@@ -23,9 +23,9 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
@@ -111,7 +111,7 @@ class HtmlParser(
         val parseResult = initParseResult(metaTags)
 
         val parseContext = ParseContext(page, parseResult, FeaturedDocument(document), metaTags, documentFragment)
-        parseContext.document?.let { parseBaseUrls(page, it) }
+        parseContext.document?.let { setMetaInfos(page, it) }
 
         parseFilters.filter(parseContext)
 
@@ -119,29 +119,10 @@ class HtmlParser(
     }
 
     private fun beforeParse(page: WebPage) {
-//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_HTML_PARSE_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
-//                ?.getOrNull()
-
-//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-//        eventHandler.onBeforeHtmlParse(page)
-
         page.eventHandler?.onBeforeHtmlParse?.invoke(page)
     }
 
     private fun afterParse(page: WebPage, document: FeaturedDocument) {
-//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class) ?: return
-//        eventHandler.onAfterParse(page, document)
-
-//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER, HtmlDocumentHandler::class.java)
-//                ?.runCatching { invoke(page, document) }
-//                ?.onFailure { log.warn("After-parse-handler failed for page #{} | {}", page.id, Strings.simplifyException(it)) }
-//                ?.getOrNull()
-
-//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-//        eventHandler.onAfterHtmlParse(page, document)
-
         page.eventHandler?.onAfterHtmlParse?.invoke(page, document)
     }
 
@@ -156,14 +137,20 @@ class HtmlParser(
         return metaTags
     }
 
-    private fun parseBaseUrls(page: WebPage, document: FeaturedDocument) {
+    private fun setMetaInfos(page: WebPage, document: FeaturedDocument) {
         val metadata = document.document.selectFirstOrNull("#${AppConstants.PULSAR_META_INFORMATION_ID}")
         if (metadata != null) {
             // The normalizedUrl
-            metadata.attr("normalized-url", page.url)
-            page.label.takeUnless { it.isBlank() }?.let { metadata.attr("label", it) }
             page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
             page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
+
+            metadata.attr("normalizedUrl", page.url)
+            if (page.args.isNotBlank()) {
+                val options = LoadOptions.parse(page.args)
+                metadata.attr("label", options.label)
+                metadata.attr("taskId", options.taskId)
+                metadata.attr("taskDateTime", options.taskDateTime)
+            }
         }
     }
 

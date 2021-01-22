@@ -48,7 +48,7 @@ class PathExtractor(
 
         parseResult.majorCode = ParseStatus.SUCCESS
 
-        val query = page.query?:page.options.toString()
+        val query = page.query?:page.args.toString()
         val options = EntityOptions.parse(query)
         if (!options.hasRules()) {
             parseResult.minorCode = ParseStatus.SUCCESS_EXT

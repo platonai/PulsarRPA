@@ -94,7 +94,7 @@ class WebPageFormatter(page: WebPage) {
         val fields: MutableMap<String, Any> = LinkedHashMap()
         /* General */fields["key"] = page.key
         fields["url"] = page.url
-        fields["options"] = page.options
+        fields["options"] = page.args
         fields["isSeed"] = page.isSeed
         fields["createTime"] = format(page.createTime)
         fields["distance"] = page.distance
@@ -196,7 +196,7 @@ class WebPageFormatter(page: WebPage) {
                 .append("fetchInterval:\t" + page.fetchInterval + "\n")
                 .append("retriesSinceFetch:\t" + page.fetchRetries + "\n")
         sb.append("\n")
-                .append("options:\t" + page.options + "\n")
+                .append("options:\t" + page.args + "\n")
         sb.append("\n")
                 .append("createTime:\t" + format(page.createTime) + "\n")
                 .append("prevFetchTime:\t" + format(page.prevFetchTime) + "\n")

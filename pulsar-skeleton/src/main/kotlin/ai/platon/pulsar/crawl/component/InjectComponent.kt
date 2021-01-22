@@ -53,7 +53,7 @@ class InjectComponent(
         }
 
         // already exist in db, update the status and mark it as a seed
-        page.options = args
+        page.args = args
         return if (inject(page)) page else WebPage.NIL
     }
 

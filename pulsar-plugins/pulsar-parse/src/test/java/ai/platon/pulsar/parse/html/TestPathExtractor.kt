@@ -74,7 +74,7 @@ class TestPathExtractor : HtmlParserTestBase() {
         val htmlPath = Paths.get(SAMPLES_DIR, "selector/1/pages/html_example_3_news.html")
         val baseUrl = "http://news.example.com/selector/1/pages/html_example_3_news.html"
         val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
-        page.options = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
+        page.args = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
         val filter = PathExtractor(MetricsCounters(), conf)
         val parseContext = ParseContext(page)
 

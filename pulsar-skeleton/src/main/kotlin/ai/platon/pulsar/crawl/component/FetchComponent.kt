@@ -22,7 +22,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.eventHandler
-import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -47,7 +46,7 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
         page.also {
             it.href = href
             it.fetchMode = options.fetchMode
-            it.options = options.toString()
+            it.args = options.toString()
             it.volatileConfig = options.volatileConfig
             it.isCachedContentEnabled = options.cacheContent
 //            if (it.protocolStatus.isRetry) {

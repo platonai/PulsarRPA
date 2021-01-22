@@ -5,32 +5,73 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 
-abstract class NamedHandler {
-    open val name: String = ""
+interface Handler {
+    val name: String
 }
 
-abstract class WebPageHandler: (WebPage) -> Unit, NamedHandler() {
+abstract class WebPageHandler: (WebPage) -> Unit, Handler {
+    override val name: String = ""
     abstract override operator fun invoke(page: WebPage)
 }
 
-abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, NamedHandler() {
+abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, Handler {
+    override val name: String = ""
     abstract override operator fun invoke(page: WebPage, document: FeaturedDocument)
 }
 
-abstract class FetchResultHandler: (FetchResult) -> Unit, NamedHandler() {
+abstract class FetchResultHandler: (FetchResult) -> Unit, Handler {
+    override val name: String = ""
     abstract override operator fun invoke(page: FetchResult)
 }
 
-abstract class WebPageBatchHandler: (Iterable<WebPage>) -> Unit, NamedHandler() {
+abstract class WebPageBatchHandler: (Iterable<WebPage>) -> Unit, Handler {
+    override val name: String = ""
     abstract override operator fun invoke(pages: Iterable<WebPage>)
 }
 
-abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Unit, NamedHandler() {
+abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Unit, Handler {
+    override val name: String = ""
     abstract override operator fun invoke(pages: Iterable<FetchResult>)
 }
 
 class AddRefererAfterFetchHandler(val url: UrlAware): WebPageHandler() {
     override fun invoke(page: WebPage) { url.referer?.let { page.referrer = it } }
+}
+
+class ChainedWebPageHandler: (WebPage) -> Unit, WebPageHandler() {
+    private val handlers = mutableListOf<(WebPage) -> Unit>()
+
+    fun addFirst(handler: (WebPage) -> Unit): ChainedWebPageHandler {
+        handlers.add(0, handler)
+        return this
+    }
+
+    fun addLast(handler: (WebPage) -> Unit): ChainedWebPageHandler {
+        handlers.add(handler)
+        return this
+    }
+
+    override operator fun invoke(page: WebPage) {
+        handlers.forEach { it(page) }
+    }
+}
+
+class ChainedHtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, HtmlDocumentHandler(), Handler {
+    private val handlers = mutableListOf<(WebPage, FeaturedDocument) -> Unit>()
+
+    fun addFirst(handler: (WebPage, FeaturedDocument) -> Unit): ChainedHtmlDocumentHandler {
+        handlers.add(0, handler)
+        return this
+    }
+
+    fun addLast(handler: (WebPage, FeaturedDocument) -> Unit): ChainedHtmlDocumentHandler {
+        handlers.add(handler)
+        return this
+    }
+
+    override fun invoke(page: WebPage, document: FeaturedDocument) {
+        handlers.forEach { it(page, document) }
+    }
 }
 
 interface CrawlEventHandler {

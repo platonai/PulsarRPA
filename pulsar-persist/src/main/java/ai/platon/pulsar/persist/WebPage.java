@@ -44,10 +44,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -597,17 +594,17 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link java.lang.String} object.
      */
     @NotNull
-    public String getOptions() {
+    public String getArgs() {
         return page.getOptions() == null ? "" : page.getOptions().toString();
     }
 
     /**
      * <p>setOptions.</p>
      *
-     * @param options a {@link java.lang.String} object.
+     * @param args a {@link java.lang.String} object.
      */
-    public void setOptions(@NotNull String options) {
-        page.setOptions(options);
+    public void setArgs(@NotNull String args) {
+        page.setOptions(args);
     }
 
     /**
@@ -622,21 +619,6 @@ public class WebPage implements Comparable<WebPage> {
             configuredUrl += " " + page.getOptions().toString();
         }
         return configuredUrl;
-    }
-
-    /**
-     * <p>Get the label</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    @NotNull
-    public String getLabel() {
-        String options = getOptions();
-        String label = StringUtils.substringBetween(options, "-label ", " ");
-        if (label == null) {
-            label = "";
-        }
-        return label;
     }
 
     /**

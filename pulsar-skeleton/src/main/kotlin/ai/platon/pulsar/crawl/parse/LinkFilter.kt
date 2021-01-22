@@ -46,7 +46,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
 
     fun reset(page: WebPage) {
         // TODO: LinkOptions.parse() should be very fast and highly optimized, JCommand is not a good way
-        linkOptions = parse(page.options.toString(), conf)
+        linkOptions = parse(page.args.toString(), conf)
         sourceHost = if (ignoreExternalLinks) URLUtil.getHost(page.url, groupMode) else ""
         reparseLinks = page.variables.contains(Name.REPARSE_LINKS)
         noFilter = page.variables.contains(Name.PARSE_NO_LINK_FILTER)

@@ -144,7 +144,7 @@ class UpdateComponent(
         if (shallowestPage != null) {
             page.referrer = shallowestPage.url
             // TODO: Not the best options
-            page.options = shallowestPage.options
+            page.args = shallowestPage.args
             page.distance = shallowestPage.distance + 1
         }
     }

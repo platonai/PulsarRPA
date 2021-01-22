@@ -90,7 +90,7 @@ public class GeneralIndexingFilter implements IndexingFilter {
     public IndexDocument filter(IndexDocument doc, String url, WebPage page) throws IndexingException {
         doc.addIfAbsent("id", doc.getKey());
         doc.addIfAbsent("url", url);
-        doc.addIfAbsent("seed_url", StringUtils.substringBefore(page.getOptions().toString(), " "));
+        doc.addIfAbsent("seed_url", StringUtils.substringBefore(page.getArgs().toString(), " "));
         addDocFields(doc, url, page);
         return doc;
     }
