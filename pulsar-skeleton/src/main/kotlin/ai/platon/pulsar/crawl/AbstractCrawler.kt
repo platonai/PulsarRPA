@@ -4,13 +4,14 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
-import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
-open class Crawler(
+interface Crawler: AutoCloseable
+
+abstract class AbstractCrawler(
         val session: PulsarSession = PulsarContexts.createSession(),
         val autoClose: Boolean = true
-): AutoCloseable {
+): Crawler {
     val closed = AtomicBoolean()
     open val isActive get() = !closed.get() && AppContext.isActive
 

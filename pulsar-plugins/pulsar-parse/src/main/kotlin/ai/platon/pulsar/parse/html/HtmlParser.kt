@@ -20,6 +20,7 @@ package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_ID
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
@@ -138,19 +139,17 @@ class HtmlParser(
     }
 
     private fun setMetaInfos(page: WebPage, document: FeaturedDocument) {
-        val metadata = document.document.selectFirstOrNull("#${AppConstants.PULSAR_META_INFORMATION_ID}")
-        if (metadata != null) {
-            // The normalizedUrl
-            page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
-            page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
+        val metadata = document.document.selectFirstOrNull("#${PULSAR_META_INFORMATION_ID}") ?: return
+        // The normalizedUrl
+        page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
+        page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
 
-            metadata.attr("normalizedUrl", page.url)
-            if (page.args.isNotBlank()) {
-                val options = LoadOptions.parse(page.args)
-                metadata.attr("label", options.label)
-                metadata.attr("taskId", options.taskId)
-                metadata.attr("taskTime", options.taskTime)
-            }
+        metadata.attr("normalizedUrl", page.url)
+        if (page.args.isNotBlank()) {
+            val options = LoadOptions.parse(page.args)
+            metadata.attr("label", options.label)
+            metadata.attr("taskId", options.taskId)
+            metadata.attr("taskTime", options.taskTime)
         }
     }
 

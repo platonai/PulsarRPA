@@ -14,6 +14,11 @@ abstract class WebPageHandler: (WebPage) -> Unit, Handler {
     abstract override operator fun invoke(page: WebPage)
 }
 
+abstract class UrlAwareWebPageHandler: (UrlAware, WebPage) -> Unit, Handler {
+    override val name: String = ""
+    abstract override operator fun invoke(url: UrlAware, page: WebPage)
+}
+
 abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, Handler {
     override val name: String = ""
     abstract override operator fun invoke(page: WebPage, document: FeaturedDocument)
@@ -53,6 +58,24 @@ class ChainedWebPageHandler: (WebPage) -> Unit, WebPageHandler() {
 
     override operator fun invoke(page: WebPage) {
         handlers.forEach { it(page) }
+    }
+}
+
+class ChainedUrlAwareWebPageHandler: (UrlAware, WebPage) -> Unit, UrlAwareWebPageHandler() {
+    private val handlers = mutableListOf<(UrlAware, WebPage) -> Unit>()
+
+    fun addFirst(handler: (UrlAware, WebPage) -> Unit): ChainedUrlAwareWebPageHandler {
+        handlers.add(0, handler)
+        return this
+    }
+
+    fun addLast(handler: (UrlAware, WebPage) -> Unit): ChainedUrlAwareWebPageHandler {
+        handlers.add(handler)
+        return this
+    }
+
+    override operator fun invoke(url: UrlAware, page: WebPage) {
+        handlers.forEach { it(url, page) }
     }
 }
 
@@ -142,6 +165,58 @@ class DefaultCrawlEventHandler(
                     handler.onAfterParse,
                     handler.onAfterLoad
             )
+        }
+    }
+}
+
+interface StreamingCrawlerEventHandler {
+    var onFilter: (UrlAware) -> UrlAware?
+    var onNormalize: (UrlAware) -> UrlAware?
+    var onBeforeLoad: (UrlAware) -> Unit
+    var onAfterLoad: (UrlAware, WebPage) -> Unit
+}
+
+abstract class AbstractStreamingCrawlerEventHandler(
+        override var onFilter: (UrlAware) -> UrlAware? = { it },
+        override var onNormalize: (UrlAware) -> UrlAware? = { it },
+        override var onBeforeLoad: (UrlAware) -> Unit = { _ -> },
+        override var onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
+): StreamingCrawlerEventHandler
+
+class DefaultStreamingCrawlerEventHandler(
+        onFilter: (UrlAware) -> UrlAware? = { it },
+        onNormalize: (UrlAware) -> UrlAware? = { it },
+        onBeforeLoad: (UrlAware) -> Unit = { _ -> },
+        onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
+): AbstractStreamingCrawlerEventHandler(
+        onFilter, onNormalize, onBeforeLoad, onAfterLoad
+)
+
+class ChainedStreamingCrawlerEventHandler(
+        onFilter: (UrlAware) -> UrlAware? = { it },
+        onNormalize: (UrlAware) -> UrlAware? = { it },
+        onBeforeLoad: (UrlAware) -> Unit = { _ -> },
+        onAfterLoad: (UrlAware, WebPage) -> Unit = ChainedUrlAwareWebPageHandler()
+): AbstractStreamingCrawlerEventHandler(
+        onFilter, onNormalize, onBeforeLoad, onAfterLoad
+) {
+    fun addFirst(name: String, handler: (UrlAware, WebPage) -> Unit) {
+        if (name == "onAfterLoad") {
+            if (onAfterLoad is ChainedUrlAwareWebPageHandler) {
+                (onAfterLoad as? ChainedUrlAwareWebPageHandler)?.addFirst(handler)
+            } else {
+                onAfterLoad = ChainedUrlAwareWebPageHandler().addFirst(handler).addFirst(onAfterLoad)
+            }
+        }
+    }
+
+    fun addLast(name: String, handler: (UrlAware, WebPage) -> Unit) {
+        if (name == "onAfterLoad") {
+            if (onAfterLoad is ChainedUrlAwareWebPageHandler) {
+                (onAfterLoad as? ChainedUrlAwareWebPageHandler)?.addLast(handler)
+            } else {
+                onAfterLoad = ChainedUrlAwareWebPageHandler().addLast(handler).addLast(onAfterLoad)
+            }
         }
     }
 }

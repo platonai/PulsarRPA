@@ -41,7 +41,7 @@ open class StreamingCrawler<T: UrlAware>(
          * */
         val globalCache: GlobalCache? = null,
         autoClose: Boolean = true
-): Crawler(session, autoClose) {
+): AbstractCrawler(session, autoClose) {
     companion object {
         private val instanceSequencer = AtomicInteger()
         private val globalRunningInstances = AtomicInteger()
@@ -92,8 +92,8 @@ open class StreamingCrawler<T: UrlAware>(
     var pageCollector: ConcurrentLinkedQueue<WebPage>? = null
 
     val id = instanceSequencer.incrementAndGet()
-    // TODO: use event handler instead
-    var onLoadComplete: (UrlAware, WebPage) -> Unit = { _: UrlAware, _: WebPage -> }
+
+    val eventHandler = ChainedStreamingCrawlerEventHandler()
 
     init {
         generateFinishCommand()
@@ -104,17 +104,23 @@ open class StreamingCrawler<T: UrlAware>(
         ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
     }
 
-    fun quit() {
-        quit = true
-    }
-
-    open suspend fun run() {
-        supervisorScope {
-            run(this)
+    open fun run() {
+        runBlocking {
+            supervisorScope {
+                run(this)
+            }
         }
     }
 
     open suspend fun run(scope: CoroutineScope) {
+        runInScope(scope)
+    }
+
+    fun quit() {
+        quit = true
+    }
+
+    protected suspend fun runInScope(scope: CoroutineScope) {
         log.info("Starting streaming crawler ...")
 
         globalRunningInstances.incrementAndGet()
@@ -128,7 +134,7 @@ open class StreamingCrawler<T: UrlAware>(
 
             urls.forEachIndexed { j, url ->
                 if (!isActive) {
-                    return@run
+                    return@runInScope
                 }
 
                 if (url.isNil) {
@@ -154,7 +160,7 @@ open class StreamingCrawler<T: UrlAware>(
                 }
 
                 if (state != FlowState.CONTINUE) {
-                    return@run
+                    return@runInScope
                 }
             }
         }
@@ -253,7 +259,7 @@ open class StreamingCrawler<T: UrlAware>(
         }
 
         lastActiveTime = Instant.now()
-        page?.let { onLoadComplete(url, it) }
+        page?.let { eventHandler.onAfterLoad(url, it) }
 
         // if urls is ConcurrentLoadingIterable
         (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
