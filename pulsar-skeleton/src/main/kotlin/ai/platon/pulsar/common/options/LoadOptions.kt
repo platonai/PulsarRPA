@@ -26,8 +26,9 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
     var taskId = LocalDate.now().toString()
 
-    @Parameter(names = ["-taskDateTime", "--task-date-time"], description = "The task time")
-    var taskDateTime = LocalDate.now().toString()
+    @Parameter(names = ["-taskTime", "--task-time"],
+            description = "The task time, we usually use a task time to indicate a batch of a task")
+    var taskTime = LocalDate.now().toString()
 
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""

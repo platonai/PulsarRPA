@@ -149,7 +149,7 @@ class HtmlParser(
                 val options = LoadOptions.parse(page.args)
                 metadata.attr("label", options.label)
                 metadata.attr("taskId", options.taskId)
-                metadata.attr("taskDateTime", options.taskDateTime)
+                metadata.attr("taskTime", options.taskTime)
             }
         }
     }
