@@ -351,14 +351,6 @@ class LoadComponent(
             parse(page, options)
         }
 
-        if (page.eventHandler == null) {
-            println("page.eventHandler == null")
-        }
-
-        if (page.eventHandler?.onAfterLoad == null) {
-            println("page.eventHandler?.onAfterLoad == null")
-        }
-
         page.eventHandler?.onAfterLoad?.invoke(page)
 
         if (options.persist) {
