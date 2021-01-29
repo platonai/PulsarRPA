@@ -390,6 +390,8 @@ class TestString {
         IntRange(0, texts.size - 1).forEach { i ->
             assertEquals(expects[i], Strings.getLastInteger(texts[i], 0), "The $i-th test is failed")
         }
+
+        assertEquals(150, Strings.getLastInteger("631 global ratings | 150 global reviews", 0))
     }
 
     @Test

@@ -3,7 +3,6 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
@@ -11,7 +10,9 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.url.PlainUrl
 import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -190,7 +191,12 @@ abstract class AbstractPulsarContext(
         }
         initOptions(finalOptions, toItemOption)
 
-        var normalizedUrl = Urls.normalizeOrNull(spec, options.shortenKey) ?: return NormUrl.NIL
+        val eventHandler = finalOptions.volatileConfig?.getBean(CrawlEventHandler::class)
+        val spec0 = if (eventHandler?.onNormalize != null) {
+            eventHandler.onNormalize(spec) ?: return NormUrl.NIL
+        } else spec
+
+        var normalizedUrl = Urls.normalizeOrNull(spec0, options.shortenKey) ?: return NormUrl.NIL
         if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
@@ -230,13 +236,15 @@ abstract class AbstractPulsarContext(
         return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(url.spec, url.args)
     }
 
+    override fun get(url: String): WebPage {
+        return webDbOrNull?.get(normalize(url).spec, false)?: WebPage.NIL
+    }
+
     override fun getOrNull(url: String): WebPage? {
         return webDbOrNull?.getOrNull(normalize(url).spec, false)
     }
 
-    override fun get(url: String): WebPage {
-        return webDbOrNull?.get(normalize(url).spec, false)?: WebPage.NIL
-    }
+    override fun exists(url: String) = null != getOrNull(url)
 
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()

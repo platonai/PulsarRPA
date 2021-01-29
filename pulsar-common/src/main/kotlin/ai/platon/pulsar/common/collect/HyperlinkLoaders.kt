@@ -25,9 +25,14 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     }
 
     override fun loadToNow(sink: MutableCollection<UrlAware>, maxSize: Int, group: Int, priority: Int): Collection<UrlAware> {
+        when {
+            maxSize < 0 -> throw IllegalArgumentException("maxSize should be >= 0")
+            maxSize == 0 -> return listOf()
+        }
+
         val g = "$group"
         runCatching {
-            Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
+            Files.readAllLines(path).asSequence().take(maxSize).mapNotNullTo(sink) { parse(it, g) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
 
         return sink
@@ -41,7 +46,7 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
 
         val g = "$group"
         runCatching {
-            Files.readAllLines(path).asSequence().mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
+            Files.readAllLines(path).asSequence().take(maxSize).mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
 
         return sink

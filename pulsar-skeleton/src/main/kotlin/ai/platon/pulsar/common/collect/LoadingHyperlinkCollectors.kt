@@ -15,9 +15,18 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 open class LocalFileHyperlinkCollector(
+        /**
+         * The path of the file source
+         * */
         val path: Path,
+        /**
+         * The priority
+         * */
         priority: Int = Priority13.NORMAL.value,
-        capacity: Int = DEFAULT_CAPACITY
+        /**
+         * The cache capacity, we assume that all items in the file are loaded into the cache
+         * */
+        capacity: Int = 1_000_000
 ): AbstractPriorityDataCollector<Hyperlink>(priority, capacity) {
 
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
@@ -30,16 +39,13 @@ open class LocalFileHyperlinkCollector(
     var loadArgs: String? = null
     val hyperlinks = LinkedList<Hyperlink>()
 
-    constructor(path: Path, priority: Priority13, capacity: Int = DEFAULT_CAPACITY): this(path, priority.value, capacity)
+    constructor(path: Path, priority: Priority13, capacity: Int = 1_000_000): this(path, priority.value, capacity)
 
     override fun hasMore() = ensureLoaded().hyperlinks.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
         var collected = 0
+
         hyperlinks.poll()?.let {
             if (sink.add(it)) {
                ++collected
@@ -57,7 +63,7 @@ open class LocalFileHyperlinkCollector(
                 Hyperlinks.toHyperlink(it).also { it.args = args }
             }
 
-            log.info("Loaded total {} urls from file | {} | {}", hyperlinks.size, loadArgs, path)
+            log.info("Loaded total {}/{} urls from file | {} | {}", hyperlinks.size, capacity, loadArgs, path)
         }
 
         return this

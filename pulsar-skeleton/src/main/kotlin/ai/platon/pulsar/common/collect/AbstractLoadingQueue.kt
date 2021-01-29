@@ -18,6 +18,8 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
 
 /**
  * An url queue should be small since every url uses about 1s to fetch
+ *
+ * TODO: check synchronization implementation, especially the child Queue
  * */
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
@@ -25,7 +27,7 @@ abstract class AbstractLoadingQueue(
         val priority: Int = Priority13.NORMAL.value,
         val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
-    protected val cache = LinkedList<UrlAware>()
+    protected val cache = Collections.synchronizedList(LinkedList<UrlAware>())
 
     @get:Synchronized
     val freeSlots get() = capacity - cache.size
@@ -72,6 +74,11 @@ abstract class AbstractLoadingQueue(
     }
 
     @Synchronized
+    fun removeIf(filter: (UrlAware) -> Boolean): Boolean {
+        return cache.removeIf(filter)
+    }
+
+    @Synchronized
     override fun iterator(): MutableIterator<UrlAware> = tryRefresh().cache.iterator()
 
     @Synchronized
@@ -87,7 +94,7 @@ abstract class AbstractLoadingQueue(
     @Synchronized
     override fun poll(): UrlAware? {
         peek()
-        return cache.poll()
+        return cache.removeFirstOrNull()
     }
 
     @get:Synchronized

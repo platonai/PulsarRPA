@@ -365,6 +365,9 @@ open class LoadOptions: CommonOptions {
         return this
     }
 
+    /**
+     * TODO: use JCommand's allowParameterOverwriting feature
+     * */
     open fun mergeModified(args: String): LoadOptions {
         val o2 = parse(args)
         val options = mergeModified(o2)

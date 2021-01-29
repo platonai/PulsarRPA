@@ -80,7 +80,7 @@ class AppMetrics(
     private val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
     private val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
 
-    private val metricRegistry = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
+    private val metricRegistry = SharedMetricRegistries.getDefault()
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter

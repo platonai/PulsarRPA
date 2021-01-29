@@ -1,0 +1,100 @@
+    1 |     0 |   0 |  19 | Root                                                                             | https://www.amazon.com/gp/new-releases
+    2 |     1 |   1 |   0 | Root > Appliances                                                                | https://www.amazon.com/gp/new-releases/appliances
+    3 |     1 |   1 |   0 | Root > Arts, Crafts & Sewing                                                     | https://www.amazon.com/gp/new-releases/arts-crafts
+    4 |     1 |   1 |  12 | Root > Automotive                                                                | https://www.amazon.com/gp/new-releases/automotive
+   25 |     4 |   2 |   9 | Root > Automotive > Car Care                                                     | https://www.amazon.com/gp/new-releases/automotive/15718271
+   33 |    25 |   3 |   0 | Root > Automotive > Car Care > Cleaning Kits                                     | https://www.amazon.com/gp/new-releases/automotive/15718281
+   34 |    25 |   3 |   8 | Root > Automotive > Car Care > Exterior Care                                     | https://www.amazon.com/gp/new-releases/automotive/15718291
+   43 |    34 |   4 |   3 | Root > Automotive > Car Care > Exterior Care > Car Polishes & Waxes              | https://www.amazon.com/gp/new-releases/automotive/15718301
+   52 |    43 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Polishes & Waxes > Bug, Sap & Tar Removers | https://www.amazon.com/gp/new-releases/automotive/19351186011
+   50 |    43 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Polishes & Waxes > Chrome & Metal Polishes | https://www.amazon.com/gp/new-releases/automotive/15718311
+   51 |    43 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Polishes & Waxes > Waxes      | https://www.amazon.com/gp/new-releases/automotive/15718371
+   44 |    34 |   4 |   6 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment                | https://www.amazon.com/gp/new-releases/automotive/15718381
+   53 |    44 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment > Applicators  | https://www.amazon.com/gp/new-releases/automotive/15718391
+   54 |    44 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment > Buckets      | https://www.amazon.com/gp/new-releases/automotive/15718401
+   55 |    44 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment > Nozzles & Hose Attachments | https://www.amazon.com/gp/new-releases/automotive/15718411
+   56 |    44 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment > Sponges & Mitts | https://www.amazon.com/gp/new-releases/automotive/15718421
+   57 |    44 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment > Waterless Wash Treatments | https://www.amazon.com/gp/new-releases/automotive/15718431
+   58 |    44 |   5 |   0 | Root > Automotive > Car Care > Exterior Care > Car Wash Equipment > Windshield Squeegees | https://www.amazon.com/gp/new-releases/automotive/15718441
+   45 |    34 |   4 |   0 | Root > Automotive > Car Care > Exterior Care > Cleaners                          | https://www.amazon.com/gp/new-releases/automotive/15718451
+   46 |    34 |   4 |   0 | Root > Automotive > Car Care > Exterior Care > Convertible Top Cleaners          | https://www.amazon.com/gp/new-releases/automotive/15718461
+   47 |    34 |   4 |   0 | Root > Automotive > Car Care > Exterior Care > Polishing & Rubbing Compounds     | https://www.amazon.com/gp/new-releases/automotive/15718471
+   48 |    34 |   4 |   0 | Root > Automotive > Car Care > Exterior Care > Polishing & Waxing Kits           | https://www.amazon.com/gp/new-releases/automotive/15718481
+   49 |    34 |   4 |   0 | Root > Automotive > Car Care > Exterior Care > Sealants                          | https://www.amazon.com/gp/new-releases/automotive/15718491
+   42 |    34 |   4 |   0 | Root > Automotive > Car Care > Exterior Care > Water Blades                      | https://www.amazon.com/gp/new-releases/automotive/155340011
+   35 |    25 |   3 |   2 | Root > Automotive > Car Care > Finishing                                         | https://www.amazon.com/gp/new-releases/automotive/15718501
+   59 |    35 |   4 |   0 | Root > Automotive > Car Care > Finishing > Corrosion & Rust Inhibitors           | https://www.amazon.com/gp/new-releases/automotive/15718511
+   60 |    35 |   4 |   0 | Root > Automotive > Car Care > Finishing > Protective Shields                    | https://www.amazon.com/gp/new-releases/automotive/15718521
+   36 |    25 |   3 |   0 | Root > Automotive > Car Care > Glass Care                                        | https://www.amazon.com/gp/new-releases/automotive/15718531
+   37 |    25 |   3 |   5 | Root > Automotive > Car Care > Interior Care                                     | https://www.amazon.com/gp/new-releases/automotive/15718541
+   61 |    37 |   4 |   0 | Root > Automotive > Car Care > Interior Care > Carpet Cleaners                   | https://www.amazon.com/gp/new-releases/automotive/15718551
+   62 |    37 |   4 |   0 | Root > Automotive > Car Care > Interior Care > Leather Care                      | https://www.amazon.com/gp/new-releases/automotive/15718561
+   63 |    37 |   4 |   3 | Root > Automotive > Car Care > Interior Care > Protectants                       | https://www.amazon.com/gp/new-releases/automotive/15718571
+   66 |    63 |   5 |   0 | Root > Automotive > Car Care > Interior Care > Protectants > Plastic Care        | https://www.amazon.com/gp/new-releases/automotive/15718581
+   67 |    63 |   5 |   0 | Root > Automotive > Car Care > Interior Care > Protectants > Rubber Care         | https://www.amazon.com/gp/new-releases/automotive/15718591
+   68 |    63 |   5 |   0 | Root > Automotive > Car Care > Interior Care > Protectants > Vinyl Care          | https://www.amazon.com/gp/new-releases/automotive/15718601
+   64 |    37 |   4 |   0 | Root > Automotive > Car Care > Interior Care > Upholstery Care                   | https://www.amazon.com/gp/new-releases/automotive/15718611
+   65 |    37 |   4 |   0 | Root > Automotive > Car Care > Interior Care > Vacuums                           | https://www.amazon.com/gp/new-releases/automotive/15718621
+   38 |    25 |   3 |   0 | Root > Automotive > Car Care > Solvents                                          | https://www.amazon.com/gp/new-releases/automotive/15718631
+   39 |    25 |   3 |   2 | Root > Automotive > Car Care > Tire & Wheel Care                                 | https://www.amazon.com/gp/new-releases/automotive/15718641
+   69 |    39 |   4 |   0 | Root > Automotive > Car Care > Tire & Wheel Care > Tire Care                     | https://www.amazon.com/gp/new-releases/automotive/2687786011
+   70 |    39 |   4 |   0 | Root > Automotive > Car Care > Tire & Wheel Care > Wheel Care                    | https://www.amazon.com/gp/new-releases/automotive/2687787011
+   40 |    25 |   3 |   7 | Root > Automotive > Car Care > Tools & Equipment                                 | https://www.amazon.com/gp/new-releases/automotive/15718651
+   71 |    40 |   4 |   0 | Root > Automotive > Car Care > Tools & Equipment > Air Dryers, Blowers & Blades  | https://www.amazon.com/gp/new-releases/automotive/15718661
+   72 |    40 |   4 |   0 | Root > Automotive > Car Care > Tools & Equipment > Brushes & Dusters             | https://www.amazon.com/gp/new-releases/automotive/15718671
+   73 |    40 |   4 |   2 | Root > Automotive > Car Care > Tools & Equipment > Cloths                        | https://www.amazon.com/gp/new-releases/automotive/15718681
+   78 |    73 |   5 |   0 | Root > Automotive > Car Care > Tools & Equipment > Cloths > Chamois              | https://www.amazon.com/gp/new-releases/automotive/15718691
+   79 |    73 |   5 |   0 | Root > Automotive > Car Care > Tools & Equipment > Cloths > Microfiber           | https://www.amazon.com/gp/new-releases/automotive/15718721
+   76 |    40 |   4 |   0 | Root > Automotive > Car Care > Tools & Equipment > Detailing Tools               | https://www.amazon.com/gp/new-releases/automotive/15718731
+   74 |    40 |   4 |   0 | Root > Automotive > Car Care > Tools & Equipment > Drying Mitts                  | https://www.amazon.com/gp/new-releases/automotive/15718701
+   75 |    40 |   4 |   0 | Root > Automotive > Car Care > Tools & Equipment > Drying Pads                   | https://www.amazon.com/gp/new-releases/automotive/15718711
+   77 |    40 |   4 |   2 | Root > Automotive > Car Care > Tools & Equipment > Machine Polishing Equipment   | https://www.amazon.com/gp/new-releases/automotive/15718741
+   81 |    77 |   5 |   0 | Root > Automotive > Car Care > Tools & Equipment > Machine Polishing Equipment > Buffers & Polishing Machine Backing Plates | https://www.amazon.com/gp/new-releases/automotive/15718751
+   80 |    77 |   5 |   0 | Root > Automotive > Car Care > Tools & Equipment > Machine Polishing Equipment > Buffers & Polishing Machine Pads | https://www.amazon.com/gp/new-releases/automotive/15707091
+   41 |    25 |   3 |   0 | Root > Automotive > Car Care > Undercoatings                                     | https://www.amazon.com/gp/new-releases/automotive/15718781
+   30 |     4 |   2 |  28 | Root > Automotive > Exterior Accessories                                         | https://www.amazon.com/gp/new-releases/automotive/15857511
+   87 |    30 |   3 |   0 | Root > Automotive > Exterior Accessories > Antenna Toppers                       | https://www.amazon.com/gp/new-releases/automotive/15735131
+  109 |    30 |   3 |   6 | Root > Automotive > Exterior Accessories > Body Armor                            | https://www.amazon.com/gp/new-releases/automotive/4939604011
+  110 |   109 |   4 |   0 | Root > Automotive > Exterior Accessories > Body Armor > Body Tub Rail Armor      | https://www.amazon.com/gp/new-releases/automotive/4939605011
+  111 |   109 |   4 |   0 | Root > Automotive > Exterior Accessories > Body Armor > Corner Guards            | https://www.amazon.com/gp/new-releases/automotive/4939606011
+  112 |   109 |   4 |   0 | Root > Automotive > Exterior Accessories > Body Armor > Door Armor               | https://www.amazon.com/gp/new-releases/automotive/4939607011
+  113 |   109 |   4 |   0 | Root > Automotive > Exterior Accessories > Body Armor > Entry Guards             | https://www.amazon.com/gp/new-releases/automotive/4939608011
+  114 |   109 |   4 |   0 | Root > Automotive > Exterior Accessories > Body Armor > Fender Protectors        | https://www.amazon.com/gp/new-releases/automotive/4939609011
+  115 |   109 |   4 |   0 | Root > Automotive > Exterior Accessories > Body Armor > Light Guards             | https://www.amazon.com/gp/new-releases/automotive/4939611011
+   85 |    30 |   3 |   0 | Root > Automotive > Exterior Accessories > Bumper Stickers, Decals & Magnets     | https://www.amazon.com/gp/new-releases/automotive/15710001
+   88 |    30 |   3 |   3 | Root > Automotive > Exterior Accessories > Bumpers & Bumper Accessories          | https://www.amazon.com/gp/new-releases/automotive/15735201
+  117 |    88 |   4 |   0 | Root > Automotive > Exterior Accessories > Bumpers & Bumper Accessories > Bumper Covers | https://www.amazon.com/gp/new-releases/automotive/15735211
+  118 |    88 |   4 |   0 | Root > Automotive > Exterior Accessories > Bumpers & Bumper Accessories > Bumper Guards | https://www.amazon.com/gp/new-releases/automotive/15735221
+  116 |    88 |   4 |   0 | Root > Automotive > Exterior Accessories > Bumpers & Bumper Accessories > Bumpers | https://www.amazon.com/gp/new-releases/automotive/15709271
+   89 |    30 |   3 |  11 | Root > Automotive > Exterior Accessories > Cargo Management                      | https://www.amazon.com/gp/new-releases/automotive/15735241
+  124 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Bike Carriers & Racks | https://www.amazon.com/gp/new-releases/automotive/491440011
+  125 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Boat Carriers & Racks | https://www.amazon.com/gp/new-releases/automotive/491441011
+  123 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Brackets           | https://www.amazon.com/gp/new-releases/automotive/361431011
+  121 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Cargo Bars         | https://www.amazon.com/gp/new-releases/automotive/347985011
+  120 |    89 |   4 |   3 | Root > Automotive > Exterior Accessories > Cargo Management > Cargo Carriers     | https://www.amazon.com/gp/new-releases/automotive/15735311
+  132 |   120 |   5 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Cargo Carriers > Cargo Baskets | https://www.amazon.com/gp/new-releases/automotive/491447011
+  130 |   120 |   5 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Cargo Carriers > Hard-Shell Carriers | https://www.amazon.com/gp/new-releases/automotive/491445011
+  131 |   120 |   5 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Cargo Carriers > Soft-Shell Carriers | https://www.amazon.com/gp/new-releases/automotive/491446011
+  119 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Cargo Racks        | https://www.amazon.com/gp/new-releases/automotive/15735251
+  127 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Rack Adapters      | https://www.amazon.com/gp/new-releases/automotive/491450011
+  128 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Rack Fairings      | https://www.amazon.com/gp/new-releases/automotive/491452011
+  129 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Rack Locks         | https://www.amazon.com/gp/new-releases/automotive/491453011
+  122 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Ratcheting Cargo Bars | https://www.amazon.com/gp/new-releases/automotive/347986011
+  126 |    89 |   4 |   0 | Root > Automotive > Exterior Accessories > Cargo Management > Ski & Snowboard Carriers & Racks | https://www.amazon.com/gp/new-releases/automotive/491442011
+  104 |    30 |   3 |   3 | Root > Automotive > Exterior Accessories > Covers                                | https://www.amazon.com/gp/new-releases/automotive/15857521
+  134 |   104 |   4 |   0 | Root > Automotive > Exterior Accessories > Covers > Front-End Covers             | https://www.amazon.com/gp/new-releases/automotive/15735571
+  135 |   104 |   4 |   0 | Root > Automotive > Exterior Accessories > Covers > Full Car Covers              | https://www.amazon.com/gp/new-releases/automotive/15735581
+  133 |   104 |   4 |   0 | Root > Automotive > Exterior Accessories > Covers > Tire Covers                  | https://www.amazon.com/gp/new-releases/automotive/15706681
+   90 |    30 |   3 |   5 | Root > Automotive > Exterior Accessories > Deflectors & Shields                  | https://www.amazon.com/gp/new-releases/automotive/15735601
+  136 |    90 |   4 |   0 | Root > Automotive > Exterior Accessories > Deflectors & Shields > Bug & Hood Shields | https://www.amazon.com/gp/new-releases/automotive/15735611
+  137 |    90 |   4 |   0 | Root > Automotive > Exterior Accessories > Deflectors & Shields > Rear Window Wind Deflectors | https://www.amazon.com/gp/new-releases/automotive/15735621
+  138 |    90 |   4 |   0 | Root > Automotive > Exterior Accessories > Deflectors & Shields > Rooftop Wind Deflectors | https://www.amazon.com/gp/new-releases/automotive/15735631
+  139 |    90 |   4 |   0 | Root > Automotive > Exterior Accessories > Deflectors & Shields > Side Window Wind Deflectors & Visors | https://www.amazon.com/gp/new-releases/automotive/15735641
+  140 |    90 |   4 |   0 | Root > Automotive > Exterior Accessories > Deflectors & Shields > Sunroof Wind Deflectors | https://www.amazon.com/gp/new-releases/automotive/15735651
+  107 |    30 |   3 |   0 | Root > Automotive > Exterior Accessories > Emblems                               | https://www.amazon.com/gp/new-releases/automotive/3095127011
+   91 |    30 |   3 |   3 | Root > Automotive > Exterior Accessories > Fender Flares & Trim                  | https://www.amazon.com/gp/new-releases/automotive/15735691
+  141 |    91 |   4 |   0 | Root > Automotive > Exterior Accessories > Fender Flares & Trim > Fender Flares  | https://www.amazon.com/gp/new-releases/automotive/15709431
+  143 |    91 |   4 |   0 | Root > Automotive > Exterior Accessories > Fender Flares & Trim > Fender Skirts  | https://www.amazon.com/gp/new-releases/automotive/15735711
+  142 |    91 |   4 |   0 | Root > Automotive > Exterior Accessories > Fender Flares & Trim > Fender Trim    | https://www.amazon.com/gp/new-releases/automotive/15735701
+   86 |    30 |   3 |   0 | Root > Automotive > Exterior Accessories > Gas Caps                              | https://www.amazon.com/gp/new-releases/automotive/15723051
+  108 |    30 |   3 |   0 | Root > Automotive > Exterior Accessories > Gas Tank Doors                        | https://www.amazon.com/gp/new-releases/automotive/318292011

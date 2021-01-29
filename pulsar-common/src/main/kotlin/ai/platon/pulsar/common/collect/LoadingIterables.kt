@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common.collect
 
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.NoSuchElementException
 
 open class ConcurrentLoadingIterable<E>(

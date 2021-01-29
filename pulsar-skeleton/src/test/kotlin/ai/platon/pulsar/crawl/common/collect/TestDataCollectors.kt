@@ -1,6 +1,8 @@
 package ai.platon.pulsar.crawl.common.collect
 
+import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.collect.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.url.Hyperlink
@@ -13,6 +15,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TestDataCollectors: TestBase() {
+
+    private val lowerCacheSize = 10
 
     @Test
     fun testLoadingFetchCache() {
@@ -107,5 +111,31 @@ class TestDataCollectors: TestBase() {
         collectors[priority] = normalCollector2
         assertEquals(3, collectors.size(priority))
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
+    }
+
+    @Test
+    fun `when iterate through fetch iterable then items are correct`() {
+        val fetchIterable = MultiSourceHyperlinkIterable(fetchCacheManager, lowerCacheSize)
+        val resourceURI = ResourceLoader.getResource("seeds/head100/best-sellers.txt")!!.toURI()
+        val collector = LocalFileHyperlinkCollector(Paths.get(resourceURI), Priority13.NORMAL)
+        fetchIterable.addDefaultCollectors()
+        fetchIterable.addDataCollector(collector)
+
+        val cache = fetchIterable.fetchCacheManager.lower2Cache
+        LinkExtractors.fromResource("seeds/head100/most-wished-for.txt")
+                .mapTo(cache.nonReentrantQueue) { Hyperlink(it) }
+
+        var i = 0
+        fetchIterable.forEach {
+            if (i < 100) {
+                assertTrue("The $i-th urls should contains zgbs but is ${it.url}") { it.url.contains("zgbs") }
+            } else {
+                assertTrue("The $i-th urls should contains most-wished-for but is ${it.url}") { it.url.contains("most-wished-for") }
+            }
+            ++i
+        }
+
+        assertTrue { collector.hyperlinks.isEmpty() }
+        assertTrue { cache.nonReentrantQueue.isEmpty() }
     }
 }

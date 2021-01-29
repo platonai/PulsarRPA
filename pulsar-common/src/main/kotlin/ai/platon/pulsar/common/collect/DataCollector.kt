@@ -7,6 +7,9 @@ import ai.platon.pulsar.common.Priority13
  * */
 interface DataCollector<T> {
     var name: String
+    /**
+     * The collector cache capacity. At most [capacity] items can be collected to the cache from the source
+     * */
     val capacity: Int
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableList<T>): Int
@@ -22,7 +25,7 @@ interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCol
 
 abstract class AbstractDataCollector<E>: DataCollector<E> {
     companion object {
-        const val DEFAULT_CAPACITY = 1_000_000
+        const val DEFAULT_CAPACITY = 1000
     }
 
     override var name: String = "DC"

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.url.CrawlableFatLink
 import ai.platon.pulsar.common.url.FatLink
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.sin
 
 interface CrawlableFatLinkCollector {
     val fatLinks: Map<String, CrawlableFatLink>
@@ -25,7 +26,6 @@ open class MultiSourceDataCollector<E>(
 
     override var name = "MultiSourceDC"
 
-    private val isActive get() = AppContext.isActive
     private val roundCounter = AtomicInteger()
     private val collectedCounter = AtomicInteger()
 
@@ -44,12 +44,15 @@ open class MultiSourceDataCollector<E>(
      * */
     override fun collectTo(sink: MutableList<E>): Int {
         roundCounter.incrementAndGet()
+        return collectTo0(sink)
+    }
 
+    private fun collectTo0(sink: MutableList<E>): Int {
         var collected = 0
         val sortedCollectors = collectors.sortedBy { it.priority }
-        while (isActive && collected == 0 && hasMore()) {
+        while (collected == 0 && hasMore()) {
             sortedCollectors.forEach {
-                if (isActive && collected == 0 && it.hasMore()) {
+                if (collected == 0 && it.hasMore()) {
                     collected += if (it.priority >= Priority13.HIGHEST.value) {
                         it.collectTo(0, sink)
                     } else {
@@ -58,7 +61,6 @@ open class MultiSourceDataCollector<E>(
                 }
             }
         }
-
         return collected
     }
 }

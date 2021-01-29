@@ -18,11 +18,11 @@ interface ExternalUrlLoader {
     /**
      * The estimated size of the external storage
      * */
-    var estimatedSize: Int
+    val estimatedSize: Int
     /**
      * The estimated remaining size of the external storage
      * */
-    var estimatedRemainingSize: Int
+    val estimatedRemainingSize: Int
     /**
      * The delay time to load after another load
      * */
@@ -78,8 +78,8 @@ abstract class AbstractExternalUrlLoader(
         override var loadDelay: Duration = Duration.ofSeconds(10)
 ): ExternalUrlLoader {
 
-    override var estimatedSize: Int = Int.MAX_VALUE
-    override var estimatedRemainingSize: Int = Int.MAX_VALUE
+    override val estimatedSize: Int = Int.MAX_VALUE
+    override val estimatedRemainingSize: Int = Int.MAX_VALUE
 
     protected var lastLoadTime = Instant.EPOCH
     override val isExpired get() = lastLoadTime + loadDelay < Instant.now()

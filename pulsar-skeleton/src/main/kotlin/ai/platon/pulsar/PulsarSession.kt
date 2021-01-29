@@ -19,6 +19,7 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
@@ -111,6 +112,8 @@ open class PulsarSession(
     fun get(url: String): WebPage = ensureActive { context.get(url) }
 
     fun getOrNull(url: String): WebPage? = ensureActive { context.getOrNull(url) }
+
+    fun exists(url: String): Boolean = ensureActive { context.exists(url) }
 
     /**
      * Load a url with specified options

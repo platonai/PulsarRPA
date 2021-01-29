@@ -3,13 +3,14 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.UrlAware
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 interface FetchCache {
-    val nonReentrantQueue: MutableCollection<UrlAware>
-    val nReentrantQueue: MutableCollection<UrlAware>
-    val reentrantQueue: MutableCollection<UrlAware>
-    val fetchQueues: Array<MutableCollection<UrlAware>>
+    val nonReentrantQueue: Queue<UrlAware>
+    val nReentrantQueue: Queue<UrlAware>
+    val reentrantQueue: Queue<UrlAware>
+    val fetchQueues: Array<Queue<UrlAware>>
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     val totalSize get() = fetchQueues.sumOf { it.size }
 }
@@ -35,7 +36,7 @@ class LoadingFetchCache(
     override val nonReentrantQueue = ConcurrentNonReentrantLoadingQueue(urlLoader, G_NON_REENTRANT, priority, capacity)
     override val nReentrantQueue = ConcurrentNEntrantLoadingQueue(urlLoader, 3, G_N_ENTRANT, priority, capacity)
     override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, G_REENTRANT, priority, capacity)
-    override val fetchQueues: Array<MutableCollection<UrlAware>>
+    override val fetchQueues: Array<Queue<UrlAware>>
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
 
     override fun load() {

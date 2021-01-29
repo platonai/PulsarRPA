@@ -39,7 +39,7 @@ class TestLoadOptions {
 
     @Test
     fun testMergeOptions() {
-        val args1 = "-incognito -expires 1s -retry -storeContent false"
+        val args1 = "-incognito -expires 1s -retry -storeContent false -parse"
         val args2 = "-incognito -expires 1d -storeContent true"
         val options1 = LoadOptions.parse(args1)
         val options2 = LoadOptions.parse(args2)
@@ -55,6 +55,7 @@ class TestLoadOptions {
     private fun assertMergedOptions(options: LoadOptions, message: String) {
         assertTrue(message) { options.storeContent }
         assertTrue(message) { options.incognito }
+        assertTrue(message) { options.parse }
         assertEquals(Duration.ofDays(1), options.expires, message)
     }
 

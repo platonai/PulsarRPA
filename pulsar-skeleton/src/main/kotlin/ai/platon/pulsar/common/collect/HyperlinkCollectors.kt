@@ -23,11 +23,8 @@ open class UrlQueueCollector(
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
         var collected = 0
+
         queue.poll()?.let {
             if (sink.add(Hyperlinks.toHyperlink(it))) {
                 ++collected
@@ -93,10 +90,6 @@ open class HyperlinkCollector(
         ++globalCollects
         ++collects
 
-        if (!hasMore()) {
-            return 0
-        }
-
         var collected = 0
         kotlin.runCatching {
             collected += collectTo0(sink)
@@ -104,7 +97,19 @@ open class HyperlinkCollector(
         return collected
     }
 
-    protected fun collectTo(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
+    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
+        val seed = seeds.poll()
+
+        if (seed == null) {
+            log.info("Total {}/{} seeds are processed, all done",
+                    fatLinkExtractor.counters.loadedSeeds, FatLinkExtractor.globalCounters.loadedSeeds)
+            return 0
+        }
+
+        return createFatLinkAndCollectTo(seed, sink)
+    }
+
+    protected fun createFatLinkAndCollectTo(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
         var collected = 0
         val fatLink = fatLinks[seed.spec]
         if (fatLink != null) {
@@ -132,17 +137,6 @@ open class HyperlinkCollector(
         return collected
     }
 
-    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
-        val seed = seeds.poll()
-
-        if (seed == null) {
-            log.info("Total {}/{} seeds are processed, all done",
-                    fatLinkExtractor.counters.loadedSeeds, FatLinkExtractor.globalCounters.loadedSeeds)
-            return 0
-        }
-
-        return collectTo(seed, sink)
-    }
 }
 
 open class CircularHyperlinkCollector(
@@ -162,8 +156,6 @@ open class CircularHyperlinkCollector(
     ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) return 0
-
         var collected = 0
         kotlin.runCatching {
             collected += collectTo0(sink)
@@ -179,7 +171,7 @@ open class CircularHyperlinkCollector(
             if (iterator.hasNext()) iterator.next() else null
         }
 
-        seed?.let { collected += collectTo(seed, sink) }
+        seed?.let { collected += createFatLinkAndCollectTo(seed, sink) }
 
         return collected
     }
@@ -201,11 +193,8 @@ open class PeriodicalHyperlinkCollector(
     override fun hasMore() = synchronized(iterator) { isExpired && iterator.hasNext() }
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
         var collected = 0
+
         kotlin.runCatching {
             collected += collectTo0(sink)
         }.onFailure { log.warn("Failed to collect", it) }
@@ -226,7 +215,7 @@ open class PeriodicalHyperlinkCollector(
         }
 
         return if (seed != null) {
-            collectTo(seed, sink)
+            createFatLinkAndCollectTo(seed, sink)
         } else 0
     }
 
@@ -261,17 +250,12 @@ open class FetchCacheCollector(
 
     @Synchronized
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
         return hyperlinkQueues.sumOf { consume(it, sink) }
     }
 
-    private fun consume(queue: MutableCollection<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
-        val size = queue.size
-        queue.mapTo(sink) { Hyperlinks.toHyperlink(it) }
-        queue.clear()
-        return size
+    private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
+        val url = queue.poll() ?: return 0
+        sink.add(Hyperlinks.toHyperlink(url))
+        return 1
     }
 }

@@ -172,11 +172,11 @@ open class Hyperlink(
         /**
          * The anchor text of this hyperlink
          * */
-        val text: String = "",
+        var text: String = "",
         /**
          * The order of this hyperlink in it's referer page
          * */
-        val order: Int = 0,
+        var order: Int = 0,
         /**
          * The url of the referer page
          * */

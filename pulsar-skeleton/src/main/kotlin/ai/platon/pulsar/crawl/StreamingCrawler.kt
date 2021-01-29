@@ -93,7 +93,7 @@ open class StreamingCrawler<T: UrlAware>(
 
     val id = instanceSequencer.incrementAndGet()
 
-    val eventHandler = ChainedStreamingCrawlerEventHandler()
+    val streamingCrawlerEventHandler = ChainedStreamingCrawlerEventHandler()
 
     init {
         generateFinishCommand()
@@ -121,7 +121,7 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     protected suspend fun runInScope(scope: CoroutineScope) {
-        log.info("Starting streaming crawler ...")
+        log.info("Starting streaming crawler ... | {}", options)
 
         globalRunningInstances.incrementAndGet()
 
@@ -177,8 +177,8 @@ open class StreamingCrawler<T: UrlAware>(
 
         while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
-                log.info("It takes long time to run {} tasks | {} -> {}",
-                        globalRunningTasks, lastActiveTime, idleTime.readable())
+                log.info("{}. It takes long time to run {} tasks | {} -> {}",
+                        j, globalRunningTasks, lastActiveTime, idleTime.readable())
             }
             delay(1000)
         }
@@ -215,6 +215,10 @@ open class StreamingCrawler<T: UrlAware>(
             return null
         }
 
+        if (url is ListenableHyperlink) {
+            url.onFilter(url.url) ?: return null
+        }
+
         val page = runCatching {
             withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
         }.onFailure {
@@ -228,10 +232,6 @@ open class StreamingCrawler<T: UrlAware>(
                 log.warn("Unexpected exception", it)
             }
         }.getOrNull()
-
-        if (!isActive) {
-            return null
-        }
 
         if (page == null) {
             globalTimeout.incrementAndGet()
@@ -259,7 +259,7 @@ open class StreamingCrawler<T: UrlAware>(
         }
 
         lastActiveTime = Instant.now()
-        page?.let { eventHandler.onAfterLoad(url, it) }
+        page?.let { streamingCrawlerEventHandler.onAfterLoad(url, it) }
 
         // if urls is ConcurrentLoadingIterable
         (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
@@ -271,6 +271,9 @@ open class StreamingCrawler<T: UrlAware>(
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
         val actualOptions = LoadOptionsNormalizer.normalize(options, url)
         registerHandlers(url, actualOptions)
+
+        // TODO: merge bug
+        actualOptions.parse = true
 
         val normUrl = session.normalize(url, actualOptions)
         return session.runCatching { loadDeferred(normUrl) }

@@ -94,6 +94,7 @@
             <artifactId>metrics-jmx</artifactId>
         </dependency>
 
+        <!-- TODO: remove selenium dependency -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>

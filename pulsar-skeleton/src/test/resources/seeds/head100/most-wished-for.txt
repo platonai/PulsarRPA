@@ -1,0 +1,100 @@
+    1 |     0 |   0 |  20 | Root                                                                             | https://www.amazon.com/most-wished-for
+    2 |     1 |   1 |  11 | Root > Appliances                                                                | https://www.amazon.com/gp/most-wished-for/appliances
+   22 |     2 |   2 |   0 | Root > Appliances > Appliance Warranties                                         | https://www.amazon.com/gp/most-wished-for/appliances/2242350011
+   26 |     2 |   2 |   0 | Root > Appliances > Cooktops                                                     | https://www.amazon.com/gp/most-wished-for/appliances/3741261
+   27 |     2 |   2 |   0 | Root > Appliances > Dishwashers                                                  | https://www.amazon.com/gp/most-wished-for/appliances/3741271
+   28 |     2 |   2 |   0 | Root > Appliances > Freezers                                                     | https://www.amazon.com/gp/most-wished-for/appliances/3741331
+   24 |     2 |   2 |   0 | Root > Appliances > Ice Makers                                                   | https://www.amazon.com/gp/most-wished-for/appliances/2399939011
+   30 |     2 |   2 |   0 | Root > Appliances > Range Hoods                                                  | https://www.amazon.com/gp/most-wished-for/appliances/3741441
+   29 |     2 |   2 |   0 | Root > Appliances > Refrigerators                                                | https://www.amazon.com/gp/most-wished-for/appliances/3741361
+   31 |     2 |   2 |   2 | Root > Appliances > Wall Ovens                                                   | https://www.amazon.com/gp/most-wished-for/appliances/3741481
+   33 |    31 |   3 |   0 | Root > Appliances > Wall Ovens > Double Wall Ovens                               | https://www.amazon.com/gp/most-wished-for/appliances/3741501
+   34 |    31 |   3 |   0 | Root > Appliances > Wall Ovens > Single Wall Ovens                               | https://www.amazon.com/gp/most-wished-for/appliances/3741511
+   25 |     2 |   2 |   0 | Root > Appliances > Warming Drawers                                              | https://www.amazon.com/gp/most-wished-for/appliances/2399955011
+   23 |     2 |   2 |   0 | Root > Appliances > Washers & Dryers                                             | https://www.amazon.com/gp/most-wished-for/appliances/2383576011
+   32 |     2 |   2 |   3 | Root > Appliances > Wine Cellars                                                 | https://www.amazon.com/gp/most-wished-for/appliances/3741521
+   36 |    32 |   3 |   0 | Root > Appliances > Wine Cellars > Built-In Wine Cellars                         | https://www.amazon.com/gp/most-wished-for/kitchen/3741551
+   35 |    32 |   3 |   0 | Root > Appliances > Wine Cellars > Freestanding Wine Cellars                     | https://www.amazon.com/gp/most-wished-for/kitchen/3741541
+   37 |    32 |   3 |   0 | Root > Appliances > Wine Cellars > Wine Cellar Cooling Systems                   | https://www.amazon.com/gp/most-wished-for/kitchen/3741581
+    3 |     1 |   1 |  14 | Root > Arts, Crafts & Sewing                                                     | https://www.amazon.com/gp/most-wished-for/arts-crafts
+   38 |     3 |   2 |   0 | Root > Arts, Crafts & Sewing > Beading & Jewelry Making                          | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896081
+   51 |     3 |   2 |  18 | Root > Arts, Crafts & Sewing > Craft Supplies                                    | https://www.amazon.com/gp/most-wished-for/arts-crafts/378733011
+   52 |    51 |   3 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Basket Making                    | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890801
+   60 |    51 |   3 |   6 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making                    | https://www.amazon.com/gp/most-wished-for/arts-crafts/262597011
+   70 |    60 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making > Dyes             | https://www.amazon.com/gp/most-wished-for/arts-crafts/262598011
+   71 |    60 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making > Kits             | https://www.amazon.com/gp/most-wished-for/arts-crafts/262599011
+   72 |    60 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making > Molds            | https://www.amazon.com/gp/most-wished-for/arts-crafts/262600011
+   73 |    60 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making > Scents           | https://www.amazon.com/gp/most-wished-for/arts-crafts/262601011
+   74 |    60 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making > Wax              | https://www.amazon.com/gp/most-wished-for/arts-crafts/262602011
+   75 |    60 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Candle Making > Wicks            | https://www.amazon.com/gp/most-wished-for/arts-crafts/262603011
+   53 |    51 |   3 |   9 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery               | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896441
+   76 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Ceramic & Pottery Tools | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896461
+   77 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Clay Extruders, Mixers & Presses | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896471
+   83 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Clay Molds  | https://www.amazon.com/gp/most-wished-for/arts-crafts/262604011
+   78 |    53 |   4 |   2 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Clays & Doughs | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896491
+   85 |    78 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Clays & Doughs > Clay | https://www.amazon.com/gp/most-wished-for/arts-crafts/689390011
+   86 |    78 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Clays & Doughs > Dough | https://www.amazon.com/gp/most-wished-for/arts-crafts/689391011
+   79 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Glazes      | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896501
+   80 |    53 |   4 |   2 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Kilns & Firing Accessories | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896511
+   88 |    80 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Kilns & Firing Accessories > Firing Accessories | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933705011
+   87 |    80 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Kilns & Firing Accessories > Kilns | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933704011
+   81 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Pottery Wheels & Accessories | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896521
+   82 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Pug Mills & Slab Rollers | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896531
+   84 |    53 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Ceramics & Pottery > Ready-to-Paint Ceramics | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090836011
+   68 |    51 |   3 |  14 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies                   | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090710011
+   89 |    68 |   4 |   9 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives       | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890721
+  108 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Adhesive Removers | https://www.amazon.com/gp/most-wished-for/arts-crafts/12898731
+  103 |    89 |   5 |   2 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Adhesive Sheets & Sprays | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890731
+  112 |   103 |   6 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Adhesive Sheets & Sprays > Adhesive Sheets | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933693011
+  113 |   103 |   6 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Adhesive Sheets & Sprays > Adhesive Sprays | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933694011
+  106 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Adhesive Waxing | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890761
+  104 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Art Glues & Pastes | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890741
+  105 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Arts & Crafts Tape | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890751
+  110 |    89 |   5 |   1 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Craft Glue Guns & Sticks | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090711011
+  114 |   110 |   6 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Craft Glue Guns & Sticks > Glue Guns | https://www.amazon.com/gp/most-wished-for/arts-crafts/12898851
+  107 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Fabric Adhesives | https://www.amazon.com/gp/most-wished-for/arts-crafts/12890771
+  109 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Laminating Supplies | https://www.amazon.com/gp/most-wished-for/arts-crafts/300341
+  111 |    89 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Adhesives > Mounting Boards | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090816011
+   95 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Brads           | https://www.amazon.com/gp/most-wished-for/arts-crafts/3298712011
+   91 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Clock Kits      | https://www.amazon.com/gp/most-wished-for/arts-crafts/17568924011
+   97 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Craft Bells     | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090818011
+   92 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Craft Foam      | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933771011
+   98 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Craft Sticks    | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090822011
+   90 |    68 |   4 |   8 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools   | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896551
+  115 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Art Knives & Blades | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896561
+  122 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Craft Shears | https://www.amazon.com/gp/most-wished-for/arts-crafts/689393011
+  118 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Cutting Mats | https://www.amazon.com/gp/most-wished-for/arts-crafts/262643011
+  116 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Glass Cutting Tools | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896601
+  117 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Mat Cutters & Blades | https://www.amazon.com/gp/most-wished-for/arts-crafts/12896611
+  120 |    90 |   5 |   3 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Paper Trimmers | https://www.amazon.com/gp/most-wished-for/arts-crafts/490584011
+  123 |   120 |   6 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Paper Trimmers > Rotary Trimmers | https://www.amazon.com/gp/most-wished-for/office-products/490588011
+  124 |   120 |   6 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Paper Trimmers > Stack & Guillotine Trimmers | https://www.amazon.com/gp/most-wished-for/office-products/490589011
+  125 |   120 |   6 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Paper Trimmers > Trimmer Blades | https://www.amazon.com/gp/most-wished-for/office-products/490590011
+  119 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Rotary Cutters | https://www.amazon.com/gp/most-wished-for/arts-crafts/262718011
+  121 |    90 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Cutting Tools > Scissors | https://www.amazon.com/gp/most-wished-for/arts-crafts/689392011
+   96 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Face Painting   | https://www.amazon.com/gp/most-wished-for/arts-crafts/7756216011
+   99 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Feathers & Boas | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090826011
+   93 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Glitter         | https://www.amazon.com/gp/most-wished-for/arts-crafts/3298704011
+   94 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Gold & Metal Leaf | https://www.amazon.com/gp/most-wished-for/arts-crafts/3298705011
+  100 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Macrame & Knotting | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090828011
+  101 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Pipe Cleaners   | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090830011
+  102 |    68 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Craft Supplies > Wiggle Eyes     | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090834011
+   61 |    51 |   3 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Doll Making                      | https://www.amazon.com/gp/most-wished-for/arts-crafts/262606011
+   58 |    51 |   3 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Fabric Ribbons                   | https://www.amazon.com/gp/most-wished-for/arts-crafts/12899411
+   62 |    51 |   3 |   6 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging                 | https://www.amazon.com/gp/most-wished-for/arts-crafts/262607011
+  128 |    62 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging > Floral Foam   | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090858011
+  130 |    62 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging > Floral Moss   | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090862011
+  126 |    62 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging > Floral Picks  | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090854011
+  127 |    62 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging > Floral Tapes & Wraps | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090856011
+  129 |    62 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging > Frogs & Kenzans | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090860011
+  131 |    62 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Floral Arranging > Vase Fillers  | https://www.amazon.com/gp/most-wished-for/arts-crafts/8149151011
+   55 |    51 |   3 |   6 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft                     | https://www.amazon.com/gp/most-wished-for/arts-crafts/12897111
+  132 |    55 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Lacing Needles    | https://www.amazon.com/gp/most-wished-for/arts-crafts/12897121
+  136 |    55 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Leather Cord & Lacing | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090866011
+  134 |    55 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Leather Strips, Shapes, & Scraps | https://www.amazon.com/gp/most-wished-for/arts-crafts/12897151
+  133 |    55 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Leathercraft Accessories | https://www.amazon.com/gp/most-wished-for/arts-crafts/12897141
+  137 |    55 |   4 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Leathercraft Rivets | https://www.amazon.com/gp/most-wished-for/arts-crafts/8090872011
+  135 |    55 |   4 |   2 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Stamping & Punching | https://www.amazon.com/gp/most-wished-for/arts-crafts/12897161
+  139 |   135 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Stamping & Punching > Punching | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933719011
+  138 |   135 |   5 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Leathercraft > Stamping & Punching > Stamping | https://www.amazon.com/gp/most-wished-for/arts-crafts/2933718011
+   64 |    51 |   3 |   0 | Root > Arts, Crafts & Sewing > Craft Supplies > Mosaic Making                    | https://www.amazon.com/gp/most-wished-for/arts-crafts/262611011
