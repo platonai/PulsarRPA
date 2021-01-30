@@ -370,18 +370,24 @@ open class LoadOptions: CommonOptions {
      * */
     open fun mergeModified(args: String): LoadOptions {
         val o2 = parse(args)
-        val options = mergeModified(o2)
+        val mergedOptions = mergeModified(o2)
+
+//        println("...............")
+//        println("this:     $this")
+//        println("args:     $args")
+//        println("modified: $o2")
+//        println("merged:   $mergedOptions")
 
         val parts = args.split(" ")
         var i = 0
         while (i < parts.size) {
             if (parts[i] in distinctBooleanParams) {
-                setFieldByAnnotation(options, parts[i], parts[++i].toBoolean())
+                setFieldByAnnotation(mergedOptions, parts[i], parts[++i].toBoolean())
             }
             ++i
         }
 
-        return options
+        return mergedOptions
     }
 
     private fun initConfig(conf: VolatileConfig?): VolatileConfig? = conf?.apply {

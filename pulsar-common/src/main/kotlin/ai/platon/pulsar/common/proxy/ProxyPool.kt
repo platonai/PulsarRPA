@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_CAPACITY
@@ -36,7 +37,7 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     /**
      * The probability to choose a test ip if absent
      * */
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     var lastActiveTime = Instant.now()
 
     operator fun contains(element: ProxyEntry): Boolean = freeProxies.contains(element)

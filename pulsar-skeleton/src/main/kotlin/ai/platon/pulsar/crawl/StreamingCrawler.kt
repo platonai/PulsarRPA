@@ -93,7 +93,7 @@ open class StreamingCrawler<T: UrlAware>(
 
     val id = instanceSequencer.incrementAndGet()
 
-    val streamingCrawlerEventHandler = ChainedStreamingCrawlerEventHandler()
+    val crawlerEventHandler = ChainedStreamingCrawlerEventHandler()
 
     init {
         generateFinishCommand()
@@ -219,47 +219,34 @@ open class StreamingCrawler<T: UrlAware>(
             url.onFilter(url.url) ?: return null
         }
 
-        val page = runCatching {
-            withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
-        }.onFailure {
-            if (it.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
+        var page: WebPage? = null
+        try {
+            page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
+        } catch (e: TimeoutCancellationException) {
+            globalTimeout.incrementAndGet()
+            log.info("Task timeout ({}) to load page | {}", taskTimeout, url)
+        } catch (e: Throwable) {
+            if (e.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("Streaming crawler coroutine was cancelled, quit ...", it)
+                    log.warn("Streaming crawler coroutine was cancelled, quit ...", e)
                 }
                 flowState = FlowState.BREAK
             } else {
-                log.warn("Unexpected exception", it)
+                log.warn("Unexpected exception", e)
             }
-        }.getOrNull()
+        }
 
-        if (page == null) {
-            globalTimeout.incrementAndGet()
-            log.info("Task timeout ({}) to load page | {}", taskTimeout, url)
+        if (!isActive) {
+            return null
         }
 
         if (page == null || page.protocolStatus.isRetry) {
-            val gCache = globalCache
-            if (gCache != null && !gCache.isFetching(url)) {
-                val cache = gCache.fetchCacheManager.normalCache.nReentrantQueue
-                if (cache.add(url)) {
-                    globalRetries.incrementAndGet()
-                    if (page != null) {
-                        val retry = 1 + page.fetchRetries
-                        log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retry}th"))
-                    }
-                } else {
-                    if (page != null) {
-                        log.info("{}", CompletedPageFormatter(page, prefix = "Gone"))
-                    } else {
-                        log.info("Page is gone | {}", url)
-                    }
-                }
-            }
+            handleRetry(url, page)
         }
 
         lastActiveTime = Instant.now()
-        page?.let { streamingCrawlerEventHandler.onAfterLoad(url, it) }
+        page?.let { crawlerEventHandler.onAfterLoad(url, it) }
 
         // if urls is ConcurrentLoadingIterable
         (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
@@ -272,8 +259,10 @@ open class StreamingCrawler<T: UrlAware>(
         val actualOptions = LoadOptionsNormalizer.normalize(options, url)
         registerHandlers(url, actualOptions)
 
-        // TODO: merge bug
-        actualOptions.parse = true
+        actualOptions.apply {
+            // TODO: merge bug
+            parse = true
+        }
 
         val normUrl = session.normalize(url, actualOptions)
         return session.runCatching { loadDeferred(normUrl) }
@@ -323,6 +312,26 @@ open class StreamingCrawler<T: UrlAware>(
         }
 
         return FlowState.CONTINUE
+    }
+
+    private fun handleRetry(url: UrlAware, page: WebPage?) {
+        val gCache = globalCache
+        if (gCache != null && !gCache.isFetching(url)) {
+            val cache = gCache.fetchCacheManager.normalCache.nReentrantQueue
+            if (cache.add(url)) {
+                globalRetries.incrementAndGet()
+                if (page != null) {
+                    val retry = 1 + page.fetchRetries
+                    log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retry}th"))
+                }
+            } else {
+                if (page != null) {
+                    log.info("{}", CompletedPageFormatter(page, prefix = "Gone"))
+                } else {
+                    log.info("Page is gone | {}", url)
+                }
+            }
+        }
     }
 
     private fun handleMemoryShortage(j: Int) {
