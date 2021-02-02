@@ -643,6 +643,24 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
+     * <p>getFetchedLinkCount.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public int getFetchedLinkCount() {
+        return getMetadata().getInt(Name.FETCHED_LINK_COUNT, 0);
+    }
+
+    /**
+     * <p>setFetchedLinkCount.</p>
+     *
+     * @param count The count of fetched link
+     */
+    public void setFetchedLinkCount(int count) {
+        getMetadata().set(Name.FETCHED_LINK_COUNT, count);
+    }
+
+    /**
      * <p>getZoneId.</p>
      *
      * @return a {@link java.time.ZoneId} object.

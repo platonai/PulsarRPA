@@ -13,7 +13,6 @@ import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
-import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.PageCounters.Self

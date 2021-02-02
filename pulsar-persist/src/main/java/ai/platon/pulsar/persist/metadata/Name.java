@@ -44,6 +44,7 @@ public enum Name {
     ACTIVE_DOM_MULTI_STATUS("F_ADMS"),
     ACTIVE_DOM_URLS("F_ADU"),
     PROXY("F_PX"),
+    FETCHED_LINK_COUNT("FFLC"),
 
     /**
      * parse
@@ -57,7 +58,7 @@ public enum Name {
     TOTAL_OUT_LINKS("P_TOL"),
     ANCHORS("P_AS"),
 
-    MODEL_SYNC_TIME("PST"),
+    MODEL_SYNC_TIME("PMST"),
 
     /**
      * harvest

@@ -122,6 +122,11 @@ open class HyperlinkCollector(
             fatLinks[fatLink.url] = fatLink
             require(fatLink.url == seed.spec)
 
+            val options = seed.options
+            fatLink.tailLinks.forEach {
+                it.args += " -taskId ${options.taskId} -taskTime ${options.taskTime}"
+            }
+
             val size = sink.size
             fatLink.tailLinks.toCollection(sink)
             collected = fatLink.tailLinks.size

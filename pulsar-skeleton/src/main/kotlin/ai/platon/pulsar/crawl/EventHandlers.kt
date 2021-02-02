@@ -97,6 +97,9 @@ class ChainedHtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, HtmlDocum
     }
 }
 
+/**
+ * TODO: use pipeline and handler pattern, see Netty
+ * */
 interface CrawlEventHandler {
     var onFilter: (String) -> String?
     var onNormalize: (String) -> String?

@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.url.CrawlableFatLink
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.StatefulHyperlink
 import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.crawl.common.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.bestElement
 import ai.platon.pulsar.dom.nodes.node.ext.isAnchor
@@ -181,7 +180,7 @@ class FatLinkExtractor(val session: PulsarSession) {
         val now = Instant.now()
 
         val vividLinks = if (document != null) {
-            parseVividLinks(seed, page, document, denyList)
+            parseVividLinks(seed, page, document, denyList).also { page.fetchedLinkCount = 0 }
         } else {
             loadVividLinks(page, options, denyList)
         }
@@ -233,7 +232,7 @@ class FatLinkExtractor(val session: PulsarSession) {
                 .onEach { ++counters.regexMatchedLinks; ++globalCounters.regexMatchedLinks }
                 .filter { it !in denyList }
                 .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
-                .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
+                .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
                 .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
                 .onEach { it.args = "-i 0s" }
                 .toList()
@@ -247,12 +246,12 @@ class FatLinkExtractor(val session: PulsarSession) {
         return page.vividLinks.asSequence()
                 .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, referer = page.url) }
                 .filterNot { it in denyList }
-                .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
+                .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
                 .onEach { it.args = "-i 0s" }
                 .toList()
     }
 
-    fun shouldFetchItemPage(url: String, expires: Duration, now: Instant): Boolean {
+    fun shouldFetchVividPage(url: String, expires: Duration, now: Instant): Boolean {
 //        if (text != null) {
 //            val createdAt = DateTimes.parseInstant(text.substringAfter(" createdAt: "), Instant.EPOCH)
 //            if (Duration.between(createdAt, now).toHours() <= 24) {

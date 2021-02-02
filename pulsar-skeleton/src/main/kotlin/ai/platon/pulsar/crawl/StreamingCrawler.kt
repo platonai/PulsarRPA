@@ -260,7 +260,7 @@ open class StreamingCrawler<T: UrlAware>(
         registerHandlers(url, actualOptions)
 
         actualOptions.apply {
-            // TODO: merge bug
+            // TODO: it seems there is a option merge bug
             parse = true
         }
 

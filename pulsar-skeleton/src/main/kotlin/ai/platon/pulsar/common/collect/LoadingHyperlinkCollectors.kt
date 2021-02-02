@@ -9,6 +9,7 @@ import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -37,7 +38,10 @@ open class LocalFileHyperlinkCollector(
     override var name = fileName.substringBefore(".")
 
     var loadArgs: String? = null
-    val hyperlinks = LinkedList<Hyperlink>()
+
+    var expireTimeCalculator: (() -> Duration)? = null
+
+    val hyperlinks: MutableList<Hyperlink> = Collections.synchronizedList(LinkedList())
 
     constructor(path: Path, priority: Priority13, capacity: Int = 1_000_000): this(path, priority.value, capacity)
 
@@ -46,9 +50,12 @@ open class LocalFileHyperlinkCollector(
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         var collected = 0
 
-        hyperlinks.poll()?.let {
+        hyperlinks.removeFirstOrNull()?.let {
+            it.expireTimeCalculator = expireTimeCalculator
             if (sink.add(it)) {
                ++collected
+            } else {
+                log.warn("Can not collect link | {}", it)
             }
         }
 

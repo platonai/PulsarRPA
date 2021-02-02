@@ -172,19 +172,10 @@ open class FetchComponent(
     }
 
     private fun beforeFetch(page: WebPage) {
-//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to invoke before fetch handler | {}", page.url) }
-//                ?.getOrNull()
-
         page.eventHandler?.onBeforeFetch?.invoke(page)
     }
 
     private fun afterFetch(page: WebPage) {
-//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to invoke after fetch handler | {}", page.url) }
-//                ?.getOrNull()
         page.eventHandler?.onAfterFetch?.invoke(page)
     }
 

@@ -196,6 +196,8 @@ open class Hyperlink(
 ): AbstractUrl(url, args, referer, label, href) {
     var depth: Int = 0
 
+    var expireTimeCalculator: (() -> Duration)? = null
+
     constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args, href = url.href, label = url.label)
     constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args, href = url.href, label = url.label)
     constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args, href = url.href, label = url.label)
@@ -365,7 +367,7 @@ open class StatefulFatLink(
     override fun toString() = "$status $createdAt $modifiedAt ${super.toString()}"
 }
 
-class CrawlableFatLink(
+open class CrawlableFatLink(
         /**
          * The url of this hyperlink
          * */
@@ -402,12 +404,13 @@ class CrawlableFatLink(
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 
-    val numFinished = AtomicInteger()
+    @Volatile
+    var finishedTailLinkCount = 0
     var aborted = false
 
-    val numActive get() = size - numFinished.get()
+    val numActive get() = size - finishedTailLinkCount
     val isAborted get() = aborted
-    val isFinished get() = numFinished.get() >= size
+    val isFinished get() = finishedTailLinkCount >= size
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
     fun abort() {
@@ -430,7 +433,7 @@ class CrawlableFatLink(
         url.modifiedAt = Instant.now()
         url.status = status
         modifiedAt = Instant.now()
-        numFinished.incrementAndGet()
+        ++finishedTailLinkCount
         if (isFinished) {
             log.info("Crawlable fat link is finished | {}", this)
             this.status = ResourceStatus.SC_OK
@@ -439,7 +442,7 @@ class CrawlableFatLink(
         return true
     }
 
-    override fun toString() = "$numFinished/${tailLinks.size} ${super.toString()}"
+    override fun toString() = "$finishedTailLinkCount/${tailLinks.size} ${super.toString()}"
 }
 
 object Hyperlinks {

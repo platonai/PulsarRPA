@@ -1,13 +1,11 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.url.CrawlableFatLink
 import ai.platon.pulsar.common.url.FatLink
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.sin
 
 interface CrawlableFatLinkCollector {
     val fatLinks: Map<String, CrawlableFatLink>
