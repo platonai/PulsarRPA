@@ -171,6 +171,11 @@ class FatLinkExtractor(val session: PulsarSession) {
         return createFatLink(seed, page, document, listOf())
     }
 
+    /**
+     * Create a fat link.
+     * If the document is not null, parse links from the document, or if the document is null, try to load the page's
+     * vivid link, the vivid link can be parsed and saved recently
+     * */
     fun createFatLink(
             seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<Hyperlink>
     ): Pair<WebPage, CrawlableFatLink>? {
@@ -251,6 +256,9 @@ class FatLinkExtractor(val session: PulsarSession) {
                 .toList()
     }
 
+    /**
+     * TODO: the logic is different from the one in LoadComponent
+     * */
     fun shouldFetchVividPage(url: String, expires: Duration, now: Instant): Boolean {
 //        if (text != null) {
 //            val createdAt = DateTimes.parseInstant(text.substringAfter(" createdAt: "), Instant.EPOCH)

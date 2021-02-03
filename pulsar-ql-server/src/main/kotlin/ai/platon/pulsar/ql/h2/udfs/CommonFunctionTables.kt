@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.ResultSets
@@ -30,32 +31,47 @@ object CommonFunctionTables {
             "can be configured by adding load options to the url parameter")
     @JvmStatic
     fun loadOptions(): ResultSet {
-        val rs = ResultSets.newSimpleResultSet()
-        rs.addColumn("OPTION")
-        rs.addColumn("TYPE")
-        rs.addColumn("DEFAULT")
-        rs.addColumn("DESCRIPTION")
-
+        val rs = ResultSets.newSimpleResultSet("OPTION", "TYPE", "DEFAULT", "DESCRIPTION")
         LoadOptions.helpList.forEach { rs.addRow(*it.toTypedArray()) }
-
         return rs
     }
 
     @UDFunction(deterministic = true, description = "Show all X-SQL functions")
     @JvmStatic
     fun xsqlHelp(@H2Context conn: Connection): ResultSet {
-        val rs = ResultSets.newSimpleResultSet()
-
-        rs.addColumn("NAMESPACE")
-        rs.addColumn("XSQL FUNCTION")
-        rs.addColumn("NATIVE FUNCTION")
-        rs.addColumn("DESCRIPTION")
+        val rs = ResultSets.newSimpleResultSet("NAMESPACE", "XSQL FUNCTION", "NATIVE FUNCTION", "DESCRIPTION")
 
         val session = H2SessionFactory.getSession(conn)
         session.registeredUdfClasses
                 .flatMap { getMetadataOfUdfs(it.kotlin) }
                 .sortedBy { it[0] }
                 .forEach { rs.addRow(*it) }
+
+        return rs
+    }
+
+    @UDFunction(deterministic = true, description = "Show system gauges")
+    @JvmStatic
+    fun gauges(@H2Context conn: Connection): ResultSet {
+        val rs = ResultSets.newSimpleResultSet("NAME", "VALUE")
+
+        AppMetrics.defaultMetricRegistry.gauges.forEach { (name, gauge) ->
+            rs.addRow(name, gauge.value)
+        }
+
+        return rs
+    }
+
+    @UDFunction(deterministic = true, description = "Show system meters")
+    @JvmStatic
+    fun meters(@H2Context conn: Connection): ResultSet {
+        val rs = ResultSets.newSimpleResultSet(
+                "NAME", "COUNT", "M1_RATE", "M5_RATE", "M15_RATE", "MEAN_RATE", "RATE_UNIT")
+
+        AppMetrics.defaultMetricRegistry.meters.forEach { (name, meter) ->
+            rs.addRow(name, meter.count, meter.oneMinuteRate, meter.fiveMinuteRate, meter.fifteenMinuteRate,
+                    "events/second")
+        }
 
         return rs
     }

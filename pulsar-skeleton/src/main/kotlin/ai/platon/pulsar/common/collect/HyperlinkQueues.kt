@@ -29,7 +29,7 @@ class ConcurrentNonReentrantLoadingQueue(
         if (!historyHash.contains(hashCode)) {
             return if (!url.isPersistable || freeSlots > 0) {
                 historyHash.add(hashCode)
-                cache.add(url)
+                implementation.add(url)
             } else {
                 loader.save(url, group)
                 true
@@ -60,7 +60,7 @@ class ConcurrentNEntrantLoadingQueue(
         if (historyHash.count(hashCode) <= n) {
             return if (!url.isPersistable || freeSlots > 0) {
                 historyHash.add(hashCode)
-                cache.add(url)
+                implementation.add(url)
             } else {
                 loader.save(url, group)
                 true
