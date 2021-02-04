@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TAB
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
@@ -21,7 +21,7 @@ class WebDriverTask<R> (
         val browserId: BrowserInstanceId,
         val priority: Int,
         val volatileConfig: VolatileConfig,
-        val action: suspend (driver: AbstractWebDriver) -> R
+        val action: suspend (driver: WebDriver) -> R
 )
 
 /**
@@ -88,7 +88,7 @@ open class WebDriverPoolManager(
      * */
     @Throws(IllegalApplicationContextStateException::class)
     suspend fun <R> run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
-                        action: suspend (driver: AbstractWebDriver) -> R?
+                        action: suspend (driver: WebDriver) -> R?
     ) = run(WebDriverTask(browserId, priority, volatileConfig, action))
 
     @Throws(IllegalApplicationContextStateException::class)
@@ -113,9 +113,9 @@ open class WebDriverPoolManager(
      * Cancel the fetch task specified by [url] remotely
      * NOTE: A cancel request should run immediately not waiting for any browser task return
      * */
-    fun cancel(url: String): AbstractWebDriver? {
+    fun cancel(url: String): WebDriver? {
         checkState()
-        var driver: AbstractWebDriver? = null
+        var driver: WebDriver? = null
         driverPools.values.forEach { driverPool ->
             driver = driverPool.firstOrNull { it.url == url }?.also {
                 it.cancel()
@@ -128,7 +128,7 @@ open class WebDriverPoolManager(
      * Cancel the fetch task specified by [url] remotely
      * NOTE: A cancel request should run immediately not waiting for any browser task return
      * */
-    fun cancel(browserId: BrowserInstanceId, url: String): AbstractWebDriver? {
+    fun cancel(browserId: BrowserInstanceId, url: String): WebDriver? {
         checkState()
         val driverPool = driverPools[browserId] ?: return null
         return driverPool.firstOrNull { it.url == url }?.also { it.cancel() }
@@ -195,7 +195,7 @@ open class WebDriverPoolManager(
                 throw WebDriverPoolException("Driver pool is already closed | $driverPool | $browserId")
             }
 
-            var driver: AbstractWebDriver? = null
+            var driver: WebDriver? = null
             try {
                 checkState()
                 driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }

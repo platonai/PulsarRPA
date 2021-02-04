@@ -34,23 +34,27 @@ open class LocalFileHyperlinkCollector(
 
     private val urlLoader = LocalFileUrlLoader(path)
     private val isLoaded = AtomicBoolean()
+
+    private val cache: MutableList<Hyperlink> = Collections.synchronizedList(LinkedList())
+
     val fileName = path.fileName.toString()
+
     override var name = fileName.substringBefore(".")
 
     var loadArgs: String? = null
 
     var expireTimeCalculator: (() -> Duration)? = null
 
-    val hyperlinks: MutableList<Hyperlink> = Collections.synchronizedList(LinkedList())
+    val hyperlinks: List<Hyperlink> get() = ensureLoaded().cache
 
     constructor(path: Path, priority: Priority13, capacity: Int = 1_000_000): this(path, priority.value, capacity)
 
-    override fun hasMore() = ensureLoaded().hyperlinks.isNotEmpty()
+    override fun hasMore() = hyperlinks.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         var collected = 0
 
-        hyperlinks.removeFirstOrNull()?.let {
+        cache.removeFirstOrNull()?.let {
             it.expireTimeCalculator = expireTimeCalculator
             if (sink.add(it)) {
                ++collected
@@ -64,13 +68,13 @@ open class LocalFileHyperlinkCollector(
 
     private fun ensureLoaded(): LocalFileHyperlinkCollector {
         if (isLoaded.compareAndSet(false, true)) {
-            val remainingCapacity = capacity - hyperlinks.size
-            urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
+            val remainingCapacity = capacity - cache.size
+            urlLoader.loadToNow(cache, remainingCapacity, 0, priority) {
                 val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
                 Hyperlinks.toHyperlink(it).also { it.args = args }
             }
 
-            log.info("Loaded total {}/{} urls from file | {} | {}", hyperlinks.size, capacity, loadArgs, path)
+            log.info("Loaded total {}/{} urls from file | {} | {}", cache.size, capacity, loadArgs, path)
         }
 
         return this

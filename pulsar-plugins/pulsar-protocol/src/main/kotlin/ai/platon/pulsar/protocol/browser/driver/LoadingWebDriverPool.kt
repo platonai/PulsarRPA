@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
@@ -44,8 +44,8 @@ class LoadingWebDriverPool(
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
     val id = instanceSequencer.incrementAndGet()
     val capacity get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
-    val onlineDrivers = ConcurrentSkipListSet<AbstractWebDriver>()
-    val freeDrivers = ArrayBlockingQueue<AbstractWebDriver>(2 * capacity)
+    val onlineDrivers = ConcurrentSkipListSet<WebDriver>()
+    val freeDrivers = ArrayBlockingQueue<WebDriver>(2 * capacity)
 
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
@@ -90,31 +90,31 @@ class LoadingWebDriverPool(
         }
     }
 
-    fun poll(): AbstractWebDriver? {
+    fun poll(): WebDriver? {
         numWaiting.incrementAndGet()
         return freeDrivers.poll().also { numWaiting.decrementAndGet() }
     }
 
     @Throws(WebDriverPoolExhaustedException::class)
-    fun poll(conf: VolatileConfig): AbstractWebDriver = poll(0, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)
+    fun poll(conf: VolatileConfig): WebDriver = poll(0, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)
 
     @Throws(WebDriverPoolExhaustedException::class)
-    fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): AbstractWebDriver = poll(0, conf, timeout, unit)
+    fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver = poll(0, conf, timeout, unit)
 
     @Throws(WebDriverPoolExhaustedException::class)
-    fun poll(priority: Int, conf: VolatileConfig, timeout: Duration): AbstractWebDriver {
+    fun poll(priority: Int, conf: VolatileConfig, timeout: Duration): WebDriver {
         return poll(0, conf, timeout.seconds, TimeUnit.SECONDS)
     }
 
     @Throws(WebDriverPoolExhaustedException::class)
-    fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): AbstractWebDriver {
+    fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         return poll0(priority, conf, timeout, unit).also {
             numWorking.incrementAndGet()
             lastActiveTime = Instant.now()
         }
     }
 
-    fun put(driver: AbstractWebDriver) {
+    fun put(driver: WebDriver) {
         if (numWorking.decrementAndGet() == 0) {
             lock.withLock { notBusy.signalAll() }
         }
@@ -136,9 +136,9 @@ class LoadingWebDriverPool(
         lastActiveTime = Instant.now()
     }
 
-    fun forEach(action: (AbstractWebDriver) -> Unit) = onlineDrivers.forEach(action)
+    fun forEach(action: (WebDriver) -> Unit) = onlineDrivers.forEach(action)
 
-    fun firstOrNull(predicate: (AbstractWebDriver) -> Boolean) = onlineDrivers.firstOrNull(predicate)
+    fun firstOrNull(predicate: (WebDriver) -> Boolean) = onlineDrivers.firstOrNull(predicate)
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
@@ -172,13 +172,13 @@ class LoadingWebDriverPool(
     override fun toString(): String = formatStatus(false)
 
     @Synchronized
-    private fun offer(driver: AbstractWebDriver) {
+    private fun offer(driver: WebDriver) {
         freeDrivers.offer(driver.apply { free() })
         lock.withLock { notEmpty.signalAll() }
     }
 
     @Synchronized
-    private fun retire(driver: AbstractWebDriver, external: Boolean = true) {
+    private fun retire(driver: WebDriver, external: Boolean = true) {
         if (external && !isActive) {
             return
         }
@@ -192,7 +192,7 @@ class LoadingWebDriverPool(
     }
 
     @Throws(WebDriverPoolException::class)
-    private fun poll0(priority: Int, conf: VolatileConfig? = null, timeout: Long, unit: TimeUnit): AbstractWebDriver {
+    private fun poll0(priority: Int, conf: VolatileConfig? = null, timeout: Long, unit: TimeUnit): WebDriver {
         if (conf != null) {
             createDriverIfNecessary(priority, conf)
         }
@@ -242,7 +242,7 @@ class LoadingWebDriverPool(
         closeAllDrivers(nonSynchronized)
     }
 
-    private fun closeAllDrivers(drivers: List<AbstractWebDriver>) {
+    private fun closeAllDrivers(drivers: List<WebDriver>) {
         if (!isHeadless) {
             // return
         }
@@ -271,7 +271,7 @@ class LoadingWebDriverPool(
         }
     }
 
-    private fun logDriverOnline(driver: AbstractWebDriver) {
+    private fun logDriverOnline(driver: WebDriver) {
         if (log.isTraceEnabled) {
             val driverControl = driverFactory.driverControl
             log.trace("The {}th web driver is online, browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {}",

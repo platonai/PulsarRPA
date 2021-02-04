@@ -55,7 +55,7 @@ abstract class AbstractLoadingQueue(
     override fun shuffle() {
         val l = implementation.toMutableList()
         implementation.clear()
-        l.shuffled()
+        l.shuffle()
         implementation.addAll(l)
     }
 

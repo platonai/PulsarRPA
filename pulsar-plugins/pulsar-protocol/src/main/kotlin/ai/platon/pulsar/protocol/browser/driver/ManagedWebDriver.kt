@@ -11,20 +11,11 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 import java.util.logging.Level
 
-enum class DriverStatus {
-    UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
-
-    val isFree get() = this == FREE
-    val isWorking get() = this == WORKING
-    val isCanceled get() = this == CANCELED
-    val isRetired get() = this == RETIRED
-    val isCrashed get() = this == CRASHED
-    val isQuit get() = this == QUIT
-}
-
+/**
+ * TODO: no selenium dependency
+ * */
 class ManagedWebDriver(
         browserInstanceId: BrowserInstanceId,
         val driver: org.openqa.selenium.WebDriver,
@@ -40,24 +31,12 @@ class ManagedWebDriver(
      * The driver name
      * */
     override val name = driver.javaClass.simpleName + "-" + id
-    /**
-     * Driver status
-     * */
-    val status = AtomicReference<DriverStatus>(DriverStatus.UNKNOWN)
 
     val pageViews = AtomicInteger()
 
     init {
         setLogLevel()
     }
-
-    val isFree get() = status.get().isFree
-    val isWorking get() = status.get().isWorking
-    val isNotWorking get() = !isWorking
-    val isCrashed get() = status.get().isCrashed
-    override val isRetired get() = status.get().isRetired
-    override val isCanceled get() = status.get().isCanceled
-    override val isQuit get() = status.get().isQuit
 
     /**
      * The actual url return by the browser
@@ -90,20 +69,6 @@ class ManagedWebDriver(
         else -> BrowserType.CHROME
     }
 
-    override fun free() = status.set(DriverStatus.FREE)
-    override fun startWork() = status.set(DriverStatus.WORKING)
-    override fun retire() = status.set(DriverStatus.RETIRED)
-    override fun cancel() {
-        if (isCanceled) {
-            return
-        }
-
-        if (status.compareAndSet(DriverStatus.WORKING, DriverStatus.CANCELED)) {
-            log.debug("Canceling driver $this")
-            stopLoading()
-        }
-    }
-
     /**
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
@@ -126,8 +91,6 @@ class ManagedWebDriver(
             else -> null
         }
     }
-
-    override fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     override fun stopLoading() {
         if (driver is ChromeDevtoolsDriver) {
@@ -158,20 +121,12 @@ class ManagedWebDriver(
         if (!isQuit) {
             synchronized(status) {
                 if (!isQuit) {
-                    status.set(DriverStatus.QUIT)
+                    status.set(Status.QUIT)
                     driver.runCatching { quit() }.onFailure { log.warn("Unexpected exception", it) }
                 }
             }
         }
     }
-
-    override fun equals(other: Any?): Boolean = other is ManagedWebDriver && other.id == this.id
-
-    override fun hashCode(): Int = id
-
-    override fun compareTo(other: AbstractWebDriver): Int = id - other.id
-
-    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
 
     private fun setLogLevel() {
         // Set log level

@@ -47,6 +47,8 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.SYSTEM_PROPERTY_SPE
  *
  * @author vincent
  * @version $Id: $Id
+ *
+ * TODO: remove hadoop dependency
  */
 public abstract class AbstractConfiguration {
 

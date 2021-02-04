@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -49,7 +49,7 @@ class WebDriverContext(
     private val isActive get() = !closed.get()
     private val isShutdown = AtomicBoolean()
 
-    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
+    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
@@ -174,13 +174,13 @@ class ProxyContext(
     val isEnabled get() = proxyPoolManager.isEnabled
     val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
 
-    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
+    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
     }
 
     @Throws(ProxyVendorUntrustedException::class)
     private suspend fun run0(
-            task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
+            task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         var success = false
         return try {
             beforeTaskStart(task)

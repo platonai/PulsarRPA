@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.model.ActiveDomMessage
@@ -14,7 +14,7 @@ import java.time.Instant
 
 class NavigateTask(
         val task: FetchTask,
-        val driver: AbstractWebDriver,
+        val driver: WebDriver,
         val driverConfig: BrowserControl
 ) {
     val startTime = Instant.now()
@@ -38,7 +38,7 @@ class InteractResult(
 class InteractTask(
         val fetchTask: FetchTask,
         val driverConfig: BrowserControl,
-        val driver: AbstractWebDriver
+        val driver: WebDriver
 ) {
     val url get() = fetchTask.url
     val isCanceled get() = fetchTask.isCanceled

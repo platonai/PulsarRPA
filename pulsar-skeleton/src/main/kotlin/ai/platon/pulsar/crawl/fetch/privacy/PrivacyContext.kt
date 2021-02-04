@@ -5,10 +5,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,6 +27,11 @@ abstract class PrivacyContext(
         val IDENT_PREFIX = "cx."
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+
+        val meterGlobalTasks = AppMetrics.meter(this, "tasks")
+        val meterGlobalSuccesses = AppMetrics.meter(this, "successes")
+        val meterGlobalFinished = AppMetrics.meter(this, "finished")
+        val meterGlobalSmallPages = AppMetrics.meter(this, "smallPages")
     }
 
     private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
@@ -43,11 +45,11 @@ abstract class PrivacyContext(
     val privacyLeakMinorWarnings = AtomicInteger()
 
     private val smSuffix = AppMetrics.SHADOW_METRIC_SUFFIX
-    val numTasks = AppMetrics.meter(this, sequence.toString(), "numTasks$smSuffix")
-    val numSuccesses = AppMetrics.meter(this, sequence.toString(), "numSuccesses$smSuffix")
-    val numFinished = AppMetrics.meter(this, sequence.toString(), "numFinished$smSuffix")
-    val numSmallPages = AppMetrics.meter(this, sequence.toString(), "numSmallPages$smSuffix")
-    val smallPageRate get() = 1.0 * numSmallPages.count / numTasks.count.coerceAtLeast(1)
+    val meterTasks = AppMetrics.meter(this, sequence.toString(), "tasks$smSuffix")
+    val meterSuccesses = AppMetrics.meter(this, sequence.toString(), "successes$smSuffix")
+    val meterFinished = AppMetrics.meter(this, sequence.toString(), "finished$smSuffix")
+    val meterSmallPages = AppMetrics.meter(this, sequence.toString(), "smallPages$smSuffix")
+    val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()
     var lastActiveTime = startTime
@@ -57,7 +59,7 @@ abstract class PrivacyContext(
     val numRunningTasks = AtomicInteger()
 
     val closed = AtomicBoolean()
-    val isGood get() = numSuccesses.meanRate >= minimumThroughput
+    val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     val isActive get() = !isLeaked && !closed.get()
 
@@ -76,10 +78,6 @@ abstract class PrivacyContext(
     }
 
     fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
-
-    fun markWarningDeprecated() = markWarning()
-
-    fun markSuccessDeprecated() = markSuccess()
 
     open fun report() {
         log.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())

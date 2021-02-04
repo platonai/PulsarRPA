@@ -2,14 +2,13 @@ package ai.platon.pulsar.net
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.context.support.BasicPulsarContext
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.CapabilityType
 import org.slf4j.LoggerFactory
@@ -50,19 +49,17 @@ class TestWebDriver {
         val generalOptions = driverControl.createGeneralOptions()
         generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
         generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        var driver: WebDriver = ChromeDriver(generalOptions)
 
         val chromeOptions = driverControl.createChromeOptions()
         chromeOptions.addArguments("--blink-settings=imagesEnabled=false")
         chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
         chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        driver = ChromeDriver(chromeOptions)
     }
 
     @Test
     fun testWebDriverPool() {
         val driverPool = driverPoolManager.createUnmanagedDriverPool()
-        val workingDrivers = mutableListOf<AbstractWebDriver>()
+        val workingDrivers = mutableListOf<WebDriver>()
         repeat(10) {
             val driver = driverPool.poll(conf.toVolatileConfig())
             workingDrivers.add(driver)
@@ -93,7 +90,7 @@ class TestWebDriver {
     @Test
     fun testWebDriverPoolMultiThreaded() {
         val driverPool = driverPoolManager.createUnmanagedDriverPool()
-        val workingDrivers = ArrayBlockingQueue<AbstractWebDriver>(30)
+        val workingDrivers = ArrayBlockingQueue<WebDriver>(30)
 
         val consumer = Thread {
             while (!quitMultiThreadTesting) {

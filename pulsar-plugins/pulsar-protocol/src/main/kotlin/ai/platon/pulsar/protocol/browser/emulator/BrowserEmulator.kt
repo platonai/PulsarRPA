@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_BEFORE_FEA
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -49,7 +49,7 @@ open class BrowserEmulator(
      * @throws IllegalApplicationContextStateException Throw if the browser is closed or the program is closed
      * */
     @Throws(IllegalApplicationContextStateException::class)
-    open suspend fun fetch(task: FetchTask, driver: AbstractWebDriver): FetchResult {
+    open suspend fun fetch(task: FetchTask, driver: WebDriver): FetchResult {
         return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(task)
     }
 
@@ -68,7 +68,7 @@ open class BrowserEmulator(
     }
 
     @Throws(IllegalApplicationContextStateException::class)
-    protected open suspend fun browseWithDriver(task: FetchTask, driver: AbstractWebDriver): FetchResult {
+    protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         checkState()
 
         if (task.nRetries > fetchMaxRetry) {
@@ -111,7 +111,7 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class)
-    private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: AbstractWebDriver): Response {
+    private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
         val navigateTask = NavigateTask(task, driver, driverControl)
 
         try {
@@ -134,7 +134,7 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class,
             IllegalApplicationContextStateException::class,
             WebDriverException::class)
-    private suspend fun navigateAndInteract(task: FetchTask, driver: AbstractWebDriver, driverConfig: BrowserControl): InteractResult {
+    private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserControl): InteractResult {
         eventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
