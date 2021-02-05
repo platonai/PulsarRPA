@@ -4,7 +4,12 @@ import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.fetch.FetchResult
+import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.persist.RetryScope
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -28,10 +33,14 @@ abstract class PrivacyContext(
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
 
+        val meterGlobalContexts = AppMetrics.meter(this, "contexts")
         val meterGlobalTasks = AppMetrics.meter(this, "tasks")
         val meterGlobalSuccesses = AppMetrics.meter(this, "successes")
-        val meterGlobalFinished = AppMetrics.meter(this, "finished")
+        val meterGlobalFinishes = AppMetrics.meter(this, "finishes")
         val meterGlobalSmallPages = AppMetrics.meter(this, "smallPages")
+        val meterGlobalLeakWarnings = AppMetrics.meter(this, "leakWarnings")
+        val meterGlobalMinorLeakWarnings = AppMetrics.meter(this, "minorLeakWarnings")
+        val meterGlobalContextLeaks = AppMetrics.meter(this, "contextLeaks")
     }
 
     private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
@@ -47,7 +56,7 @@ abstract class PrivacyContext(
     private val smSuffix = AppMetrics.SHADOW_METRIC_SUFFIX
     val meterTasks = AppMetrics.meter(this, sequence.toString(), "tasks$smSuffix")
     val meterSuccesses = AppMetrics.meter(this, sequence.toString(), "successes$smSuffix")
-    val meterFinished = AppMetrics.meter(this, sequence.toString(), "finished$smSuffix")
+    val meterFinishes = AppMetrics.meter(this, sequence.toString(), "finishes$smSuffix")
     val meterSmallPages = AppMetrics.meter(this, sequence.toString(), "smallPages$smSuffix")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
 
@@ -63,14 +72,29 @@ abstract class PrivacyContext(
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     val isActive get() = !isLeaked && !closed.get()
 
-    fun markSuccess() = privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
+    init {
+        meterGlobalContexts.mark()
+    }
 
-    fun markWarning() = privacyLeakWarnings.incrementAndGet()
+    fun markSuccess() {
+        privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
+        meterSuccesses.mark()
+        meterGlobalSuccesses.mark()
+    }
 
-    fun markWarning(n: Int) = privacyLeakWarnings.addAndGet(n)
+    fun markWarning() {
+        privacyLeakWarnings.incrementAndGet()
+        meterGlobalLeakWarnings.mark()
+    }
+
+    fun markWarning(n: Int) {
+        privacyLeakWarnings.addAndGet(n)
+        meterGlobalLeakWarnings.mark(n.toLong())
+    }
 
     fun markMinorWarning() {
         privacyLeakMinorWarnings.incrementAndGet()
+        meterGlobalMinorLeakWarnings.mark()
         if (privacyLeakMinorWarnings.get() > minorWarningFactor) {
             privacyLeakMinorWarnings.set(0)
             markWarning()
@@ -78,6 +102,48 @@ abstract class PrivacyContext(
     }
 
     fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
+
+    open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        beforeRun(task)
+        val result = doRun(task, browseFun)
+        afterRun(result)
+        return result
+    }
+
+    abstract suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+
+    protected fun beforeRun(task: FetchTask) {
+        lastActiveTime = Instant.now()
+        meterTasks.mark()
+        meterGlobalTasks.mark()
+
+        numRunningTasks.incrementAndGet()
+    }
+
+    protected fun afterRun(result: FetchResult) {
+        numRunningTasks.decrementAndGet()
+
+        lastActiveTime = Instant.now()
+        meterFinishes.mark()
+        meterGlobalFinishes.mark()
+
+        val status = result.status
+        when {
+            status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> markLeaked()
+            status.isRetry(RetryScope.PRIVACY) -> markWarning()
+            status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
+            status.isSuccess -> markSuccess()
+        }
+
+        if (result.isSmall) {
+            meterSmallPages.mark()
+            meterGlobalSmallPages.mark()
+        }
+
+        if (isLeaked) {
+            meterGlobalContextLeaks.mark()
+        }
+    }
 
     open fun report() {
         log.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())

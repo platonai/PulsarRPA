@@ -244,7 +244,7 @@ open class FetchCacheCollector(
 
     override var name = "FetchCacheC"
 
-    private val hyperlinkQueues get() = fetchCache.fetchQueues
+    private val hyperlinkQueues get() = fetchCache.queues
 
     constructor(fetchCache: FetchCache, priority: Priority13): this(fetchCache, priority.value)
 

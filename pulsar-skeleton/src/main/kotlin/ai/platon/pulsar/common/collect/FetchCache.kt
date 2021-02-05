@@ -10,9 +10,9 @@ interface FetchCache {
     val nonReentrantQueue: Queue<UrlAware>
     val nReentrantQueue: Queue<UrlAware>
     val reentrantQueue: Queue<UrlAware>
-    val fetchQueues: Array<Queue<UrlAware>>
+    val queues: Array<Queue<UrlAware>>
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
-    val totalSize get() = fetchQueues.sumOf { it.size }
+    val totalSize get() = queues.sumOf { it.size }
 }
 
 open class ConcurrentFetchCache(conf: ImmutableConfig): FetchCache {
@@ -36,14 +36,14 @@ class LoadingFetchCache(
     override val nonReentrantQueue = ConcurrentNonReentrantLoadingQueue(urlLoader, G_NON_REENTRANT, priority, capacity)
     override val nReentrantQueue = ConcurrentNEntrantLoadingQueue(urlLoader, 3, G_N_ENTRANT, priority, capacity)
     override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, G_REENTRANT, priority, capacity)
-    override val fetchQueues: Array<Queue<UrlAware>>
+    override val queues: Array<Queue<UrlAware>>
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
 
     override fun load() {
-        fetchQueues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load() }
+        queues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load() }
     }
 
     override fun loadNow(): Collection<UrlAware> {
-        return fetchQueues.filterIsInstance<Loadable<UrlAware>>().flatMap { it.loadNow() }
+        return queues.filterIsInstance<Loadable<UrlAware>>().flatMap { it.loadNow() }
     }
 }

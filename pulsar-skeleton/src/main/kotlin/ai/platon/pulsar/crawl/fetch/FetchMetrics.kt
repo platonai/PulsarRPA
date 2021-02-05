@@ -20,9 +20,6 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.random.Random
 
 class FetchMetrics(
         private val messageWriter: MiscMessageWriter,
@@ -72,7 +69,7 @@ class FetchMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    val meterSystemNetworkMBytesRecv = AppMetrics.meter(this, "systemNetworkMBytesRecv")
+    val meterTotalNetworkIFsRecvMBytes = AppMetrics.meter(this, "totalNetworkIFsRecvMBytes")
 
     /**
      * The total bytes of page content of all success web pages
@@ -80,8 +77,8 @@ class FetchMetrics(
     val tasks = AppMetrics.meter(this, "tasks")
     val successTasks = AppMetrics.meter(this, "successTasks")
     val finishedTasks = AppMetrics.meter(this, "finishedTasks")
-    val meterContentBytes = AppMetrics.meter(this, "mContentBytes")
-    val histogramContentBytes = AppMetrics.histogram(this, "hContentBytes")
+    val meterContentBytes = AppMetrics.meter(this, "contentBytes")
+    val histogramContentBytes = AppMetrics.histogram(this, "contentBytes")
 
     val pageImages = AppMetrics.histogram(this, "pageImages")
     val pageAnchors = AppMetrics.histogram(this, "pageAnchors")
@@ -89,27 +86,27 @@ class FetchMetrics(
     val pageSmallTexts = AppMetrics.histogram(this, "pageSmallTexts")
     val pageHeights = AppMetrics.histogram(this, "pageHeights")
 
-    val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
+    val realTimeNetworkIFsRecvBytes get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
             .toLong().coerceAtLeast(0)
     /**
      * The total all bytes received by the hardware at the application startup
      * */
-    val initSystemNetworkBytesRecv by lazy { realTimeSystemNetworkBytesRecv }
+    val initNetworkIFsRecvBytes by lazy { realTimeNetworkIFsRecvBytes }
     /**
      * The total all bytes received by the hardware last read from system
      * */
     @Volatile
-    var systemNetworkBytesRecv = 0L
+    var totalNetworkIFsRecvBytes = 0L
 
     /**
      * The total bytes received by the hardware from the application startup
      * */
-    val networkBytesRecv
-        get() = (systemNetworkBytesRecv - initSystemNetworkBytesRecv).coerceAtLeast(0L)
-    val networkBytesRecvPerSecond
-        get() = networkBytesRecv / elapsedTime.seconds.coerceAtLeast(1)
-    val networkBytesRecvPerPage
-        get() = networkBytesRecv / successTasks.count.coerceAtLeast(1)
+    val networkIFsRecvBytes
+        get() = (totalNetworkIFsRecvBytes - initNetworkIFsRecvBytes).coerceAtLeast(0L)
+    val networkIFsRecvBytesPerSecond
+        get() = networkIFsRecvBytes / elapsedTime.seconds.coerceAtLeast(1)
+    val networkIFsRecvBytesPerPage
+        get() = networkIFsRecvBytes / successTasks.count.coerceAtLeast(1)
 
     val successTasksPerSecond
         get() = successTasks.count / elapsedTime.seconds.coerceAtLeast(1)
@@ -291,10 +288,10 @@ class FetchMetrics(
                 Strings.readableBytes(bytes),
                 Strings.readableBytes(bytes / seconds),
                 Strings.readableBytes(bytes / count),
-                Strings.readableBytes(networkBytesRecv),
-                Strings.readableBytes(networkBytesRecvPerSecond),
-                Strings.readableBytes(networkBytesRecvPerPage),
-                Strings.readableBytes(systemNetworkBytesRecv))
+                Strings.readableBytes(networkIFsRecvBytes),
+                Strings.readableBytes(networkIFsRecvBytesPerSecond),
+                Strings.readableBytes(networkIFsRecvBytesPerPage),
+                Strings.readableBytes(totalNetworkIFsRecvBytes))
     }
 
     override fun close() {
@@ -322,9 +319,9 @@ class FetchMetrics(
         }
         lastSystemInfoRefreshTime = currentTimeMillis
 
-        systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
-                .coerceAtLeast(systemNetworkBytesRecv)
-        meterSystemNetworkMBytesRecv.mark(systemNetworkBytesRecv / 1024)
+        totalNetworkIFsRecvBytes = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+                .coerceAtLeast(totalNetworkIFsRecvBytes)
+        meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024)
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")
         usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
