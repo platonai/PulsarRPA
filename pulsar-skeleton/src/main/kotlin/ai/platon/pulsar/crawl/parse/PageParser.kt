@@ -19,14 +19,12 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.CrawlEventHandler
-import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -52,13 +50,13 @@ class PageParser(
         val crawlFilters: CrawlFilters,
         val parserFactory: ParserFactory,
         val signature: Signature,
-        val metricsCounters: MetricsCounters,
+        val enumCounters: EnumCounters,
         val messageWriter: MiscMessageWriter,
         private val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
-    init { MetricsCounters.register(Counter::class.java) }
+    init { EnumCounters.register(Counter::class.java) }
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
@@ -77,7 +75,7 @@ class PageParser(
             CrawlFilters(conf),
             ParserFactory(conf),
             TextMD5Signature(),
-            MetricsCounters(),
+            EnumCounters(),
             MiscMessageWriter(conf),
             conf
     )
@@ -283,7 +281,7 @@ class PageParser(
             }
         }
         if (counter != null) {
-            metricsCounters.inc(counter)
+            enumCounters.inc(counter)
         }
     }
 

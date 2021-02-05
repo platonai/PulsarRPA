@@ -8,7 +8,7 @@ import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 object CounterUtils {
-    fun increaseMDays(days: Long, metricsCounters: MetricsCounters) {
+    fun increaseMDays(days: Long, enumCounters: EnumCounters) {
         val counter = when (days.toInt()) {
             0 -> CommonCounter.mDay0
             1 -> CommonCounter.mDay1
@@ -20,10 +20,10 @@ object CounterUtils {
             7 -> CommonCounter.mDay7
             else -> CommonCounter.mDayN
         }
-        metricsCounters.inc(counter)
+        enumCounters.inc(counter)
     }
 
-    fun increaseRDays(days: Long, metricsCounters: MetricsCounters) {
+    fun increaseRDays(days: Long, enumCounters: EnumCounters) {
         val counter = when (days.toInt()) {
             0 -> CommonCounter.rDay0
             1 -> CommonCounter.rDay1
@@ -35,10 +35,10 @@ object CounterUtils {
             7 -> CommonCounter.rDay7
             else -> CommonCounter.rDayN
         }
-        metricsCounters.inc(counter)
+        enumCounters.inc(counter)
     }
 
-    fun increaseMDepth(depth: Int, metricsCounters: MetricsCounters) {
+    fun increaseMDepth(depth: Int, enumCounters: EnumCounters) {
         val counter = when (depth) {
             0 -> CommonCounter.mDepth0
             1 -> CommonCounter.mDepth1
@@ -46,10 +46,10 @@ object CounterUtils {
             3 -> CommonCounter.mDepth3
             else -> CommonCounter.mDepthN
         }
-        metricsCounters.inc(counter)
+        enumCounters.inc(counter)
     }
 
-    fun increaseRDepth(depth: Int, counter: MetricsCounters) {
+    fun increaseRDepth(depth: Int, counter: EnumCounters) {
         when (depth) {
             0 -> counter.inc(CommonCounter.rDepth0)
             1 -> counter.inc(CommonCounter.rDepth1)
@@ -59,7 +59,7 @@ object CounterUtils {
         }
     }
 
-    fun updateStatusCounter(crawlStatus: CrawlStatus, counter: MetricsCounters) {
+    fun updateStatusCounter(crawlStatus: CrawlStatus, counter: EnumCounters) {
         when (crawlStatus.code.toByte()) {
             CrawlStatusCodes.FETCHED -> counter.inc(CommonCounter.stFetched)
             CrawlStatusCodes.REDIR_TEMP -> counter.inc(CommonCounter.stRedirTemp)

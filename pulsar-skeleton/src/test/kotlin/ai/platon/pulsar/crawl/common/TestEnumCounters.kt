@@ -1,8 +1,6 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.MetricsCounters
-import org.junit.Assert
-import org.junit.Ignore
+import ai.platon.pulsar.common.EnumCounters
 import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -12,31 +10,31 @@ import kotlin.test.assertEquals
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-class TestMetricsCounters {
+class TestEnumCounters {
     companion object {
         init {
-            MetricsCounters.register(Counter1::class.java)
-            MetricsCounters.register(Counter2::class.java)
-            MetricsCounters.register(Counter3::class.java)
+            EnumCounters.register(Counter1::class.java)
+            EnumCounters.register(Counter2::class.java)
+            EnumCounters.register(Counter3::class.java)
             // It's OK to re-register
-            MetricsCounters.register(Counter3::class.java)
-            MetricsCounters.register(Counter3::class.java)
+            EnumCounters.register(Counter3::class.java)
+            EnumCounters.register(Counter3::class.java)
         }
     }
 
     @Test
     fun testCounters() {
-        val counter = MetricsCounters()
-        val group1 = MetricsCounters.getGroup(Counter1::class.java)
-        val group2 = MetricsCounters.getGroup(Counter2::class.java)
-        val group3 = MetricsCounters.getGroup(Counter3::class.java)
-        val group4 = MetricsCounters.getGroup(Counter3::class.java)
+        val counter = EnumCounters()
+        val group1 = EnumCounters.getGroup(Counter1::class.java)
+        val group2 = EnumCounters.getGroup(Counter2::class.java)
+        val group3 = EnumCounters.getGroup(Counter3::class.java)
+        val group4 = EnumCounters.getGroup(Counter3::class.java)
         assertEquals(1, group1.toLong())
         assertEquals(2, group2.toLong())
         assertEquals(3, group3.toLong())
         assertEquals(3, group4.toLong())
-        assertEquals(3, MetricsCounters.getGroup(Counter3::class.java).toLong())
-        assertEquals(3, MetricsCounters.getGroup(Counter3.stFetched).toLong())
+        assertEquals(3, EnumCounters.getGroup(Counter3::class.java).toLong())
+        assertEquals(3, EnumCounters.getGroup(Counter3.stFetched).toLong())
         counter.inc(Counter1.rDepth0)
         counter.setValue(Counter1.rDepth1, 2000)
         counter.inc(Counter2.inlinks)
@@ -62,7 +60,7 @@ class TestMetricsCounters {
         assertEquals("rDepth0:1, rDepth1:2000, rDepth1:2147483647, rDepth3:1, rDepthN:1, inlinks:1, liveLinks:1, stFetched:1, stGone:1", counter.getStatus(false))
     }
 
-    fun operationOnCounter(counter: MetricsCounters, group3: Int) {
+    fun operationOnCounter(counter: EnumCounters, group3: Int) {
         counter.inc(Counter1.rDepth1)
         counter.inc(Counter3.rDepth1)
         counter.inc(Counter2.rDepth2)
@@ -76,8 +74,8 @@ class TestMetricsCounters {
 
     @Test
     fun testCountersMultipleThreaded() {
-        val counter = MetricsCounters()
-        val group3 = MetricsCounters.getGroup(Counter3::class.java)
+        val counter = EnumCounters()
+        val group3 = EnumCounters.getGroup(Counter3::class.java)
         val maxThreads = 2000
         var countDown = maxThreads
         val taskExecutor = Executors.newFixedThreadPool(maxThreads)

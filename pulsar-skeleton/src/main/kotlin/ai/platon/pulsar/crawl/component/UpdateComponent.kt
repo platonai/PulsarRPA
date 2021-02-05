@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -47,14 +47,14 @@ class UpdateComponent(
         val fetchSchedule: FetchSchedule,
         val scoringFilters: ScoringFilters? = null,
         val messageWriter: MiscMessageWriter? = null,
-        val metricsCounters: MetricsCounters? = null,
+        val enumCounters: EnumCounters? = null,
         val conf: ImmutableConfig
 ) : Parameterized {
     val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
 
     companion object {
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
-        init { MetricsCounters.register(Counter::class.java) }
+        init { EnumCounters.register(Counter::class.java) }
     }
 
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
@@ -192,7 +192,7 @@ class UpdateComponent(
                 }
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    metricsCounters?.inc(Counter.rBadModTime)
+                    enumCounters?.inc(Counter.rBadModTime)
                     messageWriter?.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,
                             "PMT", prevModifiedTime, "MT", modifiedTime,

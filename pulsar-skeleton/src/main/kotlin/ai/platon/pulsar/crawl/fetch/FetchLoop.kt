@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.persist.WebPage
@@ -39,7 +38,7 @@ class FetchLoop(
         val illegalState = AtomicBoolean()
     }
 
-    private val metricsCounters = MetricsCounters()
+    private val metricsCounters = EnumCounters()
 
     val id = instanceSequencer.incrementAndGet()
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)

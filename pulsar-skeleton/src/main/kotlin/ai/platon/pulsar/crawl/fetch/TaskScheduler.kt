@@ -42,7 +42,7 @@ class TaskScheduler(
 
     private val log = LoggerFactory.getLogger(TaskScheduler::class.java)
     val id: Int = instanceSequence.incrementAndGet()
-    private val metricsCounters = MetricsCounters()
+    private val metricsCounters = EnumCounters()
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
@@ -363,7 +363,7 @@ class TaskScheduler(
             rIndexed, rNotIndexed
         }
 
-        init { MetricsCounters.register(Counter::class.java) }
+        init { EnumCounters.register(Counter::class.java) }
 
         private val instanceSequence = AtomicInteger(0)
     }

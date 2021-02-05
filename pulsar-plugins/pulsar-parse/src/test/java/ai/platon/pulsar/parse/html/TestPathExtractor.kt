@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -75,7 +75,7 @@ class TestPathExtractor : HtmlParserTestBase() {
         val baseUrl = "http://news.example.com/selector/1/pages/html_example_3_news.html"
         val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
         page.args = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
-        val filter = PathExtractor(MetricsCounters(), conf)
+        val filter = PathExtractor(EnumCounters(), conf)
         val parseContext = ParseContext(page)
 
         filter.filter(parseContext)
@@ -108,7 +108,7 @@ class TestPathExtractor : HtmlParserTestBase() {
 
         val parseResult = ParseResult()
         val parseContext = ParseContext(page, parseResult)
-        val extractor = PathExtractor(MetricsCounters(), conf)
+        val extractor = PathExtractor(EnumCounters(), conf)
         extractor.filter(parseContext)
         assertTrue(parseResult.isParsed)
         assertTrue(parseResult.isSuccess)

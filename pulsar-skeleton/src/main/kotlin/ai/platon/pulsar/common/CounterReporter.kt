@@ -25,7 +25,7 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 class CounterReporter(
-        private val counter: MetricsCounters,
+        private val counter: EnumCounters,
         initialDelay: Duration = Duration.ofMinutes(3),
         watchInterval: Duration = Duration.ofSeconds(30),
         private val conf: ImmutableConfig

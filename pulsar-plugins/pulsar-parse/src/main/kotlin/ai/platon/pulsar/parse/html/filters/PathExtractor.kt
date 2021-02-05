@@ -1,6 +1,6 @@
 package ai.platon.pulsar.parse.html.filters
 
-import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.EntityOptions
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
@@ -24,13 +24,13 @@ import org.slf4j.LoggerFactory
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
  */
 class PathExtractor(
-        val metricsCounters: MetricsCounters,
+        val enumCounters: EnumCounters,
         val conf: ImmutableConfig
 ) : AbstractParseFilter() {
 
     companion object {
         enum class Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
-        init { MetricsCounters.register(Counter::class.java) }
+        init { EnumCounters.register(Counter::class.java) }
     }
 
     private var log = LoggerFactory.getLogger(PathExtractor::class.java)
@@ -70,7 +70,7 @@ class PathExtractor(
         var loss = fields.loss
 
         page.pageCounters.set(Self.missingFields, loss)
-        metricsCounters.inc(Counter.brokenEntity, if (loss > 0) 1 else 0)
+        enumCounters.inc(Counter.brokenEntity, if (loss > 0) 1 else 0)
 
         var brokenSubEntity = 0
         for (i in 1 until fieldCollections.size) {
@@ -83,7 +83,7 @@ class PathExtractor(
         }
 
         page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
-        metricsCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
+        enumCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
 
         return parseResult
     }

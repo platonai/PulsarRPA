@@ -30,7 +30,7 @@ object MetricFilters {
 }
 
 class AppMetrics(
-        val metricsCounters: MetricsCounters,
+        val enumCounters: EnumCounters,
         conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
@@ -84,7 +84,7 @@ class AppMetrics(
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter
-    private val counterReporter = CounterReporter(metricsCounters, conf = conf)
+    private val counterReporter = CounterReporter(enumCounters, conf = conf)
 
     private val closed = AtomicBoolean()
 

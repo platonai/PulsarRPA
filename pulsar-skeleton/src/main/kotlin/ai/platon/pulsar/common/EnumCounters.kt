@@ -21,15 +21,11 @@ import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.stream.IntStream
 import kotlin.reflect.KClass
 
-/**
- * TODO: a better name?
- * */
-class MetricsCounters {
+class EnumCounters {
     companion object {
-        var LOG = LoggerFactory.getLogger(MetricsCounters::class.java)
+        var LOG = LoggerFactory.getLogger(EnumCounters::class.java)
         var MAX_GROUPS = 100
         var MAX_COUNTERS_IN_GROUP = 1000
         var MAX_COUNTERS = MAX_GROUPS * MAX_COUNTERS_IN_GROUP
@@ -93,7 +89,7 @@ class MetricsCounters {
         }
 
         init {
-            IntStream.range(0, MAX_COUNTERS).forEach { i: Int ->
+            IntRange(0, MAX_COUNTERS - 1).forEach { i: Int ->
                 counterNames.add("")
                 globalCounters.add(AtomicInteger(0))
                 nativeCounters.add(AtomicInteger(0))
@@ -106,7 +102,7 @@ class MetricsCounters {
     val registeredCounters get() = registeredClasses.mapNotNull { it.key }
 
     fun reset() {
-        IntRange(0, MAX_COUNTERS).forEach { _ ->
+        IntRange(0, MAX_COUNTERS - 1).forEach { _ ->
             counterNames.add("")
             globalCounters.add(AtomicInteger(0))
             nativeCounters.add(AtomicInteger(0))
@@ -169,7 +165,7 @@ class MetricsCounters {
 
     fun getStatus(names: Set<String?>, verbose: Boolean): String {
         val sb = StringBuilder()
-        IntStream.range(0, MAX_COUNTERS).forEach { i: Int ->
+        IntRange(0, MAX_COUNTERS - 1).forEach { i: Int ->
             var name = counterNames[i]
             if (name.isNotEmpty() && (names.isEmpty() || names.contains(name))) {
                 val value = nativeCounters[i].get()
@@ -188,6 +184,12 @@ class MetricsCounters {
 
     fun getStatus(verbose: Boolean): String {
         return getStatus(hashSetOf(), verbose)
+    }
+
+    fun asMap(): Map<String, Int> {
+        return IntRange(0, MAX_COUNTERS - 1).associate { i ->
+            counterNames[i] to nativeCounters[i].get()
+        }
     }
 
     private fun inc(index: Int) {
