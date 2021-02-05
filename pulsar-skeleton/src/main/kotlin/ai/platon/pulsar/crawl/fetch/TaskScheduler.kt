@@ -42,7 +42,7 @@ class TaskScheduler(
 
     private val log = LoggerFactory.getLogger(TaskScheduler::class.java)
     val id: Int = instanceSequence.incrementAndGet()
-    private val metricsCounters = EnumCounters()
+    private val enumCounters = EnumCounters()
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
@@ -160,7 +160,7 @@ class TaskScheduler(
     fun finishUnchecked(fetchTask: JobFetchTask) {
         tasksMonitor.finish(fetchTask)
         lastTaskFinishTime = Instant.now()
-        metricsCounters.inc(Counter.rFinishedTasks)
+        enumCounters.inc(Counter.rFinishedTasks)
     }
 
     /**
@@ -193,7 +193,7 @@ class TaskScheduler(
 
             tasksMonitor.finishAsap(fetchTask)
             fetchErrors.incrementAndGet()
-            metricsCounters.inc(CommonCounter.errors)
+            enumCounters.inc(CommonCounter.errors)
         } finally {
             lastTaskFinishTime = Instant.now()
         }
@@ -210,12 +210,12 @@ class TaskScheduler(
         val readyFetchTasks = tasksMonitor.numReadyTasks.get()
         val pendingFetchTasks = tasksMonitor.numPendingTasks.get()
 
-        metricsCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
-        metricsCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
+        enumCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
+        enumCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
 
         if (indexJIT) {
-            metricsCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
-            metricsCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
+            enumCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
+            enumCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
         }
     }
 
@@ -241,13 +241,13 @@ class TaskScheduler(
             val parseResult = pageParser.parse(page)
 
             if (!parseResult.isSuccess) {
-                metricsCounters.inc(Counter.rParseFailed)
+                enumCounters.inc(Counter.rParseFailed)
                 page.pageCounters.increase<PageCounters.Self>(PageCounters.Self.parseErr)
             }
 
             // Double check success
             if (!page.hasMark(Mark.PARSE)) {
-                metricsCounters.inc(Counter.rNoParse)
+                enumCounters.inc(Counter.rNoParse)
             }
 
             if (parseResult.minorCode != ParseStatus.SUCCESS_OK) {
@@ -295,7 +295,7 @@ class TaskScheduler(
         page.reprUrl = reprUrl
         reprUrls[threadId] = reprUrl
         messageWriter.reportRedirects(String.format("[%s] - %100s -> %s\n", redirType, url, reprUrl))
-        metricsCounters.inc(Counter.rRedirect)
+        enumCounters.inc(Counter.rRedirect)
     }
 
     /**
@@ -319,19 +319,19 @@ class TaskScheduler(
     }
 
     private fun updateStatus(page: WebPage) {
-        metricsCounters.inc(CommonCounter.rPersist)
-        metricsCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
+        enumCounters.inc(CommonCounter.rPersist)
+        enumCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
 
         totalPages.incrementAndGet()
         totalBytes.addAndGet(page.contentBytes.toLong())
 
         if (page.isSeed) {
-            metricsCounters.inc(Counter.rSeeds)
+            enumCounters.inc(Counter.rSeeds)
         }
 
-        CounterUtils.increaseRDepth(page.distance, metricsCounters)
+        CounterUtils.increaseRDepth(page.distance, enumCounters)
 
-        metricsCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f / 1024).roundToInt())
+        enumCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f / 1024).roundToInt())
     }
 
     private fun logFetchFailure(message: String) {
@@ -340,7 +340,7 @@ class TaskScheduler(
         }
 
         fetchErrors.incrementAndGet()
-        metricsCounters.inc(CommonCounter.errors)
+        enumCounters.inc(CommonCounter.errors)
     }
 
     private fun report() {

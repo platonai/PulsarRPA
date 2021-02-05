@@ -28,7 +28,7 @@
         <constructor-arg ref="urlNormalizers"/>
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="messageWriter"/>
-        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="enumCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -55,7 +55,7 @@
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="messageWriter"/>
-        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="enumCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent" destroy-method="close">

@@ -38,7 +38,7 @@ class FetchLoop(
         val illegalState = AtomicBoolean()
     }
 
-    private val metricsCounters = EnumCounters()
+    private val enumCounters = EnumCounters()
 
     val id = instanceSequencer.incrementAndGet()
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)
@@ -164,7 +164,7 @@ class FetchLoop(
                 log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page).toString())
                 if (!isCanceled) {
                     write(page.key, page)
-                    metricsCounters.inc(CommonCounter.rPersist)
+                    enumCounters.inc(CommonCounter.rPersist)
                 }
             }
         } catch (e: Throwable) {

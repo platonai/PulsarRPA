@@ -43,7 +43,7 @@
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="pathExtractor" class="ai.platon.pulsar.parse.html.filters.PathExtractor">
-        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="enumCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters" destroy-method="close">
@@ -61,7 +61,7 @@
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>
-        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="enumCounters"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
