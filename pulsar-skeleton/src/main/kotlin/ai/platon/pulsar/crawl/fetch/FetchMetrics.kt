@@ -77,8 +77,8 @@ class FetchMetrics(
     val tasks = AppMetrics.meter(this, "tasks")
     val successTasks = AppMetrics.meter(this, "successTasks")
     val finishedTasks = AppMetrics.meter(this, "finishedTasks")
-    val meterContentBytes = AppMetrics.meter(this, "contentBytes")
-    val histogramContentBytes = AppMetrics.histogram(this, "contentBytes")
+    val meterContentBytes = AppMetrics.meter(this, "m", "contentBytes")
+    val histogramContentBytes = AppMetrics.histogram(this, "h", "contentBytes")
 
     val pageImages = AppMetrics.histogram(this, "pageImages")
     val pageAnchors = AppMetrics.histogram(this, "pageAnchors")
