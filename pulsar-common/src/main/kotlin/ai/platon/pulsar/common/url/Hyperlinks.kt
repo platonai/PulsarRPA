@@ -196,8 +196,6 @@ open class Hyperlink(
 ): AbstractUrl(url, args, referer, label, href) {
     var depth: Int = 0
 
-    var expireTimeCalculator: (() -> Duration)? = null
-
     constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args, href = url.href, label = url.label)
     constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args, href = url.href, label = url.label)
     constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args, href = url.href, label = url.label)
