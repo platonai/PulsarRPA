@@ -61,7 +61,7 @@ class AppMetrics(
 
         fun <T: Enum<T>> register(counterClass: Class<T>) {
             EnumCounters.register(counterClass)
-            counterClass.enumConstants.associateTo(appCounters) { it to counter(this, it.name) }
+            counterClass.enumConstants.associateTo(appCounters) { it to counter(counterClass, it.name) }
         }
 
         fun <T: Enum<T>> register(counterClass: KClass<T>) {
