@@ -429,7 +429,7 @@ class LoadComponent(
         }
 
         // if (now > lastTime + expires), it's expired
-        if (now.isAfter(lastFetchTime.plus(options.expires))) {
+        if (options.isExpired(lastFetchTime)) {
             return FetchReason.EXPIRED
         }
 

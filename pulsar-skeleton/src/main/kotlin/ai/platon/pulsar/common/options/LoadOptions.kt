@@ -7,6 +7,7 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -33,10 +34,19 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
-    /** Web page expire time */
+    /**
+     * Web page expiry time
+     * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,
+     * guess it means "expires at"
+     * */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = ChronoUnit.CENTURIES.duration
+
+    /** Web page expire time */
+    @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
+            description = "If a page is expired, it should be fetched from the internet again")
+    var expireAt = Instant.now() + ChronoUnit.CENTURIES.duration
 
     /** Arrange links */
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
@@ -112,6 +122,11 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
     var itemExpires = ChronoUnit.CENTURIES.duration
+
+    /** Web page expire time */
+    @Parameter(names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
+            description = "If a page is expired, it should be fetched from the internet again")
+    var itemExpireAt = Instant.now() + ChronoUnit.CENTURIES.duration
 
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
@@ -278,6 +293,10 @@ open class LoadOptions: CommonOptions {
         itemOptions.volatileConfig = conf ?: volatileConfig
 
         return itemOptions
+    }
+
+    fun isExpired(time: Instant): Boolean {
+        return time > expireAt || time + expires < Instant.now()
     }
 
     open fun itemOptions2MajorOptions() {
