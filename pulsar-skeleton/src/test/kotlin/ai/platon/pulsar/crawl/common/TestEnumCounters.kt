@@ -24,7 +24,7 @@ class TestEnumCounters {
 
     @Test
     fun testCounters() {
-        val counter = EnumCounters()
+        val counter = EnumCounters.DEFAULT
         val group1 = EnumCounters.getGroup(Counter1::class.java)
         val group2 = EnumCounters.getGroup(Counter2::class.java)
         val group3 = EnumCounters.getGroup(Counter3::class.java)
@@ -74,7 +74,7 @@ class TestEnumCounters {
 
     @Test
     fun testCountersMultipleThreaded() {
-        val counter = EnumCounters()
+        val counter = EnumCounters.DEFAULT
         val group3 = EnumCounters.getGroup(Counter3::class.java)
         val maxThreads = 2000
         var countDown = maxThreads

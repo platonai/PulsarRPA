@@ -15,12 +15,8 @@
     </bean>
 
     <bean id="appMetrics" class="ai.platon.pulsar.common.AppMetrics" init-method="start" destroy-method="close">
-        <constructor-arg ref="enumCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
-
-    <!-- The enum counters -->
-    <bean id="enumCounters" class="ai.platon.pulsar.common.EnumCounters"/>
 
     <!--System metrics -->
     <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">

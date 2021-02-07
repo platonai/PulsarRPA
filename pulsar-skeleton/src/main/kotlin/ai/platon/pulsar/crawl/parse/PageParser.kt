@@ -50,7 +50,6 @@ class PageParser(
         val crawlFilters: CrawlFilters,
         val parserFactory: ParserFactory,
         val signature: Signature,
-        val enumCounters: EnumCounters,
         val messageWriter: MiscMessageWriter,
         private val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
@@ -60,6 +59,7 @@ class PageParser(
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
+    private val enumCounters = EnumCounters.DEFAULT
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
@@ -75,7 +75,6 @@ class PageParser(
             CrawlFilters(conf),
             ParserFactory(conf),
             TextMD5Signature(),
-            EnumCounters(),
             MiscMessageWriter(conf),
             conf
     )

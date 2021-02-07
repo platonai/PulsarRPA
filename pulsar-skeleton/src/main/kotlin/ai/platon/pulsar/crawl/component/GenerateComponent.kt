@@ -18,14 +18,17 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.EnumCounters
+import ai.platon.pulsar.common.FSUtils
+import ai.platon.pulsar.common.LocalFSUtils
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlFilters
@@ -54,7 +57,6 @@ class GenerateComponent(
         val urlNormalizers: UrlNormalizers,
         val fetchSchedule: FetchSchedule,
         val messageWriter: MiscMessageWriter,
-        val enumCounters: EnumCounters,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized {
 
@@ -70,6 +72,7 @@ class GenerateComponent(
 
     val LOG = LoggerFactory.getLogger(GenerateComponent::class.java)
 
+    private val enumCounters = EnumCounters.DEFAULT
     private val startTime = Instant.now()
 
     private val unreachableHosts: MutableSet<String> = HashSet()

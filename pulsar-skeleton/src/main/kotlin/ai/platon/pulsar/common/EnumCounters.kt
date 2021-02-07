@@ -25,76 +25,81 @@ import kotlin.reflect.KClass
 
 class EnumCounters {
     companion object {
-        var LOG = LoggerFactory.getLogger(EnumCounters::class.java)
-        var MAX_GROUPS = 100
-        var MAX_COUNTERS_IN_GROUP = 1000
-        var MAX_COUNTERS = MAX_GROUPS * MAX_COUNTERS_IN_GROUP
-        var DELIMITER = "'"
+        val DEFAULT = EnumCounters()
+        fun <T : Enum<T>> register(counterClass: Class<T>) = DEFAULT.register(counterClass)
+        fun <T : Enum<T>> getGroup(counterClass: Class<T>) = DEFAULT.getGroup(counterClass)
+        fun <T : Enum<T>> getGroup(counter: T) = DEFAULT.getGroup(counter)
+    }
 
-        private val counterGroupSequence = AtomicInteger(0)
-        private val counterSequence = AtomicInteger(0)
+    var LOG = LoggerFactory.getLogger(EnumCounters::class.java)
+    var MAX_GROUPS = 100
+    var MAX_COUNTERS_IN_GROUP = 1000
+    var MAX_COUNTERS = MAX_GROUPS * MAX_COUNTERS_IN_GROUP
+    var DELIMITER = "'"
 
-        // Thread safe for read/write at index
-        private val registeredClasses = ArrayList<Pair<Class<*>, Int>>()
+    private val counterGroupSequence = AtomicInteger(0)
+    private val counterSequence = AtomicInteger(0)
 
-        // Thread safe for read/write at index
-        private val counterNames = ArrayList<String>(MAX_COUNTERS)
+    // Thread safe for read/write at index
+    private val registeredClasses = ArrayList<Pair<Class<*>, Int>>()
 
-        // Thread safe for read/write at index
-        private val globalCounters = ArrayList<AtomicInteger>(MAX_COUNTERS)
+    // Thread safe for read/write at index
+    private val counterNames = ArrayList<String>(MAX_COUNTERS)
 
-        // Thread safe for read/write at index
-        private val nativeCounters = ArrayList<AtomicInteger>(MAX_COUNTERS)
+    // Thread safe for read/write at index
+    private val globalCounters = ArrayList<AtomicInteger>(MAX_COUNTERS)
 
-        /**
-         * Register a counter, return the group id of this counter
-         *
-         * @param counterClass The counter enum class
-         * @return group id
-         */
-        @Synchronized
-        fun <T : Enum<T>> register(counterClass: Class<T>): Int {
-            // TODO : use annotation
-            var groupId = getGroup(counterClass)
-            if (groupId > 0) {
-                return groupId
-            }
-            groupId = counterGroupSequence.incrementAndGet()
-            registeredClasses.add(Pair.of(counterClass, groupId))
-            for (e in counterClass.enumConstants) {
-                val counterIndex = groupId * MAX_COUNTERS_IN_GROUP + e.ordinal
-                val counterName = groupId.toString() + DELIMITER + e.name
-                counterNames[counterIndex] = counterName
-                globalCounters[counterIndex] = AtomicInteger(0)
-                nativeCounters[counterIndex] = AtomicInteger(0)
-            }
+    // Thread safe for read/write at index
+    private val nativeCounters = ArrayList<AtomicInteger>(MAX_COUNTERS)
+
+    init {
+        IntRange(0, MAX_COUNTERS - 1).forEach { i: Int ->
+            counterNames.add("")
+            globalCounters.add(AtomicInteger(0))
+            nativeCounters.add(AtomicInteger(0))
+        }
+    }
+
+    /**
+     * Register a counter, return the group id of this counter
+     *
+     * @param counterClass The counter enum class
+     * @return group id
+     */
+    @Synchronized
+    fun <T : Enum<T>> register(counterClass: Class<T>): Int {
+        // TODO : use annotation
+        var groupId = getGroup(counterClass)
+        if (groupId > 0) {
             return groupId
         }
-
-        @Synchronized
-        fun <T : Enum<T>> register(counterClass: KClass<T>) = register(counterClass.java)
-
-        fun <T : Enum<T>> getGroup(counter: T): Int {
-            return getGroup(counter.javaClass)
+        groupId = counterGroupSequence.incrementAndGet()
+        registeredClasses.add(Pair.of(counterClass, groupId))
+        for (e in counterClass.enumConstants) {
+            val counterIndex = groupId * MAX_COUNTERS_IN_GROUP + e.ordinal
+            val counterName = groupId.toString() + DELIMITER + e.name
+            counterNames[counterIndex] = counterName
+            globalCounters[counterIndex] = AtomicInteger(0)
+            nativeCounters[counterIndex] = AtomicInteger(0)
         }
+        return groupId
+    }
 
-        fun <T : Enum<T>> getGroup(counterClass: Class<T>): Int {
-            val entry = registeredClasses.firstOrNull { it.key == counterClass }
-            return if (entry == null) -1 else entry.value
-        }
+    @Synchronized
+    fun <T : Enum<T>> register(counterClass: KClass<T>) = register(counterClass.java)
 
-        fun <T : Enum<T>> getName(e: Enum<T>): String {
-            val groupId = getGroup(e.javaClass as Class<T>)
-            return groupId.toString() + DELIMITER + e.name
-        }
+    fun <T : Enum<T>> getGroup(counter: T): Int {
+        return getGroup(counter.javaClass)
+    }
 
-        init {
-            IntRange(0, MAX_COUNTERS - 1).forEach { i: Int ->
-                counterNames.add("")
-                globalCounters.add(AtomicInteger(0))
-                nativeCounters.add(AtomicInteger(0))
-            }
-        }
+    fun <T : Enum<T>> getGroup(counterClass: Class<T>): Int {
+        val entry = registeredClasses.firstOrNull { it.key == counterClass }
+        return if (entry == null) -1 else entry.value
+    }
+
+    fun <T : Enum<T>> getName(e: Enum<T>): String {
+        val groupId = getGroup(e.javaClass as Class<T>)
+        return groupId.toString() + DELIMITER + e.name
     }
 
     val id = counterSequence.incrementAndGet()

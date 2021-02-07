@@ -3,10 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import com.codahale.metrics.CsvReporter
-import com.codahale.metrics.Metric
-import com.codahale.metrics.MetricFilter
-import com.codahale.metrics.SharedMetricRegistries
+import com.codahale.metrics.*
 import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
@@ -15,6 +12,7 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KClass
 
 object MetricFilters {
 
@@ -30,7 +28,6 @@ object MetricFilters {
 }
 
 class AppMetrics(
-        val enumCounters: EnumCounters,
         conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
@@ -41,7 +38,10 @@ class AppMetrics(
         }
 
         const val SHADOW_METRIC_SUFFIX = "_"
+
         val defaultMetricRegistry = SharedMetricRegistries.getDefault()
+        val enumCounters = EnumCounters.DEFAULT
+        val appCounters: MutableMap<Enum<*>, Counter> = mutableMapOf()
 
         fun counter(obj: Any, ident: String, name: String) =
                 defaultMetricRegistry.counter(prependReadableClassName(obj, ident, name, "."))
@@ -57,6 +57,16 @@ class AppMetrics(
 
         fun <T: Metric> register(obj: Any, name: String, metric: T) {
             defaultMetricRegistry.register(prependReadableClassName(obj, name), metric)
+        }
+
+        fun <T: Enum<T>> register(counterClass: Class<T>) {
+            EnumCounters.register(counterClass)
+            counterClass.enumConstants.associateTo(appCounters) { it to counter(this, it.name) }
+        }
+
+        fun <T: Enum<T>> register(counterClass: KClass<T>) {
+            EnumCounters.register(counterClass.java)
+            counterClass.java.enumConstants.associateTo(appCounters) { it to counter(this, it.name) }
         }
 
         fun <T: Metric> register(obj: Any, ident: String, name: String, metric: T) {
@@ -110,6 +120,17 @@ class AppMetrics(
                 .filter(MetricFilters.notEndsWith(SHADOW_METRIC_SUFFIX))
                 .build()
         counterReporter.outputTo(LoggerFactory.getLogger(CounterReporter::class.java))
+    }
+
+    fun inc(count: Int, vararg counters: Enum<*>) {
+        counters.forEach {
+            enumCounters.inc(it, count)
+            appCounters[it]?.inc(count.toLong())
+        }
+    }
+
+    fun inc(vararg counters: Enum<*>) {
+        inc(count = 1, counters = counters)
     }
 
     fun start() {

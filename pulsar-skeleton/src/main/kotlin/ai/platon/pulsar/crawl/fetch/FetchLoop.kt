@@ -38,7 +38,7 @@ class FetchLoop(
         val illegalState = AtomicBoolean()
     }
 
-    private val enumCounters = EnumCounters()
+    private val enumCounters = EnumCounters.DEFAULT
 
     val id = instanceSequencer.incrementAndGet()
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)

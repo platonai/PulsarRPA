@@ -24,16 +24,17 @@ import org.slf4j.LoggerFactory
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
  */
 class PathExtractor(
-        val enumCounters: EnumCounters,
         val conf: ImmutableConfig
 ) : AbstractParseFilter() {
 
     companion object {
         enum class Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
-        init { EnumCounters.register(Counter::class.java) }
+        init { EnumCounters.DEFAULT.register(Counter::class.java) }
     }
 
     private var log = LoggerFactory.getLogger(PathExtractor::class.java)
+
+    private val enumCounters = EnumCounters.DEFAULT
 
     /**
      * Extract all fields in the page

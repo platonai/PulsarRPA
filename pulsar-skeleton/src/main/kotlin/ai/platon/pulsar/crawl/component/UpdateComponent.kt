@@ -47,7 +47,6 @@ class UpdateComponent(
         val fetchSchedule: FetchSchedule,
         val scoringFilters: ScoringFilters? = null,
         val messageWriter: MiscMessageWriter? = null,
-        val enumCounters: EnumCounters? = null,
         val conf: ImmutableConfig
 ) : Parameterized {
     val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
@@ -57,10 +56,11 @@ class UpdateComponent(
         init { EnumCounters.register(Counter::class.java) }
     }
 
+    private val enumCounters = EnumCounters.DEFAULT
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 
-    constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, null, conf)
+    constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, conf)
 
     override fun getParams(): Params {
         return Params.of(
@@ -192,7 +192,7 @@ class UpdateComponent(
                 }
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    enumCounters?.inc(Counter.rBadModTime)
+                    enumCounters.inc(Counter.rBadModTime)
                     messageWriter?.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,
                             "PMT", prevModifiedTime, "MT", modifiedTime,
