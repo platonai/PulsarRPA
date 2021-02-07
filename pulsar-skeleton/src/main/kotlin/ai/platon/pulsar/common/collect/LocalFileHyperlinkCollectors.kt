@@ -43,8 +43,6 @@ open class LocalFileHyperlinkCollector(
 
     var loadArgs: String? = null
 
-    var expireTimeCalculator: (() -> Duration)? = null
-
     val hyperlinks: List<Hyperlink> get() = ensureLoaded().cache
 
     constructor(path: Path, priority: Priority13, capacity: Int = 1_000_000): this(path, priority.value, capacity)
@@ -55,7 +53,6 @@ open class LocalFileHyperlinkCollector(
         var collected = 0
 
         cache.removeFirstOrNull()?.let {
-            it.expireTimeCalculator = expireTimeCalculator
             if (sink.add(it)) {
                ++collected
             } else {
