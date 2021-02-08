@@ -27,6 +27,9 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
     var taskId = LocalDate.now().toString()
 
+    /**
+     * TODO: should be a Instant
+     * */
     @Parameter(names = ["-taskTime", "--task-time"],
             description = "The task time, we usually use a task time to indicate a batch of a task")
     var taskTime = LocalDate.now().toString()

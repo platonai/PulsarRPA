@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
 import org.slf4j.LoggerFactory

@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.ListenableHyperlink
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
@@ -186,6 +187,18 @@ open class StreamingCrawler<T: UrlAware>(
         while (isActive && remainingMemory < 0) {
             if (j % 20 == 0) {
                 handleMemoryShortage(j)
+            }
+            delay(1000)
+        }
+
+        /**
+         * The vendor proclaimed every ip can be used for more than 5 minutes,
+         * If proxy is not enabled, the rate is always 0
+         * */
+        val fifteenMinuteRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
+        while (isActive && fifteenMinuteRate >= 5 / 60f) {
+            if (j % 60 == 0) {
+                log.warn("Context leaks too fast ($fifteenMinuteRate leaks/seconds)")
             }
             delay(1000)
         }
