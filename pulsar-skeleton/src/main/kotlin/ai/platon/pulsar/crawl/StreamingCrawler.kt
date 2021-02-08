@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.LoadOptionsNormalizer
+import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
@@ -306,12 +307,22 @@ open class StreamingCrawler<T: UrlAware>(
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("\n!!!Illegal application context, quit streaming crawler ... | {}", e.message)
+                    log.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }
-            is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
-            is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
+            is IllegalStateException -> {
+                log.warn("Illegal state", e)
+            }
+            is ProxyVendorUntrustedException -> {
+                log.error("Proxy is untrusted | {}", e.message)
+            }
+            is ProxyException -> {
+                log.error(Strings.simplifyException(e))
+            }
+            is TimeoutCancellationException -> {
+                log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
+            }
             is CancellationException -> {
                 // Comes after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
@@ -320,7 +331,6 @@ open class StreamingCrawler<T: UrlAware>(
                 }
                 return FlowState.BREAK
             }
-            is IllegalStateException -> log.warn("Illegal state", e)
             else -> throw e
         }
 

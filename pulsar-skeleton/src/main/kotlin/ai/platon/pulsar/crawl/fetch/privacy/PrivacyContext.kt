@@ -4,7 +4,10 @@ import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
+import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -103,6 +106,7 @@ abstract class PrivacyContext(
 
     fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
 
+    @Throws(ProxyException::class)
     open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
         val result = doRun(task, browseFun)
@@ -110,6 +114,7 @@ abstract class PrivacyContext(
         return result
     }
 
+    @Throws(ProxyException::class)
     abstract suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     protected fun beforeRun(task: FetchTask) {

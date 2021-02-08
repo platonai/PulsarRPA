@@ -6,8 +6,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -152,12 +153,41 @@ class ProxyContext(
     companion object {
         val numProxyAbsence = AtomicInteger()
         val numRunningTasks = AtomicInteger()
+        var maxAllowedProxyAbsence = 200
 
         init {
             mapOf(
-                    "proxyAbsences" to Gauge<Int> { numProxyAbsence.get() },
-                    "runningTasks" to Gauge<Int> { numRunningTasks.get() }
+                    "proxyAbsences" to Gauge { numProxyAbsence.get() },
+                    "runningTasks" to Gauge { numRunningTasks.get() }
             ).forEach { AppMetrics.register(this, it.key, it.value) }
+        }
+
+        @Throws(ProxyException::class)
+        fun create(
+                id: PrivacyContextId,
+                driverContext: WebDriverContext,
+                proxyPoolManager: ProxyPoolManager,
+                conf: ImmutableConfig
+        ): ProxyContext {
+            val proxyPool = proxyPoolManager.proxyPool
+            val proxy = proxyPool.take()
+
+            if (proxy != null) {
+                numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
+                val proxyEntry0 = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.dataDir) { proxy }
+                proxyEntry0.startWork()
+                return ProxyContext(proxyEntry0, proxyPoolManager, driverContext, conf)
+            } else {
+                numProxyAbsence.incrementAndGet()
+                checkProxyAbsence()
+                throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
+            }
+        }
+
+        fun checkProxyAbsence() {
+            if (numProxyAbsence.get() > maxAllowedProxyAbsence) {
+                throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
+            }
         }
     }
 
@@ -166,7 +196,6 @@ class ProxyContext(
      * If the number of success exceeds [maxFetchSuccess], emit a PrivacyRetry result
      * */
     private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE / 10)
-    private val maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     private val minTimeToLive = Duration.ofSeconds(30)
     private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
@@ -174,11 +203,15 @@ class ProxyContext(
     val isEnabled get() = proxyPoolManager.isEnabled
     val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
 
+    init {
+        maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
+    }
+
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
     }
 
-    @Throws(ProxyVendorUntrustedException::class)
+    @Throws(ProxyException::class)
     private suspend fun run0(
             task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         var success = false
@@ -225,14 +258,9 @@ class ProxyContext(
         }
     }
 
-    private fun checkProxyAbsence() {
-        if (isActive && numProxyAbsence.get() > maxAllowedProxyAbsence) {
-            throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
-        }
-    }
-
     private fun beforeTaskStart(task: FetchTask) {
         numRunningTasks.incrementAndGet()
+
         // If the proxy is idle, and here comes a new task, reset the context
         // The proxy is about to be unusable, reset the context
         proxyEntry?.also {

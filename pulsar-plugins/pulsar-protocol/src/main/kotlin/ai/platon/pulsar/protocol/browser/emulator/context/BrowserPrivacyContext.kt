@@ -2,9 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.NoProxyException
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -27,32 +25,18 @@ open class BrowserPrivacyContext(
         id: PrivacyContextId
 ): PrivacyContext(id, conf) {
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
-    private val browserInstanceId: BrowserInstanceId
-    private val driverContext: WebDriverContext
+    private val browserInstanceId = BrowserInstanceId.resolve(id.dataDir)
+    private val driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
     var proxyEntry: ProxyEntry? = null
     val numFreeDrivers get() = driverPoolManager.numFreeDrivers
     val numWorkingDrivers get() = driverPoolManager.numWorkingDrivers
     val numAvailableDrivers get() = driverPoolManager.numAvailableDrivers
 
-    init {
-        if (proxyPoolManager != null && proxyPoolManager.isEnabled) {
-            val proxyPool = proxyPoolManager.proxyPool
-            proxyEntry = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.dataDir) {
-                proxyPool.take() ?: throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
-            }
-            proxyEntry?.startWork()
-        }
-
-        browserInstanceId = BrowserInstanceId.resolve(id.dataDir).apply { proxyServer = proxyEntry?.hostPort }
-        driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
-
-        if (proxyPoolManager != null && proxyPoolManager.isEnabled) {
-            proxyContext = ProxyContext(proxyEntry, proxyPoolManager, driverContext, conf)
-        }
-    }
-
+    @Throws(NoProxyException::class, ProxyVendorUntrustedException::class)
     override suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        initialize()
+
         return checkAbnormalResult(task) ?:
             proxyContext?.run(task, browseFun) ?:
             driverContext.run(task, browseFun)
@@ -98,6 +82,17 @@ open class BrowserPrivacyContext(
         return when {
             !isActive -> FetchResult.privacyRetry(task)
             else -> null
+        }
+    }
+
+    @Throws(ProxyException::class)
+    @Synchronized
+    private fun initialize() {
+        if (proxyEntry == null && proxyPoolManager != null && proxyPoolManager.isEnabled) {
+            val pc = ProxyContext.create(id, driverContext, proxyPoolManager, conf)
+            proxyEntry = pc.proxyEntry
+            browserInstanceId.proxyServer = proxyEntry?.hostPort
+            proxyContext = pc
         }
     }
 }

@@ -14,13 +14,14 @@ open class FileProxyLoader(conf: ImmutableConfig): ProxyLoader(conf) {
     private val log = LoggerFactory.getLogger(FileProxyLoader::class.java)
 
     @Synchronized
+    @Throws(IOException::class, NoProxyException::class)
     override fun updateProxies(reloadInterval: Duration): List<ProxyEntry> {
         return kotlin.runCatching { updateProxies0(reloadInterval) }
                 .onFailure { log.warn("Failed to update proxies, {}", it.message) }
                 .getOrElse { listOf() }
     }
 
-    @Throws(IOException::class)
+    @Throws(IOException::class, NoProxyException::class)
     private fun updateProxies0(reloadInterval: Duration): List<ProxyEntry> {
         return Files.list(AppPaths.ENABLED_PROXY_DIR).filter { Files.isRegularFile(it) }
                 .iterator().asSequence()

@@ -86,6 +86,7 @@ class LoadingProxyPool(
         }
     }
 
+    @Throws(NoProxyException::class)
     private fun load() {
         proxyLoader.updateProxies(Duration.ZERO).asSequence()
                 .filterNot { it in proxyEntries }
