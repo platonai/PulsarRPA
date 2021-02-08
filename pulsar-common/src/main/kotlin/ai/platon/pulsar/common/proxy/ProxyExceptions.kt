@@ -28,4 +28,6 @@ open class ProxyVendorException : ProxyException {
     constructor(cause: Throwable) : super(cause) {}
 }
 
+open class ProxyInsufficientBalanceException(message: String) : ProxyException(message)
+
 open class ProxyVendorUntrustedException(message: String) : ProxyException(message)

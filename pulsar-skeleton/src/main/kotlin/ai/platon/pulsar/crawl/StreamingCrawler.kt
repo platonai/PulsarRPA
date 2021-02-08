@@ -9,6 +9,8 @@ import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.proxy.ProxyException
+import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
@@ -83,6 +85,8 @@ open class StreamingCrawler<T: UrlAware>(
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
+    @Volatile
+    private var proxyInsufficientBalance = 0
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
     private val numTasks = AtomicInteger()
@@ -92,6 +96,7 @@ open class StreamingCrawler<T: UrlAware>(
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
     var pageCollector: ConcurrentLinkedQueue<WebPage>? = null
+    var proxyPool: ProxyPool? = null
 
     val id = instanceSequencer.incrementAndGet()
 
@@ -196,12 +201,17 @@ open class StreamingCrawler<T: UrlAware>(
          * The vendor proclaimed every ip can be used for more than 5 minutes,
          * If proxy is not enabled, the rate is always 0
          * */
-        val fifteenMinuteRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
-        while (isActive && fifteenMinuteRate >= 5 / 60f) {
+        val contextLeaksRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
+        while (isActive && contextLeaksRate >= 5 / 60f) {
             if (j % 60 == 0) {
-                log.warn("Context leaks too fast ($fifteenMinuteRate leaks/seconds)")
+                log.warn("Context leaks too fast ($contextLeaksRate leaks/seconds)")
             }
             delay(1000)
+        }
+
+        while (isActive && proxyInsufficientBalance > 0) {
+            delay(1000)
+            handleProxySufficientBalance()
         }
 
         if (FileCommand.check("finish-job")) {
@@ -314,11 +324,16 @@ open class StreamingCrawler<T: UrlAware>(
             is IllegalStateException -> {
                 log.warn("Illegal state", e)
             }
+            is ProxyInsufficientBalanceException -> {
+                proxyInsufficientBalance++
+                log.warn("{}. {}", proxyInsufficientBalance, e.message)
+            }
             is ProxyVendorUntrustedException -> {
-                log.error("Proxy is untrusted | {}", e.message)
+                log.warn("Proxy is untrusted | {}", e.message)
+                return FlowState.BREAK
             }
             is ProxyException -> {
-                log.error(Strings.simplifyException(e))
+                log.warn("Unexpected proxy exception", Strings.simplifyException(e))
             }
             is TimeoutCancellationException -> {
                 log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
@@ -366,6 +381,21 @@ open class StreamingCrawler<T: UrlAware>(
         )
         session.context.clearCaches()
         System.gc()
+    }
+
+    private fun handleProxySufficientBalance() {
+        if (++proxyInsufficientBalance % 180 == 0) {
+            log.warn("Proxy account insufficient balance, check it again ...")
+            if (proxyPool != null) {
+                proxyPool?.runCatching { take() }?.onFailure {
+                    if (it !is ProxyInsufficientBalanceException) {
+                        proxyInsufficientBalance = 0
+                    }
+                }
+            } else {
+                proxyInsufficientBalance = 0
+            }
+        }
     }
 
     private fun generateFinishCommand() {

@@ -25,6 +25,7 @@ class LoadingProxyPool(
     private val bannedIps get() = proxyLoader.bannedIps
     private val bannedSegments get() = proxyLoader.bannedSegments
 
+    @Throws(ProxyException::class)
     override fun take(): ProxyEntry? {
         lastActiveTime = Instant.now()
 
@@ -86,7 +87,7 @@ class LoadingProxyPool(
         }
     }
 
-    @Throws(NoProxyException::class)
+    @Throws(ProxyException::class)
     private fun load() {
         proxyLoader.updateProxies(Duration.ZERO).asSequence()
                 .filterNot { it in proxyEntries }

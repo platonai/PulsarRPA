@@ -241,6 +241,9 @@ class ProxyContext(
 
     private fun handleProxyException(task: FetchTask, e: ProxyException): FetchResult {
         return when (e) {
+            is ProxyInsufficientBalanceException -> {
+                throw e
+            }
             is ProxyRetiredException -> {
                 log.warn("{}, context reset will be triggered | {}", e.message, task.proxyEntry?:"<no proxy>")
                 FetchResult.privacyRetry(task, reason = e)

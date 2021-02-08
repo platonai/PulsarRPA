@@ -45,7 +45,7 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
 
     val isActive get() = !closed.get()
 
-    @Throws(NoProxyException::class)
+    @Throws(ProxyException::class)
     abstract fun updateProxies(reloadInterval: Duration): List<ProxyEntry>
 
     @Synchronized
