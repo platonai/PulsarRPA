@@ -190,9 +190,10 @@ open class StreamingCrawler<T: UrlAware>(
             delay(1000)
         }
 
+        var k = 0
         while (isActive && remainingMemory < 0) {
-            if (j % 20 == 0) {
-                handleMemoryShortage(j)
+            if (k++ % 20 == 0) {
+                handleMemoryShortage(k)
             }
             delay(1000)
         }
@@ -200,10 +201,13 @@ open class StreamingCrawler<T: UrlAware>(
         /**
          * The vendor proclaimed every ip can be used for more than 5 minutes,
          * If proxy is not enabled, the rate is always 0
+         *
+         * 5 / 60f = 0.083
          * */
         val contextLeaksRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
+        k = 0
         while (isActive && contextLeaksRate >= 5 / 60f) {
-            if (j % 60 == 0) {
+            if (k++ % 60 == 0) {
                 log.warn("Context leaks too fast ($contextLeaksRate leaks/seconds)")
             }
             delay(1000)
@@ -333,7 +337,7 @@ open class StreamingCrawler<T: UrlAware>(
                 return FlowState.BREAK
             }
             is ProxyException -> {
-                log.warn("Unexpected proxy exception", Strings.simplifyException(e))
+                log.warn("Unexpected proxy exception | {}", Strings.simplifyException(e))
             }
             is TimeoutCancellationException -> {
                 log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
@@ -386,12 +390,13 @@ open class StreamingCrawler<T: UrlAware>(
     private fun handleProxySufficientBalance() {
         if (++proxyInsufficientBalance % 180 == 0) {
             log.warn("Proxy account insufficient balance, check it again ...")
-            if (proxyPool != null) {
-                proxyPool?.runCatching { take() }?.onFailure {
+            val p = proxyPool
+            if (p != null) {
+                p.runCatching { take() }.onFailure {
                     if (it !is ProxyInsufficientBalanceException) {
                         proxyInsufficientBalance = 0
                     }
-                }
+                }.onSuccess { proxyInsufficientBalance = 0 }
             } else {
                 proxyInsufficientBalance = 0
             }

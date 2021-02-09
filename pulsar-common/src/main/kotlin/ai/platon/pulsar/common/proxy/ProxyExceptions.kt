@@ -15,6 +15,8 @@ open class NoProxyException(message: String) : ProxyException(message)
 
 open class ProxyRetiredException(message: String) : ProxyException(message)
 
+open class ProxyRetryException(message: String) : ProxyException(message)
+
 open class ProxyGoneException(message: String) : ProxyException(message)
 
 open class ProxyVendorException : ProxyException {

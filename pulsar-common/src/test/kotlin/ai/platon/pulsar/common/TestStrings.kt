@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
+import org.apache.commons.lang3.StringUtils
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -34,5 +33,13 @@ class TestStrings {
     @Test
     fun testReadableBytes() {
         println(Strings.readableBytes(1e6.toLong(), true))
+    }
+
+    @Test
+    fun testAbbreviate() {
+        val s = "http://amazon.com/a/reviews/123?pageNumber=21&a=b&e=d"
+        val s2 = StringUtils.abbreviate(s, 50)
+        assertEquals(50, s2.length)
+        assertTrue(s2) { s2.endsWith("a...") }
     }
 }
