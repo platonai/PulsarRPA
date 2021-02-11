@@ -16,11 +16,6 @@
  */
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.url.Urls.reverseUrl
-import ai.platon.pulsar.common.url.Urls.unreverseUrl
-import org.junit.Assert
-import org.junit.Test
-
 object UrlCommon {
     val urlString1 = "http://foo.com/"
     val urlString2 = "http://foo.com:8900/"

@@ -92,7 +92,6 @@ open class StreamingCrawler<T: UrlAware>(
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(10)
     private var flowState = FlowState.CONTINUE
-    private var finishScript: Path? = null
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
     var pageCollector: ConcurrentLinkedQueue<WebPage>? = null
@@ -404,12 +403,11 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     private fun generateFinishCommand() {
-        val script = finishScript?:return
-
+        val finishScriptPath = AppPaths.SCRIPT_DIR.resolve("finish-crawler.sh")
         val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
         try {
-            Files.write(script, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-            Files.setPosixFilePermissions(script, PosixFilePermissions.fromString("rwxrw-r--"))
+            Files.write(finishScriptPath, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            Files.setPosixFilePermissions(finishScriptPath, PosixFilePermissions.fromString("rwxrw-r--"))
         } catch (e: IOException) {
             log.error(e.toString())
         }
