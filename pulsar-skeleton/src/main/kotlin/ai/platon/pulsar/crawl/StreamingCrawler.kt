@@ -205,7 +205,7 @@ open class StreamingCrawler<T: UrlAware>(
          * */
         val contextLeaksRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
         k = 0
-        while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
+        while (isActive && contextLeaksRate >= 5 / 60f && ++k < 300) {
             if (k % 60 == 0) {
                 log.warn("Context leaks too fast: $contextLeaksRate leaks/seconds")
             }

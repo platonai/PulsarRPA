@@ -78,6 +78,11 @@ class AppMetrics(
 
         fun <T: Metric> registerAll(obj: Any, ident: String, metrics: Map<String, T>) =
                 metrics.forEach { (name, metric) -> register(obj, ident, name, metric) }
+
+        fun <T: Enum<T>> setValue(counter: T, value: Int) {
+            enumCounters.setValue(counter, value)
+            appCounters[counter]?.let { it.dec(it.count); it.inc(value.toLong()) }
+        }
     }
 
     private val timeIdent = DateTimes.formatNow("MMdd")
