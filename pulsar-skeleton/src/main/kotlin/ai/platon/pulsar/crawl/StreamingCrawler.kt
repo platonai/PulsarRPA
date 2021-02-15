@@ -49,13 +49,16 @@ open class StreamingCrawler<T: UrlAware>(
     companion object {
         private val instanceSequencer = AtomicInteger()
         private val globalRunningInstances = AtomicInteger()
-        private val globalTasks = AtomicInteger()
-        private val globalRunningTasks = AtomicInteger()
-        private val globalFinishedTasks = AtomicInteger()
-        private val globalTimeout = AtomicInteger()
-        private val globalRetries = AtomicInteger()
-        private val globalLoadingUrls = ConcurrentSkipListSet<String>()
 
+        private val globalRunningTasks = AtomicInteger()
+        private val globalTimeout = AtomicInteger()
+        private val meterGlobalRetries = AppMetrics.meter(this, "retries")
+        private val meterGlobalGone = AppMetrics.meter(this, "gone")
+        private val meterGlobalTasks = AppMetrics.meter(this, "tasks")
+        private val meterGlobalSuccesses = AppMetrics.meter(this, "successes")
+        private val meterGlobalFinishes = AppMetrics.meter(this, "finishes")
+
+        private val globalLoadingUrls = ConcurrentSkipListSet<String>()
         private val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         private val availableMemory get() = systemInfo.hardware.memory.available
@@ -67,11 +70,18 @@ open class StreamingCrawler<T: UrlAware>(
             mapOf(
                     "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
                     "globalRunningInstances" to Gauge { globalRunningInstances.get() },
-                    "globalTasks" to Gauge { globalTasks.get() },
                     "globalRunningTasks" to Gauge { globalRunningTasks.get() },
-                    "globalFinishedTasks" to Gauge { globalFinishedTasks.get() },
                     "globalTimeout" to Gauge { globalTimeout.get() },
-                    "globalRetries" to Gauge { globalRetries.get() }
+                    "globalTasks" to Gauge { meterGlobalTasks.count },
+                    "globalSuccesses" to Gauge { meterGlobalSuccesses.count },
+                    "globalFinishes" to Gauge { meterGlobalFinishes.count },
+                    "globalRetries" to Gauge { meterGlobalRetries.count },
+                    "globalGone" to Gauge { meterGlobalGone.count },
+                    "globalTaskThroughput" to Gauge { meterGlobalTasks.meanRate },
+                    "globalSuccessTaskThroughput" to Gauge { meterGlobalSuccesses.meanRate },
+                    "globalFinishTaskThroughput" to Gauge { meterGlobalFinishes.meanRate },
+                    "globalRetryTaskThroughput" to Gauge { meterGlobalRetries.meanRate },
+                    "globalGoneTaskThroughput" to Gauge { meterGlobalGone.meanRate },
             ).forEach { AppMetrics.register(this, it.key, it.value) }
         }
     }
@@ -89,7 +99,6 @@ open class StreamingCrawler<T: UrlAware>(
     private var proxyInsufficientBalance = 0
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
-    private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(10)
     private var flowState = FlowState.CONTINUE
 
@@ -101,13 +110,13 @@ open class StreamingCrawler<T: UrlAware>(
 
     val crawlerEventHandler = ChainedStreamingCrawlerEventHandler()
 
-    init {
-        generateFinishCommand()
+    private val gauges = mapOf(
+            "idleTime" to Gauge { idleTime.readable() }
+    )
 
-        mapOf(
-                "idleTime" to Gauge { idleTime.readable() },
-                "numTasks" to Gauge { numTasks.get() }
-        ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
+    init {
+        AppMetrics.registerAll(this, "$id.g", gauges)
+        generateFinishCommand()
     }
 
     open fun run() {
@@ -155,13 +164,12 @@ open class StreamingCrawler<T: UrlAware>(
                     return@forEachIndexed
                 }
 
-                globalTasks.incrementAndGet()
                 globalLoadingUrls.add(url.url)
 
                 val state = try {
                     load(1 + j, url, scope)
                 } finally {
-                    globalFinishedTasks.incrementAndGet()
+                    meterGlobalFinishes.mark()
                     globalLoadingUrls.remove(url.url)
                 }
 
@@ -174,12 +182,12 @@ open class StreamingCrawler<T: UrlAware>(
         globalRunningInstances.decrementAndGet()
 
         log.info("All done. Total {} tasks are processed in session {} in {}",
-                numTasks, session, DateTimes.elapsedTime(startTime).readable())
+                meterGlobalTasks.count, session, DateTimes.elapsedTime(startTime).readable())
     }
 
     private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
-        numTasks.incrementAndGet()
+        meterGlobalTasks.mark()
 
         while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
@@ -249,6 +257,9 @@ open class StreamingCrawler<T: UrlAware>(
         var page: WebPage? = null
         try {
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
+            if (page != null && page.protocolStatus.isSuccess) {
+                meterGlobalSuccesses.mark()
+            }
         } catch (e: TimeoutCancellationException) {
             globalTimeout.incrementAndGet()
             log.info("Task timeout ({}) to load page | {}", taskTimeout, url)
@@ -360,12 +371,13 @@ open class StreamingCrawler<T: UrlAware>(
         if (gCache != null && !gCache.isFetching(url)) {
             val cache = gCache.fetchCacheManager.normalCache.nReentrantQueue
             if (cache.add(url)) {
-                globalRetries.incrementAndGet()
+                meterGlobalRetries.mark()
                 if (page != null) {
                     val retry = 1 + page.fetchRetries
                     log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retry}th"))
                 }
             } else {
+                meterGlobalGone.mark()
                 if (page != null) {
                     log.info("{}", CompletedPageFormatter(page, prefix = "Gone"))
                 } else {
