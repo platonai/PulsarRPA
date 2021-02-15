@@ -81,6 +81,7 @@ open class StreamingCrawler<T: UrlAware>(
                     "globalGone" to Gauge { meterGlobalGone.count },
                     "globalTasks/s" to Gauge { meterGlobalTasks.meanRate },
                     "globalSuccesses/s" to Gauge { meterGlobalSuccesses.meanRate },
+                    "globalUpdateSuccesses/s" to Gauge { meterGlobalUpdateSuccesses.meanRate },
                     "globalFinishes/s" to Gauge { meterGlobalFinishes.meanRate },
                     "globalRetries/s" to Gauge { meterGlobalRetries.meanRate },
                     "globalGone/s" to Gauge { meterGlobalGone.meanRate },

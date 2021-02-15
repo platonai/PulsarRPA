@@ -59,18 +59,21 @@ class AppMetrics(
             defaultMetricRegistry.register(prependReadableClassName(obj, name), metric)
         }
 
-        fun <T: Enum<T>> register(counterClass: Class<T>) {
-            EnumCounters.register(counterClass)
-            counterClass.enumConstants.associateTo(appCounters) { it to counter(counterClass, it.name) }
-        }
-
         fun <T: Metric> register(obj: Any, ident: String, name: String, metric: T) {
             defaultMetricRegistry.register(prependReadableClassName(obj, ident, name, "."), metric)
         }
 
-        fun <T: Enum<T>> register(counterClass: KClass<T>) {
-            EnumCounters.register(counterClass.java)
-            counterClass.java.enumConstants.associateTo(appCounters) { it to counter(this, it.name) }
+        fun <T: Enum<T>> register(counterClass: Class<T>, withGauges: Boolean = false) {
+            EnumCounters.register(counterClass)
+            counterClass.enumConstants.associateTo(appCounters) { it to counter(counterClass, it.name) }
+            if (withGauges) {
+                val gauges = counterClass.enumConstants.associate { it.name to Gauge { enumCounters[it] } }
+                registerAll(this, "g", gauges)
+            }
+        }
+
+        fun <T: Enum<T>> register(counterClass: KClass<T>, withGauges: Boolean = false) {
+            return register(counterClass.java, withGauges)
         }
 
         fun <T: Metric> registerAll(obj: Any, metrics: Map<String, T>) =
