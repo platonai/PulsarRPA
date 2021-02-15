@@ -64,13 +64,13 @@ class AppMetrics(
             counterClass.enumConstants.associateTo(appCounters) { it to counter(counterClass, it.name) }
         }
 
+        fun <T: Metric> register(obj: Any, ident: String, name: String, metric: T) {
+            defaultMetricRegistry.register(prependReadableClassName(obj, ident, name, "."), metric)
+        }
+
         fun <T: Enum<T>> register(counterClass: KClass<T>) {
             EnumCounters.register(counterClass.java)
             counterClass.java.enumConstants.associateTo(appCounters) { it to counter(this, it.name) }
-        }
-
-        fun <T: Metric> register(obj: Any, ident: String, name: String, metric: T) {
-            defaultMetricRegistry.register(prependReadableClassName(obj, ident, name, "."), metric)
         }
 
         fun <T: Metric> registerAll(obj: Any, metrics: Map<String, T>) =

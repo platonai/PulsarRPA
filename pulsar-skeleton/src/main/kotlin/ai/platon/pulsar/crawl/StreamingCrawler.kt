@@ -51,11 +51,12 @@ open class StreamingCrawler<T: UrlAware>(
         private val globalRunningInstances = AtomicInteger()
 
         private val globalRunningTasks = AtomicInteger()
-        private val globalTimeout = AtomicInteger()
+        private val globalTimeouts = AppMetrics.meter(this, "timeouts")
         private val meterGlobalRetries = AppMetrics.meter(this, "retries")
         private val meterGlobalGone = AppMetrics.meter(this, "gone")
         private val meterGlobalTasks = AppMetrics.meter(this, "tasks")
         private val meterGlobalSuccesses = AppMetrics.meter(this, "successes")
+        private val meterGlobalUpdateSuccesses = AppMetrics.meter(this, "updateSuccesses")
         private val meterGlobalFinishes = AppMetrics.meter(this, "finishes")
 
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
@@ -71,18 +72,19 @@ open class StreamingCrawler<T: UrlAware>(
                     "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
                     "globalRunningInstances" to Gauge { globalRunningInstances.get() },
                     "globalRunningTasks" to Gauge { globalRunningTasks.get() },
-                    "globalTimeout" to Gauge { globalTimeout.get() },
                     "globalTasks" to Gauge { meterGlobalTasks.count },
                     "globalSuccesses" to Gauge { meterGlobalSuccesses.count },
+                    "globalUpdateSuccesses" to Gauge { meterGlobalUpdateSuccesses.count },
                     "globalFinishes" to Gauge { meterGlobalFinishes.count },
                     "globalRetries" to Gauge { meterGlobalRetries.count },
+                    "globalTimeouts" to Gauge { globalTimeouts.count },
                     "globalGone" to Gauge { meterGlobalGone.count },
-                    "globalTaskThroughput" to Gauge { meterGlobalTasks.meanRate },
-                    "globalSuccessTaskThroughput" to Gauge { meterGlobalSuccesses.meanRate },
-                    "globalFinishTaskThroughput" to Gauge { meterGlobalFinishes.meanRate },
-                    "globalRetryTaskThroughput" to Gauge { meterGlobalRetries.meanRate },
-                    "globalGoneTaskThroughput" to Gauge { meterGlobalGone.meanRate },
-            ).forEach { AppMetrics.register(this, it.key, it.value) }
+                    "globalTasks/s" to Gauge { meterGlobalTasks.meanRate },
+                    "globalSuccesses/s" to Gauge { meterGlobalSuccesses.meanRate },
+                    "globalFinishes/s" to Gauge { meterGlobalFinishes.meanRate },
+                    "globalRetries/s" to Gauge { meterGlobalRetries.meanRate },
+                    "globalGone/s" to Gauge { meterGlobalGone.meanRate },
+            ).let { AppMetrics.registerAll(this, it) }
         }
     }
 
@@ -246,23 +248,26 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     private suspend fun load(url: UrlAware): WebPage? {
-        if (!isActive) {
-            return null
-        }
-
         if (url is ListenableHyperlink) {
             url.onFilter(url.url) ?: return null
         }
 
         var page: WebPage? = null
         try {
+            if (!isActive) {
+                return null
+            }
+
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
             if (page != null && page.protocolStatus.isSuccess) {
+                if (page.isUpdated) {
+                    meterGlobalUpdateSuccesses.mark()
+                }
                 meterGlobalSuccesses.mark()
             }
         } catch (e: TimeoutCancellationException) {
-            globalTimeout.incrementAndGet()
-            log.info("Task timeout ({}) to load page | {}", taskTimeout, url)
+            globalTimeouts.mark()
+            log.info("{}. Task timeout ({}) to load page | {}", globalTimeouts.count, taskTimeout, url)
         } catch (e: Throwable) {
             if (e.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
@@ -287,6 +292,7 @@ open class StreamingCrawler<T: UrlAware>(
         page?.let { crawlerEventHandler.onAfterLoad(url, it) }
 
         // if urls is ConcurrentLoadingIterable
+        // TODO: the line below can be removed
         (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
 
         return page
@@ -298,7 +304,7 @@ open class StreamingCrawler<T: UrlAware>(
         registerHandlers(url, actualOptions)
 
         actualOptions.apply {
-            // TODO: it seems there is a option merge bug
+            // TODO: it seems there is an option merge bug
             parse = true
         }
 
