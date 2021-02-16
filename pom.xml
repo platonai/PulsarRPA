@@ -57,13 +57,14 @@
         <module>pulsar-skeleton</module>
         <module>pulsar-dom</module>
         <module>pulsar-plugins</module>
-        <module>pulsar-beans</module>
 
         <module>pulsar-tools</module>
         <module>pulsar-third</module>
         <module>pulsar-ql-common</module>
         <module>pulsar-ql-server</module>
         <module>pulsar-rest</module>
+
+        <module>pulsar-spring-support</module>
         <module>pulsar-app</module>
         <module>pulsar-test</module>
     </modules>
@@ -436,6 +437,12 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-h2</artifactId>
                 <version>${pulsar-h2.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-boot</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-serialization -->

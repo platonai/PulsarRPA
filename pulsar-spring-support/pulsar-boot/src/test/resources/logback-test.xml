@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true" scanPeriod="30 seconds" debug="false">
+    <property name="logging.dir" value="${logging.dir:-logs}" />
+    <property name="logging.file" value="${logging.file:-pulsar.log}" />
+    <property name="logging.m.file" value="${logging.m.file:-pulsar.m.log}" />
+    <property name="logging.sql.file" value="${logging.sql.file:-pulsar.sql.log}" />
+
+    <!--0. 日志格式和颜色渲染 -->
+    <!-- 彩色日志依赖的渲染类 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    <!-- 彩色日志格式 -->
+    <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%.10t]){faint} %clr(%c{2}){cyan} %clr(-){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
+
+    <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logging.dir}/${logging.file}</File>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.dir}/${logging.file}.%d{.yyyy-MM-dd}</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+    <appender name="METRICS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${logging.dir}/${logging.m.file}</File>
+        <encoder>
+            <pattern>%d{ISO8601} - %m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.dir}/${logging.m.file}.%d{.yyyy-MM-dd}</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <appender name="SQL" class="ch.qos.logback.core.FileAppender">
+        <File>${logging.dir}/${logging.sql.file}</File>
+        <encoder>
+            <pattern>%m%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="${log.level:-INFO}">
+        <appender-ref ref="DRFA"/>
+        <appender-ref ref="stdout"/>
+    </root>
+
+    <logger name="ai.platon.scent" level="DEBUG"/>
+    <logger name="ai.platon.scent.proxy" level="DEBUG"/>
+    <logger name="ai.platon.scent.crawl.parser" level="DEBUG"/>
+
+    <logger name="ai.platon.scent.examples" level="DEBUG"/>
+
+    <logger name="ai.platon.pulsar.common.MetricsManagement" level="DEBUG" additivity="false">
+        <appender-ref ref="METRICS"/>
+    </logger>
+
+    <logger name="ai.platon.pulsar.common.sql.log" level="DEBUG" additivity="false">
+        <appender-ref ref="SQL"/>
+    </logger>
+
+    <logger name="ai.platon.pulsar" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.ql" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.net" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.browser" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.parse.html" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.crawl.parse" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.cli.shell" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.crawl" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.protocol.browser" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.protocol.browser.driver" level="DEBUG"/>
+
+    <logger name="ai.platon.pulsar.crawl.component" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler" level="DEBUG"/>
+
+    <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="DEBUG"/>
+
+    <logger name="ai.platon.pulsar.examples" level="DEBUG"/>
+
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.core" level="INFO"/>
+    <logger name="org.springframework.core.env" level="INFO"/>
+
+    <logger name="org.apache.hadoop.conf.Configuration" level="WARN"/>
+    <logger name="org.apache.gora" level="ERROR"/>
+    <logger name="org.apache.zookeeper" level="ERROR"/>
+    <logger name="org.apache.hadoop" level="WARN"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.apache.hadoop.mapreduce.Job" level="WARN"/>
+    <logger name="io.netty.handler.logging" level="INFO"/>
+    <logger name="org.mongodb" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+
+</configuration>

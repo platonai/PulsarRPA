@@ -30,6 +30,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-protocol</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-boot</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -46,6 +50,11 @@
             <groupId>com.ninja-squad</groupId>
             <artifactId>springmockk</artifactId>
             <version>1.1.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-ql-server</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

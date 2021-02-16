@@ -24,6 +24,7 @@
     <name>Pulsar App</name>
 
     <modules>
+        <module>pulsar-app-resources</module>
         <module>pulsar-master</module>
         <module>pulsar-examples</module>
     </modules>

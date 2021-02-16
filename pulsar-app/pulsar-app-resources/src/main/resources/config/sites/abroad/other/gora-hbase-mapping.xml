@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!--
+In addition to family 'name' and 'maxVersions' attributes, 
+individual table families can ve defined with several other
+attributes such as
+  compression="$$$" - the compression option to use in HBase.
+  blockCache="$$$"  - an LRU cache that contains three levels of block priority 
+                      to allow for scan-resistance and in-memory ColumnFamilies.
+  blockSize="$$$"   - The blocksize can be configured for each ColumnFamily in 
+                      a table, and this defaults to 64k.
+  bloomFilter="$$$" - Bloom Filters can be enabled per-ColumnFamily.
+  maxVersions="$$$" - The maximum number of row versions to store is configured 
+                      per column family via HColumnDescriptor.
+  timeToLive="$$$"  - ColumnFamilies can set a TTL length in seconds, and HBase 
+                      will automatically delete rows once the expiration time is 
+                      reached.
+  inMemory="$$$"    - ColumnFamilies can optionally be defined as in-memory.
+
+You should consult the current Gora gora-hbase documentation
+for further information on properties and mapping configurtion.
+http://gora.apache.org/current/gora-hbase.html
+-->
+
+<gora-orm>
+    <table name="news_aboard_webpage">
+        <family name="p" maxVersions="1"/>
+        <family name="f" maxVersions="1"/>
+        <family name="s" maxVersions="1"/>
+        <family name="il" maxVersions="1"/>
+        <family name="ol" maxVersions="1"/>
+        <family name="h" maxVersions="1"/>
+        <family name="mtdt" maxVersions="1"/>
+        <family name="mk" maxVersions="1"/>
+    </table>
+    <class table="news_aboard_webpage" keyClass="java.lang.String" name="HWebPage">
+        <!-- fetch fields                                       -->
+        <field name="baseUrl" family="f" qualifier="bas"/>
+        <field name="status" family="f" qualifier="st"/>
+        <field name="prevFetchTime" family="f" qualifier="pts"/>
+        <field name="fetchTime" family="f" qualifier="ts"/>
+        <field name="fetchInterval" family="f" qualifier="fi"/>
+        <field name="retriesSinceFetch" family="f" qualifier="rsf"/>
+        <field name="reprUrl" family="f" qualifier="rpr"/>
+        <field name="content" family="f" qualifier="cnt"/>
+        <field name="contentType" family="f" qualifier="typ"/>
+        <field name="protocolStatus" family="f" qualifier="prot"/>
+        <field name="modifiedTime" family="f" qualifier="mod"/>
+        <field name="prevModifiedTime" family="f" qualifier="pmod"/>
+        <field name="batchId" family="f" qualifier="bid"/>
+
+        <!-- parse fields                                       -->
+        <field name="title" family="p" qualifier="t"/>
+        <field name="text" family="p" qualifier="c"/>
+        <field name="parseStatus" family="p" qualifier="st"/>
+        <field name="signature" family="p" qualifier="sig"/>
+        <field name="prevSignature" family="p" qualifier="psig"/>
+
+        <!-- score fields                                       -->
+        <field name="score" family="s" qualifier="s"/>
+        <field name="headers" family="h"/>
+        <field name="inlinks" family="il"/>
+        <field name="outlinks" family="ol"/>
+        <field name="metadata" family="mtdt"/>
+        <field name="markers" family="mk"/>
+    </class>
+
+    <table name="news_aboard_pageblock">
+        <family name="b"  maxVersions="1" />
+        <family name="i"  maxVersions="1" />
+        <family name="p"  maxVersions="1" />
+        <family name="l"  maxVersions="1" />
+        <family name="mk" maxVersions="1" />
+    </table>
+    <class table="news_aboard_pageblock" keyClass="java.lang.String" name="HPageBlock">
+        <!-- build fields                                       -->
+        <field name="baseUrl"       family="b"    qualifier="bas" />
+        <field name="baseSequence"  family="b"    qualifier="seq" />
+        <field name="cssSelector"   family="b"    qualifier="slt" />
+        <field name="name"          family="b"    qualifier="nm" />
+        <field name="content"       family="b"    qualifier="cnt" />
+        <field name="text"          family="b"    qualifier="txt" />
+        <field name="codeDigest"    family="b"    qualifier="coddgt" />
+        <field name="textDigest"    family="b"    qualifier="txtdgt" />
+        <field name="diagnosis"     family="b"    qualifier="diag" />
+        <field name="batchId"       family="b"    qualifier="bid" />
+
+        <!-- features -->
+        <field name="features"    family="i" />
+
+        <field name="patterns"      family="p" />
+
+        <field name="labels"        family="l" />
+
+        <!-- other fields -->
+        <field name="markers"       family="mk" />
+    </class>
+
+    <table name="news_aboard_pageentity">
+        <family name="p"  maxVersions="1" />
+        <family name="a"  maxVersions="1" />
+    </table>
+    <class table="news_aboard_pageentity" keyClass="java.lang.String" name="HPageEntity">
+        <!-- build fields                                       -->
+        <field name="baseUri"       family="p"    qualifier="bas" />
+        <field name="title"         family="p"    qualifier="t"/>
+
+        <!-- other fields -->
+        <field name="markers"       family="mk" />
+
+        <!-- features -->
+        <field name="entityAttributes" family="a" qualifier="attrs"/>
+    </class>
+</gora-orm>
