@@ -25,15 +25,6 @@
 
     <modules>
         <module>pulsar-master</module>
+        <module>pulsar-examples</module>
     </modules>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-master</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 </project>

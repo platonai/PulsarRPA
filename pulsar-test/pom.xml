@@ -18,12 +18,36 @@
         <version>1.5.7-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-tools</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>pulsar-test</artifactId>
+    <name>Pulsar Test</name>
 
-    <name>Pulsar Tools</name>
+    <dependencies>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-beans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-protocol</artifactId>
+        </dependency>
 
-    <modules>
-        <module>pulsar-browser</module>
-    </modules>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.junit.jupiter</groupId>-->
+<!--            <artifactId>junit-jupiter-engine</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>com.ninja-squad</groupId>
+            <artifactId>springmockk</artifactId>
+            <version>1.1.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>

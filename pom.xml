@@ -65,6 +65,7 @@
         <module>pulsar-ql-server</module>
         <module>pulsar-rest</module>
         <module>pulsar-app</module>
+        <module>pulsar-test</module>
     </modules>
 
     <profiles>

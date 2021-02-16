@@ -14,12 +14,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar</artifactId>
+        <artifactId>pulsar-app</artifactId>
         <version>1.5.7-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-app</artifactId>
-    <name>Pulsar App</name>
+    <artifactId>pulsar-master</artifactId>
+    <name>Pulsar Master</name>
 
     <dependencies>
         <!-- Internal Dependencies -->
