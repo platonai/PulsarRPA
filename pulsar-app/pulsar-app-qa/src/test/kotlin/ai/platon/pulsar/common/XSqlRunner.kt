@@ -1,7 +1,5 @@
-package ai.platon.pulsar
+package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.sql.SqlConverter
 import ai.platon.pulsar.common.sql.SqlTemplate
 import ai.platon.pulsar.context.PulsarContext

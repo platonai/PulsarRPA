@@ -1,6 +1,6 @@
 package ai.platon.pulsar.qa
 
-import ai.platon.pulsar.XSqlRunner
+import ai.platon.pulsar.common.XSqlRunner
 import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest

@@ -18,8 +18,8 @@
         <version>1.5.7-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-test</artifactId>
-    <name>Pulsar Test</name>
+    <artifactId>pulsar-app-qa</artifactId>
+    <name>Pulsar App QA</name>
 
     <dependencies>
         <dependency>
@@ -57,6 +57,13 @@
             <artifactId>pulsar-ql-server</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-app-resources</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>

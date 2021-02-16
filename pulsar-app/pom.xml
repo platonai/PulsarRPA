@@ -25,6 +25,7 @@
 
     <modules>
         <module>pulsar-app-resources</module>
+        <module>pulsar-app-qa</module>
         <module>pulsar-master</module>
         <module>pulsar-examples</module>
     </modules>
