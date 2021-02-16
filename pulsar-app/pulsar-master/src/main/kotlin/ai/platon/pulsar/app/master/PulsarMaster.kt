@@ -2,9 +2,7 @@ package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.support.GenericPulsarContext
 import org.h2.tools.Server
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner

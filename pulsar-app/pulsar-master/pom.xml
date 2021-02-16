@@ -19,21 +19,23 @@
     </parent>
 
     <artifactId>pulsar-app</artifactId>
-    <packaging>pom</packaging>
-
     <name>Pulsar App</name>
 
-    <modules>
-        <module>pulsar-master</module>
-    </modules>
+    <dependencies>
+        <!-- Internal Dependencies -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-beans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-ql-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-rest</artifactId>
+        </dependency>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-master</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    </dependencies>
+
 </project>

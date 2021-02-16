@@ -1,7 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.withContext
 

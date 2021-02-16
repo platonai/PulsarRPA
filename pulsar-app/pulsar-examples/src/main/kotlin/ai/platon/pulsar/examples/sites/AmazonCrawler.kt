@@ -1,11 +1,8 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.examples.common.Crawler
 
 class AmazonCrawler(context: PulsarContext): Crawler(context) {
