@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
@@ -56,7 +55,7 @@ open class StreamingCrawler<T: UrlAware>(
         private val meterGlobalGone = AppMetrics.meter(this, "gone")
         private val meterGlobalTasks = AppMetrics.meter(this, "tasks")
         private val meterGlobalSuccesses = AppMetrics.meter(this, "successes")
-        private val meterGlobalUpdateSuccesses = AppMetrics.meter(this, "updateSuccesses")
+        private val meterGlobalFetchSuccesses = AppMetrics.meter(this, "fetchSuccesses")
         private val meterGlobalFinishes = AppMetrics.meter(this, "finishes")
 
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
@@ -65,26 +64,30 @@ open class StreamingCrawler<T: UrlAware>(
         private val availableMemory get() = systemInfo.hardware.memory.available
         private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
         private val remainingMemory get() = availableMemory - requiredMemory
+        private var contextLeakWaitingTime = Duration.ZERO
+        private var proxyVendorWaitingTime = Duration.ZERO
         private val isIllegalApplicationState = AtomicBoolean()
 
         init {
             mapOf(
-                    "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
-                    "globalRunningInstances" to Gauge { globalRunningInstances.get() },
-                    "globalRunningTasks" to Gauge { globalRunningTasks.get() },
-                    "globalTasks" to Gauge { meterGlobalTasks.count },
-                    "globalSuccesses" to Gauge { meterGlobalSuccesses.count },
-                    "globalUpdateSuccesses" to Gauge { meterGlobalUpdateSuccesses.count },
-                    "globalFinishes" to Gauge { meterGlobalFinishes.count },
-                    "globalRetries" to Gauge { meterGlobalRetries.count },
-                    "globalTimeouts" to Gauge { globalTimeouts.count },
-                    "globalGone" to Gauge { meterGlobalGone.count },
-                    "globalTasks/s" to Gauge { meterGlobalTasks.meanRate },
-                    "globalSuccesses/s" to Gauge { meterGlobalSuccesses.meanRate },
-                    "globalUpdateSuccesses/s" to Gauge { meterGlobalUpdateSuccesses.meanRate },
-                    "globalFinishes/s" to Gauge { meterGlobalFinishes.meanRate },
-                    "globalRetries/s" to Gauge { meterGlobalRetries.meanRate },
-                    "globalGone/s" to Gauge { meterGlobalGone.meanRate },
+                "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
+                "globalRunningInstances" to Gauge { globalRunningInstances.get() },
+                "globalRunningTasks" to Gauge { globalRunningTasks.get() },
+                "globalTasks" to Gauge { meterGlobalTasks.count },
+                "globalSuccesses" to Gauge { meterGlobalSuccesses.count },
+                "globalUpdateSuccesses" to Gauge { meterGlobalFetchSuccesses.count },
+                "globalFinishes" to Gauge { meterGlobalFinishes.count },
+                "globalRetries" to Gauge { meterGlobalRetries.count },
+                "globalTimeouts" to Gauge { globalTimeouts.count },
+                "globalGone" to Gauge { meterGlobalGone.count },
+                "globalTasks/s" to Gauge { meterGlobalTasks.meanRate },
+                "globalSuccesses/s" to Gauge { meterGlobalSuccesses.meanRate },
+                "globalFetchSuccesses/s" to Gauge { meterGlobalFetchSuccesses.meanRate },
+                "globalFinishes/s" to Gauge { meterGlobalFinishes.meanRate },
+                "globalRetries/s" to Gauge { meterGlobalRetries.meanRate },
+                "globalGone/s" to Gauge { meterGlobalGone.meanRate },
+                "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
+                "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime }
             ).let { AppMetrics.registerAll(this, it) }
         }
     }
@@ -208,23 +211,14 @@ open class StreamingCrawler<T: UrlAware>(
             delay(1000)
         }
 
-        /**
-         * The vendor proclaimed every ip can be used for more than 5 minutes,
-         * If proxy is not enabled, the rate is always 0
-         *
-         * 5 / 60f = 0.083
-         * */
         val contextLeaksRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
-        k = 0
-        while (isActive && contextLeaksRate >= 5 / 60f && ++k < 300) {
-            if (k % 60 == 0) {
-                log.warn("Context leaks too fast: $contextLeaksRate leaks/seconds")
-            }
-            delay(1000)
+        if (isActive && contextLeaksRate >= 5) {
+            handleContextLeaks()
         }
 
         while (isActive && proxyInsufficientBalance > 0) {
             delay(1000)
+            proxyVendorWaitingTime += Duration.ofSeconds(1)
             handleProxySufficientBalance()
         }
 
@@ -262,7 +256,7 @@ open class StreamingCrawler<T: UrlAware>(
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
             if (page != null && page.protocolStatus.isSuccess) {
                 if (page.isUpdated) {
-                    meterGlobalUpdateSuccesses.mark()
+                    meterGlobalFetchSuccesses.mark()
                 }
                 meterGlobalSuccesses.mark()
             }
@@ -403,6 +397,30 @@ open class StreamingCrawler<T: UrlAware>(
         )
         session.context.clearCaches()
         System.gc()
+    }
+
+    /**
+     * The vendor proclaimed every ip can be used for more than 5 minutes,
+     * If proxy is not enabled, the rate is always 0
+     *
+     * 5 / 60f = 0.083
+     * */
+    private suspend fun handleContextLeaks() {
+        val meterGlobalContextLeaks = PrivacyContext.meterGlobalContextLeaks
+        val contextLeaksRate = meterGlobalContextLeaks.fifteenMinuteRate
+        var k = 0
+        while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
+            if (k % 60 == 0) {
+                log.warn("Context leaks too fast: $contextLeaksRate leaks/seconds")
+            }
+            delay(1000)
+
+            // trigger the meter updating
+            meterGlobalContextLeaks.mark(-1)
+            meterGlobalContextLeaks.mark(1)
+
+            contextLeakWaitingTime += Duration.ofSeconds(1)
+        }
     }
 
     private fun handleProxySufficientBalance() {

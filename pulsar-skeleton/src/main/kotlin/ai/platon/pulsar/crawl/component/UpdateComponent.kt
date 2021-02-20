@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -53,7 +54,7 @@ class UpdateComponent(
 
     companion object {
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
-        init { EnumCounters.register(Counter::class.java) }
+        init { AppMetrics.register(Counter::class.java) }
     }
 
     private val enumCounters = EnumCounters.DEFAULT

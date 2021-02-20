@@ -64,7 +64,7 @@ class AppMetrics(
         }
 
         fun <T: Enum<T>> register(counterClass: Class<T>, withGauges: Boolean = false) {
-            EnumCounters.register(counterClass)
+            enumCounters.register(counterClass)
             counterClass.enumConstants.associateTo(appCounters) { it to counter(counterClass, it.name) }
             if (withGauges) {
                 val gauges = counterClass.enumConstants.associate { it.name to Gauge { enumCounters[it] } }

@@ -363,7 +363,7 @@ class TaskScheduler(
             rIndexed, rNotIndexed
         }
 
-        init { EnumCounters.register(Counter::class.java) }
+        init { AppMetrics.register(Counter::class.java) }
 
         private val instanceSequence = AtomicInteger(0)
     }

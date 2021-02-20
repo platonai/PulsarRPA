@@ -18,12 +18,9 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.EnumCounters
-import ai.platon.pulsar.common.FSUtils
-import ai.platon.pulsar.common.LocalFSUtils
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.JobInitialized
@@ -67,7 +64,7 @@ class GenerateComponent(
             mLater, mLater0, mLater1, mLater2, mLater3, mLater4, mLater5, mLater6, mLater7, mLaterN,
             mAhead, mSeedAhead, mSeedLater, mInactive
         }
-        init { EnumCounters.register(Counter::class.java) }
+        init { AppMetrics.register(Counter::class.java) }
     }
 
     val LOG = LoggerFactory.getLogger(GenerateComponent::class.java)

@@ -15,6 +15,6 @@ enum class CommonCounter {
     stFetched, stRedirTemp, stRedirPerm, stNotModified, stRetry, stUnfetched, stGone;
 
     companion object {
-        init { EnumCounters.register(CommonCounter::class.java) }
+        init { AppMetrics.register(CommonCounter::class.java) }
     }
 }

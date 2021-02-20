@@ -18,13 +18,10 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.EnumCounters
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.persist.ext.eventHandler
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -55,7 +52,7 @@ class PageParser(
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
-    init { EnumCounters.register(Counter::class.java) }
+    init { AppMetrics.register(Counter::class.java) }
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
