@@ -34,7 +34,7 @@ class FetchMetrics(
             mapOf(
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
                 "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
-            ).forEach { AppMetrics.register(this, it.key, it.value) }
+            ).forEach { AppMetrics.defaultMetricRegistry.register(this, it.key, it.value) }
         }
     }
 
@@ -69,22 +69,24 @@ class FetchMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    val meterTotalNetworkIFsRecvMBytes = AppMetrics.meter(this, "totalNetworkIFsRecvMBytes")
+    private val registry = AppMetrics.defaultMetricRegistry
+
+    val meterTotalNetworkIFsRecvMBytes = registry.meter(this, "totalNetworkIFsRecvMBytes")
 
     /**
      * The total bytes of page content of all success web pages
      * */
-    val tasks = AppMetrics.meter(this, "tasks")
-    val successTasks = AppMetrics.meter(this, "successTasks")
-    val finishedTasks = AppMetrics.meter(this, "finishedTasks")
-    val meterContentBytes = AppMetrics.meter(this, "m", "contentBytes")
-    val histogramContentBytes = AppMetrics.histogram(this, "h", "contentBytes")
+    val tasks = registry.meter(this, "tasks")
+    val successTasks = registry.meter(this, "successTasks")
+    val finishedTasks = registry.meter(this, "finishedTasks")
+    val meterContentBytes = registry.meter(this, "contentBytes")
+    val histogramContentBytes = registry.histogram(this, "contentBytes")
 
-    val pageImages = AppMetrics.histogram(this, "pageImages")
-    val pageAnchors = AppMetrics.histogram(this, "pageAnchors")
-    val pageNumbers = AppMetrics.histogram(this, "pageNumbers")
-    val pageSmallTexts = AppMetrics.histogram(this, "pageSmallTexts")
-    val pageHeights = AppMetrics.histogram(this, "pageHeights")
+    val pageImages = registry.histogram(this, "pageImages")
+    val pageAnchors = registry.histogram(this, "pageAnchors")
+    val pageNumbers = registry.histogram(this, "pageNumbers")
+    val pageSmallTexts = registry.histogram(this, "pageSmallTexts")
+    val pageHeights = registry.histogram(this, "pageHeights")
 
     val realTimeNetworkIFsRecvBytes get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
             .toLong().coerceAtLeast(0)

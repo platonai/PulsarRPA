@@ -32,14 +32,14 @@ class WebDriverContext(
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
-        private val globalTasks = AppMetrics.meter(this, "globalTasks")
-        private val globalFinishedTasks = AppMetrics.meter(this, "globalFinishedTasks")
+        private val globalTasks = AppMetrics.reg.meter(this, "globalTasks")
+        private val globalFinishedTasks = AppMetrics.reg.meter(this, "globalFinishedTasks")
 
         private val lock = ReentrantLock()
         private val notBusy = lock.newCondition()
 
         init {
-            AppMetrics.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
+            AppMetrics.reg.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
         }
     }
 
@@ -159,7 +159,7 @@ class ProxyContext(
             mapOf(
                     "proxyAbsences" to Gauge { numProxyAbsence.get() },
                     "runningTasks" to Gauge { numRunningTasks.get() }
-            ).forEach { AppMetrics.register(this, it.key, it.value) }
+            ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
 
         @Throws(ProxyException::class)

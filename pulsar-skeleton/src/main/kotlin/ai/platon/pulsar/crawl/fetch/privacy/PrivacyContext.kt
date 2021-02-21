@@ -36,14 +36,15 @@ abstract class PrivacyContext(
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
 
-        val meterGlobalContexts = AppMetrics.meter(this, "contexts")
-        val meterGlobalTasks = AppMetrics.meter(this, "tasks")
-        val meterGlobalSuccesses = AppMetrics.meter(this, "successes")
-        val meterGlobalFinishes = AppMetrics.meter(this, "finishes")
-        val meterGlobalSmallPages = AppMetrics.meter(this, "smallPages")
-        val meterGlobalLeakWarnings = AppMetrics.meter(this, "leakWarnings")
-        val meterGlobalMinorLeakWarnings = AppMetrics.meter(this, "minorLeakWarnings")
-        val meterGlobalContextLeaks = AppMetrics.meter(this, "contextLeaks")
+        private val registry = AppMetrics.defaultMetricRegistry
+        val meterGlobalContexts = registry.meter(this, "contexts")
+        val meterGlobalTasks = registry.meter(this, "tasks")
+        val meterGlobalSuccesses = registry.meter(this, "successes")
+        val meterGlobalFinishes = registry.meter(this, "finishes")
+        val meterGlobalSmallPages = registry.meter(this, "smallPages")
+        val meterGlobalLeakWarnings = registry.meter(this, "leakWarnings")
+        val meterGlobalMinorLeakWarnings = registry.meter(this, "minorLeakWarnings")
+        val meterGlobalContextLeaks = registry.meter(this, "contextLeaks")
     }
 
     private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
@@ -56,11 +57,12 @@ abstract class PrivacyContext(
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
+    private val registry = AppMetrics.defaultMetricRegistry
     private val smSuffix = AppMetrics.SHADOW_METRIC_SUFFIX
-    val meterTasks = AppMetrics.meter(this, sequence.toString(), "tasks$smSuffix")
-    val meterSuccesses = AppMetrics.meter(this, sequence.toString(), "successes$smSuffix")
-    val meterFinishes = AppMetrics.meter(this, sequence.toString(), "finishes$smSuffix")
-    val meterSmallPages = AppMetrics.meter(this, sequence.toString(), "smallPages$smSuffix")
+    val meterTasks = registry.meter(this, sequence.toString(), "tasks$smSuffix")
+    val meterSuccesses = registry.meter(this, sequence.toString(), "successes$smSuffix")
+    val meterFinishes = registry.meter(this, sequence.toString(), "finishes$smSuffix")
+    val meterSmallPages = registry.meter(this, sequence.toString(), "smallPages$smSuffix")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()

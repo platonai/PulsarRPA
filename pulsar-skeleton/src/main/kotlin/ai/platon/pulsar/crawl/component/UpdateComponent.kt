@@ -54,10 +54,10 @@ class UpdateComponent(
 
     companion object {
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
-        init { AppMetrics.register(Counter::class.java) }
+        init { AppMetrics.reg.register(Counter::class.java) }
     }
 
-    private val enumCounters = EnumCounters.DEFAULT
+    private val enumCounters = AppMetrics.reg.enumCounters
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 

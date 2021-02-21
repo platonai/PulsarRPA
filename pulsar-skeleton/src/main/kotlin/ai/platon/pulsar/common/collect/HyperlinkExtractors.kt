@@ -121,7 +121,7 @@ class FatLinkExtractor(val session: PulsarSession) {
                 "loadedSeeds" to Gauge { globalCounters.loadedSeeds }
         )
 
-        init { AppMetrics.registerAll(this, gauges) }
+        init { AppMetrics.reg.registerAll(this, gauges) }
     }
 
     private val webDb = session.context.getBean<WebDb>()

@@ -52,11 +52,11 @@ class PageParser(
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
-    init { AppMetrics.register(Counter::class.java) }
+    init { AppMetrics.reg.register(Counter::class.java) }
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
-    private val enumCounters = EnumCounters.DEFAULT
+    private val enumCounters = AppMetrics.reg.enumCounters
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
@@ -277,7 +277,7 @@ class PageParser(
             }
         }
         if (counter != null) {
-            enumCounters.inc(counter)
+            AppMetrics.reg.enumCounters.inc(counter)
         }
     }
 

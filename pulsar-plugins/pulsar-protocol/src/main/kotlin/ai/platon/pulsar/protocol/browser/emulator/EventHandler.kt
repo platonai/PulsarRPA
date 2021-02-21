@@ -45,13 +45,14 @@ open class EventHandler(
     protected val numNavigates = AtomicInteger()
     protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverControl.jsInvadingEnabled
 
-    protected val pageSourceBytes by lazy { AppMetrics.meter(this, "pageSourceBytes") }
-    protected val pageSourceByteHistogram by lazy { AppMetrics.histogram(this, "hPageSourceBytes") }
-    protected val bannedPages by lazy { AppMetrics.meter(this, "bannedPages") }
-    protected val smallPages by lazy { AppMetrics.meter(this, "smallPages") }
+    private val registry = AppMetrics.defaultMetricRegistry
+    protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
+    protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
+    protected val bannedPages by lazy { registry.meter(this, "bannedPages") }
+    protected val smallPages by lazy { registry.meter(this, "smallPages") }
     protected val smallPageRate get() = 100 * smallPages.count / numNavigates.get()
-    protected val smallPageRateHistogram by lazy { AppMetrics.histogram(this, "smallPageRate") }
-    protected val emptyPages by lazy { AppMetrics.meter(this, "emptyPages") }
+    protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
+    protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
         if (log.isTraceEnabled) {

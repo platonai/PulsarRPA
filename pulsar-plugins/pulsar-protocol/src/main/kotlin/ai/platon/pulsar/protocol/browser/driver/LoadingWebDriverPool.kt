@@ -57,8 +57,9 @@ class LoadingWebDriverPool(
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
 
-    val counterRetired = AppMetrics.counter(this, "retired")
-    val counterQuit = AppMetrics.counter(this, "quit")
+    private val registry = AppMetrics.defaultMetricRegistry
+    val counterRetired = registry.counter(this, "retired")
+    val counterQuit = registry.counter(this, "quit")
 
     val isActive get() = !closed.get()
     val numWaiting = AtomicInteger()

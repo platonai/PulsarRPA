@@ -120,7 +120,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
         )
 
         init {
-            AppMetrics.registerAll(this, gauges)
+            AppMetrics.reg.registerAll(this, gauges)
         }
     }
 

@@ -64,12 +64,12 @@ class GenerateComponent(
             mLater, mLater0, mLater1, mLater2, mLater3, mLater4, mLater5, mLater6, mLater7, mLaterN,
             mAhead, mSeedAhead, mSeedLater, mInactive
         }
-        init { AppMetrics.register(Counter::class.java) }
+        init { AppMetrics.reg.register(Counter::class.java) }
     }
 
     val LOG = LoggerFactory.getLogger(GenerateComponent::class.java)
 
-    private val enumCounters = EnumCounters.DEFAULT
+    private val enumCounters = AppMetrics.reg.enumCounters
     private val startTime = Instant.now()
 
     private val unreachableHosts: MutableSet<String> = HashSet()

@@ -54,8 +54,8 @@ open class WebDriverPoolManager(
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isIdle get() = idleTime > idleTimeout
 
-    val numReset by lazy { AppMetrics.meter(this, "numReset") }
-    val numTimeout by lazy { AppMetrics.meter(this, "numTimeout") }
+    val numReset by lazy { AppMetrics.reg.meter(this, "numReset") }
+    val numTimeout by lazy { AppMetrics.reg.meter(this, "numTimeout") }
     val gauges = mapOf(
             "waitingDrivers" to Gauge { numWaiting },
             "freeDrivers" to Gauge { numFreeDrivers },
@@ -75,7 +75,7 @@ open class WebDriverPoolManager(
     val numOnline get() = driverPools.values.sumBy { it.onlineDrivers.size }
 
     init {
-        gauges?.let { AppMetrics.registerAll(this, it) }
+        gauges?.let { AppMetrics.reg.registerAll(this, it) }
     }
 
     /**

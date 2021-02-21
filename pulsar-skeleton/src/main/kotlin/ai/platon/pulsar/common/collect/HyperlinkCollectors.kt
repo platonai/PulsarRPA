@@ -62,7 +62,7 @@ open class HyperlinkCollector(
                 "globalCollects" to Gauge { globalCollects }
         )
 
-        init { AppMetrics.registerAll(this, gauges) }
+        init { AppMetrics.reg.registerAll(this, gauges) }
     }
 
     private val log = LoggerFactory.getLogger(HyperlinkCollector::class.java)

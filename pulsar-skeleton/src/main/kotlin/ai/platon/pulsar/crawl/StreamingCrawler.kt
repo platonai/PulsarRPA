@@ -47,14 +47,16 @@ open class StreamingCrawler<T : UrlAware>(
 ) : AbstractCrawler(session, autoClose) {
     companion object {
         class Metrics {
-            val retries = AppMetrics.multiMetric(this, "retries")
-            val gone = AppMetrics.multiMetric(this, "gone")
-            val tasks = AppMetrics.multiMetric(this, "tasks")
-            val successes = AppMetrics.multiMetric(this, "successes")
-            val fetchSuccesses = AppMetrics.multiMetric(this, "fetchSuccesses")
-            val finishes = AppMetrics.multiMetric(this, "finishes")
+            private val registry = AppMetrics.defaultMetricRegistry
 
-            val timeouts = AppMetrics.meter(this, "timeouts")
+            val retries = registry.multiMetric(this, "retries")
+            val gone = registry.multiMetric(this, "gone")
+            val tasks = registry.multiMetric(this, "tasks")
+            val successes = registry.multiMetric(this, "successes")
+            val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
+            val finishes = registry.multiMetric(this, "finishes")
+
+            val timeouts = registry.meter(this, "timeouts")
         }
 
         private val instanceSequencer = AtomicInteger()
@@ -83,7 +85,7 @@ open class StreamingCrawler<T : UrlAware>(
                 "remainingMemory" to Gauge { Strings.readableBytes(remainingMemory) },
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime }
-            ).let { AppMetrics.registerAll(this, it) }
+            ).let { AppMetrics.defaultMetricRegistry.registerAll(this, it) }
         }
     }
 
@@ -117,7 +119,7 @@ open class StreamingCrawler<T : UrlAware>(
     )
 
     init {
-        AppMetrics.registerAll(this, "$id.g", gauges)
+        AppMetrics.defaultMetricRegistry.registerAll(this, "$id.g", gauges)
         generateFinishCommand()
     }
 
