@@ -4,10 +4,8 @@ import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
-import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -58,11 +56,11 @@ abstract class PrivacyContext(
     val privacyLeakMinorWarnings = AtomicInteger()
 
     private val registry = AppMetrics.defaultMetricRegistry
-    private val smSuffix = AppMetrics.SHADOW_METRIC_SUFFIX
-    val meterTasks = registry.meter(this, sequence.toString(), "tasks$smSuffix")
-    val meterSuccesses = registry.meter(this, sequence.toString(), "successes$smSuffix")
-    val meterFinishes = registry.meter(this, sequence.toString(), "finishes$smSuffix")
-    val meterSmallPages = registry.meter(this, sequence.toString(), "smallPages$smSuffix")
+    private val sms = AppMetrics.SHADOW_METRIC_SYMBOL
+    val meterTasks = registry.meter(this, "$sequence$sms", "tasks")
+    val meterSuccesses = registry.meter(this, "$sequence$sms", "successes")
+    val meterFinishes = registry.meter(this, "$sequence$sms", "finishes")
+    val meterSmallPages = registry.meter(this, "$sequence$sms", "smallPages")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()

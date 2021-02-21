@@ -23,11 +23,14 @@ object AppContext {
     val impreciseNow = Instant.now()
     val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
     val imprecise2DaysAhead = impreciseNow.plus(2, ChronoUnit.DAYS)
-    val midnight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
     val defaultZoneId = ZoneId.systemDefault()
 
+    val midnight get() = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+    val tohour get() = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+
     val elapsed get() = Duration.between(startTime, Instant.now())
-    val elapsedToday get() = Duration.between(midnight, Instant.now())
+    val todayElapsed get() = Duration.between(midnight, LocalDateTime.now())
+    val tohourElapsed get() = Duration.between(tohour, LocalDateTime.now())
 
     /**
      * The number of processors available to the Java virtual machine

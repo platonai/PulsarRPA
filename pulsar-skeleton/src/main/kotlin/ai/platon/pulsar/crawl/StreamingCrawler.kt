@@ -21,6 +21,7 @@ import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
+import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.io.IOException
@@ -457,6 +458,12 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun generateFinishCommand() {
+        if (SystemUtils.IS_OS_UNIX) {
+            generateFinishCommandUnix()
+        }
+    }
+
+    private fun generateFinishCommandUnix() {
         val finishScriptPath = AppPaths.SCRIPT_DIR.resolve("finish-crawler.sh")
         val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
         try {
