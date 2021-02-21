@@ -11,11 +11,11 @@ fun readableClassName(obj: Any, fullNameCount: Int = 1, partCount: Int = 3): Str
 
     val size = names.size
     return names.mapIndexed { i, n -> n.takeIf { i >= size - fullNameCount }?:n.substring(0, 1) }
-            .joinToString(".") { it.removeSuffix("\$Companion") }
+            .joinToString(".") { it.replace("\$Companion", "\$C") }
 }
 
 fun prependReadableClassName(obj: Any, name: String, separator: String = "."): String {
-    return "${readableClassName(obj)}$separator$name"
+    return "${readableClassName(obj)}$separator$name".replace("\\.+".toRegex(), separator)
 }
 
 fun prependReadableClassName(obj: Any, ident: String, name: String, separator: String): String {
@@ -24,7 +24,5 @@ fun prependReadableClassName(obj: Any, ident: String, name: String, separator: S
     }
 
     val prefix = readableClassName(obj)
-    val ident0 = ident.replace("\\.+".toRegex(), separator)
-        .removeSurrounding(separator)
-    return "$prefix$separator$ident0$separator$name"
+    return "$prefix$separator$ident$separator$name".replace("\\.+".toRegex(), separator)
 }
