@@ -134,7 +134,8 @@ class AppMetricRegistry: MetricRegistry() {
             else -> AppContext.elapsed.seconds
         }
         val df = DecimalFormat("#.####")
-        val rate = df.format(1.0 * counter.count / elapsedSeconds)
+//        val rate = df.format(1.0 * counter.count / elapsedSeconds)
+        val rate = 1.0 * counter.count / elapsedSeconds
 
         register(obj, "$ident.g", name, Gauge { counter.count })
         register(obj, "$ident.g", "$name/s", Gauge { rate })
