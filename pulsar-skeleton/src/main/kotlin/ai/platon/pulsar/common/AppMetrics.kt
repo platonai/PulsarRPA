@@ -128,19 +128,19 @@ class AppMetricRegistry: MetricRegistry() {
     fun counterAndGauge(obj: Any, ident: String, name: String): Counter {
         val counter = counter(obj, ident, name)
 
-        val elapsedSeconds = when {
-            "daily" in ident -> AppContext.todayElapsed.seconds
-            "hourly" in ident -> AppContext.tohourElapsed.seconds
-            else -> AppContext.elapsed.seconds
-        }
-        val df = DecimalFormat("#.####")
-//        val rate = df.format(1.0 * counter.count / elapsedSeconds)
-        val rate = 1.0 * counter.count / elapsedSeconds
-
         register(obj, "$ident.g", name, Gauge { counter.count })
-        register(obj, "$ident.g", "$name/s", Gauge { rate })
+        register(obj, "$ident.g", "$name/s", Gauge { 1.0 * counter.count / elapsedSeconds(counter) })
 
         return counter
+    }
+
+    private fun elapsedSeconds(counter: Counter): Long {
+        val fullName = metrics.entries.firstOrNull { it.value == counter }?.key?:""
+        return when {
+            "daily" in fullName -> AppContext.todayElapsed.seconds.coerceAtMost(AppContext.elapsed.seconds)
+            "hourly" in fullName -> AppContext.tohourElapsed.seconds.coerceAtMost(AppContext.elapsed.seconds)
+            else -> AppContext.elapsed.seconds
+        }.coerceAtLeast(1)
     }
 
     fun counterAndGauge(obj: Any, name: String) = counterAndGauge(obj, "", name)

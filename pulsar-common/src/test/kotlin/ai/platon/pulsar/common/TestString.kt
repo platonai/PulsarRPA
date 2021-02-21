@@ -132,6 +132,8 @@ class TestString {
         val url = "https://www.amazon.com/s?k=insomnia&i=aps&page=100"
         val regex = ".+&i=.+".toRegex()
         assertTrue { url.matches(regex) }
+
+        assertEquals("a.b", "a..b".replace("\\.+".toRegex(), "."))
     }
 
     @Test
