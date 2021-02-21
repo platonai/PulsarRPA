@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import org.apache.commons.lang3.SystemUtils
 import java.net.InetAddress
 import java.nio.file.Paths
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -18,12 +19,15 @@ object AppContext {
     /**
      * Date time
      */
+    val startTime = Instant.now()
     val impreciseNow = Instant.now()
     val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
     val imprecise2DaysAhead = impreciseNow.plus(2, ChronoUnit.DAYS)
-    val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-    val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)
+    val midnight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
     val defaultZoneId = ZoneId.systemDefault()
+
+    val elapsed get() = Duration.between(startTime, Instant.now())
+    val elapsedToday get() = Duration.between(midnight, Instant.now())
 
     /**
      * The number of processors available to the Java virtual machine

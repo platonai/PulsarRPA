@@ -9,6 +9,11 @@ interface Handler {
     val name: String
 }
 
+abstract class UrlAwareHandler: (UrlAware) -> Unit, Handler {
+    override val name: String = ""
+    abstract override operator fun invoke(url: UrlAware)
+}
+
 abstract class WebPageHandler: (WebPage) -> Unit, Handler {
     override val name: String = ""
     abstract override operator fun invoke(page: WebPage)
@@ -41,6 +46,24 @@ abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Unit, Handler
 
 class AddRefererAfterFetchHandler(val url: UrlAware): WebPageHandler() {
     override fun invoke(page: WebPage) { url.referer?.let { page.referrer = it } }
+}
+
+class ChainedUrlAwareHandler: (UrlAware) -> Unit, UrlAwareHandler() {
+    private val handlers = mutableListOf<(UrlAware) -> Unit>()
+
+    fun addFirst(handler: (UrlAware) -> Unit): ChainedUrlAwareHandler {
+        handlers.add(0, handler)
+        return this
+    }
+
+    fun addLast(handler: (UrlAware) -> Unit): ChainedUrlAwareHandler {
+        handlers.add(handler)
+        return this
+    }
+
+    override operator fun invoke(url: UrlAware) {
+        handlers.forEach { it(url) }
+    }
 }
 
 class ChainedWebPageHandler: (WebPage) -> Unit, WebPageHandler() {
@@ -203,22 +226,38 @@ class ChainedStreamingCrawlerEventHandler(
 ): AbstractStreamingCrawlerEventHandler(
         onFilter, onNormalize, onBeforeLoad, onAfterLoad
 ) {
+    fun addFirst(name: String, handler: (UrlAware) -> Unit) {
+        if (name == "onBeforeLoad") {
+            when (onBeforeLoad) {
+                is ChainedUrlAwareHandler -> (onBeforeLoad as ChainedUrlAwareHandler).addFirst(handler)
+                else -> onBeforeLoad = ChainedUrlAwareHandler().addFirst(handler).addFirst(onBeforeLoad)
+            }
+        }
+    }
+
+    fun addLast(name: String, handler: (UrlAware) -> Unit) {
+        if (name == "onBeforeLoad") {
+            when (onBeforeLoad) {
+                is ChainedUrlAwareHandler -> (onBeforeLoad as ChainedUrlAwareHandler).addLast(handler)
+                else -> onBeforeLoad = ChainedUrlAwareHandler().addLast(onBeforeLoad).addLast(handler)
+            }
+        }
+    }
+
     fun addFirst(name: String, handler: (UrlAware, WebPage) -> Unit) {
         if (name == "onAfterLoad") {
-            if (onAfterLoad is ChainedUrlAwareWebPageHandler) {
-                (onAfterLoad as? ChainedUrlAwareWebPageHandler)?.addFirst(handler)
-            } else {
-                onAfterLoad = ChainedUrlAwareWebPageHandler().addFirst(handler).addFirst(onAfterLoad)
+            when (onAfterLoad) {
+                is ChainedUrlAwareWebPageHandler -> (onAfterLoad as ChainedUrlAwareWebPageHandler).addFirst(handler)
+                else -> onAfterLoad = ChainedUrlAwareWebPageHandler().addFirst(handler).addFirst(onAfterLoad)
             }
         }
     }
 
     fun addLast(name: String, handler: (UrlAware, WebPage) -> Unit) {
         if (name == "onAfterLoad") {
-            if (onAfterLoad is ChainedUrlAwareWebPageHandler) {
-                (onAfterLoad as? ChainedUrlAwareWebPageHandler)?.addLast(handler)
-            } else {
-                onAfterLoad = ChainedUrlAwareWebPageHandler().addLast(handler).addLast(onAfterLoad)
+            when (onAfterLoad) {
+                is ChainedUrlAwareWebPageHandler -> (onAfterLoad as ChainedUrlAwareWebPageHandler).addLast(handler)
+                else -> onAfterLoad = ChainedUrlAwareWebPageHandler().addLast(onAfterLoad).addLast(handler)
             }
         }
     }

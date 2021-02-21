@@ -24,5 +24,6 @@ fun prependReadableClassName(obj: Any, ident: String, name: String, separator: S
     }
 
     val prefix = readableClassName(obj)
-    return "$prefix$separator$ident$separator$name"
+    val ident0 = ident.removeSurrounding(separator)
+    return "$prefix$separator$ident0$separator$name"
 }

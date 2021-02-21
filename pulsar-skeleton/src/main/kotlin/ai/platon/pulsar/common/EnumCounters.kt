@@ -26,7 +26,6 @@ import kotlin.reflect.KClass
 class EnumCounters {
     companion object {
         val DEFAULT = EnumCounters()
-        val DAILY_COUNTERS = EnumCounters()
 
         fun <T : Enum<T>> register(counterClass: Class<T>) = DEFAULT.register(counterClass)
         fun <T : Enum<T>> getGroup(counterClass: Class<T>) = DEFAULT.getGroup(counterClass)
