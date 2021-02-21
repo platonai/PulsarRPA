@@ -46,8 +46,8 @@ class MultiMetric(
 }
 
 class AppMetricRegistry: MetricRegistry() {
-    val enumCounters = EnumCounters()
-    val appCounters: MutableMap<Enum<*>, Counter> = mutableMapOf()
+    val enumCounterRegistry = EnumCounterRegistry()
+    val enumCounters: MutableMap<Enum<*>, Counter> = mutableMapOf()
     val dailyCounters = mutableSetOf<Counter>()
     val hourlyCounters = mutableSetOf<Counter>()
 
@@ -93,17 +93,17 @@ class AppMetricRegistry: MetricRegistry() {
     fun <T : Metric> registerAll(obj: Any, ident: String, metrics: Map<String, T>) =
         metrics.forEach { (name, metric) -> register(obj, ident, name, metric) }
 
-    fun <T : Enum<T>> register(counterClass: Class<T>, withGauges: Boolean = false) {
-        enumCounters.register(counterClass)
-        counterClass.enumConstants.associateTo(appCounters) { it to counter(counterClass, it.name) }
+    fun <T : Enum<T>> register(counterClass: Class<T>, ident: String = "", withGauges: Boolean = false) {
+        enumCounterRegistry.register(counterClass)
+        counterClass.enumConstants.associateTo(enumCounters) { it to counter(counterClass, it.name) }
         if (withGauges) {
-            val gauges = counterClass.enumConstants.associate { it.name to Gauge { enumCounters[it] } }
-            registerAll(this, "g", gauges)
+            val gauges = counterClass.enumConstants.associate { it.name to Gauge { enumCounterRegistry[it] } }
+            registerAll(this, "$ident.g", gauges)
         }
     }
 
-    fun <T : Enum<T>> register(counterClass: KClass<T>, withGauges: Boolean = false) {
-        return register(counterClass.java, withGauges)
+    fun <T : Enum<T>> register(counterClass: KClass<T>, ident: String = "", withGauges: Boolean = false) {
+        return register(counterClass.java, ident, withGauges)
     }
 
     fun counterAndGauge(obj: Any, ident: String, name: String): Counter {
@@ -141,8 +141,8 @@ class AppMetricRegistry: MetricRegistry() {
     }
 
     fun <T: Enum<T>> setValue(counter: T, value: Int) {
-        enumCounters.setValue(counter, value)
-        appCounters[counter]?.let { it.dec(it.count); it.inc(value.toLong()) }
+        enumCounterRegistry.setValue(counter, value)
+        enumCounters[counter]?.let { it.dec(it.count); it.inc(value.toLong()) }
     }
 }
 
@@ -274,7 +274,7 @@ class AppMetrics(
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter
-    private val counterReporter = CounterReporter(metricRegistry.enumCounters, conf = conf)
+    private val counterReporter = CounterReporter(metricRegistry.enumCounterRegistry, conf = conf)
 
     private val closed = AtomicBoolean()
 
@@ -304,8 +304,8 @@ class AppMetrics(
 
     fun inc(count: Int, vararg counters: Enum<*>) {
         counters.forEach {
-            metricRegistry.enumCounters.inc(it, count)
-            metricRegistry.appCounters[it]?.inc(count.toLong())
+            metricRegistry.enumCounterRegistry.inc(it, count)
+            metricRegistry.enumCounters[it]?.inc(count.toLong())
         }
     }
 

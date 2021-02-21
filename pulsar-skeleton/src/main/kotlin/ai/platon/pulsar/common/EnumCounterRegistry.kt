@@ -23,16 +23,16 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-class EnumCounters {
+class EnumCounterRegistry {
     companion object {
-        val DEFAULT = EnumCounters()
+        val DEFAULT = EnumCounterRegistry()
 
         fun <T : Enum<T>> register(counterClass: Class<T>) = DEFAULT.register(counterClass)
         fun <T : Enum<T>> getGroup(counterClass: Class<T>) = DEFAULT.getGroup(counterClass)
         fun <T : Enum<T>> getGroup(counter: T) = DEFAULT.getGroup(counter)
     }
 
-    var LOG = LoggerFactory.getLogger(EnumCounters::class.java)
+    var LOG = LoggerFactory.getLogger(EnumCounterRegistry::class.java)
     var MAX_GROUPS = 100
     var MAX_COUNTERS_IN_GROUP = 1000
     var MAX_COUNTERS = MAX_GROUPS * MAX_COUNTERS_IN_GROUP

@@ -69,7 +69,7 @@ class GenerateComponent(
 
     val LOG = LoggerFactory.getLogger(GenerateComponent::class.java)
 
-    private val enumCounters = AppMetrics.reg.enumCounters
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     private val startTime = Instant.now()
 
     private val unreachableHosts: MutableSet<String> = HashSet()
@@ -307,7 +307,7 @@ class GenerateComponent(
         return true
     }
 
-    private fun increaseMDaysLater(days: Int, enumCounters: EnumCounters) {
+    private fun increaseMDaysLater(days: Int, enumCounterRegistry: EnumCounterRegistry) {
         val counter: Counter = when (days) {
             0 -> Counter.mLater0
             1 -> Counter.mLater1
@@ -320,7 +320,7 @@ class GenerateComponent(
             else -> Counter.mLaterN
         }
 
-        enumCounters.inc(counter)
-        enumCounters.inc(Counter.mLater)
+        enumCounterRegistry.inc(counter)
+        enumCounterRegistry.inc(Counter.mLater)
     }
 }

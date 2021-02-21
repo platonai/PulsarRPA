@@ -56,7 +56,7 @@ class PageParser(
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
-    private val enumCounters = AppMetrics.reg.enumCounters
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
@@ -277,7 +277,7 @@ class PageParser(
             }
         }
         if (counter != null) {
-            AppMetrics.reg.enumCounters.inc(counter)
+            AppMetrics.reg.enumCounterRegistry.inc(counter)
         }
     }
 

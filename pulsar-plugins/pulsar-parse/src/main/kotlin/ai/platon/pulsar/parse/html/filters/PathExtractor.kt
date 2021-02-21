@@ -1,7 +1,6 @@
 package ai.platon.pulsar.parse.html.filters
 
 import ai.platon.pulsar.common.AppMetrics
-import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.EntityOptions
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
@@ -35,7 +34,7 @@ class PathExtractor(
 
     private var log = LoggerFactory.getLogger(PathExtractor::class.java)
 
-    private val enumCounters = AppMetrics.reg.enumCounters
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
 
     /**
      * Extract all fields in the page

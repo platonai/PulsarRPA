@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.parse.ParseResult

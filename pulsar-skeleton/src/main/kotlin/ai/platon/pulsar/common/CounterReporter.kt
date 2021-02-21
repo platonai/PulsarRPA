@@ -25,10 +25,10 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 class CounterReporter(
-        private val counter: EnumCounters,
-        initialDelay: Duration = Duration.ofMinutes(3),
-        watchInterval: Duration = Duration.ofSeconds(30),
-        private val conf: ImmutableConfig
+    private val counter: EnumCounterRegistry,
+    initialDelay: Duration = Duration.ofMinutes(3),
+    watchInterval: Duration = Duration.ofSeconds(30),
+    private val conf: ImmutableConfig
 ): ScheduledMonitor(initialDelay, watchInterval) {
     private var log = LoggerFactory.getLogger(CounterReporter::class.java)
     private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")

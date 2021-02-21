@@ -19,7 +19,6 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.AppMetrics
-import ai.platon.pulsar.common.EnumCounters
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -57,7 +56,7 @@ class UpdateComponent(
         init { AppMetrics.reg.register(Counter::class.java) }
     }
 
-    private val enumCounters = AppMetrics.reg.enumCounters
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 
