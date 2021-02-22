@@ -16,7 +16,7 @@ select
     dom_first_attr(dom, 'span.zg-item div img[src]', 'src') as `pic`,
     str_substring_between(dom_first_attr(dom, 'span.zg-item div a i.a-icon-star', 'class'), ' a-star-', ' ') as score,
     dom_first_text(dom, 'span.zg-item div a:has(i.a-icon-star) ~ a') as starnum,
-    time_first_mysql_date_time(dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
     dom_first_text(dom, 'span.zg-percent-change') as `sales_rank_change`,
-    dom_first_text(dom, 'span.zg-sales-movement') as `sales_rank`
+    dom_first_text(dom, 'span.zg-sales-movement') as `sales_rank`,
+    time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`
 from load_and_select(@url, 'ol#zg-ordered-list li.zg-item-immersion');

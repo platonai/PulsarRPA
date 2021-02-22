@@ -22,7 +22,7 @@ select
     str_first_integer(dom_first_text(dom, '.review-comments .cr-vote .cr-vote-text, span[data-hook=helpful-vote-statement]'), 0) as `helpfulnum`,
 
     dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'label') as `label`,
-    time_first_mysql_date_time(dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
+    time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
 
     dom_own_texts(dom_select_first(dom, 'a[data-hook=format-strip]')) as `sku`
 from load_and_select('{{url}}', '#cm-cr-dp-review-list > div[data-hook=review]');

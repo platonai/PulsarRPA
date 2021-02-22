@@ -14,7 +14,7 @@ select
     dom_first_text(dom, '.p13n-sc-price') as `price`,
     dom_first_text(dom, 'span.zg-item a > div:expr(img=0 && char>10)') as title,
     dom_first_attr(dom, 'span.zg-item div img[src]', 'src') as `pic`,
-    time_first_mysql_date_time(dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
     str_substring_between(dom_first_attr(dom, 'span.zg-item div a i.a-icon-star', 'class'), ' a-star-', ' ') as score,
-    dom_first_text(dom, 'span.zg-item div a:has(i.a-icon-star) ~ a') as starnum
+    dom_first_text(dom, 'span.zg-item div a:has(i.a-icon-star) ~ a') as starnum,
+    time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`
 from load_and_select(@url, 'ol#zg-ordered-list li.zg-item-immersion');

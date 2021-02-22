@@ -15,6 +15,6 @@ select
     cast(dom_all_texts(dom, '#feedback-content #feedback-summary-table tr:contains(Negative) td') as varchar) as `badstarpercent`,
     cast(dom_all_texts(dom, '#feedback-content #feedback-summary-table tr:contains(Count) td') as varchar) as `feedback_num_12`,
     cast(dom_all_texts(dom, '#feedback-content #feedback-summary-table tr:contains(Count) td') as varchar) as `feedback_num`,
-    dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'label') as `label`,
-    time_first_mysql_date_time(dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'taskTime')) as `task_time`
+    dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'label') as `label`,
+    time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`
 from load_and_select(@url, ':root body');

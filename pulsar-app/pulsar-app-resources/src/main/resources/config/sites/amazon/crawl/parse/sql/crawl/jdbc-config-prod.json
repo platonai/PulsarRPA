@@ -1,6 +1,0 @@
-{
-  "driver": "com.mysql.cj.jdbc.Driver",
-  "url": "jdbc:mysql://mysql0:3306/mallbigdata_us?autoReconnect=true",
-  "username": "mytest",
-  "password": "123456@"
-}

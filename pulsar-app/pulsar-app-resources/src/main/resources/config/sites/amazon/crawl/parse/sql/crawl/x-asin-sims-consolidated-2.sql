@@ -16,7 +16,7 @@ select
     dom_first_text(dom, 'div[data-asin] > div > a i.a-icon-star') as ad_asin_score,
     str_substring_after(dom_first_attr(dom, 'div > div > a i.a-icon-star', 'class'), ' a-star-') as ad_asin_score_2,
     dom_first_text(dom, 'div[data-asin] a:contains(out of 5 stars) ~ a[href~=reviews]') as ad_asin_starnum,
-    dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'label') as `label`,
-    time_first_mysql_date_time(dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
+    dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'label') as `label`,
+    time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
     'sims-2' as `ad_type`
 from load_and_select(@url, '#sims-consolidated-2_feature_div ol.a-carousel li');

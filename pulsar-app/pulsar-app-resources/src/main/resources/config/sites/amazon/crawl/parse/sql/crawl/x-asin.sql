@@ -80,7 +80,7 @@ select
     dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'href') as `href`,
     dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'referer') as `referer`,
     dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'label') as `label`,
-    time_first_mysql_date_time(dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
+    time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
 
     dom_ch(dom) as `numchars`,
     dom_a(dom) as `numlinks`,
