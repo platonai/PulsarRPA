@@ -214,7 +214,7 @@ open class StreamingCrawler<T : UrlAware>(
             delay(1000)
         }
 
-        val contextLeaksRate = PrivacyContext.meterGlobalContextLeaks.fifteenMinuteRate
+        val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
         if (contextLeaksRate >= 5 / 60f) {
             handleContextLeaks()
         }
@@ -412,8 +412,8 @@ open class StreamingCrawler<T : UrlAware>(
      * 5 / 60f = 0.083
      * */
     private suspend fun handleContextLeaks() {
-        val meterGlobalContextLeaks = PrivacyContext.meterGlobalContextLeaks
-        val contextLeaksRate = meterGlobalContextLeaks.fifteenMinuteRate
+        val contextLeaks = PrivacyContext.globalMetrics.contextLeaks
+        val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             if (k % 60 == 0) {
@@ -422,8 +422,8 @@ open class StreamingCrawler<T : UrlAware>(
             delay(1000)
 
             // trigger the meter updating
-            meterGlobalContextLeaks.mark(-1)
-            meterGlobalContextLeaks.mark(1)
+            contextLeaks.inc(-1)
+            contextLeaks.inc(1)
 
             contextLeakWaitingTime += Duration.ofSeconds(1)
         }

@@ -21,6 +21,18 @@ open class PrivacyContextException(message: String): Exception(message)
 
 class FatalPrivacyContextException(message: String): PrivacyContextException(message)
 
+class PrivacyContextMetrics {
+    private val registry = AppMetrics.defaultMetricRegistry
+    val contexts = registry.multiMetric(this, "contexts")
+    val tasks = registry.multiMetric(this, "tasks")
+    val successes = registry.multiMetric(this, "successes")
+    val finishes = registry.multiMetric(this, "finishes")
+    val smallPages = registry.multiMetric(this, "smallPages")
+    val leakWarnings = registry.multiMetric(this, "leakWarnings")
+    val minorLeakWarnings = registry.multiMetric(this, "minorLeakWarnings")
+    val contextLeaks = registry.multiMetric(this, "contextLeaks")
+}
+
 abstract class PrivacyContext(
     /**
      * The data directory for this context, very context has it's own data directory
@@ -34,15 +46,7 @@ abstract class PrivacyContext(
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
 
-        private val registry = AppMetrics.defaultMetricRegistry
-        val meterGlobalContexts = registry.meter(this, "contexts")
-        val meterGlobalTasks = registry.meter(this, "tasks")
-        val meterGlobalSuccesses = registry.meter(this, "successes")
-        val meterGlobalFinishes = registry.meter(this, "finishes")
-        val meterGlobalSmallPages = registry.meter(this, "smallPages")
-        val meterGlobalLeakWarnings = registry.meter(this, "leakWarnings")
-        val meterGlobalMinorLeakWarnings = registry.meter(this, "minorLeakWarnings")
-        val meterGlobalContextLeaks = registry.meter(this, "contextLeaks")
+        val globalMetrics = PrivacyContextMetrics()
     }
 
     private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
@@ -76,28 +80,28 @@ abstract class PrivacyContext(
     val isActive get() = !isLeaked && !closed.get()
 
     init {
-        meterGlobalContexts.mark()
+        globalMetrics.contexts.mark()
     }
 
     fun markSuccess() {
         privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
         meterSuccesses.mark()
-        meterGlobalSuccesses.mark()
+        globalMetrics.successes.mark()
     }
 
     fun markWarning() {
         privacyLeakWarnings.incrementAndGet()
-        meterGlobalLeakWarnings.mark()
+        globalMetrics.leakWarnings.mark()
     }
 
     fun markWarning(n: Int) {
         privacyLeakWarnings.addAndGet(n)
-        meterGlobalLeakWarnings.mark(n.toLong())
+        globalMetrics.leakWarnings.inc(n.toLong())
     }
 
     fun markMinorWarning() {
         privacyLeakMinorWarnings.incrementAndGet()
-        meterGlobalMinorLeakWarnings.mark()
+        globalMetrics.minorLeakWarnings.mark()
         if (privacyLeakMinorWarnings.get() > minorWarningFactor) {
             privacyLeakMinorWarnings.set(0)
             markWarning()
@@ -120,7 +124,7 @@ abstract class PrivacyContext(
     protected fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()
         meterTasks.mark()
-        meterGlobalTasks.mark()
+        globalMetrics.tasks.mark()
 
         numRunningTasks.incrementAndGet()
     }
@@ -130,7 +134,7 @@ abstract class PrivacyContext(
 
         lastActiveTime = Instant.now()
         meterFinishes.mark()
-        meterGlobalFinishes.mark()
+        globalMetrics.finishes.mark()
 
         val status = result.status
         when {
@@ -142,11 +146,11 @@ abstract class PrivacyContext(
 
         if (result.isSmall) {
             meterSmallPages.mark()
-            meterGlobalSmallPages.mark()
+            globalMetrics.smallPages.mark()
         }
 
         if (isLeaked) {
-            meterGlobalContextLeaks.mark()
+            globalMetrics.contextLeaks.mark()
         }
     }
 

@@ -323,7 +323,7 @@ class FetchMetrics(
 
         totalNetworkIFsRecvBytes = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
                 .coerceAtLeast(totalNetworkIFsRecvBytes)
-        meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024)
+        meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024 / 1024)
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")
         usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
