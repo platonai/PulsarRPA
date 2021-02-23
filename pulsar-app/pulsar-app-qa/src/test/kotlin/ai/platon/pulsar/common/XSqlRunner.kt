@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.sql.SqlConverter
 import ai.platon.pulsar.common.sql.SqlTemplate
 import ai.platon.pulsar.context.PulsarContext
@@ -26,11 +27,11 @@ class XSqlRunner(
     }
 
     fun execute(url: String, sqlTemplate: SqlTemplate): ResultSet {
-        val document = loadResourceAsDocument(url) ?: session.loadDocument(url, "-i 1s")
+        val document = loadResourceAsDocument(url) ?: session.loadDocument(url, "-i 1s -sc 10")
 
         val sql = sqlTemplate.createInstance(url)
 
-        var rs = extractor.query(sql, printResult = true)
+        val rs = extractor.query(sql, printResult = true)
 
         val count = SqlUtils.count(rs)
         val path = session.export(document)
@@ -39,7 +40,7 @@ class XSqlRunner(
         return rs
     }
 
-    fun executeAll(sqls: Map<String, String>) {
+    fun executeAll(sqls: List<Pair<String, String>>) {
         var i = 0
         sqls.forEach { (url, resource) ->
             val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
@@ -68,8 +69,8 @@ class XSqlRunner(
 fun main() = withContext { cx ->
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
 
-    val productUrl = "https://www.amazon.com/Assistant-2700-6500K-Tunable-Changing-Dimmable/dp/B07L4RR1N2/ref=amzdv_cabsh_dp_3/144-0825628-8630255?_encoding=UTF8&pd_rd_i=B07L4RR1N2&pd_rd_r=7cde081c-a7c0-4b56-85da-89b5b800bd80&pd_rd_w=jTOsh&pd_rd_wg=ydYvv&pf_rd_p=10835d28-3e4a-4f93-bb3c-443ad482b1c9&pf_rd_r=MK4N7F3G6ADHH2TS3VK4&psc=1&refRID=MK4N7F3G6ADHH2TS3VK4"
-    val productAlsoReview = "https://www.amazon.com/Seagate-Portable-External-Hard-Drive/dp/B07CRG94G3/ref=lp_16225007011_1_11?s=computers-intl-ship&ie=UTF8&qid=1596590947&sr=1-11"
+    val productUrl = "https://www.amazon.com/Assistant-2700-6500K-Tunable-Changing-Dimmable/dp/B07L4RR1N2/ref=amzdv_cabsh_dp_3"
+    val productAlsoReview = "https://www.amazon.com/Seagate-Portable-External-Hard-Drive/dp/B07CRG94G3/ref=lp_16225007011_1_11"
     val offerListingUrl = "https://www.amazon.com/gp/offer-listing/B076H3SRXG/ref=dp_olp_NEW_mbc"
     val asinBestUrl = "https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/ref=zg_bs_nav_0"
     val sellerUrl = "https://www.amazon.com/sp?_encoding=UTF8&asin=&isAmazonFulfilled=1&isCBA=&marketplaceID=ATVPDKIKX0DER&orderID=&protocol=current&seller=A2QJQR8DPHL921&sshmPath="
@@ -100,8 +101,9 @@ fun main() = withContext { cx ->
             categoryListUrl to "category-asin-extract.sql",
             keywordAsinList to "keyword-asin-extract.sql",
             keywordAsinList to "keyword-side-category-tree-1.sql"
-    ).associate { it.first to "$resourcePrefix/${it.second}" }
+    ).map { it.first to "$resourcePrefix/${it.second}" }
 
-    val xsqlFilter = { xsql: String -> "crawl/x-asin.sql" in xsql }
-    XSqlRunner(cx).executeAll(sqls.filter { xsqlFilter(it.value) })
+    cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+    val xsqlFilter = { xsql: String -> "x-asin.sql" in xsql }
+    XSqlRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
 }

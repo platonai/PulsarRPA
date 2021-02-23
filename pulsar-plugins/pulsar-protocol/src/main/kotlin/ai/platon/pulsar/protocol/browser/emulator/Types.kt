@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -42,6 +43,12 @@ class InteractTask(
 ) {
     val url get() = fetchTask.url
     val isCanceled get() = fetchTask.isCanceled
+
+    val conf get() = fetchTask.volatileConfig
+    val pageLoadTimeout get() = conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
+    val scriptTimeout get() = conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
+    val scrollDownCount get() = conf.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 5)
+    val scrollInterval get() = conf.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
 }
 
 class BrowserStatus(

@@ -36,6 +36,19 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
+class StreamingCrawlerMetrics {
+    private val registry = AppMetrics.defaultMetricRegistry
+
+    val retries = registry.multiMetric(this, "retries")
+    val gone = registry.multiMetric(this, "gone")
+    val tasks = registry.multiMetric(this, "tasks")
+    val successes = registry.multiMetric(this, "successes")
+    val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
+    val finishes = registry.multiMetric(this, "finishes")
+
+    val timeouts = registry.meter(this, "timeouts")
+}
+
 open class StreamingCrawler<T : UrlAware>(
     private val urls: Sequence<T>,
     private val options: LoadOptions = LoadOptions.create(),
@@ -47,24 +60,11 @@ open class StreamingCrawler<T : UrlAware>(
     autoClose: Boolean = true
 ) : AbstractCrawler(session, autoClose) {
     companion object {
-        class Metrics {
-            private val registry = AppMetrics.defaultMetricRegistry
-
-            val retries = registry.multiMetric(this, "retries")
-            val gone = registry.multiMetric(this, "gone")
-            val tasks = registry.multiMetric(this, "tasks")
-            val successes = registry.multiMetric(this, "successes")
-            val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
-            val finishes = registry.multiMetric(this, "finishes")
-
-            val timeouts = registry.meter(this, "timeouts")
-        }
-
         private val instanceSequencer = AtomicInteger()
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
 
-        private val globalMetrics = Metrics()
+        private val globalMetrics = StreamingCrawlerMetrics()
 
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
         private val systemInfo = SystemInfo()

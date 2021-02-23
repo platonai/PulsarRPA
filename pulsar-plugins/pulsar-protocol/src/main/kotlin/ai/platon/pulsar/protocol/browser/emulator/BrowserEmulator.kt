@@ -256,11 +256,18 @@ open class BrowserEmulator(
 
     protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
         val random = ThreadLocalRandom.current().nextInt(3)
-        var scrollDownCount = interactTask.driverConfig.scrollDownCount + random - 1
-        scrollDownCount = scrollDownCount.coerceAtLeast(3)
+        val scrollDownCount = (interactTask.scrollDownCount + random - 1).coerceAtLeast(1)
 
-        val expression = "__utils__.scrollDownN($scrollDownCount)"
-        evaluate(interactTask, expression)
+        val expressions = mutableListOf(
+            "__utils__.scrollToMiddle(0.25)",
+            "__utils__.scrollToMiddle(0.5)",
+            "__utils__.scrollToMiddle(0.75)",
+            "__utils__.scrollToMiddle(0.5)"
+        )
+        repeat(scrollDownCount) {
+            expressions.add("__utils__.scrollDown()")
+        }
+        evaluate(interactTask, expressions, 500)
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
@@ -276,22 +283,27 @@ open class BrowserEmulator(
         }
     }
 
-    private suspend fun evaluate(interactTask: InteractTask, expressions: Iterable<String>, delayTimeMillis: Long) {
+    private suspend fun evaluate(interactTask: InteractTask,
+        expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
-            log.info("Evaluate expression >>>$it<<<")
+            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
             val result = evaluate(interactTask, it)
             if (result is String) {
                 val s = Strings.stripNonPrintableChar(result)
-                log.info("Result >>>$s<<<")
+                log.takeIf { verbose }?.info("Result >>>$s<<<")
             }
-            delay(delayTimeMillis)
+            delay(delayMillis)
         }
     }
 
-    private fun evaluate(interactTask: InteractTask, expression: String): Any? {
+    private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
         counterRequests.inc()
         checkState(interactTask.driver)
         checkState(interactTask.fetchTask)
-        return interactTask.driver.evaluate(expression)
+        val result = interactTask.driver.evaluate(expression)
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        return result
     }
 }

@@ -337,7 +337,7 @@ public interface CapabilityTypes {
     /** Constant <code>PRIVACY_CONTEXT_MIN_THROUGHPUT="privacy.context.min.throughput"</code> */
     String PRIVACY_CONTEXT_MIN_THROUGHPUT = "privacy.context.min.throughput";
     /**
-     * Browser control
+     * The max value of tabs a browser can open
      */
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
     /** Constant <code>BROWSER_EAGER_ALLOCATE_TABS="browser.eager.allocate.tabs"</code> */
@@ -352,7 +352,7 @@ public interface CapabilityTypes {
     String BROWSER_TYPE = "browser.type";
     /** Constant <code>BROWSER_INCOGNITO="browser.incognito"</code> */
     String BROWSER_INCOGNITO = "browser.incognito";
-    /** Constant <code>BROWSER_DRIVER_HEADLESS="browser.driver.headless"</code> */
+    /** Set browser driver to be headless or not */
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
     /** Constant <code>BROWSER_IMAGES_ENABLED="browser.images.enabled"</code> */
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";

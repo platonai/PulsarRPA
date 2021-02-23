@@ -51,7 +51,7 @@ __utils__.isBrowserError = function () {
     return false
 };
 
-__utils__.checkPulsarStatus = function(maxRound = 30, scroll = 2) {
+__utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
     if (!document.pulsarData) {
         // initialization
         __utils__.createPulsarDataIfAbsent();
@@ -285,6 +285,29 @@ __utils__.updatePulsarStat = function(init = false) {
     document.pulsarData.multiStatus = Object.assign(multiStatus, newMultiStatus)
 };
 
+/**
+ * @param {Number} ratio The ratio of the page's height to scroll to, default is 0.5
+ * */
+__utils__.scrollToMiddle = function(ratio = 0.5) {
+    if (!document || !document.documentElement || !document.body) {
+        return
+    }
+
+    if (ratio < 0 || ratio > 1) {
+        ratio = 0.5
+    }
+
+    let x = 0;
+    let y = Math.max(
+        document.documentElement.scrollHeight,
+        document.documentElement.clientHeight,
+        document.body.scrollHeight
+    );
+    y = Math.min(y, 15000) * ratio
+
+    window.scrollTo(x, y)
+};
+
 __utils__.scrollToBottom = function() {
     if (!document || !document.documentElement || !document.body) {
         return
@@ -296,12 +319,22 @@ __utils__.scrollToBottom = function() {
         document.documentElement.clientHeight,
         document.body.scrollHeight
     );
+    y = Math.min(y, 15000)
 
-    window.scrollTo(x, Math.min(y, 15000))
+    window.scrollTo(x, y)
 };
 
 __utils__.scrollToTop = function() {
     window.scrollTo(0, 0)
+};
+
+__utils__.scrollDown = function() {
+    if (!document.pulsarData) {
+        // TODO: this occurs when do performance test, but the reason is not investigated
+        return false
+    }
+
+    window.scrollBy(0, 500);
 };
 
 __utils__.scrollDownN = function(scrollCount = 5) {

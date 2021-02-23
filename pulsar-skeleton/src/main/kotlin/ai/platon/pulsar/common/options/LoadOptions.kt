@@ -49,7 +49,7 @@ open class LoadOptions: CommonOptions {
     /** Web page expire time */
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var expireAt = Instant.now() + ChronoUnit.CENTURIES.duration
+    var expireAt = Instant.EPOCH + ChronoUnit.CENTURIES.duration
 
     /** Arrange links */
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
@@ -129,7 +129,7 @@ open class LoadOptions: CommonOptions {
     /** Web page expire time */
     @Parameter(names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var itemExpireAt = Instant.now() + ChronoUnit.CENTURIES.duration
+    var itemExpireAt = Instant.EPOCH + ChronoUnit.CENTURIES.duration
 
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
@@ -241,12 +241,8 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
-    // A volatile config is usually in session scoped
+    // A volatile config is usually in session scope
     var volatileConfig: VolatileConfig? = null
-        set(value) {
-            field = initConfig(value)
-        }
-        get() = initConfig(field)
 
     /**
      * If shortenKey is set, also ignore url query when fetch pages
@@ -313,6 +309,14 @@ open class LoadOptions: CommonOptions {
         requireImages = itemRequireImages
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
+    }
+
+    fun apply(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+        setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 
     open fun isDefault(option: String): Boolean {
@@ -394,12 +398,6 @@ open class LoadOptions: CommonOptions {
         val o2 = parse(args)
         val mergedOptions = mergeModified(o2)
 
-//        println("...............")
-//        println("this:     $this")
-//        println("args:     $args")
-//        println("modified: $o2")
-//        println("merged:   $mergedOptions")
-
         val parts = args.split(" ")
         var i = 0
         while (i < parts.size) {
@@ -410,13 +408,6 @@ open class LoadOptions: CommonOptions {
         }
 
         return mergedOptions
-    }
-
-    private fun initConfig(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
-        setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
     companion object {

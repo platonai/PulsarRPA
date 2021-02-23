@@ -201,6 +201,8 @@ abstract class AbstractPulsarContext(
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
 
+        finalOptions.apply(finalOptions.volatileConfig)
+
         val href = url.href?.takeIf { Urls.isValidUrl(it) }
         return NormUrl(normalizedUrl, finalOptions, href)
     }
@@ -423,7 +425,7 @@ abstract class AbstractPulsarContext(
             options.volatileConfig = unmodifiedConfig.toVolatileConfig()
         }
 
-        options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)
+        options.apply(options.volatileConfig)
 
         return if (toItemOption) options.createItemOptions() else options
     }
