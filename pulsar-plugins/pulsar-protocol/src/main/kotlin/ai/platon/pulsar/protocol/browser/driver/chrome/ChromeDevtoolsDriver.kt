@@ -175,6 +175,13 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(NoSuchSessionException::class)
+    fun bringToFront() {
+        if (isActive) {
+            page.bringToFront()
+        }
+    }
+
+    @Throws(NoSuchSessionException::class)
     fun getCookieNames(): List<String> {
         if (!isActive) return listOf()
 

@@ -92,6 +92,14 @@ class ManagedWebDriver(
         }
     }
 
+    override fun bringToFront() {
+        if (driver is ChromeDevtoolsDriver) {
+            driver.takeIf { isWorking }?.runCatching { bringToFront() }
+        } else {
+            evaluateSilently(";document.blur();")
+        }
+    }
+
     override fun stopLoading() {
         if (driver is ChromeDevtoolsDriver) {
             driver.takeIf { isWorking }?.runCatching { stopLoading() }

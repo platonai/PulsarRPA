@@ -182,11 +182,15 @@ open class BrowserEmulator(
 
         jsCheckDOMState(task, result)
 
+        // TODO: check performance issue
+        task.driver.bringToFront()
+
         if (result.state.isContinue) {
             jsScrollDown(task, result)
         }
 
         if (result.state.isContinue) {
+            // if bring to front
             // TODO: can not use ; in javascript strings
             volatileConfig?.get(FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE)?.let {
                 evaluate(task, it.split(";"), 1000, verbose)
@@ -289,10 +293,12 @@ open class BrowserEmulator(
         expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
             log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
-            val result = evaluate(interactTask, it)
-            if (result is String) {
-                val s = Strings.stripNonPrintableChar(result)
+            val value = evaluate(interactTask, it)
+            if (value is String) {
+                val s = Strings.stripNonPrintableChar(value)
                 log.takeIf { verbose }?.info("Result >>>$s<<<")
+            } else if (value is Int || value is Long) {
+                log.takeIf { verbose }?.info("Result >>>$value<<<")
             }
             delay(delayMillis)
         }

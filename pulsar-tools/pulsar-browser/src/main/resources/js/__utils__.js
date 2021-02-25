@@ -802,7 +802,9 @@ __utils__.compute = function() {
 };
 
 __utils__.addProjectSpecifiedData = function() {
-
+    document.querySelector("#twotabsearchtextbox").onclick = function () {
+        // alert("click")
+    }
 };
 
 /**
