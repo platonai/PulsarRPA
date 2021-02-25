@@ -316,6 +316,10 @@ public interface CapabilityTypes {
 
     /** Constant <code>FETCH_CLIENT_JS="fetch.browser.client.js"</code> */
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
+    /**
+     * If log the result of expressions
+     * */
+    String FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT = "fetch.browser.client.js.show.expression.result";
     /** Constant <code>FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */
     String FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE = "fetch.browser.client.js.before.feature.compute";
     /** Constant <code>FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */

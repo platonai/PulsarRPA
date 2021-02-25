@@ -131,9 +131,6 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         val query = store.newQuery()
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
-//        val filter = SingleFieldValueFilter<String, GWebPage>()
-//        query.filter = filter
-
         val result = store.execute(query)
         return DbIterator(result)
     }

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.examples.common.Crawler
@@ -30,9 +32,26 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
         i.load(portalUrl)
     }
 
+    fun search() {
+        val portalUrl = "https://www.amazon.com/ -i 0s"
+        val expressions = "document.querySelector(\"input#twotabsearchtextbox\").value = 'cup';\n" +
+                "document.querySelector(\"input#twotabsearchtextbox\").value;\n" +
+                "document.querySelector(\"input#twotabsearchtextbox\").click();\n" +
+                "document.querySelector(\"input#twotabsearchtextbox\").blur();\n" +
+                "document.querySelector(\"input#twotabsearchtextbox\").focus();\n" +
+                "let a = 1+1;" +
+                "var b = 1+2;" +
+                "let c = 1+3;\n" +
+                "document.querySelector(\"#nav-iss-attach\").value;\n" +
+                "document.querySelector(\"#nav-iss-attach\").value"
+        i.sessionConfig.set(FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT, "true")
+        i.sessionConfig.set(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expressions)
+        i.load(portalUrl)
+    }
+
     fun chooseCountry() {
         val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
-        val expressions = "document.querySelector(\"div#nav-global-location-slot a\").click(); " +
+        val expressions = "document.querySelector(\"div#nav-global-location-slot a\").click();" +
                 "document.querySelector(\"input#GLUXZipUpdateInput\").value = '90001'; " +
                 "document.querySelector(\"div#GLUXChangePostalCodeLink\").click(); " +
                 "document.querySelector(\"div#GLUXZipInputSection input[type=submit]\").click(); "
@@ -54,6 +73,8 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 }
 
 fun main() {
-    System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    withContext { AmazonCrawler(it).jp() }
+    withContext { cx ->
+        cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+        AmazonCrawler(cx).search()
+    }
 }

@@ -5,8 +5,7 @@ import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -178,6 +177,8 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+        val volatileConfig = task.fetchTask.page.volatileConfig
+        val verbose = volatileConfig?.getBoolean(FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT, false) == true
 
         jsCheckDOMState(task, result)
 
@@ -186,8 +187,9 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            task.fetchTask.page.volatileConfig?.get(FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE)?.let {
-                evaluate(task, it.split(";\n"), 1000)
+            // TODO: can not use ; in javascript strings
+            volatileConfig?.get(FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE)?.let {
+                evaluate(task, it.split(";"), 1000, verbose)
             }
         }
 
@@ -196,8 +198,8 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            task.fetchTask.page.volatileConfig?.get(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE)?.let {
-                evaluate(task, it.split(";\n"), 1000)
+            volatileConfig?.get(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE)?.let {
+                evaluate(task, it.split(";"), 1000, verbose)
             }
         }
 
