@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.metrics
 
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
@@ -7,7 +7,7 @@ import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
  * Created by vincent on 17-4-5.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-object CounterUtils {
+object EnumCounterUtils {
     fun increaseMDays(days: Long, enumCounterRegistry: EnumCounterRegistry) {
         val counter = when (days.toInt()) {
             0 -> CommonCounter.mDay0

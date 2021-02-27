@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -79,9 +80,10 @@ class FetchMetrics(
     val tasks = registry.meter(this, "tasks")
     val successTasks = registry.meter(this, "successTasks")
     val finishedTasks = registry.meter(this, "finishedTasks")
+    val persists = registry.meter(this, "persists")
     val meterContentBytes = registry.meter(this, "contentBytes")
-    val histogramContentBytes = registry.histogram(this, "contentBytes")
 
+    val histogramContentBytes = registry.histogram(this, "contentBytes")
     val pageImages = registry.histogram(this, "pageImages")
     val pageAnchors = registry.histogram(this, "pageAnchors")
     val pageNumbers = registry.histogram(this, "pageNumbers")

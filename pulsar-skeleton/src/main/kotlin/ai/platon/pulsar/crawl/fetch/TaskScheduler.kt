@@ -7,6 +7,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.CommonCounter
+import ai.platon.pulsar.common.metrics.EnumCounterUtils
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
@@ -329,7 +332,7 @@ class TaskScheduler(
             enumCounters.inc(Counter.rSeeds)
         }
 
-        CounterUtils.increaseRDepth(page.distance, enumCounters)
+        EnumCounterUtils.increaseRDepth(page.distance, enumCounters)
 
         enumCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f / 1024).roundToInt())
     }

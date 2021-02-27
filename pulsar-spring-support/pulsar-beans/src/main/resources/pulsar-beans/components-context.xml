@@ -62,7 +62,7 @@
         <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="updateComponent"/>
         <constructor-arg ref="parseComponent"/>
-        <constructor-arg ref="messageWriter"/>
+        <constructor-arg ref="appStatusTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
 

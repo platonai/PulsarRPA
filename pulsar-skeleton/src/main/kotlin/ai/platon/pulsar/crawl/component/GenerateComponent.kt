@@ -23,6 +23,8 @@ import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.EnumCounterRegistry
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.common.URLUtil.GroupMode

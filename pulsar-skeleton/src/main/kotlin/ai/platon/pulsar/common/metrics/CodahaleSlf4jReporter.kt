@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.metrics
 
 import com.codahale.metrics.*
 import com.codahale.metrics.Histogram
@@ -18,15 +18,15 @@ import java.util.function.Supplier
  * for the bound logging toolkit to further process metrics reports.
  */
 class CodahaleSlf4jReporter private constructor(registry: MetricRegistry,
-                                        private val loggerProxy: LoggerProxy,
-                                        private val marker: Marker?,
-                                        private val prefix: String,
-                                        rateUnit: TimeUnit,
-                                        durationUnit: TimeUnit,
-                                        filter: MetricFilter,
-                                        executor: ScheduledExecutorService?,
-                                        shutdownExecutorOnStop: Boolean,
-                                        disabledMetricAttributes: Set<MetricAttribute>
+                                                private val loggerProxy: LoggerProxy,
+                                                private val marker: Marker?,
+                                                private val prefix: String,
+                                                rateUnit: TimeUnit,
+                                                durationUnit: TimeUnit,
+                                                filter: MetricFilter,
+                                                executor: ScheduledExecutorService?,
+                                                shutdownExecutorOnStop: Boolean,
+                                                disabledMetricAttributes: Set<MetricAttribute>
 ) : ScheduledReporter(registry, "logger-reporter",
         filter, rateUnit, durationUnit, executor, shutdownExecutorOnStop, disabledMetricAttributes) {
     enum class LoggingLevel {

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.metrics
 
 /**
  * Created by vincent on 17-4-5.

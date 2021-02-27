@@ -14,23 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.metrics
 
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.readableClassName
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
-class CounterReporter(
+class EnumCounterReporter(
     private val counter: EnumCounterRegistry,
     initialDelay: Duration = Duration.ofMinutes(3),
     watchInterval: Duration = Duration.ofSeconds(30),
     private val conf: ImmutableConfig
 ): ScheduledMonitor(initialDelay, watchInterval) {
-    private var log = LoggerFactory.getLogger(CounterReporter::class.java)
+    private var log = LoggerFactory.getLogger(EnumCounterReporter::class.java)
     private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
     private var lastStatus = ""
     private val tick = AtomicInteger()

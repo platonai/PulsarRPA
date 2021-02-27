@@ -68,7 +68,7 @@
 
     <logger name="ai.platon.scent.boot.amazon" level="INFO"/>
 
-    <logger name="ai.platon.pulsar.common.AppMetrics" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
 

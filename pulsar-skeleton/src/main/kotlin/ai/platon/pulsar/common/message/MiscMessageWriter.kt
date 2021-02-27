@@ -29,7 +29,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Write misc messages into misc sinks
  */
-class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMessageWriter(conf) {
+class MiscMessageWriter(
+    /**
+     * TODO: no WebDb dependency
+     * */
+    val webDb: WebDb,
+    conf: ImmutableConfig
+) : MultiSinkMessageWriter(conf) {
     private val log = LoggerFactory.getLogger(MiscMessageWriter::class.java)
     private val hostname = NetUtil.getHostname()
     // TODO: job name is set in job setup phrase, so it's not available unless this is a [JobInitialized] class

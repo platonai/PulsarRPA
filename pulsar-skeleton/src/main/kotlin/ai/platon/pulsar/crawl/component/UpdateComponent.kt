@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.AppMetrics
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter

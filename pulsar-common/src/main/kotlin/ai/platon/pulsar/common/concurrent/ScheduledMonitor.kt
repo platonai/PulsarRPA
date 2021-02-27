@@ -9,6 +9,9 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * TODO: java.util.Time is perfect
+ * */
 abstract class ScheduledMonitor(
         var initialDelay: Duration = Duration.ofMinutes(5),
         var watchInterval: Duration = Duration.ofSeconds(30),
@@ -24,11 +27,11 @@ abstract class ScheduledMonitor(
      * Visible only for testing
      */
     fun start(initialDelay: Duration, period: Duration, runnable: () -> Unit) {
-        start(initialDelay.seconds, period.seconds, TimeUnit.SECONDS, Runnable { runnable() })
+        start(initialDelay.seconds, period.seconds, TimeUnit.SECONDS) { runnable() }
     }
 
     fun start(initialDelay: Duration, period: Duration) {
-        start(initialDelay.seconds, period.seconds, TimeUnit.SECONDS, Runnable { watch() })
+        start(initialDelay.seconds, period.seconds, TimeUnit.SECONDS) { watch() }
     }
 
     /**

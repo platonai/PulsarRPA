@@ -1,6 +1,6 @@
 package ai.platon.pulsar.parse.html.filters
 
-import ai.platon.pulsar.common.AppMetrics
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.EntityOptions
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter

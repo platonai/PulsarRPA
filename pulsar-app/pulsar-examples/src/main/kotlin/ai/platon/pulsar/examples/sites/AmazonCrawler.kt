@@ -35,21 +35,13 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
     fun search() {
         val portalUrl = "https://www.amazon.com/ -i 0s"
         val selector = "input#twotabsearchtextbox"
-        val expressions = "document.querySelector('$selector').value = 'cup';\n" +
-//                "document.focus({preventScroll: true});" +
-//                "window.blur();" +
-//                "__utils__.scrollToTop();" +
-//                "__warps__fireEvent('$selector', 'mouseover');" +
+        val expressions = "document.querySelector('$selector').value = 'cup';" +
                 "document.querySelector('$selector').click();" +
                 "document.querySelector('$selector').focus({preventScroll: true});" +
                 "let a = 1+1;" +
                 "var b = 1+2;" +
-                "let c = 1+3;\n" +
-                "b;" +
-                "c;" +
-                "document.querySelector('#suggestions').outerHTML;\n" +
-                "c;" +
-                "document.querySelector('#suggestions').outerHTML"
+                "let c = 1+3;" +
+                "document.querySelector('#suggestions').outerHTML;"
         i.sessionConfig.set(FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT, "true")
         i.sessionConfig.set(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expressions)
         i.load(portalUrl)

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
-import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
@@ -29,7 +29,6 @@ import java.net.URL
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Collectors
 
 /**
@@ -40,13 +39,13 @@ import java.util.stream.Collectors
  */
 @Component
 class LoadComponent(
-        val webDb: WebDb,
-        val globalCache: GlobalCache,
-        val fetchComponent: BatchFetchComponent,
-        val parseComponent: ParseComponent? = null,
-        val updateComponent: UpdateComponent,
-        val messageWriter: MiscMessageWriter? = null,
-        val immutableConfig: ImmutableConfig
+    val webDb: WebDb,
+    val globalCache: GlobalCache,
+    val fetchComponent: BatchFetchComponent,
+    val parseComponent: ParseComponent? = null,
+    val updateComponent: UpdateComponent,
+    val statusTracker: AppStatusTracker? = null,
+    val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
@@ -57,8 +56,12 @@ class LoadComponent(
 
     private val fetchMetrics get() = fetchComponent.fetchMetrics
     private val closed = AtomicBoolean()
+    /**
+     * TODO: only check active before blocking calls
+     * */
     private val isActive get() = !closed.get()
-    private val numWrite = AtomicInteger()
+    @Volatile
+    private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     constructor(
@@ -425,7 +428,7 @@ class LoadComponent(
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            messageWriter?.debugIllegalLastFetchTime(page)
+            statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)
         }
 
         // if (now > lastTime + expires), it's expired
@@ -527,9 +530,10 @@ class LoadComponent(
         }
 
         webDb.put(page)
-        numWrite.incrementAndGet()
+        ++numWrite
+        fetchMetrics?.persists?.mark()
 
-        if (!options.lazyFlush || numWrite.get() % 20 == 0) {
+        if (!options.lazyFlush || numWrite % 20 == 0) {
             flush()
         }
 
