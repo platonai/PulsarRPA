@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.url.PlainUrl
 import ai.platon.pulsar.common.url.UrlAware
@@ -181,30 +182,7 @@ abstract class AbstractPulsarContext(
      * but default values in LoadOptions are ignored.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val (spec, args) = Urls.splitUrlArgs(url.url)
-
-        var finalOptions = options
-        if (args.isNotBlank()) {
-            // options parsed from args overrides options parsed from url
-            val primeOptions = LoadOptions.parse(args, options.volatileConfig)
-            finalOptions = LoadOptions.mergeModified(options, primeOptions, options.volatileConfig)
-        }
-        initOptions(finalOptions, toItemOption)
-
-        val eventHandler = finalOptions.volatileConfig?.getBean(CrawlEventHandler::class)
-        val spec0 = if (eventHandler?.onNormalize != null) {
-            eventHandler.onNormalize(spec) ?: return NormUrl.NIL
-        } else spec
-
-        var normalizedUrl = Urls.normalizeOrNull(spec0, options.shortenKey) ?: return NormUrl.NIL
-        if (!options.noNorm) {
-            normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
-        }
-
-        finalOptions.apply(finalOptions.volatileConfig)
-
-        val href = url.href?.takeIf { Urls.isValidUrl(it) }
-        return NormUrl(normalizedUrl, finalOptions, href)
+        return LoadOptionsNormalizer(unmodifiedConfig, urlNormalizers).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {

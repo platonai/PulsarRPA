@@ -50,8 +50,16 @@ class TestLoadOptions {
         assertMergedOptions(options1.mergeModified(args2), "options1 merge args2")
 
         LoadOptions.mergeModified(args2, null).also {
-            val message = "options2 merge null"
+            val message = "args2 merge null"
             assertTrue(message) { it.storeContent }
+            assertTrue(message) { it.incognito }
+            assertEquals(Duration.ofDays(1), it.expires, message)
+        }
+
+        val args3 = "-storeContent false"
+        LoadOptions.mergeModified(args2, args3).also {
+            val message = "args2 merge args3"
+            assertTrue(message) { !it.storeContent }
             assertTrue(message) { it.incognito }
             assertEquals(Duration.ofDays(1), it.expires, message)
         }

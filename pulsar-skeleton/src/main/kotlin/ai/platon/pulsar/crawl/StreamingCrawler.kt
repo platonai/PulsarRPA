@@ -73,8 +73,12 @@ open class StreamingCrawler<T : UrlAware>(
         private val availableMemory get() = systemInfo.hardware.memory.available
         private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
         private val remainingMemory get() = availableMemory - requiredMemory
+        private val diskStores get() = systemInfo.hardware.diskStores.joinToString {
+            it.name + ": " + Strings.readableBytes(it.size)
+        }
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
+        private var lastPageArgs = ""
         private val isIllegalApplicationState = AtomicBoolean()
 
         init {
@@ -84,8 +88,10 @@ open class StreamingCrawler<T : UrlAware>(
 
                 "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
                 "remainingMemory" to Gauge { Strings.readableBytes(remainingMemory) },
+                "diskStores" to Gauge { diskStores },
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
-                "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime }
+                "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
+                "lastPageArgs" to Gauge { lastPageArgs }
             ).let { AppMetrics.defaultMetricRegistry.registerAll(this, it) }
         }
     }
@@ -258,6 +264,7 @@ open class StreamingCrawler<T : UrlAware>(
 
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
             if (page != null && page.protocolStatus.isSuccess) {
+                lastPageArgs = page.args
                 if (page.isUpdated) {
                     globalMetrics.fetchSuccesses.mark()
                 }
@@ -307,7 +314,6 @@ open class StreamingCrawler<T : UrlAware>(
             storeContent = false
         }
 
-        // crawlerEventHandler.onNormalize(url)
         val normUrl = session.normalize(url, actualOptions)
 
         crawlerEventHandler.onBeforeLoad(url)

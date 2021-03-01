@@ -520,23 +520,33 @@ class LoadComponent(
         // Remove content if storingContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
         if (!options.storeContent && page.content != null) {
-            if (!page.isSeed || page.fetchCount > 2) {
-                if (page.isCachedContentEnabled) {
-                    // set cached content so other thread still can use it
-                    page.cachedContent = page.content
-                }
-                page.content = null
+            if (page.isCachedContentEnabled) {
+                // set cached content so other thread still can use it
+                page.cachedContent = page.content
             }
+            page.content = null
         }
 
         webDb.put(page)
         ++numWrite
-        fetchMetrics?.persists?.mark()
+
+        collectPersistMetrics(page)
 
         if (!options.lazyFlush || numWrite % 20 == 0) {
             flush()
         }
+    }
 
+    private fun collectPersistMetrics(page: WebPage) {
+        val metrics = fetchMetrics
+        if (metrics != null) {
+            metrics.persists.mark()
+            val bytes = page.content?.array()?.size ?: 0
+            if (bytes > 0) {
+                metrics.meterContentPersists.mark()
+                metrics.meterPersistMBytes.mark(bytes.toLong() / 1024 / 1024)
+            }
+        }
         tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes), page.url)
     }
 
