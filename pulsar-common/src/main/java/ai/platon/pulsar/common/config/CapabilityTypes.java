@@ -314,19 +314,19 @@ public interface CapabilityTypes {
     /** Constant <code>FETCH_SCROLL_DOWN_INTERVAL="fetch.scroll.down.interval"</code> */
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
 
+    String FETCH_BROWSER_EVENT_HANDLER = "fetch.browser.event.handler";
+
     /** Constant <code>FETCH_CLIENT_JS="fetch.browser.client.js"</code> */
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
     /**
      * If log the result of expressions
      * */
+    @Deprecated
     String FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT = "fetch.browser.client.js.show.expression.result";
-    /** Constant <code>FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */
-    String FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE = "fetch.browser.client.js.before.feature.compute";
-    /** Constant <code>FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */
+
     String FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE = "fetch.browser.client.js.after.feature.compute";
-    /** Constant <code>FETCH_CLIENT_JS_COMPUTED_STYLES="fetch.browser.client.js.computed.styles"</code> */
+
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
-    /** Constant <code>FETCH_CLIENT_JS_PROPERTY_NAMES="fetch.browser.client.js.property.names"</code> */
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
      * Privacy control

@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.JsEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -178,7 +179,7 @@ open class BrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.volatileConfig
-        val verbose = volatileConfig?.getBoolean(FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT, false) == true
+        val eventHandler = volatileConfig?.getBean(JsEventHandler::class)
 
         jsCheckDOMState(task, result)
 
@@ -190,11 +191,7 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            // if bring to front
-            // TODO: can not use ; in javascript strings
-            volatileConfig?.get(FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE)?.let {
-                evaluate(task, it.split(";"), 1000, verbose)
-            }
+            eventHandler?.onBeforeComputeFeature(task.fetchTask.page, task.driver)
         }
 
         if (result.state.isContinue) {
@@ -202,9 +199,7 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            volatileConfig?.get(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE)?.let {
-                evaluate(task, it.split(";"), 1000, verbose)
-            }
+            eventHandler?.onAfterComputeFeature(task.fetchTask.page, task.driver)
         }
 
         return result

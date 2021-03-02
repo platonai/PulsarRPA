@@ -262,11 +262,3 @@ class ChainedStreamingCrawlerEventHandler(
         }
     }
 }
-
-interface JsEventHandler {
-    fun onWaitingForDomReady()
-    fun onBeforeComputeFeature()
-    fun onComputeFeature()
-    fun onAfterComputeFeature()
-
-}

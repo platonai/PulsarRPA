@@ -1,15 +1,19 @@
-package ai.platon.pulsar.examples.sites
+package ai.platon.pulsar.examples.sites.amazon
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.withContext
+import ai.platon.pulsar.crawl.fetch.AbstractJsEventHandler
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.persist.WebPage
+import org.slf4j.LoggerFactory
 
-fun main() {
-    val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
-    val args = "-i 1s"
+class ChooseCountryJsEventHandler: AbstractJsEventHandler() {
+    private val log = LoggerFactory.getLogger(ChooseCountryJsEventHandler::class.java)!!
 
-    val zipcode = listOf("10001", "10002", "10003", "10004", "10005", "90002", "90003", "90004", "90005").shuffled().first()
-    val expressions = """
+    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+        val zipcode = listOf("10001", "10002", "10003", "10004", "10005", "90002", "90003", "90004", "90005").shuffled().first()
+        val expressions = """
 document.querySelector("#glow-ingress-block").textContent;
 document.querySelector("div#nav-global-location-slot a").click();
 document.querySelector("input#GLUXZipUpdateInput").value;
@@ -23,18 +27,32 @@ document.querySelector("#glow-ingress-block").click();
 document.querySelector("#glow-ingress-block").textContent;
     """.trimIndent()
 
+        evaluate(driver, expressions.split(";"))
+
+        val expression = "document.querySelector('#suggestions').outerHTML;"
+
+        val value = evaluate(driver, expression)
+
+        println(value)
+
+        return value
+    }
+}
+
+fun main() {
     withContext { cx ->
         val context = cx as AbstractPulsarContext
         val session = context.createSession()
+        val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
+        val args = "-i 1s"
 
         val unmodifiedConfig = context.unmodifiedConfig.unbox()
         unmodifiedConfig.set(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator")
         unmodifiedConfig.set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-        unmodifiedConfig.set(CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expressions)
 
+        session.sessionConfig.putBean(ChooseCountryJsEventHandler())
         session.load(portalUrl, args)
 
-        unmodifiedConfig.unset(CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE)
         val document = session.loadDocument(portalUrl, args)
 
         val text = document.selectFirstOrNull("#glow-ingress-block")?.text() ?: "(unknown)"

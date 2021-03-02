@@ -12,12 +12,16 @@ open class VolatileConfig : MutableConfig {
     var fallbackConfig: ImmutableConfig? = null
 
     private val ttls: MutableMap<String, Int> = ConcurrentHashMap()
-    private val variables: MutableMap<String, Any> = ConcurrentHashMap()
+    val variables: MutableMap<String, Any> = ConcurrentHashMap()
 
     constructor() : super(false)
 
     constructor(fallbackConfig: ImmutableConfig?) : super(false) {
         this.fallbackConfig = fallbackConfig
+        if (fallbackConfig is VolatileConfig) {
+            ttls.putAll(fallbackConfig.ttls)
+            variables.putAll(fallbackConfig.variables)
+        }
     }
 
     fun reset() {
@@ -85,11 +89,11 @@ open class VolatileConfig : MutableConfig {
         }
     }
 
-    fun <T: Any> putBean(bean: T): Any? {
+    fun <T : Any> putBean(bean: T): Any? {
         return putBean(bean.javaClass.name, bean)
     }
 
-    fun <T: Any> putBean(name: String, bean: T): Any? {
+    fun <T : Any> putBean(name: String, bean: T): Any? {
         return variables.put(name, bean)
     }
 
@@ -98,16 +102,20 @@ open class VolatileConfig : MutableConfig {
         return obj as? T
     }
 
-    fun <T: Any> getBean(bean: KClass<T>): T? {
+    fun <T : Any> getBean(bean: KClass<T>): T? {
         val obj = variables.values.firstOrNull { bean.java.isAssignableFrom(it.javaClass) }
         return obj as? T
     }
 
-    fun <T> getBean(name: String?, bean: Class<T>): T? {
+    fun <T> getBean(name: String, bean: Class<T>): T? {
         val obj = variables[name]
         return if (obj != null && bean.isAssignableFrom(obj.javaClass)) {
             obj as T
         } else null
+    }
+
+    fun <T : Any> getBean(name: String, bean: KClass<T>): T? {
+        return getBean(name, bean.java)
     }
 
     fun getVariable(name: String?): Any? {

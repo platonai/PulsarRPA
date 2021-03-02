@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites
+package ai.platon.pulsar.examples.sites.amazon
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.options.LoadOptions

@@ -11,6 +11,12 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+object LoadOptionDefaults {
+    var lazyFlush = true
+    var parse = false
+    var storeContent = true
+}
+
 /**
  * Created by vincent on 19-4-24.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
@@ -177,7 +183,7 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-storeContent", "--store-content"], arity = 1,
             description = "Persist page content into data store")
-    var storeContent = true
+    var storeContent = LoadOptionDefaults.storeContent
 
     @Parameter(names = ["-cacheContent", "--cache-content"], arity = 1,
             description = "Cache the page content so it is still available after it be cleared for persistent")
@@ -193,7 +199,7 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
             description = "If false, flush persisted pages into database as soon as possible")
-    var lazyFlush = true
+    var lazyFlush = LoadOptionDefaults.lazyFlush
 
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
             description = "Parallel fetch pages whenever applicable")
@@ -215,7 +221,7 @@ open class LoadOptions: CommonOptions {
 
     // parse options
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page after fetch")
-    var parse = false
+    var parse = LoadOptionDefaults.parse
 
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
