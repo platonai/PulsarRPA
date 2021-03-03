@@ -16,13 +16,12 @@
  */
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.AppConstants
 import org.junit.Test
 import kotlin.test.assertTrue
 
 class TestAppPaths {
     private val tmpDirStr get() = AppPaths.TMP_DIR.toString()
-    private val homeDirStr get() = AppPaths.HOME_DIR.toString()
+    private val homeDirStr get() = AppPaths.DATA_DIR.toString()
 
     @Test
     @Throws(Exception::class)
@@ -35,14 +34,14 @@ class TestAppPaths {
 
         path = AppPaths.get("scripts", filename)
         path2 = AppPaths.get("scripts", filename)
-        assertTrue(path2.startsWith(AppPaths.HOME_DIR), "$path -> $path2")
+        assertTrue(path2.startsWith(AppPaths.DATA_DIR), "$path -> $path2")
 
         path = AppPaths.TMP_DIR.resolve("scripts")
         path2 = AppPaths.getTmp(path.toString(), filename)
         assertTrue(path2.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
 
-        path = AppPaths.HOME_DIR.resolve("scripts")
+        path = AppPaths.DATA_DIR.resolve("scripts")
         path2 = AppPaths.get(path.toString(), filename)
-        assertTrue(path2.startsWith(AppPaths.HOME_DIR), "$path -> $path2")
+        assertTrue(path2.startsWith(AppPaths.DATA_DIR), "$path -> $path2")
     }
 }

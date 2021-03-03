@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.url.*
 import ai.platon.pulsar.persist.WebDb
@@ -21,13 +22,20 @@ open class UrlQueueCollector(
 
     override var name = "UrlQueueC"
 
+    override val estimatedSize: Int get() = queue.size
+
+    var loadArgs: String? = null
+
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         var collected = 0
 
         queue.poll()?.let {
-            if (sink.add(Hyperlinks.toHyperlink(it))) {
+            val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
+            val hyperlink = Hyperlinks.toHyperlink(it).also { it.args = args }
+
+            if (sink.add(hyperlink)) {
                 ++collected
             }
         }
@@ -70,7 +78,13 @@ open class HyperlinkCollector(
     private val webDb = session.context.getBean<WebDb>()
     private val fatLinkExtractor = FatLinkExtractor(session)
 
+    private var parsedSeedCount = 0
+    private var collectedHyperlinkCount = 0
+    private val averageHyperlinkCount get() = collectedHyperlinkCount / parsedSeedCount.coerceAtLeast(1)
+
     override var name: String = "HC"
+
+    override val estimatedSize: Int get() = averageHyperlinkCount * seeds.size
 
     var collects: Int = 0
 
@@ -117,6 +131,7 @@ open class HyperlinkCollector(
             return 0
         }
 
+        ++parsedSeedCount
         fatLinkExtractor.createFatLink(seed, sink)?.also { (page, fatLink) ->
             fatLinks[fatLink.url] = fatLink
             require(fatLink.url == seed.spec)
@@ -130,6 +145,7 @@ open class HyperlinkCollector(
             fatLink.tailLinks.toCollection(sink)
             collected = fatLink.tailLinks.size
             val size2 = sink.size
+            collectedHyperlinkCount += size2
 
             log.info("{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
                     page.id,

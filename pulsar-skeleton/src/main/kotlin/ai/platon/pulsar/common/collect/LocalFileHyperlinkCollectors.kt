@@ -44,6 +44,8 @@ open class LocalFileHyperlinkCollector(
 
     val hyperlinks: List<Hyperlink> get() = ensureLoaded().cache
 
+    override val estimatedSize: Int get() = hyperlinks.size
+
     constructor(path: Path, priority: Priority13, capacity: Int = 1_000_000): this(path, priority.value, capacity)
 
     override fun hasMore() = hyperlinks.isNotEmpty()

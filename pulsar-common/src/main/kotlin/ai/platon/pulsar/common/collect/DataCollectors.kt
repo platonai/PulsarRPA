@@ -39,6 +39,8 @@ open class MultiSourceDataCollector<E>(
      * Collect items from delegated collectors to the sink.
      * If a delegated collector has priority >= Priority.HIGHEST, the items are added to the front of the sink,
      * or the items are appended to the back of the sink.
+     *
+     * All collectors with the same priority have the same chance to choose
      * */
     override fun collectTo(sink: MutableList<E>): Int {
         roundCounter.incrementAndGet()
@@ -49,7 +51,8 @@ open class MultiSourceDataCollector<E>(
         var collected = 0
         val sortedCollectors = collectors.sortedBy { it.priority }
         while (collected == 0 && hasMore()) {
-            sortedCollectors.forEach {
+            // collectors with the same priority have the same chance to choose
+            sortedCollectors.shuffled().forEach {
                 if (collected == 0 && it.hasMore()) {
                     collected += if (it.priority >= Priority13.HIGHEST.value) {
                         it.collectTo(0, sink)
