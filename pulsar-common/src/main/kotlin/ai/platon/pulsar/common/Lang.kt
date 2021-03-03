@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import com.google.common.base.Predicates
+import java.lang.IllegalArgumentException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.memberProperties
@@ -45,6 +46,16 @@ enum class Priority13(val value: Int) {
                 valueOf(name)
             } catch (t: Throwable) {
                 defaultValue
+            }
+        }
+
+        @Throws(IllegalArgumentException::class)
+        fun valueOfOrThrow(name: String): Priority13 {
+            return try {
+                valueOf(name)
+            } catch (t: Throwable) {
+                throw IllegalArgumentException("Illegal priority name $name, " +
+                        "must be one of ${values().map { it.name }}")
             }
         }
     }

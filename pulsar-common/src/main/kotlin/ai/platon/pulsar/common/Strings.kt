@@ -2,6 +2,9 @@ package ai.platon.pulsar.common
 
 import kotlin.reflect.KClass
 
+/**
+ * A human readable, simplified full name of a java class, the name can be used as a file name
+ * */
 fun readableClassName(obj: Any, fullNameCount: Int = 1, partCount: Int = 3): String {
     val names = when (obj) {
         is Class<*> -> obj.name.split(".")
@@ -10,8 +13,10 @@ fun readableClassName(obj: Any, fullNameCount: Int = 1, partCount: Int = 3): Str
     }.takeLast(partCount)
 
     val size = names.size
-    return names.mapIndexed { i, n -> n.takeIf { i >= size - fullNameCount }?:n.substring(0, 1) }
-            .joinToString(".") { it.replace("\$Companion", "\$C") }
+    return names.mapIndexed { i, n -> n.takeIf { i >= size - fullNameCount } ?: n.substring(0, 1) }
+        .joinToString(".") {
+            it.replace("Companion", "C").replace("$", "_")
+        }
 }
 
 fun prependReadableClassName(obj: Any, name: String, separator: String = "."): String {
