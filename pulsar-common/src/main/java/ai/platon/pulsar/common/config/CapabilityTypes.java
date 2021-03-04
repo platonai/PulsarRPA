@@ -344,9 +344,13 @@ public interface CapabilityTypes {
      * The max value of tabs a browser can open
      */
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
-    /** Constant <code>BROWSER_EAGER_ALLOCATE_TABS="browser.eager.allocate.tabs"</code> */
+    /**
+     * Open a set of blank tabs before the first page view
+     * */
     String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
-    /** Constant <code>BROWSER_WEB_DRIVER_CLASS="browser.web.driver.class"</code> */
+    /**
+     * The web driver to use, selenium or pulsar browser, etc
+     * */
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     /** Constant <code>BROWSER_WEB_DRIVER_PRIORITY="browser.web.driver.priority"</code> */
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";

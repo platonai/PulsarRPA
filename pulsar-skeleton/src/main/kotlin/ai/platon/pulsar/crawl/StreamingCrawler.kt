@@ -73,12 +73,10 @@ open class StreamingCrawler<T : UrlAware>(
         private val availableMemory get() = systemInfo.hardware.memory.available
         private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
         private val remainingMemory get() = availableMemory - requiredMemory
-        private val diskStores get() = systemInfo.hardware.diskStores.joinToString {
-            it.name + ": " + Strings.readableBytes(it.size)
-        }
+        private val diskStores get() = systemInfo.hardware.diskStores.joinToString { Strings.readableBytes(it.size) }
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
-        private var lastPageArgs = ""
+        private var lastUrl = ""
         private val isIllegalApplicationState = AtomicBoolean()
 
         init {
@@ -91,7 +89,7 @@ open class StreamingCrawler<T : UrlAware>(
                 "diskStores" to Gauge { diskStores },
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                "lastPageArgs" to Gauge { lastPageArgs }
+                "lastUrl" to Gauge { lastUrl }
             ).let { AppMetrics.defaultMetricRegistry.registerAll(this, it) }
         }
     }
@@ -264,7 +262,7 @@ open class StreamingCrawler<T : UrlAware>(
 
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
             if (page != null && page.protocolStatus.isSuccess) {
-                lastPageArgs = page.args
+                lastUrl = page.configuredUrl
                 if (page.isUpdated) {
                     globalMetrics.fetchSuccesses.mark()
                 }
