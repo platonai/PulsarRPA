@@ -8,8 +8,12 @@ import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
+import org.nibor.autolink.LinkExtractor
+import org.nibor.autolink.LinkType
 import org.slf4j.LoggerFactory
 import java.sql.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 object SqlUtils {
     val sqlLog = LoggerFactory.getLogger(SqlUtils.javaClass.packageName + ".log")
@@ -308,6 +312,18 @@ object SqlUtils {
     fun extractUrlFromFromClause(sql: String): String? {
         val pos = sql.indexOf("from", ignoreCase = true)
         if (pos <= 0) return null
-        return QUOTED_URL_REGEX.find(sql.substring(pos))?.value?.removeSurrounding("'")
+
+        val input = sql.substring(pos)
+        val linkExtractor = LinkExtractor.builder()
+            .linkTypes(EnumSet.of(LinkType.URL))
+            .build()
+        val links = linkExtractor.extractLinks(input).iterator()
+
+        return if (links.hasNext()) {
+            val link = links.next()
+            input.substring(link.beginIndex, link.endIndex)
+        } else {
+            null
+        }
     }
 }

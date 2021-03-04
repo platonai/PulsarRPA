@@ -49,15 +49,18 @@ open class MultiSourceDataCollector<E>(
 
     private fun collectTo0(sink: MutableList<E>): Int {
         var collected = 0
-        val sortedCollectors = collectors.sortedBy { it.priority }
+        // The returned map preserves the entry iteration order of the keys produced from the original collection.
+        val groupedCollectors = collectors.sortedBy { it.priority }.groupBy { it.priority }
         while (collected == 0 && hasMore()) {
-            // collectors with the same priority have the same chance to choose
-            sortedCollectors.shuffled().forEach {
-                if (collected == 0 && it.hasMore()) {
-                    collected += if (it.priority >= Priority13.HIGHEST.value) {
-                        it.collectTo(0, sink)
-                    } else {
-                        it.collectTo(sink)
+            groupedCollectors.forEach { (_, collectors) ->
+                // collectors with the same priority have the same chance to choose
+                collectors.shuffled().forEach {
+                    if (collected == 0 && it.hasMore()) {
+                        collected += if (it.priority >= Priority13.HIGHEST.value) {
+                            it.collectTo(0, sink)
+                        } else {
+                            it.collectTo(sink)
+                        }
                     }
                 }
             }

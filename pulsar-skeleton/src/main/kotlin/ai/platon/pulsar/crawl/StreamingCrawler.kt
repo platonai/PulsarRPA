@@ -117,7 +117,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     val id = instanceSequencer.incrementAndGet()
 
-    val crawlerEventHandler = ChainedStreamingCrawlerEventHandler()
+    val crawlerEventHandler = ChainedCrawlEventHandler()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() }
@@ -251,7 +251,7 @@ open class StreamingCrawler<T : UrlAware>(
         crawlerEventHandler.onFilter(url) ?: return null
 
         if (url is ListenableHyperlink) {
-            url.onFilter(url.url) ?: return null
+            url.loadEventHandler?.onFilter?.invoke(url.url) ?: return null
         }
 
         var page: WebPage? = null
@@ -292,7 +292,10 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         lastActiveTime = Instant.now()
-        page?.let { crawlerEventHandler.onAfterLoad(url, it) }
+        page?.let {
+            val eventHandler = (url as? ListenableHyperlink)?.crawlEventHandler ?: crawlerEventHandler
+            eventHandler.onAfterLoad(url, it)
+        }
 
         // if urls is ConcurrentLoadingIterable
         // TODO: the line below can be removed
@@ -314,7 +317,9 @@ open class StreamingCrawler<T : UrlAware>(
 
         val normUrl = session.normalize(url, actualOptions)
 
-        crawlerEventHandler.onBeforeLoad(url)
+        val eventHandler = (url as? ListenableHyperlink)?.crawlEventHandler ?: crawlerEventHandler
+        eventHandler.onBeforeLoad(url)
+
         return session.runCatching { loadDeferred(normUrl) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()
@@ -323,9 +328,9 @@ open class StreamingCrawler<T : UrlAware>(
     private fun registerHandlers(url: UrlAware, options: LoadOptions) {
         val volatileConfig = conf.toVolatileConfig().apply { name = options.label }
         options.volatileConfig = volatileConfig
-        val eventHandler = (url as? ListenableHyperlink)
-            ?.let { DefaultCrawlEventHandler.create(url) }
-            ?: DefaultCrawlEventHandler()
+        val eventHandler = (url as? ListenableHyperlink)?.loadEventHandler
+            ?.let { DefaultLoadEventHandler.create(it) }
+            ?: DefaultLoadEventHandler()
         eventHandler.onAfterFetch = ChainedWebPageHandler()
             .addFirst { AddRefererAfterFetchHandler(url) }
             .addLast { eventHandler.onAfterFetch }

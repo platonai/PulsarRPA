@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.crawl.CrawlEventHandler
+import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 
 class LoadOptionsNormalizer(
@@ -44,7 +44,7 @@ class LoadOptionsNormalizer(
         initOptions(finalOptions, toItemOption)
 
         var normalizedUrl: String
-        val eventHandler = finalOptions.volatileConfig?.getBean(CrawlEventHandler::class)
+        val eventHandler = finalOptions.volatileConfig?.getBean(LoadEventHandler::class)
         if (eventHandler?.onNormalize != null) {
             normalizedUrl = eventHandler.onNormalize(spec) ?: return NormUrl.NIL
         } else {

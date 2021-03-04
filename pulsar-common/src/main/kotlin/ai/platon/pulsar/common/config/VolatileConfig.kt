@@ -118,6 +118,14 @@ open class VolatileConfig : MutableConfig {
         return getBean(name, bean.java)
     }
 
+    fun <T : Any> removeBean(bean: T): Any? {
+        return variables.remove(bean.javaClass.name)
+    }
+
+    fun <T : Any> removeBean(name: String): Any? {
+        return variables.remove(name)
+    }
+
     fun getVariable(name: String?): Any? {
         return variables[name]
     }

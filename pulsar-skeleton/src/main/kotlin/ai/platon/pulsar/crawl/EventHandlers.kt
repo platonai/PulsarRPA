@@ -1,9 +1,12 @@
 package ai.platon.pulsar.crawl
 
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.crawl.fetch.FetchResult
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import kotlinx.coroutines.delay
 
 interface Handler {
     val name: String
@@ -123,7 +126,7 @@ class ChainedHtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, HtmlDocum
 /**
  * TODO: use pipeline and handler pattern, see Netty
  * */
-interface CrawlEventHandler {
+interface LoadEventHandler {
     var onFilter: (String) -> String?
     var onNormalize: (String) -> String?
     var onBeforeLoad: (String) -> Unit
@@ -138,7 +141,7 @@ interface CrawlEventHandler {
     var onAfterLoad: (WebPage) -> Unit
 }
 
-abstract class AbstractCrawlEventHandler(
+abstract class AbstractLoadEventHandler(
         override var onFilter: (String) -> String? = { it },
         override var onNormalize: (String) -> String? = { it },
         override var onBeforeLoad: (String) -> Unit = {},
@@ -151,9 +154,9 @@ abstract class AbstractCrawlEventHandler(
         override var onAfterHtmlParse: (WebPage, FeaturedDocument) -> Unit = { _, _ -> },
         override var onAfterParse: (WebPage) -> Unit = { _ -> },
         override var onAfterLoad: (WebPage) -> Unit = {}
-): CrawlEventHandler
+): LoadEventHandler
 
-class DefaultCrawlEventHandler(
+class DefaultLoadEventHandler(
         onFilter: (String) -> String? = { it },
         onNormalize: (String) -> String? = { it },
         onBeforeLoad: (String) -> Unit = {},
@@ -166,7 +169,7 @@ class DefaultCrawlEventHandler(
         onAfterHtmlParse: (WebPage, FeaturedDocument) -> Unit = { _, _ -> },
         onAfterParse: (WebPage) -> Unit = { _ -> },
         onAfterLoad: (WebPage) -> Unit = {}
-): AbstractCrawlEventHandler(
+): AbstractLoadEventHandler(
         onFilter, onNormalize,
         onBeforeLoad,
         onBeforeFetch, onAfterFetch,
@@ -176,8 +179,8 @@ class DefaultCrawlEventHandler(
         onAfterLoad
 ) {
     companion object {
-        fun create(handler: CrawlEventHandler): DefaultCrawlEventHandler {
-            return DefaultCrawlEventHandler(
+        fun create(handler: LoadEventHandler): DefaultLoadEventHandler {
+            return DefaultLoadEventHandler(
                     handler.onFilter,
                     handler.onNormalize,
                     handler.onBeforeLoad,
@@ -195,35 +198,92 @@ class DefaultCrawlEventHandler(
     }
 }
 
-interface StreamingCrawlerEventHandler {
+interface JsEventHandler {
+    suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any?
+    suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any?
+}
+
+abstract class AbstractJsEventHandler: JsEventHandler {
+    open var delayMillis = 500L
+    open var verbose = false
+
+    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
+        return null
+    }
+
+    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+        return null
+    }
+
+    protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
+        var value: Any? = null
+        expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
+//            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
+            val v = evaluate(driver, it)
+            if (v is String) {
+                val s = Strings.stripNonPrintableChar(v)
+//                log.takeIf { verbose }?.info("Result >>>$s<<<")
+            } else if (v is Int || v is Long) {
+//                log.takeIf { verbose }?.info("Result >>>$v<<<")
+            }
+            value = v
+        }
+        return value
+    }
+
+    protected suspend fun evaluate(driver: WebDriver, expression: String): Any? {
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        return driver.evaluate(expression)
+    }
+}
+
+class DefaultJsEventHandler(
+    val beforeComputeExpressions: Iterable<String>,
+    val afterComputeExpressions: Iterable<String>
+): AbstractJsEventHandler() {
+    constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
+        bcExpressions.split(delimiters), acExpressions2.split(delimiters))
+
+    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
+        return evaluate(driver, beforeComputeExpressions)
+    }
+
+    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+        return evaluate(driver, afterComputeExpressions)
+    }
+}
+
+interface CrawlEventHandler {
     var onFilter: (UrlAware) -> UrlAware?
     var onNormalize: (UrlAware) -> UrlAware?
     var onBeforeLoad: (UrlAware) -> Unit
     var onAfterLoad: (UrlAware, WebPage) -> Unit
 }
 
-abstract class AbstractStreamingCrawlerEventHandler(
+abstract class AbstractCrawlEventHandler(
         override var onFilter: (UrlAware) -> UrlAware? = { it },
         override var onNormalize: (UrlAware) -> UrlAware? = { it },
         override var onBeforeLoad: (UrlAware) -> Unit = { _ -> },
         override var onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
-): StreamingCrawlerEventHandler
+): CrawlEventHandler
 
-class DefaultStreamingCrawlerEventHandler(
+class DefaultCrawlEventHandler(
         onFilter: (UrlAware) -> UrlAware? = { it },
         onNormalize: (UrlAware) -> UrlAware? = { it },
         onBeforeLoad: (UrlAware) -> Unit = { _ -> },
         onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
-): AbstractStreamingCrawlerEventHandler(
+): AbstractCrawlEventHandler(
         onFilter, onNormalize, onBeforeLoad, onAfterLoad
 )
 
-class ChainedStreamingCrawlerEventHandler(
+class ChainedCrawlEventHandler(
         onFilter: (UrlAware) -> UrlAware? = { it },
         onNormalize: (UrlAware) -> UrlAware? = { it },
         onBeforeLoad: (UrlAware) -> Unit = { _ -> },
         onAfterLoad: (UrlAware, WebPage) -> Unit = ChainedUrlAwareWebPageHandler()
-): AbstractStreamingCrawlerEventHandler(
+): AbstractCrawlEventHandler(
         onFilter, onNormalize, onBeforeLoad, onAfterLoad
 ) {
     fun addFirst(name: String, handler: (UrlAware) -> Unit) {

@@ -98,11 +98,11 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-serialization</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.tika</groupId>-->
-<!--            <artifactId>tika-parsers</artifactId>-->
-<!--            <version>${tika.version}</version>-->
-<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.nibor.autolink</groupId>
+            <artifactId>autolink</artifactId>
+        </dependency>
 
         <!-- Logging and diagnose -->
         <dependency>

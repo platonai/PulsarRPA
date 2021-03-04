@@ -1,12 +1,12 @@
 package ai.platon.pulsar.common.persist.ext
 
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.CrawlEventHandler
+import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.persist.WebPage
 
-val WebPage.eventHandler: CrawlEventHandler?
+val WebPage.eventHandler: LoadEventHandler?
     get() {
-        return volatileConfig?.getBean(CrawlEventHandler::class.java)
+        return volatileConfig?.getBean(LoadEventHandler::class.java)
     }
 
 /**

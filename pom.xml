@@ -36,6 +36,7 @@
         <skipTests>false</skipTests>
 
         <serialization.version>1.4.21</serialization.version>
+        <autolink.version>0.10.0</autolink.version>
     </properties>
 
     <repositories>
@@ -451,6 +452,11 @@
                 <version>${serialization.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.nibor.autolink</groupId>
+                <artifactId>autolink</artifactId>
+                <version>${autolink.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

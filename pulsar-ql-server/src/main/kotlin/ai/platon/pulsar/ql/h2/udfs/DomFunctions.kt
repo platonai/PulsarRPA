@@ -2,8 +2,7 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
-import ai.platon.pulsar.crawl.fetch.AbstractJsEventHandler
-import ai.platon.pulsar.crawl.fetch.DefaultJsEventHandler
+import ai.platon.pulsar.crawl.DefaultJsEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.features.NodeFeature

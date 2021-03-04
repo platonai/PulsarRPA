@@ -203,6 +203,11 @@ public class PulsarParams extends Params {
     public static final String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
     /** Constant <code>VAR_GENERATE_FORCE_FIRST="generate_force_first"</code> */
     public static final String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
+    /**
+     * If this task is a scrape task
+     * TODO: this is a temporary solution
+     * */
+    public static final String VAR_IS_SCRAPE = "IS_SCRAPE";
 
     /**
      * <p>Constructor for PulsarParams.</p>
