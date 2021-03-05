@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.metrology.FileSizeUnits
+import ai.platon.pulsar.common.measure.FileSizeUnits
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.proxy.ProxyException
@@ -189,10 +189,9 @@ open class StreamingCrawler<T : UrlAware>(
 
         globalRunningInstances.decrementAndGet()
 
-        log.info(
-            "All done. Total {} tasks are processed in session {} in {}",
-            globalMetrics.tasks.counter.count, session, DateTimes.elapsedTime(startTime).readable()
-        )
+        log.info("All done. Total {} tasks are processed in session {} in {}",
+            globalMetrics.tasks.counter.count, session,
+            DateTimes.elapsedTime(startTime).readable())
     }
 
     private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {

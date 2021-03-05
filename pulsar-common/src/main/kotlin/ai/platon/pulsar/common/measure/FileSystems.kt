@@ -1,5 +1,15 @@
-package ai.platon.pulsar.common.metrology
+package ai.platon.pulsar.common.measure
 
+/**
+ *
+ * **See Also**
+ *
+ * [jscience](http://jscience.org/)
+ *
+ * [github unitsofmeasurement](https://github.com/unitsofmeasurement)
+ *
+ * [baeldung](https://www.baeldung.com/javax-measure)
+ * */
 object FileSizeUnits {
 
     fun convert(bytes: Int, unit: String) = convert(bytes.toLong(), unit)
