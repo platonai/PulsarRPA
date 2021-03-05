@@ -118,7 +118,7 @@ public class WebPage implements Comparable<WebPage> {
 
     private boolean cachedContentEnabled = false;
 
-    private ByteBuffer cachedContent = null;
+    private volatile ByteBuffer cachedContent = null;
 
     private WebPage(String url, GWebPage page, boolean urlReversed) {
         Objects.requireNonNull(url);
@@ -1484,7 +1484,7 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link java.nio.ByteBuffer} object.
      */
     @Nullable
-    public ByteBuffer getUncachedContent() {
+    public ByteBuffer getPersistContent() {
         return page.getContent();
     }
 
@@ -1578,11 +1578,24 @@ public class WebPage implements Comparable<WebPage> {
     public void setContent(@Nullable ByteBuffer value) {
         if (value != null) {
             page.setContent(value);
-            setContentBytes(value.array().length);
+            int length = value.array().length;
+            setContentLength(length);
+            setPersistContentLength(length);
         } else {
             page.setContent(null);
-            setContentBytes(0);
+            setContentLength(0);
+            setPersistContentLength(0);
         }
+    }
+
+    public void clearPersistContent() {
+        if (isCachedContentEnabled()) {
+            // set cached content so other thread still can use it
+            cachedContent = page.getContent();
+        }
+
+        page.setContent(null);
+        setPersistContentLength(0);
     }
 
     /**
@@ -1590,22 +1603,23 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a int.
      */
-    public int getContentBytes() {
-        return getMetadata().getInt(Name.CONTENT_BYTES, 0);
+    public long getContentLength() {
+        return getMetadata().getLong(Name.CONTENT_BYTES, 0);
     }
 
     /**
      * TODO: use a field
      * */
-    private void setContentBytes(int bytes) {
-        int lastBytes = getContentBytes();
-        getMetadata().set(Name.LAST_CONTENT_BYTES, lastBytes);
-        getMetadata().set(Name.CONTENT_BYTES, String.valueOf(bytes));
+    public void setContentLength(long bytes) {
+        long lastBytes = getContentLength();
+        Metadata metadata = getMetadata();
+        metadata.set(Name.LAST_CONTENT_BYTES, lastBytes);
+        metadata.set(Name.CONTENT_BYTES, bytes);
 
         int count = getFetchCount();
-        int lastAveBytes = getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
+        long lastAveBytes = metadata.getLong(Name.AVE_CONTENT_BYTES, 0);
 
-        int aveBytes;
+        long aveBytes;
         if (count > 0 && lastAveBytes == 0) {
             // old version, average bytes is not calculated
             aveBytes = bytes;
@@ -1613,11 +1627,19 @@ public class WebPage implements Comparable<WebPage> {
             aveBytes = (lastAveBytes * count + bytes) / (count + 1);
         }
 
-        getMetadata().set(Name.AVE_CONTENT_BYTES, String.valueOf(aveBytes));
+        metadata.set(Name.AVE_CONTENT_BYTES, aveBytes);
     }
 
-    public int getLastContentBytes() {
-        return getMetadata().getInt(Name.LAST_CONTENT_BYTES, 0);
+    public long getPersistContentBytes() {
+        return getMetadata().getLong(Name.PERSIST_CONTENT_BYTES, 0);
+    }
+
+    private void setPersistContentLength(long bytes) {
+        getMetadata().set(Name.PERSIST_CONTENT_BYTES, bytes);
+    }
+
+    public long getLastContentBytes() {
+        return getMetadata().getLong(Name.LAST_CONTENT_BYTES, 0);
     }
 
     /**
@@ -1625,8 +1647,8 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a int.
      */
-    public int getAveContentBytes() {
-        return getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
+    public long getAveContentBytes() {
+        return getMetadata().getLong(Name.AVE_CONTENT_BYTES, 0);
     }
 
     /**

@@ -197,7 +197,7 @@ class FatLinkExtractor(val session: PulsarSession) {
         if (vividLinks.isEmpty()) {
             log.info("{}. No new link in portal page({}), prev fetch time: {} | <{}> | {}",
                     page.id,
-                    Strings.readableBytes(page.contentBytes.toLong()),
+                    Strings.readableBytes(page.contentLength.toLong()),
                     Duration.between(page.prevFetchTime, now).readable(),
                     selector,
                     seed)
@@ -296,11 +296,11 @@ private fun reportHyperlink(
         fetchUrls: Collection<Hyperlink>,
         log: Logger
 ) {
-    if (page.contentBytes < 100) {
+    if (page.contentLength < 100) {
         log.info("Portal page is illegal (too small) | {}", page.url)
     } else {
         val exportLink = AppPaths.uniqueSymbolicLinkForUri(page.url)
-        val readableBytes = Strings.readableBytes(page.contentBytes.toLong())
+        val readableBytes = Strings.readableBytes(page.contentLength.toLong())
         log.info("{}. There are {} links in portal page ({}), total {} fetch urls | file://{} | {}",
                 page.id, links.size, readableBytes, fetchUrls.size, exportLink, page.url)
     }

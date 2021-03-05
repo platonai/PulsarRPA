@@ -2,14 +2,18 @@ package ai.platon.pulsar.common.metrics
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.metrology.FileSizeUnits
 import com.codahale.metrics.*
 import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
+import oshi.SystemInfo
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.time.Duration
 import java.time.LocalDateTime
@@ -68,6 +72,20 @@ class AppMetrics(
 
         val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
         val reg = defaultMetricRegistry
+
+        val systemInfo = SystemInfo()
+        // OSHI cached the value, so it's fast and safe to be called frequently
+        val availableMemory get() = systemInfo.hardware.memory.available
+        val freeSpace get() = FileSystems.getDefault().fileStores
+            .filter { FileSizeUnits.convert(it.totalSpace, "G") > 20 }
+            .map { it.unallocatedSpace }
+
+        init {
+            mapOf(
+                "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
+                "freeSpace" to Gauge { freeSpace.map { Strings.readableBytes(it) } }
+            ).let { reg.registerAll(this, it) }
+        }
     }
 
     private val timeIdent = DateTimes.formatNow("MMdd")

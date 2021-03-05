@@ -113,14 +113,14 @@ class CompletedPageFormatter(
     }
 
     private fun buildContentBytes(): String {
-        return if (page.lastContentBytes == 0 || page.lastContentBytes == page.contentBytes) {
-            readableBytes(page.contentBytes)
+        return if (page.lastContentBytes == 0L || page.lastContentBytes == page.contentLength) {
+            readableBytes(page.contentLength)
         } else {
-            readableBytes(page.contentBytes).trim() + " <- " + readableBytes(page.lastContentBytes).trim()
+            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentBytes).trim()
         }
     }
 
-    private fun readableBytes(bytes: Int): String {
+    private fun readableBytes(bytes: Long): String {
         return Strings.readableBytes(bytes, 7, false)
     }
 

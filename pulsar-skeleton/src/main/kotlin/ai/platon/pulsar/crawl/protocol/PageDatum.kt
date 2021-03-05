@@ -71,7 +71,7 @@ class PageDatum(
     var activeDomMultiStatus: ActiveDomMultiStatus? = null
     var activeDomUrls: ActiveDomUrls? = null
 
-    val length get() = (content?.size?:0).toLong()
+    val contentLength get() = (content?.size?:0).toLong()
 
     constructor(url: String, location: String, content: ByteArray?, contentType: String?, metadata: MultiMetadata,
                 mimeTypeResolver: MimeTypeResolver): this(url, location, ProtocolStatus.STATUS_CANCELED, content, contentType, metadata) {

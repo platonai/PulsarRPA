@@ -90,6 +90,7 @@ public enum Name {
     ENCODING_CLUES("C_EC"),
     CONTENT_BYTES("C_CB"),
     LAST_CONTENT_BYTES("C_LCB"),
+    PERSIST_CONTENT_BYTES("C_CB"),
     AVE_CONTENT_BYTES("C_ACB"),
 
     META_KEYWORDS("meta_keywords"),

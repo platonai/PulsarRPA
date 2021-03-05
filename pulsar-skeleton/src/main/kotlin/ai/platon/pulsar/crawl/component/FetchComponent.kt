@@ -333,6 +333,7 @@ open class FetchComponent(
             var contentType = contentTypeHint
 
             page.setContent(pageDatum.content)
+
             if (contentType != null) {
                 pageDatum.contentType = contentType
             } else {

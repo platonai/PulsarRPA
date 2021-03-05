@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrology.FileSizeUnits
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.proxy.ProxyException
@@ -24,7 +25,6 @@ import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
-import oshi.SystemInfo
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -67,13 +67,10 @@ open class StreamingCrawler<T : UrlAware>(
         private val globalMetrics = StreamingCrawlerMetrics()
 
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
-        private val systemInfo = SystemInfo()
 
-        // OSHI cached the value, so it's fast and safe to be called frequently
-        private val availableMemory get() = systemInfo.hardware.memory.available
+        private val availableMemory get() = AppMetrics.availableMemory
         private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
         private val remainingMemory get() = availableMemory - requiredMemory
-        private val diskStores get() = systemInfo.hardware.diskStores.joinToString { Strings.readableBytes(it.size) }
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
         private var lastUrl = ""
@@ -84,13 +81,10 @@ open class StreamingCrawler<T : UrlAware>(
                 "globalRunningInstances" to Gauge { globalRunningInstances.get() },
                 "globalRunningTasks" to Gauge { globalRunningTasks.get() },
 
-                "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
-                "remainingMemory" to Gauge { Strings.readableBytes(remainingMemory) },
-                "diskStores" to Gauge { diskStores },
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
                 "lastUrl" to Gauge { lastUrl }
-            ).let { AppMetrics.defaultMetricRegistry.registerAll(this, it) }
+            ).let { AppMetrics.reg.registerAll(this, it) }
         }
     }
 
@@ -161,6 +155,12 @@ open class StreamingCrawler<T : UrlAware>(
                     return@runInScope
                 }
 
+                // The largest disk must have at least 10GiB remaining space
+                if (AppMetrics.freeSpace.maxOfOrNull { FileSizeUnits.convert(it, "G") } ?: 0.0 < 10.0) {
+                    // log.error("Disk space is full!")
+                    // return@runInScope
+                }
+
                 if (url.isNil) {
                     return@forEachIndexed
                 }
@@ -172,7 +172,6 @@ open class StreamingCrawler<T : UrlAware>(
                 if (url.url in globalLoadingUrls) {
                     return@forEachIndexed
                 }
-
                 globalLoadingUrls.add(url.url)
 
                 val state = try {

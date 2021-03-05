@@ -29,5 +29,5 @@ class ProtocolOutput(
     constructor(pageDatum: PageDatum) : this(pageDatum, pageDatum.headers, pageDatum.status)
     constructor(status: ProtocolStatus) : this(null, MultiMetadata(), status)
 
-    val length get() = pageDatum?.length ?: 0
+    val length get() = pageDatum?.contentLength ?: 0
 }

@@ -301,7 +301,7 @@ class PageParser(
                 val hi = page.htmlIntegrity
                 return when {
                     hi.isOK -> false
-                    hi.isOther -> page.contentBytes < 20_000
+                    hi.isOther -> page.contentLength < 20_000
                     else -> true
                 }
             }

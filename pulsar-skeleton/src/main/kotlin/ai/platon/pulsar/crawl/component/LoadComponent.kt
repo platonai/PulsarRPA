@@ -436,7 +436,7 @@ class LoadComponent(
             return FetchReason.EXPIRED
         }
 
-        if (page.contentBytes < options.requireSize) {
+        if (page.contentLength < options.requireSize) {
             return FetchReason.SMALL_CONTENT
         }
 
@@ -520,11 +520,7 @@ class LoadComponent(
         // Remove content if storingContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
         if (!options.storeContent && page.content != null) {
-            if (page.isCachedContentEnabled) {
-                // set cached content so other thread still can use it
-                page.cachedContent = page.content
-            }
-            page.content = null
+            page.clearPersistContent()
         }
 
         webDb.put(page)
@@ -547,7 +543,7 @@ class LoadComponent(
                 metrics.meterPersistMBytes.mark(bytes.toLong() / 1024 / 1024)
             }
         }
-        tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes), page.url)
+        tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
     }
 
     fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {

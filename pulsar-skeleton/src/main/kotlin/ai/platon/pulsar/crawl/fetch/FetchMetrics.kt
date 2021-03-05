@@ -180,7 +180,7 @@ class FetchMetrics(
         successTasks.mark()
         finishedTasks.mark()
 
-        val bytes = page.contentBytes.toLong()
+        val bytes = page.contentLength
         histogramContentBytes.update(bytes)
         meterContentBytes.mark(bytes)
 

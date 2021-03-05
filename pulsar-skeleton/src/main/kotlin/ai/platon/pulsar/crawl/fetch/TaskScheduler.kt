@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.common.metrics.EnumCounterUtils
+import ai.platon.pulsar.common.metrology.FileSizeUnits
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
@@ -26,7 +27,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.roundToInt
 
 class TaskScheduler(
         val tasksMonitor: TaskMonitor,
@@ -245,7 +245,7 @@ class TaskScheduler(
 
             if (!parseResult.isSuccess) {
                 enumCounters.inc(Counter.rParseFailed)
-                page.pageCounters.increase<PageCounters.Self>(PageCounters.Self.parseErr)
+                page.pageCounters.increase(PageCounters.Self.parseErr)
             }
 
             // Double check success
@@ -326,7 +326,7 @@ class TaskScheduler(
         enumCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
 
         totalPages.incrementAndGet()
-        totalBytes.addAndGet(page.contentBytes.toLong())
+        totalBytes.addAndGet(page.contentLength.toLong())
 
         if (page.isSeed) {
             enumCounters.inc(Counter.rSeeds)
@@ -334,7 +334,7 @@ class TaskScheduler(
 
         EnumCounterUtils.increaseRDepth(page.distance, enumCounters)
 
-        enumCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f / 1024).roundToInt())
+        enumCounters.inc(Counter.rMbytes, FileSizeUnits.convert(page.contentLength, "M").toInt())
     }
 
     private fun logFetchFailure(message: String) {
