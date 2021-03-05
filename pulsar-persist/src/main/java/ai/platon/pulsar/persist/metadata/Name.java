@@ -49,13 +49,13 @@ public enum Name {
     /**
      * parse
      */
-    QUERY("P_Q"),
-    NO_FOLLOW("P_NF"),
-    FORCE_FOLLOW("P_FF"),
-    REPARSE_LINKS("P_RL"),
-    PARSE_NO_LINK_FILTER("P_NF"),
-    PARSE_LINK_FILTER_DEBUG_LEVEL("P_LFDL"),
-    TOTAL_OUT_LINKS("P_TOL"),
+    QUERY("PQ"),
+    NO_FOLLOW("PNF"),
+    FORCE_FOLLOW("PFF"),
+    REPARSE_LINKS("PRL"),
+    PARSE_NO_LINK_FILTER("PNF"),
+    PARSE_LINK_FILTER_DEBUG_LEVEL("PLFDL"),
+    TOTAL_OUT_LINKS("PTOL"),
     ANCHORS("P_AS"),
 
     MODEL_SYNC_TIME("PMST"),
@@ -63,7 +63,7 @@ public enum Name {
     /**
      * harvest
      */
-    HARVEST_STATUS("H_S"),
+    HARVEST_STATUS("HS"),
 
     /**
      * export
@@ -79,18 +79,18 @@ public enum Name {
     /**
      * score
      */
-    CASH_KEY("S_CASH"),
+    CASH_KEY("SCASH"),
 
     /** update */
 
     /**
      * content
      */
-    CHAR_ENCODING_FOR_CONVERSION("C_CEFC"),
+    CHAR_ENCODING_FOR_CONVERSION("CCEFC"),
     ENCODING_CLUES("C_EC"),
     CONTENT_BYTES("C_CB"),
     LAST_CONTENT_BYTES("C_LCB"),
-    PERSIST_CONTENT_BYTES("C_CB"),
+    PERSIST_CONTENT_BYTES("CPCB"),
     AVE_CONTENT_BYTES("C_ACB"),
 
     META_KEYWORDS("meta_keywords"),

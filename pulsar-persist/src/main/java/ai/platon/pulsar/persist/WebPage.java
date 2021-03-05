@@ -1582,9 +1582,7 @@ public class WebPage implements Comparable<WebPage> {
             setContentLength(length);
             setPersistContentLength(length);
         } else {
-            page.setContent(null);
-            setContentLength(0);
-            setPersistContentLength(0);
+            clearPersistContent();
         }
     }
 
