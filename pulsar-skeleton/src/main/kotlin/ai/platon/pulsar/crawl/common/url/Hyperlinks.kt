@@ -1,7 +1,11 @@
-package ai.platon.pulsar.crawl.common
+package ai.platon.pulsar.crawl.common.url
 
+import ai.platon.pulsar.common.config.AppConstants.PSEUDO_URL_BASE
 import ai.platon.pulsar.common.url.StatefulHyperlink
-import ai.platon.pulsar.crawl.*
+import ai.platon.pulsar.crawl.CrawlEventHandler
+import ai.platon.pulsar.crawl.JsEventHandler
+import ai.platon.pulsar.crawl.LoadEventHandler
+import org.apache.commons.lang3.RandomStringUtils
 import java.time.Duration
 import java.time.Instant
 
@@ -38,10 +42,18 @@ open class ListenableHyperlink(
 ): StatefulHyperlink(url, text, order, referer, args, href, label) {
 
     override val isPersistable: Boolean = false
+    /**
+     * A pseudo url can not be fetched directly, but the crawl events are handled
+     * */
+    val isPseudo: Boolean get() = url.startsWith(PSEUDO_URL_BASE)
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
     open var loadEventHandler: LoadEventHandler? = null
     open var jsEventHandler: JsEventHandler? = null
     open var crawlEventHandler: CrawlEventHandler? = null
+
+    companion object {
+        val randomPseudoUrl get() = PSEUDO_URL_BASE + "/" + RandomStringUtils.randomAlphanumeric(8)
+    }
 }

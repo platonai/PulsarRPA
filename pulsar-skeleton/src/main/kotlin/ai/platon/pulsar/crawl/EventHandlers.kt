@@ -259,32 +259,36 @@ interface CrawlEventHandler {
     var onFilter: (UrlAware) -> UrlAware?
     var onNormalize: (UrlAware) -> UrlAware?
     var onBeforeLoad: (UrlAware) -> Unit
+    var onLoad: (UrlAware) -> Unit
     var onAfterLoad: (UrlAware, WebPage) -> Unit
 }
 
 abstract class AbstractCrawlEventHandler(
-        override var onFilter: (UrlAware) -> UrlAware? = { it },
-        override var onNormalize: (UrlAware) -> UrlAware? = { it },
-        override var onBeforeLoad: (UrlAware) -> Unit = { _ -> },
-        override var onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
+    override var onFilter: (UrlAware) -> UrlAware? = { it },
+    override var onNormalize: (UrlAware) -> UrlAware? = { it },
+    override var onBeforeLoad: (UrlAware) -> Unit = { _ -> },
+    override var onLoad: (UrlAware) -> Unit = { _ -> },
+    override var onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
 ): CrawlEventHandler
 
 class DefaultCrawlEventHandler(
         onFilter: (UrlAware) -> UrlAware? = { it },
         onNormalize: (UrlAware) -> UrlAware? = { it },
         onBeforeLoad: (UrlAware) -> Unit = { _ -> },
+        onLoad: (UrlAware) -> Unit = { _ -> },
         onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
 ): AbstractCrawlEventHandler(
-        onFilter, onNormalize, onBeforeLoad, onAfterLoad
+        onFilter, onNormalize, onBeforeLoad, onLoad, onAfterLoad
 )
 
 class ChainedCrawlEventHandler(
         onFilter: (UrlAware) -> UrlAware? = { it },
         onNormalize: (UrlAware) -> UrlAware? = { it },
         onBeforeLoad: (UrlAware) -> Unit = { _ -> },
+        onLoad: (UrlAware) -> Unit = { _ -> },
         onAfterLoad: (UrlAware, WebPage) -> Unit = ChainedUrlAwareWebPageHandler()
 ): AbstractCrawlEventHandler(
-        onFilter, onNormalize, onBeforeLoad, onAfterLoad
+        onFilter, onNormalize, onBeforeLoad, onLoad, onAfterLoad
 ) {
     fun addFirst(name: String, handler: (UrlAware) -> Unit) {
         if (name == "onBeforeLoad") {

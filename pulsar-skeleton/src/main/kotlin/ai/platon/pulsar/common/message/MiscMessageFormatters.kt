@@ -76,7 +76,7 @@ class CompletedPageFormatter(
             } else ""
         }
 
-    private val prefix0 get() = if (page.isUpdated) "Fetched" else "Loaded"
+    private val prefix0 get() = if (page.isContentUpdated) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.loadOptions.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "

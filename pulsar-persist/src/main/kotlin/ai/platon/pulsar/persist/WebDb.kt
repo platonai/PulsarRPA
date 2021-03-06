@@ -30,6 +30,8 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
+     *
+     * TODO: handle ignoreQuery the higher level
      */
     @JvmOverloads
     fun getOrNull(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
@@ -54,10 +56,13 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      */
     @JvmOverloads
     fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
-        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
-
-        val page = getOrNull(url, ignoreQuery, null)?.also { it.isLoaded = true }
+        val page = getOrNull(originalUrl, ignoreQuery, fields)
         return page ?: WebPage.NIL
+    }
+
+    fun exists(originalUrl: String, ignoreQuery: Boolean = false): Boolean {
+        val requiredField = GWebPage.Field.CREATE_TIME.toString()
+        return getOrNull(originalUrl, ignoreQuery, arrayOf(requiredField)) != null
     }
 
     @JvmOverloads

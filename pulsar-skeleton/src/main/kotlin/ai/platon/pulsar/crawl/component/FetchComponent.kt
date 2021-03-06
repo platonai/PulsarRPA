@@ -255,25 +255,6 @@ open class FetchComponent(
         return crawlStatus
     }
 
-//    fun createFetchEntry(url: String, options: LoadOptions, href: String? = null): WebPage {
-//        return WebPage.newWebPage(url, options.volatileConfig, href)
-//                .also { initFetchEntry(it, options) }
-//    }
-//
-//    fun initFetchEntry(page: WebPage, options: LoadOptions, href: String?) {
-//        page.href = href
-//        initFetchEntry(page, options)
-//    }
-//
-//    fun initFetchEntry(page: WebPage, options: LoadOptions) {
-//        page.also {
-//            it.fetchMode = options.fetchMode
-//            it.options = options.toString()
-//            it.volatileConfig = options.volatileConfig
-//            it.fetchRetries++
-//        }
-//    }
-
     private fun updatePage(page: WebPage, pageDatum: PageDatum?,
                            protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
@@ -304,8 +285,6 @@ open class FetchComponent(
 
         updateFetchTime(page)
         updateMarks(page)
-
-        page.isUpdated = true
 
         return page
     }

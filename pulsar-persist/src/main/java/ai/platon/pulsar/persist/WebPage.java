@@ -114,7 +114,7 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * If this page is fetched and updated
      * */
-    private boolean isUpdated = false;
+    private boolean isContentUpdated = false;
 
     private boolean cachedContentEnabled = false;
 
@@ -512,12 +512,8 @@ public class WebPage implements Comparable<WebPage> {
         isLoaded = loaded;
     }
 
-    public boolean isUpdated() {
-        return isUpdated;
-    }
-
-    public void setUpdated(boolean updated) {
-        isUpdated = updated;
+    public boolean isContentUpdated() {
+        return isContentUpdated;
     }
 
     public boolean isCachedContentEnabled() {
@@ -1551,6 +1547,7 @@ public class WebPage implements Comparable<WebPage> {
      */
     public void setContent(@Nullable String value) {
         if (value != null) {
+            isContentUpdated = true;
             setContent(value.getBytes());
         } else {
             setContent((ByteBuffer)null);

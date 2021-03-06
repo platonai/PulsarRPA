@@ -5,9 +5,9 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
+import ai.platon.pulsar.common.measure.FileSizeUnits
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.measure.FileSizeUnits
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.proxy.ProxyException
@@ -17,7 +17,7 @@ import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -99,7 +99,7 @@ open class StreamingCrawler<T : UrlAware>(
     private val isIdle get() = idleTime > idleTimeout
 
     @Volatile
-    private var proxyInsufficientBalance = 0
+    private var proxyOutOfService = 0
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
     private val taskTimeout = Duration.ofMinutes(10)
@@ -111,7 +111,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     val id = instanceSequencer.incrementAndGet()
 
-    val crawlerEventHandler = ChainedCrawlEventHandler()
+    val crawlEventHandler = ChainedCrawlEventHandler()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() }
@@ -131,14 +131,14 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     open suspend fun run(scope: CoroutineScope) {
-        runInScope(scope)
+        startCrawlLoop(scope)
     }
 
     fun quit() {
         quit = true
     }
 
-    protected suspend fun runInScope(scope: CoroutineScope) {
+    protected suspend fun startCrawlLoop(scope: CoroutineScope) {
         log.info("Starting streaming crawler ... | {}", options)
 
         globalRunningInstances.incrementAndGet()
@@ -152,7 +152,7 @@ open class StreamingCrawler<T : UrlAware>(
 
             urls.forEachIndexed { j, url ->
                 if (!isActive) {
-                    return@runInScope
+                    return@startCrawlLoop
                 }
 
                 // The largest disk must have at least 10GiB remaining space
@@ -165,24 +165,27 @@ open class StreamingCrawler<T : UrlAware>(
                     return@forEachIndexed
                 }
 
-                if (true == globalCache?.fetchingUrls?.contains(url.url)) {
-                    return@forEachIndexed
-                }
-
+                /**
+                 * TODO: proper handling the result, especially the client ask for a result
+                 * */
                 if (url.url in globalLoadingUrls) {
                     return@forEachIndexed
                 }
-                globalLoadingUrls.add(url.url)
 
                 val state = try {
-                    load(1 + j, url, scope)
+                    globalLoadingUrls.add(url.url)
+                    runWithStatusCheck(1 + j, url, scope)
                 } finally {
                     globalMetrics.finishes.mark()
                     globalLoadingUrls.remove(url.url)
                 }
 
                 if (state != FlowState.CONTINUE) {
-                    return@runInScope
+                    return@startCrawlLoop
+                } else {
+                    // if urls is ConcurrentLoadingIterable
+                    // TODO: the line below can be removed
+                    (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
                 }
             }
         }
@@ -194,7 +197,7 @@ open class StreamingCrawler<T : UrlAware>(
             DateTimes.elapsedTime(startTime).readable())
     }
 
-    private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
+    private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
         globalMetrics.tasks.mark()
 
@@ -221,47 +224,57 @@ open class StreamingCrawler<T : UrlAware>(
             handleContextLeaks()
         }
 
-        if (proxyInsufficientBalance > 0) {
-            handleProxySufficientBalance()
+        if (proxyOutOfService > 0) {
+            handleProxyOutOfService()
         }
 
         if (FileCommand.check("finish-job")) {
             log.info("Find finish-job command, quit streaming crawler ...")
-            return FlowState.BREAK
+            flowState = FlowState.BREAK
+            return flowState
         }
 
         if (!isActive) {
-            return FlowState.BREAK
+            flowState = FlowState.BREAK
+            return flowState
         }
 
         val context = Dispatchers.Default + CoroutineName("w")
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
-            load(url)
+            runUrlTask(url)
+            lastActiveTime = Instant.now()
             globalRunningTasks.decrementAndGet()
         }
 
         return flowState
     }
 
-    private suspend fun load(url: UrlAware): WebPage? {
-        crawlerEventHandler.onFilter(url) ?: return null
-
-        if (url is ListenableHyperlink) {
-            url.loadEventHandler?.onFilter?.invoke(url.url) ?: return null
+    private suspend fun runUrlTask(url: UrlAware) {
+        if (url is ListenableHyperlink && url.isPseudo) {
+            val eventHandler = url.crawlEventHandler
+            if (eventHandler != null) {
+                eventHandler.onBeforeLoad(url)
+                eventHandler.onLoad(url)
+                eventHandler.onAfterLoad(url, WebPage.NIL)
+            }
+        } else {
+            val normalizedUrl = beforeUrlLoad(url)
+            if (normalizedUrl != null) {
+                val page = loadUrl(normalizedUrl)
+                afterUrlLoad(normalizedUrl, page)
+            }
         }
+    }
 
+    private suspend fun loadUrl(url: UrlAware): WebPage? {
         var page: WebPage? = null
         try {
-            if (!isActive) {
-                return null
-            }
-
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
             if (page != null && page.protocolStatus.isSuccess) {
                 lastUrl = page.configuredUrl
-                if (page.isUpdated) {
+                if (page.isContentUpdated) {
                     globalMetrics.fetchSuccesses.mark()
                 }
                 globalMetrics.successes.mark()
@@ -281,25 +294,31 @@ open class StreamingCrawler<T : UrlAware>(
             }
         }
 
-        if (!isActive) {
-            return null
+        return page
+    }
+
+    private fun beforeUrlLoad(url: UrlAware): UrlAware? {
+        crawlEventHandler.onFilter(url) ?: return null
+
+        if (url is ListenableHyperlink) {
+            url.loadEventHandler?.onFilter?.invoke(url.url) ?: return null
+
+            val eventHandler = url.crawlEventHandler ?: crawlEventHandler
+            eventHandler.onBeforeLoad(url)
         }
 
+        return url
+    }
+
+    private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         if (page == null || page.protocolStatus.isRetry) {
             handleRetry(url, page)
         }
 
-        lastActiveTime = Instant.now()
-        page?.let {
-            val eventHandler = (url as? ListenableHyperlink)?.crawlEventHandler ?: crawlerEventHandler
-            eventHandler.onAfterLoad(url, it)
+        if (page != null) {
+            val eventHandler = (url as? ListenableHyperlink)?.crawlEventHandler ?: crawlEventHandler
+            eventHandler.onAfterLoad(url, page)
         }
-
-        // if urls is ConcurrentLoadingIterable
-        // TODO: the line below can be removed
-        (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
-
-        return page
     }
 
     @Throws(Exception::class)
@@ -314,9 +333,6 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         val normUrl = session.normalize(url, actualOptions)
-
-        val eventHandler = (url as? ListenableHyperlink)?.crawlEventHandler ?: crawlerEventHandler
-        eventHandler.onBeforeLoad(url)
 
         return session.runCatching { loadDeferred(normUrl) }
             .onFailure { flowState = handleException(url, it) }
@@ -353,8 +369,8 @@ open class StreamingCrawler<T : UrlAware>(
                 log.warn("Illegal state", e)
             }
             is ProxyInsufficientBalanceException -> {
-                proxyInsufficientBalance++
-                log.warn("{}. {}", proxyInsufficientBalance, e.message)
+                proxyOutOfService++
+                log.warn("{}. {}", proxyOutOfService, e.message)
             }
             is ProxyVendorUntrustedException -> {
                 log.warn("Proxy is untrusted | {}", e.message)
@@ -439,28 +455,28 @@ open class StreamingCrawler<T : UrlAware>(
         contextLeakWaitingTime = Duration.ZERO
     }
 
-    private suspend fun handleProxySufficientBalance() {
-        while (isActive && proxyInsufficientBalance > 0) {
+    private suspend fun handleProxyOutOfService() {
+        while (isActive && proxyOutOfService > 0) {
             delay(1000)
             proxyVendorWaitingTime += Duration.ofSeconds(1)
-            handleProxySufficientBalance0()
+            handleProxyOutOfService0()
         }
 
         proxyVendorWaitingTime = Duration.ZERO
     }
 
-    private fun handleProxySufficientBalance0() {
-        if (++proxyInsufficientBalance % 180 == 0) {
+    private fun handleProxyOutOfService0() {
+        if (++proxyOutOfService % 180 == 0) {
             log.warn("Proxy account insufficient balance, check it again ...")
             val p = proxyPool
             if (p != null) {
                 p.runCatching { take() }.onFailure {
                     if (it !is ProxyInsufficientBalanceException) {
-                        proxyInsufficientBalance = 0
+                        proxyOutOfService = 0
                     }
-                }.onSuccess { proxyInsufficientBalance = 0 }
+                }.onSuccess { proxyOutOfService = 0 }
             } else {
-                proxyInsufficientBalance = 0
+                proxyOutOfService = 0
             }
         }
     }

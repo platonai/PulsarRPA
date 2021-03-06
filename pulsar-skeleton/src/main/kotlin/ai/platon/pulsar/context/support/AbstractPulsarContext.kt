@@ -110,6 +110,8 @@ abstract class AbstractPulsarContext(
 
     private val webDbOrNull: WebDb? get() = if (isActive) webDb else null
 
+    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
+
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
         return applicationContext.getBean(requiredType.java)
@@ -207,11 +209,11 @@ abstract class AbstractPulsarContext(
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(Urls.splitUrlArgs(url))
+        return abnormalPage ?: injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
     override fun inject(url: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(url.spec, url.args)
+        return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
 
     override fun get(url: String): WebPage {
@@ -222,7 +224,7 @@ abstract class AbstractPulsarContext(
         return webDbOrNull?.getOrNull(normalize(url).spec, false)
     }
 
-    override fun exists(url: String) = null != getOrNull(url)
+    override fun exists(url: String) = webDbOrNull?.exists(url) == true
 
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
@@ -245,7 +247,7 @@ abstract class AbstractPulsarContext(
      */
     override fun load(url: String, options: LoadOptions): WebPage {
         val normUrl = normalize(url, options)
-        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(normUrl)
+        return abnormalPage ?: loadComponent.load(normUrl)
     }
 
     /**
@@ -256,7 +258,7 @@ abstract class AbstractPulsarContext(
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: URL, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(url, initOptions(options))
+        return abnormalPage ?: loadComponent.load(url, initOptions(options))
     }
 
     /**
@@ -267,12 +269,12 @@ abstract class AbstractPulsarContext(
      */
     override fun load(url: NormUrl): WebPage {
         initOptions(url.options)
-        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(url)
+        return abnormalPage ?: loadComponent.load(url)
     }
 
     override suspend fun loadDeferred(url: NormUrl): WebPage {
         initOptions(url.options)
-        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.loadDeferred(url)
+        return abnormalPage ?: loadComponent.loadDeferred(url)
     }
 
     /**

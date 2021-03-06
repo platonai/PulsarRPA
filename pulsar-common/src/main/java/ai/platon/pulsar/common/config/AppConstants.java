@@ -67,7 +67,10 @@ public interface AppConstants {
      * The example url
      * */
     String EXAMPLE_URL = "http://example.com";
-
+    /**
+     * A pseudo url can not be fetched directly, but the crawl events are handled
+     * */
+    String PSEUDO_URL_BASE = "http://www.pseudo.com";
     /**
      * The prefix of all internal url
      * */
