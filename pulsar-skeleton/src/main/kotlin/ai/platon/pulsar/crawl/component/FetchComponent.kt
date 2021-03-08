@@ -276,7 +276,9 @@ open class FetchComponent(
             it.htmlIntegrity?.let { page.htmlIntegrity = it }
             it.lastBrowser?.let { page.lastBrowser = it }
 
-            updateContent(page, it)
+            if (protocolStatus.isSuccess) {
+                updateContent(page, it)
+            }
         }
 
         if (protocolStatus.isSuccess) {

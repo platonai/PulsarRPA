@@ -112,12 +112,18 @@ public class WebPage implements Comparable<WebPage> {
     private boolean isLoaded = false;
 
     /**
-     * If this page is fetched and updated
+     * If we should keep the content in memory even if it's cleared for persistence
      * */
-    private boolean isContentUpdated = false;
-
     private boolean cachedContentEnabled = false;
 
+    /**
+     * If this page is fetched and updated
+     * */
+    private volatile boolean isContentUpdated = false;
+
+    /**
+     * The cached content
+     * */
     private volatile ByteBuffer cachedContent = null;
 
     private WebPage(String url, GWebPage page, boolean urlReversed) {
@@ -1547,7 +1553,6 @@ public class WebPage implements Comparable<WebPage> {
      */
     public void setContent(@Nullable String value) {
         if (value != null) {
-            isContentUpdated = true;
             setContent(value.getBytes());
         } else {
             setContent((ByteBuffer)null);
@@ -1575,6 +1580,8 @@ public class WebPage implements Comparable<WebPage> {
     public void setContent(@Nullable ByteBuffer value) {
         if (value != null) {
             page.setContent(value);
+            isContentUpdated = true;
+
             int length = value.array().length;
             setContentLength(length);
             setPersistContentLength(length);
