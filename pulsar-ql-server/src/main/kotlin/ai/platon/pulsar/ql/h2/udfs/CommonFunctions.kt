@@ -14,6 +14,7 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.addColumn
+import com.google.gson.Gson
 import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.*
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.Long.MAX_VALUE
 import java.sql.Connection
+import java.sql.ResultSet
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.util.*
@@ -426,6 +428,28 @@ object CommonFunctions {
     fun makeArray(value: Value, n: Int): ValueArray {
         val values = Array(n) { value }
         return ValueArray.get(values)
+    }
+
+    /**
+     * The first column is treated as the key while the second one is treated as the value
+     * */
+    @UDFunction
+    @JvmStatic
+    fun toJson(rs: ResultSet): String {
+        if (rs.metaData.columnCount < 2) {
+            return "{}"
+        }
+
+        val map = mutableMapOf<String, String>()
+        rs.beforeFirst()
+        while (rs.next()) {
+            // TODO: this is a temporary solution, find out why there is a ' surrounding
+            val k = rs.getString(1).removeSurrounding("'")
+            val v = rs.getString(2).removeSurrounding("'")
+            map[k] = v
+        }
+
+        return Gson().toJson(map)
     }
 
     /**

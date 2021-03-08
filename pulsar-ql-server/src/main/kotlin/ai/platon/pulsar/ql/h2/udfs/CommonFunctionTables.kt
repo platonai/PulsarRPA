@@ -7,7 +7,6 @@ import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.h2.addColumn
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -76,16 +75,14 @@ object CommonFunctionTables {
             description = "Create a ResultSet from a list of values, the values should have format kvkv ... kv")
     @JvmStatic
     fun map(vararg kvs: Value): ResultSet {
-        val rs = ResultSets.newSimpleResultSet()
-        rs.addColumn("KEY")
-        rs.addColumn("VALUE")
+        val rs = ResultSets.newSimpleResultSet("KEY", "VALUE")
 
         if (kvs.isEmpty()) {
             return rs
         }
 
         var i = 0
-        while (i < kvs.size / 2) {
+        while (i < kvs.size - 1) {
             rs.addRow(kvs[i], kvs[i + 1])
             i += 2
         }
@@ -114,9 +111,8 @@ object CommonFunctionTables {
         val dt = DataType.getDataType(template.type)
         rs.addColumn(col, dt.sqlType, template.precision.toInt(), template.scale)
 
-        for (i in 0 until values.list.size) {
-            val value = values.list[i]
-            rs.addRow(value)
+        for (element in values.list) {
+            rs.addRow(element)
         }
 
         return rs
@@ -143,7 +139,7 @@ object CommonFunctionTables {
         val dt = DataType.getDataType(template.type)
         rs.addColumn(col, dt.sqlType, template.precision.toInt(), template.scale)
 
-        for (i in 0 until values.list.size) {
+        for (i in values.list.indices) {
             rs.addRow(i + 1, values.list[i])
         }
         return rs

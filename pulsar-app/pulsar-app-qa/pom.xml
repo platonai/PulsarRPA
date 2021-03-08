@@ -55,7 +55,6 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql-server</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>

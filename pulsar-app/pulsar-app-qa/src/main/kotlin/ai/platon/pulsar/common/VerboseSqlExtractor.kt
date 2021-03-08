@@ -14,7 +14,7 @@ import java.util.concurrent.ArrayBlockingQueue
 /**
  * The base class for all tests.
  */
-open class CommonSqlExtractor(context: PulsarContext): VerboseCrawler(context) {
+open class VerboseSqlExtractor(context: PulsarContext): VerboseCrawler(context) {
 
     val connection = H2MemoryDb().getRandomConnection()
     val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)

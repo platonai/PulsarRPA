@@ -19,10 +19,22 @@ select
     dom_first_text(dom, '#price #priceblock_dealprice, #price tr td:contains(Deal of the Day) ~ td') as `withdeal`,
     dom_first_text(dom, '#price #dealprice_savings .priceBlockSavingsString, #price tr td:contains(You Save) ~ td') as `yousave`,
     dom_first_text(dom, '#price_inside_buybox') as `buyboxprice`,
+
     str_is_not_empty(dom_first_text(dom, '#acBadge_feature_div i:contains(Best Seller)')) as `isbs`,
     str_is_not_empty(dom_first_text(dom, '#acBadge_feature_div span:contains(Amazon)')) as `isac`,
     str_is_not_empty(dom_first_text(dom, '#centerCol #couponBadgeRegularVpc')) as `iscoupon`,
     dom_first_text(dom, '#centerCol div i:contains(Prime Day Deal)') as `isprime`,
+
+    to_json(map(
+        'isbs', str_left(dom_first_text(dom, '#acBadge_feature_div i:contains(Best Seller)'), 8),
+        'isac', str_left(dom_first_text(dom, '#acBadge_feature_div span:contains(Amazon)'), 8),
+        'iscoupon', str_left(dom_first_text(dom, '#centerCol #couponBadgeRegularVpc'), 8),
+        'isprime', str_left(dom_first_text(dom, '#centerCol div i:contains(Prime Day Deal)'), 8),
+        'isaddcart', str_left(dom_first_text(dom, '#addToCart_feature_div span:contains(Add to Cart), #submit.add-to-cart-ubb-announce'), 8),
+        'isbuy', str_left(dom_first_text(dom, '#buyNow span:contains(Buy now)'), 8),
+        'isa', array_length(dom_all_imgs(dom, '#prodDetails img[src], #productDescription img[src]')),
+        'iscpfb', str_left(dom_first_text(dom, '#climatePledgeFriendlyBadge'), 8)
+    )) as tags,
 
     cast(dom_all_texts(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `soldby`,
     cast(dom_all_hrefs(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `sellerID`,
@@ -40,6 +52,7 @@ select
     array_join_to_string(dom_all_texts(dom, '#sims-fbt #sims-fbt-content ul li[data-p13n-asin-metadata]'), '^|^') as `boughttogether`,
 
     str_substring_between(dom_first_text(dom, '#olp-upd-new-used a, #olp-upd-new a'), '(', ')') as `othersellernum`,
+
     str_is_not_empty(dom_first_text(dom, '#addToCart_feature_div span:contains(Add to Cart), #submit.add-to-cart-ubb-announce')) as `isaddcart`,
     str_is_not_empty(dom_first_text(dom, '#buyNow span:contains(Buy now)')) as `isbuy`,
 
@@ -62,7 +75,9 @@ select
     dom_first_text(dom, '#prodDetails table tr > th:contains(Date First) ~ td, #detailBullets_feature_div ul li span:contains(Date First Available) ~ span') as `onsaletime`,
     cast(dom_all_attrs(dom, '#prodDetails img[src], #productDescription img[src], #dpx-aplus-product-description_feature_div img[src], #dpx-aplus-3p-product-description_feature_div img[src]', 'src') as varchar) as `detailimgs`,
     cast(dom_all_hrefs(dom, '#rvs-vse-related-videos ol li a[href~=/vdp/]') as varchar) as `detailvideos`,
+
     array_length(dom_all_imgs(dom, '#prodDetails img[src], #productDescription img[src]')) as `isa`,
+
     str_first_integer(dom_first_text(dom, '#askATFLink, .askTopQandALoadMoreQuestions a'), 0) as `qanum`,
     str_first_integer(dom_first_text(dom, '#acrCustomerReviewText, #reviewsMedley div[data-hook=total-review-count] span, #reviewsMedley span:contains(ratings), #reviewsMedley span:contains(customer ratings)'), 0) as `reviews`,
 

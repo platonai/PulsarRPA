@@ -17,7 +17,7 @@ class XSqlRunner(
 ) {
     private val log = LoggerFactory.getLogger(XSqlRunner::class.java)
 
-    val extractor = CommonSqlExtractor(cx)
+    val extractor = VerboseSqlExtractor(cx)
     val session = extractor.session
 
     fun execute(url: String, sqlResource: String): ResultSet {

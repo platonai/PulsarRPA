@@ -18,6 +18,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.assertEquals
 
 /**
  * The base class for all tests
@@ -315,5 +316,9 @@ abstract class TestBase {
         }
 
         return ResultSets.newResultSet()
+    }
+
+    fun assertResultSetEquals(expected: String, sql: String) {
+        assertEquals(expected, ResultSetFormatter(query(sql)).toString())
     }
 }

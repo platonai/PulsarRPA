@@ -16,6 +16,7 @@ import oshi.SystemInfo
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
@@ -73,6 +74,7 @@ class AppMetrics(
         val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
         val reg = defaultMetricRegistry
 
+        val startTime = Instant.now()
         val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         val availableMemory get() = systemInfo.hardware.memory.available
@@ -82,6 +84,7 @@ class AppMetrics(
 
         init {
             mapOf(
+                "startTime" to Gauge { startTime },
                 "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
                 "freeSpace" to Gauge { freeSpace.map { Strings.readableBytes(it) } }
             ).let { reg.registerAll(this, it) }
