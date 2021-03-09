@@ -1,0 +1,128 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl" ?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <property>
+    <name>pulsar.config.id</name>
+    <value>cluster_information_taiwan_20170617</value>
+    <description>The name of the current task</description>
+  </property>
+
+  <!-- persist -->
+  <property>
+    <name>storage.crawl.id</name>
+    <value>information_taiwan_20170617</value>
+    <description>Web crawler for opinion monitoring</description>
+  </property>
+
+  <property>
+    <name>pulsar.master.host</name>
+    <value>master</value>
+    <description>
+      A internet ip, hostname, or domain.
+      All fetch servers register itself using a internet domain so satellites
+      can do tasks from the internet.
+    </description>
+  </property>
+
+  <property>
+    <name>pulsar.master.hostname</name>
+    <value>galaxyeye</value>
+    <description>
+      A Intranet access point.
+      All slave pulsar update proxy
+      server list and other resource if any from the master pulsar server.
+      It must be the host name which is in /etc/hostname since we need to
+      check whether it's the host itself.
+    </description>
+  </property>
+
+  <!-- Fetching -->
+
+  <property>
+    <name>fetch.concurrency</name>
+    <value>50</value>
+  </property>
+
+  <property>
+    <name>fetcher.threads.per.queue</name>
+    <value>4</value>
+    <description>This number is the maximum number of threads that
+      should be allowed to access a queue at one time. Setting it to
+      a value > 1 will cause the Crawl-Delay value from robots.txt to
+      be ignored and the value of fetch.queue.min.delay to be used
+      as a delay between successive requests to the same server instead
+      of fetch.queue.delay.
+    </description>
+  </property>
+
+  <property>
+    <name>fetcher.throughput.threshold.pages</name>
+    <value>1</value>
+  </property>
+
+  <property>
+    <name>fetcher.net.bandwidth.m</name>
+    <value>4</value>
+    <description>Hardware bandwidth in Mbytes, if exceed the limit, slows down the task scheduling.</description>
+  </property>
+
+  <property>
+    <name>fetcher.task.timeout</name>
+    <value>10m</value>
+    <description>fetch thread will exit if no any fetch item for fetcher.task.timeout minutes</description>
+  </property>
+
+  <!-- Parsing -->
+  <property>
+    <name>parse.min.anchor.length</name>
+    <!--<value>8</value>-->
+    <value>2</value>
+  </property>
+  <property>
+    <name>parse.max.anchor.length</name>
+    <value>200</value>
+  </property>
+
+  <!-- Indexing -->
+
+  <!-- Scoring -->
+  <property>
+    <name>score.sort.content.score.divisor</name>
+    <value>50</value>
+    <description>Classify content score into levels</description>
+  </property>
+  <property>
+    <name>score.sort.web.graph.score.divisor</name>
+    <value>50</value>
+    <description>Classify web graph score into levels</description>
+  </property>
+
+  <!-- Generate -->
+
+  <!-- Schedule -->
+  <property>
+    <name>db.fetch.schedule.adaptive.min_interval</name>
+    <value>10m</value>
+    <description>Minimum fetchInterval, in seconds.</description>
+  </property>
+
+  <!-- Indexer -->
+  <property>
+    <name>indexer.zookeeper.hosts</name>
+    <value>iZ235p20xpvZ:2181,iZ237ax7rsqZ:2181,iZ23ocq7jaaZ:2181</value>
+    <description>Zookeeper String</description>
+  </property>
+  <property>
+    <name>indexer.collection</name>
+    <value>information_taiwan_20170617</value>
+  </property>
+  <property>
+    <name>indexer.write.commit.size</name>
+    <value>250</value>
+  </property>
+
+</configuration>

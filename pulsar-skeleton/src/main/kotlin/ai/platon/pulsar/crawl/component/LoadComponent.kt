@@ -262,6 +262,9 @@ class LoadComponent(
 
     private fun doLoad(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
+        assertSame(page.volatileConfig, normUrl.options.volatileConfig) {
+            "Volatile config should be the same"
+        }
 
         beforeLoad(page, normUrl.options)
 
@@ -270,6 +273,8 @@ class LoadComponent(
                 beforeFetch(page, normUrl.options)
                 require(page.isNotInternal) { "Internal page ${page.url}" }
                 fetchComponent.fetchContent(page)
+                // require(page.args == normUrl.options.toString())
+                // require(page.volatileConfig == normUrl.options.volatileConfig)
             } finally {
                 afterFetch(page, normUrl.options)
             }
@@ -327,6 +332,7 @@ class LoadComponent(
         // fetchComponent.initFetchEntry(page, options, normUrl.hrefSpec)
 
         val page = fetchEntry.page
+
         tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
             return redirect(page, options)
@@ -674,6 +680,10 @@ class LoadComponent(
 
     override fun close() {
         closed.set(true)
+    }
+
+    private fun assertSame(a: Any?, b: Any?, lazyMessage: () -> String) {
+        require(a === b) { lazyMessage() }
     }
 
     /**

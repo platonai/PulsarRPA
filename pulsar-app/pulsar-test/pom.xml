@@ -14,20 +14,38 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar</artifactId>
+        <artifactId>pulsar-app</artifactId>
         <version>1.5.7-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-app</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>pulsar-test</artifactId>
+    <name>Pulsar Test</name>
 
-    <name>Pulsar App</name>
+    <dependencies>
+        <!-- Internal Dependencies -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-beans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-ql-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-rest</artifactId>
+        </dependency>
 
-    <modules>
-        <module>pulsar-app-resources</module>
-        <module>pulsar-sql-qa</module>
-        <module>pulsar-test</module>
-        <module>pulsar-master</module>
-        <module>pulsar-examples</module>
-    </modules>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
 </project>

@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadOptions
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -98,7 +99,7 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetchContent(page: WebPage): WebPage {
-        return fetchContent0(FetchEntry(page, LoadOptions.create(page.volatileConfig)))
+        return fetchContent0(FetchEntry(page, page.loadOptions))
     }
 
     /**

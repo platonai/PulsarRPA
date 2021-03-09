@@ -18,8 +18,8 @@
         <version>1.5.7-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-app-qa</artifactId>
-    <name>Pulsar App QA</name>
+    <artifactId>pulsar-sql-qa</artifactId>
+    <name>Pulsar SQL QA</name>
 
     <dependencies>
         <dependency>

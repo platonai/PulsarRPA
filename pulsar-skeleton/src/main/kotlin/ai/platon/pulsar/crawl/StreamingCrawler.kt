@@ -340,15 +340,14 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun registerHandlers(url: UrlAware, options: LoadOptions) {
-        val volatileConfig = conf.toVolatileConfig().apply { name = options.label }
-        options.volatileConfig = volatileConfig
-        val eventHandler = (url as? ListenableHyperlink)?.loadEventHandler
-            ?.let { DefaultLoadEventHandler.create(it) }
-            ?: DefaultLoadEventHandler()
+        val eventHandler = (url as? ListenableHyperlink)?.loadEventHandler ?: DefaultLoadEventHandler()
         eventHandler.onAfterFetch = ChainedWebPageHandler()
             .addFirst { AddRefererAfterFetchHandler(url) }
             .addLast { eventHandler.onAfterFetch }
-        volatileConfig.putBean(eventHandler)
+        options.volatileConfig = conf.toVolatileConfig().apply {
+            name = options.label
+            putBean(eventHandler)
+        }
     }
 
     @Throws(Exception::class)
