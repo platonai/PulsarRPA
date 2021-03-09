@@ -298,14 +298,17 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
+        if (url is ListenableHyperlink) {
+            url.loadEventHandler?.onFilter?.invoke(url.url) ?: return null
+        }
+
         crawlEventHandler.onFilter(url) ?: return null
 
         if (url is ListenableHyperlink) {
-            url.loadEventHandler?.onFilter?.invoke(url.url) ?: return null
-
-            val eventHandler = url.crawlEventHandler ?: crawlEventHandler
-            eventHandler.onBeforeLoad(url)
+            url.crawlEventHandler?.onBeforeLoad?.invoke(url)
         }
+
+        crawlEventHandler.onBeforeLoad(url)
 
         return url
     }
@@ -316,8 +319,8 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         if (page != null) {
-            val eventHandler = (url as? ListenableHyperlink)?.crawlEventHandler ?: crawlEventHandler
-            eventHandler.onAfterLoad(url, page)
+            crawlEventHandler.onAfterLoad(url, page)
+            (url as? ListenableHyperlink)?.crawlEventHandler?.onAfterLoad?.invoke(url, page)
         }
     }
 
