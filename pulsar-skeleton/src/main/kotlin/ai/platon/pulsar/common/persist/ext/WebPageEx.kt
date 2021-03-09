@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.persist.WebPage
 
-val WebPage.eventHandler: LoadEventHandler?
+val WebPage.loadEventHandler: LoadEventHandler?
     get() {
         return volatileConfig?.getBean(LoadEventHandler::class.java)
     }

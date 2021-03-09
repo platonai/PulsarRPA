@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.common.persist.ext.eventHandler
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.common.FetchReason
@@ -345,7 +345,7 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
-        page.eventHandler?.onBeforeLoad?.invoke(page.url)
+        page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
     }
 
     private fun afterLoad(page: WebPage, options: LoadOptions) {
@@ -353,11 +353,11 @@ class LoadComponent(
             parse(page, options)
         }
 
-        page.eventHandler?.onAfterLoad?.invoke(page)
-
         if (options.persist) {
             persist(page, options)
         }
+
+        page.loadEventHandler?.onAfterLoad?.invoke(page)
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {

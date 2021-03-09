@@ -21,7 +21,7 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.persist.ext.eventHandler
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -49,11 +49,6 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
             it.args = options.toString()
             it.volatileConfig = options.volatileConfig
             it.isCachedContentEnabled = options.cacheContent
-//            if (it.protocolStatus.isRetry) {
-//                it.fetchRetries++
-//            } else {
-//                it.fetchRetries = 0
-//            }
         }
     }
 }
@@ -172,11 +167,11 @@ open class FetchComponent(
     }
 
     private fun beforeFetch(page: WebPage) {
-        page.eventHandler?.onBeforeFetch?.invoke(page)
+        page.loadEventHandler?.onBeforeFetch?.invoke(page)
     }
 
     private fun afterFetch(page: WebPage) {
-        page.eventHandler?.onAfterFetch?.invoke(page)
+        page.loadEventHandler?.onAfterFetch?.invoke(page)
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {

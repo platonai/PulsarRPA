@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarContextInitializer::class])
 class QABase {
-    val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
+    open val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
 
     fun assertAnyNotBlank(url: String, sqlResource: String, field: String, message: String) {
         val rs = XSqlRunner().execute(url, sqlResource)

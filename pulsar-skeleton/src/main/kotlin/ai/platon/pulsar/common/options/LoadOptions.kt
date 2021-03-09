@@ -287,6 +287,23 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
+    /**
+     * Parse with parameter overwriting fix
+     * */
+    override fun parse(): Boolean {
+        val b = super.parse()
+        if (b) {
+            LoadOptions::class.java.declaredFields.asSequence()
+                .filter { arity0BooleanParams.contains("-${it.name}") }
+                .filter { argv.contains("-${it.name}") }
+                .forEach {
+                    it.isAccessible = true
+                    it.set(this, true)
+                }
+        }
+        return b
+    }
+
     open fun createItemOptions(conf: VolatileConfig? = null): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
@@ -345,7 +362,7 @@ open class LoadOptions: CommonOptions {
         return modifiedParams.distinct().sorted()
                 .withCmdLineStyle(true)
                 .withKVDelimiter(" ")
-                .withDistinctBooleanParams(distinctBooleanParams)
+                .withDistinctBooleanParams(arity1BooleanParams)
                 .formatAsLine().replace("\\s+".toRegex(), " ")
     }
 
@@ -368,79 +385,46 @@ open class LoadOptions: CommonOptions {
         return parse(toString(), volatileConfig)
     }
 
-    /**
-     * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
-     *
-     * The other options overrides this options
-     *
-     * @param other The other LoadOptions who overrides each item if it's not the default value
-     * @return A new LoadOptions
-     * */
-    open fun mergeModified(other: LoadOptions): LoadOptions {
-        val modified = other.modifiedOptions
-
-        LoadOptions::class.java.declaredFields.forEach {
-            if (it.name in modified.keys) {
-                it.isAccessible = true
-                it.set(this, modified[it.name])
-            }
-        }
-
-        // the fields of sub classes
-        this.javaClass.declaredFields.forEach {
-            if (it.name in modified.keys) {
-                it.isAccessible = true
-                it.set(this, modified[it.name])
-            }
-        }
-
-        return this
-    }
-
-    /**
-     * TODO: use JCommand's allowParameterOverwriting feature
-     * */
-    open fun mergeModified(args: String): LoadOptions {
-        val o2 = parse(args)
-        val mergedOptions = mergeModified(o2)
-
-        val parts = args.split(" ")
-        var i = 0
-        while (i < parts.size) {
-            if (parts[i] in distinctBooleanParams) {
-                setFieldByAnnotation(mergedOptions, parts[i], parts[++i].toBoolean())
-            }
-            ++i
-        }
-
-        return mergedOptions
-    }
-
     companion object {
         val default = LoadOptions()
         val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val distinctBooleanParams = LoadOptions::class.java.declaredFields
-                .filter { it.get(default) == true }
-                .flatMap { it.annotations.toList() }
-                .filterIsInstance<Parameter>()
-                .filter { it.arity == 1 }
-                .flatMap { it.names.toList() }
+        val arity0BooleanParams = LoadOptions::class.java.declaredFields
+            .asSequence()
+            .onEach { it.isAccessible = true }
+            .filter { it.get(default) is Boolean }
+            .flatMap { it.annotations.toList() }
+            .filterIsInstance<Parameter>()
+            .filter { it.arity < 1 }
+            .flatMap { it.names.toList() }
+            .toList()
+        val arity1BooleanParams = LoadOptions::class.java.declaredFields
+            .asSequence()
+            .onEach { it.isAccessible = true }
+            .filter { it.get(default) is Boolean }
+            .flatMap { it.annotations.toList() }
+            .filterIsInstance<Parameter>()
+            .filter { it.arity == 1 }
+            .flatMap { it.names.toList() }
+            .toList()
         val optionNames = LoadOptions::class.java.declaredFields
-                .flatMap { it.annotations.toList() }
-                .filterIsInstance<Parameter>()
-                .flatMap { it.names.toList() }
+            .asSequence()
+            .flatMap { it.annotations.toList() }
+            .filterIsInstance<Parameter>()
+            .flatMap { it.names.toList() }
+            .toList()
 
         val helpList: List<List<String>> get() =
                 LoadOptions::class.java.declaredFields
-                        .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
-                        .map {
-                            listOf(it.first.names.joinToString { it },
-                                    it.second.type.typeName.substringAfterLast("."),
-                                    defaultParams[it.second.name].toString(),
-                                    it.first.description
-                            )
-                        }
+                    .asSequence()
+                    .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
+                    .map {
+                        listOf(it.first.names.joinToString { it },
+                                it.second.type.typeName.substringAfterLast("."),
+                                defaultParams[it.second.name].toString(),
+                                it.first.description
+                        )
+                    }.toList()
 
         fun setFieldByAnnotation(options: LoadOptions, annotationName: String, value: Any) {
             LoadOptions::class.java.declaredFields.forEach {
@@ -462,7 +446,7 @@ open class LoadOptions: CommonOptions {
 
         @JvmOverloads
         fun parse(args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
-            val options = LoadOptions(args)
+            val options = LoadOptions(args.trim())
             options.parse()
             options.volatileConfig = volatileConfig
             return options
@@ -473,23 +457,12 @@ open class LoadOptions: CommonOptions {
          * */
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
-            return o1.clone().mergeModified(o2).also { it.volatileConfig = volatileConfig }
-        }
-
-        @JvmOverloads
-        fun mergeModified(o1: LoadOptions, args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
-            return o1.clone().mergeModified(args).also { it.volatileConfig = volatileConfig }
+            return parse("$o1 $o2", volatileConfig)
         }
 
         @JvmOverloads
         fun mergeModified(args: String?, args2: String?, volatileConfig: VolatileConfig? = null): LoadOptions {
-            val options = parse(args ?: "")
-            if (args2 != null) {
-                options.mergeModified(args2)
-            }
-            options.volatileConfig = volatileConfig
-
-            return options
+            return parse("$args $args2", volatileConfig)
         }
     }
 }

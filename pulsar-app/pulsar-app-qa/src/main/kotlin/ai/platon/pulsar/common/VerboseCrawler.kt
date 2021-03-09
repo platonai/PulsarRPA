@@ -15,7 +15,6 @@ open class VerboseCrawler(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(VerboseCrawler::class.java)
     val closed = AtomicBoolean()
-    val isAppActive get() = !closed.get() && session.isActive
 
     constructor(context: PulsarContext): this(context.createSession())
 

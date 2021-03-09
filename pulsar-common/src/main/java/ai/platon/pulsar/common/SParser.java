@@ -1126,7 +1126,7 @@ public class SParser {
             // substitute
             eval = eval.substring(0, match.start()) + val + eval.substring(match.end());
         }
-        throw new IllegalStateException("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
+        throw new IllegalArgumentException("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
     }
 
     enum ParsedTimeDuration {

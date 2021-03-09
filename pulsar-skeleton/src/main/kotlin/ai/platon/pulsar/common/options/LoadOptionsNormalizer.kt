@@ -13,10 +13,7 @@ class LoadOptionsNormalizer(
     companion object {
         fun normalize(options: LoadOptions, url: UrlAware): LoadOptions {
             val args = url.args
-            val actualOptions = options.clone()
-            if (args != null) {
-                actualOptions.mergeModified(args)
-            }
+            val actualOptions = LoadOptions.parse("$options $args")
 
             if (url.label.isNotBlank()) {
                 actualOptions.label = url.label

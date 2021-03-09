@@ -25,7 +25,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.persist.ext.eventHandler
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -120,11 +120,11 @@ class HtmlParser(
     }
 
     private fun beforeParse(page: WebPage) {
-        page.eventHandler?.onBeforeHtmlParse?.invoke(page)
+        page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
     }
 
     private fun afterParse(page: WebPage, document: FeaturedDocument) {
-        page.eventHandler?.onAfterHtmlParse?.invoke(page, document)
+        page.loadEventHandler?.onAfterHtmlParse?.invoke(page, document)
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {

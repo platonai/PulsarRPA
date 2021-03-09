@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.persist.ext.eventHandler
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -160,25 +160,11 @@ class PageParser(
     }
 
     private fun beforeParse(page: WebPage) {
-//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_PARSE_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
-//                ?.getOrNull()
-
-//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-//        eventHandler.onBeforeParse(page)
-        page.eventHandler?.onBeforeParse?.invoke(page)
+        page.loadEventHandler?.onBeforeParse?.invoke(page)
     }
 
     private fun afterParse(page: WebPage) {
-//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_PARSE_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to run after parse handler | {}", page.url) }
-//                ?.getOrNull()
-
-//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-//        eventHandler.onAfterParse(page)
-        page.eventHandler?.onAfterParse?.invoke(page)
+        page.loadEventHandler?.onAfterParse?.invoke(page)
     }
 
     /**

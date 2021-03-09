@@ -28,16 +28,27 @@
     <description>The easy way to crawl and scrape the web:
         turn large web sites into tables and charts using simple native api, SQL or RESTful api</description>
 
-    <properties>
-        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
-        <pulsar.skip.assembly>true</pulsar.skip.assembly>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
-        <!-- skipTests is set to be true in platon.pom which will be removed from platon.pom later -->
-        <skipTests>false</skipTests>
+    <developers>
+        <developer>
+            <name>Vincent Zhang</name>
+            <email>ivincent.zhang@gmail.com</email>
+            <organization>platon.ai</organization>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
 
-        <serialization.version>1.4.21</serialization.version>
-        <autolink.version>0.10.0</autolink.version>
-    </properties>
+    <scm>
+        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
+        <url>https://github.com/platonai/pulsar</url>
+    </scm>
 
     <repositories>
         <repository>
@@ -484,26 +495,15 @@
         </dependency>
     </dependencies>
 
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
+    <properties>
+        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
+        <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-    <developers>
-        <developer>
-            <name>Vincent Zhang</name>
-            <email>ivincent.zhang@gmail.com</email>
-            <organization>platon.ai</organization>
-            <timezone>+8</timezone>
-        </developer>
-    </developers>
+        <!-- skipTests is set to be true in platon.pom which will be removed from platon.pom later -->
+        <skipTests>false</skipTests>
 
-    <scm>
-        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
-        <url>https://github.com/platonai/pulsar</url>
-    </scm>
+        <serialization.version>1.4.21</serialization.version>
+        <autolink.version>0.10.0</autolink.version>
+    </properties>
 
 </project>

@@ -9,9 +9,8 @@ class TestAsins: QABase() {
     @Test
     fun `When extract a product then scoresbyfeature exists`() {
         val url = "https://www.amazon.com/dp/B07L4RR1N2"
-        assertAllNotBlank(url, sqlResource, "scoresbyfeature", "scoresbyfeature is required | $url")
 
-        val fields = listOf("iscoupon", "isac")
+        val fields = listOf("iscoupon", "isac", "scoresbyfeature")
         assertAllNotBlank(url, sqlResource, fields, "field requirement violated | $url")
     }
 

@@ -11,6 +11,7 @@ class PulsarEnvironment {
     @Synchronized
     private fun initialize() {
         Systems.setPropertyIfAbsent(H2_SESSION_FACTORY_CLASS, "ai.platon.pulsar.ql.h2.H2SessionFactory")
+        // TODO: tika.config is not working
         System.setProperty("tika.config", "tika-config.xml")
     }
 }

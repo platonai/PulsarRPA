@@ -1,18 +1,17 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.crawl.common.options
 
-import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import org.junit.Test
 import java.time.Duration
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class TestLoadOptions {
-
-    init {
-        System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
-    }
 
     var i = PulsarContexts.createSession()
     val url = "http://abc.com"
@@ -33,21 +32,29 @@ class TestLoadOptions {
         assertEquals("\".products a\"", options.outLinkSelector)
 
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
-        val options3 = options.mergeModified(options2)
+        val options3 = LoadOptions.mergeModified(options, options2)
         assertOptions(options3)
     }
 
     @Test
+    fun testParameterOverwriting() {
+        val args1 = "-parse -incognito -expires 1s -retry -storeContent false -cacheContent false"
+        val args2 = "-incognito -expires 1d -storeContent true -cacheContent true"
+        val args3 = "$args1 $args2"
+
+        val options = LoadOptions.parse(args3)
+        assertTrue { options.incognito }
+    }
+
+    @Test
     fun testMergeOptions() {
-        val args1 = "-parse -incognito -expires 1s -retry -storeContent false"
-        val args2 = "-incognito -expires 1d -storeContent true"
+        val args1 = "-parse -incognito -expires 1s -retry -storeContent false -cacheContent false"
+        val args2 = "-incognito -expires 1d -storeContent true -cacheContent true"
         val options1 = LoadOptions.parse(args1)
         val options2 = LoadOptions.parse(args2)
 
+        println(LoadOptions.mergeModified(args1, args2))
         assertMergedOptions(LoadOptions.mergeModified(args1, args2), "args1 merge args2")
-        // do not support
-//        assertMergedOptions(options1.mergeModified(options2), "options1 merge options2")
-        assertMergedOptions(options1.mergeModified(args2), "options1 merge args2")
 
         LoadOptions.mergeModified(args2, null).also {
             val message = "args2 merge null"
@@ -67,6 +74,7 @@ class TestLoadOptions {
 
     private fun assertMergedOptions(options: LoadOptions, message: String) {
         assertTrue(message) { options.storeContent }
+        assertTrue(message) { options.cacheContent }
         assertTrue(message) { options.incognito }
         assertTrue(message) { options.parse }
         assertEquals(Duration.ofDays(1), options.expires, message)
@@ -80,7 +88,7 @@ class TestLoadOptions {
         assertFalse(options.parse)
         assertFalse(options.storeContent)
 
-        println("distinctBooleanParams: " + LoadOptions.distinctBooleanParams)
+        println("distinctBooleanParams: " + LoadOptions.arity1BooleanParams)
 
         val modifiedOptions = options.modifiedOptions
         println(modifiedOptions)

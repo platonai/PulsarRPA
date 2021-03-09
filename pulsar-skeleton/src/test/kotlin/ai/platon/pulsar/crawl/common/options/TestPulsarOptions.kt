@@ -96,9 +96,10 @@ class TestPulsarOptions {
 
         val args = "-ps -rpl -nlf -notSupport"
         val loadOptions = LoadOptions.parse(args)
+        val finalArgs = loadOptions.toString()
         assertTrue(loadOptions.params.asMap().containsKey("-persist"))
-        assertTrue(loadOptions.toString().contains("-rpl"))
-        assertTrue(!loadOptions.toString().contains("-notSupport"))
+        assertTrue(finalArgs.contains("-reparseLinks"))
+        assertTrue(!finalArgs.contains("-notSupport"))
     }
 
     @Test
