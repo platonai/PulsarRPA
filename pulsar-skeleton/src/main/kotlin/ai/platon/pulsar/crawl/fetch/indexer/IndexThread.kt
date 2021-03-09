@@ -38,6 +38,7 @@ class IndexThread(
             join()
         } catch (e: InterruptedException) {
             log.error(e.toString())
+            Thread.currentThread().interrupt()
         }
     }
 

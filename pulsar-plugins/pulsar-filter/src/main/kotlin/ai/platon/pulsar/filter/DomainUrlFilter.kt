@@ -53,22 +53,22 @@ import java.util.*
  * property "urlfilter.domain.file" in ./config/pulsar-*.xml, and * attribute "file" in plugin.xml of this plugin
  */
 class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
-    private val domainSet: MutableSet<String> = LinkedHashSet()
-    private val tlds: DomainSuffixes = DomainSuffixes.getInstance()
+    val domainSet: MutableSet<String> = LinkedHashSet()
+    val tlds: DomainSuffixes = DomainSuffixes.getInstance()
 
     init {
         val stringResource = conf[PARAM_URLFILTER_DOMAIN_RULES]
         val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
         val fileResource = conf[PARAM_URLFILTER_DOMAIN_FILE, "domain-urlfilter.txt"]
-        domainSet.addAll(ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix))
-        LOG.info("Allowed domains : " + StringUtils.join(domainSet, ", "))
+        ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix).toCollection(domainSet)
+        LOG.info(domainSet.joinToString(", ", "Allowed domains: "))
     }
 
     override fun filter(url: String): String? {
         try {
             // match for suffix, domain, and host in that order. more general will
             // override more specific
-            var domain = URLUtil.getDomainName(url)?:return null
+            var domain = URLUtil.getDomainName(url) ?: return null
             domain = domain.toLowerCase().trim { it <= ' ' }
             val host = URLUtil.getHostName(url)
             var suffix: String? = null

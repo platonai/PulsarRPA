@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.Urls.splitUrlArgs
+import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.common.options.LoadOptions.Companion.parse
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.common.collect.Lists
@@ -10,17 +10,15 @@ import org.apache.commons.lang3.StringUtils
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
-import org.slf4j.helpers.MessageFormatter
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.text.MessageFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 /**
  * Created by vincent on 16-7-20.
@@ -92,7 +90,7 @@ class TestAnything {
     fun testEnum() {
         val pageCategory: PageCategory
         pageCategory = try {
-            PageCategory.valueOf("APP")
+            PageCategory.parse("APP")
         } catch (e: Throwable) {
             println(e.localizedMessage)
             PageCategory.UNKNOWN
@@ -113,6 +111,18 @@ class TestAnything {
         val deleted = 10
         counter.addAndGet(-deleted)
         println(counter)
+    }
+
+    @Test
+    fun testReturnToLabel() {
+        var i = 0
+        IntRange(1, 10).forEach {
+            i = it
+            if (i == 5) {
+                return@forEach
+            }
+        }
+        assertEquals(10, i)
     }
 
     @Test

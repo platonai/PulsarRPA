@@ -5,6 +5,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.persist.WebPage
@@ -38,7 +40,7 @@ class FetchLoop(
         val illegalState = AtomicBoolean()
     }
 
-    private val metricsCounters = MetricsCounters()
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
 
     val id = instanceSequencer.incrementAndGet()
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)
@@ -138,6 +140,7 @@ class FetchLoop(
         }
 
         try {
+            // TODO: consult StreamingCrawler's way to init volatileConfig
             task.page.volatileConfig = loopConfig
 
             val page = try {
@@ -163,7 +166,7 @@ class FetchLoop(
                 log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page).toString())
                 if (!isCanceled) {
                     write(page.key, page)
-                    metricsCounters.inc(CommonCounter.rPersist)
+                    enumCounters.inc(CommonCounter.rPersist)
                 }
             }
         } catch (e: Throwable) {
@@ -179,6 +182,7 @@ class FetchLoop(
             log.error("Failed to write to hdfs - {}", Strings.stringifyException(e))
         } catch (e: InterruptedException) {
             log.error("Interrupted - {}", Strings.stringifyException(e))
+            Thread.currentThread().interrupt()
         } catch (e: Throwable) {
             log.error(Strings.stringifyException(e))
         }

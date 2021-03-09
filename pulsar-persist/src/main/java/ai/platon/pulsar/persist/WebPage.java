@@ -20,22 +20,12 @@ import ai.platon.pulsar.common.AppContext;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.persist.gora.generated.GHypeLink;
-import ai.platon.pulsar.persist.gora.generated.GParseStatus;
-import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import ai.platon.pulsar.persist.metadata.BrowserType;
-import ai.platon.pulsar.persist.metadata.FetchMode;
-import ai.platon.pulsar.persist.metadata.Mark;
-import ai.platon.pulsar.persist.metadata.Name;
-import ai.platon.pulsar.persist.metadata.PageCategory;
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus;
-import ai.platon.pulsar.persist.model.ActiveDomUrls;
-import ai.platon.pulsar.persist.model.PageModel;
-import ai.platon.pulsar.persist.model.WebPageFormatter;
+import ai.platon.pulsar.common.url.Urls;
+import ai.platon.pulsar.persist.gora.generated.*;
+import ai.platon.pulsar.persist.metadata.*;
+import ai.platon.pulsar.persist.model.*;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,12 +44,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.AppConstants.*;
 
@@ -116,9 +104,27 @@ public class WebPage implements Comparable<WebPage> {
      * Web page scope variables
      * TODO : we may use it a PageDatum to track all context scope variables
      */
-    private Variables variables = new Variables();
+    private final Variables variables = new Variables();
 
-    private ByteBuffer cachedContent = null;
+    /**
+     * If this page is loaded from database or is created and fetched from the web
+     * */
+    private boolean isLoaded = false;
+
+    /**
+     * If we should keep the content in memory even if it's cleared for persistence
+     * */
+    private boolean cachedContentEnabled = false;
+
+    /**
+     * If this page is fetched and updated
+     * */
+    private volatile boolean isContentUpdated = false;
+
+    /**
+     * The cached content
+     * */
+    private volatile ByteBuffer cachedContent = null;
 
     private WebPage(String url, GWebPage page, boolean urlReversed) {
         Objects.requireNonNull(url);
@@ -147,24 +153,51 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * <p>newWebPage.</p>
      *
-     * @param originalUrl a {@link java.lang.String} object.
+     * @param url a {@link java.lang.String} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage newWebPage(String originalUrl) {
-        return newWebPage(originalUrl, false);
+    public static WebPage newWebPage(String url) {
+        return newWebPage(url, false);
     }
 
     /**
      * <p>newWebPage.</p>
      *
-     * @param originalUrl a {@link java.lang.String} object.
+     * @param url a {@link java.lang.String} object.
      * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage newWebPage(@NotNull String originalUrl, @NotNull VolatileConfig volatileConfig) {
-        return newWebPageInternal(originalUrl, volatileConfig);
+    public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig volatileConfig) {
+        return newWebPage(url, volatileConfig, null);
+    }
+
+    /**
+     * <p>newWebPage.</p>
+     *
+     * @param url a {@link java.lang.String} object.
+     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
+     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
+     */
+    @NotNull
+    public static WebPage newWebPage(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String href) {
+        return newWebPageInternal(url, volatileConfig, href);
+    }
+
+    /**
+     * <p>newWebPage.</p>
+     *
+     * @param url a {@link java.lang.String} object.
+     * @param shortenKey a boolean.
+     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
+     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
+     * @deprecated shorten key is deprecated, use href instead
+     */
+    @NotNull
+    public static WebPage newWebPage(@NotNull String url, boolean shortenKey, @Nullable VolatileConfig volatileConfig) {
+        String url0 = shortenKey ? Urls.normalize(url, shortenKey) : url;
+        return newWebPageInternal(url0, volatileConfig, null);
     }
 
     /**
@@ -173,35 +206,24 @@ public class WebPage implements Comparable<WebPage> {
      * @param originalUrl a {@link java.lang.String} object.
      * @param shortenKey a boolean.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
+     * @deprecated shorten key is deprecated, use href instead
      */
     @NotNull
     public static WebPage newWebPage(@NotNull String originalUrl, boolean shortenKey) {
         String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
-        return newWebPageInternal(url, null);
-    }
-
-    /**
-     * <p>newWebPage.</p>
-     *
-     * @param originalUrl a {@link java.lang.String} object.
-     * @param shortenKey a boolean.
-     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
-    @NotNull
-    public static WebPage newWebPage(@NotNull String originalUrl, boolean shortenKey, @Nullable VolatileConfig volatileConfig) {
-        String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
-        return newWebPageInternal(url, volatileConfig);
+        return newWebPageInternal(url, null, null);
     }
 
     @NotNull
-    private static WebPage newWebPageInternal(@NotNull String url, @Nullable VolatileConfig volatileConfig) {
+    private static WebPage newWebPageInternal(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String href) {
         WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
 
         page.setLocation(url);
         page.setVolatileConfig(volatileConfig);
+        page.setHref(href);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(Instant.now());
+        page.setModifiedTime(Instant.now());
         page.setScore(0);
         page.setFetchCount(0);
 
@@ -385,6 +407,27 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
+     * Get The hypertext reference of this page.
+     * It defines the address of the document, which this time is linked from
+     *
+     * @return The hypertext reference
+     */
+    @Nullable
+    public String getHref() {
+        return getMetadata().get(Name.HREF);
+    }
+
+    /**
+     * Set The hypertext reference of this page.
+     * It defines the address of the document, which this time is linked from
+     *
+     * @param href The hypertext reference
+     */
+    public void setHref(@Nullable String href) {
+        getMetadata().set(Name.HREF, href);
+    }
+
+    /**
      * <p>isNil.</p>
      *
      * @return a boolean.
@@ -467,6 +510,26 @@ public class WebPage implements Comparable<WebPage> {
         return exist;
     }
 
+    public boolean isLoaded() {
+        return isLoaded;
+    }
+
+    public void setLoaded(boolean loaded) {
+        isLoaded = loaded;
+    }
+
+    public boolean isContentUpdated() {
+        return isContentUpdated;
+    }
+
+    public boolean isCachedContentEnabled() {
+        return cachedContentEnabled;
+    }
+
+    public void setCachedContentEnabled(boolean cachedContentEnabled) {
+        this.cachedContentEnabled = cachedContentEnabled;
+    }
+
     /**
      * <p>Getter for the field <code>volatileConfig</code>.</p>
      *
@@ -532,17 +595,18 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
-    public String getOptions() {
+    @NotNull
+    public String getArgs() {
         return page.getOptions() == null ? "" : page.getOptions().toString();
     }
 
     /**
      * <p>setOptions.</p>
      *
-     * @param options a {@link java.lang.String} object.
+     * @param args a {@link java.lang.String} object.
      */
-    public void setOptions(String options) {
-        page.setOptions(options);
+    public void setArgs(@NotNull String args) {
+        page.setOptions(args);
     }
 
     /**
@@ -550,6 +614,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @NotNull
     public String getConfiguredUrl() {
         String configuredUrl = url;
         if (page.getOptions() != null) {
@@ -562,6 +627,7 @@ public class WebPage implements Comparable<WebPage> {
      * <p>getQuery.</p>
      *
      * @return a {@link java.lang.String} object.
+     * @deprecated
      */
     @Nullable
     public String getQuery() {
@@ -572,9 +638,28 @@ public class WebPage implements Comparable<WebPage> {
      * <p>setQuery.</p>
      *
      * @param query a {@link java.lang.String} object.
+     * @deprecated
      */
     public void setQuery(@Nullable String query) {
         getMetadata().set(Name.QUERY, query);
+    }
+
+    /**
+     * <p>getFetchedLinkCount.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public int getFetchedLinkCount() {
+        return getMetadata().getInt(Name.FETCHED_LINK_COUNT, 0);
+    }
+
+    /**
+     * <p>setFetchedLinkCount.</p>
+     *
+     * @param count The count of fetched link
+     */
+    public void setFetchedLinkCount(int count) {
+        getMetadata().set(Name.FETCHED_LINK_COUNT, count);
     }
 
     /**
@@ -806,6 +891,34 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
+     * <p>getModelSyncTime.</p>
+     *
+     * @return The time to sync the page model.
+     */
+    @Nullable
+    public Instant getModelSyncTime() {
+        String modelSyncTime = getMetadata().get(Name.MODEL_SYNC_TIME);
+        if (modelSyncTime == null) {
+            return null;
+        } else {
+            return Instant.parse(modelSyncTime);
+        }
+    }
+
+    /**
+     * <p>setModelSyncTime.</p>
+     *
+     * @param modelSyncTime The time to sync the page model.
+     */
+    public void setModelSyncTime(@Nullable Instant modelSyncTime) {
+        if (modelSyncTime != null) {
+            getMetadata().set(Name.MODEL_SYNC_TIME, modelSyncTime.toString());
+        } else {
+            getMetadata().set(Name.MODEL_SYNC_TIME, (Instant) null);
+        }
+    }
+
+    /**
      ******************************************************************************
      * Fetch fields
      *******************************************************************************
@@ -936,6 +1049,25 @@ public class WebPage implements Comparable<WebPage> {
      */
     public void setPrevFetchTime(@NotNull Instant time) {
         page.setPrevFetchTime(time.toEpochMilli());
+    }
+
+    /**
+     * <p>Get the previous crawl time for out pages.</p>
+     *
+     * @return a {@link java.time.Instant} object.
+     */
+    @NotNull
+    public Instant getPrevCrawlTime1() {
+        return Instant.ofEpochMilli(page.getPrevCrawlTime1());
+    }
+
+    /**
+     * <p>Set the previous crawl time for out pages.</p>
+     *
+     * @param time a {@link java.time.Instant} object.
+     */
+    public void setPrevCrawlTime1(@NotNull Instant time) {
+        page.setPrevCrawlTime1(time.toEpochMilli());
     }
 
     /**
@@ -1244,7 +1376,7 @@ public class WebPage implements Comparable<WebPage> {
     public PageCategory getPageCategory() {
         try {
             if (page.getPageCategory() != null) {
-                return PageCategory.valueOf(page.getPageCategory().toString());
+                return PageCategory.parse(page.getPageCategory().toString());
             }
         } catch (Throwable ignored) {
         }
@@ -1258,7 +1390,11 @@ public class WebPage implements Comparable<WebPage> {
      * @param pageCategory a {@link ai.platon.pulsar.persist.metadata.PageCategory} object.
      */
     public void setPageCategory(@NotNull PageCategory pageCategory) {
-        page.setPageCategory(pageCategory.name());
+        page.setPageCategory(pageCategory.toString());
+    }
+
+    public void setPageCategory(@NotNull OpenPageCategory pageCategory) {
+        page.setPageCategory(pageCategory.toString());
     }
 
     /**
@@ -1313,15 +1449,6 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>hasContent.</p>
-     *
-     * @return a boolean.
-     */
-    public boolean hasContent() {
-        return page.getContent() != null;
-    }
-
-    /**
      * The entire raw document content e.g. raw XHTML
      *
      * @return a {@link java.nio.ByteBuffer} object.
@@ -1359,7 +1486,7 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link java.nio.ByteBuffer} object.
      */
     @Nullable
-    public ByteBuffer getUncachedContent() {
+    public ByteBuffer getPersistContent() {
         return page.getContent();
     }
 
@@ -1453,11 +1580,24 @@ public class WebPage implements Comparable<WebPage> {
     public void setContent(@Nullable ByteBuffer value) {
         if (value != null) {
             page.setContent(value);
-            setContentBytes(value.array().length);
+            isContentUpdated = true;
+
+            int length = value.array().length;
+            setContentLength(length);
+            setPersistContentLength(length);
         } else {
-            page.setContent(null);
-            setContentBytes(0);
+            clearPersistContent();
         }
+    }
+
+    public void clearPersistContent() {
+        if (isCachedContentEnabled()) {
+            // set cached content so other thread still can use it
+            cachedContent = page.getContent();
+        }
+
+        page.setContent(null);
+        setPersistContentLength(0);
     }
 
     /**
@@ -1465,21 +1605,23 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a int.
      */
-    public int getContentBytes() {
-        return getMetadata().getInt(Name.CONTENT_BYTES, 0);
+    public long getContentLength() {
+        return getMetadata().getLong(Name.CONTENT_BYTES, 0);
     }
 
-    private void setContentBytes(int bytes) {
-        if (bytes == 0) {
-            return;
-        }
-
-        getMetadata().set(Name.CONTENT_BYTES, String.valueOf(bytes));
+    /**
+     * TODO: use a field
+     * */
+    public void setContentLength(long bytes) {
+        long lastBytes = getContentLength();
+        Metadata metadata = getMetadata();
+        metadata.set(Name.LAST_CONTENT_BYTES, lastBytes);
+        metadata.set(Name.CONTENT_BYTES, bytes);
 
         int count = getFetchCount();
-        int lastAveBytes = getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
+        long lastAveBytes = metadata.getLong(Name.AVE_CONTENT_BYTES, 0);
 
-        int aveBytes;
+        long aveBytes;
         if (count > 0 && lastAveBytes == 0) {
             // old version, average bytes is not calculated
             aveBytes = bytes;
@@ -1487,7 +1629,19 @@ public class WebPage implements Comparable<WebPage> {
             aveBytes = (lastAveBytes * count + bytes) / (count + 1);
         }
 
-        getMetadata().set(Name.AVE_CONTENT_BYTES, String.valueOf(aveBytes));
+        metadata.set(Name.AVE_CONTENT_BYTES, aveBytes);
+    }
+
+    public long getPersistContentBytes() {
+        return getMetadata().getLong(Name.PERSIST_CONTENT_BYTES, 0);
+    }
+
+    private void setPersistContentLength(long bytes) {
+        getMetadata().set(Name.PERSIST_CONTENT_BYTES, bytes);
+    }
+
+    public long getLastContentBytes() {
+        return getMetadata().getLong(Name.LAST_CONTENT_BYTES, 0);
     }
 
     /**
@@ -1495,8 +1649,8 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a int.
      */
-    public int getAveContentBytes() {
-        return getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
+    public long getAveContentBytes() {
+        return getMetadata().getLong(Name.AVE_CONTENT_BYTES, 0);
     }
 
     /**
@@ -1572,65 +1726,61 @@ public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    // TODO: use a separate avro field to hold BROWSER_JS_DATA
-    /**
-     * <p>getActiveDomMultiStatus.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.model.ActiveDomMultiStatus} object.
-     */
     @Nullable
-    public ActiveDomMultiStatus getActiveDomMultiStatus() {
-        // cached
-        Name name = Name.ACTIVE_DOM_MULTI_STATUS;
-        Object value = variables.get(name);
-        if (value instanceof ActiveDomMultiStatus) {
-            return (ActiveDomMultiStatus)value;
-        } else {
-            String json = getMetadata().get(name);
-            if (json != null) {
-                ActiveDomMultiStatus status = ActiveDomMultiStatus.Companion.fromJson(json);
-                variables.set(name, status);
-                return status;
+    public ActiveDomStatus getActiveDomStatus() {
+        GActiveDomStatus s = page.getActiveDomStatus();
+        if (s == null) return null;
+
+        return new ActiveDomStatus(
+                s.getN(),
+                s.getScroll(),
+                s.getSt().toString(),
+                s.getR().toString(),
+                s.getIdl().toString(),
+                s.getEc().toString()
+        );
+    }
+
+    public void setActiveDomStatus(ActiveDomStatus s) {
+        GActiveDomStatus s2 = page.getActiveDomStatus();
+        if (s2 != null) {
+            if (s == null) {
+                page.setActiveDomStatus(null);
             }
-        }
 
-        return null;
-    }
-
-    /**
-     * <p>setActiveDomMultiStatus.</p>
-     *
-     * @param domStatus a {@link ai.platon.pulsar.persist.model.ActiveDomMultiStatus} object.
-     */
-    public void setActiveDomMultiStatus(@Nullable ActiveDomMultiStatus domStatus) {
-        if (domStatus != null) {
-            variables.set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus);
-            getMetadata().set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus.toJson());
+            s2.setN(s.getN());
+            s2.setScroll(s.getScroll());
+            s2.setSt(s.getSt());
+            s2.setR(s.getR());
+            s2.setIdl(s.getIdl());
+            s2.setEc(s.getEc());
         }
     }
 
-    /**
-     * <p>getActiveDomUrls.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.model.ActiveDomUrls} object.
-     */
-    @Nullable
+    @NotNull
+    public Map<String, ActiveDomStat> getActiveDomStats() {
+        Map<CharSequence, GActiveDomStat> s = page.getActiveDomStats();
+        return s.entrySet().stream().collect(Collectors.toMap(
+                e -> e.getKey().toString(),
+                e -> Converters.INSTANCE.convert(e.getValue())
+        ));
+    }
+
+    public void setActiveDomStats(@NotNull Map<String, ActiveDomStat> stats) {
+        Map<CharSequence, GActiveDomStat> stats2 = stats.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, e -> Converters.INSTANCE.convert(e.getValue())));
+        page.setActiveDomStats(stats2);
+    }
+
+    @NotNull
     public ActiveDomUrls getActiveDomUrls() {
-        // cached
-        Name name = Name.ACTIVE_DOM_URLS;
-        Object value = variables.get(name);
-        if (value instanceof ActiveDomUrls) {
-            return (ActiveDomUrls)value;
-        } else {
-            String json = getMetadata().get(name);
-            if (json != null) {
-                ActiveDomUrls status = ActiveDomUrls.Companion.fromJson(json);
-                variables.set(name, status);
-                return status;
-            }
-        }
-
-        return null;
+        Map<CharSequence, CharSequence> urls = page.getActiveDomUrls();
+        return new ActiveDomUrls(
+                urls.getOrDefault("URL", "").toString(),
+                urls.getOrDefault("baseURI", "").toString(),
+                urls.getOrDefault("location", "").toString(),
+                urls.getOrDefault("documentURI", "").toString()
+        );
     }
 
     /**
@@ -1638,11 +1788,12 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param urls a {@link ai.platon.pulsar.persist.model.ActiveDomUrls} object.
      */
-    public void setActiveDomUrls(@Nullable ActiveDomUrls urls) {
-        if (urls != null) {
-            variables.set(Name.ACTIVE_DOM_URLS, urls);
-            getMetadata().set(Name.ACTIVE_DOM_URLS, urls.toJson());
-        }
+    public void setActiveDomUrls(@NotNull ActiveDomUrls urls) {
+        Map<CharSequence, CharSequence> domUrls = page.getActiveDomUrls();
+        domUrls.put("URL", urls.getURL());
+        domUrls.put("baseURI", urls.getBaseURI());
+        domUrls.put("location", urls.getLocation());
+        domUrls.put("documentURI", urls.getDocumentURI());
     }
 
     /**
@@ -1846,7 +1997,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param liveLinks a {@link java.lang.Iterable} object.
      */
-    public void setLiveLinks(Iterable<HyperLink> liveLinks) {
+    public void setLiveLinks(Iterable<HyperlinkPersistable> liveLinks) {
         page.getLiveLinks().clear();
         Map<CharSequence, GHypeLink> links = page.getLiveLinks();
         liveLinks.forEach(l -> links.put(l.getUrl(), l.unbox()));
@@ -1864,9 +2015,9 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * <p>addLiveLink.</p>
      *
-     * @param hyperLink a {@link ai.platon.pulsar.persist.HyperLink} object.
+     * @param hyperLink a {@link HyperlinkPersistable} object.
      */
-    public void addLiveLink(HyperLink hyperLink) {
+    public void addLiveLink(HyperlinkPersistable hyperLink) {
         page.getLiveLinks().put(hyperLink.getUrl(), hyperLink.unbox());
     }
 
@@ -1944,7 +2095,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param hypeLinks a {@link java.lang.Iterable} object.
      */
-    public void addHyperLinks(Iterable<HyperLink> hypeLinks) {
+    public void addHyperlinks(Iterable<HyperlinkPersistable> hypeLinks) {
         List<CharSequence> links = page.getLinks();
 
         // If there are too many links, Drop the front 1/3 links
@@ -1952,7 +2103,7 @@ public class WebPage implements Comparable<WebPage> {
             links = links.subList(links.size() - MAX_LINK_PER_PAGE / 3, links.size());
         }
 
-        for (HyperLink l : hypeLinks) {
+        for (HyperlinkPersistable l : hypeLinks) {
             Utf8 url = u8(l.getUrl());
             if (!links.contains(url)) {
                 links.add(url);

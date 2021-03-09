@@ -2,10 +2,13 @@ package ai.platon.pulsar.common.collect
 
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
+import kotlin.collections.HashSet
 
-class ConcurrentNonReentrantQueue<E>: AbstractQueue<E>() {
+open class ConcurrentNonReentrantQueue<E>: AbstractQueue<E>() {
     private val set = ConcurrentSkipListSet<E>()
-    private val historyHash = ConcurrentSkipListSet<Int>()
+    private val historyHash = HashSet<Int>()
+
+    open fun count(e: E) = if (historyHash.contains(e.hashCode())) 1 else 0
 
     override fun add(element: E) = offer(element)
 

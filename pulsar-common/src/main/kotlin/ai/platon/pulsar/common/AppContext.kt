@@ -1,7 +1,9 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
+import java.net.InetAddress
 import java.nio.file.Paths
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,17 +19,26 @@ object AppContext {
     /**
      * Date time
      */
+    val startTime = Instant.now()
     val impreciseNow = Instant.now()
     val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
     val imprecise2DaysAhead = impreciseNow.plus(2, ChronoUnit.DAYS)
-    val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-    val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)
     val defaultZoneId = ZoneId.systemDefault()
+
+    val midnight get() = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+    val tohour get() = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+
+    val elapsed get() = Duration.between(startTime, Instant.now())
+    val todayElapsed get() = Duration.between(midnight, LocalDateTime.now())
+    val tohourElapsed get() = Duration.between(tohour, LocalDateTime.now())
 
     /**
      * The number of processors available to the Java virtual machine
      */
     val NCPU = Runtime.getRuntime().availableProcessors()
+
+    // User's current working directory
+    val HOST_NAME = InetAddress.getLocalHost().hostName
 
     val USER = SystemUtils.USER_NAME
 
@@ -44,9 +55,9 @@ object AppContext {
     val APP_IDENT = System.getProperty("app.id.str", USER)
     val APP_TMP_PROPERTY = System.getProperty("app.tmp.dir")
     val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
-    val APP_HOME_DIR = Paths.get(USER_HOME).resolve(".$APP_NAME")
+    val APP_DATA_DIR = Paths.get(USER_HOME).resolve(".$APP_NAME")
 
-    val state = AtomicReference<State>(State.NEW)
+    val state = AtomicReference(State.NEW)
 
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
 

@@ -18,18 +18,19 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.test.assertEquals
 
 /**
- * The base class for all tests.
+ * The base class for all tests
  */
 abstract class TestBase {
 
     companion object {
+        val log = LoggerFactory.getLogger(TestBase::class.java)
+
         init {
             PulsarContexts.activate()
         }
-
-        val log = LoggerFactory.getLogger(TestBase::class.java)
 
         val history = mutableListOf<String>()
         val startTime = Instant.now()
@@ -245,12 +246,6 @@ abstract class TestBase {
                 "http://item.jd.com/3188580.html",
                 "http://item.jd.com/1304915.html"
         )
-        urlGroups["mia"] = arrayOf(
-                "https://www.mia.com/formulas.html",
-                "https://www.mia.com/item-2726793.html",
-                "https://www.mia.com/item-1792382.html",
-                "https://www.mia.com/item-1142813.html"
-        )
         urlGroups["mogujie"] = arrayOf(
                 "http://list.mogujie.com/book/jiadian/10059513",
                 "http://list.mogujie.com/book/skirt",
@@ -321,5 +316,9 @@ abstract class TestBase {
         }
 
         return ResultSets.newResultSet()
+    }
+
+    fun assertResultSetEquals(expected: String, sql: String) {
+        assertEquals(expected, ResultSetFormatter(query(sql)).toString())
     }
 }

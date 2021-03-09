@@ -21,7 +21,7 @@ package ai.platon.pulsar.parse.html
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
 import org.junit.Assert
@@ -153,46 +153,46 @@ class TestPrimerParser {
                 "http://www.pulsar.org/",
                 "http://www.pulsar.org/;something")
         // note: should be in page-order
-        private val ANSWER_HYPER_LINKS: Array<Array<HyperLink>>
+        private val ANSWER_HYPERLINKS: Array<Array<HyperlinkPersistable>>
 
-        private fun linksString(o: ArrayList<HyperLink>): String {
-            return o.stream().map { obj: HyperLink -> obj.toString() }.collect(Collectors.joining("\n"))
+        private fun linksString(o: ArrayList<HyperlinkPersistable>): String {
+            return o.stream().map { obj: HyperlinkPersistable -> obj.toString() }.collect(Collectors.joining("\n"))
         }
 
-        private fun compareLinks(expected: ArrayList<HyperLink>, actual: ArrayList<HyperLink>, pageIndex: Int) {
+        private fun compareLinks(expected: ArrayList<HyperlinkPersistable>, actual: ArrayList<HyperlinkPersistable>, pageIndex: Int) {
             Assert.assertEquals("Page : p" + (pageIndex + 1) + "\tExpected : [" + linksString(expected) + "]\t Actual : [" + linksString(actual) + "]\t",
                     expected.size.toLong(), actual.size.toLong())
             for (i in expected.indices) {
                 if (expected[i] != actual[i]) {
                     Assert.assertTrue(
                             "got wrong liveLinks at position " + i + "\n" + "answer: " + "\n" + "'" + expected[i].url
-                                    + "', anchor: '" + expected[i].anchor + "'" +
-                                    "\n" + "got: " + "\n" + "'" + actual[i].url + "', anchor: '" + actual[i].anchor + "'", false)
+                                    + "', anchor: '" + expected[i].text + "'" +
+                                    "\n" + "got: " + "\n" + "'" + actual[i].url + "', anchor: '" + actual[i].text + "'", false)
                 }
             }
         }
 
         init {
-            ANSWER_HYPER_LINKS = arrayOf(arrayOf(HyperLink("http://www.pulsar.org", "anchor")), arrayOf(HyperLink("http://www.pulsar.org/", "home"),
-                    HyperLink("http://www.pulsar.org/docs/bot.html", "bots")), arrayOf(HyperLink("http://www.pulsar.org/", "separate this"),
-                    HyperLink("http://www.pulsar.org/docs/ok", "from this")), arrayOf(HyperLink("http://www.pulsar.org/", "home"),
-                    HyperLink("http://www.pulsar.org/docs/1", "1"),
-                    HyperLink("http://www.pulsar.org/docs/2", "2")), arrayOf(HyperLink("http://www.pulsar.org/frames/top.html", ""),
-                    HyperLink("http://www.pulsar.org/frames/left.html", ""),
-                    HyperLink("http://www.pulsar.org/frames/invalid.html", ""),
-                    HyperLink("http://www.pulsar.org/frames/right.html", "")), arrayOf(HyperLink("http://www.pulsar.org/maps/logo.gif", ""),
-                    HyperLink("http://www.pulsar.org/index.html", ""),
-                    HyperLink("http://www.pulsar.org/maps/#bottom", ""),
-                    HyperLink("http://www.pulsar.org/bot.html", ""),
-                    HyperLink("http://www.pulsar.org/docs/index.html", "")), arrayOf(HyperLink("http://www.pulsar.org/index.html", "whitespace test")), arrayOf(), arrayOf(HyperLink("http://www.pulsar.org/dummy.jsp", "test2")), arrayOf(), arrayOf(HyperLink("http://www.pulsar.org/;x", "anchor1"),
-                    HyperLink("http://www.pulsar.org/g;x", "anchor2"),
-                    HyperLink("http://www.pulsar.org/g;x?y#s", "anchor3")
+            ANSWER_HYPERLINKS = arrayOf(arrayOf(HyperlinkPersistable("http://www.pulsar.org", "anchor")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/", "home"),
+                    HyperlinkPersistable("http://www.pulsar.org/docs/bot.html", "bots")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/", "separate this"),
+                    HyperlinkPersistable("http://www.pulsar.org/docs/ok", "from this")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/", "home"),
+                    HyperlinkPersistable("http://www.pulsar.org/docs/1", "1"),
+                    HyperlinkPersistable("http://www.pulsar.org/docs/2", "2")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/frames/top.html", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/frames/left.html", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/frames/invalid.html", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/frames/right.html", "")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/maps/logo.gif", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/index.html", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/maps/#bottom", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/bot.html", ""),
+                    HyperlinkPersistable("http://www.pulsar.org/docs/index.html", "")), arrayOf(HyperlinkPersistable("http://www.pulsar.org/index.html", "whitespace test")), arrayOf(), arrayOf(HyperlinkPersistable("http://www.pulsar.org/dummy.jsp", "test2")), arrayOf(), arrayOf(HyperlinkPersistable("http://www.pulsar.org/;x", "anchor1"),
+                    HyperlinkPersistable("http://www.pulsar.org/g;x", "anchor2"),
+                    HyperlinkPersistable("http://www.pulsar.org/g;x?y#s", "anchor3")
             ), arrayOf( // this is tricky - see RFC3986 section 5.4.1 example 7
-                    HyperLink("http://www.pulsar.org/g", "anchor1"),
-                    HyperLink("http://www.pulsar.org/g?y#s", "anchor2"),
-                    HyperLink("http://www.pulsar.org/;something?y=1", "anchor3"),
-                    HyperLink("http://www.pulsar.org/;something?y=1#s", "anchor4"),
-                    HyperLink("http://www.pulsar.org/;something?y=1;somethingelse", "anchor5")
+                    HyperlinkPersistable("http://www.pulsar.org/g", "anchor1"),
+                    HyperlinkPersistable("http://www.pulsar.org/g?y#s", "anchor2"),
+                    HyperlinkPersistable("http://www.pulsar.org/;something?y=1", "anchor3"),
+                    HyperlinkPersistable("http://www.pulsar.org/;something?y=1#s", "anchor4"),
+                    HyperlinkPersistable("http://www.pulsar.org/;something?y=1;somethingelse", "anchor5")
             ))
         }
     }

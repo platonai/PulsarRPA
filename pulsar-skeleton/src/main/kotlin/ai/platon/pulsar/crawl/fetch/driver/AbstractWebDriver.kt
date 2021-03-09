@@ -1,41 +1,64 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.persist.metadata.BrowserType
+import java.util.concurrent.atomic.AtomicReference
 
 abstract class AbstractWebDriver(
-        val browserInstanceId: BrowserInstanceId,
-        val id: Int = 0
-): Comparable<AbstractWebDriver> {
+        override val browserInstanceId: BrowserInstanceId,
+        override val id: Int = 0
+): Comparable<AbstractWebDriver>, WebDriver {
+
+    enum class Status {
+        UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
+
+        val isFree get() = this == FREE
+        val isWorking get() = this == WORKING
+        val isCanceled get() = this == CANCELED
+        val isRetired get() = this == RETIRED
+        val isCrashed get() = this == CRASHED
+        val isQuit get() = this == QUIT
+    }
+
     var proxyEntry: ProxyEntry? = null
 
     /**
      * The current loading page url
      * The browser might redirect, so it might not be the same with [currentUrl]
      * */
-    var url: String = ""
+    override var url: String = ""
+    /**
+     * Driver status
+     * */
+    val status = AtomicReference(Status.UNKNOWN)
 
-    abstract val isCanceled: Boolean
-    abstract val isQuit: Boolean
-    abstract val isRetired: Boolean
+    val isFree get() = status.get().isFree
+    val isWorking get() = status.get().isWorking
+    val isNotWorking get() = !isWorking
+    val isCrashed get() = status.get().isCrashed
+    override val isRetired get() = status.get().isRetired
+    override val isCanceled get() = status.get().isCanceled
+    override val isQuit get() = status.get().isQuit
 
-    abstract val name: String
-    abstract val browserType: BrowserType
-    abstract val sessionId: String?
-    abstract val currentUrl: String?
-    abstract val pageSource: String
+    override fun free() = status.set(Status.FREE)
+    override fun startWork() = status.set(Status.WORKING)
+    override fun retire() = status.set(Status.RETIRED)
+    override fun cancel() {
+        if (isCanceled) {
+            return
+        }
 
-    abstract fun navigateTo(url: String)
-    abstract fun setTimeouts(driverConfig: BrowserControl)
-    abstract fun evaluate(expression: String): Any?
-    abstract fun stopLoading()
-    abstract fun evaluateSilently(expression: String): Any?
+        if (status.compareAndSet(Status.WORKING, Status.CANCELED)) {
+            stopLoading()
+        }
+    }
+    override fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
 
-    abstract fun free()
-    abstract fun startWork()
-    abstract fun retire()
-    abstract fun quit()
-    abstract fun cancel()
+    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
+
+    override fun hashCode(): Int = id
+
+    override fun compareTo(other: AbstractWebDriver): Int = id - other.id
+
+    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
 }

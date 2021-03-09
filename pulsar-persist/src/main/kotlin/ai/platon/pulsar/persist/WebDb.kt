@@ -1,7 +1,8 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.Urls.reverseUrlOrNull
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrNull
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.gora.db.DbIterator
@@ -11,11 +12,13 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
+import java.lang.IllegalStateException
 import java.util.concurrent.atomic.AtomicBoolean
 
 class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     private val log = LoggerFactory.getLogger(WebDb::class.java)
+    private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
     val store: DataStore<String, GWebPage> by lazy { AutoDetectStorageProvider(conf).createPageStore() }
@@ -27,22 +30,19 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
+     *
+     * TODO: handle ignoreQuery the higher level
      */
     @JvmOverloads
     fun getOrNull(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
-        if (log.isTraceEnabled) {
-            log.trace("Getting $key")
-        }
+        tracer?.trace("Getting $key")
 
-        val datum = store.get(key, fields)
-        if (datum != null) {
-            if (log.isTraceEnabled) {
-                log.trace("Got $key")
-            }
-
-            return WebPage.box(url, key, datum)
+        val page = fields?.let { store.get(key, it) } ?: store.get(key)
+        if (page != null) {
+            tracer?.trace("Got $key")
+            return WebPage.box(url, key, page).also { it.isLoaded = true }
         }
 
         return null
@@ -56,10 +56,13 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      */
     @JvmOverloads
     fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
-        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
-
-        val page = getOrNull(url, ignoreQuery, null)
+        val page = getOrNull(originalUrl, ignoreQuery, fields)
         return page ?: WebPage.NIL
+    }
+
+    fun exists(originalUrl: String, ignoreQuery: Boolean = false): Boolean {
+        val requiredField = GWebPage.Field.CREATE_TIME.toString()
+        return getOrNull(originalUrl, ignoreQuery, arrayOf(requiredField)) != null
     }
 
     @JvmOverloads
@@ -85,9 +88,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
             store.delete(key)
         }
 
-        if (log.isTraceEnabled) {
-            log.trace("Putting $key")
-        }
+        tracer?.trace("Putting $key")
 
         store.put(key, page.unbox())
         return true
@@ -114,14 +115,14 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
             return true
         }
 
-        if (schemaName.startsWith("tmp_") || schemaName.endsWith("_tmp_webpage")) {
+        return if (schemaName.startsWith("tmp_") || schemaName.endsWith("_tmp_webpage")) {
             store.truncateSchema()
             log.info("Schema $schemaName is truncated")
-            return true
+            true
         } else {
-            log.info("Only schema name starts with tmp_ or ends with _tmp_webpage can be truncated using this API, " +
-                    "bug got " + schemaName)
-            return false
+            log.info("Only schema name starts with tmp_ or ends with _tmp_webpage " +
+                    "can be truncated using this API, bug got $schemaName")
+            false
         }
     }
 
@@ -134,9 +135,6 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     fun scan(urlBase: String): Iterator<WebPage> {
         val query = store.newQuery()
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
-
-//        val filter = SingleFieldValueFilter<String, GWebPage>()
-//        query.filter = filter
 
         val result = store.execute(query)
         return DbIterator(result)
@@ -215,10 +213,12 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     fun flush() {
         try {
             store.flush()
+        } catch (e: IllegalStateException) {
+            log.warn(e.message)
         } catch (e: Throwable) {
             // TODO: Embedded MongoDB fails to shutdown gracefully #5487
             // see https://github.com/spring-projects/spring-boot/issues/5487
-            log.error(e.message)
+            log.error(Strings.stringifyException(e))
         }
     }
 

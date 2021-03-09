@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -24,9 +24,9 @@ abstract class BrowserEmulatorBase(
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
     val isActive get() = !closed.get()
-    val meterNavigates by lazy { AppMetrics.meter(this,"navigates") }
-    val counterRequests by lazy { AppMetrics.counter(this,"requests") }
-    val counterCancels by lazy { AppMetrics.counter(this,"cancels") }
+    val meterNavigates by lazy { AppMetrics.reg.meter(this,"navigates") }
+    val counterRequests by lazy { AppMetrics.reg.counter(this,"requests") }
+    val counterCancels by lazy { AppMetrics.reg.counter(this,"cancels") }
 
     override fun getParams(): Params {
         return Params.of(
@@ -58,7 +58,7 @@ abstract class BrowserEmulatorBase(
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
     @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
-    protected fun checkState(driver: AbstractWebDriver) {
+    protected fun checkState(driver: WebDriver) {
         checkState()
 
         if (driver.isCanceled) {

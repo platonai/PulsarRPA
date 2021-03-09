@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
@@ -17,13 +17,11 @@ class BasicPrivacyContextManager(
         val fetchMetrics: FetchMetrics? = null,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
-    private val privacyContextId = PrivacyContextId.DEFAULT
-
     constructor(driverPoolManager: WebDriverPoolManager, immutableConfig: ImmutableConfig)
             : this(driverPoolManager, null, null, immutableConfig)
 
-    override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
-        return run0(computeIfAbsent(privacyContextId), task, fetchFun)
+    override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        return run0(computeIfAbsent(privacyContextIdGenerator()), task, fetchFun)
     }
 
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
@@ -34,21 +32,21 @@ class BasicPrivacyContextManager(
 
     override fun computeNextContext(): PrivacyContext {
         val context = computeIfNecessary()
-        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(PrivacyContextId.generate()) }
+        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyContextIdGenerator()) }
     }
 
     override fun computeIfNecessary(): PrivacyContext {
-        return activeContexts.values.firstOrNull() ?: computeIfAbsent(PrivacyContextId.generate())
+        return activeContexts.values.firstOrNull() ?: computeIfAbsent(privacyContextIdGenerator())
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
 
     private suspend fun run0(privacyContext: PrivacyContext, task: FetchTask,
-                            fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult)
+                            fetchFun: suspend (FetchTask, WebDriver) -> FetchResult)
             = takeIf { isActive }?.run1(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task)
 
     private suspend fun run1(privacyContext: PrivacyContext, task: FetchTask,
-                             fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
+                             fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         if (privacyContext !is BrowserPrivacyContext) {
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext")
         }
@@ -66,6 +64,6 @@ class BasicPrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.numSuccesses.fiveMinuteRate)
+        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.meterSuccesses.fiveMinuteRate)
     }
 }

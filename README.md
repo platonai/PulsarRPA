@@ -3,18 +3,18 @@ Pulsar README
 Pulsar focus on web data processing, it extends SQL to handle the entire life cycle of web data processing:
 crawling, web scraping, data mining, BI, etc.
 
-## Other lauguage
+## Other language
 [Chinese](README.zh.md)
 
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- X-SQL: eXtended SQL to manage web data: crawling, web scraping, data mining, BI, etc.
+- X-SQL: eXtends SQL to manage web data: crawling, web scraping, data mining, BI, etc.
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
 - BI Integration: turn Web sites into tables and charts using just one simple SQL
 - Big data: large scale, various storage: HBase/MongoDB
 
-For more information check out [platon.ai](https://platon.ai)
+For more information check out [platon.ai](http://platon.ai)
 
 ## X-SQL
 Crawl and scrape a single page:
@@ -56,7 +56,7 @@ Add maven dependency to your project:
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-protocol</artifactId>
-        <version>1.5.7</version>
+        <version>1.5.7-SNAPSHOT</version>
     </dependency>
 
 And then scrape web pages using simple native api:
@@ -75,10 +75,10 @@ Add maven dependency to your project:
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-ql-server</artifactId>
-        <version>1.5.7</version>
+        <version>1.5.7-SNAPSHOT</version>
     </dependency>
 
-And then scrape web pages using:
+then scrape web pages using:
 
     select
         dom_first_text(dom, '.sku-name') as name,
@@ -107,7 +107,7 @@ Ubuntu/Debian:
 ## Build from source
 
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn
+    cd pulsar && mvn -DskipTests=true
 
 ## Run the native api demo
 
@@ -121,7 +121,7 @@ Ubuntu/Debian:
 
     bin/pulsar sql
     
-Now you can execute any x-sql using the command line. 
+Now you can execute any x-sql using the command line.
     
 ## Use web console
 Open web console [http://localhost:8082](http://localhost:8082) using your favourite browser now, enjoy playing with X-SQL.

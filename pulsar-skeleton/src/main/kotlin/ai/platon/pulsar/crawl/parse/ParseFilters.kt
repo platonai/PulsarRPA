@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
@@ -51,16 +50,19 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     fun addLast(parseFilter: ParseFilter) = parseFilters.add(parseFilter)
 
     /**
-     * Run all defined filters.
+     * Run all defined filters
      */
     fun filter(parseContext: ParseContext) {
         // loop on each filter
         parseFilters.forEach {
-            kotlin.runCatching { it.filter(parseContext) }.onFailure { log.warn(Strings.simplifyException(it)) }
+            if (it.isRelevant(parseContext)) {
+                val result = kotlin.runCatching { it.filter(parseContext) }
+                        .onFailure { log.warn("Unexpected exception", it) }
+                        .getOrNull()
 
-            val shouldContinue = parseContext.parseResult.shouldContinue
-            if (!shouldContinue) {
-                return
+                if (result != null && result.shouldBreak) {
+                    return
+                }
             }
         }
     }
@@ -71,7 +73,7 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
+            parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn("Failed to close ParseFilter", it.message) } }
         }
     }
 }

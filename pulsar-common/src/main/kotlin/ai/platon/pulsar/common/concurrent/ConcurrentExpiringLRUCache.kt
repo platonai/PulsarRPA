@@ -18,6 +18,9 @@ class ExpiringItem<T>(
     }
 }
 
+/**
+ * TODO: see DelayQueue
+ * */
 class ConcurrentExpiringLRUCache<T>(
         val capacity: Int,
         val ttl: Duration = CACHE_TTL
@@ -38,15 +41,19 @@ class ConcurrentExpiringLRUCache<T>(
     }
 
     fun get(key: String): ExpiringItem<T>? {
-        return cache.get(key)
+        return cache[key]
     }
 
     fun getDatum(key: String): T? {
-        return cache.get(key)?.datum
+        return cache[key]?.datum
     }
 
     fun getDatum(key: String, expires: Duration, now: Instant = Instant.now()): T? {
         return get(key)?.takeUnless { it.isExpired(expires, now) }?.datum
+    }
+
+    fun contains(key: String): Boolean {
+        return cache[key] != null
     }
 
     fun computeIfAbsent(key: String, mappingFunction: (String) -> T): T {

@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
@@ -94,7 +94,7 @@ class WebPageFormatter(page: WebPage) {
         val fields: MutableMap<String, Any> = LinkedHashMap()
         /* General */fields["key"] = page.key
         fields["url"] = page.url
-        fields["options"] = page.options
+        fields["options"] = page.args
         fields["isSeed"] = page.isSeed
         fields["createTime"] = format(page.createTime)
         fields["distance"] = page.distance
@@ -154,7 +154,7 @@ class WebPageFormatter(page: WebPage) {
         if (withLinks) {
             fields["links"] = page.links.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
             fields["vividLinks"] = page.vividLinks.values.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
-            fields["liveLinks"] = page.liveLinks.values.stream().map { l: GHypeLink? -> HyperLink.box(l!!).toString() }.collect(Collectors.toList())
+            fields["liveLinks"] = page.liveLinks.values.stream().map { l: GHypeLink? -> HyperlinkPersistable.box(l!!).toString() }.collect(Collectors.toList())
             fields["deadLinks"] = page.deadLinks.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
             fields["inlinks"] = page.inlinks.entries.stream()
                     .map { il: Map.Entry<CharSequence, CharSequence> -> il.key.toString() + "\t" + il.value }.collect(Collectors.joining("\n"))
@@ -196,7 +196,7 @@ class WebPageFormatter(page: WebPage) {
                 .append("fetchInterval:\t" + page.fetchInterval + "\n")
                 .append("retriesSinceFetch:\t" + page.fetchRetries + "\n")
         sb.append("\n")
-                .append("options:\t" + page.options + "\n")
+                .append("options:\t" + page.args + "\n")
         sb.append("\n")
                 .append("createTime:\t" + format(page.createTime) + "\n")
                 .append("prevFetchTime:\t" + format(page.prevFetchTime) + "\n")

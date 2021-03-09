@@ -2,9 +2,11 @@ package ai.platon.pulsar.context
 
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -21,6 +23,8 @@ interface PulsarContext: AutoCloseable {
 
     val applicationContext: ApplicationContext
 
+    val unmodifiedConfig: ImmutableConfig
+
     fun createSession(): PulsarSession
 
     fun closeSession(session: PulsarSession)
@@ -36,6 +40,12 @@ interface PulsarContext: AutoCloseable {
 
     fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false): List<NormUrl>
 
+    fun normalize(url: UrlAware, options: LoadOptions = opts(), toItemOption: Boolean = false): NormUrl
+
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl?
+
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions = opts(), toItemOption: Boolean = false): List<NormUrl>
+
     /**
      * Inject an url
      *
@@ -49,6 +59,8 @@ interface PulsarContext: AutoCloseable {
     fun get(url: String): WebPage
 
     fun getOrNull(url: String): WebPage?
+
+    fun exists(url: String): Boolean
 
     fun scan(urlPrefix: String): Iterator<WebPage>
 

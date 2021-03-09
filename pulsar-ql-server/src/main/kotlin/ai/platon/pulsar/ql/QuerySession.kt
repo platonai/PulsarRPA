@@ -13,6 +13,7 @@ import ai.platon.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
 import org.h2.engine.Constants
 import org.h2.engine.SessionInterface
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
@@ -22,6 +23,8 @@ open class QuerySession(
         val dbSession: DbSession,
         config: SessionConfig
 ): PulsarSession(pulsarContext, config, dbSession.id) {
+    private val log = LoggerFactory.getLogger(QuerySession::class.java)
+
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 

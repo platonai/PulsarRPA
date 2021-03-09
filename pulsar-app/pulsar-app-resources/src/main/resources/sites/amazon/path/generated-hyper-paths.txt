@@ -1,0 +1,628 @@
+
+-------------------
+https://www.amazon.com/Apple-Lightning-Digital-AV-Adapter/dp/B009WHV3BM/ref=sr_1_7?dchild=1&fst=as%3Aoff&qid=1586520423&refinements=p_72%3A1248879011&rnid=1248877011&s=pc&sr=1-7
+#nav-main-[0 605 1920 39]
+>>>
+Deliver to China Amazon's response to COVID-19 Today's Deals Customer Service Registry Gift Cards Sell Disability Customer Support
+<<<
+#nav-main
+
+1.00 | #nav-main :> #glow-ingress-line1 > n:eq(0) | 1.00 |           Deliver to
+1.00 | #nav-main :> #glow-ingress-line2 > n:eq(0) | 1.00 |                China
+1.00 | #nav-main :> #nav-swmslot > a.nav_a.nav-swm-text > n:eq(0) | 1.00 | Amazon's .. COVID-19
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(1) > n:eq(0) | 1.00 |        Today's Deals
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(2) > n:eq(0) | 1.00 |     Customer Service
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(3) > n:eq(0) | 1.00 |             Registry
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(4) > n:eq(0) | 1.00 |           Gift Cards
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(5) > n:eq(0) | 1.00 |                 Sell
+
+-------------------
+https://www.amazon.com/Apple-MK0C2AM-A-Apple-Pencil/dp/B016NY7784/ref=sr_1_16?dchild=1&fst=as%3Aoff&qid=1586520423&refinements=p_72%3A1248879011&rnid=1248877011&s=pc&sr=1-16
+#rightCol-[1627 288 275 717]
+>>>
+Share $94.88 This item does not ship to China. Please check other sellers who may ship internationally. Learn more Due to increased demand, we temporarily have reduced product selection available for delivery to your region. We are working to improve selection availability as soon as possible. Available to ship in 1-2 days. Qty: 1 2 Qty:1 Add to Cart Buy Now Ships from and sold by Amazon.com. Add gift options Deliver to China Add to List Added to Unable to add item to List. Please try again. Sorry, there was a problem. There was an error retrieving your Wish Lists. Please try again. Sorry, there was a problem. List unavailable. Other Sellers on Amazon Add to Cart $109.99 Sold by: Adorama
+<<<
+#rightCol
+
+0.67 | #rightCol :> #price_inside_buybox > n:eq(0) | 0.17 |               $74.00
+0.67 | #rightCol :> #delivery-message > n:eq(2) | 0.67 | This item..t ship to
+1.00 | #rightCol :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+0.67 | #rightCol :> #delivery-message > a > n:eq(0) | 0.67 |           Learn more
+1.00 | #rightCol :> #fast-track-message > div.a-section.a-spacing-none:eq(1) > b > n:eq(0) | 1.00 | Due to in..possible.
+0.50 | #rightCol :> #availability > span.a-size-medium.a-color-success > n:eq(0) | 0.33 |            Buy used:
+1.00 | #rightCol :> #availability > n:eq(4) | 1.00 |        Order it now.
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > label.a-native-dropdown > n:eq(0) | 1.00 |                 Qty:
+0.90 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > span.a-button.a-button-dropdown.a-button-small > span.a-button-inner > span.a-button-text.a-declarative > span.a-dropdown-label > n:eq(0) | 0.90 |                 Qty:
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > span.a-button.a-button-dropdown.a-button-small > span.a-button-inner > span.a-button-text.a-declarative > span.a-dropdown-prompt > n:eq(0) | 1.00 |                    1
+0.67 | #rightCol :> #submit.add-to-cart-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #merchant-info > n:eq(0) | 1.00 | Ships fro..azon.com.
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(0) > n:eq(0) | 1.00 |           Deliver to
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(1) > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #wishListMainButton-announce > n:eq(0) | 1.00 |          Add to List
+0.75 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-declarative > a.a-touch-link.a-box.olp-touch-link > div.a-box-inner > div.olp-text-box > span.olp-text > n:eq(0) | 0.25 |         New (4) from
+0.50 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-declarative > a.a-touch-link.a-box.olp-touch-link > div.a-box-inner > div.olp-text-box > span.a-color-price > n:eq(0) | 0.25 |              Adorama
+0.60 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-declarative > a.a-touch-link.a-box.olp-touch-link > div.a-box-inner > div.olp-text-box > span.a-color-base > n:eq(0) | 0.40 |     + $4.99 Shipping
+1.00 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-offscreen > n:eq(0) | 0.33 |    3 New from $21.00
+1.00 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-offscreen > span.a-color-base > n:eq(0) | 0.67 |     + $4.99 Shipping
+1.00 | #rightCol :> #swfMailTo > n:eq(0) | 1.00 |                Share
+0.94 | #rightCol :> #moreBuyingChoices_feature_div > div.a-section.a-spacing-medium.a-spacing-top-base > div.a-section.a-padding-base > span.a-size-small.sdpText > n:eq(0) | 0.94 |    Have one to sell?
+0.88 | #rightCol :> #moreBuyingChoices_feature_div > div.a-section.a-spacing-medium.a-spacing-top-base > div.a-section.a-padding-base > span.a-button.a-button-base.a-button-small.a-float-right > span.a-button-inner > a.a-button-text > n:eq(0) | 0.88 |       Sell on Amazon
+
+
+-------------------
+https://www.amazon.com/Apple-Keyboard-Numeric-Wireless-Rechargable/dp/B071ZZTNBM/ref=sr_1_4?dchild=1&fst=as%3Aoff&qid=1586828431&refinements=p_36%3A1253506011&rnid=386442011&s=pc&sr=1-4
+#centerCol-[647 675 953 519]
+>>>
+Apple Magic Keyboard with Numeric Keypad (Wireless, Rechargable) (US English) - Silver by Apple 4.7 out of 5 stars 1,368 ratings | 178 answered questions Amazon's Choice recommends highly rated and well-priced products. Amazon's Choice for "apple keyboard" List Price: $129.00 Price: $119.00 You Save: $10.00 (8%) In Stock. This item does not ship to China. Please check other sellers who may ship internationally. Learn more Due to increased demand, we temporarily have reduced product selection av... sold by Amazon.com. Color: Silver $119.00 from 1 seller Magic Keyboard with Numeric Keypad features an extended layout, with document navigation controls for quick scrolling and full size arrow keys for gaming A scissor mechanism beneath each key allows for increased stability, while optimized key travel and a low profile provide a comfortable and precise typing experience. The numeric keypad is also great for spreadsheets and finance applications. Jump to: Compare devices | Technical details
+<<<
+#centerCol
+
+1.00 | #centerCol :> #productTitle > n:eq(0) | 0.05 | Apple Mag.. - Silver
+1.00 | #centerCol :> #bylineInfo_feature_div > div.a-section.a-spacing-none > n:eq(0) | 1.00 |                   by
+1.00 | #centerCol :> #bylineInfo > n:eq(0) | 0.23 |             Logitech
+0.77 | #centerCol :> #acrPopover > span.a-declarative > a.a-popover-trigger.a-declarative > i.a-icon.a-icon-star.a-star-4-5 > span.a-icon-alt > n:eq(0) | 0.23 |   4.7 out of 5 stars
+1.00 | #centerCol :> #acrCustomerReviewText > n:eq(0) | 0.05 |        6,146 ratings
+1.00 | #centerCol :> #ask_feature_div > span.askPipe > n:eq(0) | 1.00 |
+0.43 | #centerCol :> #askATFLink > span.a-size-base > n:eq(0) | 0.05 |   16GB + 32GB Bundle
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.a-declarative > span.a-size-small.aok-float-left.ac-badge-rectangle > span.ac-badge-text-primary > n:eq(0) | 1.00 |             Amazon's
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.a-declarative > span.a-size-small.aok-float-left.ac-badge-rectangle > span.ac-badge-text-secondary > n:eq(0) | 1.00 |               Choice
+0.50 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > n:eq(0) | 0.79 |       Available from
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.ac-for-text > span > span.ac-keyword-link > a > n:eq(0) | 0.06 | epson 802..artridges
+0.84 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.ac-for-text > span > n:eq(2) | 0.84 |                    "
+0.60 | #centerCol :> #regularprice_savings > td.a-color-secondary.a-size-base.a-text-right.a-nowrap > n:eq(0) | 0.60 |            You Save:
+1.00 | #centerCol :> #price > table.a-lineitem > tbody > tr:eq(0) > td.a-span12.a-color-secondary.a-size-base > span.priceBlockStrikePriceString.a-text-strike > n:eq(0) | 0.14 |              $129.00
+1.00 | #centerCol :> #priceblock_ourprice_lbl > n:eq(0) | 1.00 |               Price:
+1.00 | #centerCol :> #priceblock_ourprice > n:eq(0) | 0.09 |               $74.00
+0.67 | #centerCol :> #regularprice_savings > td.a-color-secondary.a-size-base.a-text-right.a-nowrap > n:eq(0) | 0.67 |            You Save:
+1.00 | #centerCol :> #regularprice_savings > td.a-span12.a-color-price.a-size-base.priceBlockSavingsString > n:eq(0) | 0.29 |           $5.00 (6%)
+0.29 | #centerCol :> #availability > span.a-size-medium.a-color-success > n:eq(0) | 0.29 |            In Stock.
+1.00 | #centerCol :> #delivery-message > n:eq(2) | 1.00 | This item..t ship to
+1.00 | #centerCol :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #centerCol :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+0.47 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > a > n:eq(0) | 0.73 |        these sellers
+0.73 | #centerCol :> #fast-track-message > div.a-section.a-spacing-none > b > n:eq(0) | 1.00 | Due to in..possible.
+1.00 | #centerCol :> #merchant-info > n:eq(0) | 1.00 | Ships fro..azon.com.
+0.58 | #centerCol :> #variation_style_name > div.a-row > label.a-form-label > n:eq(0) | 0.58 |               Style:
+0.53 | #centerCol :> #variation_style_name > div.a-row > span.selection > n:eq(0) | 0.21 |               Single
+0.25 | #centerCol :> #a-autoid-10-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+0.27 | #centerCol :> #color_name_0_price > span.a-size-mini.twisterSwatchPrice > n:eq(0) | 0.18 |       from 2 sellers
+0.25 | #centerCol :> #a-autoid-5-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.twisterImages.thinWidthOverride > div.twisterImageDiv.twisterImageDivWrapper > img.imgSwatch | 1.00 |
+0.14 | #centerCol :> #a-autoid-10-announce > div > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.21 |               Single
+0.38 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(4) > span.a-list-item > n:eq(0) | 0.13 | Convenien..artridges
+0.38 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(5) > span.a-list-item > n:eq(0) | 0.08 | Class 10 ..factors.)
+0.25 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(6) > span.a-list-item > n:eq(0) | 0.25 | HP 26A (C..02, M426.
+0.40 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(3) > span.a-list-item > n:eq(0) | 0.10 | SanDisk m..required)
+0.40 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(7) > span.a-list-item > n:eq(0) | 0.20 | Unlimited.. you want
+0.50 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(5) > span.a-list-item > n:eq(0) | 0.50 | Sign up w..ns apply.
+0.50 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(1) > span.a-list-item > n:eq(0) | 0.17 | Four forc.. content.
+1.00 | #centerCol :> #feature-bullets > div.a-row.a-expander-container.a-expander-inline-container > a.a-expander-header.a-declarative.a-expander-extend-header > span.a-expander-prompt > n:eq(0) | 1.00 |            Show more
+
+-------------------
+https://www.amazon.com/Apple-Keyboard-Numeric-Wireless-Rechargable/dp/B071ZZTNBM/ref=sr_1_4?dchild=1&fst=as%3Aoff&qid=1586828431&refinements=p_36%3A1253506011&rnid=386442011&s=pc&sr=1-4
+#desktop_buybox-[1627 704 275 272]
+>>>
+Qty: 1 2 3 Qty:1 Add to Cart Buy Now Add gift options Deliver to China Add to List Added to Unable to add item to List. Please try again. Sorry, there was a problem. There was an error retrieving your Wish Lists. Please try again. Sorry, there was a problem. List unavailable.
+<<<
+#desktop_buybox
+
+0.50 | #desktop_buybox :> #buyNew_cbb > div.a-row > div.a-column.a-span6:eq(0) > n:eq(0) | 0.50 |       Used: Like New
+0.60 | #desktop_buybox :> #price_inside_buybox > n:eq(0) | 0.10 |              $138.93
+0.80 | #desktop_buybox :> #delivery-message > n:eq(2) | 0.80 | This item..t ship to
+1.00 | #desktop_buybox :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #desktop_buybox :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+0.80 | #desktop_buybox :> #delivery-message > a > n:eq(0) | 0.80 |           Learn more
+1.00 | #desktop_buybox :> #fast-track-message > div.a-section.a-spacing-none:eq(1) > b > n:eq(0) | 1.00 | Due to in..possible.
+0.56 | #desktop_buybox :> #availability > span.a-size-medium.a-color-success > n:eq(0) | 0.56 |            In Stock.
+0.75 | #desktop_buybox :> #availability > n:eq(4) | 0.75 |        Order it now.
+1.00 | #desktop_buybox :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > label.a-native-dropdown > n:eq(0) | 1.00 |                 Qty:
+0.86 | #desktop_buybox :> #a-autoid-0-announce > span.a-dropdown-label > n:eq(0) | 0.86 |                 Qty:
+0.86 | #desktop_buybox :> #a-autoid-0-announce > span.a-dropdown-prompt > n:eq(0) | 0.86 |                    1
+0.80 | #desktop_buybox :> #submit.add-to-cart-announce > n:eq(0) | 0.93 |          Add to Cart
+1.00 | #desktop_buybox :> #submit.buy-now-announce > n:eq(0) | 1.00 |              Buy Now
+1.00 | #desktop_buybox :> #merchant-info > n:eq(0) | 1.00 | Ships fro..azon.com.
+1.00 | #desktop_buybox :> #detailPageGifting_feature_div > div.a-checkbox > label > span.a-label.a-checkbox-label > n:eq(0) | 1.00 |     Add gift options
+1.00 | #desktop_buybox :> #contextualIngressPtLabel_deliveryShortLine > span:eq(0) > n:eq(0) | 1.00 |           Deliver to
+1.00 | #desktop_buybox :> #contextualIngressPtLabel_deliveryShortLine > span:eq(1) > n:eq(0) | 1.00 |                China
+1.00 | #desktop_buybox :> #usedAccordionRow > div.a-box-inner.a-accordion-row-container > div.a-accordion-row-a11y > a.a-accordion-row.a-declarative.accordion-header > h5 > div.a-row > div.a-column.a-span6:eq(0) > n:eq(0) | 1.00 |            Buy used:
+1.00 | #desktop_buybox :> #usedPrice > n:eq(0) | 0.50 |              $107.41
+1.00 | #desktop_buybox :> #wishListMainButton-announce > n:eq(0) | 1.00 |          Add to List
+
+-------------------
+https://www.amazon.com/Apple-Keyboard-Numeric-Wireless-Rechargable/dp/B071ZZTNBM/ref=sr_1_4?dchild=1&fst=as%3Aoff&qid=1586828431&refinements=p_36%3A1253506011&rnid=386442011&s=pc&sr=1-4
+#nav-main-[0 492 1920 39]
+>>>
+Deliver to China Amazon's response to COVID-19 Today's Deals Customer Service Registry Gift Cards Sell Disability Customer Support
+<<<
+#nav-main
+
+1.00 | #nav-main :> #glow-ingress-line1 > n:eq(0) | 1.00 |           Deliver to
+1.00 | #nav-main :> #glow-ingress-line2 > n:eq(0) | 1.00 |                China
+1.00 | #nav-main :> #nav-swmslot > a.nav_a.nav-swm-text > n:eq(0) | 1.00 | Amazon's .. COVID-19
+0.86 | #nav-main :> #nav-xshop > a.nav-a:eq(4) > n:eq(0) | 0.86 |           Gift Cards
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(2) > n:eq(0) | 1.00 |     Customer Service
+0.52 | #nav-main :> #nav-xshop > a.nav-a:eq(4) > n:eq(0) | 0.52 |           Gift Cards
+0.94 | #nav-main :> #nav-xshop > a.nav-a:eq(2) > n:eq(0) | 0.94 |     Customer Service
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(5) > n:eq(0) | 1.00 |                 Sell
+
+-------------------
+https://www.amazon.com/Apple-Keyboard-Numeric-Wireless-Rechargable/dp/B071ZZTNBM/ref=sr_1_4?dchild=1&fst=as%3Aoff&qid=1586828431&refinements=p_36%3A1253506011&rnid=386442011&s=pc&sr=1-4
+#rightCol-[1627 675 275 562]
+>>>
+Share Qty: 1 2 3 Qty:1 Add to Cart Buy Now Add gift options Deliver to China Add to List Added to Unable to add item to List. Please try again. Sorry, there was a problem. There was an error retrieving your Wish Lists. Please try again. Sorry, there was a problem. List unavailable. Other Sellers on Amazon Add to Cart $129.67 Sold by: Adorama Add to Cart $134.00 Sold by: DataVision Computer Video Add to Cart $148.94 Sold by: Expercom - Apple Premier Partner
+<<<
+#rightCol
+
+0.75 | #desktop_buybox :> #price_inside_buybox > n:eq(0) | 0.13 |              $138.93
+0.80 | #desktop_buybox :> #delivery-message > n:eq(2) | 0.80 | This item..t ship to
+1.00 | #desktop_buybox :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #desktop_buybox :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+0.80 | #desktop_buybox :> #delivery-message > a > n:eq(0) | 0.80 |           Learn more
+1.00 | #desktop_buybox :> #fast-track-message > div.a-section.a-spacing-none:eq(1) > b > n:eq(0) | 1.00 | Due to in..possible.
+0.45 | #desktop_buybox :> #availability > span.a-size-medium.a-color-success > n:eq(0) | 0.45 |            In Stock.
+1.00 | #desktop_buybox :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > label.a-native-dropdown > n:eq(0) | 1.00 |                 Qty:
+0.86 | #desktop_buybox :> #a-autoid-0-announce > span.a-dropdown-label > n:eq(0) | 0.86 |                 Qty:
+0.86 | #desktop_buybox :> #a-autoid-0-announce > span.a-dropdown-prompt > n:eq(0) | 0.86 |                    1
+0.86 | #desktop_buybox :> #submit.add-to-cart-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #desktop_buybox :> #submit.buy-now-announce > n:eq(0) | 1.00 |              Buy Now
+1.00 | #desktop_buybox :> #merchant-info > n:eq(0) | 1.00 | Ships fro..azon.com.
+1.00 | #desktop_buybox :> #detailPageGifting_feature_div > div.a-checkbox > label > span.a-label.a-checkbox-label > n:eq(0) | 1.00 |     Add gift options
+0.78 | #desktop_buybox :> #contextualIngressPtLabel_deliveryShortLine > span:eq(0) > n:eq(0) | 1.00 |           Deliver to
+0.78 | #desktop_buybox :> #contextualIngressPtLabel_deliveryShortLine > span:eq(1) > n:eq(0) | 1.00 |                China
+0.78 | #desktop_buybox :> #wishListMainButton-announce > n:eq(0) | 1.00 |          Add to List
+
+1.00 | #rightCol :> #swfMailTo > n:eq(0) | 1.00 |                Share
+1.00 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > h5 > img.aok-align-center | 1.00 |
+0.60 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > h5 > span.aok-align-center > n:eq(0) | 0.60 |          您是来自中国的顾客吗？
+0.90 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > span.a-size-base.a-color-base > n:eq(0) | 0.90 |       来中国海外购网站购买可尊享：
+0.50 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > span.a-size-base.a-color-base > ul.a-unordered-list.a-vertical > li.a-list-normal:eq(2) > span.a-list-item > n:eq(0) | 0.50 |            专业的中文客户服务
+0.75 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > span.a-size-base.a-color-base > ul.a-unordered-list.a-vertical > li.a-list-normal:eq(2) > span.a-list-item > n:eq(0) | 0.75 |            专业的中文客户服务
+0.67 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > span.a-size-base.a-color-base > ul.a-unordered-list.a-vertical > li.a-list-normal:eq(1) > span.a-list-item > n:eq(0) | 0.67 |           微信支付或支付宝支付
+1.00 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-micro > div.a-button-stack > span.a-button.a-spacing-none.a-button-base > span.a-button-inner > a.a-button-text.a-text-center > n:eq(0) | 1.00 |            点击访问海外购页面
+1.00 | #rightCol :> #mbc-title > n:eq(0) | 1.00 | Other Sel..on Amazon
+0.67 | #rightCol :> #mbc-buybutton-addtocart-1-announce > n:eq(0) | 0.67 |          Add to Cart
+1.00 | #rightCol :> #mbc-price-1 > n:eq(0) | 0.17 |              $129.67
+1.00 | #rightCol :> #mbc-shipping-sss-free-1 > n:eq(0) | 1.00 |                    &
+1.00 | #rightCol :> #mbc-shipping-sss-free-1 > b > n:eq(0) | 1.00 |        FREE Shipping
+1.00 | #rightCol :> #mbc-shipping-sss-free-1 > n:eq(2) | 1.00 |  on eligible orders.
+1.00 | #rightCol :> #mbc-shipping-sss-free-1 > a > n:eq(0) | 1.00 |              Details
+0.60 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+0.50 | #rightCol :> #mbc-sold-by-1 > span.a-size-small.mbcMerchantName > n:eq(0) | 0.50 |              Adorama
+1.00 | #rightCol :> #mbc-buybutton-addtocart-2-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #mbc-price-2 > n:eq(0) | 0.17 |              $134.00
+1.00 | #rightCol :> #mbc-shipping-sss-free-2 > n:eq(0) | 1.00 |                    &
+1.00 | #rightCol :> #mbc-shipping-sss-free-2 > b > n:eq(0) | 1.00 |        FREE Shipping
+1.00 | #rightCol :> #mbc-shipping-sss-free-2 > n:eq(2) | 1.00 |  on eligible orders.
+1.00 | #rightCol :> #mbc-shipping-sss-free-2 > a > n:eq(0) | 1.00 |              Details
+1.00 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+0.33 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > h5 > span.aok-align-center > n:eq(0) | 0.33 |           USTechMall
+0.60 | #rightCol :> #a-autoid-1-announce > n:eq(0) | 0.60 |       Sell on Amazon
+1.00 | #rightCol :> #mbc-price-3 > n:eq(0) | 0.50 |              $148.94
+1.00 | #rightCol :> #mbc-shipping-sss-free-3 > n:eq(0) | 1.00 |                    &
+0.50 | #rightCol :> #mbc-shipping-sss-free-1 > b > n:eq(0) | 1.00 |        FREE Shipping
+1.00 | #rightCol :> #mbc-shipping-sss-free-3 > n:eq(2) | 1.00 |  on eligible orders.
+0.50 | #rightCol :> #mbc-shipping-sss-free-1 > a > n:eq(0) | 1.00 |              Details
+0.50 | #rightCol :> #mbc-sold-by-1 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+0.60 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.mbcMerchantName > n:eq(0) | 0.60 | DataVisio..ter Video
+1.00 | #rightCol :> #ad-feedback-text-ams-detail-right-v2 > n:eq(0) | 1.00 |          Ad feedback
+
+-------------------
+https://www.amazon.com/Apple-Keyboard-Numeric-Wireless-Rechargable/dp/B071ZZTNBM/ref=sr_1_4?dchild=1&fst=as%3Aoff&qid=1586828431&refinements=p_36%3A1253506011&rnid=386442011&s=pc&sr=1-4
+#twister_feature_div-[647 989 953 76]
+>>>
+Color: Silver $119.00 from 1 seller
+<<<
+#twister_feature_div
+
+0.55 | #centerCol :> #variation_style_name > div.a-row > label.a-form-label > n:eq(0) | 0.60 |               Style:
+0.50 | #centerCol :> #variation_style_name > div.a-row > span.selection > n:eq(0) | 0.25 |               Single
+0.67 | #twister_feature_div :> #a-autoid-10-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.33 | Headset +..et Switch
+0.33 | #twister_feature_div :> #a-autoid-10-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterSlotDiv > span.a-color-tertiary > n:eq(0) | 1.00 |                  - -
+0.15 | #twister_feature_div :> #a-autoid-11-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.08 | Quadcast ..ud Flight
+0.33 | #twister_feature_div :> #a-autoid-11-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterSlotDiv > span.a-color-tertiary > n:eq(0) | 1.00 |                  - -
+0.15 | #twister_feature_div :> #a-autoid-12-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.08 | Keyboard ..720 Mouse
+0.29 | #twister_feature_div :> #a-autoid-12-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterSlotDiv > span.a-color-tertiary > n:eq(0) | 1.00 |                  - -
+0.40 | #twister_feature_div :> #a-autoid-13-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.20 | Headset +..d & Mouse
+0.20 | #twister_feature_div :> #a-autoid-11-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.10 |              $166.98
+0.50 | #twister_feature_div :> #a-autoid-11-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.50 | Toner + H.. 150 shts
+0.25 | #centerCol :> #a-autoid-10-announce > div > div:eq(0) > img.imgSwatch | 0.88 |
+0.10 | #twister_feature_div :> #a-autoid-21-announce > div > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.30 |               Single
+0.33 | #centerCol :> #color_name_0_price > span.a-size-mini.twisterSwatchPrice > n:eq(0) | 0.11 |               $74.00
+
+
+-------------------
+https://www.amazon.com/Canon-PG-240XL-Cartridge-Compatible-MG3620/dp/B005VC8D88/ref=sr_1_24?dchild=1&fst=as%3Aoff&qid=1586769895&refinements=p_36%3A1253504011&rnid=386442011&s=pc&sr=1-24
+#centerCol-[988 186 643 469]
+>>>
+PG-240 XL Black Ink Catridge by Canon 4.6 out of 5 stars 4,452 ratings | 239 answered questions Price: $22.98 In stock on April 26, 2020. Order it now. This item does not ship to China. Please check other sellers who may ship internationally. Learn more Due to increased demand, we temporarily have reduced product selection available for delivery to your region. We are working to improve selection availability as soon as possible. Ships from and sold by Amazon.com. Also compatible to MG4120,MG3120 and MG2120 Genuine Canon Ink Cartridges allow free access to exciting exclusive content via Creative Park Premium FINE (Full Photolithography Inkjet Nozzle Engineering) Technology Genuine Canon ink is recommended for the best experience with Canon Printers To obtain the best print quality, store the box upright, and use up all ink within 6 months after opening New (2) from $22.76 + $4.99 Shipping
+<<<
+#centerCol
+
+1.00 | #centerCol :> #productTitle > n:eq(0) | 0.07 | Falcon Du.. (4 Pack)
+1.00 | #centerCol :> #bylineInfo_feature_div > div.a-section.a-spacing-none > n:eq(0) | 1.00 |                   by
+1.00 | #centerCol :> #bylineInfo > n:eq(0) | 0.67 |                   HP
+0.93 | #centerCol :> #acrPopover > span.a-declarative > a.a-popover-trigger.a-declarative > i.a-icon.a-icon-star.a-star-4-5 > span.a-icon-alt > n:eq(0) | 0.33 |   4.6 out of 5 stars
+1.00 | #centerCol :> #acrCustomerReviewText > n:eq(0) | 0.33 |       20,159 ratings
+1.00 | #centerCol :> #ask_feature_div > span.askPipe > n:eq(0) | 1.00 |
+0.58 | #centerCol :> #acrCustomerReviewText > n:eq(0) | 0.08 |        6,983 ratings
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.a-declarative > span.a-size-small.aok-float-left.ac-badge-rectangle > span.ac-badge-text-primary > n:eq(0) | 1.00 |             Amazon's
+0.86 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.a-declarative > span.a-size-small.aok-float-left.ac-badge-rectangle > span.ac-badge-text-secondary > n:eq(0) | 0.86 |               Choice
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.ac-for-text > span > n:eq(0) | 1.00 |                for "
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.ac-for-text > span > span.ac-keyword-link > a > n:eq(0) | 0.17 |       compressed air
+1.00 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.ac-for-text > span > n:eq(2) | 1.00 |                    "
+0.54 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > n:eq(0) | 1.00 |       Available from
+0.50 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > a > n:eq(0) | 0.93 |        these sellers
+0.54 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > n:eq(2) | 1.00 |                    .
+0.87 | #centerCol :> #fast-track-message > div.a-section.a-spacing-none > b > n:eq(0) | 0.93 | Due to in..possible.
+0.20 | #centerCol :> #variation_style_name > div.a-row > label.a-form-label > n:eq(0) | 0.40 |               Style:
+0.20 | #centerCol :> #price > table.a-lineitem > tbody > tr:eq(0) > td.a-span12.a-color-secondary.a-size-base > span.priceBlockStrikePriceString.a-text-strike > n:eq(0) | 0.20 |               Single
+0.50 | #centerCol :> #pattern_name_0 > span.a-list-item > div.tooltip > span.a-declarative > span.a-button.a-button-selected.a-button-thumbnail.a-button-toggle > span.a-button-inner > button.a-button-text > div > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.50 |               Single
+0.50 | #centerCol :> #customer_package_type_1_price > span.a-size-mini.olpWrapper > n:eq(0) | 0.50 |        from 1 seller
+0.40 | #centerCol :> #acrCustomerReviewText > n:eq(0) | 0.20 |        1,423 ratings
+0.50 | #centerCol :> #olp-upd-new > span.a-declarative > a.a-link-normal > span.a-color-price > n:eq(0) | 0.25 |               $22.95
+0.75 | #centerCol :> #replacementPartsFitmentBulletInner > a.a-link-normal.hsx-rpp-fitment-focus > n:eq(0) | 0.75 |  Make sure this fits
+0.69 | #centerCol :> #replacementPartsFitmentBulletInner > span > n:eq(0) | 0.69 | by enteri..l number.
+0.38 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(8) > span.a-list-item > n:eq(0) | 0.13 | What's in..(CH561WN)
+0.56 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(4) > span.a-list-item > n:eq(0) | 0.33 | Up to 2x ..artridges
+0.57 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(4) > span.a-list-item > n:eq(0) | 0.29 | Get up to..rtridges.
+0.63 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(6) > span.a-list-item > n:eq(0) | 0.13 | Cartridge..190 pages
+0.67 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(7) > span.a-list-item > n:eq(0) | 0.33 | Compatibi.. 1000 dpi
+0.25 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(6) > span.a-list-item > n:eq(0) | 0.25 | PROGRAMMA..ng videos
+0.75 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(9) > span.a-list-item > n:eq(0) | 0.75 |         Color: Black
+0.71 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(10) > span.a-list-item > n:eq(0) | 0.86 | CHOOSE AN..tant Ink.
+0.67 | #centerCol :> #productAlert_feature_div > table:eq(0) > tbody > tr > td > a > img | 1.00 |
+0.50 | #centerCol :> #productAlert_feature_div > table.amabot_widget > tbody > tr > td > h2 > n:eq(0) | 1.00 | Save 10% ..enishment
+0.50 | #centerCol :> #productAlert_feature_div > table.amabot_widget > tbody > tr > td > n:eq(3) | 1.00 | Sign up w..ns apply.
+0.33 | #centerCol :> #delivery-message > a > n:eq(0) | 1.00 |           Learn more
+
+-------------------
+https://www.amazon.com/Canon-PG-240XL-Cartridge-Compatible-MG3620/dp/B005VC8D88/ref=sr_1_24?dchild=1&fst=as%3Aoff&qid=1586769895&refinements=p_36%3A1253504011&rnid=386442011&s=pc&sr=1-24
+#nav-main-[0 105 1920 39]
+>>>
+Deliver to China Amazon's response to COVID-19 Today's Deals Customer Service Registry Gift Cards Sell Disability Customer Support
+<<<
+#nav-main
+
+1.00 | #nav-main :> #glow-ingress-line1 > n:eq(0) | 1.00 |           Deliver to
+1.00 | #nav-main :> #glow-ingress-line2 > n:eq(0) | 1.00 |                China
+1.00 | #nav-main :> #nav-swmslot > a.nav_a.nav-swm-text > n:eq(0) | 1.00 | Amazon's .. COVID-19
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(1) > n:eq(0) | 1.00 |        Today's Deals
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(2) > n:eq(0) | 1.00 |     Customer Service
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(3) > n:eq(0) | 1.00 |             Registry
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(4) > n:eq(0) | 1.00 |           Gift Cards
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(5) > n:eq(0) | 1.00 |                 Sell
+
+-------------------
+https://www.amazon.com/Canon-PG-240XL-Cartridge-Compatible-MG3620/dp/B005VC8D88/ref=sr_1_24?dchild=1&fst=as%3Aoff&qid=1586769895&refinements=p_36%3A1253504011&rnid=386442011&s=pc&sr=1-24
+#rightCol-[1658 186 244 381]
+>>>
+Qty: 1 2 Qty:1 Add to Cart Deliver to China Add to List Added to Unable to add item to List. Please try again. Sorry, there was a problem. There was an error retrieving your Wish Lists. Please try again. Sorry, there was a problem. List unavailable. New (2) from $22.76 + $4.99 Shipping 2 New from $22.76 + $4.99 Shipping Have one to sell? Sell on Amazon
+<<<
+#rightCol
+
+1.00 | #rightCol :> #price_inside_buybox > n:eq(0) | 1.00 |               $22.99
+0.50 | #rightCol :> #usedbuyBox > div.a-section.a-spacing-base > div.a-row:eq(1) > n:eq(0) | 0.50 |              Sold by
+1.00 | #rightCol :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+0.50 | #rightCol :> #sellerProfileTriggerId > n:eq(0) | 0.50 |           Learn more
+1.00 | #rightCol :> #fast-track-message > div.a-section.a-spacing-none:eq(1) > b > n:eq(0) | 1.00 | Due to in..possible.
+0.88 | #rightCol :> #moreBuyingChoices_feature_div > div.a-section.a-spacing-medium.a-spacing-top-base > div.a-section.a-padding-base > span.a-size-small.sdpText > n:eq(0) | 0.88 |    Have one to sell?
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > label.a-native-dropdown > n:eq(0) | 1.00 |                 Qty:
+0.67 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > span.a-button.a-button-dropdown.a-button-small > span.a-button-inner > span.a-button-text.a-declarative > span.a-dropdown-label > n:eq(0) | 0.67 |                 Qty:
+0.67 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > span.a-button.a-button-dropdown.a-button-small > span.a-button-inner > span.a-button-text.a-declarative > span.a-dropdown-prompt > n:eq(0) | 0.67 |                    1
+0.67 | #rightCol :> #submit.add-to-cart-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #submit.buy-now-announce > n:eq(0) | 1.00 |              Buy Now
+1.00 | #rightCol :> #merchant-info > n:eq(0) | 1.00 | Ships fro..on.com in
+1.00 | #rightCol :> #merchant-info > a > n:eq(0) | 1.00 | easy-to-o..packaging
+1.00 | #rightCol :> #merchant-info > n:eq(2) | 1.00 |                    .
+1.00 | #rightCol :> #originalPackagingMessage > span.a-size-base > b:eq(0) > n:eq(0) | 1.00 | Item arri..s inside.
+1.00 | #rightCol :> #originalPackagingMessage > span.a-size-base > n:eq(2) | 1.00 |   To hide it, choose
+1.00 | #rightCol :> #originalPackagingMessage > span.a-size-base > b:eq(1) > n:eq(0) | 1.00 | Ship in A..packaging
+0.67 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-offscreen > n:eq(0) | 0.33 |    4 New from $22.95
+1.00 | #rightCol :> #detailPageGifting_feature_div > div.a-checkbox > label > span.a-label.a-checkbox-label > n:eq(0) | 1.00 |     Add gift options
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(0) > n:eq(0) | 1.00 |           Deliver to
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(1) > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #wishListMainButton-announce > n:eq(0) | 1.00 |          Add to List
+1.00 | #rightCol :> #swfMailTo > n:eq(0) | 1.00 |                Share
+1.00 | #rightCol :> #mbc-title > n:eq(0) | 1.00 | Other Sel..on Amazon
+0.94 | #rightCol :> #moreBuyingChoices_feature_div > div.a-section.a-spacing-medium.a-spacing-top-base > div.a-section.a-padding-base > span.a-button.a-button-base.a-button-small.a-float-right > span.a-button-inner > a.a-button-text > n:eq(0) | 0.94 |       Sell on Amazon
+1.00 | #rightCol :> #mbc-price-1 > n:eq(0) | 1.00 |               $29.19
+0.67 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-declarative > a.a-touch-link.a-box.olp-touch-link > div.a-box-inner > div.olp-text-box > span.a-color-price > n:eq(0) | 0.33 |               $22.95
+0.67 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-declarative > a.a-touch-link.a-box.olp-touch-link > div.a-box-inner > div.olp-text-box > span.a-color-base > n:eq(0) | 0.67 |     + $4.99 Shipping
+1.00 | #rightCol :> #mbc-buybutton-addtocart-2-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #mbc-price-2 > n:eq(0) | 1.00 |               $29.35
+1.00 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+1.00 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.mbcMerchantName > n:eq(0) | 1.00 | Triplenet..icing INC
+1.00 | #rightCol :> #ad-feedback-text-ams-detail-right-v2 > n:eq(0) | 1.00 |          Ad feedback
+
+-------------------
+https://www.amazon.com/HP-902XL-Black-Cartridge-T6M14AN/dp/B01BYKD628/ref=sr_1_3?dchild=1&fst=as%3Aoff&qid=1586769895&refinements=p_36%3A1253504011&rnid=386442011&s=pc&sr=1-3
+#twister_feature_div-[696 470 935 81]
+>>>
+Style: Ink Ink from 1 seller Ink + Instant Ink - -
+<<<
+#twister_feature_div
+
+0.75 | #twister_feature_div :> #variation_style_name > div.a-row > label.a-form-label > n:eq(0) | 0.92 |               Style:
+0.33 | #twister_feature_div :> #variation_style_name > div.a-row.a-spacing-micro.singleton > span.selection > n:eq(0) | 0.33 |   Mouse and Keyboard
+1.00 | #centerCol :> #color_name_0 > span.a-list-item > div.tooltip > span.a-declarative > span.a-button.a-button-thumbnail.a-button-toggle > span.a-button-inner > button.a-button-text > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #twister_feature_div :> #color_name_1 > span.a-list-item > div.tooltip > span.a-declarative > span.a-button.a-button-selected.a-button-thumbnail.a-button-toggle > span.a-button-inner > button.a-button-text > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #twister_feature_div :> #color_name_2 > span.a-list-item > div.tooltip > span.a-declarative > span.a-button.a-button-thumbnail.a-button-toggle > span.a-button-inner > button.a-button-text > div > div:eq(0) > img.imgSwatch | 1.00 |
+0.50 | #twister_feature_div :> #variation_customer_package_type > div.a-row > label.a-form-label > n:eq(0) | 0.50 |   Product Packaging:
+0.80 | #twister_feature_div :> #variation_style_name > div.a-row > span.selection > n:eq(0) | 0.90 |                  Ink
+0.50 | #twister_feature_div :> #style_name_1 > span.a-list-item > div.tooltip > span.a-declarative > span.a-button.a-button-thumbnail.a-button-toggle > span.a-button-inner > button.a-button-text > div > div:eq(1) > span.a-color-tertiary > n:eq(0) | 0.83 |                  - -
+0.50 | #twister_feature_div :> #style_name_1 > span.a-list-item > div.tooltip > span.a-declarative > span.a-button.a-button-thumbnail.a-button-toggle > span.a-button-inner > button.a-button-text > div > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.42 |    Ink + Instant Ink
+
+-------------------
+https://www.amazon.com/HP-65-Black-Cartridge-Cartridges/dp/B0722YWCZ3/ref=sr_1_23?dchild=1&fst=as%3Aoff&qid=1586769895&refinements=p_36%3A1253504011&rnid=386442011&s=pc&sr=1-23
+#comparison-table-container-1-[228 1761 1464 337]
+>>>
+Currently viewing Learn more Learn more Learn more Learn more Learn more Page yield Up to 120 pages per cartridge Up to 120 pages Up to 100 pages Up to 300 pages Up to 300 pages Up to 120 black, 100 tri-color Description Multiple cartridges per pack Standard yield HP cartridges Standard yield HP cartridges High-yield HP cartridges High-yield HP cartridges Multiple cartridges per pack Cartridge color Black Black Tri-color Black Tri-color Black, tri-color What's in the box 2 ink cartridges: Black 1 ink cartridge: Black 1 ink cartridge: Tri-color 1 ink cartridge: XL black 1 ink cartridge: XL tri-color 2 inks: Black, tri-color Multipacks available Yes Yes No No No Yes
+<<<
+#comparison-table-container-1
+
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.active.active-item.a-text-bold > a.a-link-normal.a-text-normal > img | 1.00 |
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.active.active-item.a-text-bold > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 0.70 |    Currently viewing
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(2) > a.a-link-normal.a-text-normal > img | 1.00 |
+0.60 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(2) > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 0.80 |           Learn more
+0.90 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(3) > a.a-link-normal.a-text-normal > img | 1.00 |
+0.89 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.active.active-item.a-text-bold > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 0.56 |    Currently viewing
+0.80 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(4) > a.a-link-normal.a-text-normal > img | 1.00 |
+0.89 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(3) > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 0.78 |           Learn more
+0.58 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(5) > a.a-link-normal.a-text-normal > img | 1.00 |
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(5) > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 0.80 |           Learn more
+0.80 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(3) > a.a-link-normal.a-text-normal > img | 1.00 |
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(6) > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 1.00 |           Learn more
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(6) > a.a-link-normal.a-text-normal > img | 1.00 |
+0.44 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(0) > td.aplus-data-column.top-header.a-text-bold:eq(5) > a.a-link-normal.a-text-normal > p.attribute.a-text-bold > n:eq(0) | 1.00 |           Learn more
+0.78 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.a-text-left.attribute.a-text-bold > div.comparison-metric-name > span.a-text-bold > n:eq(0) | 0.78 |          Description
+0.73 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column.active.active-item > span.description > n:eq(0) | 0.18 |      Up to 300 pages
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(2) > span.description > n:eq(0) | 0.23 |      Up to 200 pages
+0.57 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(3) > span.description > n:eq(0) | 0.43 | High-yiel..artridges
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(4) > span.description > n:eq(0) | 0.22 |      Up to 330 pages
+0.29 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(5) > span.description > n:eq(0) | 0.43 | Multiple .. per pack
+0.60 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(6) > span.description > n:eq(0) | 0.20 | Multiple .. per pack
+0.33 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column:eq(6) > span.description > n:eq(0) | 0.22 | High-yiel..artridges
+0.40 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.a-text-left.attribute.a-text-bold > div.comparison-metric-name > span.a-text-bold > n:eq(0) | 0.40 |    What's in the box
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column.active.active-item > span.description > n:eq(0) | 0.58 | Standard ..artridges
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column:eq(2) > span.description > n:eq(0) | 0.92 | Standard ..artridges
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column.active.active-item > span.description > n:eq(0) | 0.67 | High-yiel..artridges
+0.80 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column:eq(4) > span.description > n:eq(0) | 0.80 | High-yiel..artridges
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column:eq(5) > span.description > n:eq(0) | 0.33 | Up to 200..cartridge
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(5) > span.description > n:eq(0) | 0.50 | Up to 190..Tri-color
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(2) > td.aplus-data-column:eq(7) > span.description > n:eq(0) | 0.33 | Multiple .. per pack
+0.78 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.a-text-left.attribute.a-text-bold > div.comparison-metric-name > span.a-text-bold > n:eq(0) | 0.67 |    What's in the box
+0.82 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.aplus-data-column.active.active-item > span.description > n:eq(0) | 0.82 |                Black
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.aplus-data-column:eq(3) > span.description > n:eq(0) | 0.67 |            Tri-color
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(2) > span.description > n:eq(0) | 0.50 |                  Yes
+0.85 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.aplus-data-column:eq(3) > span.description > n:eq(0) | 0.77 |            Tri-color
+0.40 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(1) > td.aplus-data-column:eq(5) > span.description > n:eq(0) | 0.40 |     Black, Tri-color
+0.40 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.aplus-data-column:eq(5) > span.description > n:eq(0) | 0.60 |                Black
+0.57 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.aplus-data-column:eq(7) > span.description > n:eq(0) | 0.57 |            Tri-color
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.a-text-left.attribute.a-text-bold > div.comparison-metric-name > span.a-text-bold > n:eq(0) | 0.67 |      Cartridge color
+0.83 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column.active.active-item > span.description > n:eq(0) | 0.25 | 1 ink car..ge: Black
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column:eq(2) > span.description > n:eq(0) | 0.67 | 1 ink car..ge: Black
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column:eq(3) > span.description > n:eq(0) | 0.50 | 1 ink car..Tri-color
+0.63 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column:eq(3) > span.description > n:eq(0) | 0.38 | 1 ink car..Tri-color
+0.80 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column:eq(5) > span.description > n:eq(0) | 0.40 | 2 ink car..es: Black
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column:eq(6) > span.description > n:eq(0) | 0.50 | 2 ink car..es: Black
+0.63 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(4) > td.aplus-data-column:eq(6) > span.description > n:eq(0) | 0.25 | 1 ink car..Tri-color
+0.60 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(3) > td.a-text-left.attribute.a-text-bold > div.comparison-metric-name > span.a-text-bold > n:eq(0) | 0.60 |      Cartridge color
+0.90 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column.active.active-item > span.description > n:eq(0) | 0.60 |                  Yes
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(2) > span.description > n:eq(0) | 0.50 |                Black
+1.00 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(3) > span.description > n:eq(0) | 0.60 |                  Yes
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(4) > span.description > n:eq(0) | 0.67 |                   No
+0.50 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(4) > span.description > n:eq(0) | 0.50 |                   No
+0.67 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(6) > span.description > n:eq(0) | 0.83 |                  Yes
+0.54 | #comparison-table-container-1 :> div.table-slider.scroll-wrapper-bottom > table.a-bordered.a-horizontal-stripes.scroll-width > tbody > tr.a-text-center:eq(5) > td.aplus-data-column:eq(6) > span.description > n:eq(0) | 0.69 |                  Yes
+
+-------------------
+https://www.amazon.com/Canon-PG-240XL-Cartridge-Compatible-MG3620/dp/B005VC8D88/ref=sr_1_24?dchild=1&fst=as%3Aoff&qid=1586769895&refinements=p_36%3A1253504011&rnid=386442011&s=pc&sr=1-24
+.fourth-col.last-[1445 1686 436 278]
+>>>
+Key Features Designed with FINE technology, your documents will realize added sharpness, detail and quality. Genuine Canon Ink Cartridges allow free access to exciting exclusive content via Creative Park Premium. New ChromaLife 100 ink formulation has an even wider color range than previous generations. Compatible Printers PIXMA MG2120 PIXMA MG2220 PIXMA MG3120 PIXMA MG3220 PIXMA MG4120 PIXMA MG4220 PIXMA MX372 PIXMA MX432 PIXMA MX512
+<<<
+#productDescription > div.aplus > div.fourth-col.last
+
+0.86 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-3-four-column-images > div.a-section.a-spacing-none.premium-aplus.premium-aplus-module-3.aplus-container-1 > div.a-section.a-spacing-none.premium-aplus-four-column :> div.a-section.a-spacing-none.premium-aplus-columnerror > noscript > img | 0.86 |
+1.00 | #rightCol :> #delivery-message > n:eq(2) | 1.00 | This item..t ship to
+1.00 | #rightCol :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+1.00 | #rightCol :> #delivery-message > a > n:eq(0) | 1.00 |           Learn more
+0.50 | #premium-aplus-12-carousel-4-id :> div.a-row.a-carousel-controls.a-carousel-row.a-carousel-has-buttons.a-carousel-overlay-buttons.a-carousel-rounded-buttons > div.a-carousel-row-inner > div.a-carousel-col.a-carousel-center > div.a-carousel-viewport > ol.a-carousel > li.a-carousel-card.aplus-carousel-card:eq(1) > div.a-section.a-spacing-none.aplus-card-details-wrapper.aplus-container-2 > div.a-section.a-spacing-none.aplus-card-detail > div.a-section.a-spacing-none.aplus-table-cell > div.a-section.a-spacing-none.aplus-text-background.aplus-text-background-color > div.a-section.a-spacing-none.card-description > p.description.aplus-p1 > n:eq(0) | 0.50 | Experienc..rtridges.
+0.46 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-3-four-column-images > div.a-section.a-spacing-none.premium-aplus.premium-aplus-module-3.aplus-container-1 > div.a-section.a-spacing-none.premium-aplus-four-column :> div.a-section.a-spacing-none.premium-aplus-column > div.a-section.a-spacing-none.column-heading > h1.aplus-h3.a-text-bold > n:eq(0) | 0.23 |          Reliability
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > label.a-native-dropdown > n:eq(0) | 1.00 |                 Qty:
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > span.a-button.a-button-dropdown.a-button-small > span.a-button-inner > span.a-button-text.a-declarative > span.a-dropdown-label > n:eq(0) | 1.00 |                 Qty:
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > span.a-button.a-button-dropdown.a-button-small > span.a-button-inner > span.a-button-text.a-declarative > span.a-dropdown-prompt > n:eq(0) | 1.00 |                    1
+0.50 | #rightCol :> #usedBuySection > div.a-row.a-grid-vertical-align.a-grid-center > div.a-column.a-span12.a-text-left > span.a-text-bold > n:eq(0) | 0.50 |            Buy used:
+0.50 | #rightCol :> #submit.add-to-cart-ubb-announce > n:eq(0) | 0.50 |          Add to Cart
+0.50 | #rightCol :> #merchant-info > n:eq(0) | 0.50 | Ships fro..on.com in
+0.50 | #rightCol :> #sellerProfileTriggerId > n:eq(0) | 0.50 |           EMB-Phones
+1.00 | #rightCol :> #merchant-info > n:eq(2) | 1.00 |                    .
+0.50 | #productDescription > div.aplus > div.fourth-col.last > ul:eq(1) :> li > b > n:eq(0) | 0.50 | Designed ..chnology,
+0.50 | #premium-aplus-12-carousel-4-id :> div.a-row.a-carousel-controls.a-carousel-row.a-carousel-has-buttons.a-carousel-overlay-buttons.a-carousel-rounded-buttons > div.a-carousel-row-inner > div.a-carousel-col.a-carousel-center > div.a-carousel-viewport > ol.a-carousel > li.a-carousel-card.aplus-carousel-card:eq(1) > div.a-section.a-spacing-none.aplus-card-details-wrapper.aplus-container-2 > div.a-section.a-spacing-none.aplus-card-detail > div.a-section.a-spacing-none.aplus-table-cell > div.a-section.a-spacing-none.aplus-text-background.aplus-text-background-color > div.a-section.a-spacing-none.card-description > h1.aplus-h1.a-text-bold > n:eq(0) | 0.50 | The right cartridges
+1.00 | #rightCol :> #originalPackagingMessage > span.a-size-base > b:eq(1) > n:eq(0) | 1.00 | Ship in A..packaging
+0.67 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-3-four-column-images > div.a-section.a-spacing-none.premium-aplus.premium-aplus-module-3.aplus-container-1 > div.a-section.a-spacing-none.premium-aplus-four-column :> div.a-section.a-spacing-none.premium-aplus-columnerror > img.a-lazy-loaded | 0.89 |
+0.67 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-3-four-column-images > div.a-section.a-spacing-none.premium-aplus.premium-aplus-module-3.aplus-container-1 > div.a-section.a-spacing-none.premium-aplus-four-column :> div.a-section.a-spacing-none.premium-aplus-column > div.a-section.a-spacing-none.column-description > p.aplus-p3 > n:eq(0) | 0.44 | Save time..ltipacks.
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(0) > n:eq(0) | 1.00 |           Deliver to
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(1) > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #wishListMainButton-announce > n:eq(0) | 1.00 |          Add to List
+
+
+-------------------
+https://www.amazon.com/Blue-Yeti-USB-Microphone-Blackout/dp/B00N1YPXW2/ref=sr_1_13?dchild=1&fst=as%3Aoff&qid=1586695000&refinements=p_36%3A1253507011&rnid=386442011&s=pc&sr=1-13
+.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro-[10 190 40 177]
+>>>
+
+<<<
+#altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro
+
+0.60 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-3-announce > img | 1.00 |
+0.60 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-4-announce > img | 1.00 |
+0.43 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-5-announce > img | 1.00 |
+0.43 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-6-announce > img | 1.00 |
+0.43 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-7-announce > img | 1.00 |
+0.43 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-8-announce > img | 1.00 |
+0.58 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #a-autoid-8-announce > img | 1.00 |
+1.00 | #altImages > ul.a-unordered-list.a-nostyle.a-button-list.a-vertical.a-spacing-top-micro :> #videoCount > n:eq(0) | 0.78 |                VIDEO
+
+-------------------
+https://www.amazon.com/Blue-Yeti-USB-Microphone-Blackout/dp/B00N1YPXW2/ref=sr_1_13?dchild=1&fst=as%3Aoff&qid=1586695000&refinements=p_36%3A1253507011&rnid=386442011&s=pc&sr=1-13
+#centerCol-[894 186 738 742]
+>>>
+Blue Yeti USB Mic for Recording & Streaming on PC and Mac, 3 Condenser Capsules, 4 Pickup Patterns, Headphone Output and Volume Control, Mic Gain Control, Adjustable Stand, Plug & Play – Blackout by Blue 4.5 out of 5 stars 16,158 ratings | 1000+ answered questions Available from these sellers. Due to increased demand, we temporarily have reduced product selection available for delivery to your region. We are working to improve selection availability as soon as possible. Style: Mic Only Mic Only...vers, interviews, field recordings, conference calls. Compatible with Windows 10, Windows 8 (including 8.1), Windows 7, Windows Vista, Windows XP (Home and Professional), and Mac OS X (10.4.11 or higher), and requires a minimum of 64 MB of RAM(remove existing and upload). Compare with similar items New & Used (2) from $209.99 + $6.49 Shipping This product is available as Renewed. Blue Yeti USB Microphone - Blackout Edition (Renewed) $99.99 (26) Works and looks like new and backed by a warranty
+<<<
+#centerCol
+
+1.00 | #centerCol :> #productTitle > n:eq(0) | 0.06 | HP 410A  ..a, Yellow
+1.00 | #centerCol :> #bylineInfo_feature_div > div.a-section.a-spacing-none > n:eq(0) | 1.00 |                   by
+1.00 | #centerCol :> #bylineInfo > n:eq(0) | 0.50 |                   HP
+0.88 | #centerCol :> #acrPopover > span.a-declarative > a.a-popover-trigger.a-declarative > i.a-icon.a-icon-star.a-star-4-5 > span.a-icon-alt > n:eq(0) | 0.38 |   4.5 out of 5 stars
+1.00 | #centerCol :> #acrCustomerReviewText > n:eq(0) | 0.06 |        2,810 ratings
+1.00 | #centerCol :> #ask_feature_div > span.askPipe > n:eq(0) | 1.00 |
+0.56 | #centerCol :> #askATFLink > span.a-size-base > n:eq(0) | 0.44 |             Amazon's
+0.64 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > n:eq(0) | 1.00 |       Available from
+0.64 | #centerCol :> #availability > span.a-size-medium.a-color-success > span.a-declarative:eq(2) > a > n:eq(0) | 1.00 |        these sellers
+0.73 | #centerCol :> #acBadge_feature_div > div.ac-badge-wrapper > span.ac-for-text > span > n:eq(2) | 0.73 |                    "
+0.93 | #centerCol :> #fast-track-message > div.a-section.a-spacing-none > b > n:eq(0) | 0.93 | Due to in..possible.
+0.29 | #centerCol :> #variation_style_name > div.a-row > label.a-form-label > n:eq(0) | 0.57 |                Size:
+0.33 | #centerCol :> #price > table.a-lineitem > tbody > tr:eq(0) > td.a-span12.a-color-secondary.a-size-base > span.priceBlockStrikePriceString.a-text-strike > n:eq(0) | 0.33 |              $549.00
+0.29 | #centerCol :> #a-autoid-10-announce > div > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.14 |                Toner
+0.14 | #centerCol :> #a-autoid-11-announce > div.twisterSwatchWrapper_0.twisterSwatchWrapper.thinWidthOverride > div.twisterTextDiv.text > span.a-size-base > n:eq(0) | 0.14 | Toner + H.. 150 shts
+0.14 | #centerCol :> #variation_size_name > div.a-row > label.a-form-label > n:eq(0) | 0.29 |                Size:
+0.27 | #centerCol :> #variation_size_name > div.a-row.a-spacing-micro.singleton > span.selection > n:eq(0) | 0.18 |               Single
+0.44 | #centerCol :> #productAlert_feature_div > table:eq(0) > tbody > tr > td > a > img | 1.00 |
+1.00 | #centerCol :> #a-autoid-13-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+0.50 | #centerCol :> #a-autoid-14-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-15-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-16-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-17-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-18-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-19-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+0.50 | #centerCol :> #a-autoid-9-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-21-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-22-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+1.00 | #centerCol :> #a-autoid-23-announce > div > div:eq(0) > img.imgSwatch | 1.00 |
+0.86 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(4) > span.a-list-item > n:eq(0) | 0.29 | Save up t..HP toner.
+0.67 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(6) > span.a-list-item > n:eq(0) | 0.50 | Original ..rtridges.
+0.29 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(7) > span.a-list-item > n:eq(0) | 0.07 | What’s in..1 Yellow)
+0.50 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(6) > span.a-list-item > n:eq(0) | 0.17 | Perfect f..ce calls.
+0.43 | #centerCol :> #feature-bullets > ul.a-unordered-list.a-vertical.a-spacing-none > li:eq(4) > span.a-list-item > n:eq(0) | 0.14 | Smart cam.. in frame
+0.82 | #centerCol :> #HLCXComparisonJumplink_feature_div > div.a-section.a-spacing-small.a-spacing-top-small.HLCXComparisonJumplinkContent > span.a-declarative > a.a-link-normal.HLCXComparisonJumplinkLink > span > n:eq(0) | 0.82 | Compare w..lar items
+0.55 | #centerCol :> #replacementPartsFitmentBulletInner > a.a-link-normal.hsx-rpp-fitment-focus > n:eq(0) | 0.55 |  Make sure this fits
+0.40 | #centerCol :> #olp-upd-new > span.a-declarative > a.a-link-normal > span.a-color-price > n:eq(0) | 0.20 |              $208.81
+0.40 | #centerCol :> #olp-upd-new > span.a-color-base > n:eq(0) | 0.20 |     + $5.99 Shipping
+0.50 | #centerCol :> #certified-refurbished-version > h4 > n:eq(0) | 0.50 | There is ..his item:
+0.33 | #centerCol :> #newer-version > div.a-fixed-left-grid > div.a-fixed-left-grid-inner > div.a-fixed-left-grid-col.a-col-left > div.a-row > a.a-link-normal > img | 1.00 |
+0.50 | #centerCol :> #certified-refurbished-version > div.a-fixed-left-grid > div.a-fixed-left-grid-inner > div.a-fixed-left-grid-col.a-col-right > a.a-size-base.a-link-normal.a-text-ellipsis > n:eq(0) | 0.50 | 2020 Micr..cessories
+0.33 | #centerCol :> #certified-refurbished-version > div.a-fixed-left-grid > div.a-fixed-left-grid-inner > div.a-fixed-left-grid-col.a-col-right > span.a-size-base.a-color-price > n:eq(0) | 0.33 |               $99.99
+1.00 | #centerCol :> #certified-refurbished-version > div.a-fixed-left-grid > div.a-fixed-left-grid-inner > div.a-fixed-left-grid-col.a-col-right > a.a-link-normal:eq(4) > n:eq(0) | 1.00 |                 (26)
+1.00 | #centerCol :> #certified-refurbished-version > div.a-fixed-left-grid > div.a-fixed-left-grid-inner > div.a-fixed-left-grid-col.a-col-right > span.a-color-secondary > n:eq(0) | 1.00 | Works and.. warranty
+
+-------------------
+https://www.amazon.com/APC-Battery-Protector-BackUPS-BX1500M/dp/B06VY6FXMM/ref=sr_1_3?dchild=1&fst=as%3Aoff&qid=1586695000&refinements=p_36%3A1253507011&rnid=386442011&s=pc&sr=1-3
+#nav-main-[0 105 1920 39]
+>>>
+Deliver to China Amazon's response to COVID-19 Today's Deals Customer Service Registry Gift Cards Sell Disability Customer Support
+<<<
+#nav-main
+
+1.00 | #nav-main :> #glow-ingress-line1 > n:eq(0) | 1.00 |           Deliver to
+1.00 | #nav-main :> #glow-ingress-line2 > n:eq(0) | 1.00 |                China
+1.00 | #nav-main :> #nav-swmslot > a.nav_a.nav-swm-text > n:eq(0) | 1.00 | Amazon's .. COVID-19
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(1) > n:eq(0) | 1.00 |        Today's Deals
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(2) > n:eq(0) | 1.00 |     Customer Service
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(3) > n:eq(0) | 1.00 |             Registry
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(4) > n:eq(0) | 1.00 |           Gift Cards
+1.00 | #nav-main :> #nav-xshop > a.nav-a:eq(5) > n:eq(0) | 1.00 |                 Sell
+
+-------------------
+https://www.amazon.com/APC-Battery-Protector-BackUPS-BX1500M/dp/B06VY6FXMM/ref=sr_1_3?dchild=1&fst=as%3Aoff&qid=1586695000&refinements=p_36%3A1253507011&rnid=386442011&s=pc&sr=1-3
+#rightCol-[1658 186 244 533]
+>>>
+Buy used: $151.79 Used: Very Good | Details Sold by Amazon Warehouse Fulfilled by Amazon Condition: Used: Very Good Comment: Item will come in original packaging. Packaging will be damaged. Fulfillment by Amazon (FBA) is a service we offer sellers that lets them store their products in Amazon's fulfillment centers, and we directly pack, ship, and provide customer service for these products. Something we hope you'll especially enjoy: FBA items qualify for FREE Shipping and Amazon Prime. If you're a seller, Fulfillment by Amazon can help you grow your business. Learn more about the program. Deliver to China Add to Cart Add to List Added to Unable to add item to List. Please try again. Sorry, there was a problem. There was an error retrieving your Wish Lists. Please try again. Sorry, there was a problem. List unavailable. Add to Wedding Registry New (2) from $207.95 + FREE Shipping 2 New from $207.95 + FREE Shipping Share Have one to sell? Sell on Amazon
+<<<
+#rightCol
+
+0.71 | #rightCol :> #usedBuySection > div.a-row.a-grid-vertical-align.a-grid-center > div.a-column.a-span12.a-text-left > span.a-text-bold > n:eq(0) | 0.71 |            Buy used:
+0.71 | #rightCol :> #buyNew_noncbb > span.a-size-base.a-color-price.offer-price.a-text-normal > n:eq(0) | 0.14 |              $192.36
+1.00 | #rightCol :> #delivery-message > n:eq(2) | 1.00 | This item..t ship to
+1.00 | #rightCol :> #delivery-message > b > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #delivery-message > n:eq(4) | 1.00 | . Please ..tionally.
+1.00 | #rightCol :> #delivery-message > a > n:eq(0) | 1.00 |           Learn more
+1.00 | #rightCol :> #fast-track-message > div.a-section.a-spacing-none:eq(1) > b > n:eq(0) | 1.00 | Due to in..possible.
+0.80 | #rightCol :> #moreBuyingChoices_feature_div > div.a-section.a-spacing-medium.a-spacing-top-base > div.a-section.a-padding-base > span.a-size-small.sdpText > n:eq(0) | 0.80 |    Have one to sell?
+1.00 | #rightCol :> #selectQuantity > span.a-declarative > div.a-row.a-spacing-base > div.a-column.a-span12.a-text-left > span.a-dropdown-container > label.a-native-dropdown > n:eq(0) | 1.00 |                 Qty:
+0.71 | #rightCol :> #usedbuyBox > div.a-section.a-spacing-base > div.a-row:eq(0) > span.a-size-base > span.a-color-tertiary > n:eq(0) | 0.71 |
+1.00 | #rightCol :> #a-autoid-0-announce > span.a-dropdown-prompt > n:eq(0) | 1.00 |                    1
+0.71 | #rightCol :> #submit.add-to-cart-ubb-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #submit.buy-now-announce > n:eq(0) | 1.00 |              Buy Now
+1.00 | #rightCol :> #secureTransaction_feature_div > div.a-section.a-spacing-small.a-text-left.celWidget > span.aok-align-center > n:eq(0) | 1.00 |  Your transaction is
+0.83 | #rightCol :> #usedItemConditionInfoLink > n:eq(0) | 0.83 |              Details
+0.83 | #rightCol :> #usedbuyBox > div.a-section.a-spacing-base > div.a-row:eq(1) > n:eq(0) | 1.00 |              Sold by
+1.00 | #rightCol :> #sellerProfileTriggerId > n:eq(0) | 0.17 |    YourDigitalFriend
+1.00 | #rightCol :> #merchant-info > n:eq(2) | 1.00 |                  and
+1.00 | #rightCol :> #SSOFpopoverLink > n:eq(0) | 1.00 |  Fulfilled by Amazon
+1.00 | #rightCol :> #merchant-info > n:eq(4) | 1.00 |                    .
+0.50 | #rightCol :> #simpleBundleV2_feature_div > div.a-row.a-spacing-base.a-spacing-top-base.showBundleAsins.simpleBundleFeatureContainer > div.a-section.a-spacing-none.a-text-left > div.simpleBundleCheckBoxArea > div.aloha-simple-bundle-group-simple-bundle-buybox-add-accessory > span.add_sim_starter_text.a-text-bold > n:eq(0) | 0.50 |    Add an Accessory:
+0.67 | #rightCol :> #SSOFpopoverLink_ubb > n:eq(0) | 0.67 |  Fulfilled by Amazon
+1.00 | #rightCol :> #simpleBundleV2_feature_div > div.a-row.a-spacing-base.a-spacing-top-base.showBundleAsins.simpleBundleFeatureContainer > div.a-section.a-spacing-none.a-text-left > div.simpleBundleCheckBoxArea > div.aloha-simple-bundle-group-simple-bundle-buybox-add-accessory > span.a-declarative:eq(1) > div.a-checkbox.simple-bundle-buybox-item-checkbox.simple-bundle-item-0.simple-bundle-asin-B07YP93G2T.a-spacing-top-mini > label > span.a-label.a-checkbox-label > span.a-size-base.a-color-price > n:eq(0) | 1.00 |               $79.00
+1.00 | #rightCol :> #popover-simpleBundle-1 > a.a-size-base.a-link-normal.simpleBundle-popover-title.popover-simpleBundle-link-1 > n:eq(0) | 1.00 | Adobe Acr.. PDF d...
+1.00 | #rightCol :> #simpleBundleV2_feature_div > div.a-row.a-spacing-base.a-spacing-top-base.showBundleAsins.simpleBundleFeatureContainer > div.a-section.a-spacing-none.a-text-left > div.simpleBundleCheckBoxArea > div.aloha-simple-bundle-group-simple-bundle-buybox-add-accessory > span.a-declarative:eq(2) > div.a-checkbox.simple-bundle-buybox-item-checkbox.simple-bundle-item-1.simple-bundle-asin-B07Q6ZPC1Q.a-spacing-top-mini > label > span.a-label.a-checkbox-label > span.a-size-base.a-color-price > n:eq(0) | 1.00 |               $24.99
+1.00 | #rightCol :> #popover-simpleBundle-2 > a.a-size-base.a-link-normal.simpleBundle-popover-title.popover-simpleBundle-link-2 > n:eq(0) | 1.00 | McAfee To..scription
+1.00 | #rightCol :> #simpleBundleV2_feature_div > div.a-row.a-spacing-base.a-spacing-top-base.showBundleAsins.simpleBundleFeatureContainer > div.a-section.a-spacing-none.a-text-left > div.simpleBundleCheckBoxArea > div.aloha-simple-bundle-group-simple-bundle-buybox-add-accessory > span.a-declarative:eq(3) > div.a-checkbox.simple-bundle-buybox-item-checkbox.simple-bundle-item-2.simple-bundle-asin-B07K98XDX8.a-spacing-top-mini > label > span.a-label.a-checkbox-label > span.a-size-base.a-color-price > n:eq(0) | 1.00 |               $24.99
+1.00 | #rightCol :> #popover-simpleBundle-3 > a.a-size-base.a-link-normal.simpleBundle-popover-title.popover-simpleBundle-link-3 > n:eq(0) | 1.00 | EXCLUSIVE..softwa...
+1.00 | #rightCol :> #simpleBundleV2_feature_div > div.a-row.a-spacing-base.a-spacing-top-base.showBundleAsins.simpleBundleFeatureContainer > div.a-section.a-spacing-none.a-text-left > div.simpleBundleCheckBoxArea > div.aloha-simple-bundle-group-simple-bundle-buybox-add-accessory > span.a-declarative:eq(4) > div.a-checkbox.simple-bundle-buybox-item-checkbox.simple-bundle-item-3.simple-bundle-asin-B085WWWH3C.a-spacing-top-mini > label > span.a-label.a-checkbox-label > span.a-size-base.a-color-price > n:eq(0) | 1.00 |               $19.99
+0.50 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > span.a-size-base.a-color-base > ul.a-unordered-list.a-vertical > li.a-list-normal:eq(1) > span.a-list-item > n:eq(0) | 0.50 |           微信支付或支付宝支付
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(0) > n:eq(0) | 1.00 |           Deliver to
+1.00 | #rightCol :> #contextualIngressPtLabel_deliveryShortLine > span:eq(1) > n:eq(0) | 1.00 |                China
+1.00 | #rightCol :> #usedAccordionRow > div.a-box-inner.a-accordion-row-container > div.a-accordion-row-a11y > a.a-accordion-row.a-declarative.accordion-header > h5 > div.a-row > div.a-column.a-span6:eq(0) > n:eq(0) | 1.00 |            Buy used:
+1.00 | #rightCol :> #usedPrice > n:eq(0) | 0.50 |              $549.00
+1.00 | #rightCol :> #wishListMainButton-announce > n:eq(0) | 1.00 |          Add to List
+1.00 | #rightCol :> #swfMailTo > n:eq(0) | 1.00 |                Share
+0.60 | #rightCol :> #olpLinkWidget_feature_div > div.a-section.olp-link-widget > span.a-offscreen > n:eq(0) | 0.20 | Ships fro..azon.com.
+0.50 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > h5 > img.aok-align-center | 0.50 |
+1.00 | #rightCol :> #tradeInButton_tradeInValue > n:eq(0) | 1.00 |              $150.00
+0.50 | #rightCol :> #secureTransaction_feature_div > div.a-section.a-spacing-small.a-text-left.celWidget > span.aok-align-center > span.a-declarative > a.a-link-normal.a-text-normal > n:eq(0) | 0.50 |           Learn More
+0.94 | #rightCol :> #buybox-see-all-buying-choices-announce > n:eq(0) | 0.94 | See All B..g Options
+1.00 | #rightCol :> #mbc-title > n:eq(0) | 1.00 | Other Sel..on Amazon
+1.00 | #rightCol :> #mbc-buybutton-addtocart-1-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #mbc-price-1 > n:eq(0) | 0.50 |              $698.53
+0.50 | #rightCol :> #mbc-sold-by-1 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+0.50 | #rightCol :> #crossBorderWidget_feature_div > div.a-section > div.a-box.a-spacing-medium.a-text-left > div.a-box-inner > div.a-section.a-spacing-small > h5 > span.aok-align-center > n:eq(0) | 0.50 |          Apple Renew
+1.00 | #rightCol :> #mbc-buybutton-addtocart-2-announce > n:eq(0) | 1.00 |          Add to Cart
+1.00 | #rightCol :> #mbc-price-2 > n:eq(0) | 0.50 |              $487.98
+1.00 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+1.00 | #rightCol :> #mbc-sold-by-2 > span.a-size-small.mbcMerchantName > n:eq(0) | 0.50 |       Mall of Americ
+0.88 | #rightCol :> #a-autoid-0-announce > n:eq(0) | 0.94 |       Sell on Amazon
+1.00 | #rightCol :> #mbc-price-3 > n:eq(0) | 1.00 |              $488.00
+1.00 | #rightCol :> #mbc-sold-by-3 > span.a-size-small.a-color-secondary > n:eq(0) | 1.00 |             Sold by:
+1.00 | #rightCol :> #mbc-sold-by-3 > span.a-size-small.mbcMerchantName > n:eq(0) | 1.00 |      usa_accessories
+
+-------------------
+https://www.amazon.com/Blue-Yeti-USB-Microphone-Blackout/dp/B00N1YPXW2/ref=sr_1_13?dchild=1&fst=as%3Aoff&qid=1586695000&refinements=p_36%3A1253507011&rnid=386442011&s=pc&sr=1-13
+#premium-aplus-13-carousel-1-id-[228 1578 1464 19]
+>>>
+Previous page Unique Positionable Design Adjust and pivot the microphone in relation to the sound source to optimize your sound quality. Blue’s Legendary Broadcast-Quality Sound Makes the professional difference for recording, streaming and building your audience. Custom Three-Capsule Array Produces clear, powerful, broadcast-quality sound for YouTube, game streaming, podcasting, conference calls and music. Onboard Audio Controls Studio controls for headphone volume, pattern selection, instant mute, and microphone gain put you in charge of every level of the recording and streaming process. Next page
+<<<
+#premium-aplus-13-carousel-1-id
+
+0.25 | #productDetails_techSpec_section_1 > tbody :> tr > td.a-size-base > n:eq(0) | 0.25 | Ensure se..r outage.
+0.33 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(1) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 0.33 |     Light Correction
+0.33 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(1) > td:eq(2) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.33 |                 720p
+0.33 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-51.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(13) > td:eq(0) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.33 |   2 omni-directional
+0.33 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(3) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 0.33 |     Light Correction
+0.17 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(3) > td:eq(2) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.17 | Automatic..orrection
+0.27 | #premium-aplus-13-carousel-2-id :> #anonCarousel1 > ol.a-carousel > li.a-carousel-card.aplus-carousel-element:eq(0) > div.a-section.a-spacing-none.aplus-card-image > img | 0.91 |
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(5) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 0.50 |        Field-of-view
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(5) > td:eq(2) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.50 |                  N/A
+0.50 | #aplus-carousel-actions-4 :> span.aplus-goto-btn.aplus-goto-btn-4 > span.aplus-accent2.aplus-carousel-label > n:eq(0) | 0.33 |       Better results
+0.33 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(7) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 1.00 |                 Lens
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(7) > td:eq(2) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.50 |           90 degrees
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(9) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 0.50 |   Speakerphone & mic
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(11) > td:eq(0) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.50 |        1080p Full HD
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(11) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 0.50 |              HD zoom
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(11) > td:eq(2) > h3.a-text-center.aplus-p3 > n:eq(0) | 0.50 |         RightLight 2
+0.30 | #premium-aplus-12-carousel-4-id :> #anonCarousel1 > ol.a-carousel > li.a-carousel-card.aplus-carousel-card:eq(2) > div.a-section.a-spacing-none.aplus-card-details-wrapper.aplus-container-2 > div.a-section.a-spacing-none.aplus-card-detail > div.a-section.a-spacing-none.aplus-table-cell > div.a-section.a-spacing-none.aplus-text-background.aplus-text-background-color > div.a-section.a-spacing-none.card-description > h1.aplus-h1.a-text-bold > n:eq(0) | 0.40 | Count on Original HP
+0.50 | #aplus > div.aplus-v2.desktop.celwidget.weblabRtl > div.celwidget.aplus-module.premium-module-9-comparison-table-carousel > div.premium-aplus.premium-aplus-module-9.aplus-comparison-table > div.a-section.a-spacing-none.base-container > div.a-section.a-spacing-none.aplus-comparison-table-content-container.aplus-comparison-table-center-content > div.a-section.a-spacing-none.aplus-display-table.aplus-comparison-table-main-container > div.a-section.a-spacing-none.aplus-comparison-table-container.aplus-display-table-cell > div.a-section.a-spacing-none.compare-61.comparison-table > div.a-section.a-spacing-none.aplus-primary-color.aplus-primary-border > table.a-normal.aplus-comparison-table-content :> tbody > tr:eq(13) > td:eq(1) > h3.a-text-center.aplus-p2 > n:eq(0) | 0.50 |        Built-in Mics
+0.33 | #premium-aplus-12-carousel-4-id :> #anonCarousel1 > ol.a-carousel > li.a-carousel-card.aplus-carousel-card:eq(3) > div.a-section.a-spacing-none.aplus-card-details-wrapper.aplus-container-2 > div.a-section.a-spacing-none.aplus-card-detail > div.a-section.a-spacing-none.aplus-table-cell > div.a-section.a-spacing-none.aplus-text-background.aplus-text-background-color > div.a-section.a-spacing-none.card-description > p.description.aplus-p1 > n:eq(0) | 0.44 | Experienc..rtridges.

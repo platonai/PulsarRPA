@@ -21,11 +21,13 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.EnumCounterRegistry
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlFilters
@@ -41,7 +43,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -55,7 +56,6 @@ class GenerateComponent(
         val urlNormalizers: UrlNormalizers,
         val fetchSchedule: FetchSchedule,
         val messageWriter: MiscMessageWriter,
-        val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized {
 
@@ -66,11 +66,12 @@ class GenerateComponent(
             mLater, mLater0, mLater1, mLater2, mLater3, mLater4, mLater5, mLater6, mLater7, mLaterN,
             mAhead, mSeedAhead, mSeedLater, mInactive
         }
-        init { MetricsCounters.register(Counter::class.java) }
+        init { AppMetrics.reg.register(Counter::class.java) }
     }
 
     val LOG = LoggerFactory.getLogger(GenerateComponent::class.java)
 
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     private val startTime = Instant.now()
 
     private val unreachableHosts: MutableSet<String> = HashSet()
@@ -166,17 +167,17 @@ class GenerateComponent(
         }
 
         if (bannedUrls.contains(u)) {
-            metricsCounters.inc(Counter.mBanned)
+            enumCounters.inc(Counter.mBanned)
             return false to "-Banned"
         }
 
         if (unreachableHosts.contains(URLUtil.getHost(page.url, groupMode))) {
-            metricsCounters.inc(Counter.mHostGone)
+            enumCounters.inc(Counter.mHostGone)
             return false to "-unreachableHost"
         }
 
         if (page.hasMark(Mark.GENERATE)) {
-            metricsCounters.inc(Counter.mGenerated)
+            enumCounters.inc(Counter.mGenerated)
             /*
              * Fetch entries are generated, empty webpage entries are created in the database(HBase)
              * case 1. another fetcher job is fetching the generated batch. In this case, we should not generate it.
@@ -209,14 +210,14 @@ class GenerateComponent(
         val distanceBias = 0
         // Filter on distance
         if (page.distance > maxDistance + distanceBias) {
-            metricsCounters.inc(Counter.mTooDeep)
+            enumCounters.inc(Counter.mTooDeep)
             return false to "-Distance"
         }
 
         // TODO : Url range filtering should be applied to (HBase) native query filter
         // key before start key
         if (!CrawlFilter.keyGreaterEqual(reversedUrl, keyRange[0])) {
-            metricsCounters.inc(Counter.mBeforeStart)
+            enumCounters.inc(Counter.mBeforeStart)
             return false to "-BeforeStart"
         }
 
@@ -230,7 +231,7 @@ class GenerateComponent(
 
         // key not fall in key ranges
         if (!crawlFilters.testKeyRangeSatisfied(reversedUrl)) {
-            metricsCounters.inc(Counter.mNotInRange)
+            enumCounters.inc(Counter.mNotInRange)
             return false to "-KeyOutOfRange"
         }
 
@@ -241,12 +242,12 @@ class GenerateComponent(
         }
 
         if (u2 == null) {
-            metricsCounters.inc(Counter.mNotNormal)
+            enumCounters.inc(Counter.mNotNormal)
             return false to "-notNormal"
         }
 
         if (filter && urlFilters.filter(u2) == null) {
-            metricsCounters.inc(Counter.mUrlFiltered)
+            enumCounters.inc(Counter.mUrlFiltered)
             return false to "-UrlFiltered"
         }
 
@@ -264,7 +265,7 @@ class GenerateComponent(
 
         // INACTIVE mark is already filtered in HBase query phrase, double check here for diagnoses
         if (page.hasMark(Mark.INACTIVE)) {
-            metricsCounters.inc(Counter.mInactive)
+            enumCounters.inc(Counter.mInactive)
         }
 
         val fetchTime = page.fetchTime
@@ -273,9 +274,9 @@ class GenerateComponent(
             // TODO : we can expend maxDistance to gain a bigger web graph if the machines are idle
             val fetchInterval = ChronoUnit.HOURS.between(page.prevFetchTime, pseudoCurrTime)
             if (fetchInterval > 6) {
-                metricsCounters.inc(Counter.mAhead)
+                enumCounters.inc(Counter.mAhead)
                 if (page.isSeed) {
-                    metricsCounters.inc(Counter.mSeedAhead)
+                    enumCounters.inc(Counter.mSeedAhead)
                 }
 
                 // There are plenty resource to do tasks ahead of time
@@ -284,9 +285,9 @@ class GenerateComponent(
         }
 
         if (hours <= 30 * 24) {
-            increaseMDaysLater(hours.toInt() / 24, metricsCounters)
+            increaseMDaysLater(hours.toInt() / 24, enumCounters)
             if (page.isSeed) {
-                metricsCounters.inc(Counter.mSeedLater)
+                enumCounters.inc(Counter.mSeedLater)
                 messageWriter.debugFetchLaterSeeds(page)
             }
         }
@@ -298,17 +299,17 @@ class GenerateComponent(
     private fun checkHost(url: String): Boolean {
         val host = URLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
-            metricsCounters.inc(Counter.mUrlMalformed)
+            enumCounters.inc(Counter.mUrlMalformed)
             return false
         }
         if (unreachableHosts.contains(host)) {
-            metricsCounters.inc(Counter.mHostGone)
+            enumCounters.inc(Counter.mHostGone)
             return false
         }
         return true
     }
 
-    private fun increaseMDaysLater(days: Int, metricsCounters: MetricsCounters) {
+    private fun increaseMDaysLater(days: Int, enumCounterRegistry: EnumCounterRegistry) {
         val counter: Counter = when (days) {
             0 -> Counter.mLater0
             1 -> Counter.mLater1
@@ -321,7 +322,7 @@ class GenerateComponent(
             else -> Counter.mLaterN
         }
 
-        metricsCounters.inc(counter)
-        metricsCounters.inc(Counter.mLater)
+        enumCounterRegistry.inc(counter)
+        enumCounterRegistry.inc(Counter.mLater)
     }
 }

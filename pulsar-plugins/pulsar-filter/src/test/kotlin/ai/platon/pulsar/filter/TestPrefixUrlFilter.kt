@@ -29,14 +29,14 @@ import java.util.stream.Stream
 
 @RunWith(SpringJUnit4ClassRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
-class TestPrefixUrlFilter : UrlFilterTestBase() {
+class TestPrefixUrlFilter : UrlFilterTestBase("") {
     @Autowired
-    private val prefixUrlFilter: PrefixUrlFilter? = null
+    lateinit var prefixUrlFilter: PrefixUrlFilter
 
     @Test
     @Throws(IOException::class)
     fun testModeAccept() {
-        prefixUrlFilter!!.reload(prefixes)
+        prefixUrlFilter.reload(prefixes)
         val filteredUrls = urls.map { prefixUrlFilter.filter(it) }.toTypedArray()
         Assert.assertArrayEquals(urlsModeAccept, filteredUrls)
     }

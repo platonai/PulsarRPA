@@ -12,7 +12,6 @@ import ai.platon.pulsar.persist.metadata.Mark
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.*
 
 /**
  * Created by vincent on 16-9-24.
@@ -50,7 +49,7 @@ class SeedBuilder(
     }
 
     fun makeSeed(page: WebPage): Boolean {
-        return makeSeed(page.url, page.options.toString(), page)
+        return makeSeed(page.url, page.args.toString(), page)
     }
 
     private fun makeSeed(url: String, args: String, page: WebPage): Boolean {

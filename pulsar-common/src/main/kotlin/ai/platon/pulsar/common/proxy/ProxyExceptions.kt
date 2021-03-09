@@ -15,9 +15,11 @@ open class NoProxyException(message: String) : ProxyException(message)
 
 open class ProxyRetiredException(message: String) : ProxyException(message)
 
+open class ProxyRetryException(message: String) : ProxyException(message)
+
 open class ProxyGoneException(message: String) : ProxyException(message)
 
-open class ProxyVendorException : Exception {
+open class ProxyVendorException : ProxyException {
 
     constructor() : super() {}
 
@@ -28,4 +30,6 @@ open class ProxyVendorException : Exception {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-open class ProxyVendorUntrustedException(message: String) : RuntimeException(message)
+open class ProxyInsufficientBalanceException(message: String) : ProxyException(message)
+
+open class ProxyVendorUntrustedException(message: String) : ProxyException(message)

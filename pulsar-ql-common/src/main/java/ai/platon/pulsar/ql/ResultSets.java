@@ -48,4 +48,13 @@ public class ResultSets {
         addColumns(rs, names);
         return rs;
     }
+
+    public static SimpleResultSet newSimpleResultSet(int columnCount) {
+        SimpleResultSet rs = newSimpleResultSet();
+        rs.setAutoClose(false);
+        for (int i = 0; i < columnCount; i++) {
+            addColumns(rs, "C" + (i + 1));
+        }
+        return rs;
+    }
 }

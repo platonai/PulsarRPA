@@ -1,16 +1,11 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.AppConstants
-import com.google.common.net.InetAddresses
+import ai.platon.pulsar.common.url.Urls
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
-import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.util.*
 
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
@@ -36,13 +31,15 @@ object AppPaths {
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
 
     @RequiredDirectory
-    val HOME_DIR = AppContext.APP_HOME_DIR
+    val DATA_DIR = AppContext.APP_DATA_DIR
     @RequiredDirectory
-    val BROWSER_DATA_DIR = HOME_DIR.resolve( "browser")
+    val BROWSER_DATA_DIR = DATA_DIR.resolve( "browser")
     @RequiredDirectory
     val CHROME_DATA_DIR_PROTOTYPE = BROWSER_DATA_DIR.resolve("chrome/prototype/google-chrome")
     @RequiredDirectory
-    val DATA_DIR = HOME_DIR.resolve("data")
+    val LOCAL_DATA_DIR = DATA_DIR.resolve("data")
+    @RequiredDirectory
+    val LOCAL_STORAGE_DIR = LOCAL_DATA_DIR.resolve("store")
 
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR
@@ -80,7 +77,7 @@ object AppPaths {
      * Proxy directory
      * */
     @RequiredDirectory
-    val PROXY_BASE_DIR = HOME_DIR.resolve("proxy")
+    val PROXY_BASE_DIR = DATA_DIR.resolve("proxy")
     @RequiredDirectory
     val ENABLED_PROVIDER_DIR = PROXY_BASE_DIR.resolve( "providers-enabled")
     @RequiredDirectory
@@ -100,7 +97,7 @@ object AppPaths {
     val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve( "proxy-ban-strategy.txt")
 
     @RequiredDirectory
-    val ARCHIVE_DIR = HOME_DIR.resolve("archive")
+    val ARCHIVE_DIR = DATA_DIR.resolve("archive")
     @RequiredDirectory
     val TMP_ARCHIVE_DIR = TMP_DIR.resolve("archive")
 
@@ -119,7 +116,7 @@ object AppPaths {
     val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
 
     private val tmpDirStr get() = TMP_DIR.toString()
-    private val homeDirStr get() = HOME_DIR.toString()
+    private val homeDirStr get() = DATA_DIR.toString()
 
     init {
         AppPaths::class.java.declaredFields
@@ -149,8 +146,9 @@ object AppPaths {
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
 
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
-        val u = Urls.getURLOrNull(uri) ?: return UUID.randomUUID().toString()
-        var host = u.host.takeIf { Strings.isIpPortLike(it) }?:InternetDomainName.from(u.host).topPrivateDomain().toString()
+        val u = Urls.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
+
+        var host = u.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(u.host).topPrivateDomain().toString()
         host = host.replace('.', '-')
         val fileId = fileId(uri)
         return "$prefix$host-$fileId$suffix"

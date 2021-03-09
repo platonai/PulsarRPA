@@ -33,21 +33,7 @@ object Sockets {
      */
     const val PORT_RANGE_MAX = 65535
     private val random = Random(System.currentTimeMillis())
-    /**
-     * Find an available TCP port randomly selected from the range
-     * [`minPort`, `maxPort`].
-     * @param minPort the minimum port number
-     * @param maxPort the maximum port number
-     * @return an available TCP port number
-     * @throws IllegalStateException if no available port could be found
-     */
-    /**
-     * Find an available TCP port randomly selected from the range
-     * [`minPort`, {@value #PORT_RANGE_MAX}].
-     * @param minPort the minimum port number
-     * @return an available TCP port number
-     * @throws IllegalStateException if no available port could be found
-     */
+
     /**
      * Find an available TCP port randomly selected from the range
      * [{@value #PORT_RANGE_MIN}, {@value #PORT_RANGE_MAX}].

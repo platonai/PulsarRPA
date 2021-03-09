@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
 import org.slf4j.LoggerFactory
@@ -27,6 +25,7 @@ class LoadingProxyPool(
     private val bannedIps get() = proxyLoader.bannedIps
     private val bannedSegments get() = proxyLoader.bannedSegments
 
+    @Throws(ProxyException::class)
     override fun take(): ProxyEntry? {
         lastActiveTime = Instant.now()
 
@@ -88,6 +87,7 @@ class LoadingProxyPool(
         }
     }
 
+    @Throws(ProxyException::class)
     private fun load() {
         proxyLoader.updateProxies(Duration.ZERO).asSequence()
                 .filterNot { it in proxyEntries }
@@ -102,6 +102,7 @@ class LoadingProxyPool(
         val proxy = try {
             freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
             null
         }?:return null
 

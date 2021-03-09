@@ -18,11 +18,11 @@
  */
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.ResourceLoader.readAllLines
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
-import org.junit.Assert
+import org.apache.commons.math3.util.Precision
+import org.junit.Assert.assertArrayEquals
 import org.junit.Test
 import java.io.File
 import java.io.IOException
@@ -35,6 +35,9 @@ import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.IntStream
 import java.util.stream.Stream
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 /**
@@ -45,25 +48,25 @@ class TestString {
     @Test
     fun testValueOf() {
         val i = 18760506
-        Assert.assertEquals("18760506", i.toString())
+        assertEquals("18760506", i.toString())
     }
 
     @Test
     fun testSubstring() {
         var s = "a,b,c,d"
         s = StringUtils.substringAfter(s, ",")
-        Assert.assertEquals("b,c,d", s)
+        assertEquals("b,c,d", s)
         s = "a\nb\nc\nd\ne\nf\ng\n"
         // assume the avarage lenght of a link is 100 characters
         val pos = StringUtils.indexOf(s, '\n'.toInt(), s.length / 2)
         s = s.substring(pos + 1)
-        Assert.assertEquals("e\nf\ng\n", s)
+        assertEquals("e\nf\ng\n", s)
     }
 
     @Test
     fun testToHexString() {
         val buffer = ByteBuffer.wrap("".toByteArray())
-        Assert.assertEquals("", Strings.toHexString(buffer))
+        assertEquals("", Strings.toHexString(buffer))
     }
 
     @Test
@@ -82,26 +85,26 @@ class TestString {
     fun testRegex() {
         var text = "http://aitxt.com/book/12313413874"
         var regex = "http://(.*)aitxt.com(.*)"
-        Assert.assertTrue(text.matches(regex.toRegex()))
+        assertTrue(text.matches(regex.toRegex()))
         text = "http://aitxt.com/book/12313413874"
         regex = ".*"
-        Assert.assertTrue(text.matches(regex.toRegex()))
+        assertTrue(text.matches(regex.toRegex()))
         regex = "aitxt"
-        Assert.assertFalse(text.matches(regex.toRegex()))
+        assertFalse(text.matches(regex.toRegex()))
         text = "abcde"
         regex = "[a-zA-Z](?!\\d+).+"
-        Assert.assertTrue(text.matches(regex.toRegex()))
+        assertTrue(text.matches(regex.toRegex()))
         text = "ab12212cde"
         regex = "ab\\d+.+"
-        Assert.assertTrue(text.matches(regex.toRegex()))
+        assertTrue(text.matches(regex.toRegex()))
         regex = "(>|<|>=|<=)*([*\\d+]),(>|<|>=|<=)*([*\\d+]),(>|<|>=|<=)*([*\\d+]),(>|<|>=|<=)*([*\\d+])"
-        Assert.assertTrue(">1,2,3,4".matches(regex.toRegex()))
-        Assert.assertTrue(">=1,*,3,4".matches(regex.toRegex()))
-        Assert.assertTrue("1,2,*,4".matches(regex.toRegex()))
-        Assert.assertTrue("1,*,*,*".matches(regex.toRegex()))
+        assertTrue(">1,2,3,4".matches(regex.toRegex()))
+        assertTrue(">=1,*,3,4".matches(regex.toRegex()))
+        assertTrue("1,2,*,4".matches(regex.toRegex()))
+        assertTrue("1,*,*,*".matches(regex.toRegex()))
         var PATTERN_RECT = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
         text = ">=1,*,3,4"
-        Assert.assertTrue(PATTERN_RECT.matcher(text).matches())
+        assertTrue(PATTERN_RECT.matcher(text).matches())
         val matcher: Matcher
         //        matcher = PATTERN_RECT.matcher(text);
 //        if (matcher.find()) {
@@ -125,8 +128,17 @@ class TestString {
     }
 
     @Test
+    fun testRegex2() {
+        val url = "https://www.amazon.com/s?k=insomnia&i=aps&page=100"
+        val regex = ".+&i=.+".toRegex()
+        assertTrue { url.matches(regex) }
+
+        assertEquals("a.b", "a..b".replace("\\.+".toRegex(), "."))
+    }
+
+    @Test
     fun testReplaceCharsetInHtml() {
-        val lines = readAllLines("data/html-charsets.txt")
+        val lines = ResourceLoader.readAllLines("data/html-charsets.txt")
         for (line in lines) {
             val l = Strings.replaceCharsetInHtml(line, "UTF-8")
             assertTrue(l.contains("UTF-8"))
@@ -139,19 +151,19 @@ class TestString {
                 .map { obj: Charset -> obj.name() }
                 .collect(Collectors.joining("|"))
         var charsetPattern = Pattern.compile(charsets, Pattern.CASE_INSENSITIVE)
-        Assert.assertEquals(Charset.availableCharsets().size.toLong(), StringUtils.countMatches(charsets, "|") + 1.toLong())
-        Assert.assertTrue(charsetPattern.matcher("gb2312").matches())
-        Assert.assertTrue(charsetPattern.matcher("UTF-8").matches())
-        Assert.assertTrue(charsetPattern.matcher("windows-1257").matches())
+        assertEquals(Charset.availableCharsets().size.toLong(), StringUtils.countMatches(charsets, "|") + 1.toLong())
+        assertTrue(charsetPattern.matcher("gb2312").matches())
+        assertTrue(charsetPattern.matcher("UTF-8").matches())
+        assertTrue(charsetPattern.matcher("windows-1257").matches())
         charsets = ("UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1"
                 + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
                 + "|UTF-8")
         charsets = charsets.replace("UTF-8\\|?".toRegex(), "")
         charsetPattern = Pattern.compile(charsets, Pattern.CASE_INSENSITIVE)
-        Assert.assertTrue(charsetPattern.matcher("gb2312").matches())
-        Assert.assertTrue(charsetPattern.matcher("windows-1257").matches())
-        Assert.assertFalse(charsetPattern.matcher("UTF-8").matches())
-        Assert.assertFalse(charsetPattern.matcher("nonsense").matches())
+        assertTrue(charsetPattern.matcher("gb2312").matches())
+        assertTrue(charsetPattern.matcher("windows-1257").matches())
+        assertFalse(charsetPattern.matcher("UTF-8").matches())
+        assertFalse(charsetPattern.matcher("nonsense").matches())
     }
 
     @Test
@@ -165,21 +177,22 @@ class TestString {
             count++
             // System.out.println("Found Price : " + count + " : " + matcher.start() + " - " + matcher.end() + ", " + matcher.group());
         }
-        Assert.assertTrue(count > 0)
+        assertTrue(count > 0)
     }
 
     @Test
-    fun testParseVersion() { // assertTrue(Math.abs(StringUtil.tryParseDouble("0.2.0") - 0.2) < 0.0000001);
+    fun testParseVersion() {
+        // assertTrue(Math.abs(StringUtil.tryParseDouble("0.2.0") - 0.2) < 0.0000001);
 //    System.out.println(Lists.newArrayList("0.2.0".split("\\.")));
 //    System.out.println("0.2.0".split("\\.").length);
-        Assert.assertEquals("0.2.0".split("\\.").toTypedArray().size.toLong(), 3)
+        assertEquals(3, "0.2.0".split(".").size)
     }
 
     @Test
     fun testtrimNonCJKChar() {
         val text = "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  "
-        Assert.assertEquals(text.trim { it <= ' ' }, "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ")
-        Assert.assertEquals(Strings.trimNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘")
+        assertEquals(text.trim { it <= ' ' }, "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ")
+        assertEquals(Strings.trimNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘")
     }
 
     @Test
@@ -201,7 +214,7 @@ class TestString {
                 "关注全球华人健康"
         )
         for (text in texts) {
-            Assert.assertTrue(Strings.isChinese(text))
+            assertTrue(Strings.isChinese(text))
         }
         val noChineseTexts = arrayOf(
                 "1234534",
@@ -221,7 +234,7 @@ class TestString {
         for (text in mainlyChineseTexts) {
             println(Strings.countChinese(text).toString() + "/" + text.length
                     + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text)
-            Assert.assertTrue(text, Strings.isMainlyChinese(text, 0.6))
+            assertTrue(Strings.isMainlyChinese(text, 0.6), text)
         }
     }
 
@@ -235,18 +248,18 @@ class TestString {
     }
 
     @Test
-    fun testSplit() {
+    fun testRegexSplit() {
         var s = "TestStringUtil"
-        val r = s.split("(?=\\p{Upper})").toTypedArray()
-        Assert.assertArrayEquals(arrayOf("Test", "String", "Util"), r)
-        Assert.assertEquals("Test.String.Util", StringUtils.join(r, "."))
+        val r = s.split("(?=\\p{Upper})".toRegex()).filterNot { it.isEmpty() }.toTypedArray()
+        assertArrayEquals(arrayOf("Test", "String", "Util"), r)
+        assertEquals("Test.String.Util", StringUtils.join(r, "."))
         var url = "http://t.tt/\t-i 1m"
         var parts = StringUtils.split(url, "\t")
-        Assert.assertEquals("http://t.tt/", parts[0])
-        Assert.assertEquals("-i 1m", parts[1])
+        assertEquals("http://t.tt/", parts[0])
+        assertEquals("-i 1m", parts[1])
         url = "http://t.tt/"
         parts = StringUtils.split(url, "\t")
-        Assert.assertEquals("http://t.tt/", parts[0])
+        assertEquals("http://t.tt/", parts[0])
         s = "ld,-o,-s,-w:hello,-a:b,-c"
         val options = StringUtils.replaceChars(s, ":,", Strings.padding[2]).split(" ").toTypedArray()
         println(StringUtils.join(options, " "))
@@ -255,11 +268,11 @@ class TestString {
     @Test
     fun testCsslize() {
         var s = "-TestStringUtil"
-        Assert.assertEquals("-test-string-util", Strings.csslize(s))
+        assertEquals("-test-string-util", Strings.csslize(s))
         s = "TestStringUtil-a"
-        Assert.assertEquals("test-string-util-a", Strings.csslize(s))
+        assertEquals("test-string-util-a", Strings.csslize(s))
         s = "TestStringUtil-"
-        Assert.assertEquals("test-string-util-", Strings.csslize(s))
+        assertEquals("test-string-util-", Strings.csslize(s))
     }
 
     @Test
@@ -270,15 +283,15 @@ class TestString {
         cases["image-detail"] = "image-detail"
         cases["image      detail"] = "image-detail"
         for ((key, value) in cases) {
-            Assert.assertEquals(value, Strings.csslize(key))
+            assertEquals(value, Strings.csslize(key))
         }
     }
 
     @Test
     fun testHumanize() {
         val s = "TestStringUtil"
-        Assert.assertEquals("test string util", Strings.humanize(s))
-        Assert.assertEquals("test.string.util", Strings.humanize(s, "."))
+        assertEquals("test string util", Strings.humanize(s))
+        assertEquals("test.string.util", Strings.humanize(s, "."))
     }
 
     @Test
@@ -287,9 +300,9 @@ class TestString {
         kvs["a"] = "1"
         kvs["b"] = "2"
         kvs["c"] = "3"
-        Assert.assertEquals(kvs, Strings.parseKvs("a=1 b=2 c=3"))
-        Assert.assertEquals(kvs, Strings.parseKvs("a:1\nb:2\tc:3", ":"))
-        Assert.assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
+        assertEquals(kvs, Strings.parseKvs("a=1 b=2 c=3"))
+        assertEquals(kvs, Strings.parseKvs("a:1\nb:2\tc:3", ":"))
+        assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
         println(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
         println(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
         println(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
@@ -301,7 +314,7 @@ class TestString {
                 "   a=1     b=2\tc=3 c=4 d= e =3     ")
         for (i in kvs2.indices) {
             val kv = SParser.wrap(kvs2[i]).getKvs("=")
-            Assert.assertEquals(i.toString() + "th [" + kvs2[i] + "]", "{a=1, b=2, c=4}", kv.toString())
+            assertEquals("{a=1, b=2, c=4}", kv.toString(), i.toString() + "th [" + kvs2[i] + "]")
         }
     }
 
@@ -313,7 +326,7 @@ class TestString {
         kvs["-c"] = "3"
         kvs["-isX"] = "true"
         // assertEquals(kvs, StringUtil.parseOptions("-a 1 -b 2 -c 3 -isX"));
-        Assert.assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
+        assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
     }
 
     @Test
@@ -328,12 +341,12 @@ class TestString {
                 "http://news.163.com/\t--fetch-interval=1h --entity=#content" +
                 "\n"
         var lines = Strings.getUnslashedLines(s)
-        Assert.assertEquals(4, lines.size.toLong())
+        assertEquals(4, lines.size.toLong())
         s = "http://sz.sxrb.com/sxxww/dspd/szpd/bwch/\n" +
                 "http://sz.sxrb.com/sxxww/dspd/szpd/fcjjjc/\n" +
                 "http://sz.sxrb.com/sxxww/dspd/szpd/hydt/"
         lines = Strings.getUnslashedLines(s)
-        Assert.assertEquals(3, lines.size.toLong())
+        assertEquals(3, lines.size.toLong())
     }
 
     @Test
@@ -341,29 +354,69 @@ class TestString {
     fun testLoadSlashedLines() {
         var seeds = "@data/lines-with-slashes.txt"
         if (seeds.startsWith("@")) {
-            seeds = java.lang.String.join("\n", readAllLines(seeds.substring(1)))
+            seeds = ResourceLoader.readAllLines(seeds.substring(1)).joinToString("\n")
         }
         val seedFile = File.createTempFile("seed", ".txt")
         val unslashedLines = Strings.getUnslashedLines(seeds)
-        //        for (int i = 0; i < unslashedLines.size(); i++) {
-//            System.out.println(i + "\t" + unslashedLines.get(i));
-//        }
-        Assert.assertEquals(111, unslashedLines.size.toLong())
+        assertEquals(111, unslashedLines.size.toLong())
         FileUtils.writeLines(seedFile, unslashedLines)
-        Assert.assertEquals(111, Files.readAllLines(seedFile.toPath()).size.toLong())
-        //    System.out.println(StringUtil.getUnslashedLines(seeds).size());
-//    System.out.println(seedFile.getAbsolutePath());
+        assertEquals(111, Files.readAllLines(seedFile.toPath()).size.toLong())
     }
 
     @Test
     fun testGetFirstInteger() {
-        val s = "-hello world 999 i love you 520 forever"
-        Assert.assertEquals(999, Strings.getFirstInteger(s, -1).toLong())
+        val texts = arrayOf(
+                "-hello world 999 i love you 520 forever",
+                "i have received $1964,234 last day",
+                "this is a java number: 1_435_324"
+        )
+        val expects = arrayOf(999, 1964_234, 1_435_324)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getFirstInteger(texts[i], 0), "The $i-th test is failed")
+        }
+
+        val url = "https://www.amazon.com/s?k=insomnia&i=todays-deals&bbn=21101958011&page=2&qid=1609866830&ref=sr_pg_1"
+        assertEquals(2, Strings.getFirstInteger(url.substringAfter("page="), 0))
+    }
+
+    @Test
+    fun testGetLastInteger() {
+        val texts = arrayOf(
+                "-hello world 999 i love you 520 forever",
+                "i have received $1964,234 yesterday, and $2046,123 the day before yesterday",
+                "this is a java number: 1_435_324, and this is another: 2_457_325"
+        )
+        val expects = arrayOf(520, 2046_123, 2_457_325)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getLastInteger(texts[i], 0), "The $i-th test is failed")
+        }
+
+        assertEquals(150, Strings.getLastInteger("631 global ratings | 150 global reviews", 0))
     }
 
     @Test
     fun testGetFirstFloatNumber() {
-        val s = "-hello world 999.00.0 i love you 520.0 forever"
-        Assert.assertEquals(999.00, Strings.getFirstFloatNumber(s, Float.MIN_VALUE).toDouble(), 0.1)
+        val texts = arrayOf(
+                "-hello world 999.234 i love you 520.02 forever",
+                "i have received $1964,234.1 last day",
+                "this is a java number: 1_435_324.92"
+        )
+        val expects = arrayOf(999.234f, 1964_234.1f, 1_435_324.92f)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getFirstFloatNumber(texts[i], Float.MIN_VALUE), "The $i-th test is failed")
+        }
+    }
+
+    @Test
+    fun testHashCode() {
+        val s = "https://www.amazon.com/s?k=insomnia&i=aps&page=15"
+        val s2 = "https://www.amazon.com/s?k=insomnia&i=aps&page=16"
+        val s3 = "https://www.amazon.com/s?k=insomnia&i=aps&page=17"
+        assertNotEquals(s.hashCode(), s2.hashCode())
+        assertNotEquals(s.hashCode(), s3.hashCode())
+        assertNotEquals(s2.hashCode(), s3.hashCode())
     }
 }

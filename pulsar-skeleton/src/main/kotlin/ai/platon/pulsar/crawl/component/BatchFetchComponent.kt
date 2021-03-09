@@ -112,7 +112,7 @@ class BatchFetchComponent(
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         fetchMetrics?.markTaskStart(Iterables.size(urls))
-        return urls.map { createFetchEntry(it, options) }
+        return urls.map { FetchEntry(it, options).page }
                 .let { protocol.getResponses(it, options.volatileConfig?:immutableConfig.toVolatileConfig()) }
                 .map { getProtocolOutput(protocol, it, it.page) }
     }
@@ -178,6 +178,7 @@ class BatchFetchComponent(
             return future.get(35, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             log.warn("Interrupted when fetch resource", e)
+            Thread.currentThread().interrupt()
         } catch (e: ExecutionException) {
             log.warn(e.toString())
         } catch (e: TimeoutException) {

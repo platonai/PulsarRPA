@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -44,6 +45,7 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
 
     val isActive get() = !closed.get()
 
+    @Throws(ProxyException::class)
     abstract fun updateProxies(reloadInterval: Duration): List<ProxyEntry>
 
     @Synchronized

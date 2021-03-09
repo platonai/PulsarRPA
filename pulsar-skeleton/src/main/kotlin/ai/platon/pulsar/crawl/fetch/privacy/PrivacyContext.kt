@@ -1,14 +1,17 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyException
+import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
-import org.apache.commons.lang3.RandomStringUtils
+import ai.platon.pulsar.crawl.fetch.FetchResult
+import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.persist.RetryScope
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -18,44 +21,16 @@ open class PrivacyContextException(message: String): Exception(message)
 
 class FatalPrivacyContextException(message: String): PrivacyContextException(message)
 
-data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
-    val ident = dataDir.last().toString()
-    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
-    val isDefault get() = this == DEFAULT
-
-    // override fun hashCode() = /** AUTO GENERATED **/
-    // override fun equals(other: Any?) = /** AUTO GENERATED **/
-
-    override fun compareTo(other: PrivacyContextId) = dataDir.compareTo(other.dataDir)
-    override fun toString() = "$dataDir"
-
-    companion object {
-        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR)
-        fun generate(): PrivacyContextId {
-            return PrivacyContextId(PrivacyContext.generateBaseDir())
-        }
-    }
-}
-
-data class BrowserInstanceId(
-        val dataDir: Path,
-        var proxyServer: String? = null
-): Comparable<BrowserInstanceId> {
-
-    val contextDir = dataDir.parent
-    val ident = contextDir.last().toString()
-    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
-    override fun hashCode() = dataDir.hashCode()
-    override fun equals(other: Any?) = other is BrowserInstanceId && dataDir == other.dataDir
-    override fun compareTo(other: BrowserInstanceId) = dataDir.compareTo(other.dataDir)
-    override fun toString() = "$dataDir"
-
-    companion object {
-        val DIR_NAME = "browser"
-        val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
-
-        fun resolve(baseDir: Path) = BrowserInstanceId(baseDir.resolve(DIR_NAME))
-    }
+class PrivacyContextMetrics {
+    private val registry = AppMetrics.defaultMetricRegistry
+    val contexts = registry.multiMetric(this, "contexts")
+    val tasks = registry.multiMetric(this, "tasks")
+    val successes = registry.multiMetric(this, "successes")
+    val finishes = registry.multiMetric(this, "finishes")
+    val smallPages = registry.multiMetric(this, "smallPages")
+    val leakWarnings = registry.multiMetric(this, "leakWarnings")
+    val minorLeakWarnings = registry.multiMetric(this, "minorLeakWarnings")
+    val contextLeaks = registry.multiMetric(this, "contextLeaks")
 }
 
 abstract class PrivacyContext(
@@ -67,20 +42,11 @@ abstract class PrivacyContext(
 ): AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
-        private val idSequence = AtomicInteger()
         val IDENT_PREFIX = "cx."
-        val BASE_DIR = AppPaths.CONTEXT_TMP_DIR
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
 
-        fun generateBaseDir(): Path {
-            idSequence.incrementAndGet()
-            var impreciseNumInstances = 0L
-            synchronized(BASE_DIR) {
-                impreciseNumInstances = 1 + Files.list(BASE_DIR).filter { Files.isDirectory(it) }.count()
-            }
-            val rand = RandomStringUtils.randomAlphanumeric(5)
-            return BASE_DIR.resolve("$IDENT_PREFIX$idSequence$rand$impreciseNumInstances")
-        }
+        val globalMetrics = PrivacyContextMetrics()
     }
 
     private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
@@ -93,12 +59,13 @@ abstract class PrivacyContext(
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
-    private val smSuffix = AppMetrics.SHADOW_METRIC_SUFFIX
-    val numTasks = AppMetrics.meter(this, sequence.toString(), "numTasks$smSuffix")
-    val numSuccesses = AppMetrics.meter(this, sequence.toString(), "numSuccesses$smSuffix")
-    val numFinished = AppMetrics.meter(this, sequence.toString(), "numFinished$smSuffix")
-    val numSmallPages = AppMetrics.meter(this, sequence.toString(), "numSmallPages$smSuffix")
-    val smallPageRate get() = 1.0 * numSmallPages.count / numTasks.count.coerceAtLeast(1)
+    private val registry = AppMetrics.defaultMetricRegistry
+    private val sms = AppMetrics.SHADOW_METRIC_SYMBOL
+    val meterTasks = registry.meter(this, "$sequence$sms", "tasks")
+    val meterSuccesses = registry.meter(this, "$sequence$sms", "successes")
+    val meterFinishes = registry.meter(this, "$sequence$sms", "finishes")
+    val meterSmallPages = registry.meter(this, "$sequence$sms", "smallPages")
+    val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()
     var lastActiveTime = startTime
@@ -108,18 +75,33 @@ abstract class PrivacyContext(
     val numRunningTasks = AtomicInteger()
 
     val closed = AtomicBoolean()
-    val isGood get() = numSuccesses.meanRate >= minimumThroughput
+    val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     val isActive get() = !isLeaked && !closed.get()
 
-    fun markSuccess() = privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
+    init {
+        globalMetrics.contexts.mark()
+    }
 
-    fun markWarning() = privacyLeakWarnings.incrementAndGet()
+    fun markSuccess() {
+        privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
+        meterSuccesses.mark()
+        globalMetrics.successes.mark()
+    }
 
-    fun markWarning(n: Int) = privacyLeakWarnings.addAndGet(n)
+    fun markWarning() {
+        privacyLeakWarnings.incrementAndGet()
+        globalMetrics.leakWarnings.mark()
+    }
+
+    fun markWarning(n: Int) {
+        privacyLeakWarnings.addAndGet(n)
+        globalMetrics.leakWarnings.inc(n.toLong())
+    }
 
     fun markMinorWarning() {
         privacyLeakMinorWarnings.incrementAndGet()
+        globalMetrics.minorLeakWarnings.mark()
         if (privacyLeakMinorWarnings.get() > minorWarningFactor) {
             privacyLeakMinorWarnings.set(0)
             markWarning()
@@ -128,9 +110,49 @@ abstract class PrivacyContext(
 
     fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
 
-    fun markWarningDeprecated() = markWarning()
+    @Throws(ProxyException::class)
+    open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        beforeRun(task)
+        val result = doRun(task, browseFun)
+        afterRun(result)
+        return result
+    }
 
-    fun markSuccessDeprecated() = markSuccess()
+    @Throws(ProxyException::class)
+    abstract suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+
+    protected fun beforeRun(task: FetchTask) {
+        lastActiveTime = Instant.now()
+        meterTasks.mark()
+        globalMetrics.tasks.mark()
+
+        numRunningTasks.incrementAndGet()
+    }
+
+    protected fun afterRun(result: FetchResult) {
+        numRunningTasks.decrementAndGet()
+
+        lastActiveTime = Instant.now()
+        meterFinishes.mark()
+        globalMetrics.finishes.mark()
+
+        val status = result.status
+        when {
+            status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> markLeaked()
+            status.isRetry(RetryScope.PRIVACY) -> markWarning()
+            status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
+            status.isSuccess -> markSuccess()
+        }
+
+        if (result.isSmall) {
+            meterSmallPages.mark()
+            globalMetrics.smallPages.mark()
+        }
+
+        if (isLeaked) {
+            globalMetrics.contextLeaks.mark()
+        }
+    }
 
     open fun report() {
         log.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())

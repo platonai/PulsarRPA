@@ -267,7 +267,9 @@ class FetchMonitor(
         do {
             try {
                 TimeUnit.MILLISECONDS.sleep(checkInterval.toMillis())
-            } catch (ignored: InterruptedException) {}
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
 
             taskScheduler.updateCounters()
 

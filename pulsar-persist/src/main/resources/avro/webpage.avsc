@@ -54,6 +54,11 @@
       "default": 0
     },
     {
+      "name": "prevCrawlTime1",
+      "type": "long",
+      "default": 0
+    },
+    {
       "name": "fetchTime",
       "type": "long",
       "default": 0
@@ -291,6 +296,53 @@
       "name": "metadata",
       "type": {"type": "map","values": ["null","bytes"]},
       "default": {}
+    },
+    {
+      "name": "activeDomUrls",
+      "type": {"type": "map","values": ["null","string"]},
+      "default": {}
+    },
+    {
+      "name": "activeDomStatus",
+      "type": [
+        "null",
+        {
+          "name": "GActiveDomStatus",
+          "type": "record",
+          "namespace": "ai.platon.pulsar.persist.gora.generated",
+          "fields": [
+            {"name": "n","type": "int","default": 0},
+            {"name": "scroll","type": "int","default": 0},
+            {"name": "st", "type": ["null", "string"], "default": null},
+            {"name": "r", "type": ["null", "string"], "default": null},
+            {"name": "idl", "type": ["null", "string"], "default": null},
+            {"name": "ec", "type": ["null", "string"], "default": null}
+          ]
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "activeDomStats",
+      "type": {
+        "type": "map",
+        "values": ["null",
+            {
+              "name": "GActiveDomStat",
+              "type": "record",
+              "namespace": "ai.platon.pulsar.persist.gora.generated",
+              "fields" : [
+                  {"name": "ni","type": "int","default": 0},
+                  {"name": "na","type": "int","default": 0},
+                  {"name": "nnm","type": "int","default": 0},
+                  {"name": "nst","type": "int","default": 0},
+                  {"name": "w","type": "int","default": 0},
+                  {"name": "h","type": "int","default": 0}
+              ]
+            }
+        ]
+      },
+      "default": null
     },
     {
       "name": "pageModel",

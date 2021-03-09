@@ -2,11 +2,13 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.AppPaths.AVAILABLE_PROVIDER_DIR
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -37,7 +39,7 @@ open class ProxyPoolManager(
     val workingProxyEntries = ConcurrentSkipListSet<ProxyEntry>()
     open val localPort = -1
     open val currentInterceptProxyEntry: ProxyEntry? = null
-    val isEnabled = isProxyEnabled(conf)
+    val isEnabled get() = isProxyEnabled(conf)
     val isDisabled get() = !isEnabled
 
     private val closed = AtomicBoolean()
@@ -89,18 +91,12 @@ open class ProxyPoolManager(
 
     companion object {
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
-        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.USER_HOME,
-                AppContext.APP_HOME_DIR.toString(), AppContext.TMP_DIR).map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
+        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.USER_HOME, AppContext.TMP_DIR)
+                .map { Paths.get(it).resolve(PROXY_PROVIDER_FILE_NAME) }
 
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
-
-        init {
-            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
-                FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
-            }
-        }
 
         /**
          * Proxy system can be enabled/disabled at runtime
@@ -123,34 +119,45 @@ open class ProxyPoolManager(
             return hasEnabledProvider()
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun hasEnabledProvider(): Boolean {
             val now = Instant.now()
-            synchronized(ProxyPoolManager::class.java) {
-                if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
-                    providerDirLastWatchTime = now
-                    numEnabledProviderFiles = try {
-                        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
-                    } catch (e: Throwable) { 0 }
-                }
+
+            if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
+                providerDirLastWatchTime = now
+                numEnabledProviderFiles = try {
+                    Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
+                } catch (e: Throwable) { 0 }
             }
 
             return numEnabledProviderFiles > 0
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun enableDefaultProviders() {
-            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+                FileUtils.copyFileToDirectory(it.toFile(), AVAILABLE_PROVIDER_DIR.toFile())
+            }
+            AVAILABLE_PROVIDER_DIR.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun enableProvider(providerPath: Path) {
             val filename = providerPath.fileName
-            arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
-                    .map { it.resolve(filename) }
-                    .filterNot { Files.exists(it) }
-                    .forEach { Files.copy(providerPath, it) }
+            val link = AppPaths.ENABLED_PROVIDER_DIR.resolve(filename)
+            Files.deleteIfExists(link)
+            Files.createSymbolicLink(link, providerPath)
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun disableProviders() {
-            Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
+            Files.list(AppPaths.ENABLED_PROVIDER_DIR)
+                    .filter { Files.isRegularFile(it) || Files.isSymbolicLink(it) }
+                    .forEach { Files.delete(it) }
         }
     }
 }

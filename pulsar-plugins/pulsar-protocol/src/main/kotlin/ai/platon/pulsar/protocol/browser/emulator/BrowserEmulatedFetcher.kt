@@ -1,9 +1,11 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
@@ -76,7 +78,15 @@ open class BrowserEmulatedFetcher(
             log.warn("Page config is not set | {}", page.url)
         }
 
-        return privacyManager.run(createFetchTask(page)) { task, driver ->
+        val task = createFetchTask(page)
+        return fetchTaskDeferred(task)
+    }
+
+    /**
+     * Fetch page content
+     * */
+    private suspend fun fetchTaskDeferred(task: FetchTask): Response {
+        return privacyManager.run(task) { _, driver ->
             try {
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
@@ -219,7 +229,6 @@ open class BrowserEmulatedFetcher(
         return privacyContext.run(task) { _, driver ->
             try {
                 batch.proxyEntry = task.proxyEntry
-                batch.beforeFetch(task.page)
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
@@ -233,8 +242,6 @@ open class BrowserEmulatedFetcher(
             } catch (e: Throwable) {
                 log.warn("Unexpected throwable", e)
                 FetchResult(task, ForwardingResponse.failed(task.page, e))
-            } finally {
-                batch.afterFetch(task.page)
             }
         }
     }

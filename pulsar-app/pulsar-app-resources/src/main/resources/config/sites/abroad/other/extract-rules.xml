@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entities>
+	<entity name="SaonewsArticle" urlRegex="http://www.saonews.com/article-(.+)">
+		<domain>saonews.com</domain>
+		<sitename>南美新闻网</sitename>
+
+		<fields>
+			<field name="title" selector="h1.ph" extractor="TextExtractor"
+				extractRegex=".+" validateRegex=".+"
+				dataType="varchar(256) default ''" />
+
+			<field name="category" selector="#pt a"
+				extractor="TextExtractor" extractRegex=".+" validateRegex=".+"
+				dataType="varchar(256) default ''">
+			</field>
+
+			<field name="metadata" selector="div.hm p.xg1"
+				extractor="TextExtractor" extractRegex=".+" validateRegex=".+"
+				dataType="text">
+
+				<splitter>
+				</splitter>
+
+				<entityCollection itemType="" itemName="">
+					<entity>
+						<fields>
+							<field></field>
+							<field></field>
+							<field></field>
+							<field></field>
+						</fields>
+					</entity>
+				</entityCollection>
+
+				<entity>
+					<fields>
+						<field></field>
+						<field></field>
+						<field></field>
+						<field></field>
+					</fields>
+				</entity>
+
+				<chainedExtractor selector=":root"
+					extractor="KeyValueExtractor" extractRegex=".+" validateRegex=".+"
+					dataType="text" seperatorChars="|">
+
+					<chainedExtractor selector=":root"
+						extractor="KeyValueExtractor" extractRegex=".+" validateRegex=".+"
+						dataType="text" seperatorChars="|">
+					</chainedExtractor>
+
+				</chainedExtractor>
+
+			</field>
+
+			<field name="tags" selector=".yudi_leftview ul"
+				extractor="TextExtractor" extractRegex=".+" validateRegex=".+"
+				dataType="varchar(256) default ''">
+			</field>
+
+			<field name="abstract" selector=".h ~ .say" extractor="TextExtractor"
+				extractRegex=".+" validateRegex=".+"
+				dataType="varchar(256) default ''" />
+
+			<field name="content" selector="#article_content"
+				extractor="RawExtractor" extractRegex=".+" validateRegex=".+"
+				dataType="text">
+			</field>
+
+		</fields>
+
+		<!-- deprecated, use chained extractor instead -->
+		<complexFields>
+			<complexField name="metadata" selector="div.hm p.xg1" extractor="TextExtractor"
+				extractRegex=".+" validateRegex=".+">
+				<!-- new feature : seperators can be auto detected -->
+				<kvExtractor separatorChars="|">
+					<kvPairs>
+						<kvPair name="publish_time" regex="(\d+)-(\d+)-(\d+) (\d+):(\d+)"></kvPair>
+						<kvPair name="publisher">发布者</kvPair>
+						<kvPair name="pageviews">查看</kvPair>
+						<kvPair name="comment_number">评论</kvPair>
+						<kvPair name="source_website">来自</kvPair>
+					</kvPairs>
+				</kvExtractor>
+			</complexField>
+		</complexFields>
+	</entity>
+
+	<entityCollection>
+		<entity name="SaonewsArticle">
+		</entity>
+	</entityCollection>
+</entities>

@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl" ?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <property>
+    <name>scent.domain</name>
+    <value>news_aboard</value>
+  </property>
+
+  <property>
+    <name>scent.web.cache.file.expires</name>
+    <value>0</value>
+  </property>
+
+  <!-- diagnose -->
+  <property>
+    <name>scent.diagnostor.enabled</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>scent.stat.segment.variance.log</name>
+    <value>true</value>
+  </property>
+
+  <!-- classifier -->
+  <property>
+    <name>scent.classifier.block.labels</name>
+    <!-- <value>Menu,Navigation,Description,Map,ShopPicture,Comment,SimilarShop</value> -->
+    <value>ProductSpec,ProductShow,PriceDetail,ProductDetail,ShopIntro,Areas,Comment,Title,Categories,SimilarEntity,Menu,RelativeProduct,Metadata,CategoryList,BadBlock,DealHistory,Gallery</value>
+    <description>Notice : do not split into lines</description>
+  </property>
+
+  <property>
+    <name>scent.classifier.block.inheritable.labels</name>
+    <value>Comment</value>
+    <description>Notice : do not split into lines</description>
+  </property>
+
+  <!-- deprecated, use ManualFeature instead -->
+  <property>
+    <name>scent.block.manual.defined</name>
+    <value>#imgdiv,.detail-info,.detail-mode,.pt-major-info,.pt-cont-notice,.pt-cont-intro,.pt-cont-maptraffic,.Qt_deinfo,.price</value>
+  </property>
+
+  <!-- extract -->
+  <property>
+    <name>scent.extract.generate.brief</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>scent.ml.generate.extract.model</name>
+    <value>true</value>
+  </property>
+
+  <!-- additional extractors -->
+  <property>
+    <name>scent.block.extractors.label.ProductShow</name>
+    <value>ProductShowExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.label.PriceDetail</name>
+    <value>TextExtractor</value>
+  </property>
+
+  <!-- builder -->
+  <property>
+    <name>scent.builder.build.order.by.category</name>
+    <value>Title,PriceDetail,Captured,RegexExtracted,ProductShow,Respected,Metadata,Gallery,ProductDetail,SimilarEntity</value>
+  </property>
+
+  <!-- wiki -->
+  <property>
+    <name>scent.wiki.domain</name>
+    <value>qiwur.com</value>
+  </property>
+  <property>
+    <name>scent.wiki.username</name>
+    <value>galaxyeyebot</value>
+  </property>
+  <property>
+    <name>scent.wiki.password</name>
+    <value>ABC!@#</value>
+  </property>
+  <property>
+    <name>scent.wiki.save</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>scent.wiki.upload</name>
+    <value>false</value>
+  </property>
+
+</configuration>

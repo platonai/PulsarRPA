@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -21,6 +21,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
 
+    val privacyContextIdGenerator get() = PrivacyContextIdGeneratorFactory(conf).generator
     val isActive get() = !closed.get() && AppContext.isActive
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
@@ -31,7 +32,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Run a task within this privacy manager
      * */
-    abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult
+    abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     /**
      * Create a new context or return an exist one
@@ -82,7 +83,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             val prefix = "The latest context throughput: "
             val postfix = " (success/sec)"
             zombieContexts.take(15)
-                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.numSuccesses.meanRate) }
+                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.meterSuccesses.meanRate) }
                     .let { log.info(it) }
         }
     }

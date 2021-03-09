@@ -329,9 +329,9 @@ class ChromeLauncher(
                 throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            log.error("Interrupted while waiting for devtools server, close it", e)
             close(readLineThread)
-            log.error("Interrupted while waiting for dev tools server", e)
-            throw RuntimeException("Interrupted while waiting for dev tools server", e)
         }
         return port
     }
@@ -339,24 +339,39 @@ class ChromeLauncher(
     private fun close(thread: Thread) {
         try {
             thread.join(config.threadWaitTime.toMillis())
-        } catch (ignored: InterruptedException) {}
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 
     private fun prepareUserDataDir() {
-        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        if (userDataDir == prototypeUserDataDir || userDataDir.toString().contains("/default/")) {
+            log.info("Running chrome with prototype/default data dir, no cleaning | {}", userDataDir)
+            return
+        }
+
+        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
         if (Files.exists(prototypeUserDataDir.resolve("Default"))) {
             FileChannel.open(lock, StandardOpenOption.APPEND).use {
                 it.lock()
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
                     log.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
+                    // remove dead symbolic links
+                    Files.list(prototypeUserDataDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
-                    FileUtils.deleteDirectory(userDataDir.resolve("Default/Local Storage/leveldb").toFile())
+                    val leveldb = userDataDir.resolve("Default/Local Storage/leveldb")
+                    if (Files.exists(leveldb)) {
+                        FileUtils.deleteDirectory(leveldb.toFile())
+                    }
+
                     arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
-                        Files.copy(prototypeUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+                        val target = userDataDir.resolve(it)
+                        Files.createDirectories(target.parent)
+                        Files.copy(prototypeUserDataDir.resolve(it), target, StandardCopyOption.REPLACE_EXISTING)
                     }
                 }
             }

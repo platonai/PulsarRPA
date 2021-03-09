@@ -47,6 +47,8 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.SYSTEM_PROPERTY_SPE
  *
  * @author vincent
  * @version $Id: $Id
+ *
+ * TODO: remove hadoop dependency
  */
 public abstract class AbstractConfiguration {
 
@@ -61,6 +63,8 @@ public abstract class AbstractConfiguration {
     public static final String APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml";
 
     private final LinkedHashSet<String> resources = new LinkedHashSet<>();
+
+    private String name = "Configuration#" + hashCode();
 
     private String profile = "";
 
@@ -132,6 +136,14 @@ public abstract class AbstractConfiguration {
      */
     public AbstractConfiguration(Configuration conf) {
         this.conf = new Configuration(conf);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**

@@ -137,6 +137,11 @@ public interface CapabilityTypes {
     String COUNTER_GROUP_STATUS = "Runtime Status";
 
     /**
+     * Application metrics
+     * */
+    String METRICS_ENABLED = "metrics.enabled";
+
+    /**
      * Generate
      * */
     String GENERATE_COUNT_VALUE_DOMAIN = "domain";
@@ -274,16 +279,29 @@ public interface CapabilityTypes {
     /** Constant <code>FETCH_NET_BANDWIDTH_M="fetcher.net.bandwidth.m"</code> */
     String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
-    /** Constant <code>FETCH_BEFORE_FETCH_HANDLER="onBeforeFetch"</code> */
-    String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
-    /** Constant <code>FETCH_AFTER_FETCH_HANDLER="onAfterFetch"</code> */
-    String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
-    /** Constant <code>FETCH_AFTER_FETCH_N_HANDLER="onAfterFetchN"</code> */
+//    String FETCH_BEFORE_LOAD_HANDLER = "onBeforeLoad";
+//
+//    /** Constant <code>FETCH_BEFORE_FETCH_HANDLER="onBeforeFetch"</code> */
+//    String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
+//    /** Constant <code>FETCH_AFTER_FETCH_HANDLER="onAfterFetch"</code> */
+//    String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
+//    /** Constant <code>FETCH_AFTER_FETCH_N_HANDLER="onAfterFetchN"</code> */
     String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
-    /** Constant <code>FETCH_BEFORE_FETCH_BATCH_HANDLER="onBeforeFetchBatch"</code> */
+//    /** Constant <code>FETCH_BEFORE_FETCH_BATCH_HANDLER="onBeforeFetchBatch"</code> */
     String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
-    /** Constant <code>FETCH_AFTER_FETCH_BATCH_HANDLER="onAfterFetchBatch"</code> */
+//    /** Constant <code>FETCH_AFTER_FETCH_BATCH_HANDLER="onAfterFetchBatch"</code> */
     String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
+//
+//    String FETCH_BEFORE_PARSE_HANDLER = "onBeforeParse";
+//    String FETCH_BEFORE_HTML_PARSE_HANDLER = "onBeforeHtmlParse";
+//
+//    String FETCH_BEFORE_EXTRACT_HANDLER = "onBeforeExtract";
+//    String FETCH_AFTER_EXTRACT_HANDLER = "onAfterExtract";
+//
+//    String FETCH_AFTER_HTML_PARSE_HANDLER = "onAfterHtmlParse";
+//    String FETCH_AFTER_PARSE_HANDLER = "onAfterParse";
+//
+//    String FETCH_AFTER_LOAD_HANDLER = "onAfterLoad";
 
     /**
      * Browser
@@ -296,18 +314,26 @@ public interface CapabilityTypes {
     /** Constant <code>FETCH_SCROLL_DOWN_INTERVAL="fetch.scroll.down.interval"</code> */
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
 
+    String FETCH_BROWSER_EVENT_HANDLER = "fetch.browser.event.handler";
+
     /** Constant <code>FETCH_CLIENT_JS="fetch.browser.client.js"</code> */
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
-    /** Constant <code>FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */
+    /**
+     * If log the result of expressions
+     * */
+    @Deprecated
+    String FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT = "fetch.browser.client.js.show.expression.result";
+
     String FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE = "fetch.browser.client.js.after.feature.compute";
-    /** Constant <code>FETCH_CLIENT_JS_COMPUTED_STYLES="fetch.browser.client.js.computed.styles"</code> */
+
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
-    /** Constant <code>FETCH_CLIENT_JS_PROPERTY_NAMES="fetch.browser.client.js.property.names"</code> */
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
      * Privacy control
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
+    /** The class name of privacy context id generator */
+    String PRIVACY_CONTEXT_ID_GENERATOR_CLASS = "privacy.context.id.generator.class";
     /** Constant <code>PRIVACY_MINOR_WARNING_FACTOR="privacy.minor.warning.factor"</code> */
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
     /** Constant <code>PRIVACY_MAX_WARNINGS="privacy.max.warnings"</code> */
@@ -315,12 +341,16 @@ public interface CapabilityTypes {
     /** Constant <code>PRIVACY_CONTEXT_MIN_THROUGHPUT="privacy.context.min.throughput"</code> */
     String PRIVACY_CONTEXT_MIN_THROUGHPUT = "privacy.context.min.throughput";
     /**
-     * Browser control
+     * The max value of tabs a browser can open
      */
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
-    /** Constant <code>BROWSER_EAGER_ALLOCATE_TABS="browser.eager.allocate.tabs"</code> */
+    /**
+     * Open a set of blank tabs before the first page view
+     * */
     String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
-    /** Constant <code>BROWSER_WEB_DRIVER_CLASS="browser.web.driver.class"</code> */
+    /**
+     * The web driver to use, selenium or pulsar browser, etc
+     * */
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     /** Constant <code>BROWSER_WEB_DRIVER_PRIORITY="browser.web.driver.priority"</code> */
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
@@ -330,7 +360,7 @@ public interface CapabilityTypes {
     String BROWSER_TYPE = "browser.type";
     /** Constant <code>BROWSER_INCOGNITO="browser.incognito"</code> */
     String BROWSER_INCOGNITO = "browser.incognito";
-    /** Constant <code>BROWSER_DRIVER_HEADLESS="browser.driver.headless"</code> */
+    /** Set browser driver to be headless or not */
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
     /** Constant <code>BROWSER_IMAGES_ENABLED="browser.images.enabled"</code> */
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
@@ -544,9 +574,6 @@ public interface CapabilityTypes {
      */
     String CACHING_FORBIDDEN_ALL = "all";
 
-    /** Constant <code>NODE_FEATURE_CALCULATOR_CLASS="pulsar.node.feature.calculator"</code> */
-    String NODE_FEATURE_CALCULATOR_CLASS = "pulsar.node.feature.calculator";
-
     /** Constant <code>PULSAR_DOMAIN="scent.domain"</code> */
     String PULSAR_DOMAIN = "scent.domain";
     /** Constant <code>SCENT_TASK_IDENT="scent.task.ident"</code> */
@@ -614,10 +641,6 @@ public interface CapabilityTypes {
     String SCENT_WIKI_USERNAME = "scent.wiki.username";
     /** Constant <code>SCENT_WIKI_PASSWORD="scent.wiki.password"</code> */
     String SCENT_WIKI_PASSWORD = "scent.wiki.password";
-
-    // Spark
-    /** Constant <code>SPARK_MASTER="spark.master"</code> */
-    String SPARK_MASTER = "spark.master";
 
     // H2
     /** Constant <code>H2_SESSION_FACTORY_CLASS="h2.sessionFactory"</code> */

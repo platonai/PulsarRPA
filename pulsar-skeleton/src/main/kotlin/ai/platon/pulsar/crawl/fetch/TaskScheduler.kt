@@ -7,6 +7,10 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.metrics.CommonCounter
+import ai.platon.pulsar.common.metrics.EnumCounterUtils
+import ai.platon.pulsar.common.measure.FileSizeUnits
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
@@ -23,7 +27,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.roundToInt
 
 class TaskScheduler(
         val tasksMonitor: TaskMonitor,
@@ -42,7 +45,7 @@ class TaskScheduler(
 
     private val log = LoggerFactory.getLogger(TaskScheduler::class.java)
     val id: Int = instanceSequence.incrementAndGet()
-    private val metricsCounters = MetricsCounters()
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
@@ -91,7 +94,7 @@ class TaskScheduler(
         return Params.of(
                 "className", this.javaClass.simpleName,
                 "id", id,
-                "bandwidth", Strings.readableBytes(bandwidth.toLong()),
+                "bandwidth", Strings.readableBytes(bandwidth),
                 "skipTruncated", skipTruncated,
                 "parse", parse,
                 "storeContent", storeContent,
@@ -160,7 +163,7 @@ class TaskScheduler(
     fun finishUnchecked(fetchTask: JobFetchTask) {
         tasksMonitor.finish(fetchTask)
         lastTaskFinishTime = Instant.now()
-        metricsCounters.inc(Counter.rFinishedTasks)
+        enumCounters.inc(Counter.rFinishedTasks)
     }
 
     /**
@@ -193,7 +196,7 @@ class TaskScheduler(
 
             tasksMonitor.finishAsap(fetchTask)
             fetchErrors.incrementAndGet()
-            metricsCounters.inc(CommonCounter.errors)
+            enumCounters.inc(CommonCounter.errors)
         } finally {
             lastTaskFinishTime = Instant.now()
         }
@@ -210,12 +213,12 @@ class TaskScheduler(
         val readyFetchTasks = tasksMonitor.numReadyTasks.get()
         val pendingFetchTasks = tasksMonitor.numPendingTasks.get()
 
-        metricsCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
-        metricsCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
+        enumCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
+        enumCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
 
         if (indexJIT) {
-            metricsCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
-            metricsCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
+            enumCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
+            enumCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
         }
     }
 
@@ -241,13 +244,13 @@ class TaskScheduler(
             val parseResult = pageParser.parse(page)
 
             if (!parseResult.isSuccess) {
-                metricsCounters.inc(Counter.rParseFailed)
-                page.pageCounters.increase<PageCounters.Self>(PageCounters.Self.parseErr)
+                enumCounters.inc(Counter.rParseFailed)
+                page.pageCounters.increase(PageCounters.Self.parseErr)
             }
 
             // Double check success
             if (!page.hasMark(Mark.PARSE)) {
-                metricsCounters.inc(Counter.rNoParse)
+                enumCounters.inc(Counter.rNoParse)
             }
 
             if (parseResult.minorCode != ParseStatus.SUCCESS_OK) {
@@ -280,7 +283,7 @@ class TaskScheduler(
             return
         }
 
-        page.addLiveLink(HyperLink(newUrl))
+        page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata.set(Name.REDIRECT_DISCOVERED, YES_STRING)
 
         val threadId = Thread.currentThread().id
@@ -295,7 +298,7 @@ class TaskScheduler(
         page.reprUrl = reprUrl
         reprUrls[threadId] = reprUrl
         messageWriter.reportRedirects(String.format("[%s] - %100s -> %s\n", redirType, url, reprUrl))
-        metricsCounters.inc(Counter.rRedirect)
+        enumCounters.inc(Counter.rRedirect)
     }
 
     /**
@@ -319,19 +322,19 @@ class TaskScheduler(
     }
 
     private fun updateStatus(page: WebPage) {
-        metricsCounters.inc(CommonCounter.rPersist)
-        metricsCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
+        enumCounters.inc(CommonCounter.rPersist)
+        enumCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
 
         totalPages.incrementAndGet()
-        totalBytes.addAndGet(page.contentBytes.toLong())
+        totalBytes.addAndGet(page.contentLength.toLong())
 
         if (page.isSeed) {
-            metricsCounters.inc(Counter.rSeeds)
+            enumCounters.inc(Counter.rSeeds)
         }
 
-        CounterUtils.increaseRDepth(page.distance, metricsCounters)
+        EnumCounterUtils.increaseRDepth(page.distance, enumCounters)
 
-        metricsCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f / 1024).roundToInt())
+        enumCounters.inc(Counter.rMbytes, FileSizeUnits.convert(page.contentLength, "M").toInt())
     }
 
     private fun logFetchFailure(message: String) {
@@ -340,7 +343,7 @@ class TaskScheduler(
         }
 
         fetchErrors.incrementAndGet()
-        metricsCounters.inc(CommonCounter.errors)
+        enumCounters.inc(CommonCounter.errors)
     }
 
     private fun report() {
@@ -363,7 +366,7 @@ class TaskScheduler(
             rIndexed, rNotIndexed
         }
 
-        init { MetricsCounters.register(Counter::class.java) }
+        init { AppMetrics.reg.register(Counter::class.java) }
 
         private val instanceSequence = AtomicInteger(0)
     }

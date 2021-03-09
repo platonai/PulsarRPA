@@ -30,7 +30,7 @@ import java.io.Reader
  * @author Jrme Charron
  */
 @RunWith(SpringJUnit4ClassRunner::class)
-class TestRegexUrlFilter : RegexUrlFilterBaseTest() {
+class TestRegexUrlFilter : RegexUrlFilterBaseTest("sample") {
 
     override fun getURLFilter(reader: Reader): UrlFilter {
         return RegexUrlFilter(reader, conf)

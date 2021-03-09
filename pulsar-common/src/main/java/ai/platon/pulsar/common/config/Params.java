@@ -32,6 +32,7 @@ public class Params {
     private String headerFormat = String.format("%25s   %-25s\n", "Name", "Value");
     private String rowFormat = "%25s: %s";
     private boolean cmdLineStyle = false;
+    private List<String> distinctBooleanParams;
     private String pairDelimiter = " ";
     private String kvDelimiter = ": ";
     private Logger defaultLog = null;
@@ -493,7 +494,7 @@ public class Params {
      *
      * @return a boolean.
      */
-    public boolean iscmdLineStyle() {
+    public boolean isCmdLineStyle() {
         return cmdLineStyle;
     }
 
@@ -514,6 +515,11 @@ public class Params {
      */
     public Params withCmdLineStyle(boolean isCmdLineStyle) {
         this.cmdLineStyle = isCmdLineStyle;
+        return this;
+    }
+
+    public Params withDistinctBooleanParams(List<String> distinctBooleanParams) {
+        this.distinctBooleanParams = distinctBooleanParams;
         return this;
     }
 
@@ -731,20 +737,29 @@ public class Params {
             }
 
             String key = arg.getKey();
+            String value = arg.getValue().toString();
             if (arg.getValue() == null) {
                 sb.append(key);
                 if (!cmdLineStyle) {
                     sb.append(kvDelimiter);
                     sb.append("null");
                 }
-            } else if (cmdLineStyle && key.startsWith("-") && "true".equals(arg.getValue().toString())) {
-                sb.append(arg.getKey());
-            } else if (cmdLineStyle && key.startsWith("-") && "false".equals(arg.getValue().toString())) {
-                // TODO: still not handle cases when arity > 1
-                // nothing
+            } else if (cmdLineStyle && key.startsWith("-") && "true".equals(value)) {
+                if (distinctBooleanParams != null && distinctBooleanParams.contains(key)) {
+                    sb.append(key);
+                    sb.append(kvDelimiter);
+                    sb.append("true");
+                } else {
+                    sb.append(key);
+                }
+            } else if (cmdLineStyle && key.startsWith("-") && "false".equals(value)) {
+                if (distinctBooleanParams != null && distinctBooleanParams.contains(key)) {
+                    sb.append(key);
+                    sb.append(kvDelimiter);
+                    sb.append("false");
+                }
             } else {
                 sb.append(key);
-                String value = arg.getValue().toString();
                 if (!value.isEmpty()) {
                     sb.append(kvDelimiter);
 

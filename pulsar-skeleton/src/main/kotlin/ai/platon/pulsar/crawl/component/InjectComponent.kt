@@ -1,11 +1,12 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -35,6 +36,10 @@ class InjectComponent(
         return inject(urlArgs.first, urlArgs.second)
     }
 
+    fun inject(normUrl: NormUrl): WebPage {
+        return inject(normUrl.spec, normUrl.args)
+    }
+
     fun inject(url: String, args: String): WebPage {
         var page = webDb.get(url, false)
 
@@ -48,7 +53,7 @@ class InjectComponent(
         }
 
         // already exist in db, update the status and mark it as a seed
-        page.options = args
+        page.args = args
         return if (inject(page)) page else WebPage.NIL
     }
 

@@ -31,7 +31,7 @@ open class PulsarOptions : Parameterized {
 
     constructor(): this("")
 
-    constructor(args: String): this(split(args))
+    constructor(args: String): this(split(args.trim()))
 
     constructor(argv: Array<String>) {
         this.argv = argv
@@ -84,6 +84,9 @@ open class PulsarOptions : Parameterized {
         }
     }
 
+    /**
+     * TODO: there is a bug to handle overwriting boolean field with arity = 0, e.g. "-parse -parse"
+     * */
     private fun doParse() {
         objects.add(this)
 

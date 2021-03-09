@@ -710,15 +710,17 @@ public class SParser {
      * @return a {@link java.time.Duration} object.
      */
     public Duration getDuration(Duration defaultValue) {
-        if (value == null) {
+        if (value == null || value.length() < 2) {
             return defaultValue;
         }
 
+        String upperCase = value.toUpperCase();
         try {
-            if (value.startsWith("P") || value.startsWith("-P")) {
+            if (upperCase.startsWith("P") || upperCase.startsWith("-P")) {
                 try {
-                    return Duration.parse(value);
+                    return Duration.parse(upperCase);
                 } catch (Throwable ignored) {
+                    return defaultValue;
                 }
             }
 
@@ -1124,7 +1126,7 @@ public class SParser {
             // substitute
             eval = eval.substring(0, match.start()) + val + eval.substring(match.end());
         }
-        throw new IllegalStateException("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
+        throw new IllegalArgumentException("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
     }
 
     enum ParsedTimeDuration {

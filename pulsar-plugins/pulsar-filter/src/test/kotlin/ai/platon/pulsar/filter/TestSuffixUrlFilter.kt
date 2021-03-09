@@ -19,12 +19,12 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader.readAllLines
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.io.IOException
+import kotlin.test.assertEquals
 
 /**
  * JUnit test for `SuffixUrlFilter`.
@@ -33,64 +33,65 @@ import java.io.IOException
  */
 @RunWith(SpringJUnit4ClassRunner::class)
 class TestSuffixUrlFilter : UrlFilterTestBase() {
-    private var filter: SuffixUrlFilter? = null
+    private lateinit var filter: SuffixUrlFilter
+    
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        filter = SuffixUrlFilter(readAllLines(suffixes), conf)
+        filter = SuffixUrlFilter(readAllLines(suffixes, "not-exist"), conf)
     }
 
     @Test
     fun testModeAccept() {
-        filter!!.isIgnoreCase = false
-        filter!!.isModeAccept = true
+        filter.isIgnoreCase = false
+        filter.isModeAccept = true
         for (i in urls.indices) {
-            Assert.assertEquals(urlsModeAccept[i], filter!!.filter(urls[i]))
+            assertEquals(urlsModeAccept[i], filter.filter(urls[i]))
         }
     }
 
     @Test
     fun testModeReject() {
-        filter!!.isIgnoreCase = false
-        filter!!.isModeAccept = false
+        filter.isIgnoreCase = false
+        filter.isModeAccept = false
         for (i in urls.indices) {
-            Assert.assertEquals(urlsModeReject[i], filter!!.filter(urls[i]))
+            assertEquals(urlsModeReject[i], filter.filter(urls[i]))
         }
     }
 
     @Test
     fun testModeAcceptIgnoreCase() {
-        filter!!.isIgnoreCase = true
-        filter!!.isModeAccept = true
+        filter.isIgnoreCase = true
+        filter.isModeAccept = true
         for (i in urls.indices) {
-            Assert.assertEquals(urlsModeAcceptIgnoreCase[i], filter!!.filter(urls[i]))
+            assertEquals(urlsModeAcceptIgnoreCase[i], filter.filter(urls[i]))
         }
     }
 
     @Test
     fun testModeRejectIgnoreCase() {
-        filter!!.isIgnoreCase = true
-        filter!!.isModeAccept = false
+        filter.isIgnoreCase = true
+        filter.isModeAccept = false
         for (i in urls.indices) {
-            Assert.assertEquals(urlsModeRejectIgnoreCase[i], filter!!.filter(urls[i]))
+            assertEquals(urlsModeRejectIgnoreCase[i], filter.filter(urls[i]))
         }
     }
 
     @Test
     fun testModeAcceptAndNonPathFilter() {
-        filter!!.isModeAccept = true
-        filter!!.setFilterFromPath(false)
+        filter.isModeAccept = true
+        filter.setFilterFromPath(false)
         for (i in urls.indices) {
-            Assert.assertEquals(urlsModeAcceptAndNonPathFilter[i], filter!!.filter(urls[i]))
+            assertEquals(urlsModeAcceptAndNonPathFilter[i], filter.filter(urls[i]))
         }
     }
 
     @Test
     fun testModeAcceptAndPathFilter() {
-        filter!!.isModeAccept = true
-        filter!!.setFilterFromPath(true)
+        filter.isModeAccept = true
+        filter.setFilterFromPath(true)
         for (i in urls.indices) {
-            Assert.assertEquals(urlsModeAcceptAndPathFilter[i], filter!!.filter(urls[i]))
+            assertEquals(urlsModeAcceptAndPathFilter[i], filter.filter(urls[i]))
         }
     }
 

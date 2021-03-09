@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 /**
  * <p>ProtocolStatus class.</p>
  *
+ * TODO: keep consistent with ResourceStatus
+ *
  * @author vincent
  * @version $Id: $Id
  */
@@ -49,16 +51,16 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     /** Constant <code>STATUS_SUCCESS</code> */
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     /** Constant <code>STATUS_NOTMODIFIED</code> */
-    public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
+    public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOT_MODIFIED);
     /** Constant <code>STATUS_NOTFETCHED</code> */
     public static final ProtocolStatus STATUS_NOTFETCHED = new ProtocolStatus(NOTFETCHED);
 
     /** Constant <code>STATUS_PROTO_NOT_FOUND</code> */
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     /** Constant <code>STATUS_ACCESS_DENIED</code> */
-    public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
+    public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(UNAUTHORIZED);
     /** Constant <code>STATUS_NOTFOUND</code> */
-    public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
+    public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOT_FOUND);
     // if a task is canceled, we do not save anything, if a task is retry, all the metadata is saved
     /** Constant <code>STATUS_CANCELED</code> */
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
@@ -69,33 +71,34 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     private static final HashMap<Integer, String> minorCodes = new HashMap<>();
 
     static {
-        majorCodes.put(NOTFETCHED, "nofetched");
-        majorCodes.put(SUCCESS, "success");
-        majorCodes.put(FAILED, "failed");
+        majorCodes.put(NOTFETCHED, "NotFetched");
+        majorCodes.put(SUCCESS, "Success");
+        majorCodes.put(FAILED, "Failed");
 
-        minorCodes.put(SUCCESS_OK, "ok");
-        minorCodes.put(MOVED, "moved");
-        minorCodes.put(TEMP_MOVED, "temp_moved");
-        minorCodes.put(NOTMODIFIED, "notmodified");
+        minorCodes.put(SUCCESS_OK, "OK");
+        minorCodes.put(CREATED, "Created");
+        minorCodes.put(MOVED_PERMANENTLY, "Moved");
+        minorCodes.put(MOVED_TEMPORARILY, "TempMoved");
+        minorCodes.put(NOT_MODIFIED, "NotModified");
 
-        minorCodes.put(PROTO_NOT_FOUND, "proto_not_found");
-        minorCodes.put(ACCESS_DENIED, "access_denied");
-        minorCodes.put(NOTFOUND, "notfound");
-        minorCodes.put(REQUEST_TIMEOUT, "request_timeout");
-        minorCodes.put(GONE, "gone");
+        minorCodes.put(PROTO_NOT_FOUND, "ProtoNotFound");
+        minorCodes.put(UNAUTHORIZED, "AccessDenied");
+        minorCodes.put(NOT_FOUND, "NotFound");
+        minorCodes.put(REQUEST_TIMEOUT, "RequestTimeout");
+        minorCodes.put(GONE, "Gone");
 
-        minorCodes.put(UNKNOWN_HOST, "unknown_host");
-        minorCodes.put(ROBOTS_DENIED, "robots_denied");
-        minorCodes.put(EXCEPTION, "exception");
-        minorCodes.put(REDIR_EXCEEDED, "redir_exceeded");
-        minorCodes.put(WOULDBLOCK, "wouldblock");
-        minorCodes.put(BLOCKED, "blocked");
+        minorCodes.put(UNKNOWN_HOST, "UnknownHost");
+        minorCodes.put(ROBOTS_DENIED, "RobotsDenied");
+        minorCodes.put(EXCEPTION, "Exception");
+        minorCodes.put(REDIR_EXCEEDED, "RedirExceeded");
+        minorCodes.put(WOULD_BLOCK, "WouldBlock");
+        minorCodes.put(BLOCKED, "Blocked");
 
-        minorCodes.put(RETRY, "retry");
-        minorCodes.put(CANCELED, "canceled");
-        minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
-        minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
-        minorCodes.put(SCRIPT_TIMEOUT, "script_timeout");
+        minorCodes.put(RETRY, "Retry");
+        minorCodes.put(CANCELED, "Canceled");
+        minorCodes.put(THREAD_TIMEOUT, "ThreadTimeout");
+        minorCodes.put(WEB_DRIVER_TIMEOUT, "WebDriverTimeout");
+        minorCodes.put(SCRIPT_TIMEOUT, "ScriptTimeout");
     }
 
     private GProtocolStatus protocolStatus;
@@ -145,8 +148,8 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @param code a short.
      * @return a {@link java.lang.String} object.
      */
-    public static String getMajorName(short code) {
-        return majorCodes.getOrDefault(code, "unknown");
+    public static String getMajorName(int code) {
+        return majorCodes.getOrDefault((short)code, "unknown");
     }
 
     /**
@@ -251,7 +254,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @return a {@link ai.platon.pulsar.persist.ProtocolStatus} object.
      */
     public static ProtocolStatus fromMinor(int minorCode) {
-        if (minorCode == SUCCESS_OK || minorCode == NOTMODIFIED) {
+        if (minorCode == SUCCESS_OK || minorCode == NOT_MODIFIED) {
             return STATUS_SUCCESS;
         } else {
             return failed(minorCode);
@@ -367,7 +370,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @return a boolean.
      */
     public boolean isTempMoved() {
-        return getMinorCode() == TEMP_MOVED;
+        return getMinorCode() == MOVED_TEMPORARILY;
     }
 
     /**
@@ -376,7 +379,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @return a boolean.
      */
     public boolean isMoved() {
-        return getMinorCode() == TEMP_MOVED || getMinorCode() == MOVED;
+        return getMinorCode() == MOVED_TEMPORARILY || getMinorCode() == MOVED_PERMANENTLY;
     }
 
     /**

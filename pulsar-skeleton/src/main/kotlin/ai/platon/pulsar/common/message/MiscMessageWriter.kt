@@ -3,19 +3,20 @@ package ai.platon.pulsar.common.message
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.MultiSinkMessageWriter
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.url.LabeledHyperlink
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.DomStatistics
-import ai.platon.pulsar.persist.model.LabeledHyperLink
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDateTime
@@ -28,7 +29,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Write misc messages into misc sinks
  */
-class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMessageWriter(conf) {
+class MiscMessageWriter(
+    /**
+     * TODO: no WebDb dependency
+     * */
+    val webDb: WebDb,
+    conf: ImmutableConfig
+) : MultiSinkMessageWriter(conf) {
     private val log = LoggerFactory.getLogger(MiscMessageWriter::class.java)
     private val hostname = NetUtil.getHostname()
     // TODO: job name is set in job setup phrase, so it's not available unless this is a [JobInitialized] class
@@ -58,7 +65,7 @@ class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMess
     fun report(reportGroup: String, page: WebPage) {
         val metricsPageUrl = "$urlPrefix/$reportGroup"
         val metricsPage = getOrCreateMetricsPage(metricsPageUrl)
-        metricsPage.addLiveLink(HyperLink(page.url))
+        metricsPage.addLiveLink(HyperlinkPersistable(page.url))
         metricsPage.setContent(metricsPage.contentAsString + PageFormatter(page) + "\n")
         metricsPageUrls.add(metricsPageUrl)
         metricsPages[metricsPageUrl] = metricsPage
@@ -160,14 +167,14 @@ class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMess
         write(report, "document-statistics.txt")
     }
 
-    fun reportLabeledHyperLinks(hyperLinks: Set<LabeledHyperLink>) {
+    fun reportLabeledHyperlinks(hyperLinks: Set<LabeledHyperlink>) {
         if (hyperLinks.isEmpty()) return
-        val groupedHyperLinks = hyperLinks.groupBy { it.label }
-        groupedHyperLinks.keys.forEach { label ->
-            val links = groupedHyperLinks[label]?:return@forEach
+        val groupedHyperlinks = hyperLinks.groupBy { it.label }
+        groupedHyperlinks.keys.forEach { label ->
+            val links = groupedHyperlinks[label]?:return@forEach
 
             val report = links.joinToString("\n") {
-                String.format("%4d %4d | %-50s | %s", it.depth, it.order, it.anchor, it.url)
+                String.format("%4d %4d | %-50s | %s", it.depth, it.order, it.text, it.url)
             }
 
             val ident = label.toLowerCase()

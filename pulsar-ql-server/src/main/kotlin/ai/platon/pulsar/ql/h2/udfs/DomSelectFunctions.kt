@@ -14,6 +14,7 @@ import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.value.ValueArray
 import org.h2.value.ValueFloat
+import org.h2.value.ValueInt
 import org.h2.value.ValueString
 import org.jsoup.nodes.Element
 
@@ -61,6 +62,24 @@ object DomSelectFunctions {
         return Queries.selectNthOrNull(dom, cssQuery, n) { it.text() } ?: ""
     }
 
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element's own texts")
+    @JvmStatic
+    fun allOwnTexts(dom: ValueDom, cssQuery: String): ValueArray {
+        return Queries.select(dom, cssQuery) { it.ownText() }
+    }
+
+    @UDFunction(description = "Select the first element from a DOM by the given css query and return the element's own text")
+    @JvmStatic
+    fun firstOwnText(dom: ValueDom, cssQuery: String): String {
+        return Queries.selectFirstOrNull(dom, cssQuery) { it.ownText() } ?: ""
+    }
+
+    @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element's own text")
+    @JvmStatic
+    fun nthOwnText(dom: ValueDom, cssQuery: String, n: Int): String {
+        return Queries.selectNthOrNull(dom, cssQuery, n) { it.ownText() } ?: ""
+    }
+
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
     @JvmStatic
     fun allSlimHtmls(dom: ValueDom, cssQuery: String): ValueArray {
@@ -77,6 +96,14 @@ object DomSelectFunctions {
     @JvmStatic
     fun nthSlimHtml(dom: ValueDom, cssQuery: String, n: Int): String {
         return Queries.selectNthOrNull(dom, cssQuery, n) { it.slimHtml } ?: ""
+    }
+
+    @UDFunction(description = "Select all the element from a DOM by the given css query " +
+            "and try to extract an integer from the element text, if the text is not an integer, fill the default value")
+    @JvmStatic
+    @JvmOverloads
+    fun allIntegers(dom: ValueDom, cssQuery: String, defaultValue: Int = 0): ValueArray {
+        return Queries.select(dom, cssQuery) { ValueInt.get(Strings.getFirstInteger(it.text(), defaultValue)) }
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -96,6 +123,14 @@ object DomSelectFunctions {
         return Strings.getFirstInteger(s, defaultValue)
     }
 
+    @UDFunction(description = "Select all the element from a DOM by the given css query " +
+            "and try to extract an number from the element text")
+    @JvmStatic
+    @JvmOverloads
+    fun allFloats(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueArray {
+        return Queries.select(dom, cssQuery) { ValueFloat.get(Strings.getFirstFloatNumber(it.text(), defaultValue)) }
+    }
+
     /**
      * convert to ValueFloat manually,
      * TODO: kotlin.Float can not convert to ValueFloat automatically
@@ -103,7 +138,7 @@ object DomSelectFunctions {
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
             "and try to extract an number from the element text")
     @JvmStatic
-    fun firstNumber(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueFloat {
+    fun firstFloat(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueFloat {
         val s = firstText(dom, cssQuery)
         return Strings.getFirstFloatNumber(s, defaultValue).let { ValueFloat.get(it) }
     }
@@ -112,7 +147,7 @@ object DomSelectFunctions {
             "and try to extract an number from the element text")
     @JvmStatic
     @JvmOverloads
-    fun nthNumber(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): ValueFloat {
+    fun nthFloat(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): ValueFloat {
         val s = nthText(dom, cssQuery, n)
         return Strings.getFirstFloatNumber(s, defaultValue).let { ValueFloat.get(it) }
     }

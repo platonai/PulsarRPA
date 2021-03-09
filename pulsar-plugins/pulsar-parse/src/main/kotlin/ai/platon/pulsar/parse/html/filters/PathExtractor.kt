@@ -1,10 +1,9 @@
 package ai.platon.pulsar.parse.html.filters
 
-import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.EntityOptions
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
-import ai.platon.pulsar.crawl.parse.ParseFilter
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.crawl.parse.html.ParseContext
@@ -25,16 +24,17 @@ import org.slf4j.LoggerFactory
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
  */
 class PathExtractor(
-        val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : AbstractParseFilter() {
 
     companion object {
         enum class Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
-        init { MetricsCounters.register(Counter::class.java) }
+        init { AppMetrics.reg.register(Counter::class.java) }
     }
 
     private var log = LoggerFactory.getLogger(PathExtractor::class.java)
+
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
 
     /**
      * Extract all fields in the page
@@ -49,7 +49,7 @@ class PathExtractor(
 
         parseResult.majorCode = ParseStatus.SUCCESS
 
-        val query = page.query?:page.options.toString()
+        val query = page.query?:page.args.toString()
         val options = EntityOptions.parse(query)
         if (!options.hasRules()) {
             parseResult.minorCode = ParseStatus.SUCCESS_EXT
@@ -71,7 +71,7 @@ class PathExtractor(
         var loss = fields.loss
 
         page.pageCounters.set(Self.missingFields, loss)
-        metricsCounters.inc(Counter.brokenEntity, if (loss > 0) 1 else 0)
+        enumCounters.inc(Counter.brokenEntity, if (loss > 0) 1 else 0)
 
         var brokenSubEntity = 0
         for (i in 1 until fieldCollections.size) {
@@ -84,7 +84,7 @@ class PathExtractor(
         }
 
         page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
-        metricsCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
+        enumCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
 
         return parseResult
     }

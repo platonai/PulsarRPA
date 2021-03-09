@@ -14,15 +14,16 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.addColumn
+import com.google.gson.Gson
 import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
-import org.h2.value.Value
-import org.h2.value.ValueArray
-import org.h2.value.ValueString
+import org.h2.value.*
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.Long.MAX_VALUE
 import java.sql.Connection
+import java.sql.ResultSet
+import java.text.SimpleDateFormat
 import java.time.Duration
 import java.util.*
 
@@ -424,6 +425,71 @@ object CommonFunctions {
 
     @UDFunction
     @JvmStatic
+    fun makeArray(value: Value, n: Int): ValueArray {
+        val values = Array(n) { value }
+        return ValueArray.get(values)
+    }
+
+    /**
+     * The first column is treated as the key while the second one is treated as the value
+     * */
+    @UDFunction
+    @JvmStatic
+    fun toJson(rs: ResultSet): String {
+        if (rs.metaData.columnCount < 2) {
+            return "{}"
+        }
+
+        val map = mutableMapOf<String, String>()
+        rs.beforeFirst()
+        while (rs.next()) {
+            // TODO: this is a temporary solution, find out why there is a ' surrounding
+            val k = rs.getString(1).removeSurrounding("'")
+            val v = rs.getString(2).removeSurrounding("'")
+            map[k] = v
+        }
+
+        return Gson().toJson(map)
+    }
+
+    /**
+     * For all ValueInts in the values, find out the minimal value, ignore no-integer values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun intArrayMin(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueInt>().minByOrNull { it.int } ?: ValueNull.INSTANCE
+    }
+
+    /**
+     * For all ValueInts in the values, find out the maximal value, ignore no-integer values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun intArrayMax(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueInt>().maxByOrNull { it.int } ?: ValueNull.INSTANCE
+    }
+
+    /**
+     * For all ValueFloats in the values, find out the minimal value, ignore no-float values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun floatArrayMin(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueFloat>().minByOrNull { it.float } ?: ValueNull.INSTANCE
+    }
+
+    /**
+     * For all ValueFloats in the values, find out the maximal value, ignore no-float values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun floatArrayMax(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueFloat>().maxByOrNull { it.float } ?: ValueNull.INSTANCE
+    }
+
+    @UDFunction
+    @JvmStatic
     fun getString(value: Value): String {
         return value.string
     }
@@ -444,6 +510,14 @@ object CommonFunctions {
     @JvmStatic
     fun isNotEmpty(array: ValueArray): Boolean {
         return array.list.isNotEmpty()
+    }
+
+    @UDFunction
+    @JvmStatic
+    @JvmOverloads
+    fun formatTimestamp(timestamp: String, fmt: String = "yyyy-MM-dd HH:mm:ss"): String {
+        val time = timestamp.toLongOrNull() ?: 0
+        return formatTimestamp(time, fmt)
     }
 
     /**
@@ -479,5 +553,9 @@ object CommonFunctions {
         }
 
         return SParser.wrap(d).duration
+    }
+
+    private fun formatTimestamp(timestamp: Long, fmt: String): String {
+        return SimpleDateFormat(fmt).format(Date(timestamp))
     }
 }

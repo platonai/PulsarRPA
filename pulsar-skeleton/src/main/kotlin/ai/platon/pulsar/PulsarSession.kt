@@ -1,20 +1,25 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.BeanFactory
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.nodes.node.ext.isAnchor
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
@@ -38,23 +43,38 @@ open class PulsarSession(
         /**
          * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
-        val id: Int = 9000000 + idGen.incrementAndGet()
+        val id: Int = nextId
 ) : AutoCloseable {
-    protected val log = LoggerFactory.getLogger(PulsarSession::class.java)
+
+    companion object {
+        const val ID_CAPACITY = 1_000_000
+        const val ID_START = 1_000_000
+        const val ID_END = ID_START + ID_CAPACITY - 1
+
+        private val idGen = AtomicInteger()
+        private val nextId get() = ID_START + idGen.incrementAndGet()
+        private fun opts() = LoadOptions.create()
+    }
+
+    private val log = LoggerFactory.getLogger(PulsarSession::class.java)
+
+    val unmodifiedConfig get() = context.unmodifiedConfig
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * TODO: session scoped?
      * */
     val sessionBeanFactory = BeanFactory(sessionConfig)
+
+    val display = "$id"
+
+    private val closed = AtomicBoolean()
+    val isActive get() = !closed.get() && context.isActive
+
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
     private val pageCache get() = context.globalCache.pageCache
     private val documentCache get() = context.globalCache.documentCache
-    val display = "$id"
-    // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
-    private val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && context.isActive
 
     /**
      * Close objects when sessions closes
@@ -72,6 +92,15 @@ open class PulsarSession(
     fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
             context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
 
+    fun normalize(url: UrlAware, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+            context.normalize(url, initOptions(options), toItemOption)
+
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+            context.normalizeOrNull(url, initOptions(options), toItemOption)
+
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+            context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
+
     /**
      * Inject a url
      *
@@ -81,6 +110,10 @@ open class PulsarSession(
     fun inject(url: String): WebPage = ensureActive { context.inject(normalize(url)) }
 
     fun get(url: String): WebPage = ensureActive { context.get(url) }
+
+    fun getOrNull(url: String): WebPage? = ensureActive { context.getOrNull(url) }
+
+    fun exists(url: String): Boolean = ensureActive { context.exists(url) }
 
     /**
      * Load a url with specified options
@@ -192,7 +225,7 @@ open class PulsarSession(
      * @return The web pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = opts()): Collection<WebPage> {
-        val outlinkSelector = appendSelectorIfMissing(options.outlinkSelector, "a")
+        val outlinkSelector = appendSelectorIfMissing(options.outLinkSelector, "a")
 
         val normUrl = normalize(portalUrl, options)
 
@@ -316,13 +349,8 @@ open class PulsarSession(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            // org.springframework.beans.factory.BeanCreationNotAllowedException throws if WebDb is not created yet
-            kotlin.runCatching { context.webDb.flush() }.onFailure { log.warn(it.message) }
             closableObjects.forEach { o -> o.close() }
-
-            log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
-                    display,
-                    Strings.readableBytes(Systems.memoryUsed), Strings.readableBytes(Systems.memoryFree))
+            log.info("Session #{} is closed", display)
         }
     }
 
@@ -398,10 +426,4 @@ open class PulsarSession(
             = if (isActive) action() else throw IllegalApplicationContextStateException("Pulsar session is not alive")
 
     private fun <T> ensureActive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
-
-    private fun opts() = LoadOptions.create()
-
-    companion object {
-        private val idGen = AtomicInteger()
-    }
 }

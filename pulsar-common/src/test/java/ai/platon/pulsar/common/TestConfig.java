@@ -6,10 +6,9 @@ import ai.platon.pulsar.common.config.VolatileConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
-import java.io.BufferedReader;
 import java.time.Duration;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * Created by vincent on 17-1-14.
@@ -20,12 +19,10 @@ public class TestConfig {
     public void testConfig() {
         ImmutableConfig conf = new ImmutableConfig(false);
         System.out.println(conf.toString());
-//    assertFalse(conf.toString().contains("pulsar-default.xml"));
-//
-//    conf = new ImmutableConfig();
-//    assertTrue(conf.toString().contains("pulsar-default.xml"));
+        assertFalse(conf.toString().contains("core-default.xml"));
 
-        new BufferedReader(conf.getConfResourceAsReader("log4j.properties")).lines().forEach(System.out::println);
+        conf = new ImmutableConfig();
+        assertTrue(conf.toString().contains("core-default.xml"));
     }
 
     @Test

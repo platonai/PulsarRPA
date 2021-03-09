@@ -12,22 +12,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.5.8-SNAPSHOT</version>
+        <version>1.5.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-common</artifactId>
@@ -46,12 +34,6 @@
         </dependency>
 
         <!-- Local Data Storage -->
-
-        <!-- Nonnull -->
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
 
         <!-- XML process -->
         <dependency>
@@ -112,11 +94,15 @@
             <artifactId>xercesImpl</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.apache.tika</groupId>-->
-<!--            <artifactId>tika-parsers</artifactId>-->
-<!--            <version>${tika.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-serialization</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.nibor.autolink</groupId>
+            <artifactId>autolink</artifactId>
+        </dependency>
 
         <!-- Logging and diagnose -->
         <dependency>
@@ -127,14 +113,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-coroutines-core</artifactId>
         </dependency>
     </dependencies>
 </project>

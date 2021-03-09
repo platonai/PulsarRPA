@@ -18,10 +18,11 @@
  */
 package ai.platon.pulsar.crawl.component
 
-
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadOptions
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -36,6 +37,22 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+
+class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = null) {
+
+    constructor(url: String, options: LoadOptions, href: String? = null):
+            this(WebPage.newWebPage(url, options.volatileConfig, href), options)
+
+    init {
+        page.also {
+            it.href = href
+            it.fetchMode = options.fetchMode
+            it.args = options.toString()
+            it.volatileConfig = options.volatileConfig
+            it.isCachedContentEnabled = options.cacheContent
+        }
+    }
+}
 
 /**
  * Created by vincent on 17-5-1.
@@ -72,7 +89,7 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetch(url: String, options: LoadOptions): WebPage {
-        return fetchContent(createFetchEntry(url, options))
+        return fetchContent0(FetchEntry(url, options))
     }
 
     /**
@@ -82,8 +99,17 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetchContent(page: WebPage): WebPage {
-        require(page.isNotInternal) { "Internal page ${page.url}" }
-        return page.takeIf { !isActive } ?: fetchContent0(page)
+        return fetchContent0(FetchEntry(page, page.loadOptions))
+    }
+
+    /**
+     * Fetch a page
+     *
+     * @param page The page to fetch
+     * @return The fetch result
+     */
+    fun fetchContent(fetchEntry: FetchEntry): WebPage {
+        return fetchContent0(fetchEntry)
     }
 
     /**
@@ -102,14 +128,21 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    protected fun fetchContent0(page: WebPage): WebPage {
+    protected fun fetchContent0(fetchEntry: FetchEntry): WebPage {
+        val page = fetchEntry.page
+        require(page.isNotInternal) { "Internal page ${page.url}" }
+
         return try {
+            beforeFetch(page)
+
             fetchMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
             log.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
+        } finally {
+            afterFetch(page)
         }
     }
 
@@ -121,13 +154,25 @@ open class FetchComponent(
      */
     protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
         return try {
+            beforeFetch(page)
+
             fetchMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
             log.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
+        } finally {
+            afterFetch(page)
         }
+    }
+
+    private fun beforeFetch(page: WebPage) {
+        page.loadEventHandler?.onBeforeFetch?.invoke(page)
+    }
+
+    private fun afterFetch(page: WebPage) {
+        page.loadEventHandler?.onAfterFetch?.invoke(page)
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
@@ -142,17 +187,17 @@ open class FetchComponent(
 
         val crawlStatus = when (protocolStatus.minorCode) {
             ProtocolStatus.SUCCESS_OK -> CrawlStatus.STATUS_FETCHED
-            ProtocolStatus.NOTMODIFIED -> CrawlStatus.STATUS_NOTMODIFIED
+            ProtocolStatus.NOT_MODIFIED -> CrawlStatus.STATUS_NOTMODIFIED
             ProtocolStatus.CANCELED -> CrawlStatus.STATUS_UNFETCHED
 
-            ProtocolStatus.MOVED,
-            ProtocolStatus.TEMP_MOVED -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
+            ProtocolStatus.MOVED_PERMANENTLY,
+            ProtocolStatus.MOVED_TEMPORARILY -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
 
-            ProtocolStatus.ACCESS_DENIED,
+            ProtocolStatus.UNAUTHORIZED,
             ProtocolStatus.ROBOTS_DENIED,
             ProtocolStatus.UNKNOWN_HOST,
             ProtocolStatus.GONE,
-            ProtocolStatus.NOTFOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics?.trackHostUnreachable(url) }
+            ProtocolStatus.NOT_FOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.EXCEPTION,
             ProtocolStatus.RETRY,
@@ -187,7 +232,7 @@ open class FetchComponent(
         val url = page.url
         val minorCode = protocolStatus.minorCode
         val temp: Boolean
-        if (minorCode == ProtocolStatus.MOVED) {
+        if (minorCode == ProtocolStatus.MOVED_PERMANENTLY) {
             crawlStatus = CrawlStatus.STATUS_REDIR_PERM
             temp = false
         } else {
@@ -206,20 +251,6 @@ open class FetchComponent(
         return crawlStatus
     }
 
-    fun createFetchEntry(originalUrl: String, options: LoadOptions): WebPage {
-        return WebPage.newWebPage(originalUrl, options.shortenKey, options.volatileConfig)
-                .also { initFetchEntry(it, options) }
-    }
-
-    fun initFetchEntry(page: WebPage, options: LoadOptions) {
-        page.also {
-            it.fetchMode = options.fetchMode
-            it.options = options.toString()
-            it.volatileConfig = options.volatileConfig
-            it.options = options.toString()
-        }
-    }
-
     private fun updatePage(page: WebPage, pageDatum: PageDatum?,
                            protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
@@ -227,16 +258,28 @@ open class FetchComponent(
         pageDatum?.also {
             page.location = it.location
             page.proxy = it.proxyEntry?.outIp
-            page.activeDomMultiStatus = it.activeDomMultiStatus
-            page.activeDomUrls = it.activeDomUrls
+            val ms = it.activeDomMultiStatus
+            if (ms != null) {
+                page.activeDomStatus = ms.status
+                page.activeDomStats = mapOf(
+                        "initStat" to ms.initStat, "initD" to ms.initD,
+                        "lastStat" to ms.lastStat, "lastD" to ms.lastD
+                )
+            }
 
-            it.pageCategory?.let { page.pageCategory = it }
+            it.activeDomUrls?.let { page.activeDomUrls = it }
+            it.pageCategory?.let { page.setPageCategory(it) }
             it.htmlIntegrity?.let { page.htmlIntegrity = it }
             it.lastBrowser?.let { page.lastBrowser = it }
+
+            if (protocolStatus.isSuccess) {
+                updateContent(page, it)
+            }
         }
 
-        // No need to update content if the fetch is failed, just keep the last content in such cases
-        pageDatum?.takeIf { protocolStatus.isSuccess }?.also { updateContent(page, it) }
+        if (protocolStatus.isSuccess) {
+            page.fetchRetries = 0
+        }
 
         updateFetchTime(page)
         updateMarks(page)
@@ -267,6 +310,7 @@ open class FetchComponent(
             var contentType = contentTypeHint
 
             page.setContent(pageDatum.content)
+
             if (contentType != null) {
                 pageDatum.contentType = contentType
             } else {

@@ -12,11 +12,15 @@ import org.junit.Ignore
 import org.junit.Test
 import java.sql.Timestamp
 import java.text.ParseException
+import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
 /**
  * Created by vincent on 16-7-20.
@@ -24,6 +28,7 @@ import java.util.*
  */
 class TestDateTimes {
     private val pattern = "yyyy-MM-dd HH:mm:ss"
+
     @Test
     fun testDateTimeConvert() {
         val zoneId = ZoneId.systemDefault()
@@ -125,24 +130,32 @@ class TestDateTimes {
         println(now)
         val ldt = LocalDateTime.now()
         println(ldt)
+
+        val timestamp = 0L
+        val fmt = "yyyyMMddHHmmss"
+        val d = SimpleDateFormat(fmt).format(Date(timestamp))
+        println(d)
     }
 
     @Test
-    fun testIlligalDateFormat() {
-        var dateString: String? = "2013-39-08 10:39:36"
-        try {
-            val dateTime = DateTimeFormatter.ofPattern(pattern).parse(dateString)
-            dateString = DateTimeFormatter.ISO_INSTANT.format(dateTime)
-            println(dateString)
-        } catch (e: DateTimeParseException) {
-            println(e.toString())
-        }
+    fun testTruncateLocalDateTime() {
+        val dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+        val date = LocalDate.now()
+        assertEquals(dateTime.dayOfMonth, date.dayOfMonth)
+        assertEquals(dateTime.monthValue, date.monthValue)
+    }
+
+    @Test(expected = DateTimeParseException::class)
+    fun testIllegalDateFormat() {
+        var dateString = "2013-39-08 10:39:36"
+        val dateTime = DateTimeFormatter.ofPattern(pattern).parse(dateString)
+        dateString = DateTimeFormatter.ISO_INSTANT.format(dateTime)
     }
 
     @Test
     @Ignore("Time costing performance testing")
     fun testSystemClockPerformance() {
-        val ROUND = 10000000
+        val round = 10000000
         val impreciseNow = System.currentTimeMillis()
         var cost: Long = 0
         var cost2: Long = 0
@@ -151,17 +164,17 @@ class TestDateTimes {
         var uselessTime: Instant?
         var start: Instant
         start = Instant.now()
-        for (i in 0 until ROUND) {
+        for (i in 0 until round) {
             useless = impreciseNow
         }
         cost = Instant.now().toEpochMilli() - start.toEpochMilli()
         start = Instant.now()
-        for (i in 0 until ROUND) {
+        for (i in 0 until round) {
             useless = System.currentTimeMillis()
         }
         cost2 = Instant.now().toEpochMilli() - start.toEpochMilli()
         start = Instant.now()
-        for (i in 0 until ROUND) {
+        for (i in 0 until round) {
             uselessTime = Instant.now()
         }
         cost3 = Instant.now().toEpochMilli() - start.toEpochMilli()

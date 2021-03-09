@@ -8,7 +8,7 @@ import java.nio.file.Paths
 /**
  * Created by vincent on 17-2-23.
  */
-class TestAutomatonUrlFilter : RegexUrlFilterBaseTest(SAMPLES_DIR) {
+class TestAutomatonUrlFilter : RegexUrlFilterBaseTest("automaton/sample") {
 
     override fun getURLFilter(reader: Reader): UrlFilter {
         return AutomatonUrlFilter(reader, conf)
@@ -23,9 +23,5 @@ class TestAutomatonUrlFilter : RegexUrlFilterBaseTest(SAMPLES_DIR) {
         bench(200, "Benchmarks")
         bench(400, "Benchmarks")
         bench(800, "Benchmarks")
-    }
-
-    companion object {
-        private val SAMPLES_DIR = Paths.get(TEST_DIR, "automaton", "sample").toString()
     }
 }

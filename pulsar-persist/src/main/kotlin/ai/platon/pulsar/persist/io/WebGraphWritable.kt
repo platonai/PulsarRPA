@@ -42,7 +42,7 @@ class WebGraphWritable(
             output.writeBoolean(edge.isLoop)
             if (optimizeMode != OptimizeMode.IGNORE_EDGE) {
                 Text.writeString(output, edge.options)
-                Text.writeString(output, edge.anchor)
+                Text.writeString(output, edge.anchorText)
                 output.writeInt(edge.order)
                 IOUtils.serialize(conf, output, MetadataWritable(edge.metadata), MetadataWritable::class.java)
                 output.writeDouble(graph.getEdgeWeight(edge))
@@ -88,7 +88,7 @@ class WebGraphWritable(
 
             val edge = graph.addEdgeLenient(source.vertex, target.vertex, weight)
             edge.options = options
-            edge.anchor = anchor
+            edge.anchorText = anchor
             edge.order = order
             edge.metadata = metadataWritable.get()
         }

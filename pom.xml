@@ -22,16 +22,33 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.5.8-SNAPSHOT</version>
+    <version>1.5.7-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>The easy way to crawl and scrape the web:
         turn large web sites into tables and charts using simple native api, SQL or RESTful api</description>
 
-    <properties>
-        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
-        <pulsar.skip.assembly>true</pulsar.skip.assembly>
-    </properties>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Vincent Zhang</name>
+            <email>ivincent.zhang@gmail.com</email>
+            <organization>platon.ai</organization>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
+        <url>https://github.com/platonai/pulsar</url>
+    </scm>
 
     <repositories>
         <repository>
@@ -52,15 +69,15 @@
         <module>pulsar-skeleton</module>
         <module>pulsar-dom</module>
         <module>pulsar-plugins</module>
-        <module>pulsar-beans</module>
 
         <module>pulsar-tools</module>
         <module>pulsar-third</module>
         <module>pulsar-ql-common</module>
         <module>pulsar-ql-server</module>
         <module>pulsar-rest</module>
+
+        <module>pulsar-spring-support</module>
         <module>pulsar-app</module>
-        <module>pulsar-examples</module>
     </modules>
 
     <profiles>
@@ -112,6 +129,25 @@
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>OS-WIN</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -261,6 +297,7 @@
                     <version>1.6.7</version>
                     <extensions>true</extensions>
                 </plugin>
+
             </plugins>
         </pluginManagement>
 
@@ -294,6 +331,7 @@
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
             </plugin>
+
         </plugins>
     </build>
 
@@ -411,29 +449,61 @@
                 <artifactId>pulsar-h2</artifactId>
                 <version>${pulsar-h2.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-boot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-serialization -->
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-serialization</artifactId>
+                <version>${serialization.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.nibor.autolink</groupId>
+                <artifactId>autolink</artifactId>
+                <version>${autolink.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+        </dependency>
+    </dependencies>
 
-    <developers>
-        <developer>
-            <name>Vincent Zhang</name>
-            <email>ivincent.zhang@gmail.com</email>
-            <organization>platon.ai</organization>
-            <timezone>+8</timezone>
-        </developer>
-    </developers>
+    <properties>
+        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
+        <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-    <scm>
-        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
-        <url>https://github.com/platonai/pulsar</url>
-    </scm>
+        <!-- skipTests is set to be true in platon.pom which will be removed from platon.pom later -->
+        <skipTests>false</skipTests>
+
+        <serialization.version>1.4.21</serialization.version>
+        <autolink.version>0.10.0</autolink.version>
+    </properties>
 
 </project>

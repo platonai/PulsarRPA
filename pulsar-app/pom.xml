@@ -15,27 +15,19 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.5.8-SNAPSHOT</version>
+        <version>1.5.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-app</artifactId>
+    <packaging>pom</packaging>
+
     <name>Pulsar App</name>
 
-    <dependencies>
-        <!-- Internal Dependencies -->
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-beans</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-ql-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-rest</artifactId>
-        </dependency>
-
-    </dependencies>
-
+    <modules>
+        <module>pulsar-app-resources</module>
+        <module>pulsar-sql-qa</module>
+        <module>pulsar-test</module>
+        <module>pulsar-master</module>
+        <module>pulsar-examples</module>
+    </modules>
 </project>

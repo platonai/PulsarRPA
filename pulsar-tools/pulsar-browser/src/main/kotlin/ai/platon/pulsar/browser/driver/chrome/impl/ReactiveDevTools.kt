@@ -93,7 +93,7 @@ abstract class ReactiveDevTools(
         } catch (e: WebSocketServiceException) {
             throw ChromeDevToolsInvocationException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
-            throw ChromeDevToolsInvocationException("Interrupted while waiting response", e)
+            Thread.currentThread().interrupt()
         } catch (e: IOException) {
             throw ChromeDevToolsInvocationException("Failed reading response message", e)
         }
@@ -188,7 +188,9 @@ abstract class ReactiveDevTools(
     override fun waitUntilClosed() {
         try {
             closeLatch.await()
-        } catch (ignored: InterruptedException) {}
+        } catch (ignored: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 
     override fun close() {

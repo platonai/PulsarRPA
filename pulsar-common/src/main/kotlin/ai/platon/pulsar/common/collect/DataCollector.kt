@@ -1,19 +1,62 @@
 package ai.platon.pulsar.common.collect
 
-enum class Priority(val value: Int) {
-    HIGHEST(0), HIGHER(100), NORMAL(1000), LOWER(1100), LOWEST(1200)
-}
+import ai.platon.pulsar.common.Priority13
 
+/**
+ * The data collector interface
+ * */
 interface DataCollector<T> {
+    var name: String
+    /**
+     * The collector cache capacity. At most [capacity] items can be collected to the cache from the source
+     * */
+    val capacity: Int
+    val estimatedSize: Int
     fun hasMore(): Boolean = false
-    fun collectTo(sink: MutableCollection<T>) {}
+    fun collectTo(element: T, sink: MutableList<T>): Int
+    fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
+    fun collectTo(sink: MutableList<T>): Int
+    fun collectTo(index: Int, sink: MutableList<T>): Int
 }
 
-abstract class AbstractDataCollector<T>: DataCollector<T>
+interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCollector<T>> {
+    val priority: Int
+    override fun compareTo(other: PriorityDataCollector<T>) = priority - other.priority
+}
+
+abstract class AbstractDataCollector<E>: DataCollector<E> {
+    companion object {
+        const val DEFAULT_CAPACITY = 1000
+    }
+
+    override var name: String = "DC"
+    override val capacity: Int = DEFAULT_CAPACITY
+    override val estimatedSize: Int = 0
+
+    override fun collectTo(element: E, sink: MutableList<E>): Int {
+        sink.add(element)
+        return 1
+    }
+
+    override fun collectTo(index: Int, element: E, sink: MutableList<E>): Int {
+        sink.add(index, element)
+        return 1
+    }
+
+    override fun collectTo(index: Int, sink: MutableList<E>): Int {
+        val list = mutableListOf<E>()
+        collectTo(list)
+        sink.addAll(index, list)
+        return list.size
+    }
+
+    override fun toString() = name
+}
 
 abstract class AbstractPriorityDataCollector<T>(
-        val priority: Int = Priority.NORMAL.value
-): AbstractDataCollector<T>(), Comparable<AbstractPriorityDataCollector<T>> {
-    constructor(priority: Priority): this(priority.value)
-    override fun compareTo(other: AbstractPriorityDataCollector<T>) = priority - other.priority
+        override val priority: Int = Priority13.NORMAL.value,
+        override val capacity: Int = DEFAULT_CAPACITY
+): AbstractDataCollector<T>(), PriorityDataCollector<T> {
+    constructor(priority: Priority13): this(priority.value)
+    override var name: String = "PriorityDC"
 }

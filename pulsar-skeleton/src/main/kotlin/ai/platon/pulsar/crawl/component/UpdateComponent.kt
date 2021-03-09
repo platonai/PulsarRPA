@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -47,20 +47,20 @@ class UpdateComponent(
         val fetchSchedule: FetchSchedule,
         val scoringFilters: ScoringFilters? = null,
         val messageWriter: MiscMessageWriter? = null,
-        val metricsCounters: MetricsCounters? = null,
         val conf: ImmutableConfig
 ) : Parameterized {
     val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
 
     companion object {
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
-        init { MetricsCounters.register(Counter::class.java) }
+        init { AppMetrics.reg.register(Counter::class.java) }
     }
 
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 
-    constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, null, conf)
+    constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, conf)
 
     override fun getParams(): Params {
         return Params.of(
@@ -144,7 +144,7 @@ class UpdateComponent(
         if (shallowestPage != null) {
             page.referrer = shallowestPage.url
             // TODO: Not the best options
-            page.options = shallowestPage.options
+            page.args = shallowestPage.args
             page.distance = shallowestPage.distance + 1
         }
     }
@@ -192,7 +192,7 @@ class UpdateComponent(
                 }
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    metricsCounters?.inc(Counter.rBadModTime)
+                    enumCounters.inc(Counter.rBadModTime)
                     messageWriter?.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,
                             "PMT", prevModifiedTime, "MT", modifiedTime,

@@ -4,6 +4,7 @@ import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
 import ai.platon.pulsar.context.support.GenericPulsarContext
 import org.springframework.context.ApplicationContext
+import org.springframework.context.support.AbstractApplicationContext
 
 object PulsarContexts {
     private val contexts = mutableSetOf<PulsarContext>()
@@ -22,7 +23,8 @@ object PulsarContexts {
     }
 
     @Synchronized
-    fun activate(applicationContext: ApplicationContext) = activate(GenericPulsarContext(applicationContext))
+    fun activate(applicationContext: ApplicationContext)
+            = activate(GenericPulsarContext(applicationContext as AbstractApplicationContext))
 
     @Synchronized
     fun createSession() = activate().createSession()

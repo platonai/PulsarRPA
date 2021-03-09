@@ -46,14 +46,10 @@ internal class InvocationFuture(val returnProperty: String? = null) {
 
     @Throws(InterruptedException::class)
     fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
-        return try {
-            if (timeout == 0L) {
-                countDownLatch.await()
-                true
-            } else countDownLatch.await(timeout, timeUnit)
-        } catch (ignored: InterruptedException) {
-            false
-        }
+        return if (timeout == 0L) {
+            countDownLatch.await()
+            true
+        } else countDownLatch.await(timeout, timeUnit)
     }
 }
 
@@ -148,8 +144,8 @@ abstract class BasicDevTools(
             }
 
             if (!responded) {
-                logger.warn("Timeout to wait for ws response #$numInvokes")
-                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #$numInvokes")
+                logger.warn("Timeout to wait for ws response #{}", numInvokes.count)
+                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #${numInvokes.count}")
             }
 
             if (future.isSuccess) {
@@ -172,7 +168,9 @@ abstract class BasicDevTools(
         } catch (e: WebSocketServiceException) {
             throw ChromeDevToolsInvocationException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
-            throw ChromeDevToolsInvocationException("Interrupted while waiting response", e)
+            logger.warn("Interrupted while invoke ${method.method}")
+            Thread.currentThread().interrupt()
+            return null
         } catch (e: IOException) {
             throw ChromeDevToolsInvocationException("Failed reading response message", e)
         }
@@ -236,40 +234,37 @@ abstract class BasicDevTools(
     }
 
     override fun waitUntilClosed() {
-        closeLatch.runCatching { await() }.onFailure {
+        runCatching { closeLatch.await() }.onFailure {
             if (it is InterruptedException) {
-                // ignored
-            } else {
-                logger.warn("Unexpected exception", it)
+                Thread.currentThread().interrupt()
             }
         }
     }
 
-    @Throws(Exception::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            lock.withLock {
-                try {
-                    var i = 0
-                    while (i++ < 5 && invocationFutures.isNotEmpty()) {
-                        notBusy.await(1, TimeUnit.SECONDS)
-                    }
-                } catch (ignored: InterruptedException) {}
-            }
-
-            logger.trace("Closing ws client ... | {}", wsClient)
-
-            try {
-                wsClient.close()
-                workerGroup.shutdownGracefully()
-            } catch (e: Throwable) {
-                logger.warn("Unexpected throwable", e)
-            }
-
-            // logger.info("Web socket client #{} is closed | {}", id, wsClient)
-
+            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.message) }
             closeLatch.countDown()
         }
+    }
+
+    @Throws(Exception::class)
+    private fun doClose() {
+        lock.withLock {
+            try {
+                var i = 0
+                while (i++ < 5 && invocationFutures.isNotEmpty()) {
+                    notBusy.await(1, TimeUnit.SECONDS)
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+
+        logger.trace("Closing ws client ... | {}", wsClient)
+
+        wsClient.close()
+        workerGroup.shutdownGracefully()
     }
 
     private fun handleEvent(name: String, params: JsonNode) {

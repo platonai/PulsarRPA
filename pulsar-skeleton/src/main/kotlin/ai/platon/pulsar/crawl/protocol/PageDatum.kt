@@ -25,7 +25,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
-import ai.platon.pulsar.persist.metadata.PageCategory
+import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
 import ai.platon.pulsar.persist.model.ActiveDomUrls
 import java.util.*
@@ -64,14 +64,14 @@ class PageDatum(
          */
         val metadata: MultiMetadata = MultiMetadata()
 ) {
-    var pageCategory: PageCategory? = null
+    var pageCategory: OpenPageCategory? = null
     var proxyEntry: ProxyEntry? = null
     var lastBrowser: BrowserType? = null
     var htmlIntegrity: HtmlIntegrity? = null
     var activeDomMultiStatus: ActiveDomMultiStatus? = null
     var activeDomUrls: ActiveDomUrls? = null
 
-    val length get() = (content?.size?:0).toLong()
+    val contentLength get() = (content?.size?:0).toLong()
 
     constructor(url: String, location: String, content: ByteArray?, contentType: String?, metadata: MultiMetadata,
                 mimeTypeResolver: MimeTypeResolver): this(url, location, ProtocolStatus.STATUS_CANCELED, content, contentType, metadata) {

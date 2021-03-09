@@ -1,0 +1,52 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<beans xmlns = "http://www.springframework.org/schema/beans"
+       xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation = "http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
+
+    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig">
+        <property name="environment" ref="environment"/>
+    </bean>
+
+    <!--Web Page Database -->
+    <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
+        <constructor-arg ref="conf" />
+    </bean>
+
+    <bean id="appMetrics" class="ai.platon.pulsar.common.metrics.AppMetrics" init-method="start" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <!--System metrics -->
+    <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="fetchMetrics" class="ai.platon.pulsar.crawl.fetch.FetchMetrics" destroy-method="close">
+        <constructor-arg ref="messageWriter"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="appStatusTracker" class="ai.platon.pulsar.common.AppStatusTracker">
+        <constructor-arg ref="appMetrics"/>
+        <constructor-arg ref="fetchMetrics"/>
+        <constructor-arg ref="messageWriter"/>
+    </bean>
+
+    <bean id="protocolFactory" class="ai.platon.pulsar.crawl.protocol.ProtocolFactory" destroy-method="close">
+        <constructor-arg ref="conf" />
+    </bean>
+
+    <bean id="lazyFetchTaskManager" class="ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="fetchMetrics"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="globalCache" class="ai.platon.pulsar.crawl.common.GlobalCache">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+</beans>

@@ -1,15 +1,16 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.AppMetrics
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.JsEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -34,7 +35,7 @@ open class BrowserEmulator(
 ): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
     private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
-    val numDeferredNavigates by lazy { AppMetrics.meter(this, "deferredNavigates") }
+    val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
     init {
         params.withLogger(log).info(true)
@@ -48,7 +49,7 @@ open class BrowserEmulator(
      * @throws IllegalApplicationContextStateException Throw if the browser is closed or the program is closed
      * */
     @Throws(IllegalApplicationContextStateException::class)
-    open suspend fun fetch(task: FetchTask, driver: AbstractWebDriver): FetchResult {
+    open suspend fun fetch(task: FetchTask, driver: WebDriver): FetchResult {
         return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(task)
     }
 
@@ -67,7 +68,7 @@ open class BrowserEmulator(
     }
 
     @Throws(IllegalApplicationContextStateException::class)
-    protected open suspend fun browseWithDriver(task: FetchTask, driver: AbstractWebDriver): FetchResult {
+    protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         checkState()
 
         if (task.nRetries > fetchMaxRetry) {
@@ -110,7 +111,7 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class)
-    private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: AbstractWebDriver): Response {
+    private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
         val navigateTask = NavigateTask(task, driver, driverControl)
 
         try {
@@ -133,7 +134,7 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class,
             IllegalApplicationContextStateException::class,
             WebDriverException::class)
-    private suspend fun navigateAndInteract(task: FetchTask, driver: AbstractWebDriver, driverConfig: BrowserControl): InteractResult {
+    private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserControl): InteractResult {
         eventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
@@ -146,7 +147,8 @@ open class BrowserEmulator(
 
         checkState(driver)
         checkState(task)
-        driver.navigateTo(task.url)
+        val location = task.href ?: task.url
+        driver.navigateTo(location)
 
         val interactTask = InteractTask(task, driverConfig, driver)
         return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
@@ -176,11 +178,20 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+        val volatileConfig = task.fetchTask.page.volatileConfig
+        val eventHandler = volatileConfig?.getBean(JsEventHandler::class)
 
         jsCheckDOMState(task, result)
 
+        // TODO: check performance issue
+        task.driver.bringToFront()
+
         if (result.state.isContinue) {
             jsScrollDown(task, result)
+        }
+
+        if (result.state.isContinue) {
+            eventHandler?.onBeforeComputeFeature(task.fetchTask.page, task.driver)
         }
 
         if (result.state.isContinue) {
@@ -188,10 +199,7 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            task.fetchTask.page.volatileConfig?.get(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE)?.let {
-                log.info("Evaluate custom js <<<$it>>>")
-                evaluate(task, it)
-            }
+            eventHandler?.onAfterComputeFeature(task.fetchTask.page, task.driver)
         }
 
         return result
@@ -249,11 +257,18 @@ open class BrowserEmulator(
 
     protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
         val random = ThreadLocalRandom.current().nextInt(3)
-        var scrollDownCount = interactTask.driverConfig.scrollDownCount + random - 1
-        scrollDownCount = scrollDownCount.coerceAtLeast(3)
+        val scrollDownCount = (interactTask.scrollDownCount + random - 1).coerceAtLeast(1)
 
-        val expression = "__utils__.scrollDownN($scrollDownCount)"
-        evaluate(interactTask, expression)
+        val expressions = mutableListOf(
+            "__utils__.scrollToMiddle(0.25)",
+            "__utils__.scrollToMiddle(0.5)",
+            "__utils__.scrollToMiddle(0.75)",
+            "__utils__.scrollToMiddle(0.5)"
+        )
+        repeat(scrollDownCount) {
+            expressions.add("__utils__.scrollDown()")
+        }
+        evaluate(interactTask, expressions, 500)
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
@@ -269,11 +284,29 @@ open class BrowserEmulator(
         }
     }
 
-    private fun evaluate(interactTask: InteractTask, expression: String): Any? {
-        val scriptTimeout = interactTask.driverConfig.scriptTimeout
+    private suspend fun evaluate(interactTask: InteractTask,
+        expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
+        expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
+            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
+            val value = evaluate(interactTask, it)
+            if (value is String) {
+                val s = Strings.stripNonPrintableChar(value)
+                log.takeIf { verbose }?.info("Result >>>$s<<<")
+            } else if (value is Int || value is Long) {
+                log.takeIf { verbose }?.info("Result >>>$value<<<")
+            }
+            delay(delayMillis)
+        }
+    }
+
+    private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
         counterRequests.inc()
         checkState(interactTask.driver)
         checkState(interactTask.fetchTask)
-        return interactTask.driver.evaluate(expression)
+        val result = interactTask.driver.evaluate(expression)
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        return result
     }
 }

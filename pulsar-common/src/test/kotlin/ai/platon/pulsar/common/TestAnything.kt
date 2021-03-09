@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.url.UrlTree
 import com.google.common.collect.TreeMultimap
 import com.google.common.net.InetAddresses
 import org.apache.commons.math3.distribution.NormalDistribution
@@ -10,8 +11,6 @@ import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
 import java.math.BigInteger
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -84,6 +83,8 @@ class TestAnything {
         for (i in 0..10) {
             assertEquals(b, (a * i + b) % a, "i=$i")
         }
+
+        assertTrue { Int.MIN_VALUE < Int.MAX_VALUE }
     }
 
     /**

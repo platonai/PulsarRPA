@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -16,6 +17,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
@@ -44,13 +46,14 @@ open class EventHandler(
     protected val numNavigates = AtomicInteger()
     protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverControl.jsInvadingEnabled
 
-    protected val pageSourceBytes by lazy { AppMetrics.meter(this, "pageSourceBytes") }
-    protected val pageSourceByteHistogram by lazy { AppMetrics.histogram(this, "hPageSourceBytes") }
-    protected val bannedPages by lazy { AppMetrics.meter(this, "bannedPages") }
-    protected val smallPages by lazy { AppMetrics.meter(this, "smallPages") }
+    private val registry = AppMetrics.defaultMetricRegistry
+    protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
+    protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
+    protected val bannedPages by lazy { registry.meter(this, "bannedPages") }
+    protected val smallPages by lazy { registry.meter(this, "smallPages") }
     protected val smallPageRate get() = 100 * smallPages.count / numNavigates.get()
-    protected val smallPageRateHistogram by lazy { AppMetrics.histogram(this, "smallPageRate") }
-    protected val emptyPages by lazy { AppMetrics.meter(this, "emptyPages") }
+    protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
+    protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
         if (log.isTraceEnabled) {
@@ -112,8 +115,8 @@ open class EventHandler(
         return createResponse(task, pageDatum)
     }
 
-    open fun sniffPageCategory(page: WebPage): PageCategory {
-        return PageCategory.UNKNOWN
+    open fun sniffPageCategory(page: WebPage): OpenPageCategory {
+        return OpenPageCategory(PageCategory.UNKNOWN)
     }
 
     open fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus {
@@ -171,7 +174,7 @@ open class EventHandler(
             log.info("Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                     task.pageDatum.status.minorName,
                     elapsed,
-                    Strings.readableBytes(length.toLong()),
+                    Strings.readableBytes(length),
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
         }
@@ -268,7 +271,7 @@ open class EventHandler(
         if (takeScreenshot && task.pageDatum.status.isSuccess) {
             val driver = task.driver
             if (driver is ManagedWebDriver) {
-                takeScreenshot(task.pageDatum.length, task.page, driver.driver as RemoteWebDriver)
+                takeScreenshot(task.pageDatum.contentLength, task.page, driver.driver as RemoteWebDriver)
             }
         }
     }
@@ -276,7 +279,7 @@ open class EventHandler(
     private fun takeScreenshot(contentLength: Long, page: WebPage, driver: RemoteWebDriver) {
         try {
             val bytes = driver.getScreenshotAs(OutputType.BYTES)
-            val readableLength = Strings.readableBytes(bytes.size.toLong())
+            val readableLength = Strings.readableBytes(bytes.size)
             val filename = AppPaths.fromUri(page.url, "", ".png")
             val path = ExportPaths.get("screenshot", filename)
             AppFiles.saveTo(bytes, path, true)
@@ -293,7 +296,7 @@ open class EventHandler(
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
-        val readableLength = Strings.readableBytes(pageSource.length.toLong())
+        val readableLength = Strings.readableBytes(pageSource.length)
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)

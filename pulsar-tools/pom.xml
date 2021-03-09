@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.5.8-SNAPSHOT</version>
+        <version>1.5.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-tools</artifactId>
@@ -26,14 +26,4 @@
     <modules>
         <module>pulsar-browser</module>
     </modules>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-browser</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 </project>

@@ -20,9 +20,13 @@ package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_ID
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
@@ -31,6 +35,7 @@ import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -72,8 +77,14 @@ class HtmlParser(
 
     override fun parse(page: WebPage): ParseResult {
         return try {
-            // The base url is set by protocol. Might be different from url if the request redirected.
-            doParse(page)
+            // The base url is set by protocol. Might be different from url if the request redirected
+            beforeParse(page)
+
+            val parseContext = doParse(page)
+
+            parseContext.document?.let { afterParse(page, it) }
+
+            parseContext.parseResult
         } catch (e: MalformedURLException) {
             failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
         } catch (e: Exception) {
@@ -82,15 +93,15 @@ class HtmlParser(
     }
 
     @Throws(MalformedURLException::class, Exception::class)
-    private fun doParse(page: WebPage): ParseResult {
+    private fun doParse(page: WebPage): ParseContext {
         tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
                 page.id,
-                Strings.readableBytes(page.contentBytes.toLong()),
+                Strings.readableBytes(page.contentLength),
                 page.protocolStatus,
                 page.htmlIntegrity,
                 page.url)
 
-        val baseUrl = page.baseUrl?:page.url
+        val baseUrl = page.baseUrl ?: page.url
         val baseURL = URL(baseUrl)
         if (page.encoding == null) {
             primerParser.detectEncoding(page)
@@ -101,9 +112,19 @@ class HtmlParser(
         val parseResult = initParseResult(metaTags)
 
         val parseContext = ParseContext(page, parseResult, FeaturedDocument(document), metaTags, documentFragment)
+        parseContext.document?.let { setMetaInfos(page, it) }
+
         parseFilters.filter(parseContext)
 
-        return parseContext.parseResult
+        return parseContext
+    }
+
+    private fun beforeParse(page: WebPage) {
+        page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
+    }
+
+    private fun afterParse(page: WebPage, document: FeaturedDocument) {
+        page.loadEventHandler?.onAfterHtmlParse?.invoke(page, document)
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
@@ -115,6 +136,21 @@ class HtmlParser(
             metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
         return metaTags
+    }
+
+    private fun setMetaInfos(page: WebPage, document: FeaturedDocument) {
+        val metadata = document.document.selectFirstOrNull("#${PULSAR_META_INFORMATION_ID}") ?: return
+        // The normalizedUrl
+        page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
+        page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
+
+        metadata.attr("normalizedUrl", page.url)
+        if (page.args.isNotBlank()) {
+            val options = LoadOptions.parse(page.args)
+            metadata.attr("label", options.label)
+            metadata.attr("taskId", options.taskId)
+            metadata.attr("taskTime", options.taskTime)
+        }
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {

@@ -1,18 +1,20 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
-import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.common.FetchReason
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
@@ -26,9 +28,7 @@ import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Collectors
 
 /**
@@ -39,16 +39,16 @@ import java.util.stream.Collectors
  */
 @Component
 class LoadComponent(
-        val webDb: WebDb,
-        val fetchComponent: BatchFetchComponent,
-        val parseComponent: ParseComponent? = null,
-        val updateComponent: UpdateComponent,
-        val messageWriter: MiscMessageWriter? = null,
-        val immutableConfig: ImmutableConfig
-): AutoCloseable {
+    val webDb: WebDb,
+    val globalCache: GlobalCache,
+    val fetchComponent: BatchFetchComponent,
+    val parseComponent: ParseComponent? = null,
+    val updateComponent: UpdateComponent,
+    val statusTracker: AppStatusTracker? = null,
+    val immutableConfig: ImmutableConfig
+) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
-        private val globalFetchingUrls = ConcurrentSkipListSet<String>()
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -56,15 +56,21 @@ class LoadComponent(
 
     private val fetchMetrics get() = fetchComponent.fetchMetrics
     private val closed = AtomicBoolean()
+    /**
+     * TODO: only check active before blocking calls
+     * */
     private val isActive get() = !closed.get()
-    private val numWrite = AtomicInteger()
+    @Volatile
+    private var numWrite = 0
+    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     constructor(
             webDb: WebDb,
+            globalCache: GlobalCache,
             fetchComponent: BatchFetchComponent,
             updateComponent: UpdateComponent,
             immutableConfig: ImmutableConfig
-    ): this(webDb, fetchComponent, null, updateComponent, null, immutableConfig)
+    ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, immutableConfig)
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -98,11 +104,11 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(originalUrl: String, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load0(NormUrl(originalUrl, options))
+        return abnormalPage ?: loadWithRetry(NormUrl(originalUrl, options))
     }
 
     fun load(url: URL, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load0(NormUrl(url, options))
+        return abnormalPage ?: loadWithRetry(NormUrl(url, options))
     }
 
     /**
@@ -114,16 +120,33 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(link: GHypeLink, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load(link.url.toString(), options)
-                .also { it.anchor = link.anchor.toString() }
+        return abnormalPage ?: load(link.url.toString(), options).also { it.anchor = link.anchor.toString() }
     }
 
     fun load(normUrl: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load0(normUrl)
+        return abnormalPage ?: loadWithRetry(normUrl)
     }
 
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: loadDeferred0(normUrl)
+        return abnormalPage ?: loadWithRetryDeferred(normUrl)
+    }
+
+    fun loadWithRetry(normUrl: NormUrl): WebPage {
+        var page = doLoad(normUrl)
+        var n = normUrl.options.nJitRetry
+        while (page.protocolStatus.isRetry && n-- > 0) {
+            page = doLoad(normUrl)
+        }
+        return page
+    }
+
+    suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
+        var page = loadDeferred0(normUrl)
+        var n = normUrl.options.nJitRetry
+        while (page.protocolStatus.isRetry && n-- > 0) {
+            page = loadDeferred0(normUrl)
+        }
+        return page
     }
 
     /**
@@ -166,6 +189,7 @@ class LoadComponent(
                 FetchReason.NEW_PAGE,
                 FetchReason.EXPIRED,
                 FetchReason.SMALL_CONTENT,
+                FetchReason.RETRY,
                 FetchReason.MISS_FIELD -> pendingUrls.add(url)
                 FetchReason.TEMP_MOVED -> {
                     // TODO: batch redirect
@@ -191,14 +215,14 @@ class LoadComponent(
 
         log.debug("Fetching {} urls with options {}", pendingUrls.size, options)
         val updatedPages = try {
-            globalFetchingUrls.addAll(pendingUrls)
+            globalCache.fetchingUrls.addAll(pendingUrls)
             if (options.preferParallel) {
                 fetchComponent.parallelFetchAll(pendingUrls, options)
             } else {
                 fetchComponent.fetchAll(pendingUrls, options)
             }
         } finally {
-            globalFetchingUrls.removeAll(pendingUrls)
+            globalCache.fetchingUrls.removeAll(pendingUrls)
         }.filter { it.isNotInternal }
 
         if (options.parse) {
@@ -210,7 +234,7 @@ class LoadComponent(
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(LoadCompletedPagesFormatter(updatedPages, startTime, verbose).toString())
+            log.info("{}", LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose))
         }
 
         return knownPages
@@ -236,31 +260,47 @@ class LoadComponent(
         return loadAll(normUrls, options)
     }
 
-    private fun load0(normUrl: NormUrl): WebPage {
+    private fun doLoad(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
+        assertSame(page.volatileConfig, normUrl.options.volatileConfig) {
+            "Volatile config should be the same"
+        }
+
+        beforeLoad(page, normUrl.options)
+
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
                 require(page.isNotInternal) { "Internal page ${page.url}" }
                 fetchComponent.fetchContent(page)
+                // require(page.args == normUrl.options.toString())
+                // require(page.volatileConfig == normUrl.options.volatileConfig)
             } finally {
                 afterFetch(page, normUrl.options)
             }
         }
+
+        afterLoad(page, normUrl.options)
+
         return page
     }
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
+
+        beforeLoad(page, normUrl.options)
+
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
-                require(page.isNotInternal) { "Internal page ${page.url}" }
                 fetchComponent.fetchContentDeferred(page)
             } finally {
                 afterFetch(page, normUrl.options)
             }
         }
+
+        afterLoad(page, normUrl.options)
+
         return page
     }
 
@@ -271,27 +311,38 @@ class LoadComponent(
 
         val url = normUrl.spec
         val options = normUrl.options
-        if (globalFetchingUrls.contains(url)) {
+        if (globalCache.fetchingUrls.contains(url)) {
             log.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
             return WebPage.NIL
         }
 
-        var page = if (options.expires.seconds > 1) {
+        // less than 1 seconds means do not check the database
+        val page0 = if (options.expires.seconds > 1) {
             webDb.get(url, options.ignoreQuery)
         } else WebPage.NIL
 
-        val reason = getFetchReason(page, options)
-        if (page.isNil) {
-            page = fetchComponent.createFetchEntry(url, options)
+        val reason = getFetchReason(page0, options)
+        val fetchEntry = if (page0.isNil) {
+//            page = fetchComponent.createFetchEntry(url, options, normUrl.hrefSpec)
+            FetchEntry(url, options, normUrl.hrefSpec)
+        } else {
+            FetchEntry(page0, options, normUrl.hrefSpec)
         }
+        // set page variables like volatileConfig here
+        // fetchComponent.initFetchEntry(page, options, normUrl.hrefSpec)
+
+        val page = fetchEntry.page
 
         tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
             return redirect(page, options)
         }
 
-        val refresh = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
-                || reason == FetchReason.SMALL_CONTENT || reason == FetchReason.MISS_FIELD
+        val refresh = reason == FetchReason.NEW_PAGE
+                || reason == FetchReason.EXPIRED
+                || reason == FetchReason.SMALL_CONTENT
+                || reason == FetchReason.RETRY
+                || reason == FetchReason.MISS_FIELD
         if (refresh) {
             page.variables[VAR_REFRESH] = refresh
         }
@@ -299,25 +350,39 @@ class LoadComponent(
         return page
     }
 
+    private fun beforeLoad(page: WebPage, options: LoadOptions) {
+        page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
+    }
+
+    private fun afterLoad(page: WebPage, options: LoadOptions) {
+        if (options.parse) {
+            parse(page, options)
+        }
+
+        if (options.persist) {
+            persist(page, options)
+        }
+
+        page.loadEventHandler?.onAfterLoad?.invoke(page)
+    }
+
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
-        globalFetchingUrls.add(page.url)
-        fetchComponent.initFetchEntry(page, options)
+        globalCache.fetchingUrls.add(page.url)
     }
 
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         update(page, options)
 
-        if (log.isInfoEnabled && isActive) {
+        if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(CompletedPageFormatter(page, verbose).toString())
+            log.info(CompletedPageFormatter(page, withSymbolicLink = verbose).toString())
         }
 
-        globalFetchingUrls.remove(page.url)
+        globalCache.fetchingUrls.remove(page.url)
     }
 
     private fun filterUrlToNull(url: NormUrl): NormUrl? {
-        val u = filterUrlToNull(url.spec) ?: return null
-        return NormUrl(u, url.options)
+        return url.takeIf { filterUrlToNull(url.spec) != null }
     }
 
     private fun filterUrlToNull(url: String): String? {
@@ -328,7 +393,7 @@ class LoadComponent(
         }
 
         when {
-            globalFetchingUrls.contains(url) -> return null
+            globalCache.fetchingUrls.contains(url) -> return null
             fetchMetrics?.isFailed(url) == true -> return null
             fetchMetrics?.isTimeout(url) == true -> {
             }
@@ -349,42 +414,53 @@ class LoadComponent(
             page.isInternal -> FetchReason.DO_NOT_FETCH
             protocolStatus.isNotFetched -> FetchReason.NEW_PAGE
             protocolStatus.isTempMoved -> FetchReason.TEMP_MOVED
-            protocolStatus.isFailed && !options.retryFailed -> FetchReason.DO_NOT_FETCH
             else -> getFetchReasonForExistPage(page, options)
         }
     }
 
     private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
+        val protocolStatus = page.protocolStatus
+        if (protocolStatus.isRetry) {
+            return FetchReason.RETRY
+        }
+
+        // Failed to fetch the page last time, it might be caused by page is gone reason
+        // in such case, do not fetch it even it it's expired, unless the -retry flag is set
+        if (protocolStatus.isFailed && !options.retryFailed) {
+            return FetchReason.DO_NOT_FETCH
+        }
+
         // Fetch a page already fetched before if necessary
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            messageWriter?.debugIllegalLastFetchTime(page)
+            statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)
         }
 
         // if (now > lastTime + expires), it's expired
-        if (now.isAfter(lastFetchTime.plus(options.expires))) {
+        if (options.isExpired(lastFetchTime)) {
             return FetchReason.EXPIRED
         }
 
-        if (page.contentBytes < options.requireSize) {
+        if (page.contentLength < options.requireSize) {
             return FetchReason.SMALL_CONTENT
         }
 
-        val domStatus = page.activeDomMultiStatus
-        if (domStatus != null) {
-            val (ni, na) = domStatus.lastStat ?: ActiveDomStat()
-            if (ni < options.requireImages) {
-                return FetchReason.MISS_FIELD
-            }
-            if (na < options.requireAnchors) {
-                return FetchReason.MISS_FIELD
-            }
+        val domStats = page.activeDomStats
+        val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
+        if (ni < options.requireImages) {
+            return FetchReason.MISS_FIELD
+        }
+        if (na < options.requireAnchors) {
+            return FetchReason.MISS_FIELD
         }
 
         return FetchReason.DO_NOT_FETCH
     }
 
+    /**
+     * TODO: not used in browser mode, redirect inside a browser instead
+     * */
     private fun redirect(page: WebPage, options: LoadOptions): WebPage {
         if (!isActive) {
             page.protocolStatus = ProtocolStatus.STATUS_CANCELED
@@ -436,15 +512,13 @@ class LoadComponent(
             return
         }
 
+        updateComponent.updateFetchSchedule(page)
+    }
+
+    private fun parse(page: WebPage, options: LoadOptions) {
         parseComponent?.takeIf { options.parse }?.also {
             val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
-            log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
-        }
-
-        updateComponent.updateFetchSchedule(page)
-
-        if (options.persist) {
-            persist(page, options)
+            tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
         }
     }
 
@@ -452,24 +526,30 @@ class LoadComponent(
         // Remove content if storingContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
         if (!options.storeContent && page.content != null) {
-            if (!page.isSeed || page.fetchCount > 2) {
-                // set cached content so other thread still can use it
-                page.cachedContent = page.content
-                page.content = null
-                require(page.cachedContent != null)
-            }
+            page.clearPersistContent()
         }
 
         webDb.put(page)
-        numWrite.incrementAndGet()
+        ++numWrite
 
-        if (!options.lazyFlush || numWrite.get() % 20 == 0) {
+        collectPersistMetrics(page)
+
+        if (!options.lazyFlush || numWrite % 20 == 0) {
             flush()
         }
+    }
 
-        if (log.isTraceEnabled) {
-            log.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes.toLong()), page.url)
+    private fun collectPersistMetrics(page: WebPage) {
+        val metrics = fetchMetrics
+        if (metrics != null) {
+            metrics.persists.mark()
+            val bytes = page.content?.array()?.size ?: 0
+            if (bytes > 0) {
+                metrics.meterContentPersists.mark()
+                metrics.meterPersistMBytes.mark(bytes.toLong() / 1024 / 1024)
+            }
         }
+        tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
     }
 
     fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {
@@ -600,6 +680,10 @@ class LoadComponent(
 
     override fun close() {
         closed.set(true)
+    }
+
+    private fun assertSame(a: Any?, b: Any?, lazyMessage: () -> String) {
+        require(a === b) { lazyMessage() }
     }
 
     /**

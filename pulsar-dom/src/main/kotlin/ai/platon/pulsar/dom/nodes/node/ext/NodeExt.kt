@@ -10,7 +10,6 @@ import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureEntry
 import ai.platon.pulsar.dom.features.FeatureFormatter
 import ai.platon.pulsar.dom.features.NodeFeature
@@ -132,6 +131,16 @@ fun Element.addClasses(vararg classNames: String): Element {
     return this
 }
 
+fun Element.slimCopy(): Element {
+    val ele = this.clone()
+    ele.forEachElement(includeRoot = true) { it.removeNonStandardAttrs() }
+    return ele
+}
+
+fun Element.ownTexts(): List<String> {
+    return this.childNodes().mapNotNullTo(mutableListOf()) { (it as? TextNode)?.text() }
+}
+
 fun Element.qualifiedClassNames(): Set<String> {
     val classNames = className().split("\\s+".toRegex()).toMutableSet()
     return getQualifiedClassNames(classNames)
@@ -139,6 +148,20 @@ fun Element.qualifiedClassNames(): Set<String> {
 
 fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
     this.attr(attributeKey, attributeValue.toString())
+    return this
+}
+
+fun Element.removeTemporaryAttrs(): Element {
+    this.attributes().map { it.key }.filter { it in TEMPORARY_ATTRIBUTES || it.startsWith("tv") }.forEach {
+        this.removeAttr(it)
+    }
+    return this
+}
+
+fun Element.removeNonStandardAttrs(): Element {
+    this.attributes().map { it.key }.forEach { if (it !in STANDARD_ATTRIBUTES) {
+        this.removeAttr(it)
+    } }
     return this
 }
 
@@ -350,7 +373,7 @@ val Node.textRepresentation: String get() =
     }
 
 /**
- * TODO: slim html for table
+ * TODO: slim table
  * */
 val Node.slimHtml by field {
     val nm = it.nodeName()
@@ -358,7 +381,7 @@ val Node.slimHtml by field {
         it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
         it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
             String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
-        it is Element -> String.format("<div>%s</div>", it.cleanText)
+        it is Element -> it.slimCopy().removeNonStandardAttrs().outerHtml()
         else -> String.format("<b>%s</b>", it.name)
     }
 }
@@ -377,7 +400,7 @@ private fun atomSlimHtml(node: Node): String {
 }
 
 private fun createSlimImageHtml(node: Node): String = node.run { String.format("<img src='%s' vi='%s' alt='%s'/>",
-            absUrl("src"), attr("vi"), attr("alt")) }
+        absUrl("src"), attr("vi"), attr("alt")) }
 
 val Node.key: String get() = "$location#$sequence"
 
@@ -399,7 +422,9 @@ val Node.name: String
                 nodeName()
             }
             is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                val postfix = if (siblingSize() > 1) {
+                    "~" + siblingIndex()
+                } else ""
                 return bestElement.name + postfix
             }
             else -> nodeName()
@@ -429,7 +454,9 @@ val Node.canonicalName: String
                 return "${nodeName()}$id$classes"
             }
             is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                val postfix = if (siblingSize() > 1) {
+                    "~" + siblingIndex()
+                } else ""
                 return bestElement.canonicalName + postfix
             }
             else -> return nodeName()
@@ -762,6 +789,6 @@ private fun Node.calculateViewPort(): Dimension {
     val default = AppConstants.DEFAULT_VIEW_PORT
     val parts = ownerBody.attr("view-port").split("x")
     return if (parts.size == 2)
-        Dimension(parts[0].toIntOrNull()?:default.width, parts[1].toIntOrNull()?:default.height)
+        Dimension(parts[0].toIntOrNull() ?: default.width, parts[1].toIntOrNull() ?: default.height)
     else default
 }

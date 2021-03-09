@@ -46,6 +46,44 @@ class TestCases: TestBase() {
     }
 
     @Test
+    fun testExtractTable() {
+        val url = "https://www.amazon.com/Dash-Mini-Maker-Individual-Breakfast/dp/B01M9I779L"
+        val sql = """
+            select
+                dom_all_texts(dom, '#comparison_title, tr.comparison_table_image_row th a[href~=/dp/]') as `Product name`,
+                dom_all_attrs(dom, 'tr.comparison_table_image_row center > img[alt]', 'data-src') as `Product image`,
+                dom_all_texts(dom, 'tr.comparison_table_image_row th i span:contains(Best Seller)') as `Label best seller`,
+                dom_all_texts(dom, 'tr#comparison_custormer_rating_row > td') as `Customer Rating`,
+                dom_all_texts(dom, 'tr#comparison_price_row > td') as `Price`,
+                dom_all_texts(dom, 'tr#comparison_sold_by_row > td') as `Sold By`,
+                dom_all_texts(dom, 'tr.comparison_other_attribute_row:contains(Color) > td') as `Color`,
+                dom_all_texts(dom, 'tr.comparison_other_attribute_row:contains(Item Dimensions) > td') as `Item Dimensions`,
+                dom_all_texts(dom, 'tr.comparison_other_attribute_row:contains(Material) > td') as `Material`
+            from load_and_select('$url', '#HLCXComparisonTable')
+        """.trimIndent()
+        execute(sql)
+    }
+
+    @Test
+    fun testTranspose() {
+        val url = "https://www.amazon.com/Dash-Mini-Maker-Individual-Breakfast/dp/B01M9I779L"
+        val sql = """
+            select * from transpose(select
+                dom_all_texts(dom, '#comparison_title, tr.comparison_table_image_row th a[href~=/dp/]') as `Product name`,
+                dom_all_attrs(dom, 'tr.comparison_table_image_row center > img[alt]', 'data-src') as `Product image`,
+                dom_all_texts(dom, 'tr.comparison_table_image_row th i span:contains(Best Seller)') as `Label best seller`,
+                dom_all_texts(dom, 'tr#comparison_custormer_rating_row > td') as `Customer Rating`,
+                dom_all_texts(dom, 'tr#comparison_price_row > td') as `Price`,
+                dom_all_texts(dom, 'tr#comparison_sold_by_row > td') as `Sold By`,
+                dom_all_texts(dom, 'tr.comparison_other_attribute_row:contains(Color) > td') as `Color`,
+                dom_all_texts(dom, 'tr.comparison_other_attribute_row:contains(Item Dimensions) > td') as `Item Dimensions`,
+                dom_all_texts(dom, 'tr.comparison_other_attribute_row:contains(Material) > td') as `Material`
+            from load_and_select('$url', '#HLCXComparisonTable'));
+        """.trimIndent()
+        execute(sql)
+    }
+
+    @Test
     fun loadAndSelectNeeq() {
         val url = "http://www.neeq.com.cn/nq/listedcompany.html"
         // execute("select dom, dom_css_selector(dom), dom_text(dom), dom_text_length(dom) from dom_load_and_select('$url', 'tbody > tr');", remote = true)

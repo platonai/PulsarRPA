@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.5.8-SNAPSHOT</version>
+        <version>1.5.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-skeleton</artifactId>
@@ -45,6 +45,12 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers</artifactId>
             <version>${tika.version}</version>
+        </dependency>
+
+        <!-- apache common -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.code.crawler-commons/crawler-commons -->
@@ -88,6 +94,7 @@
             <artifactId>metrics-jmx</artifactId>
         </dependency>
 
+        <!-- TODO: remove selenium dependency -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>

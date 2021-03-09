@@ -1,15 +1,17 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.crawl.DefaultJsEventHandler
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.parsers.TreeParser1
+import ai.platon.pulsar.dom.select.selectFirstOrNull
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -17,6 +19,7 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
+import com.google.gson.GsonBuilder
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
@@ -28,7 +31,7 @@ import java.time.Duration
 
 /**
  * Created by vincent on 17-11-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2020 Platon AI. All rights reserved
  */
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
@@ -59,13 +62,15 @@ object DomFunctions {
 
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
-    fun fetchAndEvaluate(@H2Context conn: Connection, configuredUrl: String, expression: String): ValueDom {
+    fun fetchAndEvaluate(@H2Context conn: Connection, configuredUrl: String, expressions: String): ValueDom {
         if (!sqlContext.isActive) return ValueDom.NIL
 
         val h2session = H2SessionFactory.getH2Session(conn)
+
         return sqlContext.getSession(h2session).run {
             val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
-            normUrl.options.volatileConfig!!.set(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expression)
+            val eventHandler = DefaultJsEventHandler("", expressions)
+            normUrl.options.volatileConfig!!.putBean(eventHandler)
             parseValueDom(load(normUrl))
         }
     }
@@ -208,7 +213,7 @@ object DomFunctions {
     @JvmStatic
     @JvmOverloads
     fun text(dom: ValueDom, truncate: Int = Int.MAX_VALUE): String {
-        val text = dom.element.text()!!
+        val text = dom.element.text()
         return if (truncate > text.length) {
             text
         } else {
@@ -227,6 +232,10 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun ownText(dom: ValueDom) = dom.element.ownText()
+
+    @UDFunction
+    @JvmStatic
+    fun ownTexts(dom: ValueDom) = ValueArray.get(dom.element.ownTexts().map { ValueString.get(it) }.toTypedArray())
 
     @UDFunction
     @JvmStatic
@@ -336,11 +345,11 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun html(dom: ValueDom) = dom.element.html()
+    fun html(dom: ValueDom) = dom.element.slimCopy().html()
 
     @UDFunction
     @JvmStatic
-    fun outerHtml(dom: ValueDom) = dom.element.outerHtml()
+    fun outerHtml(dom: ValueDom) = dom.element.slimCopy().outerHtml()
 
     @UDFunction
     @JvmStatic
@@ -355,6 +364,22 @@ object DomFunctions {
     fun links(dom: ValueDom): ValueArray {
         val elements = dom.element.getElementsByTag("a")
         return toValueArray(elements)
+    }
+
+    @UDFunction
+    @JvmStatic
+    @JvmOverloads
+    fun parseTree1(dom: ValueDom, cssPath: String = ":root"): String {
+        val rootElement = if (cssPath == ":root")
+            dom.element
+        else
+            dom.element.selectFirstOrNull(cssPath) ?: return "{}"
+
+        val tree = TreeParser1(rootElement).parse()
+        val gson = GsonBuilder()
+                .setPrettyPrinting()
+                .create()
+        return gson.toJson(tree)
     }
 
     @UDFunction

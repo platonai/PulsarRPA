@@ -45,7 +45,7 @@ data class PageAttribute(
     }
 }
 
-class PageEntity(baseUri_: String = NIL_PAGE_URL, var category: FragmentCategory? = null) {
+class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory? = null) {
 
     val attributes = HashMap<String, PageAttribute>()
     val metadata = HashMap<String, String>()
@@ -53,7 +53,7 @@ class PageEntity(baseUri_: String = NIL_PAGE_URL, var category: FragmentCategory
 
     val size: Int get() = attributes.size
 
-    var baseUri: String = baseUri_
+    var baseUri: String = baseUri0
         set(value) {
             field = value
             put(META_BASE_URI, baseUri, METADATA)

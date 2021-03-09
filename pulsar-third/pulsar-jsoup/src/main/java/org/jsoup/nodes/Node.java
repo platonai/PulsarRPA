@@ -2,17 +2,17 @@ package org.jsoup.nodes;
 
 import org.apache.commons.math3.linear.OpenMapRealVector;
 import org.apache.commons.math3.linear.RealVector;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.SerializationException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
 
-    static final String EmptyString = "";
-    static final RealVector EMPTY_FEATURE = new OpenMapRealVector();
+    public static final String EmptyString = "";
+    public static final RealVector EMPTY_FEATURE = new OpenMapRealVector();
 
     Node parentNode;
     int siblingIndex;
@@ -167,7 +167,7 @@ public abstract class Node implements Cloneable {
     /**
      * Document is a frequently used element so need a short cut to access it
      * */
-    @Nonnull
+    @NotNull
     public Node getOwnerDocumentNode() {
         if (ownerDocumentNode == null) {
             ownerDocumentNode = ownerDocument();
@@ -179,7 +179,7 @@ public abstract class Node implements Cloneable {
      * Body is a frequently used element so need a short cut to access it
      * TODO: the body can be ineffective if the DOM is changed
      * */
-    @Nonnull
+    @NotNull
     public Node getOwnerBody() {
         if (ownerBody == null) {
             ownerBody = ownerDocument().body();
@@ -203,16 +203,16 @@ public abstract class Node implements Cloneable {
         this.immutableText = immutableText;
     }
 
-    @Nonnull
+    @NotNull
     public RealVector getFeatures() {
         return features;
     }
 
-    public void setFeatures(@Nonnull RealVector features) {
+    public void setFeatures(@NotNull RealVector features) {
         this.features = features;
     }
 
-    @Nonnull
+    @NotNull
     public Map<String, Object> getVariables() {
         if (variables == null) {
             variables = new HashMap<>();
@@ -220,7 +220,7 @@ public abstract class Node implements Cloneable {
         return variables;
     }
 
-    @Nonnull
+    @NotNull
     public Map<String, List<Object>> getTuples() {
         if (tuples == null) {
             tuples = new HashMap<>();

@@ -1,11 +1,9 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_CAPACITY
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_POLLING_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.readable
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
@@ -36,7 +34,7 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     /**
      * The probability to choose a test ip if absent
      * */
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     var lastActiveTime = Instant.now()
 
     operator fun contains(element: ProxyEntry): Boolean = freeProxies.contains(element)
@@ -52,10 +50,20 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
         return freeProxies.offer(proxyEntry)
     }
 
+    @Throws(ProxyException::class)
     open fun take(): ProxyEntry? {
         lastActiveTime = Instant.now()
-        return freeProxies.runCatching { poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS) }
-                .onFailure { log.warn("Unexpected exception", it) }.getOrNull()
+
+        var retry = 3
+        while (retry-- > 0) {
+            try {
+                return freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
+            } catch (e: ProxyRetryException) {
+                sleepSeconds(3)
+            }
+        }
+
+        return null
     }
 
     /**

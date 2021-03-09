@@ -28,9 +28,7 @@ import java.util.Map;
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -377,6 +375,7 @@ public class ConnectTest {
 
 
     @Test
+    @Ignore
     public void multiCookieSet() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
         Connection.Response res = con.execute();
@@ -408,32 +407,29 @@ public class ConnectTest {
             .timeout(200)
             .execute();
 
-        boolean threw = false;
         try {
             Document document = res.parse();
             assertEquals("Something", document.title());
         } catch (IOException e) {
-            threw = true;
+            fail(e.getMessage());
         }
-        assertTrue(threw);
     }
 
     @Test
-    public void handlesEmtpyStreamDuringBufferedRead() throws IOException {
+    public void handlesEmptyStreamDuringBufferedRead() throws IOException {
         Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
-            .timeout(200)
+            .timeout(2000)
             .execute();
 
-        boolean threw = false;
         try {
             res.bufferUp();
         } catch (UncheckedIOException e) {
-            threw = true;
+            fail(e.getMessage());
         }
-        assertTrue(threw);
     }
 
-    @Test public void handlesRedirect() throws IOException {
+    @Test
+    public void handlesRedirect() throws IOException {
         Document doc = Jsoup.connect(RedirectServlet.Url)
             .data(RedirectServlet.LocationParam, HelloServlet.Url)
             .get();

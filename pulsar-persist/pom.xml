@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.5.8-SNAPSHOT</version>
+        <version>1.5.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-persist</artifactId>
@@ -23,7 +23,6 @@
 
     <build>
         <plugins>
-            <!-- Intellij idea can not recognize gora-maven-plugin -->
 <!--            <plugin>-->
 <!--                <groupId>org.apache.gora</groupId>-->
 <!--                <artifactId>gora-maven-plugin</artifactId>-->
@@ -119,20 +118,6 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-        </dependency>
-
-        <!-- Kotlin -->
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit</artifactId>
         </dependency>
 
         <!-- Test -->

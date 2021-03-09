@@ -18,19 +18,18 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.MetricsCounters
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -49,16 +48,16 @@ class PageParser(
         val crawlFilters: CrawlFilters,
         val parserFactory: ParserFactory,
         val signature: Signature,
-        val metricsCounters: MetricsCounters,
         val messageWriter: MiscMessageWriter,
         private val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
-    init { MetricsCounters.register(Counter::class.java) }
+    init { AppMetrics.reg.register(Counter::class.java) }
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
+    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
@@ -74,7 +73,6 @@ class PageParser(
             CrawlFilters(conf),
             ParserFactory(conf),
             TextMD5Signature(),
-            MetricsCounters(),
             MiscMessageWriter(conf),
             conf
     )
@@ -129,10 +127,10 @@ class PageParser(
     }
 
     // TODO: optimization
-    private fun filterLinks(page: WebPage, unfilteredLinks: Set<HyperLink>): Set<HyperLink> {
+    private fun filterLinks(page: WebPage, unfilteredLinks: Set<HyperlinkPersistable>): Set<HyperlinkPersistable> {
         return unfilteredLinks.asSequence()
                 .filter { linkFilter.asPredicate(page).test(it) } // filter out invalid urls
-                .sortedByDescending { it.anchor.length } // longer anchor comes first
+                .sortedByDescending { it.text.length } // longer anchor comes first
                 .take(maxParsedLinks)
                 .toSet()
     }
@@ -148,15 +146,25 @@ class PageParser(
         }
 
         return try {
+            beforeParse(page)
             applyParsers(page)
         } catch (e: ParserNotFound) {
             unparsableTypes.add(page.contentType)
             LOG.warn("No parser found for <" + page.contentType + ">\n" + e.message)
-
             return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, page.contentType)
         } catch (e: Throwable) {
             return ParseResult.failed(e)
+        } finally {
+            afterParse(page)
         }
+    }
+
+    private fun beforeParse(page: WebPage) {
+        page.loadEventHandler?.onBeforeParse?.invoke(page)
+    }
+
+    private fun afterParse(page: WebPage) {
+        page.loadEventHandler?.onAfterParse?.invoke(page)
     }
 
     /**
@@ -220,7 +228,7 @@ class PageParser(
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
         val newUrl = crawlFilters.normalizeToNull(refreshHref, UrlNormalizers.SCOPE_FETCHER)?:return
 
-        page.addLiveLink(HyperLink(newUrl))
+        page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
         if (newUrl == page.url) {
             val refreshTime = parseStatus.getArgOrDefault(ParseStatus.REFRESH_TIME, "0").toInt()
@@ -229,7 +237,7 @@ class PageParser(
         }
     }
 
-    private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HyperLink>) {
+    private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HyperlinkPersistable>) {
         // Collect links
         // TODO : check the no-follow html tag directive
         val follow = (!page.metadata.contains(Name.NO_FOLLOW)
@@ -243,7 +251,7 @@ class PageParser(
             val hypeLinks = unfilteredLinks
             log.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
             page.setLiveLinks(hypeLinks)
-            page.addHyperLinks(hypeLinks)
+            page.addHyperlinks(hypeLinks)
         }
     }
 
@@ -256,12 +264,12 @@ class PageParser(
             }
         }
         if (counter != null) {
-            metricsCounters.inc(counter)
+            AppMetrics.reg.enumCounterRegistry.inc(counter)
         }
     }
 
     override fun close() {
-        messageWriter.reportLabeledHyperLinks(ParseResult.labeledHypeLinks)
+        messageWriter.reportLabeledHyperlinks(ParseResult.labeledHypeLinks)
     }
 
     companion object {
@@ -279,7 +287,7 @@ class PageParser(
                 val hi = page.htmlIntegrity
                 return when {
                     hi.isOK -> false
-                    hi.isOther -> page.contentBytes < 20_000
+                    hi.isOther -> page.contentLength < 20_000
                     else -> true
                 }
             }

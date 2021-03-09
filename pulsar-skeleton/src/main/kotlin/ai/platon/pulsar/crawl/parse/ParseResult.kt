@@ -17,11 +17,11 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.common.url.LabeledHyperlink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.persist.model.DomStatistics
-import ai.platon.pulsar.persist.model.LabeledHyperLink
 import java.util.concurrent.ConcurrentSkipListSet
 
 class ParseResult(
@@ -29,7 +29,7 @@ class ParseResult(
         minorCode: Int = SUCCESS_OK,
         message: String? = null
 ) : ParseStatus(majorCode, minorCode, message) {
-    val hypeLinks = mutableSetOf<HyperLink>()
+    val hypeLinks = mutableSetOf<HyperlinkPersistable>()
     var domStatistics: DomStatistics? = null
     var parser: Parser? = null
     var flowStatus = FlowState.CONTINUE
@@ -38,7 +38,7 @@ class ParseResult(
     val shouldBreak get() = flowStatus == FlowState.BREAK
 
     companion object {
-        val labeledHypeLinks = ConcurrentSkipListSet<LabeledHyperLink>()
+        val labeledHypeLinks = ConcurrentSkipListSet<LabeledHyperlink>()
 
         fun failed(minorCode: Int, message: String?): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, minorCode, message)

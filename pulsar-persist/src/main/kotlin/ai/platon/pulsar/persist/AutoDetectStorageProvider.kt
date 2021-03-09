@@ -1,20 +1,22 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.apache.commons.lang3.SystemUtils
 import org.apache.gora.persistency.Persistent
 import org.apache.gora.store.DataStore
 import org.apache.hadoop.conf.Configuration
 import org.slf4j.LoggerFactory
+import java.lang.IllegalStateException
 
 /**
  * Created by vincent on 19-1-19.
  * Copyright @ 2013-2019 Platon AI. All rights reserved
- *
  */
 class AutoDetectStorageProvider(val conf: ImmutableConfig) {
     private val log = LoggerFactory.getLogger(AutoDetectStorageProvider::class.java)
@@ -23,6 +25,10 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
     val pageStoreClass: Class<out DataStore<String, GWebPage>> get() = detectDataStoreClass(conf)
 
     fun createPageStore(): DataStore<String, GWebPage> {
+        if (!AppContext.isActive) {
+            throw IllegalStateException("App context is inactive")
+        }
+
         val pageStore = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java, pageStoreClass)
         log.info("Storage is created: {} realSchema: {}", pageStoreClass, pageStore.schemaName)
         return pageStore
@@ -37,16 +43,29 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
          * @return the DataStore persistent class
          */
         fun detectDataStoreClassName(conf: ImmutableConfig): String {
-            return when {
-                conf.isDryRun -> MEM_STORE_CLASS
-                conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                Runtimes.checkIfProcessRunning(".+HMaster.+") ->
-                    conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                Runtimes.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
-                    conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
-                Runtimes.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
-                    conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
-                else -> MEM_STORE_CLASS
+            if (!AppContext.isActive) {
+                throw IllegalStateException("App context is inactive")
+            }
+
+            when {
+                SystemUtils.IS_OS_WINDOWS -> return when {
+                    conf.isDryRun -> FILE_BACKEND_STORE_CLASS
+                    SystemUtils.IS_OS_WINDOWS && Runtimes.checkIfProcessRunning(".*mongod.exe .+") ->
+                        conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
+                    else -> FILE_BACKEND_STORE_CLASS
+                }
+                SystemUtils.IS_OS_LINUX -> return when {
+                    conf.isDryRun -> FILE_BACKEND_STORE_CLASS
+                    conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
+                    Runtimes.checkIfProcessRunning(".+HMaster.+") ->
+                        conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
+                    Runtimes.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
+                        conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
+                    Runtimes.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
+                        conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
+                    else -> FILE_BACKEND_STORE_CLASS
+                }
+                else -> return FILE_BACKEND_STORE_CLASS
             }
         }
 

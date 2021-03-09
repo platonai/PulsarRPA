@@ -22,11 +22,11 @@ import ai.platon.pulsar.common.DomUtil
 import ai.platon.pulsar.common.EncodingDetector
 import ai.platon.pulsar.common.NodeWalker
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.Urls.resolveURL
+import ai.platon.pulsar.common.url.Urls.resolveURL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Maps
 import org.slf4j.LoggerFactory
@@ -337,7 +337,7 @@ class PrimerParser(conf: ImmutableConfig) {
 
     /**
      * This method finds all anchors below the supplied DOM `root`, and
-     * creates appropriate [HyperLink] records for each (relative to the
+     * creates appropriate [HyperlinkPersistable] records for each (relative to the
      * supplied `base` URL), and adds them to the `outlinks`
      * [ArrayList].
      *
@@ -345,30 +345,30 @@ class PrimerParser(conf: ImmutableConfig) {
      * which contain only single nested links and empty text nodes (this is a
      * common DOM-fixup artifact, at least with nekohtml).
      */
-    fun collectLinks(base: URL, root: Node): MutableSet<HyperLink> {
+    fun collectLinks(base: URL, root: Node): MutableSet<HyperlinkPersistable> {
         return collectLinks(base, root, null)
     }
 
-    fun collectLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperLink> {
+    fun collectLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperlinkPersistable> {
         return collectLinks(base, mutableSetOf(), root, crawlFilters)
     }
 
-    fun collectLinks(base: URL, hyperLinks: MutableSet<HyperLink>, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperLink> {
+    fun collectLinks(base: URL, hyperlinks: MutableSet<HyperlinkPersistable>, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperlinkPersistable> {
         val walker = NodeWalker(root)
         while (walker.hasNext()) {
             val currentNode = walker.nextNode()
             if (crawlFilters == null || crawlFilters.isAllowed(currentNode)) {
-                getLinksStep2(base, hyperLinks, currentNode, crawlFilters)
+                getLinksStep2(base, hyperlinks, currentNode, crawlFilters)
                 walker.skipChildren()
             } else {
                 log.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
             }
         }
 
-        return hyperLinks
+        return hyperlinks
     }
 
-    private fun getLinksStep2(base: URL, hyperLinks: MutableSet<HyperLink>, root: Node, crawlFilters: CrawlFilters?) {
+    private fun getLinksStep2(base: URL, hyperlinks: MutableSet<HyperlinkPersistable>, root: Node, crawlFilters: CrawlFilters?) {
         val walker = NodeWalker(root)
         // log.debug("Get hypeLinks for " + DomUtil.getPrettyName(root));
         while (walker.hasNext()) {
@@ -414,7 +414,7 @@ class PrimerParser(conf: ImmutableConfig) {
 
                         if (target != null && !noFollow && !post) try {
                             val url = resolveURL(base, target)
-                            hyperLinks.add(HyperLink(url.toString(), linkText.toString().trim { it <= ' ' }))
+                            hyperlinks.add(HyperlinkPersistable(url.toString(), linkText.toString().trim { it <= ' ' }))
                         } catch (ignored: MalformedURLException) {
                         }
                     } // if not should throw away

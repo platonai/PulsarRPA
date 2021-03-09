@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.common
 
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.net.URL
@@ -26,7 +25,6 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
-import kotlin.streams.toList
 
 /**
  * Load resources
@@ -100,20 +98,15 @@ object ResourceLoader {
      */
     @JvmOverloads
     fun readAllLines(stringResource: String?, fileResource: String, resourcePrefix: String = ""): List<String> {
-        return kotlin.runCatching {
-            getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.use { reader ->
-                BufferedReader(reader).lines().filter { !it.startsWith("#") && StringUtils.isNotBlank(it) }.toList()
-            }
-        }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
+        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.useLines {
+            it.filter { it.isNotBlank() }.filter { !it.startsWith("#") }.toList()
+        } ?: listOf()
     }
 
-    @JvmStatic
     fun readAllLines(fileResource: String): List<String> {
-        return kotlin.runCatching {
-            getResourceAsReader(fileResource)?.use { reader ->
-                BufferedReader(reader).lines().filter { !it.startsWith("#") && StringUtils.isNotBlank(it) }.toList()
-            }
-        }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
+        return getResourceAsReader(fileResource)?.useLines {
+            it.filter { it.isNotBlank() }.filter { !it.startsWith("#") }.toList()
+        } ?: listOf()
     }
 
     fun readAllLinesIfModified(path: Path): List<String> {
@@ -130,12 +123,9 @@ object ResourceLoader {
     }
 
     fun readStringTo(fileResource: String, sb: StringBuilder): StringBuilder {
-        kotlin.runCatching {
-            getResourceAsReader(fileResource)?.use { reader ->
-                BufferedReader(reader).lines().forEach { sb.append(it) }
-            }
-        }.onFailure { log.error("IO failure {}", it.message) }
-
+        getResourceAsReader(fileResource)?.forEachLine {
+            sb.appendln(it)
+        }
         return sb
     }
 
@@ -148,15 +138,11 @@ object ResourceLoader {
      */
     fun getResourceAsStream(name: String): InputStream? {
         return try {
-            val url = getResource(name)
-            if (url == null) {
-                // LOG.info(name + " not found");
-                return null
-            } else {
-                log.info("Find resource $name at $url")
-            }
+            val url = getResource(name) ?: return null
+            log.info("Find resource $name | $url")
             url.openStream()
-        } catch (e: Exception) {
+        } catch (e: IOException) {
+            log.warn("Failed to read resource {} | {}", name, e.message)
             null
         }
     }
@@ -166,7 +152,7 @@ object ResourceLoader {
      */
     fun getResourceAsStream(name: String, vararg resourcePrefixes: String): InputStream? {
         var found = false
-        return resourcePrefixes.asIterable().filter { StringUtils.isNotBlank(it) }
+        return resourcePrefixes.asIterable().filter { it.isNotBlank() }
                 .mapNotNull { if (!found) getResourceAsStream("$it/$name") else null }
                 .onEach { found = true }
                 .firstOrNull() ?: getResourceAsStream(name)
@@ -203,7 +189,7 @@ object ResourceLoader {
         while (url == null && it.hasNext()) {
             url = it.next().javaClass.getResource(name)
         }
-        return url ?: classLoader!!.getResource(name)
+        return url ?: classLoader.getResource(name)
     }
 
     /**
@@ -268,5 +254,4 @@ object ResourceLoader {
         @Throws(ClassNotFoundException::class)
         fun loadClass(name: String): Class<*>?
     }
-
 }
