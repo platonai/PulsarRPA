@@ -45,11 +45,11 @@ import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.system.measureTimeMillis
 
 class PageParser(
-        val crawlFilters: CrawlFilters,
-        val parserFactory: ParserFactory,
-        val signature: Signature,
-        val messageWriter: MiscMessageWriter,
-        private val conf: ImmutableConfig
+    val parserFactory: ParserFactory,
+    val conf: ImmutableConfig,
+    val crawlFilters: CrawlFilters = CrawlFilters(conf),
+    val signature: Signature = TextMD5Signature(),
+    val messageWriter: MiscMessageWriter? = null
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
@@ -57,7 +57,6 @@ class PageParser(
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
-    private val enumCounters = AppMetrics.reg.enumCounterRegistry
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
@@ -66,16 +65,18 @@ class PageParser(
     private val maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
     val linkFilter = LinkFilter(crawlFilters, conf)
 
+    constructor(parserFactory: ParserFactory, conf: ImmutableConfig) : this(
+        parserFactory,
+        conf,
+        CrawlFilters(conf),
+        TextMD5Signature(),
+        MiscMessageWriter(conf)
+    )
+
     /**
      * @param conf The configuration
      */
-    constructor(conf: ImmutableConfig) : this(
-            CrawlFilters(conf),
-            ParserFactory(conf),
-            TextMD5Signature(),
-            MiscMessageWriter(conf),
-            conf
-    )
+    constructor(conf: ImmutableConfig) : this(ParserFactory(conf), conf)
 
     init {
         params.merge(linkFilter.params).withLogger(LOG).info(true)
@@ -113,7 +114,7 @@ class PageParser(
                 updateCounters(parseResult)
 
                 if (parseResult.isSuccess) {
-                    messageWriter.debugExtractedFields(page)
+                    messageWriter?.debugExtractedFields(page)
                     page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
                 }
             }
@@ -217,7 +218,7 @@ class PageParser(
         if (prevSig != null) {
             page.prevSignature = prevSig
         }
-        page.setSignature(signature.calculate(page))
+        signature?.calculate(page)?.let { page.setSignature(it) }
 
         if (parseResult.hypeLinks.isNotEmpty()) {
             processLinks(page, parseResult.hypeLinks)
@@ -226,7 +227,9 @@ class PageParser(
 
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
-        val newUrl = crawlFilters.normalizeToNull(refreshHref, UrlNormalizers.SCOPE_FETCHER)?:return
+        val newUrl = if (crawlFilters != null) {
+            crawlFilters.normalizeToNull(refreshHref, UrlNormalizers.SCOPE_FETCHER)?:return
+        } else refreshHref
 
         page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
@@ -263,13 +266,14 @@ class PageParser(
             else -> {
             }
         }
+
         if (counter != null) {
             AppMetrics.reg.enumCounterRegistry.inc(counter)
         }
     }
 
     override fun close() {
-        messageWriter.reportLabeledHyperlinks(ParseResult.labeledHypeLinks)
+        messageWriter?.reportLabeledHyperlinks(ParseResult.labeledHypeLinks)
     }
 
     companion object {

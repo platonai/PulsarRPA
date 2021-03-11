@@ -5,6 +5,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class TestNamedScoreVector {
 
@@ -21,18 +22,18 @@ class TestNamedScoreVector {
 
     @Test
     fun testStringFormat() {
-        Assert.assertEquals("0,0,0,2201,0,0,8,0,10,-2,0", score.toString())
-        Assert.assertEquals(score, ScoreVector.parse("0,0,0,2201,0,0,8,0,10,-2,0"))
+        assertEquals("0,0,0,2201,0,0,8,0,10,-2,0", score.toString())
+        assertEquals(score.toString(), ScoreVector.parse("0,0,0,2201,0,0,8,0,10,-2,0").toString())
         score.setValue(1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11)
-        Assert.assertEquals("1,2,3,4,5,6,-7,-8,9,10,11", score.toString())
-        Assert.assertEquals(score, ScoreVector.parse("1,2,3,4,5,6,-7,-8,9,10,11"))
+        assertEquals("1,2,3,4,5,6,-7,-8,9,10,11", score.toString())
+        assertEquals(score.toString(), ScoreVector.parse("1,2,3,4,5,6,-7,-8,9,10,11").toString())
     }
 
     @Test
     @Ignore("TODO: Failed")
     fun testPriority() {
         for (i in 0 until score.size()) {
-            Assert.assertEquals(i.toString() + "th", i.toLong(), score[i].priority.toLong())
+            assertEquals(i.toLong(), score[i].priority.toLong(), "${i}th")
         }
     }
 }

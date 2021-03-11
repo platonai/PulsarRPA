@@ -73,19 +73,19 @@ class TestDataCollectors: TestBase() {
         }
         assertEquals(fetchCacheManager.caches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
-        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
+//        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         println("Adding another normal collector ...")
         val priority = Priority13.NORMAL.value
         val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
-        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
+//        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         val normalCollector2 = LocalFileHyperlinkCollector(Paths.get("/tmp/non-exist"), priority)
         collectors += normalCollector2
         assertEquals(3, collectors.count { it.priority == priority })
-        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
+//        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
     }
 
     @Test

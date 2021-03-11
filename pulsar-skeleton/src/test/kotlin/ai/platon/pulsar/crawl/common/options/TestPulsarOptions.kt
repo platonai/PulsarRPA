@@ -38,15 +38,6 @@ class TestPulsarOptions {
 
     private val conf = ImmutableConfig()
 
-    @Test
-    fun testNoProgramOpts() {
-        for (cl in argss) {
-            val opts = CrawlOptions.parse(cl, conf)
-            // System.out.println(opts.toString());
-            // assertEquals(opts.toString(), StringUtils.substringBefore(cl, " "), "");
-        }
-    }
-
     /**
      * TODO: Failed to parse CrawlOptions
      */
@@ -205,7 +196,7 @@ class TestPulsarOptions {
                 " --collection-item .comment" +
                 " -FFauthor=.author -FFcontent=.content -FFpublish_time=.publish-time"
 
-        var argss = arrayOf("", "-i 1m -d 2 -e article -ed body -Ftitle=h2")
+        var argv = arrayOf("", "-i 1m -d 2 -e article -ed body -Ftitle=h2")
 
         private val linkFilterCommandLine = "-amin 2 -amax 45 -umin 44 -umax 200 -ucon news -ureg .+news.+"
 

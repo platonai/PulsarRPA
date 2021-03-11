@@ -5,6 +5,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class TestMetadataFunctions : TestBase() {
+    private val urlGroups = TestResource.urlGroups
 
     @Test
     fun testMetadata() {

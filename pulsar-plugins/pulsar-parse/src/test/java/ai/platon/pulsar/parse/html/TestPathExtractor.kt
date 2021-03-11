@@ -32,12 +32,11 @@ import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.io.IOException
 import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Ignore("PathExtractor is deprecated, use x-sql instead")
 @RunWith(SpringJUnit4ClassRunner::class)
 class TestPathExtractor : HtmlParserTestBase() {
     @Test
@@ -70,9 +69,8 @@ class TestPathExtractor : HtmlParserTestBase() {
     @Ignore("Use Web SQL instead")
     @Throws(ParseException::class, IOException::class)
     fun testExtractNews() {
-        val htmlPath = Paths.get(SAMPLES_DIR, "selector/1/pages/html_example_3_news.html")
-        val baseUrl = "http://news.example.com/selector/1/pages/html_example_3_news.html"
-        val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
+        val html = ResourceLoader.readString("selector/2/pages/html_example_3_news.html")
+        val page = getPage(html, Charset.forName("utf-8"))
         page.args = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
         val filter = PathExtractor(conf)
         val parseContext = ParseContext(page)
@@ -136,11 +134,10 @@ class TestPathExtractor : HtmlParserTestBase() {
     @Test
     @Throws(IOException::class, ParseException::class)
     fun testContentSanitize() {
-        val htmlPath = Paths.get(SAMPLES_DIR, "selector", "2", "pages", "html_example_4_bbs.html")
-        val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
+        val html = ResourceLoader.readString("selector/2/pages/html_example_4_bbs.html")
+        val page = getPage(html, Charset.forName("utf-8"))
         val doc = Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseUrl)
         val content = JsoupUtils.toHtmlPiece(doc, true)
         assertTrue(content.startsWith("<div id=\"pulsarHtml\">"))
-        println(content)
     }
 }

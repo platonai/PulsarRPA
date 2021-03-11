@@ -19,12 +19,12 @@ class TestParams {
         val objectStyleLine = params.formatAsLine()
         assertTrue { "-storeContent: false" in objectStyleLine }
 
-        val distinctBooleanParams = listOf("storeContent")
+        val distinctBooleanParams = listOf("-storeContent")
         val cmdStyleLine = params.distinct().sorted()
                 .withCmdLineStyle(true)
                 .withKVDelimiter(" ")
                 .withDistinctBooleanParams(distinctBooleanParams)
                 .formatAsLine().replace("\\s+".toRegex(), " ")
-        assertTrue { "-storeContent false" in cmdStyleLine }
+        assertTrue(cmdStyleLine) { "-storeContent false" in cmdStyleLine }
     }
 }

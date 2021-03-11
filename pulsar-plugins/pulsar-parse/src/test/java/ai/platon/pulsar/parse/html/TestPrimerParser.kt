@@ -200,11 +200,12 @@ class TestPrimerParser {
     @Autowired
     private lateinit var immutableConfig: ImmutableConfig
     private val testBaseHrefURLs = arrayOfNulls<URL>(testPages.size)
-    private val conf = MutableConfig(immutableConfig)
+    private lateinit var conf: MutableConfig
     private lateinit var primerParser: PrimerParser
 
     @Before
     fun setup() {
+        conf = immutableConfig.toMutableConfig()
         conf.setBoolean("parser.html.form.use_action", true)
         primerParser = PrimerParser(conf)
         val parser = DOMFragmentParser()

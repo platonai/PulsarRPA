@@ -18,6 +18,8 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.MEM_STORE_CLASS
+import ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.url.Urls
@@ -26,6 +28,7 @@ import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.RandomStringUtils
+import org.apache.gora.memory.store.MemStore
 import org.apache.gora.store.DataStore
 import org.junit.After
 import org.junit.Before
@@ -37,6 +40,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Tests basic Gora functionality by writing and reading webpages.
@@ -45,8 +49,10 @@ class TestGoraStorageInMemory {
 
     val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
 
-    private val conf = MutableConfig()
-    protected var persistentDataStore = false
+    private val conf = MutableConfig().apply {
+        set(CapabilityTypes.STORAGE_CRAWL_ID, "test_" + RandomStringUtils.randomAlphabetic(4))
+        set(CapabilityTypes.STORAGE_DATA_STORE_CLASS, MEM_STORE_CLASS)
+    }
 
     private lateinit var webDb: WebDb
     private val store: DataStore<String, GWebPage> get() = webDb.store
@@ -54,8 +60,12 @@ class TestGoraStorageInMemory {
 
     @Before
     fun setup() {
-        conf.set(CapabilityTypes.STORAGE_CRAWL_ID, RandomStringUtils.randomAlphabetic(4))
+        assertEquals(MEM_STORE_CLASS, conf.get(CapabilityTypes.STORAGE_DATA_STORE_CLASS))
+        assertEquals(MEM_STORE_CLASS, AutoDetectStorageProvider.detectDataStoreClassName(conf))
         webDb = WebDb(conf)
+//        assertTrue(store.javaClass.name) { store is MemStore }
+        assertTrue { store.schemaName.startsWith("test_") }
+        webDb.truncate(force = true)
     }
 
     @After
@@ -71,12 +81,20 @@ class TestGoraStorageInMemory {
      */
     @Test
     fun testSingleThreadReadWriteGoraWebPage() {
+        if (store !is MemStore) {
+            return
+        }
+
         val id = "testSingleThreadReadWriteGoraWebPage"
         readWriteGoraWebPage(id, store)
     }
 
     @Test
     fun testSingleThreadReadWriteWebPage() {
+        if (store !is MemStore) {
+            return
+        }
+
         val id = "testSingleThreadReadWriteWebPage"
         readWriteWebPage(id, store)
     }
@@ -88,6 +106,10 @@ class TestGoraStorageInMemory {
      */
     @Test
     fun testMultithreaded() { // create a fixed thread pool
+        if (store !is MemStore) {
+            return
+        }
+
         val numThreads = 8
         val pool = Executors.newFixedThreadPool(numThreads)
         // define a list of tasks
@@ -115,7 +137,7 @@ class TestGoraStorageInMemory {
 
         private fun readWriteGoraWebPage(id: String, store: DataStore<String, GWebPage>) {
             var page = GWebPage.newBuilder().build()
-            val max = 500
+            val max = 100
             for (i in 0 until max) {
                 // store a page with title
                 val key = "key-$id-$i"
@@ -143,7 +165,7 @@ class TestGoraStorageInMemory {
         }
 
         private fun readWriteWebPage(id: String, store: DataStore<String, GWebPage>) {
-            val max = 1000
+            val max = 100
             for (i in 0 until max) {
                 val url = AppConstants.SHORTEST_VALID_URL + "/" + id + "/" + i
                 var page = WebPage.newWebPage(url)

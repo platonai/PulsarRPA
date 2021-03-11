@@ -15,21 +15,17 @@ import kotlin.test.assertTrue
  */
 @RunWith(SpringJUnit4ClassRunner::class)
 class TestDomainUrlFilter : UrlFilterTestBase("") {
-    override lateinit var conf: MutableConfig
-
-    @Before
-    fun setup() {
-        conf = MutableConfig()
-        val rules = ResourceLoader.readString("domain/data/general/hosts.txt")
-        conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES] = rules
-    }
+    override var conf: MutableConfig = MutableConfig()
 
     @Test
     fun testDomainFilter() {
+        val rules = ResourceLoader.readString("domain/data/general/hosts.txt")
+        conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES] = rules
+
         val domainFilter = DomainUrlFilter(conf)
 
-        domainFilter.domainSet.forEach { println() }
-        println(conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES])
+//        domainFilter.domainSet.forEach { println() }
+//        println(conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES])
         assertTrue { domainFilter.domainSet.contains("apache.org") }
 
         assertNotNull(domainFilter.filter("http://lucene.apache.org"))
@@ -46,7 +42,11 @@ class TestDomainUrlFilter : UrlFilterTestBase("") {
 
     @Test
     fun testNoDomainAllowedFilter() {
+        val rules = ResourceLoader.readString("domain/data/none/hosts.txt")
+        conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES] = rules
+
         val domainFilter = DomainUrlFilter(conf)
+
         assertNull(domainFilter.filter("http://lucene.apache.org"))
         assertNull(domainFilter.filter("http://hadoop.apache.org"))
         assertNull(domainFilter.filter("http://www.apache.org"))

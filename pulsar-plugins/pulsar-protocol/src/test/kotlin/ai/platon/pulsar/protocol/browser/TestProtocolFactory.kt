@@ -41,13 +41,14 @@ class TestProtocolFactory {
 
     @Test
     @Throws(Exception::class)
-    fun testGetProtocol() { //        assertEquals(Http.class.getName(),
+    fun testGetProtocol() {
+        //        assertEquals(Http.class.getName(),
 //                protocolFactory.getProtocol("http://example.com").getClass().getName());
 //        assertEquals(Http.class.getName(),
 //                protocolFactory.getProtocol("https://example.com").getClass().getName());
         assertEquals(ForwardingProtocol::class.java.name,
                 protocolFactory.getProtocol("crowd:http://example.com")?.javaClass?.name)
         assertEquals(BrowserEmulatorProtocol::class.java.name,
-                protocolFactory.getProtocol("selenium:http://example.com")?.javaClass?.name)
+                protocolFactory.getProtocol("browser:http://example.com")?.javaClass?.name)
     }
 }

@@ -31,17 +31,17 @@ Crawl out pages from a portal and scrape each one:
 
     select
         dom_first_text(dom, '.sku-name') as name,
-        dom_first_number(dom, '.p-price .price', 0.00) as price,
-        dom_first_number(dom, '#page_opprice', 0.00) as tag_price,
+        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) as price,
+        DOM_FIRST_FLOAT(dom, '#page_opprice', 0.00) as tag_price,
         dom_first_text(dom, '#comment-count .count') as comments,
         dom_first_text(dom, '#summary-service') as logistics,
         dom_base_uri(dom) as baseuri
     from
         load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
     where
-        dom_first_number(dom, '.p-price .price', 0.00) > 0
+        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) > 0
     order by
-        dom_first_number(dom, '.p-price .price', 0.00);
+        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00);
 
 The SQL above visits a portal page in jd.com, downloads detail pages and then scrape data from them.
 

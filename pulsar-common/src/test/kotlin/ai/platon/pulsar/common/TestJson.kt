@@ -25,15 +25,17 @@ class TestJson {
     @Test
     fun testCollection() {
         val gson = GsonBuilder().create()
-        println(gson.toJson(urls))
-        println(gson.toJson(Sets.newHashSet(*urls)))
+        val json = gson.toJson(Sets.newHashSet(*urls))
+        urls.forEach { url ->
+            assertTrue(url) { json.contains(url) }
+        }
     }
 
     @Test
-    fun testTab() {
+    fun testRawString() {
         val seed = "http://www.sxrb.com/sxxww/\t-i pt1s -p"
         val gson = GsonBuilder().create()
-        println(gson.toJson(seed))
+        assertEquals("\"http://www.sxrb.com/sxxww/\\t-i pt1s -p\"", gson.toJson(seed))
     }
 
     @Test

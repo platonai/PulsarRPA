@@ -18,14 +18,14 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
 
     select
         dom_first_text(dom, '.sku-name') as name,
-        dom_first_number(dom, '.p-price .price', 0.00) as price,
-        dom_first_number(dom, '#page_opprice', 0.00) as tag_price,
+        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) as price,
+        DOM_FIRST_FLOAT(dom, '#page_opprice', 0.00) as tag_price,
         dom_first_text(dom, '#comment-count .count') as comments,
         dom_first_text(dom, '#summary-service') as logistics,
         dom_base_uri(dom) as baseuri
     from load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
-    where dom_first_number(dom, '.p-price .price', 0.00) > 0
-    order by dom_first_number(dom, '.p-price .price', 0.00);
+    where DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) > 0
+    order by DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00);
 
 你可以下载 pulsar 源代码自己运行上述 X-SQL 或者通过我们的[在线演示版](http://bi.platonic.fun/question/65)运行。
 

@@ -3,6 +3,8 @@ package ai.platon.pulsar.ql
 import org.junit.Test
 
 class TestManual: TestBase() {
+    private val productIndexUrl = TestResource.productIndexUrl
+    private val productDetailUrl = TestResource.productDetailUrl
 
     @Test
     fun load() {

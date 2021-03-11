@@ -3,42 +3,29 @@ package ai.platon.pulsar.crawl.scoring
 import ai.platon.pulsar.common.ScoreVector
 import com.google.common.math.IntMath
 import org.apache.commons.math3.analysis.function.Sigmoid
-import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestScoreVector {
     @Test
-    fun testStringFormat() {
-        val score = NamedScoreVector()
-        score.setValue(3, 10)
-        score.setValue(1, 8)
-        score.setValue(6, -8)
-        score.setValue(7, -2)
-        score.setValue(9, 2201)
-        Assert.assertEquals("0,8,0,10,0,0,-8,-2,0,2201,0", score.toString())
-        Assert.assertEquals(score, ScoreVector.parse("0,8,0,10,0,0,-8,-2,0,2201,0"))
-        score.setValue(1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11)
-        Assert.assertEquals("1,2,3,4,5,6,-7,-8,9,10,11", score.toString())
-        Assert.assertEquals(score, ScoreVector.parse("1,2,3,4,5,6,-7,-8,9,10,11"))
-    }
-
-    @Test
     fun testCompare() {
         val scores = arrayOf(
-                ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11),
-                ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 12),
-                ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 11, 11),
-                ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -7, 10, 10, 11),
-                ScoreVector("11", 1, 2, 3, 4, 5, 6, -6, -8, 10, 10, 11),
-                ScoreVector("11", 1, 2, 3, 4, 5, 7, -7, -8, 10, 10, 11),
-                ScoreVector("11", 1, 2, 3, 4, 6, 6, -7, -8, 10, 10, 11),
-                ScoreVector("11", 1, 2, 3, 5, 5, 6, -7, -8, 10, 10, 11),
-                ScoreVector("11", 1, 3, 4, 4, 5, 6, -7, -8, 10, 10, 11),
-                ScoreVector("11", 1, 4, 4, 4, 5, 6, -7, -8, 10, 10, 11),
-                ScoreVector("11", 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-                ScoreVector("12", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+            ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11),
+            ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 12),
+            ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 11, 11),
+            ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -7, 10, 10, 11),
+            ScoreVector("11", 1, 2, 3, 4, 5, 6, -6, -8, 10, 10, 11),
+            ScoreVector("11", 1, 2, 3, 4, 5, 7, -7, -8, 10, 10, 11),
+            ScoreVector("11", 1, 2, 3, 4, 6, 6, -7, -8, 10, 10, 11),
+            ScoreVector("11", 1, 2, 3, 5, 5, 6, -7, -8, 10, 10, 11),
+            ScoreVector("11", 1, 3, 4, 4, 5, 6, -7, -8, 10, 10, 11),
+            ScoreVector("11", 1, 4, 4, 4, 5, 6, -7, -8, 10, 10, 11),
+            ScoreVector("11", 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            ScoreVector("12", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        )
         for (i in 0 until scores.size - 1) {
-            Assert.assertTrue(i.toString() + "th", scores[i].compareTo(scores[i + 1]) < 0)
+            assertTrue(i.toString() + "th") { scores[i] < scores[i + 1] }
         }
     }
 
@@ -54,24 +41,24 @@ class TestScoreVector {
         val score8 = ScoreVector("11", 1, 2, 3, 5, 5, 6, -7, -8, 10, 10, 11)
         val score9 = ScoreVector("11", 1, 3, 4, 4, 5, 6, -7, -8, 10, 10, 11)
         val score10 = ScoreVector("12", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        Assert.assertTrue(score < score2)
-        Assert.assertTrue(score2 < score3)
-        Assert.assertTrue(score3 < score4)
-        Assert.assertTrue(score4 < score5)
-        Assert.assertTrue(score5 < score6)
-        Assert.assertTrue(score6 < score7)
-        Assert.assertTrue(score7 < score8)
-        Assert.assertTrue(score8 < score9)
-        Assert.assertTrue(score9 < score10)
+        assertTrue(score < score2)
+        assertTrue(score2 < score3)
+        assertTrue(score3 < score4)
+        assertTrue(score4 < score5)
+        assertTrue(score5 < score6)
+        assertTrue(score6 < score7)
+        assertTrue(score7 < score8)
+        assertTrue(score8 < score9)
+        assertTrue(score9 < score10)
     }
 
     @Test
     fun testEquals() {
         val score = ScoreVector("11", 1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11)
         val score2 = ScoreVector.parse("1,2,3,4,5,6,-7,-8,9,10,11")
-        Assert.assertTrue("$score <-> $score2", score.compareTo(score2) == 0)
-        Assert.assertEquals("$score <-> $score2", score, score2)
-        Assert.assertEquals(1, 1)
+        assertTrue("$score <-> $score2") { score.compareTo(score2) == 0 }
+        assertEquals(score, score2, "$score <-> $score2")
+        assertEquals(1, 1)
     }
 
     @Test

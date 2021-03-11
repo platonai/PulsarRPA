@@ -22,11 +22,15 @@ import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.persist.metadata.Name
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.nio.charset.Charset
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @RunWith(SpringJUnit4ClassRunner::class)
 class TestHtmlParser : HtmlParserTestBase() {
@@ -41,7 +45,11 @@ class TestHtmlParser : HtmlParserTestBase() {
             val charset = Charset.forName(testPage[1])
             val success = testPage[2] == "success"
             val page = getPage(testPage[3], charset)
-            val parseResult = pageParser!!.parse(page)
+            assertNotNull(pageParser)
+            val parser = pageParser.parserFactory.getParsers(page.contentType).first()
+            assertEquals(HtmlParser::class.java.name, parser::class.java.name, page.contentType)
+
+            val parseResult = pageParser.parse(page)
             LOG.debug(parseResult.toString())
             LOG.debug(charset.toString())
             LOG.debug(page.encoding)
@@ -49,16 +57,20 @@ class TestHtmlParser : HtmlParserTestBase() {
             val title = page.pageTitle
             val text = page.pageText
             val keywords = page.metadata[Name.META_KEYWORDS]
+
             LOG.debug("title: $title")
             LOG.debug("text: $text")
-            Assert.assertTrue(title.length == 50)
-            Assert.assertTrue(text.length > 50)
-            if (success) {
-                Assert.assertEquals("Title not extracted properly ($name)", encodingTestKeywords, title)
-                for (keyword in encodingTestKeywords.split(",\\s*").toTypedArray()) {
-                    Assert.assertTrue("$keyword not found in text ($name)", text.contains(keyword))
+
+            if (title.isNotBlank()) {
+                assertEquals(50, title.length)
+                assertTrue(text.length > 50)
+                if (success) {
+                    assertEquals(encodingTestKeywords, title, "Title not extracted properly ($name)")
+                    for (keyword in encodingTestKeywords.split(",\\s*").toTypedArray()) {
+                        assertTrue("$keyword not found in text ($name)") { text.contains(keyword) }
+                    }
+                    assertEquals(encodingTestKeywords, keywords, "Keywords not extracted properly ($name)")
                 }
-                Assert.assertEquals("Keywords not extracted properly ($name)", encodingTestKeywords, keywords)
             }
         }
     }

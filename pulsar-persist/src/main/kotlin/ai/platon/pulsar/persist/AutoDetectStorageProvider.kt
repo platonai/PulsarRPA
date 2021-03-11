@@ -21,7 +21,7 @@ import java.lang.IllegalStateException
 class AutoDetectStorageProvider(val conf: ImmutableConfig) {
     private val log = LoggerFactory.getLogger(AutoDetectStorageProvider::class.java)
 
-    val storeClassName: String = detectDataStoreClassName(conf)
+    val storeClassName: String get() = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> get() = detectDataStoreClass(conf)
 
     fun createPageStore(): DataStore<String, GWebPage> {
@@ -47,22 +47,23 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
                 throw IllegalStateException("App context is inactive")
             }
 
+            val specified = conf.get(STORAGE_DATA_STORE_CLASS)
+            if (specified != null) {
+                return specified
+            }
+
             when {
                 SystemUtils.IS_OS_WINDOWS -> return when {
                     conf.isDryRun -> FILE_BACKEND_STORE_CLASS
-                    SystemUtils.IS_OS_WINDOWS && Runtimes.checkIfProcessRunning(".*mongod.exe .+") ->
-                        conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
+                    SystemUtils.IS_OS_WINDOWS && Runtimes.checkIfProcessRunning(".*mongod.exe .+") -> MONGO_STORE_CLASS
                     else -> FILE_BACKEND_STORE_CLASS
                 }
                 SystemUtils.IS_OS_LINUX -> return when {
                     conf.isDryRun -> FILE_BACKEND_STORE_CLASS
-                    conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                    Runtimes.checkIfProcessRunning(".+HMaster.+") ->
-                        conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                    Runtimes.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
-                        conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
-                    Runtimes.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
-                        conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
+                    conf.isDistributedFs -> HBASE_STORE_CLASS
+                    Runtimes.checkIfProcessRunning(".+HMaster.+") -> HBASE_STORE_CLASS
+                    Runtimes.checkIfProcessRunning(".+/usr/bin/mongod .+") -> MONGO_STORE_CLASS
+                    Runtimes.checkIfProcessRunning(".+/tmp/.+extractmongod .+") -> MONGO_STORE_CLASS
                     else -> FILE_BACKEND_STORE_CLASS
                 }
                 else -> return FILE_BACKEND_STORE_CLASS

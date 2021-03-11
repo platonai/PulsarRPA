@@ -56,17 +56,11 @@
     </bean>
 
     <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser">
-        <constructor-arg ref="crawlFilters"/>
-        <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="conf"/>
+        <constructor-arg ref="parserFactory"/>
     </bean>
 
     <bean id="crawlFilters" class="ai.platon.pulsar.crawl.filter.CrawlFilters">
-        <constructor-arg>
-            <list>
-            </list>
-        </constructor-arg>
-        <constructor-arg value="default"/>
         <constructor-arg ref="conf"/>
     </bean>
 

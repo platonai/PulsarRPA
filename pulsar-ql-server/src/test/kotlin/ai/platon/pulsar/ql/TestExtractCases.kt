@@ -1,8 +1,8 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -12,6 +12,11 @@ import org.junit.Test
 import java.util.concurrent.TimeUnit
 
 class TestExtractCases : TestBase() {
+    private val productIndexUrl = TestResource.productIndexUrl
+    private val productDetailUrl = TestResource.productDetailUrl
+    private val newsIndexUrl = TestResource.newsIndexUrl
+    private val newsDetailUrl = TestResource.newsDetailUrl
+    private val urlGroups = TestResource.urlGroups
 
     private val pc = PulsarContexts.activate(BasicPulsarContext())
 
@@ -73,28 +78,6 @@ class TestExtractCases : TestBase() {
 
             TimeUnit.SECONDS.sleep(30)
         }
-    }
-
-    @Test
-    fun testLoadOutPagesForMia() {
-        val url = urlGroups["mia"]!![0]
-        val limit = 20
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1d') WHERE SIBLING > 30 LIMIT $limit")
-
-        execute("CALL SET_PAGE_EXPIRES('1s', 10)")
-        // val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"
-        val expr = "a[href~=item]"
-        val sql = """
-SELECT
-  DOM_BASE_URI(DOM) AS BaseUri,
-  DOM_FIRST_TEXT(DOM, '.brand') AS Title,
-  DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
-  DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
-  DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
-  DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-FROM LOAD_OUT_PAGES('$url -i 1s', '$expr', 1, $limit)
-"""
-        execute(sql)
     }
 
     @Test
@@ -185,14 +168,14 @@ WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
         val sql = """
 select
     dom_first_text(dom, '.sku-name') as name,
-    dom_first_number(dom, '.p-price .price', 0.00) as price,
-    dom_first_number(dom, '#page_opprice', 0.00) as tag_price,
+    DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) as price,
+    DOM_FIRST_FLOAT(dom, '#page_opprice', 0.00) as tag_price,
     dom_first_text(dom, '#comment-count .count') as comments,
     dom_first_text(dom, '#summary-service') as logistics,
     dom_base_uri(dom) as baseuri
 from load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
-where dom_first_number(dom, '.p-price .price', 0.00) > 0
-order by dom_first_number(dom, '.p-price .price', 0.00);
+where DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) > 0
+order by DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00);
 """.trimIndent()
 
         execute(sql)

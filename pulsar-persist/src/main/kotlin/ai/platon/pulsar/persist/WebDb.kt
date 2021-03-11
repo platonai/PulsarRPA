@@ -21,7 +21,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
-    val store: DataStore<String, GWebPage> by lazy { AutoDetectStorageProvider(conf).createPageStore() }
+    val customStore: DataStore<String, GWebPage>? = null
+    val store: DataStore<String, GWebPage> by lazy {
+        customStore ?: AutoDetectStorageProvider(conf).createPageStore()
+    }
     val schemaName: String get() = store.schemaName
 
     /**

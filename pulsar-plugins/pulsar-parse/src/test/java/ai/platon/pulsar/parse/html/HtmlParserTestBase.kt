@@ -41,7 +41,6 @@ open class HtmlParserTestBase {
 
     companion object {
         val LOG = LoggerFactory.getLogger(HtmlParserTestBase::class.java)
-        val SAMPLES_DIR = System.getProperty("test.data", ".")
         const val encodingTestKeywords = "français, español, русский язык, čeština, ελληνικά"
         const val encodingTestBody = "<ul>\n  <li>français\n  <li>español\n  <li>русский язык\n  <li>čeština\n  <li>ελληνικά\n</ul>"
         const val encodingTestBody2 = "<div>" +

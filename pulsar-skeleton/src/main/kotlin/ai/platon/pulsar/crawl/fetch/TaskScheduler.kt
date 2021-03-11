@@ -276,31 +276,6 @@ class TaskScheduler(
         updateStatus(page)
     }
 
-    private fun handleRedirect(url: String, newUrl_: String, temp: Boolean, redirType: String, page: WebPage) {
-        var newUrl = newUrl_
-        newUrl = pageParser.crawlFilters.normalizeToEmpty(newUrl, UrlNormalizers.SCOPE_FETCHER)
-        if (newUrl.isEmpty() || newUrl == url) {
-            return
-        }
-
-        page.addLiveLink(HyperlinkPersistable(newUrl))
-        page.metadata.set(Name.REDIRECT_DISCOVERED, YES_STRING)
-
-        val threadId = Thread.currentThread().id
-        var reprUrl = reprUrls.getOrDefault(threadId, url)
-        reprUrl = URLUtil.chooseRepr(reprUrl, newUrl, temp)
-
-        if (reprUrl.length < SHORTEST_VALID_URL_LENGTH) {
-            log.warn("reprUrl is too short")
-            return
-        }
-
-        page.reprUrl = reprUrl
-        reprUrls[threadId] = reprUrl
-        messageWriter.reportRedirects(String.format("[%s] - %100s -> %s\n", redirType, url, reprUrl))
-        enumCounters.inc(Counter.rRedirect)
-    }
-
     /**
      * Do not redirect too many times
      * TODO : Check why we need to save reprUrl for each thread

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
  *
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
  */
+@Deprecated("use x-sql instead")
 class PathExtractor(
         val conf: ImmutableConfig
 ) : AbstractParseFilter() {

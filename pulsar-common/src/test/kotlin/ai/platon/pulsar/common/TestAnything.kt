@@ -1,7 +1,9 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.url.UrlTree
+import com.google.common.collect.Multiset
 import com.google.common.collect.TreeMultimap
+import com.google.common.collect.TreeMultiset
 import com.google.common.net.InetAddresses
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
@@ -10,6 +12,8 @@ import org.apache.commons.math3.util.Precision
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
+import java.io.FileWriter
+import java.io.PrintWriter
 import java.math.BigInteger
 import java.time.Duration
 import java.time.Instant
@@ -18,6 +22,37 @@ import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+
+class TestClass(
+    val file: String = "",
+    val preprocessor: String = "",
+    val wordsComparator: Comparator<String> = kotlin.Comparator { t, t2 -> t.compareTo(t2) }
+) {
+    private val lines = TreeMultiset.create<String>()
+    init { load() }
+    fun merge(other: SingleFiledLines) {}
+    operator fun contains(text: String): Boolean = true
+    fun lines(): Multiset<String> = lines
+    val size: Int get() = lines.size
+    val isEmpty: Boolean get() = lines.isEmpty()
+    val isNotEmpty: Boolean get() = lines.isNotEmpty()
+    fun load() {}
+    fun saveTo(destFile: String) {}
+    fun save() {}
+
+    interface Preprocessor {
+        fun process(line: String): String
+    }
+
+    class TextPreprocessor : Preprocessor {
+        override fun process(line: String): String = ""
+    }
+
+    class RegexPreprocessor : Preprocessor {
+        override fun process(line: String): String = ""
+    }
+}
+
 
 class TestAnything {
 
@@ -36,11 +71,14 @@ class TestAnything {
     @Test
     fun testReflection() {
         val clazz = SingleFiledLines::class
-        println("constructors: " + clazz.constructors.size)
+        assertEquals(1, clazz.constructors.size)
+        // println("constructors: " + clazz.constructors.size)
         println("members: " + clazz.members.size)
+        assertEquals(16, clazz.members.size)
 
         val ctor = clazz.constructors.first()
-        println("first constructor parameters: " + ctor.parameters.size)
+        assertEquals(3, ctor.parameters.size)
+        // println("first constructor parameters: " + ctor.parameters.size)
     }
 
     @Test
@@ -77,8 +115,8 @@ class TestAnything {
         val b = 23
         val n = a + 23
 
-        println(n % a)
-        println((a * 3 + b) % a)
+//        println(n % a)
+//        println((a * 3 + b) % a)
 
         for (i in 0..10) {
             assertEquals(b, (a * i + b) % a, "i=$i")
@@ -185,13 +223,12 @@ class TestAnything {
     }
 
     @Test
-    fun testUrlDecoder() {
+    fun testRandomeInt() {
 //        val s = "%E4%B8%89%E9%87%8C%E7%95%882-03%E5%8F%B7%E5%9C%B0%E6%AE%B5%E8%A7%84%E5%88%92%E5%8F%8A%E7%BC%96%E5%88%B6"
 //        println(URLDecoder.decode(s, StandardCharsets.UTF_8.toString()))
 
-        repeat(100) {
-            Random.nextInt(0, 100000).toString(Character.MAX_RADIX).also { println(it) }
-        }
+        val numbers = IntRange(1, 100).joinToString { Random.nextInt(0, 100000).toString(Character.MAX_RADIX) }
+        println(numbers)
     }
 
     @Test

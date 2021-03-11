@@ -4,6 +4,7 @@ import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
+import ai.platon.pulsar.common.ResourceLoader;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -20,15 +21,9 @@ import java.util.List;
  */
 public class TestExtract {
 
-  private final static String SAMPLES_DIR = System.getProperty("test.data", ".");
-
   @Test
   public void extract() throws IOException {
-    List<String> urls = Lists.newArrayList();
-//        urls.add("http://www.chinatimes.cc/movie_comment");
-
-    Path path = Paths.get(SAMPLES_DIR, "urls-detail-FetchJob-1022.100818.txt.sorted");
-    urls.addAll(Files.readAllLines(path));
+    List<String> urls = ResourceLoader.INSTANCE.readAllLines("urls-detail-FetchJob-1022.100818.txt.sorted");
 
     for (String url : urls) {
       try {

@@ -14,6 +14,8 @@ import kotlin.test.assertTrue
 
 class TestJavaObjectSerializer : TestBase() {
 
+    private val productIndexUrl = TestResource.productIndexUrl
+
     @Test
     fun testLocalSerialization() {
         val serializer = ai.platon.pulsar.ql.PulsarObjectSerializer()

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * Created by vincent on 16-7-20.
@@ -30,10 +30,11 @@ public class TestJavaCollections {
     @Test
     public void testTreeSet() {
         TreeSet<Integer> integers = IntStream.range(0, 30).boxed().collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
-        integers.forEach(System.out::print);
+        assertTrue(integers.contains(0));
+        assertTrue(integers.contains(29));
+        assertFalse(integers.contains(30));
         integers.pollLast();
-        System.out.println();
-        integers.forEach(System.out::print);
+        assertFalse(integers.contains(29));
     }
 
     @Test
@@ -85,9 +86,9 @@ public class TestJavaCollections {
         final int batchSize = 3;
         List<String> urls = IntStream.range(1, 20).mapToObj(i -> "http://example.com/" + i).collect(Collectors.toList());
         List<List<String>> partitions = Lists.partition(urls, batchSize);
-        for (List<String> partition : partitions) {
-            System.out.println(partition.size());
-            System.out.println(partition);
+
+        for (int i = 0; i < partitions.size() - 1; ++i) {
+            assertEquals(3, partitions.get(i).size());
         }
     }
 }

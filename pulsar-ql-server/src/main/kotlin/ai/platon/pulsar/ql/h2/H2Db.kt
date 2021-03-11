@@ -1,5 +1,8 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.AppPaths
+import org.apache.commons.lang3.SystemUtils
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
 import java.sql.Connection
@@ -11,6 +14,13 @@ import kotlin.math.abs
  * A wrapper for h2 database
  */
 class H2Db(val conf: H2DbConfig = H2DbConfig()) {
+    companion object {
+        val TEST_DB_CONFIG = H2DbConfig().apply {
+            baseDir = AppPaths.TEST_DIR.resolve("h2")
+        }
+        val TEST_DB = H2Db(TEST_DB_CONFIG)
+    }
+
     fun generateTempDbName(): String {
         return "" + System.currentTimeMillis() + "_" + abs(Random().nextInt());
     }

@@ -17,18 +17,18 @@ class TestSQLFeatures : TestBase() {
 
     @Test
     fun testExplode() {
-        execute("SELECT * FROM explode(array('A','B','C'))")
-        execute("SELECT * FROM explode(array())")
+        execute("SELECT * FROM explode(make_array('A','B','C'))")
+        execute("SELECT * FROM explode(make_array())")
         execute("SELECT * FROM explode()")
-        execute("SELECT * FROM posexplode(array('A','B','C'))")
+        execute("SELECT * FROM posexplode(make_array('A','B','C'))")
     }
 
     @Test
     fun testArray() {
-        execute("SET @r=array(1, 2, 3)")
+        execute("SET @r=make_array(1, 2, 3)")
         query("SELECT @r")
 
-        execute("SET @r=array('a', 'b', 1 + 3)")
+        execute("SET @r=make_array('a', 'b', 1 + 3)")
         query("SELECT @r")
     }
 
@@ -46,6 +46,7 @@ class TestSQLFeatures : TestBase() {
 
     @Test
     fun testGroupConcat() {
+        execute("drop TABLE if exists test")
         execute("CREATE TABLE test(id INT, name VARCHAR)")
         execute(("INSERT INTO test VALUES (2, 'a'), (1, 'a'), (3, 'b');" + " INSERT INTO test VALUES (4, 'e'), (5, 'f'), (10, 'g')"))
         query("SELECT GROUP_CONCAT(name) FROM test")
@@ -53,6 +54,7 @@ class TestSQLFeatures : TestBase() {
 
     @Test
     fun testGroupInline() {
+        execute("drop TABLE if exists test")
         execute("CREATE TABLE test(id INT, name VARCHAR)")
         execute(("INSERT INTO test VALUES (2, 'a'), (1, 'a'), (3, 'b');" + " INSERT INTO test VALUES (4, 'e'), (5, 'f'), (10, 'g')"))
         execute("SET @R=(SELECT GROUP_COLLECT(name) FROM test)")
@@ -61,6 +63,7 @@ class TestSQLFeatures : TestBase() {
 
     @Test
     fun testVariable() {
+        execute("drop TABLE if exists test")
         execute("CREATE TABLE test(number INT, name VARCHAR)")
         execute(("INSERT INTO test VALUES (2, 'a'), (1, 'a'), (3, 'b');" + " INSERT INTO test VALUES (4, 'e'), (5, 'f'), (10, 'g')"))
         execute("SET @r = (SELECT * FROM test LIMIT 1)")
@@ -77,20 +80,24 @@ class TestSQLFeatures : TestBase() {
                 " ) t;" +
                 " SELECT a, b FROM table(a INT=(7, 8, 9), b VARCHAR=('John', 'Lucy', 'Vince')) WHERE b LIKE '%u%'" +
                 ""
-        val rs = localStat.executeQuery(sql)
+        val state = embedDB.getConnection(name).createStatement()
+        val rs = state.executeQuery(sql)
 
         while (rs.next()) {
             print(rs.getString(1) + " " + rs.getString(2))
             println()
         }
 
-        if (localStat.moreResults) {
+        if (state.moreResults) {
             println("moreResults")
             while (rs.next()) {
                 print(rs.getString(1) + " " + rs.getString(2))
                 println()
             }
         }
+
+        rs.close()
+        state.close()
     }
 
     @Test
@@ -114,6 +121,7 @@ class TestSQLFeatures : TestBase() {
 
     @Test
     fun testSimpleIndex() {
+        execute("drop TABLE if exists test")
         execute("CREATE TABLE test(number INT, name VARCHAR)")
         execute(("INSERT INTO test VALUES (2, 'a'), (1, 'a'), (3, 'b');" + " INSERT INTO test VALUES (4, 'e'), (5, 'f'), (10, 'g')"))
         execute("CREATE INDEX ON test(name)")

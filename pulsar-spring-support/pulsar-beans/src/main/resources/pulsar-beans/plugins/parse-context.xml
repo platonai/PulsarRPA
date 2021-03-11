@@ -42,15 +42,12 @@
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="pathExtractor" class="ai.platon.pulsar.parse.html.filters.PathExtractor">
-        <constructor-arg ref="conf"/>
-    </bean>
     <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters" destroy-method="close">
         <constructor-arg>
             <list>
 <!--                <ref bean="jsParseFilter" />-->
 <!--                <ref bean="boilerpipeFilter" />-->
-                <ref bean="pathExtractor" />
+<!--                <ref bean="pathExtractor" />-->
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>

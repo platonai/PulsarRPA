@@ -5,6 +5,7 @@ import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
 import ai.platon.pulsar.common.DateTimes;
+import ai.platon.pulsar.common.ResourceLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -13,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Created by vincent on 16-11-9.
@@ -21,12 +23,11 @@ import java.time.Instant;
 public class TestExtractDateTime {
 
     private final int LIMIT = 20;
-    private final static String SAMPLES_DIR = System.getProperty("test.data", ".");
 
     @Test
     public void extract() throws IOException {
-        Path path = Paths.get(SAMPLES_DIR, "urls-detail-FetchJob-1022.100818.txt.sorted");
-        Files.readAllLines(path).stream()
+        List<String> urls = ResourceLoader.INSTANCE.readAllLines("urls-detail-FetchJob-1022.100818.txt.sorted");
+        urls.stream()
                 .filter(line -> !line.contains("house"))
                 .limit(LIMIT)
                 .map(line -> "http" + StringUtils.substringAfterLast(line, "http"))
