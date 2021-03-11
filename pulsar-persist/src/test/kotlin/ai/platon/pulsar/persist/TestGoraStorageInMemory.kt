@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -28,7 +27,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.gora.store.DataStore
-import org.apache.hadoop.fs.Path
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -37,7 +35,6 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 

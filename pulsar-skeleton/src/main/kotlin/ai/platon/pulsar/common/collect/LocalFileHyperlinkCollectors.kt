@@ -68,7 +68,7 @@ open class LocalFileHyperlinkCollector(
         if (isLoaded.compareAndSet(false, true)) {
             val remainingCapacity = capacity - cache.size
             urlLoader.loadToNow(cache, remainingCapacity, 0, priority) {
-                val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
+                val args = LoadOptions.merge(it.args, loadArgs).toString()
                 Hyperlinks.toHyperlink(it).also { it.args = args }
             }
 

@@ -36,10 +36,11 @@ class LoadOptionsNormalizer(
         if (args.isNotBlank()) {
             // options parsed from args overrides options parsed from url
             val primeOptions = LoadOptions.parse(args, options.volatileConfig)
-            finalOptions = LoadOptions.mergeModified(options, primeOptions, options.volatileConfig)
+            finalOptions = LoadOptions.merge(options, primeOptions, options.volatileConfig)
         }
         initOptions(finalOptions, toItemOption)
 
+        // TODO: the normalization order might not be correct
         var normalizedUrl: String
         val eventHandler = finalOptions.volatileConfig?.getBean(LoadEventHandler::class)
         if (eventHandler?.onNormalize != null) {

@@ -32,7 +32,7 @@ open class UrlQueueCollector(
         var collected = 0
 
         queue.poll()?.let {
-            val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
+            val args = LoadOptions.merge(it.args, loadArgs).toString()
             val hyperlink = Hyperlinks.toHyperlink(it).also { it.args = args }
 
             if (sink.add(hyperlink)) {

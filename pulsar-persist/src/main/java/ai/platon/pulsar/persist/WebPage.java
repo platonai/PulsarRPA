@@ -552,8 +552,8 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * <p>getMutableConfigOrElse.</p>
      *
-     * @param fallbackConfig a {@link ai.platon.pulsar.common.config.MutableConfig} object.
-     * @return a {@link ai.platon.pulsar.common.config.MutableConfig} object.
+     * @param fallbackConfig a {@link MutableConfig} object.
+     * @return a {@link MutableConfig} object.
      */
     @NotNull
     public MutableConfig getMutableConfigOrElse(MutableConfig fallbackConfig) {

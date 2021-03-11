@@ -14,8 +14,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar</artifactId>
-        <version>1.5.7-SNAPSHOT</version>
+        <artifactId>pulsar-app</artifactId>
+        <version>1.5.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-sql-qa</artifactId>

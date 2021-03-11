@@ -1,8 +1,8 @@
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.reverseUrl
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import org.junit.Before
 import org.junit.Ignore

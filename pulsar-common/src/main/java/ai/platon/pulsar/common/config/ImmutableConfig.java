@@ -52,7 +52,7 @@ public class ImmutableConfig extends AbstractConfiguration {
     /**
      * <p>toMutableConfig.</p>
      *
-     * @return a {@link ai.platon.pulsar.common.config.MutableConfig} object.
+     * @return a {@link MutableConfig} object.
      */
     public MutableConfig toMutableConfig() {
         return new MutableConfig(this);

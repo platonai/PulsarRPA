@@ -456,12 +456,12 @@ open class LoadOptions: CommonOptions {
          * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
          * */
         @JvmOverloads
-        fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
+        fun merge(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
             return parse("$o1 $o2", volatileConfig)
         }
 
         @JvmOverloads
-        fun mergeModified(args: String?, args2: String?, volatileConfig: VolatileConfig? = null): LoadOptions {
+        fun merge(args: String?, args2: String?, volatileConfig: VolatileConfig? = null): LoadOptions {
             return parse("$args $args2", volatileConfig)
         }
     }

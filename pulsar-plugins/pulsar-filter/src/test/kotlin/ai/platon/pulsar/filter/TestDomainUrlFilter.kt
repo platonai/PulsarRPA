@@ -2,13 +2,10 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.MutableConfig
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
-import java.io.StringReader
-import java.nio.file.Paths
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue

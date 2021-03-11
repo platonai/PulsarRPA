@@ -2,9 +2,7 @@ package ai.platon.pulsar.crawl.common.url
 
 import ai.platon.pulsar.common.config.AppConstants.PSEUDO_URL_BASE
 import ai.platon.pulsar.common.url.StatefulHyperlink
-import ai.platon.pulsar.crawl.CrawlEventHandler
-import ai.platon.pulsar.crawl.JsEventHandler
-import ai.platon.pulsar.crawl.LoadEventHandler
+import ai.platon.pulsar.crawl.*
 import org.apache.commons.lang3.RandomStringUtils
 import java.time.Duration
 import java.time.Instant
@@ -49,9 +47,9 @@ open class ListenableHyperlink(
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
-    open var loadEventHandler: LoadEventHandler? = null
-    open var jsEventHandler: JsEventHandler? = null
-    open var crawlEventHandler: CrawlEventHandler? = null
+    open var loadEventHandler: LoadEventHandler? = DefaultLoadEventHandler()
+    open var jsEventHandler: JsEventHandler? = DefaultJsEventHandler()
+    open var crawlEventHandler: CrawlEventHandler? = DefaultCrawlEventHandler()
 
     companion object {
         val randomPseudoUrl get() = PSEUDO_URL_BASE + "/" + RandomStringUtils.randomAlphanumeric(8)

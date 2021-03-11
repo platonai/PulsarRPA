@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.InjectOptions
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
-import org.springframework.context.ApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.nio.file.Files
 import java.nio.file.Paths

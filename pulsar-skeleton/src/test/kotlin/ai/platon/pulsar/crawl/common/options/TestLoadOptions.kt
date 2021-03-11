@@ -32,7 +32,7 @@ class TestLoadOptions {
         assertEquals("\".products a\"", options.outLinkSelector)
 
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
-        val options3 = LoadOptions.mergeModified(options, options2)
+        val options3 = LoadOptions.merge(options, options2)
         assertOptions(options3)
     }
 
@@ -53,10 +53,10 @@ class TestLoadOptions {
         val options1 = LoadOptions.parse(args1)
         val options2 = LoadOptions.parse(args2)
 
-        println(LoadOptions.mergeModified(args1, args2))
-        assertMergedOptions(LoadOptions.mergeModified(args1, args2), "args1 merge args2")
+        println(LoadOptions.merge(args1, args2))
+        assertMergedOptions(LoadOptions.merge(args1, args2), "args1 merge args2")
 
-        LoadOptions.mergeModified(args2, null).also {
+        LoadOptions.merge(args2, null).also {
             val message = "args2 merge null"
             assertTrue(message) { it.storeContent }
             assertTrue(message) { it.incognito }
@@ -64,7 +64,7 @@ class TestLoadOptions {
         }
 
         val args3 = "-storeContent false"
-        LoadOptions.mergeModified(args2, args3).also {
+        LoadOptions.merge(args2, args3).also {
             val message = "args2 merge args3"
             assertTrue(message) { !it.storeContent }
             assertTrue(message) { it.incognito }
@@ -143,7 +143,7 @@ class TestLoadOptions {
     fun testMerging() {
         val options = LoadOptions.parse("-incognito -expires 1s -retry")
         val args = "-label test-merging"
-        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(args))
+        val options2 = LoadOptions.merge(options, LoadOptions.parse(args))
         assertEquals("test-merging", options2.label)
         assertTrue { options2.incognito }
     }

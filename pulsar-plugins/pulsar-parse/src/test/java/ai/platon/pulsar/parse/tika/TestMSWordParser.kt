@@ -55,6 +55,7 @@ class TestMSWordParser {
     private val sampleFiles = arrayOf("tika/sample/word97.doc")
     private val expectedText = "This is a sample doc file prepared for pulsar."
     private var conf: MutableConfig? = null
+
     @Before
     fun setUp() {
         conf = MutableConfig()

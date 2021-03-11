@@ -24,7 +24,6 @@ import org.apache.avro.util.Utf8
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.io.UnsupportedEncodingException
 import java.nio.ByteBuffer
 
 class TestEncodingDetector {

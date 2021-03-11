@@ -111,7 +111,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     val id = instanceSequencer.incrementAndGet()
 
-    val crawlEventHandler = ChainedCrawlEventHandler()
+    val crawlEventHandler = DefaultCrawlEventHandler()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() }
@@ -261,6 +261,7 @@ open class StreamingCrawler<T : UrlAware>(
             }
         } else {
             val normalizedUrl = beforeUrlLoad(url)
+            println("Loading $normalizedUrl")
             if (normalizedUrl != null) {
                 val page = loadUrl(normalizedUrl)
                 afterUrlLoad(normalizedUrl, page)
@@ -299,16 +300,19 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
         if (url is ListenableHyperlink) {
-            url.loadEventHandler?.onFilter?.invoke(url.url) ?: return null
+            val onFilter = url.loadEventHandler?.onFilter
+            if (onFilter != null) {
+                onFilter(url.url) ?: return null
+            }
         }
 
         crawlEventHandler.onFilter(url) ?: return null
 
+        crawlEventHandler.onBeforeLoad(url)
+
         if (url is ListenableHyperlink) {
             url.crawlEventHandler?.onBeforeLoad?.invoke(url)
         }
-
-        crawlEventHandler.onBeforeLoad(url)
 
         return url
     }
@@ -320,14 +324,18 @@ open class StreamingCrawler<T : UrlAware>(
 
         if (page != null) {
             crawlEventHandler.onAfterLoad(url, page)
-            (url as? ListenableHyperlink)?.crawlEventHandler?.onAfterLoad?.invoke(url, page)
+            if (url is ListenableHyperlink) {
+                url.crawlEventHandler?.onAfterLoad?.invoke(url, page)
+            }
         }
     }
 
     @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
         val actualOptions = LoadOptionsNormalizer.normalize(options, url)
-        registerHandlers(url, actualOptions)
+        if (url is ListenableHyperlink) {
+            registerHandlers(url, actualOptions)
+        }
 
         actualOptions.apply {
             // TODO: it seems there is an option merge bug
@@ -342,14 +350,13 @@ open class StreamingCrawler<T : UrlAware>(
             .getOrNull()
     }
 
-    private fun registerHandlers(url: UrlAware, options: LoadOptions) {
-        val eventHandler = (url as? ListenableHyperlink)?.loadEventHandler ?: DefaultLoadEventHandler()
-        eventHandler.onAfterFetch = ChainedWebPageHandler()
-            .addFirst { AddRefererAfterFetchHandler(url) }
-            .addLast { eventHandler.onAfterFetch }
+    private fun registerHandlers(url: ListenableHyperlink, options: LoadOptions) {
+        (url.loadEventHandler as? DefaultLoadEventHandler)?.onAfterFetchPipeline
+            ?.addFirst(AddRefererAfterFetchHandler(url))
+
         options.volatileConfig = conf.toVolatileConfig().apply {
             name = options.label
-            putBean(eventHandler)
+            url.loadEventHandler?.let { putBean(it) }
         }
     }
 

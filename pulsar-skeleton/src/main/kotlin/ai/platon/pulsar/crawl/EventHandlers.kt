@@ -7,196 +7,368 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
+import java.util.*
 
-interface Handler {
+interface EventHandler {
     val name: String
 }
 
-abstract class UrlAwareHandler: (UrlAware) -> Unit, Handler {
+abstract class AbstractHandler: EventHandler {
     override val name: String = ""
+}
+
+abstract class UrlAwareHandler: (UrlAware) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(url: UrlAware)
 }
 
-abstract class WebPageHandler: (WebPage) -> Unit, Handler {
-    override val name: String = ""
+abstract class UrlAwareFilter: (UrlAware) -> UrlAware?, AbstractHandler() {
+    abstract override operator fun invoke(url: UrlAware): UrlAware?
+}
+
+abstract class UrlHandler: (String) -> Unit, AbstractHandler() {
+    abstract override operator fun invoke(url: String)
+}
+
+abstract class UrlFilter: (String) -> String?, AbstractHandler() {
+    abstract override operator fun invoke(url: String): String?
+}
+
+abstract class WebPageHandler: (WebPage) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(page: WebPage)
 }
 
-abstract class UrlAwareWebPageHandler: (UrlAware, WebPage) -> Unit, Handler {
-    override val name: String = ""
+abstract class UrlAwareWebPageHandler: (UrlAware, WebPage) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(url: UrlAware, page: WebPage)
 }
 
-abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, Handler {
-    override val name: String = ""
+abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(page: WebPage, document: FeaturedDocument)
 }
 
-abstract class FetchResultHandler: (FetchResult) -> Unit, Handler {
-    override val name: String = ""
+abstract class FetchResultHandler: (FetchResult) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(page: FetchResult)
 }
 
-abstract class WebPageBatchHandler: (Iterable<WebPage>) -> Unit, Handler {
-    override val name: String = ""
+abstract class WebPageBatchHandler: (Iterable<WebPage>) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(pages: Iterable<WebPage>)
 }
 
-abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Unit, Handler {
-    override val name: String = ""
+abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(pages: Iterable<FetchResult>)
 }
 
-class AddRefererAfterFetchHandler(val url: UrlAware): WebPageHandler() {
-    override fun invoke(page: WebPage) { url.referer?.let { page.referrer = it } }
-}
+class UrlAwareHandlerPipeline: UrlAwareHandler() {
+    private val registeredHandlers = mutableListOf<(UrlAware) -> Unit>()
 
-class ChainedUrlAwareHandler: (UrlAware) -> Unit, UrlAwareHandler() {
-    private val handlers = mutableListOf<(UrlAware) -> Unit>()
-
-    fun addFirst(handler: (UrlAware) -> Unit): ChainedUrlAwareHandler {
-        handlers.add(0, handler)
+    fun addFirst(handler: (UrlAware) -> Unit): UrlAwareHandlerPipeline {
+        registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: (UrlAware) -> Unit): ChainedUrlAwareHandler {
-        handlers.add(handler)
+    fun addFirst(vararg handlers: (UrlAware) -> Unit): UrlAwareHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: (UrlAware) -> Unit): UrlAwareHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: (UrlAware) -> Unit): UrlAwareHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
         return this
     }
 
     override operator fun invoke(url: UrlAware) {
-        handlers.forEach { it(url) }
+        registeredHandlers.forEach { it(url) }
     }
 }
 
-class ChainedWebPageHandler: (WebPage) -> Unit, WebPageHandler() {
-    private val handlers = mutableListOf<(WebPage) -> Unit>()
+class UrlAwareFilterPipeline: UrlAwareFilter() {
+    private val registeredHandlers = mutableListOf<(UrlAware) -> UrlAware?>()
 
-    fun addFirst(handler: (WebPage) -> Unit): ChainedWebPageHandler {
-        handlers.add(0, handler)
+    fun addFirst(handler: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+        registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: (WebPage) -> Unit): ChainedWebPageHandler {
-        handlers.add(handler)
+    fun addFirst(vararg handlers: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+        handlers.toCollection(registeredHandlers)
+        return this
+    }
+
+    override operator fun invoke(url: UrlAware): UrlAware? {
+        var result: UrlAware? = url
+        registeredHandlers.forEach {
+            result = it(url)
+        }
+        return result
+    }
+}
+
+class UrlFilterPipeline: UrlFilter() {
+    private val registeredHandlers = mutableListOf<UrlFilter>()
+
+    fun addFirst(handler: UrlFilter): UrlFilterPipeline {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addFirst(handler: (String) -> String?): UrlFilterPipeline {
+        registeredHandlers.add(0, object: UrlFilter() {
+            override fun invoke(url: String) = handler(url)
+        })
+        return this
+    }
+
+    fun addFirst(vararg handlers: UrlFilter): UrlFilterPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: UrlFilter): UrlFilterPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: UrlFilter): UrlFilterPipeline {
+        handlers.toCollection(registeredHandlers)
+        return this
+    }
+
+    fun addLast(handler: (String) -> String?): UrlFilterPipeline {
+        registeredHandlers.add(object: UrlFilter() {
+            override fun invoke(url: String) = handler(url)
+        })
+        return this
+    }
+
+    override operator fun invoke(url: String): String? {
+        var result: String? = url
+        registeredHandlers.forEach {
+            result = it(url)
+        }
+        return result
+    }
+}
+
+class UrlHandlerPipeline: UrlHandler() {
+    private val registeredHandlers = mutableListOf<(String) -> Unit>()
+
+    fun addFirst(handler: UrlHandler): UrlHandlerPipeline {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addFirst(handler: (String) -> Unit): UrlHandlerPipeline {
+        registeredHandlers.add(0, object: UrlHandler() {
+            override fun invoke(url: String) = handler(url)
+        })
+        return this
+    }
+
+    fun addFirst(vararg handlers: UrlHandler): UrlHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: UrlHandler): UrlHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: UrlHandler): UrlHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
+        return this
+    }
+
+    fun addLast(handler: (String) -> Unit): UrlHandlerPipeline {
+        registeredHandlers.add(object: UrlHandler() {
+            override fun invoke(url: String) = handler(url)
+        })
+        return this
+    }
+
+    override operator fun invoke(url: String) {
+        registeredHandlers.forEach { it(url) }
+    }
+}
+
+class WebPageHandlerPipeline: WebPageHandler() {
+    private val registeredHandlers = mutableListOf<WebPageHandler>()
+
+    fun addFirst(handler: WebPageHandler): WebPageHandlerPipeline {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addFirst(handler: (WebPage) -> Unit): WebPageHandlerPipeline {
+        registeredHandlers.add(0, object: WebPageHandler() {
+            override fun invoke(page: WebPage) = handler(page)
+        })
+        return this
+    }
+
+    fun addFirst(vararg handlers: WebPageHandler): WebPageHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: WebPageHandler): WebPageHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(handler: (WebPage) -> Unit): WebPageHandlerPipeline {
+        registeredHandlers += object: WebPageHandler() {
+            override fun invoke(page: WebPage) = handler(page)
+        }
+        return this
+    }
+
+    fun addLast(vararg handlers: WebPageHandler): WebPageHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
         return this
     }
 
     override operator fun invoke(page: WebPage) {
-        handlers.forEach { it(page) }
+        registeredHandlers.forEach { it(page) }
     }
 }
 
-class ChainedUrlAwareWebPageHandler: (UrlAware, WebPage) -> Unit, UrlAwareWebPageHandler() {
-    private val handlers = mutableListOf<(UrlAware, WebPage) -> Unit>()
+class UrlAwareWebPageHandlerPipeline: UrlAwareWebPageHandler() {
+    private val registeredHandlers = mutableListOf<(UrlAware, WebPage) -> Unit>()
 
-    fun addFirst(handler: (UrlAware, WebPage) -> Unit): ChainedUrlAwareWebPageHandler {
-        handlers.add(0, handler)
+    fun addFirst(handler: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+        registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: (UrlAware, WebPage) -> Unit): ChainedUrlAwareWebPageHandler {
-        handlers.add(handler)
+    fun addFirst(vararg handlers: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
         return this
     }
 
     override operator fun invoke(url: UrlAware, page: WebPage) {
-        handlers.forEach { it(url, page) }
+        registeredHandlers.forEach { it(url, page) }
     }
 }
 
-class ChainedHtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, HtmlDocumentHandler(), Handler {
-    private val handlers = mutableListOf<(WebPage, FeaturedDocument) -> Unit>()
+class HtmlDocumentHandlerPipeline: HtmlDocumentHandler(), EventHandler {
+    private val registeredHandlers = mutableListOf<HtmlDocumentHandler>()
 
-    fun addFirst(handler: (WebPage, FeaturedDocument) -> Unit): ChainedHtmlDocumentHandler {
-        handlers.add(0, handler)
+    fun addFirst(handler: HtmlDocumentHandler): HtmlDocumentHandlerPipeline {
+        registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: (WebPage, FeaturedDocument) -> Unit): ChainedHtmlDocumentHandler {
-        handlers.add(handler)
+    fun addFirst(handler: (WebPage, FeaturedDocument) -> Unit): HtmlDocumentHandlerPipeline {
+        registeredHandlers.add(0, object: HtmlDocumentHandler() {
+            override fun invoke(page: WebPage, document: FeaturedDocument) = handler(page, document)
+        })
+        return this
+    }
+
+    fun addFirst(vararg handlers: HtmlDocumentHandler): HtmlDocumentHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: HtmlDocumentHandler): HtmlDocumentHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(handler: (WebPage, FeaturedDocument) -> Unit): HtmlDocumentHandlerPipeline {
+        registeredHandlers += object: HtmlDocumentHandler() {
+            override fun invoke(page: WebPage, document: FeaturedDocument) = handler(page, document)
+        }
+        return this
+    }
+
+    fun addLast(vararg handlers: HtmlDocumentHandler): HtmlDocumentHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
         return this
     }
 
     override fun invoke(page: WebPage, document: FeaturedDocument) {
-        handlers.forEach { it(page, document) }
+        registeredHandlers.forEach { it(page, document) }
     }
 }
 
-/**
- * TODO: use pipeline and handler pattern, see Netty
- * */
 interface LoadEventHandler {
-    var onFilter: (String) -> String?
-    var onNormalize: (String) -> String?
-    var onBeforeLoad: (String) -> Unit
-    var onBeforeFetch: (WebPage) -> Unit
-    var onAfterFetch: (WebPage) -> Unit
-    var onBeforeParse: (WebPage) -> Unit
-    var onBeforeHtmlParse: (WebPage) -> Unit
-    var onBeforeExtract: (WebPage) -> Unit
-    var onAfterExtract: (WebPage, FeaturedDocument) -> Unit
-    var onAfterHtmlParse: (WebPage, FeaturedDocument) -> Unit
-    var onAfterParse: (WebPage) -> Unit
-    var onAfterLoad: (WebPage) -> Unit
+    var onFilter: UrlFilter
+    var onNormalize: UrlFilter
+    var onBeforeLoad: UrlHandler
+    var onBeforeFetch: WebPageHandler
+    var onAfterFetch: WebPageHandler
+    var onBeforeParse: WebPageHandler
+    var onBeforeHtmlParse: WebPageHandler
+    var onBeforeExtract: WebPageHandler
+    var onAfterExtract: HtmlDocumentHandler
+    var onAfterHtmlParse: HtmlDocumentHandler
+    var onAfterParse: WebPageHandler
+    var onAfterLoad: WebPageHandler
 }
 
 abstract class AbstractLoadEventHandler(
-        override var onFilter: (String) -> String? = { it },
-        override var onNormalize: (String) -> String? = { it },
-        override var onBeforeLoad: (String) -> Unit = {},
-        override var onBeforeFetch: (WebPage) -> Unit = {},
-        override var onAfterFetch: (WebPage) -> Unit = {},
-        override var onBeforeParse: (WebPage) -> Unit = {},
-        override var onBeforeHtmlParse: (WebPage) -> Unit = {},
-        override var onBeforeExtract: (WebPage) -> Unit = {},
-        override var onAfterExtract: (WebPage, FeaturedDocument) -> Unit = { _, _ -> },
-        override var onAfterHtmlParse: (WebPage, FeaturedDocument) -> Unit = { _, _ -> },
-        override var onAfterParse: (WebPage) -> Unit = { _ -> },
-        override var onAfterLoad: (WebPage) -> Unit = {}
+        override var onFilter: UrlFilter = UrlFilterPipeline(),
+        override var onNormalize: UrlFilter = UrlFilterPipeline(),
+        override var onBeforeLoad: UrlHandler = UrlHandlerPipeline(),
+        override var onBeforeFetch: WebPageHandler = WebPageHandlerPipeline(),
+        override var onAfterFetch: WebPageHandler = WebPageHandlerPipeline(),
+        override var onBeforeParse: WebPageHandler = WebPageHandlerPipeline(),
+        override var onBeforeHtmlParse: WebPageHandler = WebPageHandlerPipeline(),
+        override var onBeforeExtract: WebPageHandler = WebPageHandlerPipeline(),
+        override var onAfterExtract: HtmlDocumentHandler = HtmlDocumentHandlerPipeline(),
+        override var onAfterHtmlParse: HtmlDocumentHandler = HtmlDocumentHandlerPipeline(),
+        override var onAfterParse: WebPageHandler = WebPageHandlerPipeline(),
+        override var onAfterLoad: WebPageHandler = WebPageHandlerPipeline()
 ): LoadEventHandler
 
-class DefaultLoadEventHandler(
-        onFilter: (String) -> String? = { it },
-        onNormalize: (String) -> String? = { it },
-        onBeforeLoad: (String) -> Unit = {},
-        onBeforeFetch: (WebPage) -> Unit = {},
-        onAfterFetch: (WebPage) -> Unit = {},
-        onBeforeParse: (WebPage) -> Unit = {},
-        onBeforeHtmlParse: (WebPage) -> Unit = {},
-        onBeforeExtract: (WebPage) -> Unit = {},
-        onAfterExtract: (WebPage, FeaturedDocument) -> Unit = { _, _ -> },
-        onAfterHtmlParse: (WebPage, FeaturedDocument) -> Unit = { _, _ -> },
-        onAfterParse: (WebPage) -> Unit = { _ -> },
-        onAfterLoad: (WebPage) -> Unit = {}
+open class DefaultLoadEventHandler(
+    val onFilterPipeline: UrlFilterPipeline = UrlFilterPipeline(),
+    val onNormalizePipeline: UrlFilterPipeline = UrlFilterPipeline(),
+    val onBeforeLoadPipeline: UrlHandlerPipeline = UrlHandlerPipeline(),
+    val onBeforeFetchPipeline: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    val onAfterFetchPipeline: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    val onBeforeParsePipeline: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    val onBeforeHtmlParsePipeline: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    val onBeforeExtractPipeline: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    val onAfterExtractPipeline: HtmlDocumentHandlerPipeline = HtmlDocumentHandlerPipeline(),
+    val onAfterHtmlParsePipeline: HtmlDocumentHandlerPipeline = HtmlDocumentHandlerPipeline(),
+    val onAfterParsePipeline: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    val onAfterLoadPipeline: WebPageHandlerPipeline = WebPageHandlerPipeline()
 ): AbstractLoadEventHandler(
-        onFilter, onNormalize,
-        onBeforeLoad,
-        onBeforeFetch, onAfterFetch,
-        onBeforeParse, onBeforeHtmlParse,
-        onBeforeExtract, onAfterExtract,
-        onAfterHtmlParse, onAfterParse,
-        onAfterLoad
-) {
-    companion object {
-        fun create(handler: LoadEventHandler): DefaultLoadEventHandler {
-            return DefaultLoadEventHandler(
-                    handler.onFilter,
-                    handler.onNormalize,
-                    handler.onBeforeLoad,
-                    handler.onBeforeFetch,
-                    handler.onAfterFetch,
-                    handler.onBeforeParse,
-                    handler.onBeforeHtmlParse,
-                    handler.onBeforeExtract,
-                    handler.onAfterExtract,
-                    handler.onAfterHtmlParse,
-                    handler.onAfterParse,
-                    handler.onAfterLoad
-            )
-        }
-    }
-}
+    onFilterPipeline, onNormalizePipeline,
+    onBeforeLoadPipeline,
+    onBeforeFetchPipeline, onAfterFetchPipeline,
+    onBeforeParsePipeline, onBeforeHtmlParsePipeline,
+    onBeforeExtractPipeline, onAfterExtractPipeline,
+    onAfterHtmlParsePipeline, onAfterParsePipeline,
+    onAfterLoadPipeline
+)
 
 interface JsEventHandler {
     suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any?
@@ -240,8 +412,8 @@ abstract class AbstractJsEventHandler: JsEventHandler {
 }
 
 class DefaultJsEventHandler(
-    val beforeComputeExpressions: Iterable<String>,
-    val afterComputeExpressions: Iterable<String>
+    val beforeComputeExpressions: Iterable<String> = listOf(),
+    val afterComputeExpressions: Iterable<String> = listOf()
 ): AbstractJsEventHandler() {
     constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
         bcExpressions.split(delimiters), acExpressions2.split(delimiters))
@@ -256,73 +428,72 @@ class DefaultJsEventHandler(
 }
 
 interface CrawlEventHandler {
-    var onFilter: (UrlAware) -> UrlAware?
-    var onNormalize: (UrlAware) -> UrlAware?
-    var onBeforeLoad: (UrlAware) -> Unit
-    var onLoad: (UrlAware) -> Unit
-    var onAfterLoad: (UrlAware, WebPage) -> Unit
+    val onFilter: (UrlAware) -> UrlAware?
+    val onNormalize: (UrlAware) -> UrlAware?
+    val onBeforeLoad: (UrlAware) -> Unit
+    val onLoad: (UrlAware) -> Unit
+    val onAfterLoad: (UrlAware, WebPage) -> Unit
 }
 
 abstract class AbstractCrawlEventHandler(
-    override var onFilter: (UrlAware) -> UrlAware? = { it },
-    override var onNormalize: (UrlAware) -> UrlAware? = { it },
-    override var onBeforeLoad: (UrlAware) -> Unit = { _ -> },
-    override var onLoad: (UrlAware) -> Unit = { _ -> },
-    override var onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
+    override val onFilter: (UrlAware) -> UrlAware? = { it },
+    override val onNormalize: (UrlAware) -> UrlAware? = { it },
+    override val onBeforeLoad: (UrlAware) -> Unit = {},
+    override val onLoad: (UrlAware) -> Unit = {},
+    override val onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
 ): CrawlEventHandler
 
-class DefaultCrawlEventHandler(
-        onFilter: (UrlAware) -> UrlAware? = { it },
-        onNormalize: (UrlAware) -> UrlAware? = { it },
-        onBeforeLoad: (UrlAware) -> Unit = { _ -> },
-        onLoad: (UrlAware) -> Unit = { _ -> },
-        onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
-): AbstractCrawlEventHandler(
-        onFilter, onNormalize, onBeforeLoad, onLoad, onAfterLoad
-)
+open class DefaultCrawlEventHandler(
+    val onFilterPipeline: UrlAwareFilterPipeline = UrlAwareFilterPipeline(),
+    val onNormalizePipeline: UrlAwareFilterPipeline = UrlAwareFilterPipeline(),
+    val onBeforeLoadPipeline: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
+    val onLoadPipeline: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
+    val onAfterLoadPipeline: UrlAwareWebPageHandlerPipeline = UrlAwareWebPageHandlerPipeline()
+): AbstractCrawlEventHandler(onFilterPipeline, onNormalizePipeline, onBeforeLoadPipeline, onLoadPipeline, onAfterLoadPipeline)
 
-class ChainedCrawlEventHandler(
-        onFilter: (UrlAware) -> UrlAware? = { it },
-        onNormalize: (UrlAware) -> UrlAware? = { it },
-        onBeforeLoad: (UrlAware) -> Unit = { _ -> },
-        onLoad: (UrlAware) -> Unit = { _ -> },
-        onAfterLoad: (UrlAware, WebPage) -> Unit = ChainedUrlAwareWebPageHandler()
-): AbstractCrawlEventHandler(
-        onFilter, onNormalize, onBeforeLoad, onLoad, onAfterLoad
-) {
-    fun addFirst(name: String, handler: (UrlAware) -> Unit) {
-        if (name == "onBeforeLoad") {
-            when (onBeforeLoad) {
-                is ChainedUrlAwareHandler -> (onBeforeLoad as ChainedUrlAwareHandler).addFirst(handler)
-                else -> onBeforeLoad = ChainedUrlAwareHandler().addFirst(handler).addFirst(onBeforeLoad)
-            }
-        }
+/**
+ * TODO: is it necessary?
+ * */
+class CrawlEventHandlerPipeline: CrawlEventHandler {
+    private val registeredHandlers: MutableList<CrawlEventHandler> = Collections.synchronizedList(mutableListOf())
+
+    fun addFirst(handler: CrawlEventHandler) {
+        registeredHandlers.add(0, handler)
     }
 
-    fun addLast(name: String, handler: (UrlAware) -> Unit) {
-        if (name == "onBeforeLoad") {
-            when (onBeforeLoad) {
-                is ChainedUrlAwareHandler -> (onBeforeLoad as ChainedUrlAwareHandler).addLast(handler)
-                else -> onBeforeLoad = ChainedUrlAwareHandler().addLast(onBeforeLoad).addLast(handler)
-            }
-        }
+    fun addFirst(vararg handlers: CrawlEventHandler) {
+        handlers.forEach { addFirst(it) }
     }
 
-    fun addFirst(name: String, handler: (UrlAware, WebPage) -> Unit) {
-        if (name == "onAfterLoad") {
-            when (onAfterLoad) {
-                is ChainedUrlAwareWebPageHandler -> (onAfterLoad as ChainedUrlAwareWebPageHandler).addFirst(handler)
-                else -> onAfterLoad = ChainedUrlAwareWebPageHandler().addFirst(handler).addFirst(onAfterLoad)
-            }
-        }
+    fun addLast(handler: CrawlEventHandler) {
+        registeredHandlers.add(handler)
     }
 
-    fun addLast(name: String, handler: (UrlAware, WebPage) -> Unit) {
-        if (name == "onAfterLoad") {
-            when (onAfterLoad) {
-                is ChainedUrlAwareWebPageHandler -> (onAfterLoad as ChainedUrlAwareWebPageHandler).addLast(handler)
-                else -> onAfterLoad = ChainedUrlAwareWebPageHandler().addLast(onAfterLoad).addLast(handler)
-            }
-        }
+    fun addLast(vararg handlers: CrawlEventHandler) {
+        handlers.forEach { addFirst(it) }
+    }
+
+    override val onFilter: (UrlAware) -> UrlAware? = { url ->
+        var result: UrlAware? = url
+        registeredHandlers.forEach { result = it.onFilter(url) }
+        result
+    }
+
+    override val onNormalize: (UrlAware) -> UrlAware?  = { url ->
+        var result: UrlAware? = url
+        registeredHandlers.forEach { result = it.onNormalize(url) }
+        result
+    }
+
+    override val onBeforeLoad: (UrlAware) -> Unit = { url ->
+        registeredHandlers.forEach { it.onBeforeLoad(url) }
+    }
+
+    override val onLoad: (UrlAware) -> Unit = { url ->
+        registeredHandlers.forEach { it.onLoad(url) }
+    }
+
+    override val onAfterLoad: (UrlAware, WebPage) -> Unit = { url, page ->
+        registeredHandlers.forEach { it.onAfterLoad(url, page) }
     }
 }

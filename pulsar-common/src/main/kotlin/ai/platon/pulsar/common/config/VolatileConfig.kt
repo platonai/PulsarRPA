@@ -16,7 +16,7 @@ open class VolatileConfig : MutableConfig {
 
     constructor() : super(false)
 
-    constructor(fallbackConfig: ImmutableConfig?) : super(false) {
+    constructor(fallbackConfig: ImmutableConfig) : super(false) {
         this.fallbackConfig = fallbackConfig
         if (fallbackConfig is VolatileConfig) {
             ttls.putAll(fallbackConfig.ttls)

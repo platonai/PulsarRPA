@@ -6,11 +6,12 @@ import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
+import java.util.*
 
 interface CrawlLoop: StartStopRunnable {
     var options: LoadOptions
     val fetchIterable: Iterable<Hyperlink>
-    val collectors: MutableList<out DataCollector<Hyperlink>>
+    val collectors: Queue<out DataCollector<Hyperlink>>
     val crawler: Crawler
 }
 

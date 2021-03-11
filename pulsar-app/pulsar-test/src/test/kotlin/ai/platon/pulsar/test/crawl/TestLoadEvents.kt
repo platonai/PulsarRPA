@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test.crawl
 
-import ai.platon.pulsar.test.MockListenableHyperlink
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.test.MockListenableHyperlink
 import ai.platon.pulsar.test.TestBase
 import org.junit.After
 import org.junit.Before

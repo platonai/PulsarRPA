@@ -22,7 +22,6 @@ import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.MutableConfig
 import com.google.common.io.Files
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.io.IOException

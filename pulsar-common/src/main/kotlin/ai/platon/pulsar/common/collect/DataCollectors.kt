@@ -5,6 +5,8 @@ import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.url.CrawlableFatLink
 import ai.platon.pulsar.common.url.FatLink
 import java.time.Duration
+import java.util.Collections.synchronizedList
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
 interface CrawlableFatLinkCollector {
@@ -18,9 +20,10 @@ interface CrawlableFatLinkCollector {
 }
 
 open class MultiSourceDataCollector<E>(
-        val collectors: MutableList<PriorityDataCollector<E>>,
         priority: Priority13 = Priority13.NORMAL
 ): AbstractPriorityDataCollector<E>(priority) {
+
+    val collectors: ConcurrentLinkedQueue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
 
     override var name = "MultiSourceDC"
 
@@ -30,9 +33,19 @@ open class MultiSourceDataCollector<E>(
     val round get() = roundCounter.get()
     val totalCollected get() = collectedCounter.get()
 
-    constructor(vararg thatCollectors: PriorityDataCollector<E>, priority: Priority13 = Priority13.NORMAL):
-            this(arrayListOf(*thatCollectors), priority)
+    constructor(initCollectors: Iterable<PriorityDataCollector<E>>, priority: Priority13 = Priority13.NORMAL
+    ): this(priority) {
+        initCollectors.toCollection(collectors)
+    }
 
+    constructor(vararg initCollectors: PriorityDataCollector<E>, priority: Priority13 = Priority13.NORMAL
+    ): this(priority) {
+        initCollectors.toCollection(collectors)
+    }
+
+    /**
+     * TODO: ConcurrentModificationException occurs at java.base/java.util.LinkedList$ListItr.next(LinkedList.java:892)
+     * */
     override fun hasMore() = collectors.any { it.hasMore() }
 
     /**
