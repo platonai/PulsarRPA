@@ -40,10 +40,6 @@ open class ListenableHyperlink(
 ): StatefulHyperlink(url, text, order, referer, args, href, label) {
 
     override val isPersistable: Boolean = false
-    /**
-     * A pseudo url can not be fetched directly, but the crawl events are handled
-     * */
-    val isPseudo: Boolean get() = url.startsWith(PSEUDO_URL_BASE)
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 

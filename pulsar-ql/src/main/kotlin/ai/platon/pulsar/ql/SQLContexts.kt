@@ -25,6 +25,7 @@ object SQLContexts {
 
     @Synchronized
     fun shutdown() {
+        activeContext?.close()
         activeContext = null
     }
 }

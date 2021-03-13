@@ -14,6 +14,7 @@ import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.common.url.PseudoUrl
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
@@ -252,7 +253,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private suspend fun runUrlTask(url: UrlAware) {
-        if (url is ListenableHyperlink && url.isPseudo) {
+        if (url is ListenableHyperlink && url is PseudoUrl) {
             val eventHandler = url.crawlEventHandler
             if (eventHandler != null) {
                 eventHandler.onBeforeLoad(url)
@@ -261,7 +262,6 @@ open class StreamingCrawler<T : UrlAware>(
             }
         } else {
             val normalizedUrl = beforeUrlLoad(url)
-            println("Loading $normalizedUrl")
             if (normalizedUrl != null) {
                 val page = loadUrl(normalizedUrl)
                 afterUrlLoad(normalizedUrl, page)

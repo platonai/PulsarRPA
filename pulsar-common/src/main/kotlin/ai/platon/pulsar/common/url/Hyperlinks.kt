@@ -6,7 +6,8 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicInteger
+
+interface PseudoUrl
 
 /**
  * The UrlAware interface.

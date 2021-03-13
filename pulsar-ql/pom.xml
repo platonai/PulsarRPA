@@ -18,8 +18,8 @@
         <version>1.5.8-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-ql-server</artifactId>
-    <name>Pulsar QL Server</name>
+    <artifactId>pulsar-ql</artifactId>
+    <name>Pulsar QL</name>
 
     <dependencies>
         <dependency>

@@ -47,7 +47,7 @@ The SQL above visits a portal page in jd.com, downloads detail pages and then sc
 
 You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/).
 
-Check [sql-history.sql](sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](pulsar-ql-server/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs).
+Check [sql-history.sql](sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs).
 
 ## Use pulsar as a library
 Scrape out pages from a portal url using native api:
@@ -74,7 +74,7 @@ Add maven dependency to your project:
 
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-ql-server</artifactId>
+        <artifactId>pulsar-ql</artifactId>
         <version>1.5.8-SNAPSHOT</version>
     </dependency>
 

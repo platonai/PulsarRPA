@@ -32,7 +32,7 @@
     <fileSets>
 
         <fileSet>
-            <directory>${project.basedir}/../pulsar-ql-server/lib</directory>
+            <directory>${project.basedir}/../pulsar-ql/lib</directory>
             <includes>
                 <include>*.jar</include>
             </includes>
@@ -44,7 +44,7 @@
             <outputDirectory>lib</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../pulsar-ql-server/lib</directory>
+            <directory>${project.basedir}/../pulsar-ql/lib</directory>
             <includes>
                 <include>pulsar-*.jar</include>
             </includes>
@@ -52,7 +52,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>${project.basedir}/../pulsar-ql-server/target</directory>
+            <directory>${project.basedir}/../pulsar-ql/target</directory>
             <includes>
                 <include>pulsar-*.jar</include>
             </includes>

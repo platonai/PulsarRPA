@@ -73,7 +73,7 @@
         <module>pulsar-tools</module>
         <module>pulsar-third</module>
         <module>pulsar-ql-common</module>
-        <module>pulsar-ql-server</module>
+        <module>pulsar-ql</module>
         <module>pulsar-rest</module>
 
         <module>pulsar-spring-support</module>
@@ -428,7 +428,7 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-ql-server</artifactId>
+                <artifactId>pulsar-ql</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

@@ -91,7 +91,7 @@
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-ql-server</artifactId>
+            <artifactId>pulsar-ql</artifactId>
         </dependency>
     </dependencies>
 </project>
