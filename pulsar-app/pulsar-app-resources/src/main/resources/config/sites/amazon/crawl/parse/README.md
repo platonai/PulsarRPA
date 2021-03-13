@@ -1,6 +1,6 @@
 Scrape all entities in a product page
 
-all X-SQLs can be find [here](config/sites/amazon/crawl/parse/sql/crawl).
+all X-SQLs can be find [here](sql/crawl).
 
     POST http://crawl0:8182/api/x/a/v2/q
     Content-Type: application/json
