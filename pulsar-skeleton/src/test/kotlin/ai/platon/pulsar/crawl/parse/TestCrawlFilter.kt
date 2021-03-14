@@ -10,7 +10,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.net.MalformedURLException
 import kotlin.test.assertEquals
@@ -19,7 +19,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @Ignore
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestCrawlFilter {
     private val detailUrls = arrayOf(

@@ -27,7 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 
 /**
  * Unit test for new parse plugin selection.
@@ -35,7 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
  * @author Sebastien Le Callonnec
  */
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 class TestParserFactory {
     @Autowired
     private lateinit var conf: ImmutableConfig

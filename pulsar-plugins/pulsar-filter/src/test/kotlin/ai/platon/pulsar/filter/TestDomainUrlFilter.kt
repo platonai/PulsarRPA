@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 /**
  * Created by vincent on 17-2-23.
  */
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 class TestDomainUrlFilter : UrlFilterTestBase("") {
     override var conf: MutableConfig = MutableConfig()
 

@@ -26,7 +26,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
 import java.net.URL
@@ -35,7 +35,7 @@ import java.net.URL
  * TODO: Test failed
  */
 @Ignore("Failed")
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
 class TestRobotsMetaProcessor {
     private var currURLsAndAnswers: Array<Array<URL?>> = arrayOf(arrayOf())

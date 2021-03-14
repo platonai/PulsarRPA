@@ -36,7 +36,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import org.w3c.dom.DocumentFragment
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
@@ -51,7 +51,7 @@ import java.nio.file.Paths
  * TODO: Test failed
  */
 @Ignore("Failed")
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
 class TestMetaTagsParser {
     @Autowired

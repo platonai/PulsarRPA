@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
@@ -37,7 +37,7 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Collectors
 
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestRegexUrlNormalizer {
     @Autowired

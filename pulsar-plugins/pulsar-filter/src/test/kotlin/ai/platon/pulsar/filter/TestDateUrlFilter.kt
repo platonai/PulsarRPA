@@ -19,23 +19,23 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader.readAllLines
-import junit.framework.Assert.assertNotNull
-import junit.framework.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.time.ZoneId
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 /**
  * JUnit based test of class `RegexURLFilter`.
  *
  * @author Jrme Charron
  */
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestDateUrlFilter : UrlFilterTestBase("datedata") {
     @Autowired
@@ -51,7 +51,7 @@ class TestDateUrlFilter : UrlFilterTestBase("datedata") {
     fun testNotSupportedDateFormat() {
         val urls = readAllLines("datedata/urls_with_not_supported_old_date.txt")
         for (url in urls) {
-            assertNotNull(url, dateUrlFilter.filter(url))
+            assertNotNull(dateUrlFilter.filter(url), url)
         }
     }
 
@@ -59,7 +59,7 @@ class TestDateUrlFilter : UrlFilterTestBase("datedata") {
     fun testDateTimeDetector() {
         val urls = readAllLines("datedata/urls_with_old_date.txt")
         for (url in urls) {
-            assertNull(url, dateUrlFilter.filter(url))
+            assertNull(dateUrlFilter.filter(url), url)
         }
     }
 }

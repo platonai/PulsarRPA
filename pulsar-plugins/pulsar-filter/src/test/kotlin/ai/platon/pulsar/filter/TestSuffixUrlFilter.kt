@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.ResourceLoader.readAllLines
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import kotlin.test.assertEquals
 
@@ -31,7 +31,7 @@ import kotlin.test.assertEquals
  *
  * @author Andrzej Bialecki
  */
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 class TestSuffixUrlFilter : UrlFilterTestBase() {
     private lateinit var filter: SuffixUrlFilter
     

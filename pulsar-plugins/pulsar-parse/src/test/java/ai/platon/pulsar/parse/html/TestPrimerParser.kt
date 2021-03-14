@@ -30,7 +30,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
@@ -43,7 +43,7 @@ import java.util.stream.Collectors
  * Unit tests for PrimerParser.
  */
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 class TestPrimerParser {
     companion object {
         private val testPages = arrayOf(

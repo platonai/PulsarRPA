@@ -29,7 +29,7 @@ import org.jsoup.Jsoup
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.nio.charset.Charset
 import kotlin.test.assertEquals
@@ -37,7 +37,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Ignore("PathExtractor is deprecated, use x-sql instead")
-@RunWith(SpringJUnit4ClassRunner::class)
+@RunWith(SpringRunner::class)
 class TestPathExtractor : HtmlParserTestBase() {
     @Test
     @Throws(ParseException::class, IOException::class)
