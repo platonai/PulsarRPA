@@ -35,7 +35,7 @@ class FetchMetrics(
             mapOf(
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
                 "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
-            ).forEach { AppMetrics.defaultMetricRegistry.register(this, it.key, it.value) }
+            ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }
 
@@ -70,7 +70,7 @@ class FetchMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    private val registry = AppMetrics.defaultMetricRegistry
+    private val registry = AppMetrics.reg
 
     val meterTotalNetworkIFsRecvMBytes = registry.meter(this, "totalNetworkIFsRecvMBytes")
 

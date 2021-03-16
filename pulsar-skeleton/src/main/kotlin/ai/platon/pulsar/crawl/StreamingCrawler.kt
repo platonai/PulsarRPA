@@ -47,6 +47,8 @@ class StreamingCrawlerMetrics {
     val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
     val finishes = registry.multiMetric(this, "finishes")
 
+    val drops = registry.meter(this, "drops")
+    val processing = registry.meter(this, "processing")
     val timeouts = registry.meter(this, "timeouts")
 }
 
@@ -119,7 +121,7 @@ open class StreamingCrawler<T : UrlAware>(
     )
 
     init {
-        AppMetrics.defaultMetricRegistry.registerAll(this, "$id.g", gauges)
+        AppMetrics.reg.registerAll(this, "$id.g", gauges)
         generateFinishCommand()
     }
 
@@ -153,6 +155,7 @@ open class StreamingCrawler<T : UrlAware>(
 
             urls.forEachIndexed { j, url ->
                 if (!isActive) {
+                    globalMetrics.drops.mark()
                     return@startCrawlLoop
                 }
 
@@ -163,6 +166,7 @@ open class StreamingCrawler<T : UrlAware>(
                 }
 
                 if (url.isNil) {
+                    globalMetrics.drops.mark()
                     return@forEachIndexed
                 }
 
@@ -170,6 +174,8 @@ open class StreamingCrawler<T : UrlAware>(
                  * TODO: proper handling the result, especially the client ask for a result
                  * */
                 if (url.url in globalLoadingUrls) {
+                    globalMetrics.drops.mark()
+                    globalMetrics.processing.mark()
                     return@forEachIndexed
                 }
 

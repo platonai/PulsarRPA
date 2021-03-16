@@ -425,7 +425,7 @@ object CommonFunctions {
 
     @UDFunction
     @JvmStatic
-    fun makeArray(value: Value, n: Int): ValueArray {
+    fun makeArrayN(value: Value, n: Int): ValueArray {
         val values = Array(n) { value }
         return ValueArray.get(values)
     }

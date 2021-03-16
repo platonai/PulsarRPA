@@ -9,6 +9,9 @@ import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.SqlUtils
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
+import org.h2.tools.SimpleResultSet
+import org.h2.value.ValueArray
+import org.h2.value.ValueString
 import org.junit.Assert
 import org.junit.Test
 import java.sql.Types
@@ -16,6 +19,7 @@ import java.util.*
 import kotlin.reflect.KParameter
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.jvm.internal.impl.resolve.constants.ArrayValue
 import kotlin.reflect.jvm.javaType
 import kotlin.test.assertEquals
 
@@ -38,7 +42,7 @@ class TestSqlUtils {
     }
 
     @Test
-    fun `extract url from sql's from clause using regex`() {
+    fun `Extract url from sql's from clause using regex`() {
         val url = "http://amazon.com/a/reviews/123?pageNumber=21&a=b"
         val sql = """
             select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
@@ -46,5 +50,38 @@ class TestSqlUtils {
         """.trimIndent()
         val actualUrl = SqlUtils.extractUrlFromFromClause(sql)
         assertEquals(url, actualUrl)
+    }
+
+    @Test
+    fun testTranspose() {
+        val rs = ResultSets.newSimpleResultSet()
+        val columnCount = 5
+        val transposedRowCount = 10
+        IntRange(1, columnCount).map { i ->
+            rs.addColumn("C$i", Types.ARRAY, 0, 0)
+        }
+
+        val row = IntRange(1, columnCount).map { i ->
+            IntRange(1, transposedRowCount).map { j -> ValueString.get("C${i}R$j") }.toTypedArray()
+        }.toTypedArray()
+        rs.addRow(*row)
+
+        if (rs.next()) {
+            val c1 = "'C1R1', 'C1R2', 'C1R3', 'C1R4', 'C1R5', 'C1R6', 'C1R7', 'C1R8', 'C1R9', 'C1R10'"
+            val array = rs.getArray("C1").array as Array<Any>
+            assertEquals(c1, array.joinToString())
+        }
+
+        rs.beforeFirst()
+        println(ResultSetFormatter(rs, withHeader = true).toString())
+
+        rs.beforeFirst()
+        val newRs = SqlUtils.transpose(rs)
+        var i = 0
+        while (rs.next()) {
+            ++i
+            assertEquals("C${i}R${i}", rs.getString("C1"))
+        }
+        println(ResultSetFormatter(newRs, withHeader = true).toString())
     }
 }

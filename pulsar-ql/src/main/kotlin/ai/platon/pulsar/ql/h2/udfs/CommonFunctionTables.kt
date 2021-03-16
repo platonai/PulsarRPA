@@ -7,6 +7,8 @@ import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
+import ai.platon.pulsar.ql.h2.SqlUtils
+import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -143,6 +145,18 @@ object CommonFunctionTables {
             rs.addRow(i + 1, values.list[i])
         }
         return rs
+    }
+
+    @UDFunction(description = "Transpose a simple ResultSet")
+    @JvmStatic
+    fun transpose(rs: ResultSet): ResultSet {
+        if (rs !is SimpleResultSet) {
+            throw IllegalArgumentException("Transpose can operate only on a SimpleResultSet")
+        }
+
+        TODO("Transpose is not correctly implemented")
+
+        // return SqlUtils.transpose(rs)
     }
 
     /**

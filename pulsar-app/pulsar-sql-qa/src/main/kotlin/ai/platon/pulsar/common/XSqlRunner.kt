@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SqlConverter
 import ai.platon.pulsar.common.sql.SqlTemplate
 import ai.platon.pulsar.context.PulsarContext
@@ -14,10 +15,11 @@ import java.sql.ResultSet
 import kotlin.system.exitProcess
 
 class XSqlRunner(
-        val cx: PulsarContext = PulsarContexts.activate()
+    val cx: PulsarContext = PulsarContexts.activate()
 ) {
     private val log = LoggerFactory.getLogger(XSqlRunner::class.java)
 
+    val loadArgs = "-i 100d"
     val extractor = VerboseSqlExtractor(cx)
     val session = extractor.session
 
@@ -28,11 +30,18 @@ class XSqlRunner(
     }
 
     fun execute(url: String, sqlTemplate: SqlTemplate): ResultSet {
-        val document = loadResourceAsDocument(url) ?: session.loadDocument(url, "-i 1s -sc 10")
+        val document = loadResourceAsDocument(url) ?: session.loadDocument(url, loadArgs)
 
         val sql = sqlTemplate.createInstance(url)
 
-        val rs = extractor.query(sql, printResult = true)
+        var rs = extractor.query(sql, printResult = true)
+
+        if (sqlTemplate.resource?.contains("x-similar-items.sql") == true) {
+            rs = SqlUtils.transpose(rs)
+            println("Transposed: ")
+            rs.beforeFirst()
+            println(ResultSetFormatter(rs, withHeader = true).toString())
+        }
 
         val count = SqlUtils.count(rs)
         val path = session.export(document)
@@ -112,7 +121,7 @@ fun main() = withContext { cx ->
     ).map { it.first to "$resourcePrefix/${it.second}" }
 
     cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    val xsqlFilter = { xsql: String -> "x-asin.sql" in xsql }
+    val xsqlFilter = { xsql: String -> "x-similar-items.sql" in xsql }
     XSqlRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
 
     exitProcess(0)

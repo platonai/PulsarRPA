@@ -11,10 +11,10 @@ select
     dom_all_hrefs(dom, 'tr#comparison_sold_by_row > td a') as `ad_asin_soldby_url`,
     dom_all_slim_htmls(dom, 'tr#comparison_shipping_info_row > td span') as `ad_asin_shipby`,
     make_array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) as `ad_asin_position`,
-    make_array(dom_base_uri(dom), 10) as `url`,
-    make_array(str_substring_between(dom_base_uri(dom), '/dp/', '/ref='), 10) as `asin`,
-    make_array(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'label'), 10) as `label`,
-    make_array(time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')), 10) as `task_time`,
-    make_array('Compare with similar items', 10) as `carousel_title`,
-    make_array('similar-items', 10) as `ad_type`
+    make_array_n(dom_base_uri(dom), 10) as `url`,
+    make_array_n(str_substring_between(dom_base_uri(dom), '/dp/', '/ref='), 10) as `asin`,
+    make_array_n(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'label'), 10) as `label`,
+    make_array_n(time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')), 10) as `task_time`,
+    make_array_n('Compare with similar items', 10) as `carousel_title`,
+    make_array_n('similar-items', 10) as `ad_type`
 from load_and_select(@url, '#HLCXComparisonTable');
