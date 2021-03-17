@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -14,6 +15,7 @@ import kotlin.test.assertTrue
 class TestLoadOptions {
 
     var i = PulsarContexts.createSession()
+    val conf = i.sessionConfig
     val url = "http://abc.com"
     val taskName = AppPaths.fromUri(url)
     val args = "" +
@@ -28,10 +30,11 @@ class TestLoadOptions {
     @Test
     fun testOptions() {
         val args0 = Urls.splitUrlArgs(url).second
-        val options = LoadOptions.parse("$args0 $args")
+        val options = i.options("$args0 $args")
         assertEquals("\".products a\"", options.outLinkSelector)
 
-        val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
+        val (url, args) = Urls.splitUrlArgs("$url -incognito -expires 1s -retry")
+        val options2 = LoadOptions.parse(args, conf)
         val options3 = LoadOptions.merge(options, options2)
         assertOptions(options3)
     }
@@ -42,7 +45,7 @@ class TestLoadOptions {
         val args2 = "-incognito -expires 1d -storeContent true -cacheContent true"
         val args3 = "$args1 $args2"
 
-        val options = LoadOptions.parse(args3)
+        val options = LoadOptions.parse(args3, conf)
         assertTrue { options.incognito }
     }
 
@@ -50,13 +53,13 @@ class TestLoadOptions {
     fun testMergeOptions() {
         val args1 = "-parse -incognito -expires 1s -retry -storeContent false -cacheContent false"
         val args2 = "-incognito -expires 1d -storeContent true -cacheContent true"
-        val options1 = LoadOptions.parse(args1)
-        val options2 = LoadOptions.parse(args2)
+        val options1 = i.options(args1)
+        val options2 = i.options(args2)
 
-        println(LoadOptions.merge(args1, args2))
-        assertMergedOptions(LoadOptions.merge(args1, args2), "args1 merge args2")
+        println(LoadOptions.merge(args1, args2, conf))
+        assertMergedOptions(LoadOptions.merge(args1, args2, conf), "args1 merge args2")
 
-        LoadOptions.merge(args2, null).also {
+        LoadOptions.merge(args2, null, conf).also {
             val message = "args2 merge null"
             assertTrue(message) { it.storeContent }
             assertTrue(message) { it.incognito }
@@ -64,7 +67,7 @@ class TestLoadOptions {
         }
 
         val args3 = "-storeContent false"
-        LoadOptions.merge(args2, args3).also {
+        LoadOptions.merge(args2, args3, conf).also {
             val message = "args2 merge args3"
             assertTrue(message) { !it.storeContent }
             assertTrue(message) { it.incognito }
@@ -82,7 +85,7 @@ class TestLoadOptions {
 
     @Test
     fun testBooleanOptions() {
-        var options = LoadOptions.parse("-incognito -expires 1s -retry -storeContent false")
+        var options = LoadOptions.parse("-incognito -expires 1s -retry -storeContent false", conf)
         assertTrue(options.incognito)
         assertTrue(options.retryFailed)
         assertFalse(options.parse)
@@ -110,7 +113,7 @@ class TestLoadOptions {
 
         assertTrue { "-storeContent" in args }
 
-        options = LoadOptions.parse(args)
+        options = LoadOptions.parse(args, conf)
         println("options: $options")
 
         assertTrue(options.incognito)
@@ -132,7 +135,7 @@ class TestLoadOptions {
 
     @Test
     fun testModifiedOptions() {
-        val options = LoadOptions.parse("-incognito -expires 1s -retry")
+        val options = LoadOptions.parse("-incognito -expires 1s -retry", conf)
 //        println(options.modifiedOptions)
         val modifiedOptions = options.modifiedOptions
         assertTrue(modifiedOptions.containsKey("retryFailed"))
@@ -141,9 +144,9 @@ class TestLoadOptions {
 
     @Test
     fun testMerging() {
-        val options = LoadOptions.parse("-incognito -expires 1s -retry")
+        val options = LoadOptions.parse("-incognito -expires 1s -retry", conf)
         val args = "-label test-merging"
-        val options2 = LoadOptions.merge(options, LoadOptions.parse(args))
+        val options2 = LoadOptions.merge(options, i.options(args))
         assertEquals("test-merging", options2.label)
         assertTrue { options2.incognito }
     }
@@ -155,7 +158,7 @@ class TestLoadOptions {
 
     @Test
     fun testClone() {
-        val options = LoadOptions.parse("$args -incognito -expires 1s -retry -storeContent false")
+        val options = LoadOptions.parse("$args -incognito -expires 1s -retry -storeContent false", conf)
         val clone = options.clone()
         assertEquals(options, clone)
         val clone2 = clone.clone()
@@ -185,7 +188,7 @@ class TestLoadOptions {
 
     @Test
     fun testNormalizeOptions() {
-        val op = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
+        val op = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second, conf)
         val normUrl = i.normalize(url, op)
         val options = normUrl.options
         assertTrue(options.incognito)
@@ -195,18 +198,12 @@ class TestLoadOptions {
     }
 
     @Test
-    fun testHashCode() {
-        val op = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
-        println(op.hashCode())
-    }
-
-    @Test
     fun testNormalizeOptions2() {
-        val options = LoadOptions.parse(Urls.splitUrlArgs("$url $args -incognito -expires 1s -retry -storeContent false").second)
+        val options = LoadOptions.parse(Urls.splitUrlArgs("$url $args -incognito -expires 1s -retry -storeContent false").second, conf)
         val normUrl = i.normalize(url, options)
 
         println(normUrl.configuredUrl)
-        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"))
+        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf))
 
         assertTrue { normUrl2.options.retryFailed }
 
@@ -216,15 +213,30 @@ class TestLoadOptions {
     }
 
     @Test
+    fun testNormalizeHyperlinkOptions() {
+        val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
+        val hyperlink = ListenableHyperlink(url, args = "-i 0s")
+
+        val normUrl = i.normalize(hyperlink)
+        assertEquals(0, normUrl.options.expires.seconds)
+    }
+
+    @Test
+    fun testHashCode() {
+        val op = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second, conf)
+        println(op.hashCode())
+    }
+
+    @Test
     fun testNormalizeItemOptions() {
-        val options = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
+        val options = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second, conf)
         val normUrl = i.normalize(url, options)
         println(normUrl.configuredUrl)
 
-        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"), toItemOption = true)
+        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf), toItemOption = true)
         println(normUrl2.configuredUrl)
 
-        assertEquals(options.expires, normUrl2.options.expires)
+        assertEquals(Duration.ofDays(1), normUrl2.options.expires)
         assertEquals(40, normUrl2.options.topLinks)
     }
 
@@ -239,10 +251,10 @@ class TestLoadOptions {
     }
 
     private fun assertOptionEquals(expected: String, actual: String, msg: String? = null) {
-        assertEquals(LoadOptions.parse(expected), LoadOptions.parse(actual), msg)
+        assertEquals(LoadOptions.parse(expected, conf), LoadOptions.parse(actual, conf), msg)
     }
 
     private fun assertOptionNotEquals(expected: String, actual: String, msg: String? = null) {
-        assertNotEquals(LoadOptions.parse(expected), LoadOptions.parse(actual), msg)
+        assertNotEquals(LoadOptions.parse(expected, conf), LoadOptions.parse(actual, conf), msg)
     }
 }

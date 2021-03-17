@@ -19,7 +19,7 @@ open class StreamingCrawlLoop(
     /**
      * Default LoadOptions for all load tasks within this crawl loop
      * */
-    options: LoadOptions = LoadOptions.create()
+    options: LoadOptions = session.options()
 ) : AbstractCrawlLoop(globalCache, options) {
     private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 

@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.url.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
@@ -55,20 +56,23 @@ import java.nio.file.Paths
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
 class TestMetaTagsParser {
     @Autowired
-    private val immutableConfig: ImmutableConfig? = null
+    private lateinit var immutableConfig: ImmutableConfig
     @Autowired
-    private val pageParser: PageParser? = null
+    private lateinit var pageParser: PageParser
     @Autowired
-    private val metaTagsParser: MetaTagsParser? = null
-    private var conf: MutableConfig? = null
+    private lateinit var metaTagsParser: MetaTagsParser
+
+    private lateinit var conf: VolatileConfig
+
     private val sampleDir = System.getProperty("test.data", ".")
     private val sampleFile = "testMetatags.html"
     private val description = "This is a test of description"
     private val keywords = "This is a test of keywords"
+
     @Before
     fun setup() {
-        conf = MutableConfig(immutableConfig)
-        conf!![CapabilityTypes.METATAG_NAMES] = "*"
+        conf = immutableConfig.toVolatileConfig()
+        conf[CapabilityTypes.METATAG_NAMES] = "*"
         // TODO: reload is deleted
 // metaTagsParser.reload(conf);
     }
@@ -104,18 +108,18 @@ class TestMetaTagsParser {
             val path = Paths.get(sampleDir, "metatags", "sample", fileName)
             val urlString = "file:" + path.toAbsolutePath()
             val bytes = Files.readAllBytes(path)
-            val page = WebPage.newWebPage(urlString)
+            val page = WebPage.newWebPage(urlString, conf)
             page.location = page.url
             page.setContent(bytes)
             page.contentType = "text/html"
             if (usePageParser) {
-                pageParser!!.parse(page)
+                pageParser.parse(page)
             } else {
                 val node = getDOMDocument(bytes)
                 val baseUrl = getURLOrNull(urlString)
                 val metaTags = HTMLMetaTags(node, baseUrl)
                 val parseResult = ParseResult()
-                metaTagsParser!!.filter(ParseContext(page, parseResult, metaTags = metaTags, documentFragment = node))
+                metaTagsParser.filter(ParseContext(page, parseResult, metaTags = metaTags, documentFragment = node))
                 Assert.assertTrue(parseResult.isParsed)
             }
             // System.out.println(page.getContentAsString());

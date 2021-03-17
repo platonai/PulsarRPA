@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
 
-    class MockLoadEventHandler(hyperlink: MockListenableHyperlink) : AbstractLoadEventHandler() {
+    class MockLoadEventHandler(hyperlink: MockListenableHyperlink) : DefaultLoadEventHandler() {
         private val thisHandler = this
 
         override var onBeforeLoad = object: UrlHandler() {
@@ -78,7 +78,7 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
     }
 
     override var args: String? = "-cacheContent true -storeContent false -parse"
-    override var loadEventHandler: LoadEventHandler? = MockLoadEventHandler(this)
+    override var loadEventHandler: LoadEventPipelineHandler = MockLoadEventHandler(this)
     override var crawlEventHandler: CrawlEventHandler? = MockCrawlEventHandler(this)
 
     var page: WebPage? = null

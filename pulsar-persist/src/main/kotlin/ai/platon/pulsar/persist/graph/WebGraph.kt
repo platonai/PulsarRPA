@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.graph
 
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import org.jgrapht.ext.*
 import org.jgrapht.graph.DirectedWeightedPseudograph
@@ -144,10 +145,10 @@ class WebGraph : DirectedWeightedPseudograph<WebVertex, WebEdge> {
             val vertexProvider = VertexProvider { url: String, attributes: Map<String, String> ->
                 val baseUrl = attributes["baseUrl"]
                 val depth = Integer.valueOf(attributes["depth"])
-                val page = WebPage.newWebPage(url)
+                val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE)
                 page.location = baseUrl
                 page.distance = depth
-                WebVertex(url, WebPage.newWebPage(url))
+                WebVertex(url, WebPage.newWebPage(url, VolatileConfig.UNSAFE))
             }
             // create edge provider
             val edgeProvider = EdgeProvider<WebVertex, WebEdge> {

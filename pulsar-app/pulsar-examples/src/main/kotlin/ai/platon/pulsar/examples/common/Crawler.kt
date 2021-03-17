@@ -48,7 +48,7 @@ open class Crawler(
 
     val i = context.createSession()
 
-    fun load(url: String, args: String) = load(url, LoadOptions.parse(args))
+    fun load(url: String, args: String) = load(url, i.options(args))
 
     fun load(url: String, options: LoadOptions) {
         val page = i.load(url)
@@ -73,7 +73,7 @@ open class Crawler(
         log.info("Export to: file://{}", path)
     }
 
-    fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, LoadOptions.parse(args))
+    fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, i.options(args))
 
     fun loadOutPages(portalUrl: String, options: LoadOptions) {
         val page = i.load(portalUrl, options)
@@ -107,7 +107,7 @@ open class Crawler(
     fun loadAllNews(portalUrl: String, options: LoadOptions) {
         val portal = i.load(portalUrl, options)
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = i.parallelLoadAll(links, LoadOptions.Companion.parse("--parse"))
+        val pages = i.parallelLoadAll(links, i.options("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 

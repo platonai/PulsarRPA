@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.persist.ext.loadOptions
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -41,14 +41,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = null) {
 
     constructor(url: String, options: LoadOptions, href: String? = null):
-            this(WebPage.newWebPage(url, options.volatileConfig, href), options)
+            this(WebPage.newWebPage(url, options.conf, href), options)
 
     init {
         page.also {
             it.href = href
             it.fetchMode = options.fetchMode
+            it.conf = options.conf
             it.args = options.toString()
-            it.volatileConfig = options.volatileConfig
             it.isCachedContentEnabled = options.cacheContent
         }
     }
@@ -69,7 +69,9 @@ open class FetchComponent(
     private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
+    private val conf = immutableConfig.toVolatileConfig()
     val isActive get() = !closed.get()
+    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     /**
      * Fetch a url
@@ -77,9 +79,7 @@ open class FetchComponent(
      * @param url The url of web page to fetch
      * @return The fetch result
      */
-    fun fetch(url: String): WebPage {
-        return fetchContent(WebPage.newWebPage(url, false))
-    }
+    fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, conf))
 
     /**
      * Fetch a url
@@ -88,9 +88,7 @@ open class FetchComponent(
      * @param options The options
      * @return The fetch result
      */
-    fun fetch(url: String, options: LoadOptions): WebPage {
-        return fetchContent0(FetchEntry(url, options))
-    }
+    fun fetch(url: String, options: LoadOptions) = fetchContent0(FetchEntry(url, options))
 
     /**
      * Fetch a page
@@ -98,9 +96,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    fun fetchContent(page: WebPage): WebPage {
-        return fetchContent0(FetchEntry(page, page.loadOptions))
-    }
+    fun fetchContent(page: WebPage) = fetchContent0(FetchEntry(page, page.options))
 
     /**
      * Fetch a page
@@ -108,9 +104,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    fun fetchContent(fetchEntry: FetchEntry): WebPage {
-        return fetchContent0(fetchEntry)
-    }
+    fun fetchContent(fetchEntry: FetchEntry) = fetchContent0(fetchEntry)
 
     /**
      * Fetch a page
@@ -118,9 +112,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    suspend fun fetchContentDeferred(page: WebPage): WebPage {
-        return page.takeIf { !isActive } ?: fetchContentDeferred0(page)
-    }
+    suspend fun fetchContentDeferred(page: WebPage) = abnormalPage ?: fetchContentDeferred0(page)
 
     /**
      * Fetch a page

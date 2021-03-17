@@ -140,5 +140,6 @@ open class VolatileConfig : MutableConfig {
 
     companion object {
         val EMPTY = VolatileConfig()
+        val UNSAFE = VolatileConfig()
     }
 }

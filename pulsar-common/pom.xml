@@ -70,6 +70,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+        </dependency>
+
         <!-- Required by org.apache.hadoop.conf.Configuration -->
         <dependency>
             <groupId>commons-collections</groupId>

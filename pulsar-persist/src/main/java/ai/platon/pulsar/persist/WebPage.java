@@ -70,7 +70,7 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
  * @author vincent
  * @version $Id: $Id
  */
-public class WebPage implements Comparable<WebPage> {
+final public class WebPage implements Comparable<WebPage> {
 
     /** Constant <code>LOG</code> */
     public static final Logger LOG = LoggerFactory.getLogger(WebPage.class);
@@ -87,19 +87,23 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * The url is the permanent internal address, and the location is the last working address
      */
+    @NotNull
     private String url = "";
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this object
      */
+    @NotNull
     private String reversedUrl = "";
     /**
      * Underlying persistent object
      */
-    private GWebPage page;
+    @NotNull
+    final private GWebPage page;
     /**
      * Web page scope configuration
      */
-    private VolatileConfig volatileConfig;
+    @NotNull
+    private VolatileConfig conf;
     /**
      * Web page scope variables
      * TODO : we may use it a PageDatum to track all context scope variables
@@ -126,11 +130,12 @@ public class WebPage implements Comparable<WebPage> {
      * */
     private volatile ByteBuffer cachedContent = null;
 
-    private WebPage(String url, GWebPage page, boolean urlReversed) {
-        Objects.requireNonNull(url);
-        Objects.requireNonNull(page);
+    private WebPage(
+            @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
+    ) {
         this.url = urlReversed ? Urls.unreverseUrl(url) : url;
         this.reversedUrl = urlReversed ? url : Urls.reverseUrlOrEmpty(url);
+        this.conf = conf;
         this.page = page;
 
         // the url of a page might be normalized, but the baseUrl always keeps be the original
@@ -139,10 +144,13 @@ public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    private WebPage(String url, String reversedUrl, GWebPage page) {
-        this.url = Objects.requireNonNull(url);
-        this.reversedUrl = Objects.requireNonNull(reversedUrl);
-        this.page = Objects.requireNonNull(page);
+    private WebPage(
+            @NotNull String url, @NotNull String reversedUrl, @NotNull GWebPage page, @NotNull VolatileConfig conf
+    ) {
+        this.url = url;
+        this.reversedUrl = reversedUrl;
+        this.conf = conf;
+        this.page = page;
 
         // BaseUrl is the last working address, it might redirect to url, or it might have random parameters
         if (page.getBaseUrl() == null) {
@@ -154,72 +162,43 @@ public class WebPage implements Comparable<WebPage> {
      * <p>newWebPage.</p>
      *
      * @param url a {@link java.lang.String} object.
+     * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage newWebPage(String url) {
-        return newWebPage(url, false);
+    public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf) {
+        return newWebPage(url, conf, null);
     }
 
     /**
      * <p>newWebPage.</p>
      *
      * @param url a {@link java.lang.String} object.
-     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig volatileConfig) {
-        return newWebPage(url, volatileConfig, null);
+    public static WebPage newTestWebPage(@NotNull String url) {
+        return newWebPage(url, new VolatileConfig(), null);
     }
 
     /**
      * <p>newWebPage.</p>
      *
      * @param url a {@link java.lang.String} object.
-     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
+     * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage newWebPage(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String href) {
-        return newWebPageInternal(url, volatileConfig, href);
-    }
-
-    /**
-     * <p>newWebPage.</p>
-     *
-     * @param url a {@link java.lang.String} object.
-     * @param shortenKey a boolean.
-     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     * @deprecated shorten key is deprecated, use href instead
-     */
-    @NotNull
-    public static WebPage newWebPage(@NotNull String url, boolean shortenKey, @Nullable VolatileConfig volatileConfig) {
-        String url0 = shortenKey ? Urls.normalize(url, shortenKey) : url;
-        return newWebPageInternal(url0, volatileConfig, null);
-    }
-
-    /**
-     * <p>newWebPage.</p>
-     *
-     * @param originalUrl a {@link java.lang.String} object.
-     * @param shortenKey a boolean.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     * @deprecated shorten key is deprecated, use href instead
-     */
-    @NotNull
-    public static WebPage newWebPage(@NotNull String originalUrl, boolean shortenKey) {
-        String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
-        return newWebPageInternal(url, null, null);
+    public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
+        return newWebPageInternal(url, conf, href);
     }
 
     @NotNull
-    private static WebPage newWebPageInternal(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String href) {
-        WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
+    private static WebPage newWebPageInternal(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
+        WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false, conf);
 
         page.setLocation(url);
-        page.setVolatileConfig(volatileConfig);
+        page.setConf(conf);
         page.setHref(href);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(Instant.now());
@@ -277,7 +256,8 @@ public class WebPage implements Comparable<WebPage> {
      */
     @NotNull
     public static WebPage newInternalPage(@NotNull String url, int id, @NotNull String title, @NotNull String content) {
-        WebPage page = WebPage.newWebPage(url, false);
+        VolatileConfig unsafe = VolatileConfig.Companion.getUNSAFE();
+        WebPage page = WebPage.newWebPage(url, unsafe);
         if (id >= 0) {
             page.id = id;
         }
@@ -309,8 +289,9 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage box(@NotNull String url, @NotNull String reversedUrl, @NotNull GWebPage page) {
-        return new WebPage(url, reversedUrl, page);
+    public static WebPage box(
+            @NotNull String url, @NotNull String reversedUrl, @NotNull GWebPage page, @NotNull VolatileConfig conf) {
+        return new WebPage(url, reversedUrl, page, conf);
     }
 
     /**
@@ -321,8 +302,8 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage box(@NotNull String url, @NotNull GWebPage page) {
-        return new WebPage(url, page, false);
+    public static WebPage box(@NotNull String url, @NotNull GWebPage page, @NotNull VolatileConfig conf) {
+        return box(url, page, false, conf);
     }
 
     /**
@@ -334,8 +315,10 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage box(@NotNull String url, @NotNull GWebPage page, boolean urlReversed) {
-        return new WebPage(url, page, urlReversed);
+    public static WebPage box(
+            @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
+    ) {
+        return new WebPage(url, page, urlReversed, conf);
     }
 
     /**
@@ -409,6 +392,8 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * Get The hypertext reference of this page.
      * It defines the address of the document, which this time is linked from
+     *
+     * TODO: use a seperate field to hold href
      *
      * @return The hypertext reference
      */
@@ -531,33 +516,22 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>Getter for the field <code>volatileConfig</code>.</p>
+     * <p>Getter for the field <code>conf</code>.</p>
      *
      * @return a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      */
-    @Nullable
-    public VolatileConfig getVolatileConfig() {
-        return volatileConfig;
-    }
-
-    /**
-     * <p>Setter for the field <code>volatileConfig</code>.</p>
-     *
-     * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     */
-    public void setVolatileConfig(VolatileConfig volatileConfig) {
-        this.volatileConfig = volatileConfig;
-    }
-
-    /**
-     * <p>getMutableConfigOrElse.</p>
-     *
-     * @param fallbackConfig a {@link MutableConfig} object.
-     * @return a {@link MutableConfig} object.
-     */
     @NotNull
-    public MutableConfig getMutableConfigOrElse(MutableConfig fallbackConfig) {
-        return volatileConfig != null ? volatileConfig : fallbackConfig;
+    public VolatileConfig getConf() {
+        return conf;
+    }
+
+    /**
+     * <p>Setter for the field <code>conf</code>.</p>
+     *
+     * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
+     */
+    public void setConf(@NotNull VolatileConfig conf) {
+        this.conf = conf;
     }
 
     /**

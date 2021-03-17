@@ -1,7 +1,8 @@
 package ai.platon.pulsar.crawl.common
 
+import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
-import ai.platon.pulsar.common.options.LoadOptions.Companion.parse
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -25,15 +26,17 @@ import kotlin.test.assertEquals
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestAnything {
+    private val volatileConfig = VolatileConfig()
+
     @Test
     @Ignore
     @Throws(IOException::class)
     fun generateRegexUrlFilter() {
         val files = arrayOf(
-                "config/seeds/aboard.txt",
-                "config/seeds/bbs.txt",
-                "config/seeds/national.txt",
-                "config/seeds/papers.txt"
+            "config/seeds/aboard.txt",
+            "config/seeds/bbs.txt",
+            "config/seeds/national.txt",
+            "config/seeds/papers.txt"
         )
         val lines: MutableList<String> = Lists.newArrayList()
         for (file in files) {
@@ -129,17 +132,17 @@ class TestAnything {
     @Throws(MalformedURLException::class)
     fun testURL() {
         val urls: List<String> = Lists.newArrayList(
-                "http://bond.eastmoney.com/news/1326,20160811671616734.html",
-                "http://bond.eastmoney.com/news/1326,20161011671616734.html",
-                "http://tech.huanqiu.com/photo/2016-09/2847279.html",
-                "http://tech.hexun.com/2016-09-12/186368492.html",
-                "http://opinion.cntv.cn/2016/04/17/ARTI1397735301366288.shtml",
-                "http://tech.hexun.com/2016-11-12/186368492.html",
-                "http://ac.cheaa.com/2016/0905/488888.shtml",
-                "http://ankang.hsw.cn/system/2016/0927/16538.shtml",
-                "http://auto.nbd.com.cn/articles/2016-09-28/1042037.html",
-                "http://bank.cnfol.com/pinglunfenxi/20160901/23399283.shtml",
-                "http://bank.cnfol.com/yinhanglicai/20160905/23418323.shtml"
+            "http://bond.eastmoney.com/news/1326,20160811671616734.html",
+            "http://bond.eastmoney.com/news/1326,20161011671616734.html",
+            "http://tech.huanqiu.com/photo/2016-09/2847279.html",
+            "http://tech.hexun.com/2016-09-12/186368492.html",
+            "http://opinion.cntv.cn/2016/04/17/ARTI1397735301366288.shtml",
+            "http://tech.hexun.com/2016-11-12/186368492.html",
+            "http://ac.cheaa.com/2016/0905/488888.shtml",
+            "http://ankang.hsw.cn/system/2016/0927/16538.shtml",
+            "http://auto.nbd.com.cn/articles/2016-09-28/1042037.html",
+            "http://bank.cnfol.com/pinglunfenxi/20160901/23399283.shtml",
+            "http://bank.cnfol.com/yinhanglicai/20160905/23418323.shtml"
         )
         // longer url comes first
         urls.sortedByDescending { it.length }.forEach { println(it) }
@@ -151,11 +154,13 @@ class TestAnything {
     }
 
     @Test
-    fun testUrlUtil() { // String configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE";
+    fun testSplitUrlArgs() {
+        // String configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE";
         val configuredUrl = "http://list.mogujie.com/book/jiadian/1005951"
-        val pair = splitUrlArgs(configuredUrl)
-        println(pair)
-        val options = parse(pair.second)
-        println(options)
+        val (url, args) = splitUrlArgs(configuredUrl)
+        assertEquals(configuredUrl, url)
+        assertEquals("", args)
+        val options = LoadOptions.parse(args, volatileConfig)
+        assertEquals("", options.toString())
     }
 }

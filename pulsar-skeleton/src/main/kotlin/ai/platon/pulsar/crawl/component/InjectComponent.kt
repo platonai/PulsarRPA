@@ -1,12 +1,12 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -129,14 +129,6 @@ class InjectComponent(
             return
         }
         commit()
-    }
-
-    private fun loadOrCreate(url: String): WebPage {
-        var page = webDb.get(url)
-        if (page.isNil) {
-            page = WebPage.newWebPage(url)
-        }
-        return page
     }
 
     companion object {

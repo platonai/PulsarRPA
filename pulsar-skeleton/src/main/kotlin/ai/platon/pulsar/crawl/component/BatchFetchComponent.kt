@@ -113,7 +113,7 @@ class BatchFetchComponent(
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         fetchMetrics?.markTaskStart(Iterables.size(urls))
         return urls.map { FetchEntry(it, options).page }
-                .let { protocol.getResponses(it, options.volatileConfig?:immutableConfig.toVolatileConfig()) }
+                .let { protocol.getResponses(it, options.conf?:immutableConfig.toVolatileConfig()) }
                 .map { getProtocolOutput(protocol, it, it.page) }
     }
 
@@ -145,14 +145,12 @@ class BatchFetchComponent(
      * fetch the rest in the background
      */
     private fun optimizeBatchSize(urls: Collection<String>, options: LoadOptions): Collection<String> {
-        var config: ImmutableConfig? = options.volatileConfig
-        if (config == null) {
-            config = immutableConfig
-        }
-        val parallelLevel = config.getUint(CapabilityTypes.FETCH_CONCURRENCY, AppContext.NCPU)
+        val conf = options.conf
+        val parallelLevel = conf.getUint(CapabilityTypes.FETCH_CONCURRENCY, AppContext.NCPU)
         if (urls.size <= parallelLevel) {
             return urls
         }
+
         val eagerTasks: MutableList<String> = ArrayList(parallelLevel)
         val lazyTasks: MutableList<String> = ArrayList(0.coerceAtLeast(urls.size - parallelLevel))
         for ((i, url) in urls.withIndex()) {
@@ -162,10 +160,11 @@ class BatchFetchComponent(
                 lazyTasks.add(url)
             }
         }
+
         if (lazyTasks.isNotEmpty()) {
             val mode = options.fetchMode
             // TODO: save url with options
-            lazyFetchTaskManager?.commitLazyTasks(mode, lazyTasks)
+            lazyFetchTaskManager?.commitLazyTasks(mode, lazyTasks, conf)
             if (log.isDebugEnabled) {
                 log.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
             }

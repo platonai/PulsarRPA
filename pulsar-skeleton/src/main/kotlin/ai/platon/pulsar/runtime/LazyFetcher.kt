@@ -57,7 +57,7 @@ class LazyFetcher(val pulsarContext: AbstractPulsarContext): ScheduledMonitor() 
             return
         }
 
-        val options = LoadOptions.create().apply {
+        val options = backgroundSession.options().apply {
             fetchMode = mode
             background = true
         }

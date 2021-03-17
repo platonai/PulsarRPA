@@ -1,25 +1,21 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
 import ai.platon.pulsar.crawl.LoadEventHandler
+import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 
-class LoadOptionsNormalizer(
-    val config: ImmutableConfig,
-    val urlNormalizers: UrlNormalizers? = null
-) {
+class UrlNormalizer(private val urlNormalizers: UrlNormalizers? = null) {
     companion object {
-        fun normalize(options: LoadOptions, url: UrlAware): LoadOptions {
-            val args = url.args
-            val actualOptions = LoadOptions.parse("$options $args")
+        fun registerEventHandlers(url: ListenableHyperlink, options: LoadOptions) {
+            url.loadEventHandler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))
 
-            if (url.label.isNotBlank()) {
-                actualOptions.label = url.label
+            options.conf.apply {
+                name = options.label
+                putBean(url.loadEventHandler)
             }
-
-            return actualOptions
         }
     }
 
@@ -30,19 +26,20 @@ class LoadOptionsNormalizer(
      * but default values in LoadOptions are ignored.
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val (spec, args) = Urls.splitUrlArgs(url.url)
+        val (spec, args0) = Urls.splitUrlArgs(url.url)
+        val args1 = url.args
+        val args2 = options.toString()
+        // the later on overwriting the ones before
+        val args = "$args2 $args1 $args0"
 
-        var finalOptions = options
-        if (args.isNotBlank()) {
-            // options parsed from args overrides options parsed from url
-            val primeOptions = LoadOptions.parse(args, options.volatileConfig)
-            finalOptions = LoadOptions.merge(options, primeOptions, options.volatileConfig)
+        val finalOptions = initOptions(LoadOptions.parse(args, options.conf), toItemOption)
+        if (url is ListenableHyperlink) {
+            registerEventHandlers(url, finalOptions)
         }
-        initOptions(finalOptions, toItemOption)
 
         // TODO: the normalization order might not be correct
         var normalizedUrl: String
-        val eventHandler = finalOptions.volatileConfig?.getBean(LoadEventHandler::class)
+        val eventHandler = finalOptions.conf.getBean(LoadEventHandler::class)
         if (eventHandler?.onNormalize != null) {
             normalizedUrl = eventHandler.onNormalize(spec) ?: return NormUrl.NIL
         } else {
@@ -53,18 +50,14 @@ class LoadOptionsNormalizer(
             }
         }
 
-        finalOptions.apply(finalOptions.volatileConfig)
+        finalOptions.apply(finalOptions.conf)
 
         val href = url.href?.takeIf { Urls.isValidUrl(it) }
         return NormUrl(normalizedUrl, finalOptions, href)
     }
 
     private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = config.toVolatileConfig()
-        }
-
-        options.apply(options.volatileConfig)
+        options.apply(options.conf)
 
         return if (toItemOption) options.createItemOptions() else options
     }

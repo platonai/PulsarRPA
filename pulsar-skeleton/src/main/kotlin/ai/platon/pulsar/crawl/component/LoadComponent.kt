@@ -80,31 +80,31 @@ class LoadComponent(
      */
     fun load(configuredUrl: String): WebPage {
         val (first, second) = splitUrlArgs(configuredUrl)
-        val options = LoadOptions.parse(second)
+        val options = LoadOptions.parse(second, immutableConfig.toVolatileConfig())
         return load(first, options)
     }
 
     /**
      * Load an url with specified options, see [LoadOptions] for all options
      *
-     * @param originalUrl The url to load
+     * @param url The url to load
      * @param options The options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    fun load(originalUrl: String, options: String): WebPage {
-        return load(originalUrl, LoadOptions.parse(options))
+    fun load(url: String, args: String): WebPage {
+        return load(url, LoadOptions.parse(args, immutableConfig.toVolatileConfig()))
     }
 
     /**
      * Load an url with specified options
      * If there is no page in local storage nor at the given remote location, [WebPage.NIL] is returned
      *
-     * @param originalUrl The url to load
+     * @param url The url to load
      * @param options The options
      * @return The WebPage.
      */
-    fun load(originalUrl: String, options: LoadOptions): WebPage {
-        return abnormalPage ?: loadWithRetry(NormUrl(originalUrl, options))
+    fun load(url: String, options: LoadOptions): WebPage {
+        return abnormalPage ?: loadWithRetry(NormUrl(url, options))
     }
 
     fun load(url: URL, options: LoadOptions): WebPage {
@@ -262,9 +262,9 @@ class LoadComponent(
 
     private fun doLoad(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
-        assertSame(page.volatileConfig, normUrl.options.volatileConfig) {
-            "Volatile config should be the same"
-        }
+
+        require(page.isNotNil)
+        assertSame(page.conf, normUrl.options.conf) { "Volatile config should be the same" }
 
         beforeLoad(page, normUrl.options)
 
@@ -323,13 +323,10 @@ class LoadComponent(
 
         val reason = getFetchReason(page0, options)
         val fetchEntry = if (page0.isNil) {
-//            page = fetchComponent.createFetchEntry(url, options, normUrl.hrefSpec)
             FetchEntry(url, options, normUrl.hrefSpec)
         } else {
             FetchEntry(page0, options, normUrl.hrefSpec)
         }
-        // set page variables like volatileConfig here
-        // fetchComponent.initFetchEntry(page, options, normUrl.hrefSpec)
 
         val page = fetchEntry.page
 
@@ -545,8 +542,8 @@ class LoadComponent(
             metrics.persists.mark()
             val bytes = page.content?.array()?.size ?: 0
             if (bytes > 0) {
-                metrics.meterContentPersists.mark()
-                metrics.meterPersistMBytes.mark(bytes.toLong() / 1024 / 1024)
+                metrics.contentPersists.mark()
+                metrics.persistContentMBytes.mark(bytes.toLong() / 1024 / 1024)
             }
         }
         tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
@@ -578,8 +575,9 @@ class LoadComponent(
      */
     fun scrapeOutPages(portalUrl: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
                        query: String, logLevel: Int): Map<String, Any> {
-        return scrapeOutPages(portalUrl, LoadOptions.parse(loadArgs), parse(linkArgs),
-                start, limit, LoadOptions.parse(loadArgs2), query, logLevel)
+        val conf = immutableConfig.toVolatileConfig()
+        return scrapeOutPages(portalUrl, LoadOptions.parse(loadArgs, conf), parse(linkArgs),
+                start, limit, LoadOptions.parse(loadArgs2, conf), query, logLevel)
     }
 
     /**

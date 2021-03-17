@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql
 
+import org.junit.Ignore
 import org.junit.Test
 
 class TestManual: TestBase() {
@@ -16,56 +17,44 @@ class TestManual: TestBase() {
      * */
     @Test
     fun extractByCss() {
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')")
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")
-
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic img', 0, 5)")
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), 'a[href~=item]', 0, 5)")
+        execute("SELECT * FROM LOAD_AND_SELECT('$productIndexUrl', '.welcome')")
     }
 
     @Test
     fun projectFields() {
-        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')")
-        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")
-        execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic img', 0, 5)")
-
-        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
-        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), 'a[href~=item]', 0, 5)")
+        execute("SELECT DOM_TEXT(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '.welcome')")
     }
 
     @Test
     fun extractByCssBox() {
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:in-box(*,*,323,31)')") // TODO: failed
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:in-box(*,*,229,36)', 0, 5)")
-
+        execute("SELECT * FROM LOAD_AND_SELECT('$productIndexUrl', '*:in-box(*,*,229,36)')")
         execute("SELECT IN_BOX_FIRST_TEXT(DOM_LOAD('$productIndexUrl'), '229x36')")
     }
 
     @Test
     fun extractByCssExpression() {
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:expr(width==248 && height==228)', 0, 5)")
-        execute("SELECT DOM_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:expr(width==248 && height==228) a', 0, 5)")
+        execute("SELECT * FROM LOAD_AND_SELECT('$productIndexUrl', '*:expr(width==248 && height==228)')")
+        execute("SELECT DOM_TITLE(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '*:expr(width==248 && height==228) a')")
     }
 
     @Test
     fun extractBySql() {
-        execute("SELECT DOM_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
-        execute("SELECT DOM_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5) WHERE LOCATE('白金版', DOM_TITLE(DOM)) > 0")
+        execute("SELECT DOM_TITLE(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '.nfPic a')")
+        execute("SELECT DOM_TITLE(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '.nfPic a') WHERE LOCATE('白金版', DOM_TITLE(DOM)) > 0")
 
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl') WHERE WIDTH=248 AND HEIGHT=228 LIMIT 100")
     }
 
     @Test
     fun loadAndGetLinks() {
-        execute("SELECT DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfList a', 0, 5)")
-        execute("SELECT DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfList a', 0, 5)")
+        execute("SELECT LOAD_AND_SELECT('$productIndexUrl', '.nfList a')")
+        execute("SELECT DOM_ABS_HREF(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '.nfList a')")
     }
 
     @Test
     fun loadAndGetLinksWithCssExpression() {
         val expr = "width > 240 && width < 250 && height > 360 && height < 370"
-        execute("SELECT DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:expr($expr) a', 0, 5)")
+        execute("SELECT DOM_ABS_HREF(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '*:expr($expr) a')")
     }
 
     @Test
@@ -91,20 +80,20 @@ class TestManual: TestBase() {
 
     @Test
     fun loadOutPages() {
-        execute("SELECT DOM, DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfList', 0, 10)")
+        execute("SELECT DOM, DOM_TEXT(DOM) FROM LOAD_AND_SELECT('$productIndexUrl', '.nfList')")
     }
 
     @Test
     fun loadOutPagesUsingPreDefinedFunction() {
         val expr = "width > 240 && width < 250 && height > 360 && height < 370"
         execute("CALL SET_PAGE_EXPIRES('1s', 1)")
-        execute("SELECT DOM, DOM_TEXT(DOM) FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)', 0, 20)")
+        execute("SELECT DOM, DOM_TEXT(DOM) FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)', 1, 20)")
     }
 
     @Test
     fun loadAndGetFeatures() {
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfList', 0, 20)")
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productDetailUrl', 'DIV,UL,UI,P', 0, 20)")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfList', 1, 20)")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productDetailUrl', 'DIV,UL,UI,P', 1, 20)")
     }
 
     /**

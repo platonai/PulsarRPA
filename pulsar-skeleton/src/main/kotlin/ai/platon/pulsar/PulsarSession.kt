@@ -19,7 +19,6 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
@@ -53,7 +52,6 @@ open class PulsarSession(
 
         private val idGen = AtomicInteger()
         private val nextId get() = ID_START + idGen.incrementAndGet()
-        private fun opts() = LoadOptions.create()
     }
 
     private val log = LoggerFactory.getLogger(PulsarSession::class.java)
@@ -83,23 +81,28 @@ open class PulsarSession(
 
     fun disableCache() = run { enableCache = false }
 
-    fun normalize(url: String, options: LoadOptions = opts(), toItemOption: Boolean = false) =
-            context.normalize(url, initOptions(options), toItemOption)
+    /**
+     * Create a new options, with a new volatile config
+     * */
+    fun options(args: String = "") = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
 
-    fun normalizeOrNull(url: String?, options: LoadOptions = opts(), toItemOption: Boolean = false) =
-            context.normalizeOrNull(url, initOptions(options), toItemOption)
+    fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false) =
+            context.normalize(url, options, toItemOption)
 
-    fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
-            context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
+    fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false) =
+            context.normalizeOrNull(url, options, toItemOption)
 
-    fun normalize(url: UrlAware, options: LoadOptions = opts(), toItemOption: Boolean = false) =
-            context.normalize(url, initOptions(options), toItemOption)
+    fun normalize(urls: Iterable<String>, options: LoadOptions = options(), toItemOption: Boolean = false) =
+            context.normalize(urls, options, toItemOption).onEach { it.options }
 
-    fun normalizeOrNull(url: UrlAware?, options: LoadOptions = opts(), toItemOption: Boolean = false) =
-            context.normalizeOrNull(url, initOptions(options), toItemOption)
+    fun normalize(url: UrlAware, options: LoadOptions = options(), toItemOption: Boolean = false) =
+            context.normalize(url, options, toItemOption)
 
-    fun normalize(urls: Collection<UrlAware>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
-            context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false) =
+            context.normalizeOrNull(url, options, toItemOption)
+
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions = options(), toItemOption: Boolean = false) =
+            context.normalize(urls, options, toItemOption).onEach { it.options }
 
     /**
      * Inject a url
@@ -123,7 +126,7 @@ open class PulsarSession(
      * @return The web page
      */
     @Throws(Exception::class)
-    fun load(url: String, args: String): WebPage = load(url, LoadOptions.parse(args))
+    fun load(url: String, args: String): WebPage = load(url, options(args))
 
     /**
      * Load a url with specified options
@@ -133,13 +136,17 @@ open class PulsarSession(
      * @return The web page
      */
     @Throws(Exception::class)
-    fun load(url: String, options: LoadOptions = opts()): WebPage = load(normalize(url, options))
+    fun load(url: String, options: LoadOptions = options()): WebPage = load(normalize(url, options))
+
+    @Throws(Exception::class)
+    fun load(url: UrlAware, args: String): WebPage = load(normalize(url, options(args)))
+
+    @Throws(Exception::class)
+    fun load(url: UrlAware, options: LoadOptions = options()): WebPage = load(normalize(url, options))
 
     @Throws(Exception::class)
     fun load(normUrl: NormUrl): WebPage {
         ensureActive()
-
-        initOptions(normUrl.options)
 
         if (enableCache) {
             val (url, options) = normUrl
@@ -152,12 +159,16 @@ open class PulsarSession(
     }
 
     @Throws(Exception::class)
-    suspend fun loadDeferred(url: String, options: LoadOptions = opts()) = loadDeferred(normalize(url, options))
+    suspend fun loadDeferred(url: String, options: LoadOptions = options()) = loadDeferred(normalize(url, options))
+
+    @Throws(Exception::class)
+    suspend fun loadDeferred(url: UrlAware, args: String): WebPage = loadDeferred(normalize(url, options(args)))
+
+    @Throws(Exception::class)
+    suspend fun loadDeferred(url: UrlAware, options: LoadOptions = options()): WebPage = loadDeferred(normalize(url, options))
 
     @Throws(Exception::class)
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        initOptions(normUrl.options)
-
         if (enableCache) {
             val (url, options) = normUrl
             val now = Instant.now()
@@ -176,7 +187,7 @@ open class PulsarSession(
      * @return The web pages
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: LoadOptions = opts(), areItems: Boolean = false): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = options(), areItems: Boolean = false): Collection<WebPage> {
         ensureActive()
         val normUrls = normalize(urls, options, areItems)
         val opts = normUrls.firstOrNull()?.options ?: return listOf()
@@ -195,7 +206,7 @@ open class PulsarSession(
      * @param options The load options
      * @return The web pages
      */
-    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = opts(), areItems: Boolean = false): Collection<WebPage> {
+    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = options(), areItems: Boolean = false): Collection<WebPage> {
         ensureActive()
         options.preferParallel = true
         val normUrls = normalize(urls, options, areItems)
@@ -215,7 +226,7 @@ open class PulsarSession(
      * @param args         The load args
      * @return The web pages
      */
-    fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, LoadOptions.parse(args))
+    fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, options(args))
 
     /**
      * Load all out pages in a portal page
@@ -224,7 +235,7 @@ open class PulsarSession(
      * @param options The load options
      * @return The web pages
      */
-    fun loadOutPages(portalUrl: String, options: LoadOptions = opts()): Collection<WebPage> {
+    fun loadOutPages(portalUrl: String, options: LoadOptions = options()): Collection<WebPage> {
         val outlinkSelector = appendSelectorIfMissing(options.outLinkSelector, "a")
 
         val normUrl = normalize(portalUrl, options)
@@ -243,9 +254,9 @@ open class PulsarSession(
      */
     fun parse(page: WebPage, noCache: Boolean = false) = parse0(page, noCache)
 
-    fun loadDocument(url: String, args: String) = loadDocument(url, LoadOptions.parse(args))
+    fun loadDocument(url: String, args: String) = loadDocument(url, options(args))
 
-    fun loadDocument(url: String, options: LoadOptions = opts()): FeaturedDocument {
+    fun loadDocument(url: String, options: LoadOptions = options()): FeaturedDocument {
         ensureActive()
         val normUrl = normalize(url, options)
         return parse(load(normUrl))
@@ -356,8 +367,6 @@ open class PulsarSession(
 
     private fun loadAllWithCache(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         ensureActive()
-        urls.forEach { initOptions(it.options) }
-        initOptions(options)
 
         val pages = ArrayList<WebPage>()
         val pendingUrls = ArrayList<NormUrl>()
@@ -407,13 +416,6 @@ open class PulsarSession(
         }
 
         return link.takeUnless { ignoreQuery } ?: Urls.getUrlWithoutParameters(link)
-    }
-
-    private fun initOptions(options: LoadOptions): LoadOptions {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = sessionConfig
-        }
-        return options
     }
 
     private fun ensureActive() {

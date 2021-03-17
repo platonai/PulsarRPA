@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.*
 import com.google.common.collect.Lists
 import junit.framework.Assert.assertTrue
@@ -36,7 +37,7 @@ class TestPulsarOptions {
             "http://www.bjnews.com.cn/news/2017/06/19/447316.html"
     )
 
-    private val conf = ImmutableConfig()
+    private val conf = VolatileConfig()
 
     /**
      * TODO: Failed to parse CrawlOptions
@@ -86,7 +87,7 @@ class TestPulsarOptions {
         println(options2.params.asStringMap())
 
         val args = "-ps -rpl -nlf -notSupport"
-        val loadOptions = LoadOptions.parse(args)
+        val loadOptions = LoadOptions.parse(args, conf)
         val finalArgs = loadOptions.toString()
         assertTrue(loadOptions.params.asMap().containsKey("-persist"))
         assertTrue(finalArgs.contains("-reparseLinks"))
@@ -125,7 +126,6 @@ class TestPulsarOptions {
         assertEquals(CrawlOptions.DEFAULT, CrawlOptions())
         assertEquals(CrawlOptions.DEFAULT, CrawlOptions(arrayOf()))
         assertEquals(CrawlOptions.DEFAULT, CrawlOptions(arrayOf("")))
-        assertEquals(CrawlOptions.DEFAULT, CrawlOptions(HashMap()))
 
         assertEquals(LinkOptions.DEFAULT, LinkOptions(""))
         assertEquals(LinkOptions.DEFAULT, LinkOptions())

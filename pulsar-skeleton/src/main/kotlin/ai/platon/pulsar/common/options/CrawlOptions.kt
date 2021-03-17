@@ -15,7 +15,7 @@ import java.util.*
  * Created by vincent on 17-3-18.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class CrawlOptions : CommonOptions {
+class CrawlOptions(argv: Array<String>) : CommonOptions(argv) {
 
     @Parameter(names = ["-log", "-verbose"], description = "Log level for this crawl task")
     var verbose = 0
@@ -39,35 +39,20 @@ class CrawlOptions : CommonOptions {
     var linkOptions = LinkOptions()
         private set
 
-    constructor(): super() {
+    init {
         addObjects(this, linkOptions)
     }
 
-    constructor(args: String): super(args.replace("=".toRegex(), " ")) {
-        addObjects(this, linkOptions)
-    }
+    constructor(): this("")
 
-    constructor(args: String, conf: ImmutableConfig): super(args.replace("=".toRegex(), " ")) {
+    constructor(args: String): this(split(args.replace("=".toRegex(), " ")))
+
+    constructor(args: String, conf: ImmutableConfig): this(split(args.replace("=".toRegex(), " "))) {
         this.init(conf)
-        addObjects(this, linkOptions)
     }
 
-    constructor(argv: Array<String>) : super(argv) {
-        addObjects(this, linkOptions)
-    }
-
-    constructor(argv: Array<String>, conf: ImmutableConfig): super(argv) {
+    constructor(argv: Array<String>, conf: ImmutableConfig): this(argv) {
         this.init(conf)
-        addObjects(this, linkOptions)
-    }
-
-    constructor(argv: Map<String, String>) : super(argv) {
-        addObjects(this, linkOptions)
-    }
-
-    constructor(argv: Map<String, String>, conf: ImmutableConfig) : super(argv) {
-        this.init(conf)
-        addObjects(this, linkOptions)
     }
 
     private fun init(conf: ImmutableConfig) {

@@ -88,7 +88,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
         // val url = "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0"
 //        val url = "https://www.lazada.com.my/shop-small-kitchen-appliances/?spm=a2o4k.home.cate_3.3.75f82e7eneQBGa"
         val url = "https://list.suning.com/0-20006-0-0-0-0-0-0-0-0-11635.html"
-        val options = LoadOptions.parse("-i 1s")
+        val options = i.options("-i 1s")
         val page = i.load(url, options)
         val doc = i.parse(page)
         doc.absoluteLinks()
@@ -138,7 +138,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
         i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeWebPageBatchHandler())
         i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterWebPageBatchHandler())
 
-        val pages = i.loadAll(links, LoadOptions.parse(args))
+        val pages = i.loadAll(links, i.options(args))
 //
 //        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
 //            println(it?.text()?:"(null)")
@@ -152,7 +152,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
     fun loadOutPagesSinopr() {
         val url = "http://dzhcg.sinopr.org/channel/103"
         val args = "-ic -i 1s -ii 10d -rs 10000 -irs 100000"
-        val opt = LoadOptions.parse(args)
+        val opt = i.options(args)
         val outlink = ".title a[href~=p_id]"
 
         val links = i.parse(i.load(url, opt))
@@ -178,7 +178,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
 
     fun parallelLoadAllOutPages() {
         val args = "-parse -expires 1s -preferParallel true"
-        val options = LoadOptions.parse(args)
+        val options = i.options(args)
         val tasks = i.loadAll(seeds.values, options).flatMap { it.links }.map { it.toString() }
                 .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }.toList()
         Lists.partition(tasks, AppConstants.FETCH_THREADS).forEach { partition ->
@@ -201,7 +201,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
                 .sortedBy { it.length }
                 .take(40)
         log.info("Loading {} pages", links.size)
-        val pages = i.loadAll(links, LoadOptions.parse("-retry -expires 1s"))
+        val pages = i.loadAll(links, i.options("-retry -expires 1s"))
 
         println(pages.size)
     }
@@ -217,7 +217,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
         println(WebPageFormatter(portal))
         println(portal.simpleVividLinks)
         val links = portal.simpleLiveLinks.filter { it.contains("detail") }
-        val pages = i.parallelLoadAll(links, LoadOptions.parse("-ps"))
+        val pages = i.parallelLoadAll(links, i.options("-ps"))
         pages.forEach { println("${it.url} ${it.pageTitle}") }
     }
 
@@ -226,7 +226,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
 
         val portal = i.load("$url $loadOptions")
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = i.parallelLoadAll(links, LoadOptions.Companion.parse("--parse"))
+        val pages = i.parallelLoadAll(links, i.options("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 

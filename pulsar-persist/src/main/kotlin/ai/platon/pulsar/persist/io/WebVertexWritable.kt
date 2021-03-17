@@ -1,6 +1,7 @@
 package ai.platon.pulsar.persist.io
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.graph.WebGraph
@@ -20,8 +21,9 @@ import java.util.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class WebVertexWritable(
-        var conf: Configuration = ImmutableConfig.DEFAULT.unbox()
+        var conf: Configuration = ImmutableConfig.UNSAFE.unbox()
 ) : Writable {
+    val volatileConfig = ImmutableConfig(conf).toVolatileConfig()
     var vertex: WebVertex = WebVertex(WebPage.NIL.url)
 
     constructor(vertex: WebVertex, conf: Configuration): this(conf) {
@@ -47,11 +49,11 @@ class WebVertexWritable(
         val url = Text.readString(input)
         val hasWebPage = BooleanWritable()
         hasWebPage.readFields(input)
-        val page: WebPage
-        page = if (hasWebPage.get()) {
-            WebPage.box(url, IOUtils.deserialize(conf, input, null, GWebPage::class.java))
-        } else { // TODO: is it right to create a new web page?
-            WebPage.newWebPage(url)
+        val page = if (hasWebPage.get()) {
+            WebPage.box(url, IOUtils.deserialize(conf, input, null, GWebPage::class.java), volatileConfig)
+        } else {
+            // TODO: is it right to create a new web page?
+            WebPage.newWebPage(url, VolatileConfig.UNSAFE)
         }
         vertex = WebVertex(page)
     }

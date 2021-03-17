@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants.SEED_HOME_URL
 import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -61,8 +62,8 @@ class LazyFetchTaskManager(
                 .take(limit).mapTo(HashSet()) { it.url }
     }
 
-    fun commitLazyTasks(mode: FetchMode, urls: Collection<String>) {
-        urls.map { WebPage.newWebPage(it) }.forEach { lazyFetch(it, mode) }
+    fun commitLazyTasks(mode: FetchMode, urls: Collection<String>, conf: VolatileConfig) {
+        urls.map { WebPage.newWebPage(it, conf) }.forEach { lazyFetch(it, mode) }
 
         // Urls with different fetch mode are indexed in different pages and the page number is just the enum ordinal
         val pageNo = LAZY_FETCH_URLS_PAGE_BASE + mode.ordinal

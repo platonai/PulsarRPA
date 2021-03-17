@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.common.GlobalCache
 import java.util.*
 
 interface CrawlLoop: StartStopRunnable {
-    var options: LoadOptions
+    var crawlOptions: LoadOptions
     val fetchIterable: Iterable<Hyperlink>
     val collectors: Queue<out DataCollector<Hyperlink>>
     val crawler: Crawler
@@ -17,7 +17,7 @@ interface CrawlLoop: StartStopRunnable {
 
 abstract class AbstractCrawlLoop(
         val globalCache: GlobalCache,
-        override var options: LoadOptions = LoadOptions.create()
+        override var crawlOptions: LoadOptions
 ) : CrawlLoop {
     /**
      * Data collector lower capacity

@@ -31,3 +31,8 @@ fun prependReadableClassName(obj: Any, ident: String, name: String, separator: S
     val prefix = readableClassName(obj)
     return "$prefix$separator$ident$separator$name".replace("\\.+".toRegex(), separator)
 }
+
+fun parseSimpleOption(args: String?, optionName: String): String? {
+    val s = args ?: return null
+    return "$optionName\\s+([\\-_a-zA-Z0-9]+)\\s?".toRegex().find(s)?.groupValues?.get(1)
+}

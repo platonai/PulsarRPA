@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants.MEM_STORE_CLASS
 import ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.Mark
@@ -49,7 +50,7 @@ class TestGoraStorageInMemory {
 
     val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
 
-    private val conf = MutableConfig().apply {
+    private val conf = VolatileConfig().apply {
         set(CapabilityTypes.STORAGE_CRAWL_ID, "test_" + RandomStringUtils.randomAlphabetic(4))
         set(CapabilityTypes.STORAGE_DATA_STORE_CLASS, MEM_STORE_CLASS)
     }
@@ -96,7 +97,7 @@ class TestGoraStorageInMemory {
         }
 
         val id = "testSingleThreadReadWriteWebPage"
-        readWriteWebPage(id, store)
+        readWriteWebPage(id, store, conf)
     }
 
     /**
@@ -164,11 +165,11 @@ class TestGoraStorageInMemory {
             assertEquals(max, count)
         }
 
-        private fun readWriteWebPage(id: String, store: DataStore<String, GWebPage>) {
+        private fun readWriteWebPage(id: String, store: DataStore<String, GWebPage>, conf: VolatileConfig) {
             val max = 100
             for (i in 0 until max) {
                 val url = AppConstants.SHORTEST_VALID_URL + "/" + id + "/" + i
-                var page = WebPage.newWebPage(url)
+                var page = WebPage.newWebPage(url, conf)
                 page.location = url
                 page.pageText = "text"
                 page.distance = 0
@@ -183,7 +184,7 @@ class TestGoraStorageInMemory {
                 // retrieve page and check title
                 val goraPage = store.get(url)
                 assertNotNull(goraPage)
-                page = WebPage.box(url, goraPage)
+                page = WebPage.box(url, goraPage, conf)
                 assertEquals("text", page.pageText)
                 assertEquals(0, page.distance.toLong())
                 assertEquals("header1", page.headers["header1"])

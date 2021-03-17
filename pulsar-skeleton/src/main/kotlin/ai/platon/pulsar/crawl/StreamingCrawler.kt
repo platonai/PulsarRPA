@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.measure.FileSizeUnits
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
 import ai.platon.pulsar.common.proxy.ProxyPool
@@ -54,7 +53,7 @@ class StreamingCrawlerMetrics {
 
 open class StreamingCrawler<T : UrlAware>(
     private val urls: Sequence<T>,
-    private val options: LoadOptions = LoadOptions.create(),
+    private val crawlOptions: LoadOptions,
     session: PulsarSession = PulsarContexts.createSession(),
     /**
      * A optional global cache which will hold the retry tasks
@@ -101,11 +100,11 @@ open class StreamingCrawler<T : UrlAware>(
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
 
-    @Volatile
     private var proxyOutOfService = 0
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
     private val taskTimeout = Duration.ofMinutes(10)
+    @Volatile
     private var flowState = FlowState.CONTINUE
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
@@ -142,7 +141,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        log.info("Starting streaming crawler ... | {}", options)
+        log.info("Starting streaming crawler ... | {}", crawlOptions)
 
         globalRunningInstances.incrementAndGet()
 
@@ -199,9 +198,11 @@ open class StreamingCrawler<T : UrlAware>(
 
         globalRunningInstances.decrementAndGet()
 
-        log.info("All done. Total {} tasks are processed in session {} in {}",
+        log.info(
+            "All done. Total {} tasks are processed in session {} in {}",
             globalMetrics.tasks.counter.count, session,
-            DateTimes.elapsedTime(startTime).readable())
+            DateTimes.elapsedTime(startTime).readable()
+        )
     }
 
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
@@ -306,10 +307,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
         if (url is ListenableHyperlink) {
-            val onFilter = url.loadEventHandler?.onFilter
-            if (onFilter != null) {
-                onFilter(url.url) ?: return null
-            }
+            url.loadEventHandler.onFilter(url.url) ?: return null
         }
 
         crawlEventHandler.onFilter(url) ?: return null
@@ -338,32 +336,11 @@ open class StreamingCrawler<T : UrlAware>(
 
     @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
-        val actualOptions = LoadOptionsNormalizer.normalize(options, url)
-        if (url is ListenableHyperlink) {
-            registerHandlers(url, actualOptions)
-        }
-
-        actualOptions.apply {
-            // TODO: it seems there is an option merge bug
-            parse = true
-            storeContent = false
-        }
-
-        val normUrl = session.normalize(url, actualOptions)
-
-        return session.runCatching { loadDeferred(normUrl) }
+        // apply the default options, arguments in the url has the highest priority
+        val options = LoadOptions.merge(crawlOptions, url.args)
+        return session.runCatching { loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()
-    }
-
-    private fun registerHandlers(url: ListenableHyperlink, options: LoadOptions) {
-        (url.loadEventHandler as? DefaultLoadEventHandler)?.onAfterFetchPipeline
-            ?.addFirst(AddRefererAfterFetchHandler(url))
-
-        options.volatileConfig = conf.toVolatileConfig().apply {
-            name = options.label
-            url.loadEventHandler?.let { putBean(it) }
-        }
     }
 
     @Throws(Exception::class)

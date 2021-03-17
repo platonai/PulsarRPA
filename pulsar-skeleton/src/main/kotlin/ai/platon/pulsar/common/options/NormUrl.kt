@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.Urls
 import java.net.MalformedURLException
 import java.net.URL
@@ -36,19 +37,15 @@ open class NormUrl constructor(
         return other is NormUrl && configuredUrl == other.configuredUrl
     }
 
-    override fun compareTo(other: NormUrl): Int {
-        return configuredUrl.compareTo(other.configuredUrl)
-    }
+    override fun compareTo(other: NormUrl) = configuredUrl.compareTo(other.configuredUrl)
 
-    override fun toString(): String {
-        return configuredUrl
-    }
+    override fun toString() = configuredUrl
 
     companion object {
         val NIL = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
-        fun parse(configuredUrl: String): NormUrl {
+        fun parse(configuredUrl: String, volatileConfig: VolatileConfig): NormUrl {
             val (url, args) = Urls.splitUrlArgs(configuredUrl)
-            val options = LoadOptions.parse(args)
+            val options = LoadOptions.parse(args, volatileConfig)
             return NormUrl(url, options)
         }
     }

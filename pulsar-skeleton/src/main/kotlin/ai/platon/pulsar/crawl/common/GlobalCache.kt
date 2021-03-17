@@ -21,17 +21,25 @@ typealias DocumentCatch = ConcurrentExpiringLRUCache<FeaturedDocument>
  * */
 open class GlobalCache(val conf: ImmutableConfig) {
     /**
+     * The page cache capacity
+     * */
+    private val pageCacheCapacity = conf.getUint(SESSION_PAGE_CACHE_SIZE, CACHE_CAPACITY)
+    /**
+     * The document cache capacity
+     * */
+    private val documentCacheCapacity = conf.getUint(SESSION_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY)
+    /**
      * The fetch cache manager, hold on queues of fetch items
      * */
     open val fetchCacheManager: FetchCatchManager = ConcurrentFetchCatchManager(conf).apply { initialize() }
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */
-    open val pageCache = PageCatch(conf.getUint(SESSION_PAGE_CACHE_SIZE, CACHE_CAPACITY))
+    open val pageCache = PageCatch(pageCacheCapacity)
     /**
      * The global document cache, a document might be removed if it's expired or the cache is full
      * */
-    open val documentCache = DocumentCatch(conf.getUint(SESSION_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY))
+    open val documentCache = DocumentCatch(documentCacheCapacity)
 
     open val fetchingUrls = ConcurrentSkipListSet<String>()
 

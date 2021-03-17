@@ -1,6 +1,7 @@
 package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -17,10 +18,11 @@ import java.time.Instant
  * A very simple file backend storage for Web pages
  * */
 class FileBackendPageStore(
-        val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
+        private val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
 ) : MemStore<String, GWebPage>() {
 
     private val log = LoggerFactory.getLogger(FileBackendPageStore::class.java)
+    private val unsafeConf = VolatileConfig.UNSAFE
 
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
         val page = map[reversedUrl] as? GWebPage ?: read(reversedUrl)
@@ -32,7 +34,7 @@ class FileBackendPageStore(
         super.put(reversedUrl, page)
 
         Urls.unreverseUrlOrNull(reversedUrl)?.let {
-            write(WebPage.box(it, page))
+            write(WebPage.box(it, page, unsafeConf))
         }
     }
 
@@ -69,7 +71,7 @@ class FileBackendPageStore(
     }
 
     private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): WebPage {
-        val page = WebPage.newWebPage(url).apply {
+        val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE).apply {
             location = url
             fetchCount = 1
             fetchTime = lastModified

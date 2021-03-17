@@ -81,9 +81,9 @@ class FetchMetrics(
     val successTasks = registry.meter(this, "successTasks")
     val finishedTasks = registry.meter(this, "finishedTasks")
     val persists = registry.meter(this, "persists")
-    val meterContentPersists = registry.meter(this, "contentPersists")
+    val contentPersists = registry.meter(this, "contentPersists")
     val meterContentBytes = registry.meter(this, "contentBytes")
-    val meterPersistMBytes = registry.meter(this, "persistMBytes")
+    val persistContentMBytes = registry.meter(this, "persistContentMBytes")
 
     val histogramContentBytes = registry.histogram(this, "contentBytes")
     val pageImages = registry.histogram(this, "pageImages")

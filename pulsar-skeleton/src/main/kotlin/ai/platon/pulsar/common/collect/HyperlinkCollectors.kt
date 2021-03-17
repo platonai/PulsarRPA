@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
@@ -26,13 +27,15 @@ open class UrlQueueCollector(
 
     var loadArgs: String? = null
 
+    private val unsafeConf = VolatileConfig.UNSAFE
+
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         var collected = 0
 
         queue.poll()?.let {
-            val args = LoadOptions.merge(it.args, loadArgs).toString()
+            val args = LoadOptions.merge(it.args, loadArgs, unsafeConf).toString()
             val hyperlink = Hyperlinks.toHyperlink(it).also { it.args = args }
 
             if (sink.add(hyperlink)) {
@@ -247,7 +250,7 @@ open class PeriodicalHyperlinkCollector(
                     .asSequence()
                     .filterNot { it.startsWith("#") }
                     .filterNot { it.isBlank() }
-                    .map { NormUrl.parse(it) }
+                    .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
                     .filter { Urls.isValidUrl(it.spec) }
                     .map { PeriodicalHyperlinkCollector(session, it, priority) }
         }

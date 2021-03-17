@@ -1,10 +1,10 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -29,7 +29,7 @@ class TestGoraStorage {
 
     companion object {
         val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
-        private val conf = MutableConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
+        private val conf = VolatileConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
         private var store: DataStore<String, GWebPage> = webDb.store
         private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
@@ -221,7 +221,7 @@ class TestGoraStorage {
         webDb.flush()
 
         LOG.debug("Random url: $exampleUrl")
-        val page = WebPage.newWebPage(exampleUrl)
+        val page = WebPage.newWebPage(exampleUrl, conf)
 
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i

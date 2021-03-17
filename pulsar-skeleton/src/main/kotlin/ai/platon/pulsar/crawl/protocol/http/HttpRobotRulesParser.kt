@@ -30,6 +30,7 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
      * @return [BaseRobotRules] holding the rules from robots.txt
      */
     override fun getRobotRulesSet(protocol: Protocol, url: URL): BaseRobotRules {
+        val volatileConfig = conf.toVolatileConfig()
         val cacheKey = getCacheKey(url)
         var robotRules = CACHE[cacheKey]
         var cacheRule = true
@@ -41,7 +42,7 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
 
             try {
                 val http = (protocol as? AbstractHttpProtocol)?:return EMPTY_RULES
-                val page = WebPage.newWebPage(URL(url, "/robots.txt").toString())
+                val page = WebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
                 var response: Response? = http.getResponse(page, true)?:return EMPTY_RULES
 
                 // try one level of redirection ?
@@ -56,7 +57,7 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
                         } else {
                             URL(redirection)
                         }
-                        response = http.getResponse(WebPage.newWebPage(redir.toString()), true)
+                        response = http.getResponse(WebPage.newWebPage(redir.toString(), volatileConfig), true)
                     }
                 }
 

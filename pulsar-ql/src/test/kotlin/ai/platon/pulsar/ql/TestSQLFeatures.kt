@@ -1,8 +1,6 @@
 package ai.platon.pulsar.ql
 
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Index tests.
@@ -80,7 +78,7 @@ class TestSQLFeatures : TestBase() {
                 " ) t;" +
                 " SELECT a, b FROM table(a INT=(7, 8, 9), b VARCHAR=('John', 'Lucy', 'Vince')) WHERE b LIKE '%u%'" +
                 ""
-        val state = embedDB.getConnection(name).createStatement()
+        val state = connection.createStatement()
         val rs = state.executeQuery(sql)
 
         while (rs.next()) {

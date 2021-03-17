@@ -10,7 +10,7 @@ import ai.platon.pulsar.examples.common.Crawler
 class AmazonCategoryCrawler(context: PulsarContext): Crawler(context) {
     private val url = "https://www.amazon.com/"
     private val siteDirectory = "https://www.amazon.com/gp/site-directory?ref_=nav_em_T1_0_2_2_35__fullstore"
-    private val loadOptions = LoadOptions.parse("-i 1s")
+    private val loadOptions = i.options("-i 1s")
     private var j = 0
 
     fun collectFromSiteDirectory() {

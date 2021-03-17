@@ -1,17 +1,13 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
 import ai.platon.pulsar.crawl.DefaultJsEventHandler
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.parsers.TreeParser1
 import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -70,7 +66,7 @@ object DomFunctions {
         return sqlContext.getSession(h2session).run {
             val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
             val eventHandler = DefaultJsEventHandler("", expressions)
-            normUrl.options.volatileConfig!!.putBean(eventHandler)
+            normUrl.options.conf!!.putBean(eventHandler)
             parseValueDom(load(normUrl))
         }
     }

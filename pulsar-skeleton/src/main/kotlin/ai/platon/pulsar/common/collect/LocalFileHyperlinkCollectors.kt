@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.Hyperlinks
@@ -68,7 +69,7 @@ open class LocalFileHyperlinkCollector(
         if (isLoaded.compareAndSet(false, true)) {
             val remainingCapacity = capacity - cache.size
             urlLoader.loadToNow(cache, remainingCapacity, 0, priority) {
-                val args = LoadOptions.merge(it.args, loadArgs).toString()
+                val args = LoadOptions.merge(it.args, loadArgs, VolatileConfig.UNSAFE).toString()
                 Hyperlinks.toHyperlink(it).also { it.args = args }
             }
 

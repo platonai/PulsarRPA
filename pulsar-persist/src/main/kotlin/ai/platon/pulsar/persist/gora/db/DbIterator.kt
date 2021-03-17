@@ -16,15 +16,18 @@
  */
 package ai.platon.pulsar.persist.gora.db
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.gora.query.Result
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.function.Predicate
 
-class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
+class DbIterator(
+    val result: Result<String, GWebPage>,
+    val conf: ImmutableConfig
+) : Iterator<WebPage> {
     private val log = LoggerFactory.getLogger(WebDb::class.java)
 
     private var nextPage: WebPage? = null
@@ -59,7 +62,7 @@ class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
     private fun moveToNext() {
         nextPage = null
         while (nextPage == null && result.next()) {
-            val page = WebPage.box(result.key, result.get(), true)
+            val page = WebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
             val f = filter
             if (f == null || f.test(page)) {
                 nextPage = page

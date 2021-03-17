@@ -14,6 +14,9 @@ public class ImmutableConfig extends AbstractConfiguration {
     public static final ImmutableConfig EMPTY = new ImmutableConfig(false);
 
     /** Constant <code>DEFAULT</code> */
+    public static final ImmutableConfig UNSAFE = new ImmutableConfig();
+
+    /** Constant <code>DEFAULT</code> */
     public static final ImmutableConfig DEFAULT = new ImmutableConfig(new Configuration());
 
     /**

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.JsEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -178,7 +177,7 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
-        val volatileConfig = task.fetchTask.page.volatileConfig
+        val volatileConfig = task.fetchTask.page.conf
         val eventHandler = volatileConfig?.getBean(JsEventHandler::class)
 
         jsCheckDOMState(task, result)

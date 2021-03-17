@@ -32,18 +32,14 @@ open class ListenableHyperlink(
          * A click url is a url variant, it's the raw url in the html without normalization,
          * for example, an url with a timestamp query parameter added
          * */
-        href: String? = null,
-        /**
-         * The label
-         * */
-        label: String = ""
-): StatefulHyperlink(url, text, order, referer, args, href, label) {
+        href: String? = null
+): StatefulHyperlink(url, text, order, referer, args, href) {
 
     override val isPersistable: Boolean = false
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
-    open var loadEventHandler: LoadEventHandler? = DefaultLoadEventHandler()
+    open var loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler()
     open var jsEventHandler: JsEventHandler? = DefaultJsEventHandler()
     open var crawlEventHandler: CrawlEventHandler? = DefaultCrawlEventHandler()
 

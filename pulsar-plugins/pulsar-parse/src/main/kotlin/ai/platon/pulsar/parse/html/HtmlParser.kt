@@ -60,6 +60,7 @@ class HtmlParser(
     private val tracer = log.takeIf { it.isDebugEnabled }
     private val defaultCharEncoding = conf.get(CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8")
     private val cachingPolicy = conf.get(CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
+    private val volatileConfig = conf.toVolatileConfig()
     private val primerParser = PrimerParser(conf)
 
     init {
@@ -146,7 +147,7 @@ class HtmlParser(
 
         metadata.attr("normalizedUrl", page.url)
         if (page.args.isNotBlank()) {
-            val options = LoadOptions.parse(page.args)
+            val options = LoadOptions.parse(page.args, volatileConfig)
             metadata.attr("label", options.label)
             metadata.attr("taskId", options.taskId)
             metadata.attr("taskTime", options.taskTime)

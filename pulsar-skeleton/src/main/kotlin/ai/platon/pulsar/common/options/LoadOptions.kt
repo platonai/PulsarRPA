@@ -25,21 +25,25 @@ object LoadOptionDefaults {
  * ISO-8601 standard : PnDTnHnMn.nS
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
-open class LoadOptions: CommonOptions {
+open class LoadOptions(
+    argv: Array<String>,
+    val conf: VolatileConfig
+): CommonOptions(argv) {
 
+    @ApiPublic
     @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
     var label = ""
 
+    @ApiPublic
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
     var taskId = LocalDate.now().toString()
 
-    /**
-     * TODO: should be a Instant
-     * */
+    @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"],
             description = "The task time, we usually use a task time to indicate a batch of a task")
     var taskTime = LocalDate.now().toString()
 
+    @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
@@ -48,50 +52,63 @@ open class LoadOptions: CommonOptions {
      * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,
      * guess it means "expires at"
      * */
+    @ApiPublic
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = ChronoUnit.CENTURIES.duration
 
     /** Web page expire time */
+    @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expireAt = Instant.EPOCH + ChronoUnit.CENTURIES.duration
 
     /** Arrange links */
+    @ApiPublic
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
     var outLinkSelector = ""
 
+    @ApiPublic
     @Parameter(names = ["-olp", "-outLinkPattern", "--out-link-pattern"], description = "The pattern of the out links")
     var outLinkPattern = ".+"
 
+    @ApiPublic
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
 
+    @ApiPublic
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The i-th iframe")
     var iframe = 0
 
+    @ApiPublic
     @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
     var topLinks = 20
 
+    @ApiPublic
     @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
     var topNAnchorGroups = 3
 
+    @ApiPublic
     @Parameter(names = ["-wnb", "-waitNonBlank"],
             description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
     var waitNonBlank: String = ""
 
+    @ApiPublic
     @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
 
+    @ApiPublic
     @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
     var requireSize = 0
 
+    @ApiPublic
     @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
     var requireImages = 0
 
+    @ApiPublic
     @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"], description = "Fetch pages who's anchors less than requireAnchors")
     var requireAnchors = 0
 
@@ -124,15 +141,13 @@ open class LoadOptions: CommonOptions {
             description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
     var itemBrowser = BrowserType.CHROME
 
-    @Parameter(names = ["-ie", "-itemExtractor", "--item-extractor"], converter = BrowserTypeConverter::class,
-            description = "The extract used to extract item pages, use BOILERPIPE for news and DEFAULT for others")
-    var itemExtractor = ItemExtractor.DEFAULT
-
+    @ApiPublic
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
     var itemExpires = ChronoUnit.CENTURIES.duration
 
     /** Web page expire time */
+    @ApiPublic
     @Parameter(names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var itemExpireAt = Instant.EPOCH + ChronoUnit.CENTURIES.duration
@@ -154,18 +169,22 @@ open class LoadOptions: CommonOptions {
             description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
     var itemPageLoadTimeout = pageLoadTimeout
 
+    @ApiPublic
     @Parameter(names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
             description = "Keep the item pages only if the required text is not blank")
     var itemRequireNotBlank = ""
 
+    @ApiPublic
     @Parameter(names = ["-irs", "-itemRequireSize", "--item-require-size"],
             description = "Fetch item pages smaller than requireSize")
     var itemRequireSize = 0
 
+    @ApiPublic
     @Parameter(names = ["-iri", "-itemRequireImages", "--item-require-images"],
             description = "Fetch item pages who's images less than requireImages")
     var itemRequireImages = 0
 
+    @ApiPublic
     @Parameter(names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],
             description = "Fetch item pages who's anchors less than requireAnchors")
     var itemRequireAnchors = 0
@@ -189,6 +208,7 @@ open class LoadOptions: CommonOptions {
             description = "Cache the page content so it is still available after it be cleared for persistent")
     var cacheContent = false
 
+    @ApiPublic
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
             description = "Retry fetching the page if it's failed last time")
     var retryFailed = false
@@ -235,6 +255,7 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
     var noFilter = false
 
+    @Deprecated("Use x-sql instead")
     @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
     var query: String? = null
 
@@ -246,9 +267,6 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
-
-    // A volatile config is usually in session scope
-    var volatileConfig: VolatileConfig? = null
 
     /**
      * If shortenKey is set, also ignore url query when fetch pages
@@ -275,17 +293,7 @@ open class LoadOptions: CommonOptions {
                     .associate { it.name to it.get(this) }
         }
 
-    protected constructor() {
-        addObjects(this)
-    }
-
-    protected constructor(argv: Array<String>) : super(argv) {
-        addObjects(this)
-    }
-
-    protected constructor(args: String) : super(args) {
-        addObjects(this)
-    }
+    protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
 
     /**
      * Parse with parameter overwriting fix
@@ -293,7 +301,8 @@ open class LoadOptions: CommonOptions {
     override fun parse(): Boolean {
         val b = super.parse()
         if (b) {
-            LoadOptions::class.java.declaredFields.asSequence()
+            // fix zero-arity boolean parameter overwriting
+            declaredFields.asSequence()
                 .filter { arity0BooleanParams.contains("-${it.name}") }
                 .filter { argv.contains("-${it.name}") }
                 .forEach {
@@ -311,8 +320,6 @@ open class LoadOptions: CommonOptions {
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
-
-        itemOptions.volatileConfig = conf ?: volatileConfig
 
         return itemOptions
     }
@@ -343,15 +350,14 @@ open class LoadOptions: CommonOptions {
     }
 
     open fun isDefault(option: String): Boolean {
-        val value = LoadOptions::class.java.declaredFields.find { it.name == option }
+        val value = declaredFields.find { it.name == option }
                 ?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
 
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
-        val fields = LoadOptions::class.java.declaredFields
-        return fields.filter { it.annotations.any { it is Parameter } }
+        return declaredFields.filter { it.annotations.any { it is Parameter } }
                 .onEach { it.isAccessible = true }
                 .associate { "-${it.name}" to it.get(this) }
                 .filter { it.value != null }
@@ -381,15 +387,14 @@ open class LoadOptions: CommonOptions {
     /**
      * Create a new LoadOptions
      * */
-    open fun clone(): LoadOptions {
-        return parse(toString(), volatileConfig)
-    }
+    open fun clone() = parse(toString(), conf)
 
     companion object {
-        val default = LoadOptions()
-        val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
+        val default = LoadOptions("", VolatileConfig())
+        val declaredFields = LoadOptions::class.java.declaredFields
+        val defaultParams = declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val arity0BooleanParams = LoadOptions::class.java.declaredFields
+        val arity0BooleanParams = declaredFields
             .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(default) is Boolean }
@@ -398,7 +403,7 @@ open class LoadOptions: CommonOptions {
             .filter { it.arity < 1 }
             .flatMap { it.names.toList() }
             .toList()
-        val arity1BooleanParams = LoadOptions::class.java.declaredFields
+        val arity1BooleanParams = declaredFields
             .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(default) is Boolean }
@@ -407,7 +412,7 @@ open class LoadOptions: CommonOptions {
             .filter { it.arity == 1 }
             .flatMap { it.names.toList() }
             .toList()
-        val optionNames = LoadOptions::class.java.declaredFields
+        val optionNames = declaredFields
             .asSequence()
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
@@ -415,7 +420,7 @@ open class LoadOptions: CommonOptions {
             .toList()
 
         val helpList: List<List<String>> get() =
-                LoadOptions::class.java.declaredFields
+                declaredFields
                     .asSequence()
                     .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
                     .map {
@@ -427,7 +432,7 @@ open class LoadOptions: CommonOptions {
                     }.toList()
 
         fun setFieldByAnnotation(options: LoadOptions, annotationName: String, value: Any) {
-            LoadOptions::class.java.declaredFields.forEach {
+            declaredFields.forEach {
                 val found = it.annotations.filterIsInstance<Parameter>().any { annotationName in it.names }
                 if (found) {
                     it.isAccessible = true
@@ -436,33 +441,17 @@ open class LoadOptions: CommonOptions {
             }
         }
 
-        @JvmOverloads
-        fun create(volatileConfig: VolatileConfig? = null): LoadOptions {
-            val options = LoadOptions()
-            options.parse()
-            options.volatileConfig = volatileConfig
-            return options
-        }
+        fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }
 
-        @JvmOverloads
-        fun parse(args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
-            val options = LoadOptions(args.trim())
-            options.parse()
-            options.volatileConfig = volatileConfig
-            return options
-        }
+        fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
 
         /**
          * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
          * */
-        @JvmOverloads
-        fun merge(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
-            return parse("$o1 $o2", volatileConfig)
-        }
+        fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o1.conf)
 
-        @JvmOverloads
-        fun merge(args: String?, args2: String?, volatileConfig: VolatileConfig? = null): LoadOptions {
-            return parse("$args $args2", volatileConfig)
-        }
+        fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1.conf)
+
+        fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
     }
 }

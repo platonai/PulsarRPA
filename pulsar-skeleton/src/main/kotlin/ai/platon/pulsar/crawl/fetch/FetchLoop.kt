@@ -140,9 +140,6 @@ class FetchLoop(
         }
 
         try {
-            // TODO: consult StreamingCrawler's way to init volatileConfig
-            task.page.volatileConfig = loopConfig
-
             val page = try {
                 fetchComponent.fetchContentDeferred(task.page)
             } finally {

@@ -12,7 +12,7 @@ class TestCases: TestBase() {
 
     @Test
     fun projectFields() {
-        execute("SELECT DOM_TEXT(DOM) AS `breadcrumb` FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '#breadcrumb')", remote = true)
+        execute("SELECT DOM_TEXT(DOM) AS `breadcrumb` FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '#breadcrumb')")
         execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.shoplist li a', 1, 5)")
         execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.shoplist li a', 1, 5)")
 
@@ -28,7 +28,7 @@ class TestCases: TestBase() {
             FROM
                 DOM_SELECT(DOM_LOAD('http://category.dangdang.com/cid4001403.html'), '#breadcrumb');
         """.trimIndent()
-        execute(sql, remote = true)
+        execute(sql)
     }
 
     @Test
@@ -82,7 +82,7 @@ class TestCases: TestBase() {
             dom_nth_text(dom, 'td', 7) as links
         from load_and_select('$url', 'tbody:not(:first-child) > tr');
         """.trimIndent()
-        execute(sql, remote = false)
+        execute(sql)
     }
 
     @Test
@@ -96,7 +96,7 @@ class TestCases: TestBase() {
             from
                 load_out_pages('http://www.neeq.com.cn/nq/listedcompany.html', '$cssQuery', 1, 20)
         """.trimIndent()
-        execute(sql, remote = true)
+        execute(sql)
     }
 
     @Test
@@ -112,7 +112,7 @@ class TestCases: TestBase() {
                 (select dom as tr from load_out_pages_and_select('http://www.neeq.com.cn/nq/listedcompany.html', '$cssQuery', 1, 20, 'table tr'))
         """.trimIndent()
 
-        execute(sql, remote = true)
+        execute(sql)
     }
 
     @Test
@@ -122,7 +122,7 @@ select *
 from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.recommend a');
         """.trimIndent()
 
-        execute(sql, remote = true)
+        execute(sql)
     }
 
     @Test
@@ -134,7 +134,7 @@ from
     load_out_pages_and_select('https://www.cityflower.net/attribute/21.html -i 1s', '.recommend a[href~=detail]', 1, 40, '.product_detail');
         """.trimIndent()
 
-        execute(sql, remote = true)
+        execute(sql)
     }
 
     @Test

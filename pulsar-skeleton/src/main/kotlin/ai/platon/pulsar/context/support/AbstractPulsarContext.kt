@@ -6,8 +6,8 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.options.UrlNormalizer
 import ai.platon.pulsar.common.url.PlainUrl
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.common.url.Urls
@@ -88,6 +88,7 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
+    // TODO: we can only check active before system calls
     val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
@@ -113,9 +114,7 @@ abstract class AbstractPulsarContext(
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     @Throws(BeansException::class)
-    fun <T : Any> getBean(requiredType: KClass<T>): T {
-        return applicationContext.getBean(requiredType.java)
-    }
+    fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
 
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
@@ -182,7 +181,7 @@ abstract class AbstractPulsarContext(
      * but default values in LoadOptions are ignored.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return LoadOptionsNormalizer(unmodifiedConfig, urlNormalizers).normalize(url, options, toItemOption)
+        return UrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
@@ -217,11 +216,11 @@ abstract class AbstractPulsarContext(
     }
 
     override fun get(url: String): WebPage {
-        return webDbOrNull?.get(normalize(url).spec, false)?: WebPage.NIL
+        return webDbOrNull?.get(url, false)?: WebPage.NIL
     }
 
     override fun getOrNull(url: String): WebPage? {
-        return webDbOrNull?.getOrNull(normalize(url).spec, false)
+        return webDbOrNull?.getOrNull(url, false)
     }
 
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
@@ -258,7 +257,7 @@ abstract class AbstractPulsarContext(
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: URL, options: LoadOptions): WebPage {
-        return abnormalPage ?: loadComponent.load(url, initOptions(options))
+        return abnormalPage ?: loadComponent.load(url, options)
     }
 
     /**
@@ -268,12 +267,10 @@ abstract class AbstractPulsarContext(
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: NormUrl): WebPage {
-        initOptions(url.options)
         return abnormalPage ?: loadComponent.load(url)
     }
 
     override suspend fun loadDeferred(url: NormUrl): WebPage {
-        initOptions(url.options)
         return abnormalPage ?: loadComponent.loadDeferred(url)
     }
 
@@ -295,7 +292,7 @@ abstract class AbstractPulsarContext(
     }
 
     override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.loadAll(urls, initOptions(options)) else listOf()
+        return if (isActive) loadComponent.loadAll(urls, options) else listOf()
     }
 
     /**
@@ -316,7 +313,7 @@ abstract class AbstractPulsarContext(
     }
 
     override fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.parallelLoadAll(urls, initOptions(options)) else listOf()
+        return if (isActive) loadComponent.parallelLoadAll(urls, options) else listOf()
     }
 
     /**
@@ -332,7 +329,6 @@ abstract class AbstractPulsarContext(
 
     override fun delete(url: String) {
         webDbOrNull?.delete(url)
-        webDbOrNull?.delete(normalize(url).spec)
     }
 
     override fun delete(page: WebPage) {
@@ -396,15 +392,5 @@ abstract class AbstractPulsarContext(
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
         }
-    }
-
-    private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = unmodifiedConfig.toVolatileConfig()
-        }
-
-        options.apply(options.volatileConfig)
-
-        return if (toItemOption) options.createItemOptions() else options
     }
 }

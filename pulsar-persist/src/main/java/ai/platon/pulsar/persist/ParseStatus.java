@@ -51,7 +51,7 @@ public class ParseStatus implements ParseStatusCodes {
         minorCodes.put(FAILED_UNKNOWN_ENCODING, "unknown_encoding");
     }
 
-    private GParseStatus parseStatus;
+    private final GParseStatus parseStatus;
 
     /**
      * <p>Constructor for ParseStatus.</p>
@@ -297,7 +297,6 @@ public class ParseStatus implements ParseStatusCodes {
     @Override
     public String toString() {
         String args = getArgs().entrySet().stream()
-                .filter(e -> !(e instanceof WebPage))
                 .map(e -> Pair.of(e.getKey().toString(), e.getValue() == null ? "(null)" : e.getValue().toString()))
                 .map(e -> e.getKey() + ": " + e.getValue())
                 .collect(Collectors.joining(", "));

@@ -14,44 +14,42 @@ import kotlin.system.exitProcess
  * Created by vincent on 17-4-12.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-open class PulsarOptions : Parameterized {
+open class PulsarOptions(
+    /**
+     * The argument vector
+     * */
+    val argv: Array<String>
+) : Parameterized {
     protected val log = LoggerFactory.getLogger(PulsarOptions::class.java)
+
+    init { normalize(argv) }
 
     var expandAtSign = true
     var acceptUnknownOptions = true
     var allowParameterOverwriting = true
     // arguments
-    val args: String
-    // argument vector
-    val argv: Array<String>
-    protected val objects: MutableSet<Any> = HashSet()
+    val args: String get() = argv.joinToString(DEFAULT_DELIMETER)
+    protected val registeredObjects: MutableSet<Any> = HashSet()
     protected lateinit var jc: JCommander
 
     open var isHelp: Boolean = false
 
-    constructor(): this("")
+    init { addObjects(this) }
+
+    constructor(): this(arrayOf())
 
     constructor(args: String): this(split(args.trim()))
-
-    constructor(argv: Array<String>) {
-        this.argv = argv
-        for (i in this.argv.indices) {
-            // Since space can not appear in dynamic parameters in command line, we use % instead
-            this.argv[i] = this.argv[i].replace("%".toRegex(), " ")
-        }
-        args = argv.joinToString(DEFAULT_DELIMETER)
-    }
 
     constructor(argv: Map<String, String>)
             : this(argv.entries.joinToString(DEFAULT_DELIMETER) { it.key + DEFAULT_DELIMETER + it.value })
 
     fun setObjects(vararg objects: Any) {
-        this.objects.clear()
-        this.objects.addAll(objects.toList())
+        this.registeredObjects.clear()
+        addObjects(objects)
     }
 
     fun addObjects(vararg objects: Any) {
-        this.objects.addAll(objects.toList())
+        objects.toCollection(this.registeredObjects)
     }
 
     open fun parse(): Boolean {
@@ -88,13 +86,13 @@ open class PulsarOptions : Parameterized {
      * TODO: there is a bug to handle overwriting boolean field with arity = 0, e.g. "-parse -parse"
      * */
     private fun doParse() {
-        objects.add(this)
+        registeredObjects.add(this)
 
         jc = JCommander.newBuilder()
                 .acceptUnknownOptions(acceptUnknownOptions)
                 .allowParameterOverwriting(allowParameterOverwriting)
                 .expandAtSign(expandAtSign).build()
-        objects.forEach { jc.addObject(it) }
+        registeredObjects.forEach { jc.addObject(it) }
 
         if (argv.isNotEmpty()) {
             jc.parse(*argv)
@@ -143,6 +141,15 @@ open class PulsarOptions : Parameterized {
         @JvmOverloads
         fun normalize(args: String, seps: String = ","): String {
             return StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length))
+        }
+
+        fun normalize(argv: Array<String>) {
+            for (i in argv.indices) {
+                // Since space can not appear in dynamic parameters in command line, we use % instead
+                argv[i] = argv[i]
+                    .replace("%", " ")
+                    .replace("%20", " ")
+            }
         }
 
         /**

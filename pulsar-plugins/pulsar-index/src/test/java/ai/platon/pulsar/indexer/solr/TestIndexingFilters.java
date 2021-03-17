@@ -62,7 +62,7 @@ public class TestIndexingFilters {
         conf.unbox().set(indexingFiltersClassNames, class1 + "," + class2);
 
         String url = "http://www.example.com/";
-        WebPage page = WebPage.newWebPage(url);
+        WebPage page = WebPage.newTestWebPage(url);
         page.setPageText("text");
         page.setPageTitle("title");
 
@@ -76,7 +76,7 @@ public class TestIndexingFilters {
     @Test
     public void testIndexDocumentNullIndexingFilter() throws IndexingException {
         String url = "http://www.example.com/";
-        WebPage page = WebPage.newWebPage(url);
+        WebPage page = WebPage.newTestWebPage(url);
         page.setPageText("text");
         page.setPageTitle("title");
         IndexDocument doc = filters.filter(null, url, page);

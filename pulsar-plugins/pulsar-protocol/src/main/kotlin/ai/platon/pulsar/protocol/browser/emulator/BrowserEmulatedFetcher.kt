@@ -1,11 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
@@ -40,26 +38,20 @@ open class BrowserEmulatedFetcher(
     private val illegalState = AtomicBoolean()
     private val isActive get() = !illegalState.get() && !closed.get()
 
-    fun fetch(url: String): Response {
-        return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
-    }
+    fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
-    fun fetch(url: String, volatileConfig: VolatileConfig): Response {
-        return fetchContent(WebPage.newWebPage(url, volatileConfig))
-    }
+    fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPage.newWebPage(url, conf))
 
     /**
      * Fetch page content
      * */
     fun fetchContent(page: WebPage) = runBlocking { fetchContentDeferred(page) }
 
-    suspend fun fetchDeferred(url: String): Response {
-        return fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
-    }
+    suspend fun fetchDeferred(url: String) =
+        fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
-    suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig): Response {
-        return fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))
-    }
+    suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig) =
+        fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))
 
     /**
      * Fetch page content
@@ -72,10 +64,6 @@ open class BrowserEmulatedFetcher(
         if (page.isInternal) {
             log.warn("Unexpected internal page | {}", page.url)
             return ForwardingResponse.canceled(page)
-        }
-
-        if (page.volatileConfig == null) {
-            log.warn("Page config is not set | {}", page.url)
         }
 
         val task = createFetchTask(page)
@@ -100,34 +88,25 @@ open class BrowserEmulatedFetcher(
     }
 
     fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
-        val volatileConfig = immutableConfig.toVolatileConfig()
-        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
+        val conf = immutableConfig.toVolatileConfig()
+        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, conf) }, conf)
     }
 
-    fun fetchAll(urls: Iterable<String>): List<Response> {
-        return fetchAll(nextBatchId, urls)
-    }
+    fun fetchAll(urls: Iterable<String>) = fetchAll(nextBatchId, urls)
 
-    fun fetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
-    }
+    fun fetchAll(batchId: Int, urls: Iterable<String>, conf: VolatileConfig) =
+        parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, conf) }, conf)
 
-    fun fetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return fetchAll(nextBatchId, urls, volatileConfig)
-    }
+    fun fetchAll(urls: Iterable<String>, conf: VolatileConfig) = fetchAll(nextBatchId, urls, conf)
 
-    fun parallelFetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return parallelFetchAllPages0(nextBatchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
-    }
+    fun parallelFetchAll(urls: Iterable<String>, conf: VolatileConfig) =
+        parallelFetchAllPages0(nextBatchId, urls.map { WebPage.newWebPage(it, conf) }, conf)
 
-    fun parallelFetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
-    }
+    fun parallelFetchAll(batchId: Int, urls: Iterable<String>, conf: VolatileConfig) =
+        parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, conf) }, conf)
 
-    fun parallelFetchAllPages(pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        pages.forEach { if (it.volatileConfig == null) it.volatileConfig = volatileConfig }
-        return parallelFetchAllPages0(nextBatchId, pages, volatileConfig)
-    }
+    fun parallelFetchAllPages(pages: Iterable<WebPage>, conf: VolatileConfig) =
+        parallelFetchAllPages0(nextBatchId, pages, conf)
 
     fun reset() {
         TODO("Not implemented")
@@ -142,9 +121,9 @@ open class BrowserEmulatedFetcher(
     }
 
     private fun createFetchTask(page: WebPage): FetchTask {
-        val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
-        val priority = volatileConfig.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
-        return FetchTask(0, priority, page, volatileConfig)
+        val conf = page.conf
+        val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
+        return FetchTask(0, priority, page, conf)
     }
 
     private fun parallelFetchAllPages0(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {

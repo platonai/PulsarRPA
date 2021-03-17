@@ -1,18 +1,85 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
+import ai.platon.pulsar.ql.h2.H2Db
+import ai.platon.pulsar.ql.h2.H2DbConfig
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.SysProperties
+import org.h2.store.fs.FileUtils
+import org.h2.tools.Server
 import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.Test
+import java.nio.file.Files
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Types
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TestJavaObjectSerializer : TestBase() {
+
+    companion object {
+
+        val remoteDB = H2Db(H2DbConfig(baseDir = Files.createTempDirectory("pulsar-test"), networked = true))
+        var server: Server? = null
+
+        @JvmStatic
+        @BeforeClass
+        fun init() {
+            try {
+                initializeDatabase()
+            } catch (e: Throwable) {
+                log.info(Strings.stringifyException(e))
+            }
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun destroy() {
+            destroyDatabase()
+        }
+
+        /**
+         * This method is called before a complete set of tests is run. It deletes
+         * old database files in the test directory and trace files. It also starts
+         * a TCP server if the test uses remote connections.
+         */
+        private fun initializeDatabase() {
+            log.info("Initializing database")
+
+            val config = remoteDB.conf
+            val args = if (config.ssl)
+                mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
+            else
+                mutableListOf("-tcpPort", config.port.toString())
+
+            args.add("-trace")
+
+            server = Server.createTcpServer(*args.toTypedArray())
+            try {
+                server?.start()
+                server?.let { log.info("H2 Server status: {}", it.status) }
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        /**
+         * Clean test environment
+         */
+        private fun destroyDatabase() {
+            server?.stop()
+            server?.let { log.info("[Destroy database] H2 Server status: {}", it.status) }
+            FileUtils.deleteRecursive(remoteDB.conf.baseDir.toString(), true)
+
+            log.info("Database destroyed")
+        }
+    }
 
     private val productIndexUrl = TestResource.productIndexUrl
 

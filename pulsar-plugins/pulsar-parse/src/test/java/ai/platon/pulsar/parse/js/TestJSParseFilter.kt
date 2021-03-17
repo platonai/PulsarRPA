@@ -19,6 +19,7 @@ package ai.platon.pulsar.parse.js
 import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.protocol.ProtocolException
@@ -54,11 +55,11 @@ class TestJSParseFilter {
     private val sampleFiles = arrayOf("parse_pure_js_test.js", "parse_embedded_js_test.html")
     @Autowired
     private lateinit var immutableConfig: ImmutableConfig
-    private lateinit var conf: MutableConfig
+    private lateinit var conf: VolatileConfig
 
     @Before
     fun setUp() {
-        conf = immutableConfig.toMutableConfig()
+        conf = immutableConfig.toVolatileConfig()
         conf["file.content.limit"] = "-1"
     }
 
@@ -69,7 +70,7 @@ class TestJSParseFilter {
         val dip = DataInputStream(FileInputStream(file))
         dip.readFully(bytes)
         dip.close()
-        val page = WebPage.newWebPage(urlString)
+        val page = WebPage.newWebPage(urlString, conf)
         page.location = urlString
         page.setContent(bytes)
 

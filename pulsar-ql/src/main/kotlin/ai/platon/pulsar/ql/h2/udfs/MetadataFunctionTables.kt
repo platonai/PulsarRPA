@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -13,6 +14,7 @@ import java.time.Duration
 
 @UDFGroup(namespace = "META")
 object MetadataFunctionTables {
+    private val volatileConfig = VolatileConfig()
 
     @UDFunction(description = "Load a page specified by url from the database, " +
             "return the fields of the page as key-value pairs")
@@ -27,11 +29,11 @@ object MetadataFunctionTables {
             "return the fields of the page as key-value pairs")
     @JvmStatic
     fun fetch(@H2Context conn: Connection, configuredUrl: String): ResultSet {
-        val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.second)
+        val (url, args) = Urls.splitUrlArgs(configuredUrl)
+        val loadOptions = LoadOptions.parse(args, volatileConfig)
         loadOptions.expires = Duration.ZERO
 
-        val page = H2SessionFactory.getSession(conn).load(urlAndArgs.first, loadOptions)
+        val page = H2SessionFactory.getSession(conn).load(url, loadOptions)
         return Queries.toResultSet(page)
     }
 }

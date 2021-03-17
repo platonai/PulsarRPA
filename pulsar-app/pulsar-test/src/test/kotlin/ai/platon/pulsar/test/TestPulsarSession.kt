@@ -1,6 +1,5 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.context.PulsarContexts
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -14,8 +13,8 @@ class TestPulsarSession: TestBase() {
     @Test
     fun testNormalize() {
         val normUrl = session.normalize(url)
-        assertEquals(session.sessionConfig, normUrl.options.volatileConfig)
+        assertEquals(session.sessionConfig, normUrl.options.conf)
         val page = session.load(normUrl)
-        assertEquals(normUrl.options.volatileConfig, page.volatileConfig)
+        assertEquals(normUrl.options.conf, page.conf)
     }
 }

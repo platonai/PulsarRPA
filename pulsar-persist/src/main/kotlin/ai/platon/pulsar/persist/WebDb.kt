@@ -1,10 +1,10 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.common.url.Urls.reverseUrlOrNull
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -12,7 +12,6 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
-import java.lang.IllegalStateException
 import java.util.concurrent.atomic.AtomicBoolean
 
 class WebDb(val conf: ImmutableConfig): AutoCloseable {
@@ -45,7 +44,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         val page = fields?.let { store.get(key, it) } ?: store.get(key)
         if (page != null) {
             tracer?.trace("Got $key")
-            return WebPage.box(url, key, page).also { it.isLoaded = true }
+            return WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
         }
 
         return null
@@ -140,7 +139,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
         val result = store.execute(query)
-        return DbIterator(result)
+        return DbIterator(result, conf)
     }
 
     /**
@@ -165,7 +164,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         query.setFields(*fields)
 
         val result = store.execute(query)
-        return DbIterator(result)
+        return DbIterator(result, conf)
     }
 
     /**
@@ -182,7 +181,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         query.setFields(*fields)
 
         val result = store.execute(query)
-        return DbIterator(result)
+        return DbIterator(result, conf)
     }
 
     /**
@@ -210,7 +209,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         goraQuery.setFields(*fields)
         val result = store.execute(goraQuery)
 
-        return DbIterator(result)
+        return DbIterator(result, conf)
     }
 
     fun flush() {

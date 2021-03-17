@@ -3,11 +3,10 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.config.Params
 import com.beust.jcommander.Parameter
 
-
 /**
  * Created by vincent on 17-7-14.
  */
-class ParseOptions : CommonOptions {
+class ParseOptions(args: String) : CommonOptions(split(args)) {
     @Parameter(names = ["-ps", "--parse"], description = "Parse the page.")
     var isParse = false
     @Parameter(names = ["-rpl", "--reparse-links"], description = "Re-parse all links if the parsed.")
@@ -16,10 +15,6 @@ class ParseOptions : CommonOptions {
     var isNoLinkFilter = false
     @Parameter(names = ["-prst", "--persist"], description = "Persist the page.")
     var isPersist = false
-
-    constructor(): super()
-
-    constructor(args: String) : super(args)
 
     override fun getParams(): Params {
         return Params.of(

@@ -67,8 +67,7 @@ class TestExtractCases : TestBase() {
         session.flush()
 
         println("Loading " + page.vividLinks.size + " out links")
-        val optins = LoadOptions.create()
-        session.loadAll(page.vividLinks.keys.map { it -> it.toString() }, optins)
+        session.loadAll(page.vividLinks.keys.map { it.toString() })
 
         var page2 = session.get(URL_TRACKER_HOME_URL)
         println(WebPageFormatter(page2))

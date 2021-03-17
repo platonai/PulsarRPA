@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.persist.ext.loadOptions
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
@@ -78,7 +78,7 @@ class CompletedPageFormatter(
 
     private val prefix0 get() = if (page.isContentUpdated) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
-    private val label = StringUtils.abbreviateMiddle(page.loadOptions.label, "..", 20)
+    private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     private val category get() = page.pageCategory.symbol()
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)

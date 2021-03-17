@@ -2,10 +2,15 @@ package ai.platon.pulsar.common.url
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.parseSimpleOption
+import org.apache.commons.cli.DefaultParser
+import org.apache.commons.cli.Options
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
+import java.util.*
 
 interface PseudoUrl
 
@@ -26,10 +31,6 @@ interface UrlAware: Comparable<UrlAware> {
      * */
     var referer: String?
     /**
-     * The label
-     * */
-    var label: String
-    /**
      * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
     var href: String?
@@ -45,6 +46,10 @@ interface UrlAware: Comparable<UrlAware> {
      * If this link is persistable
      * */
     val isPersistable: Boolean
+    /**
+     * The url label, it should be in args
+     * */
+    val label: String
 }
 
 /**
@@ -62,7 +67,6 @@ abstract class AbstractUrl(
         override var url: String,
         override var args: String? = null,
         override var referer: String? = null,
-        override var label: String = "",
         override var href: String? = null
 ): UrlAware {
 
@@ -74,6 +78,8 @@ abstract class AbstractUrl(
      * If this link is persistable
      * */
     override val isPersistable: Boolean = true
+
+    override val label: String get() = parseSimpleOption(args, "-label") ?: ""
 
     /**
      * A abstract url can be compare to one of the following types:
@@ -96,9 +102,7 @@ abstract class AbstractUrl(
 
     override fun hashCode() = url.hashCode()
 
-    override fun compareTo(other: UrlAware): Int {
-        return url.compareTo(other.url)
-    }
+    override fun compareTo(other: UrlAware) = url.compareTo(other.url)
 
     override fun toString() = url
 }
@@ -148,11 +152,7 @@ data class HyperlinkDatum(
         /**
          * The depth
          * */
-        val depth: Int = 0,
-        /**
-         * The label
-         * */
-        val label: String = ""
+        val depth: Int = 0
 )
 
 /**
@@ -189,26 +189,22 @@ open class Hyperlink(
         /**
          * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        href: String? = null,
-        /**
-         * The label
-         * */
-        label: String = ""
-): AbstractUrl(url, args, referer, label, href) {
+        href: String? = null
+): AbstractUrl(url, args, referer, href) {
     var depth: Int = 0
 
-    constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args, href = url.href, label = url.label)
-    constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args, href = url.href, label = url.label)
-    constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args, href = url.href, label = url.label)
+    constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args, href = url.href)
+    constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
+    constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
 
-    fun data() = HyperlinkDatum(url, text, order, referer = referer, args = args, href = href, true, 0, label = label)
+    fun data() = HyperlinkDatum(url, text, order, referer = referer, args = args, href = href, true, 0)
 }
 
 open class LabeledHyperlink(
         /**
          * The url of this hyperlink
          * */
-        label: String,
+        override val label: String,
         /**
          * The url of this hyperlink
          * */
@@ -233,7 +229,7 @@ open class LabeledHyperlink(
          * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
         href: String? = null
-): Hyperlink(url, text, order, referer, args, href, label)
+): Hyperlink(url, text, order, referer, args, href)
 
 open class StatefulHyperlink(
         /**
@@ -260,12 +256,8 @@ open class StatefulHyperlink(
          * A click url is a url variant, it's the raw url in the html without normalization,
          * for example, an url with a timestamp query parameter added
          * */
-        href: String? = null,
-        /**
-         * The label
-         * */
-        label: String = ""
-): Hyperlink(url, text, order, referer, args, href, label), StatefulUrl {
+        href: String? = null
+): Hyperlink(url, text, order, referer, args, href), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -308,14 +300,10 @@ open class FatLink(
          * */
         href: String? = null,
         /**
-         * The label
-         * */
-        label: String = "",
-        /**
          * The tail links
          * */
         var tailLinks: List<StatefulHyperlink>
-): Hyperlink(url, text, order, referer, args, href, label) {
+): Hyperlink(url, text, order, referer, args, href) {
     val size get() = tailLinks.size
     val isEmpty get() = size == 0
     val isNotEmpty get() = !isEmpty
@@ -349,14 +337,10 @@ open class StatefulFatLink(
          * */
         href: String? = null,
         /**
-         * The label
-         * */
-        label: String = "",
-        /**
          * The tail links
          * */
         tailLinks: List<StatefulHyperlink>
-): FatLink(url, text, order, referer, args, href, label, tailLinks), StatefulUrl {
+): FatLink(url, text, order, referer, args, href, tailLinks), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -392,14 +376,10 @@ open class CrawlableFatLink(
          * */
         href: String? = null,
         /**
-         * The label
-         * */
-        label: String = "",
-        /**
          * The tail links
          * */
         tailLinks: List<StatefulHyperlink>
-): StatefulFatLink(url, text, order, referer, args, href, label, tailLinks) {
+): StatefulFatLink(url, text, order, referer, args, href, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 
@@ -448,6 +428,6 @@ object Hyperlinks {
 
     fun toHyperlink(url: UrlAware): Hyperlink {
         return if (url is Hyperlink) url
-        else Hyperlink(url.url, args = url.args, referer = url.referer, label = url.label, href = url.href)
+        else Hyperlink(url.url, args = url.args, referer = url.referer, href = url.href)
     }
 }

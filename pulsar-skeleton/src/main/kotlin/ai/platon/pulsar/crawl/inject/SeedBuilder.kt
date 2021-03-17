@@ -44,12 +44,12 @@ class SeedBuilder(
         if (url.isEmpty()) {
             return WebPage.NIL
         }
-        val page = WebPage.newWebPage(url)
+        val page = WebPage.newWebPage(url, conf.toVolatileConfig())
         return if (makeSeed(url, args, page)) page else WebPage.NIL
     }
 
     fun makeSeed(page: WebPage): Boolean {
-        return makeSeed(page.url, page.args.toString(), page)
+        return makeSeed(page.url, page.args, page)
     }
 
     private fun makeSeed(url: String, args: String, page: WebPage): Boolean {

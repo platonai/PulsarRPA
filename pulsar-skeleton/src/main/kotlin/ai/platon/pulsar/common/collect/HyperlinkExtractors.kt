@@ -219,7 +219,8 @@ class FatLinkExtractor(val session: PulsarSession) {
             page.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
         }
 
-        return page to CrawlableFatLink(fatLinkSpec, label = options.label, tailLinks = vividLinks)
+        val args = "-label ${options.label}"
+        return page to CrawlableFatLink(fatLinkSpec, args = args, tailLinks = vividLinks)
     }
 
     private fun parseVividLinks(

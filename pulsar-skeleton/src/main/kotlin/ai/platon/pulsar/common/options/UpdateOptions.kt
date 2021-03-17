@@ -11,7 +11,7 @@ import com.beust.jcommander.Parameter
 /**
  * Command options for [WebGraphUpdateJob].
  */
-class UpdateOptions(args: Array<String>, conf: ImmutableConfig) : CommonOptions(args) {
+class UpdateOptions(argv: Array<String>, conf: ImmutableConfig) : CommonOptions(argv) {
     // TODO: crawlId is not used since AutoStorageService is started after Option parsing
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The crawl id, (default : \"storage.crawl.id\").")
     var crawlId: String = conf[CapabilityTypes.STORAGE_CRAWL_ID, ""]

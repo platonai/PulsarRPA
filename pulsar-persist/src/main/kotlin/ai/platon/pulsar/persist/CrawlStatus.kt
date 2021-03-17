@@ -19,7 +19,7 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import java.util.*
 
-class CrawlStatus(private val status: Byte) : CrawlStatusCodes {
+class CrawlStatus constructor(private val status: Byte) : CrawlStatusCodes {
     companion object {
         @JvmField
         val STATUS_UNFETCHED = CrawlStatus(CrawlStatusCodes.UNFETCHED)
@@ -32,6 +32,7 @@ class CrawlStatus(private val status: Byte) : CrawlStatusCodes {
         val STATUS_RETRY = CrawlStatus(CrawlStatusCodes.RETRY)
 
         private val NAMES: MutableMap<Byte, String> = HashMap()
+
         init {
             NAMES[CrawlStatusCodes.UNFETCHED] = "status_unfetched"
             NAMES[CrawlStatusCodes.FETCHED] = "status_fetched"
@@ -44,10 +45,15 @@ class CrawlStatus(private val status: Byte) : CrawlStatusCodes {
     }
 
     val code get() = status.toInt()
-    val name get() = NAMES[status]?:"status_unknown"
+    val name get() = NAMES[status] ?: "status_unknown"
     val isUnFetched get() = status == CrawlStatusCodes.UNFETCHED
     val isFetched get() = status == CrawlStatusCodes.FETCHED
-    val isFailed get() = status !in arrayOf(CrawlStatusCodes.UNFETCHED, CrawlStatusCodes.FETCHED, CrawlStatusCodes.NOTMODIFIED)
+    val isFailed
+        get() = status !in arrayOf(
+            CrawlStatusCodes.UNFETCHED,
+            CrawlStatusCodes.FETCHED,
+            CrawlStatusCodes.NOTMODIFIED
+        )
 
     override fun equals(other: Any?): Boolean {
         return other is CrawlStatus && status.toInt() == other.code

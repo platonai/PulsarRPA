@@ -46,6 +46,7 @@ class LinkOptions : PulsarOptions {
     constructor(args: String, conf: ImmutableConfig) : super(args) {
         init(conf)
     }
+
     constructor(args: Array<String>, conf: ImmutableConfig) : super(args) {
         init(conf)
     }

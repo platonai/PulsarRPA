@@ -51,8 +51,7 @@ class GroupFetch : Aggregate {
     override fun getResult(): Any {
         val session = H2SessionFactory.getSession(conn!!)
         val h2session = session.dbSession.implementation as org.h2.engine.Session
-        val options = LoadOptions.create()
-        session.parallelLoadAll(urls, options)
+        session.parallelLoadAll(urls)
         val values = urls.map { url -> DataType.convertToValue(h2session, url, Value.STRING) }.toTypedArray()
         return ValueArray.get(values)
     }
