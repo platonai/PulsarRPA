@@ -19,7 +19,7 @@ class TestEvents: TestBase() {
     lateinit var fetchComponent: FetchComponent
 
     @Test
-    fun `When a page is fetched then it's recorded in FetchMetrics`() {
+    fun `When a page is fetched then events are fired and metrics are recorded`() {
         val metrics = fetchComponent.fetchMetrics
         assertNotNull(metrics)
 

@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
@@ -187,7 +188,13 @@ class ChromeLauncher(
 
     fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
         userDataDir = options.userDataDir
-        prepareUserDataDir()
+
+        // if the data dir is the default dir, we might have problem to prepare user dir
+        if ("context\\default" !in userDataDir.toString()) {
+            kotlin.runCatching { prepareUserDataDir() }.onFailure {
+                log.warn("Failed to prepare user data dir", it)
+            }
+        }
 
         val port = launchChromeProcess(chromeBinaryPath, options)
         return Chrome(port)
@@ -208,10 +215,11 @@ class ChromeLauncher(
                     .onFailure { log.warn("Unexpected exception", it) }
         }
 
-        try {
-            cleanUp()
-        } catch (e: IOException) {
-            log.warn("Failed to clear user data dir | {} | {}", userDataDir, e.message)
+        // if the data dir is the default dir, we might have problem to clean up
+        if ("context\\default" !in userDataDir.toString()) {
+            kotlin.runCatching { cleanUp() }.onFailure {
+                log.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
+            }
         }
     }
 
@@ -344,6 +352,7 @@ class ChromeLauncher(
         }
     }
 
+    @Throws(IOException::class)
     private fun prepareUserDataDir() {
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         if (userDataDir == prototypeUserDataDir || userDataDir.toString().contains("/default/")) {
@@ -399,6 +408,7 @@ class ChromeLauncher(
     /**
      * Force delete all browser data
      * */
+    @Throws(IOException::class)
     private fun forceDeleteDirectory(dirToDelete: Path) {
         synchronized(ChromeLauncher::class.java) {
             val lock = AppPaths.BROWSER_TMP_DIR_LOCK
@@ -409,7 +419,7 @@ class ChromeLauncher(
                 FileChannel.open(lock, StandardOpenOption.APPEND).use {
                     it.lock()
                     kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                            .onFailure { log.warn("Unexpected exception", it) }
+                            .onFailure { log.warn("Failed to delete directory", it) }
                 }
 
                 Thread.sleep(500)

@@ -53,8 +53,8 @@ open class VolatileConfig : MutableConfig {
             if (!isExpired(name)) {
                 return value
             } else {
-                if (AbstractConfiguration.LOG.isTraceEnabled) {
-                    AbstractConfiguration.LOG.trace("Session config {} is expired", name)
+                if (LOG.isTraceEnabled) {
+                    LOG.trace("Session config {} is expired", name)
                 }
                 ttls.remove(name)
                 super.unset(name)
