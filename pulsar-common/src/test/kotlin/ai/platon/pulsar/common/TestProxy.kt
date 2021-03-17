@@ -29,4 +29,16 @@ class TestProxy {
 //        val testProxy = ProxyEntry("117.90.220.193", 4216)
 //        println(testProxy)
     }
+
+    @Test
+    fun testParseProxyEntry() {
+        val proxies = arrayOf(
+            "58.218.200.226:6925 at:2019-08-24T15:34:28.255Z, spd:0.0",
+            "58.218.200.228:4169 at:2019-08-24T15:34:28.255Z, spd:0.0",
+            "58.218.200.226:6008 at:2019-08-24T15:34:28.255Z, ttl:2019-08-24T16:31:24.215Z, spd:0.0"
+        )
+        proxies.forEach {
+            assertEquals(it.substringBefore(", "), ProxyEntry.parse(it)?.serialize()?.substringBefore(", "))
+        }
+    }
 }

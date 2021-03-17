@@ -84,6 +84,12 @@ class TestLoadOptions {
     }
 
     @Test
+    fun testOptionParams() {
+        assertTrue { arrayOf("-l", "-label", "--label").all { it in LoadOptions.apiPublicOptionNames } }
+        assertFalse { arrayOf("-storeContent", "--store-content").any { it in LoadOptions.apiPublicOptionNames } }
+    }
+
+    @Test
     fun testBooleanOptions() {
         var options = LoadOptions.parse("-incognito -expires 1s -retry -storeContent false", conf)
         assertTrue(options.incognito)

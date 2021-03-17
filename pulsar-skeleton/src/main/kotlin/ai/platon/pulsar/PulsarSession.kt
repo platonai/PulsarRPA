@@ -84,7 +84,7 @@ open class PulsarSession(
     /**
      * Create a new options, with a new volatile config
      * */
-    fun options(args: String = "") = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
+    open fun options(args: String = "") = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
 
     fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false) =
             context.normalize(url, options, toItemOption)

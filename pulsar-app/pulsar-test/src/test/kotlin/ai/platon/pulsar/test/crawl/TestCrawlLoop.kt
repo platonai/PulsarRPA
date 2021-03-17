@@ -8,7 +8,7 @@ import org.junit.Before
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class TestLoadEvents: TestBase() {
+class TestCrawlLoop: TestBase() {
 
     private val crawlLoop get() = StreamingCrawlLoop(session, globalCache)
     private val fetchQueue get() = globalCache.fetchCacheManager.normalCache.nReentrantQueue

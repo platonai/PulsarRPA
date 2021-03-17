@@ -20,10 +20,7 @@ enum class ProxyType {
     HTTP, SOCKS4, SOCKS5
 }
 
-/**
- * TODO: should not be a data class
- * */
-data class ProxyEntry(
+class ProxyEntry(
         var host: String,
         var port: Int = 0,
         var outIp: String = "",

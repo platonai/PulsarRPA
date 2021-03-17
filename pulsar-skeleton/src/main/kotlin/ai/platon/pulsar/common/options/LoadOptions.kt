@@ -10,6 +10,8 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.jvm.kotlinProperty
 
 object LoadOptionDefaults {
     var lazyFlush = true
@@ -414,6 +416,13 @@ open class LoadOptions(
             .toList()
         val optionNames = declaredFields
             .asSequence()
+            .flatMap { it.annotations.toList() }
+            .filterIsInstance<Parameter>()
+            .flatMap { it.names.toList() }
+            .toList()
+        val apiPublicOptionNames = declaredFields
+            .asSequence()
+            .filter { it.kotlinProperty?.hasAnnotation<ApiPublic>() == true }
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
