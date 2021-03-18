@@ -14,9 +14,12 @@ open class VolatileConfig : MutableConfig {
     private val ttls: MutableMap<String, Int> = ConcurrentHashMap()
     val variables: MutableMap<String, Any> = ConcurrentHashMap()
 
-    constructor() : super(false)
+    @JvmOverloads
+    constructor(profile: String = "", loadDefaultResource: Boolean = true) : super(profile, loadDefaultResource)
 
-    constructor(fallbackConfig: ImmutableConfig) : super(false) {
+    constructor(loadDefaultResource: Boolean): this("", loadDefaultResource)
+
+    constructor(fallbackConfig: ImmutableConfig) : super("", false) {
         this.fallbackConfig = fallbackConfig
         if (fallbackConfig is VolatileConfig) {
             ttls.putAll(fallbackConfig.ttls)
@@ -43,11 +46,11 @@ open class VolatileConfig : MutableConfig {
                 super.unset(name)
             }
         }
-        return if (fallbackConfig != null) fallbackConfig!![name, defaultValue] else defaultValue
+
+        return fallbackConfig?.get(name, defaultValue) ?: defaultValue
     }
 
     override fun get(name: String): String? {
-        Objects.requireNonNull(name)
         val value = super.get(name)
         if (value != null) {
             if (!isExpired(name)) {
@@ -60,7 +63,7 @@ open class VolatileConfig : MutableConfig {
                 super.unset(name)
             }
         }
-        return if (fallbackConfig != null) fallbackConfig!![name] else null
+        return fallbackConfig?.get(name)
     }
 
     operator fun set(name: String, value: String, ttl: Int) {

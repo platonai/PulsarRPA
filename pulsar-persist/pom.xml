@@ -26,7 +26,6 @@
 <!--            <plugin>-->
 <!--                <groupId>org.apache.gora</groupId>-->
 <!--                <artifactId>gora-maven-plugin</artifactId>-->
-<!--                <version>${gora.version}</version>-->
 <!--                <configuration>-->
 <!--                    <sourceDirectory>${basedir}/src/resources/avro</sourceDirectory>-->
 <!--                    <outputDirectory>${basedir}/src/main/java</outputDirectory>-->
@@ -46,11 +45,6 @@
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
 
-        <!-- Required by org.apache.hadoop.conf.Configuration -->
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -83,34 +77,23 @@
             <version>2.3.1</version>
         </dependency>
 
-        <!-- TODO: avoid this dependency, required by GraphGroupKey currently -->
+        <!-- Configuration is required by gora, and commons-collections is required -->
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.2</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <artifactId>hadoop-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
         </dependency>
-        <!-- TODO: avoid this dependency, WebPage requires this jar currently -->
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-common</artifactId>
-        </dependency>
 
-        <!-- Since we use mongo db by default, we do not include hbase-shaded-client.jar, it's big -->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hbase</groupId>-->
-<!--            <artifactId>hbase-shaded-client</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.gora</groupId>-->
-<!--            <artifactId>gora-hbase</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-mongodb</artifactId>
@@ -124,6 +107,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

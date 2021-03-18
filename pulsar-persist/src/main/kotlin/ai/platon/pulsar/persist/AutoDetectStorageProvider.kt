@@ -10,9 +10,7 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.commons.lang3.SystemUtils
 import org.apache.gora.persistency.Persistent
 import org.apache.gora.store.DataStore
-import org.apache.hadoop.conf.Configuration
 import org.slf4j.LoggerFactory
-import java.lang.IllegalStateException
 
 /**
  * Created by vincent on 19-1-19.
@@ -29,7 +27,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
             throw IllegalStateException("App context is inactive")
         }
 
-        val pageStore = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java, pageStoreClass)
+        val pageStore = GoraStorage.createDataStore(conf, String::class.java, GWebPage::class.java, pageStoreClass)
         log.info("Storage is created: {} realSchema: {}", pageStoreClass, pageStore.schemaName)
         return pageStore
     }
@@ -79,11 +77,6 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
         @Throws(ClassNotFoundException::class)
         fun <K, V : Persistent> detectDataStoreClass(conf: ImmutableConfig): Class<out DataStore<K, V>> {
             return Class.forName(detectDataStoreClassName(conf)) as Class<out DataStore<K, V>>
-        }
-
-        @Throws(ClassNotFoundException::class)
-        fun <K, V : Persistent> detectDataStoreClass(conf: Configuration): Class<out DataStore<K, V>> {
-            return detectDataStoreClass(ImmutableConfig(conf))
         }
     }
 }

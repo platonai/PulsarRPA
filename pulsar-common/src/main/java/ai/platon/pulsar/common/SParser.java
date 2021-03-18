@@ -21,13 +21,10 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.net.NetUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
-import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,10 +44,14 @@ import java.util.regex.PatternSyntaxException;
  * @version $Id: $Id
  */
 public class SParser {
-    /** Constant <code>LOG</code> */
+    /**
+     * Constant <code>LOG</code>
+     */
     public static final Log LOG = LogFactory.getLog(SParser.class);
 
-    /** Constant <code>INVALID_DURATION</code> */
+    /**
+     * Constant <code>INVALID_DURATION</code>
+     */
     public static final Duration INVALID_DURATION = Duration.ofSeconds(Integer.MIN_VALUE);
 
     private static final Map<ClassLoader, Map<String, WeakReference<Class<?>>>> CACHE_CLASSES = new WeakHashMap<>();
@@ -65,13 +66,18 @@ public class SParser {
      */
     private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{[^\\}\\$\u0020]+\\}");
     private static final int MAX_SUBST = 20;
+    /**
+     * TODO: consider ResourceLoader
+     */
     private ClassLoader classLoader;
+
     {
         classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
-            classLoader = Configuration.class.getClassLoader();
+            classLoader = SParser.class.getClassLoader();
         }
     }
+
     private String value;
 
     /**
@@ -123,12 +129,12 @@ public class SParser {
      * Get the value of property, <code>null</code> if
      * no such property exists. If the key is deprecated, it returns the value of
      * the first key which replaces the deprecated key and is not null.
-     *
+     * <p>
      * Values are processed for <a href="#VariableExpansion">variable expansion</a>
      * before being returned.
      *
      * @return the value of or its replacing property,
-     *         or null if no such property exists.
+     * or null if no such property exists.
      */
     public String get() {
         return substituteVars(value);
@@ -139,12 +145,12 @@ public class SParser {
      * <code>null</code> if no such property exists.
      * If the key is deprecated, it returns the value of
      * the first key which replaces the deprecated key and is not null
-     *
+     * <p>
      * Values are processed for <a href="#VariableExpansion">variable expansion</a>
      * before being returned.
      *
      * @return the value of or its replacing property,
-     *         or null if no such property exists.
+     * or null if no such property exists.
      */
     public String getTrimmed() {
         if (null == value) {
@@ -159,9 +165,9 @@ public class SParser {
      * <code>defaultValue</code> if no such property exists.
      * See @{Configuration#getTrimmed} for more details.
      *
-     * @param defaultValue  the property default value.
+     * @param defaultValue the property default value.
      * @return the value of or defaultValue
-     *                      if it is not set.
+     * if it is not set.
      */
     public String getTrimmed(String defaultValue) {
         String ret = getTrimmed();
@@ -234,9 +240,9 @@ public class SParser {
      * then an error is thrown.
      *
      * @param defaultValue default value.
-     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>long</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public long getLong(long defaultValue) {
         String valueString = getTrimmed();
@@ -258,9 +264,9 @@ public class SParser {
      * t(tera), p(peta), e(exa)
      *
      * @param defaultValue default value.
-     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>long</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public long getLongBytes(long defaultValue) {
         String valueString = getTrimmed();
@@ -303,9 +309,9 @@ public class SParser {
      * then an error is thrown.
      *
      * @param defaultValue default value.
-     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>float</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public float getFloat(float defaultValue) {
         String valueString = getTrimmed();
@@ -330,9 +336,9 @@ public class SParser {
      * then an error is thrown.
      *
      * @param defaultValue default value.
-     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>double</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public double getDouble(double defaultValue) {
         String valueString = getTrimmed();
@@ -357,7 +363,7 @@ public class SParser {
      *
      * @param defaultValue default value.
      * @return property value as a <code>boolean</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
      */
     public boolean getBoolean(boolean defaultValue) {
         String valueString = getTrimmed();
@@ -395,7 +401,7 @@ public class SParser {
      * is equivalent to <code>set(&lt;name&gt;, value.toString())</code>.
      *
      * @param value new value
-     * @param <T> a T object.
+     * @param <T>   a T object.
      */
     public <T extends Enum<T>> void setEnum(T value) {
         set(value.toString());
@@ -405,10 +411,10 @@ public class SParser {
      * Return value matching this enumerated type.
      *
      * @param defaultValue Value returned if no mapping exists
-     * @throws java.lang.IllegalArgumentException If mapping is illegal for the type
-     * provided
-     * @param <T> a T object.
+     * @param <T>          a T object.
      * @return a T object.
+     * @throws java.lang.IllegalArgumentException If mapping is illegal for the type
+     *                                            provided
      */
     public <T extends Enum<T>> T getEnum(T defaultValue) {
         return null == value
@@ -420,7 +426,7 @@ public class SParser {
      * Set the value to the given time duration
      *
      * @param value Time duration
-     * @param unit Unit of time
+     * @param unit  Unit of time
      */
     public void setTimeDuration(long value, TimeUnit unit) {
         set(value + ParsedTimeDuration.unitFor(unit).suffix());
@@ -432,10 +438,10 @@ public class SParser {
      * (ms), seconds (s), minutes (m), hours (h), and days (d).
      *
      * @param defaultValue Value returned if no mapping exists.
-     * @param unit Unit to convert the stored property, if it exists.
+     * @param unit         Unit to convert the stored property, if it exists.
      * @return The time duration
      * @throws java.lang.NumberFormatException If the property stripped of its unit is not
-     *         a number
+     *                                         a number
      */
     public long getTimeDuration(long defaultValue, TimeUnit unit) {
         if (null == value) {
@@ -551,7 +557,7 @@ public class SParser {
      * <p>getKvs.</p>
      *
      * @param pairDelimeterPattern a {@link java.lang.String} object.
-     * @param kvDelimeter a {@link java.lang.String} object.
+     * @param kvDelimeter          a {@link java.lang.String} object.
      * @return a {@link java.util.Map} object.
      */
     public Map<String, String> getKvs(String pairDelimeterPattern, String kvDelimeter) {
@@ -575,7 +581,7 @@ public class SParser {
      * If no such property is specified then <code>null</code> is returned.
      *
      * @return property value as an array of <code>String</code>s,
-     *         or <code>null</code>.
+     * or <code>null</code>.
      */
     public String[] getStrings() {
         return Strings.getStrings(value);
@@ -598,7 +604,7 @@ public class SParser {
      *
      * @param defaultValue The default value
      * @return property value as an array of <code>String</code>s,
-     *         or default value.
+     * or default value.
      */
     public String[] getStrings(String... defaultValue) {
         if (value == null) {
@@ -628,7 +634,7 @@ public class SParser {
      * If no such property is specified then an empty array is returned.
      *
      * @return property value as an array of trimmed <code>String</code>s,
-     *         or empty array.
+     * or empty array.
      */
     public String[] getTrimmedStrings() {
         return Strings.getTrimmedStrings(value);
@@ -641,7 +647,7 @@ public class SParser {
      *
      * @param defaultValue The default value
      * @return property value as an array of trimmed <code>String</code>s,
-     *         or default value.
+     * or default value.
      */
     public String[] getTrimmedStrings(String... defaultValue) {
         if (null == value) {
@@ -765,7 +771,7 @@ public class SParser {
     /**
      * <p>getPath.</p>
      *
-     * @param defaultValue a {@link java.nio.file.Path} object.
+     * @param defaultValue      a {@link java.nio.file.Path} object.
      * @param createDirectories a boolean.
      * @return a {@link java.nio.file.Path} object.
      * @throws java.io.IOException if any.
@@ -789,7 +795,8 @@ public class SParser {
             Path path = (value != null) ? Paths.get(value) : defaultValue;
             Files.createDirectories(path.getParent());
             return path;
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
 
         return defaultValue;
     }
@@ -807,49 +814,10 @@ public class SParser {
                 Files.createDirectories(path.getParent());
                 return path;
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
 
         return null;
-    }
-
-    /**
-     * Get the socket address for <code>name</code> property as a
-     * <code>InetSocketAddress</code>.
-     *
-     * @param name property name.
-     * @param defaultAddress the default value
-     * @param defaultPort the default port
-     * @return InetSocketAddress
-     */
-    public InetSocketAddress getSocketAddr(
-            String name, String defaultAddress, int defaultPort) {
-        final String address = get(defaultAddress);
-        return NetUtils.createSocketAddr(address, defaultPort, name);
-    }
-
-    /**
-     * Set the socket address for property as a <code>host:port</code>.
-     *
-     * @param addr The socket address
-     */
-    public void setSocketAddr(InetSocketAddress addr) {
-        set(NetUtils.getHostPortString(addr));
-    }
-
-    /**
-     * Set the socket address a client can use to connect for the
-     * <code>name</code> property as a <code>host:port</code>.  The wildcard
-     * address is replaced with the local host's address.
-     *
-     * @param name property name.
-     * @param addr InetSocketAddress of a listener to store in the given property
-     * @return InetSocketAddress for clients to connect
-     */
-    public InetSocketAddress updateConnectAddr(String name,
-                                               InetSocketAddress addr) {
-        final InetSocketAddress connectAddr = NetUtils.getConnectAddress(addr);
-        setSocketAddr(connectAddr);
-        return connectAddr;
     }
 
     /**
@@ -920,7 +888,7 @@ public class SParser {
      *
      * @param defaultValue default value.
      * @return property value as a <code>Class[]</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
      */
     public Class<?>[] getClasses(Class<?>... defaultValue) {
         String[] classnames = getTrimmedStrings();
@@ -944,7 +912,7 @@ public class SParser {
      *
      * @param defaultValue default value.
      * @return property value as a <code>Class</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
      */
     public Class<?> getClass(Class<?> defaultValue) {
         String valueString = getTrimmed();
@@ -959,18 +927,18 @@ public class SParser {
 
     /**
      * Set the value to <code>theClass</code> implementing the given interface <code>xface</code>.
-     *
+     * <p>
      * If no such property is specified, then <code>defaultValue</code> is
      * returned.
-     *
+     * <p>
      * An exception is thrown if the returned class does not implement the named
      * interface.
      *
      * @param defaultValue default value.
-     * @param xface the interface implemented by the named class.
-     * @param <U> The base class
+     * @param xface        the interface implemented by the named class.
+     * @param <U>          The base class
      * @return property value as a <code>Class</code>,
-     *         or <code>defaultValue</code>.
+     * or <code>defaultValue</code>.
      */
     public <U> Class<? extends U> getClass(Class<? extends U> defaultValue, Class<U> xface) {
         try {
@@ -988,12 +956,12 @@ public class SParser {
 
     /**
      * Set the value to <code>theClass</code> implementing the given interface <code>xface</code>.
-     *
+     * <p>
      * An exception is thrown if <code>theClass</code> does not implement the
      * interface <code>xface</code>.
      *
      * @param theClass property value.
-     * @param xface the interface implemented by the named class.
+     * @param xface    the interface implemented by the named class.
      */
     public void setClass(Class<?> theClass, Class<?> xface) {
         if (!xface.isAssignableFrom(theClass))
@@ -1008,7 +976,7 @@ public class SParser {
      * directory does not exist, an attempt is made to create it.
      *
      * @param dirsProp directory in which to locate the file.
-     * @param path file-path.
+     * @param path     file-path.
      * @return local file under the directory with the given path.
      * @throws java.io.IOException If no valid local directories
      */
@@ -1260,7 +1228,8 @@ public class SParser {
 
         /**
          * Convert a string to an int treating empty strings as the default value.
-         * @param value the string value
+         *
+         * @param value        the string value
          * @param defaultValue the value for if the string is empty
          * @return the desired integer
          */
@@ -1274,6 +1243,7 @@ public class SParser {
 
         /**
          * Is the given value in the set of ranges
+         *
          * @param value the value to check
          * @return is the value in the ranges?
          */
@@ -1378,7 +1348,7 @@ public class SParser {
         GIGA(MEGA.bitShift + 10),
         TERA(GIGA.bitShift + 10),
         PETA(TERA.bitShift + 10),
-        EXA (PETA.bitShift + 10);
+        EXA(PETA.bitShift + 10);
 
         public final long value;
         public final char symbol;
@@ -1398,7 +1368,7 @@ public class SParser {
          */
         public static TraditionalBinaryPrefix valueOf(char symbol) {
             symbol = Character.toUpperCase(symbol);
-            for(TraditionalBinaryPrefix prefix : TraditionalBinaryPrefix.values()) {
+            for (TraditionalBinaryPrefix prefix : TraditionalBinaryPrefix.values()) {
                 if (symbol == prefix.symbol) {
                     return prefix;
                 }
@@ -1410,7 +1380,7 @@ public class SParser {
          * Convert a string to long.
          * The input string is first be trimmed
          * and then it is parsed with traditional binary prefix.
-         *
+         * <p>
          * For example,
          * "-1230k" will be converted to -1230 * 1024 = -1259520;
          * "891g" will be converted to 891 * 1024^3 = 956703965184;
@@ -1434,7 +1404,7 @@ public class SParser {
                             + "'. Allowed prefixes are k, m, g, t, p, e(case insensitive)");
                 }
                 long num = Long.parseLong(s.substring(0, lastpos));
-                if (num > (Long.MAX_VALUE/prefix) || num < (Long.MIN_VALUE/prefix)) {
+                if (num > (Long.MAX_VALUE / prefix) || num < (Long.MIN_VALUE / prefix)) {
                     throw new IllegalArgumentException(s + " does not fit in a Long");
                 }
                 return num * prefix;
@@ -1444,8 +1414,8 @@ public class SParser {
         /**
          * Convert a long integer to a string with traditional binary prefix.
          *
-         * @param n the value to be converted
-         * @param unit The unit, e.g. "B" for bytes.
+         * @param n             the value to be converted
+         * @param unit          The unit, e.g. "B" for bytes.
          * @param decimalPlaces The number of decimal places.
          * @return a string with traditional binary prefix.
          */
@@ -1467,23 +1437,23 @@ public class SParser {
             if (n < KILO.value) {
                 //no prefix
                 b.append(n);
-                return (unit.isEmpty()? b: b.append(" ").append(unit)).toString();
+                return (unit.isEmpty() ? b : b.append(" ").append(unit)).toString();
             } else {
                 //find traditional binary prefix
                 int i = 0;
-                for(; i < values().length && n >= values()[i].value; i++);
+                for (; i < values().length && n >= values()[i].value; i++) ;
                 TraditionalBinaryPrefix prefix = values()[i - 1];
 
                 if ((n & prefix.bitMask) == 0) {
                     //exact division
                     b.append(n >> prefix.bitShift);
                 } else {
-                    final String  format = "%." + decimalPlaces + "f";
-                    String s = format(format, n/(double)prefix.value);
+                    final String format = "%." + decimalPlaces + "f";
+                    String s = format(format, n / (double) prefix.value);
                     //check a special rounding up case
                     if (s.startsWith("1024")) {
                         prefix = values()[i];
-                        s = format(format, n/(double)prefix.value);
+                        s = format(format, n / (double) prefix.value);
                     }
                     b.append(s);
                 }
@@ -1492,7 +1462,9 @@ public class SParser {
         }
     }
 
-    /** The same as String.format(Locale.ENGLISH, format, objects). */
+    /**
+     * The same as String.format(Locale.ENGLISH, format, objects).
+     */
     private static String format(final String format, final Object... objects) {
         return String.format(Locale.ENGLISH, format, objects);
     }

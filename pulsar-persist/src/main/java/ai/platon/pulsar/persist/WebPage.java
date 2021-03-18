@@ -31,7 +31,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -72,12 +71,18 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
  */
 final public class WebPage implements Comparable<WebPage> {
 
-    /** Constant <code>LOG</code> */
+    /**
+     * Constant <code>LOG</code>
+     */
     public static final Logger LOG = LoggerFactory.getLogger(WebPage.class);
 
-    /** Constant <code>sequencer</code> */
+    /**
+     * Constant <code>sequencer</code>
+     */
     public static AtomicInteger sequencer = new AtomicInteger();
-    /** Constant <code>NIL</code> */
+    /**
+     * Constant <code>NIL</code>
+     */
     public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
     /**
@@ -112,22 +117,22 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * If this page is loaded from database or is created and fetched from the web
-     * */
+     */
     private boolean isLoaded = false;
 
     /**
      * If we should keep the content in memory even if it's cleared for persistence
-     * */
+     */
     private boolean cachedContentEnabled = false;
 
     /**
      * If this page is fetched and updated
-     * */
+     */
     private volatile boolean isContentUpdated = false;
 
     /**
      * The cached content
-     * */
+     */
     private volatile ByteBuffer cachedContent = null;
 
     private WebPage(
@@ -161,7 +166,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>newWebPage.</p>
      *
-     * @param url a {@link java.lang.String} object.
+     * @param url  a {@link java.lang.String} object.
      * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -184,7 +189,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>newWebPage.</p>
      *
-     * @param url a {@link java.lang.String} object.
+     * @param url  a {@link java.lang.String} object.
      * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -223,7 +228,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>newInternalPage.</p>
      *
-     * @param url a {@link java.lang.String} object.
+     * @param url   a {@link java.lang.String} object.
      * @param title a {@link java.lang.String} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -235,8 +240,8 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>newInternalPage.</p>
      *
-     * @param url a {@link java.lang.String} object.
-     * @param title a {@link java.lang.String} object.
+     * @param url     a {@link java.lang.String} object.
+     * @param title   a {@link java.lang.String} object.
      * @param content a {@link java.lang.String} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -248,9 +253,9 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>newInternalPage.</p>
      *
-     * @param url a {@link java.lang.String} object.
-     * @param id a int.
-     * @param title a {@link java.lang.String} object.
+     * @param url     a {@link java.lang.String} object.
+     * @param id      a int.
+     * @param title   a {@link java.lang.String} object.
      * @param content a {@link java.lang.String} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -283,9 +288,9 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      *
-     * @param url a {@link java.lang.String} object.
+     * @param url         a {@link java.lang.String} object.
      * @param reversedUrl a {@link java.lang.String} object.
-     * @param page a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
+     * @param page        a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
@@ -297,7 +302,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      *
-     * @param url a {@link java.lang.String} object.
+     * @param url  a {@link java.lang.String} object.
      * @param page a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -309,8 +314,8 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      *
-     * @param url a {@link java.lang.String} object.
-     * @param page a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
+     * @param url         a {@link java.lang.String} object.
+     * @param page        a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
      * @param urlReversed a boolean.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
@@ -322,9 +327,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Other
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
      * @return a {@link org.apache.avro.util.Utf8} object.
@@ -392,7 +397,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Get The hypertext reference of this page.
      * It defines the address of the document, which this time is linked from
-     *
+     * <p>
      * TODO: use a seperate field to hold href
      *
      * @return The hypertext reference
@@ -459,9 +464,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Common fields
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @return a {@link ai.platon.pulsar.persist.Variables} object.
      */
@@ -544,9 +549,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Creation fields
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @return a {@link ai.platon.pulsar.persist.CrawlMarks} object.
      */
@@ -893,9 +898,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Fetch fields
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @return a int.
      */
@@ -942,8 +947,8 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Set crawl status
      *
-     * @see CrawlStatus
      * @param value a int.
+     * @see CrawlStatus
      */
     public void setCrawlStatus(int value) {
         page.setCrawlStatus(value);
@@ -951,12 +956,12 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * The baseUrl is as the same as Location
-     *
+     * <p>
      * A baseUrl has the same semantic with Jsoup.parse:
      *
+     * @return a {@link java.lang.String} object.
      * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
      * @see WebPage#getLocation
-     * @return a {@link java.lang.String} object.
      */
     public String getBaseUrl() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
@@ -976,9 +981,9 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * The url is the permanent internal address, it might not still available to access the target.
-     *
+     * <p>
      * Location is the last working address, it might redirect to url, or it might have additional random parameters.
-     *
+     * <p>
      * Location may be different from url, it's generally normalized.
      *
      * @param value a {@link java.lang.String} object.
@@ -1176,8 +1181,8 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Get the number of crawl scope retries
      *
-     * @see ai.platon.pulsar.persist.RetryScope
      * @return a int.
+     * @see ai.platon.pulsar.persist.RetryScope
      */
     public int getFetchRetries() {
         return page.getFetchRetries();
@@ -1186,8 +1191,8 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Set the number of crawl scope retries
      *
-     * @see ai.platon.pulsar.persist.RetryScope
      * @param value a int.
+     * @see ai.platon.pulsar.persist.RetryScope
      */
     public void setFetchRetries(int value) {
         page.setFetchRetries(value);
@@ -1288,9 +1293,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Parsing
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @param fetchTime a {@link java.time.Instant} object.
      */
@@ -1306,7 +1311,8 @@ final public class WebPage implements Comparable<WebPage> {
      * @param defaultValue a {@link java.time.Instant} object.
      * @return a {@link java.time.Instant} object.
      */
-    public @NotNull Instant getFirstCrawlTime(@NotNull Instant defaultValue) {
+    public @NotNull
+    Instant getFirstCrawlTime(@NotNull Instant defaultValue) {
         Instant firstCrawlTime = null;
 
         String fetchTimeHistory = getFetchTimeHistory("");
@@ -1465,9 +1471,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getContentAsBytes.</p>
+     * Get content as bytes, the underling buffer is duplicated
      *
-     * @return an array of {@link byte} objects.
+     * @return a duplication of the underling buffer.
      */
     @NotNull
     public byte[] getContentAsBytes() {
@@ -1475,7 +1481,7 @@ final public class WebPage implements Comparable<WebPage> {
         if (content == null) {
             return ByteUtils.toBytes('\0');
         }
-        return Bytes.getBytes(content);
+        return ByteUtils.toBytes(content);
     }
 
     /**
@@ -1485,7 +1491,7 @@ final public class WebPage implements Comparable<WebPage> {
      */
     @NotNull
     public String getContentAsString() {
-        return Bytes.toString(getContentAsBytes());
+        return ByteUtils.toString(getContentAsBytes());
     }
 
     /**
@@ -1529,7 +1535,7 @@ final public class WebPage implements Comparable<WebPage> {
         if (value != null) {
             setContent(value.getBytes());
         } else {
-            setContent((ByteBuffer)null);
+            setContent((ByteBuffer) null);
         }
     }
 
@@ -1542,7 +1548,7 @@ final public class WebPage implements Comparable<WebPage> {
         if (value != null) {
             setContent(ByteBuffer.wrap(value));
         } else {
-            setContent((ByteBuffer)null);
+            setContent((ByteBuffer) null);
         }
     }
 
@@ -1585,7 +1591,7 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * TODO: use a field
-     * */
+     */
     public void setContentLength(long bytes) {
         long lastBytes = getContentLength();
         Metadata metadata = getMetadata();
@@ -2408,9 +2414,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Page Model
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @return a {@link ai.platon.pulsar.persist.model.PageModel} object.
      */
@@ -2421,9 +2427,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Scoring
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @return a float.
      */
@@ -2506,9 +2512,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     ******************************************************************************
+     * *****************************************************************************
      * Index
-     *******************************************************************************
+     * ******************************************************************************
      *
      * @param defaultValue a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
@@ -2550,25 +2556,33 @@ final public class WebPage implements Comparable<WebPage> {
         return firstIndexTime == null ? defaultValue : firstIndexTime;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return url.hashCode();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int compareTo(@NotNull WebPage o) {
         return url.compareTo(o.url);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object other) {
         return other instanceof WebPage && ((WebPage) other).url.equals(url);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return new WebPageFormatter(this).format();

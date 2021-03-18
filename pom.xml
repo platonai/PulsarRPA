@@ -16,7 +16,7 @@
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
-        <version>3.2-SNAPSHOT</version>
+        <version>3.3-SNAPSHOT</version>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
@@ -83,7 +83,7 @@
     <profiles>
 
         <profile>
-            <id>apache-release</id>
+            <id>platon-release</id>
             <modules>
                 <module>pulsar-distribution</module>
             </modules>
@@ -262,7 +262,6 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>${maven-clean-plugin.version}</version>
                     <configuration>
                         <filesets>
                             <fileset>
@@ -281,11 +280,6 @@
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>${maven-exec-plugin.version}</version>
                 </plugin>
-                <!--                 <plugin> -->
-                <!--                     <groupId>org.eclipse.jetty</groupId> -->
-                <!--                     <artifactId>jetty-maven-plugin</artifactId> -->
-                <!--                     <version>${jetty-maven-plugin.version}</version> -->
-                <!--                 </plugin> -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -310,15 +304,11 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            <!-- apache-release is enabled by default in maven-apache-parent -->
+            <!-- platon-release is enabled by default in maven-apache-parent -->
             <!-- see http://maven.apache.org/pom/asf/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <!-- <arguments>-Papache-release ${arguments}</arguments>-->
-                    <arguments/>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -326,12 +316,13 @@
             </plugin>
             <!-- unit test support -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
             </plugin>
-
         </plugins>
     </build>
 
@@ -456,13 +447,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-serialization -->
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-serialization</artifactId>
-                <version>${serialization.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.nibor.autolink</groupId>
                 <artifactId>autolink</artifactId>
@@ -499,10 +483,6 @@
         <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-        <!-- skipTests is set to be true in platon.pom which will be removed from platon.pom later -->
-        <skipTests>false</skipTests>
-
-        <serialization.version>1.4.21</serialization.version>
         <autolink.version>0.10.0</autolink.version>
     </properties>
 

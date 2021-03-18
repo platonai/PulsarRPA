@@ -32,6 +32,11 @@
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-filter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

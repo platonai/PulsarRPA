@@ -69,7 +69,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     }
 
     fun addAll(elements: Array<T>) {
-        CollectionUtils.addAll(counter, elements)
+        elements.forEach { counter.add(it) }
     }
 
     override fun removeAll(elements: Collection<T>): Boolean {

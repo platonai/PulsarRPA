@@ -2,6 +2,7 @@ package ai.platon.pulsar.test
 
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /**
  * Created by vincent on 16-7-20.
@@ -13,7 +14,7 @@ class TestPulsarSession: TestBase() {
     @Test
     fun testNormalize() {
         val normUrl = session.normalize(url)
-        assertEquals(session.sessionConfig, normUrl.options.conf)
+        assertNotEquals(session.sessionConfig, normUrl.options.conf)
         val page = session.load(normUrl)
         assertEquals(normUrl.options.conf, page.conf)
     }

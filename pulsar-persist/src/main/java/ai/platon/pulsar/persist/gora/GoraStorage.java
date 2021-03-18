@@ -1,12 +1,12 @@
 package ai.platon.pulsar.persist.gora;
 
+import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
 import org.apache.gora.util.GoraException;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class GoraStorage {
      */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(Configuration conf, Class<K> keyClass, Class<V> persistentClass)
+    createDataStore(ImmutableConfig conf, Class<K> keyClass, Class<V> persistentClass)
             throws GoraException, ClassNotFoundException {
         String className = conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS);
         Class<? extends DataStore<K, V>> dataStoreClass = (Class<? extends DataStore<K, V>>)Class.forName(className);
@@ -66,7 +66,7 @@ public class GoraStorage {
      */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(Configuration conf,
+    createDataStore(ImmutableConfig conf,
                     Class<K> keyClass, Class<V> persistentClass, Class<? extends DataStore<K, V>> dataStoreClass
     ) throws GoraException {
         String crawlId = conf.get(STORAGE_CRAWL_ID, "");
@@ -78,15 +78,16 @@ public class GoraStorage {
         String schema;
         if (GWebPage.class.equals(persistentClass)) {
             schema = conf.get(STORAGE_SCHEMA_WEBPAGE, "webpage");
-            conf.set(STORAGE_PREFERRED_SCHEMA_NAME, schemaPrefix + "webpage");
+            System.setProperty(STORAGE_PREFERRED_SCHEMA_NAME, schemaPrefix + "webpage");
         } else {
             throw new UnsupportedOperationException("Unable to create storage for class " + persistentClass);
         }
 
         Object o = dataStores.get(schema);
         if (o == null) {
+            org.apache.hadoop.conf.Configuration hadoopConf = new org.apache.hadoop.conf.Configuration();
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
-                    keyClass, persistentClass, conf, properties, schema);
+                    keyClass, persistentClass, hadoopConf, properties, schema);
 
             dataStores.put(schema, dataStore);
 

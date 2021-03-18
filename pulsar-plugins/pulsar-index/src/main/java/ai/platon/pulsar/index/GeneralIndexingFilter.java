@@ -24,7 +24,6 @@ import ai.platon.pulsar.crawl.index.IndexingException;
 import ai.platon.pulsar.crawl.index.IndexingFilter;
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 
 import java.util.Map;
 
@@ -51,7 +50,6 @@ public class GeneralIndexingFilter implements IndexingFilter {
     }
 
     /**
-     * Set the {@link Configuration} object
      */
     @Override
     public void setup(ImmutableConfig conf) {
@@ -71,7 +69,6 @@ public class GeneralIndexingFilter implements IndexingFilter {
     }
 
     /**
-     * Get the {@link Configuration} object
      */
     public ImmutableConfig getConf() {
         return this.conf;

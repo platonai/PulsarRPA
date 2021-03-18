@@ -18,10 +18,10 @@
  */
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.common.url.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.KConfigurable
+import ai.platon.pulsar.common.url.Urls.getURLOrNull
 import ai.platon.pulsar.crawl.filter.UrlNormalizer
-import org.apache.hadoop.conf.Configured
 import org.apache.oro.text.regex.*
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
@@ -34,7 +34,7 @@ import java.net.URL
  *  * remove default ports, e.g. 80 for protocol `http://`
  *
  */
-class BasicUrlNormalizer(conf: ImmutableConfig) : Configured(), UrlNormalizer {
+class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, UrlNormalizer {
     val LOG = LoggerFactory.getLogger(BasicUrlNormalizer::class.java)
 
     private val relativePathRule: Rule = Rule()

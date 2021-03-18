@@ -3,7 +3,7 @@ package ai.platon.pulsar.persist;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.persist.metadata.Name;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.gora.util.ByteUtils;
 
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
@@ -161,7 +161,7 @@ public class Metadata {
      */
     public String get(String name) {
         ByteBuffer bvalue = getByteBuffer(name);
-        return bvalue == null ? null : Bytes.toString(bvalue.array());
+        return bvalue == null ? null : ByteUtils.toString(bvalue.array());
     }
 
     /**
@@ -317,7 +317,7 @@ public class Metadata {
     public Map<String, String> asStringMap() {
         return data.entrySet().stream()
                 .filter(e -> e.getValue() != null && e.getValue().hasArray())
-                .collect(Collectors.toMap(e -> e.getKey().toString(), e -> Bytes.toString(e.getValue().array())));
+                .collect(Collectors.toMap(e -> e.getKey().toString(), e -> ByteUtils.toString(e.getValue().array())));
     }
 
     /** {@inheritDoc} */

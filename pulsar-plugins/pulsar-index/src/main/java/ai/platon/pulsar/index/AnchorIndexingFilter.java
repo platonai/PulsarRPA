@@ -21,7 +21,6 @@ import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexingFilter;
 import ai.platon.pulsar.persist.WebPage;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +44,6 @@ public class AnchorIndexingFilter implements IndexingFilter {
         this.conf = conf;
     }
 
-    /**
-     * Set the {@link Configuration} object
-     */
-    @Override
     public void setup(ImmutableConfig conf) {
         this.conf = conf;
 
@@ -61,14 +56,10 @@ public class AnchorIndexingFilter implements IndexingFilter {
     }
 
     /**
-     * Get the {@link Configuration} object
      */
     @Override
     public ImmutableConfig getConf() {
         return this.conf;
-    }
-
-    public void addIndexBackendOptions(Configuration conf) {
     }
 
     /**

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.config;
 
+import ai.platon.pulsar.common.Strings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,7 +24,9 @@ import java.util.stream.Collectors;
  * @version $Id: $Id
  */
 public class Params {
-    /** Constant <code>EMPTY_PARAMS</code> */
+    /**
+     * Constant <code>EMPTY_PARAMS</code>
+     */
     public static final Params EMPTY_PARAMS = new Params();
 
     private Logger log = LoggerFactory.getLogger(Params.class);
@@ -46,8 +49,8 @@ public class Params {
     /**
      * <p>Constructor for Params.</p>
      *
-     * @param key a {@link java.lang.String} object.
-     * @param value a {@link java.lang.Object} object.
+     * @param key    a {@link java.lang.String} object.
+     * @param value  a {@link java.lang.Object} object.
      * @param others a {@link java.lang.Object} object.
      */
     public Params(String key, Object value, Object... others) {
@@ -66,8 +69,8 @@ public class Params {
     /**
      * <p>of.</p>
      *
-     * @param key a {@link java.lang.String} object.
-     * @param value a {@link java.lang.Object} object.
+     * @param key    a {@link java.lang.String} object.
+     * @param value  a {@link java.lang.Object} object.
      * @param others a {@link java.lang.Object} object.
      * @return a {@link ai.platon.pulsar.common.config.Params} object.
      */
@@ -88,8 +91,8 @@ public class Params {
     /**
      * <p>toArgList.</p>
      *
-     * @param key a {@link java.lang.String} object.
-     * @param value a {@link java.lang.Object} object.
+     * @param key    a {@link java.lang.String} object.
+     * @param value  a {@link java.lang.Object} object.
      * @param others a {@link java.lang.Object} object.
      * @return a {@link java.util.List} object.
      */
@@ -123,9 +126,9 @@ public class Params {
      *
      * @param others A K/V pairs array, the length of the array must be a even number
      *               null key or null value pair is ignored
+     * @param key    a {@link java.lang.String} object.
+     * @param value  a {@link java.lang.Object} object.
      * @return A map contains all non-null key/values
-     * @param key a {@link java.lang.String} object.
-     * @param value a {@link java.lang.Object} object.
      */
     public static Map<String, Object> toArgMap(String key, Object value, Object... others) {
         Map<String, Object> results = new LinkedHashMap<>();
@@ -155,8 +158,8 @@ public class Params {
     /**
      * <p>formatAsLine.</p>
      *
-     * @param key a {@link java.lang.String} object.
-     * @param value a {@link java.lang.Object} object.
+     * @param key    a {@link java.lang.String} object.
+     * @param value  a {@link java.lang.Object} object.
      * @param others a {@link java.lang.Object} object.
      * @return a {@link java.lang.String} object.
      */
@@ -167,8 +170,8 @@ public class Params {
     /**
      * <p>format.</p>
      *
-     * @param key a {@link java.lang.String} object.
-     * @param value a {@link java.lang.Object} object.
+     * @param key    a {@link java.lang.String} object.
+     * @param value  a {@link java.lang.Object} object.
      * @param others a {@link java.lang.Object} object.
      * @return a {@link java.lang.String} object.
      */
@@ -179,7 +182,7 @@ public class Params {
     /**
      * <p>put.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name  a {@link java.lang.String} object.
      * @param value a {@link java.lang.Object} object.
      */
     public void put(String name, Object value) {
@@ -215,7 +218,7 @@ public class Params {
     /**
      * <p>get.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
      */
@@ -237,9 +240,9 @@ public class Params {
     /**
      * <p>getEnum.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a T object.
-     * @param <T> a T object.
+     * @param <T>          a T object.
      * @return a T object.
      */
     public <T extends Enum<T>> T getEnum(String name, T defaultValue) {
@@ -260,7 +263,7 @@ public class Params {
     /**
      * <p>getInt.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.lang.Integer} object.
      * @return a {@link java.lang.Integer} object.
      */
@@ -282,7 +285,7 @@ public class Params {
     /**
      * <p>getLong.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.lang.Long} object.
      * @return a {@link java.lang.Long} object.
      */
@@ -304,7 +307,7 @@ public class Params {
     /**
      * <p>getBoolean.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.lang.Boolean} object.
      * @return a {@link java.lang.Boolean} object.
      */
@@ -316,7 +319,7 @@ public class Params {
     /**
      * <p>getStrings.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue an array of {@link java.lang.String} objects.
      * @return an array of {@link java.lang.String} objects.
      */
@@ -325,19 +328,19 @@ public class Params {
         if (valueString == null) {
             return defaultValue;
         }
-        return org.apache.hadoop.util.StringUtils.getStrings(valueString);
+        return Strings.getStrings(valueString);
     }
 
     /**
      * <p>getStringCollection.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name  a {@link java.lang.String} object.
      * @param delim a {@link java.lang.String} object.
      * @return a {@link java.util.Collection} object.
      */
     public Collection<String> getStringCollection(String name, String delim) {
         String valueString = get(name, null);
-        return org.apache.hadoop.util.StringUtils.getStringCollection(valueString, delim);
+        return Strings.getStringCollection(valueString, delim);
     }
 
     /**
@@ -360,7 +363,7 @@ public class Params {
     /**
      * <p>getPath.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.nio.file.Path} object.
      * @return a {@link java.nio.file.Path} object.
      * @throws java.io.IOException if any.
@@ -385,7 +388,7 @@ public class Params {
     /**
      * <p>getInstant.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.time.Instant} object.
      * @return a {@link java.time.Instant} object.
      */
@@ -407,7 +410,7 @@ public class Params {
     /**
      * <p>getDuration.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name         a {@link java.lang.String} object.
      * @param defaultValue a {@link java.time.Duration} object.
      * @return a {@link java.time.Duration} object.
      */
@@ -665,9 +668,9 @@ public class Params {
     /**
      * <p>info.</p>
      *
-     * @param prefix a {@link java.lang.String} object.
+     * @param prefix  a {@link java.lang.String} object.
      * @param postfix a {@link java.lang.String} object.
-     * @param inline a boolean.
+     * @param inline  a boolean.
      */
     public void info(String prefix, String postfix, boolean inline) {
         StringBuilder sb = new StringBuilder(prefix);
@@ -681,7 +684,9 @@ public class Params {
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return format();

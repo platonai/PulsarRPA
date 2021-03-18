@@ -22,7 +22,7 @@ import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.hbase.util.Bytes
+import org.apache.gora.util.ByteUtils
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.time.Instant
@@ -92,7 +92,8 @@ class WebPageFormatter(page: WebPage) {
 
     fun toMap(): Map<String, Any> {
         val fields: MutableMap<String, Any> = LinkedHashMap()
-        /* General */fields["key"] = page.key
+        /* General */
+        fields["key"] = page.key
         fields["url"] = page.url
         fields["options"] = page.args
         fields["isSeed"] = page.isSeed
@@ -222,57 +223,60 @@ class WebPageFormatter(page: WebPage) {
                 .append("contentScore:\t" + page.contentScore + "\n")
                 .append("score:\t" + page.score + "\n")
                 .append("cash:\t" + page.cash + "\n")
-        if (page.reprUrl != null) {
+        if (page.reprUrl.isNotBlank()) {
             sb.append("\n\n").append("reprUrl:\t" + page.reprUrl + "\n")
         }
         val crawlMarks = page.marks
         if (!crawlMarks.unbox().isEmpty()) {
             sb.append("\n")
-            crawlMarks.unbox().forEach { (key: CharSequence, value: CharSequence) -> sb.append("mark $key:\t$value\n") }
+            crawlMarks.unbox().forEach { (key, value) -> sb.append("mark $key:\t$value\n") }
         }
         if (!page.pageCounters.unbox().isEmpty()) {
             sb.append("\n")
-            page.pageCounters.unbox().forEach { (key: CharSequence, value: Int) -> sb.append("counter $key : $value\n") }
+            page.pageCounters.unbox().forEach { (key, value) -> sb.append("counter $key : $value\n") }
         }
         val metadata = page.metadata.asStringMap()
         if (!metadata.isEmpty()) {
             sb.append("\n")
-            metadata.entries.stream().filter { e: Map.Entry<String, String> -> !e.value.startsWith("meta_") }
-                    .forEach { e: Map.Entry<String, String> -> sb.append("metadata " + e.key + ":\t" + e.value + "\n") }
-            metadata.entries.stream().filter { e: Map.Entry<String, String> -> e.value.startsWith("meta_") }
-                    .forEach { e: Map.Entry<String, String> -> sb.append("metadata " + e.key + ":\t" + e.value + "\n") }
+            metadata.entries.stream().filter { it.value.startsWith("meta_") }
+                    .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
+            metadata.entries.stream().filter { e -> e.value.startsWith("meta_") }
+                    .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
         }
         val headers = page.headers.unbox()
         if (headers != null && !headers.isEmpty()) {
             sb.append("\n")
-            headers.forEach { (key: CharSequence, value: CharSequence) -> sb.append("header $key:\t$value\n") }
+            headers.forEach { (key, value) -> sb.append("header $key:\t$value\n") }
         }
+
         sb.append("\n")
         sb.append("Total " + page.links.size + " links, ")
                 .append(page.vividLinks.size.toString() + " vivid links, ")
                 .append(page.liveLinks.size.toString() + " live links, ")
                 .append(page.deadLinks.size.toString() + " dead links, ")
                 .append(page.inlinks.size.toString() + " inlinks\n")
+
         if (withLinks) {
             sb.append("\n")
             sb.append("links:\n")
-            page.links.forEach(Consumer { l: CharSequence -> sb.append("links:\t$l\n") })
+            page.links.forEach { l -> sb.append("links:\t$l\n") }
             sb.append("vividLinks:\n")
-            page.vividLinks.forEach { (k: CharSequence, v: CharSequence) -> sb.append("liveLinks:\t$k\t$v\n") }
+            page.vividLinks.forEach { (k, v) -> sb.append("liveLinks:\t$k\t$v\n") }
             sb.append("liveLinks:\n")
             page.liveLinks.values.forEach(Consumer { e: GHypeLink -> sb.append("liveLinks:\t" + e.url + "\t" + e.anchor + "\n") })
             sb.append("deadLinks:\n")
             page.deadLinks.forEach(Consumer { l: CharSequence -> sb.append("deadLinks:\t$l\n") })
             sb.append("inlinks:\n")
-            page.inlinks.entries.forEach(Consumer<Map.Entry<CharSequence, CharSequence>> { e: Map.Entry<CharSequence, CharSequence> -> sb.append("inlink:\t" + e.key + "\t" + e.value + "\n") })
+            page.inlinks.forEach { (key, value) -> sb.append("inlink:\t$key\t$value\n") }
         }
+
         if (withContent) {
             val content = page.content
             if (content != null) {
                 sb.append("\n")
                 sb.append("contentType:\t" + page.contentType + "\n")
                         .append("content:START>>>\n")
-                        .append(Bytes.toString(content.array()))
+                        .append(ByteUtils.toString(content.array()))
                         .append("\n<<<END:content\n")
             }
         }

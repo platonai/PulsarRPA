@@ -41,7 +41,6 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.gora.util.ByteUtils
-import org.apache.hadoop.hbase.util.Bytes
 import org.slf4j.LoggerFactory
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
@@ -532,14 +531,14 @@ class KWebPage : Comparable<KWebPage> {
 
     fun getContentAsBytes(): ByteArray {
         val content = content ?: return ByteUtils.toBytes('\u0000')
-        return Bytes.getBytes(content)
+        return ByteUtils.toBytes(content)
     }
 
     /**
      * TODO: Encoding is always UTF-8?
      */
     fun getContentAsString(): String {
-        return Bytes.toString(getContentAsBytes())
+        return ByteUtils.toString(getContentAsBytes())
     }
 
     fun getContentAsInputStream(): ByteArrayInputStream {

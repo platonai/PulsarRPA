@@ -18,7 +18,7 @@ class TestScoreVectorWritable {
     @Throws(Exception::class)
     fun setUp() {
         conf["storage.data.store.class"] = "org.apache.gora.memory.store.MemStore"
-        datastore = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java)
+        datastore = GoraStorage.createDataStore(conf, String::class.java, GWebPage::class.java)
     }
 
     @After

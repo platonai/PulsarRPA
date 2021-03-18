@@ -3,14 +3,10 @@ package ai.platon.pulsar.common.url
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.parseSimpleOption
-import org.apache.commons.cli.DefaultParser
-import org.apache.commons.cli.Options
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 
 interface PseudoUrl
 

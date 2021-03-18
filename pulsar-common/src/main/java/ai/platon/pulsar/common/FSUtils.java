@@ -35,7 +35,9 @@ import java.util.List;
  */
 public class FSUtils {
 
-    /** Constant <code>LOG</code> */
+    /**
+     * Constant <code>LOG</code>
+     */
     public static final Logger LOG = LoggerFactory.getLogger(FSUtils.class);
 
     /**
@@ -47,13 +49,15 @@ public class FSUtils {
      * @throws java.io.IOException if any.
      */
     public static List<String> readAllLines(String path, ImmutableConfig conf) throws IOException {
-        boolean isDistributedFs = HdfsUtils.isDistributedFS(conf);
+//        boolean isDistributedFs = HdfsUtils.isDistributedFS(conf);
+//
+//        if (isDistributedFs) {
+//            return HdfsUtils.readAllLines(path, conf);
+//        } else {
+//            return Files.readAllLines(Paths.get(path));
+//        }
 
-        if (isDistributedFs) {
-            return HdfsUtils.readAllLines(path, conf);
-        } else {
-            return Files.readAllLines(Paths.get(path));
-        }
+        return Files.readAllLines(Paths.get(path));
     }
 
     /**

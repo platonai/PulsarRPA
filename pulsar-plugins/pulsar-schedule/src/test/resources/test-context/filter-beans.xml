@@ -6,7 +6,7 @@
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig">
-        <constructor-arg value="test-conf"/>
+<!--        <constructor-arg value="test-conf"/>-->
     </bean>
 
     <bean id="prefixUrlFilter" class="ai.platon.pulsar.filter.PrefixUrlFilter">

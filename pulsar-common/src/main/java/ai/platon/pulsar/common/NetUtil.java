@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.CapabilityTypes;
-import org.apache.hadoop.conf.Configuration;
+import ai.platon.pulsar.common.config.ImmutableConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -238,10 +238,9 @@ public class NetUtil {
     /**
      * TODO : We may need a better solution to indicate whether it's a master
      *
-     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
      * @return a boolean.
      */
-    public static boolean isMaster(Configuration conf) {
+    public static boolean isMaster(ImmutableConfig conf) {
         String masterHostname = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         return masterHostname.equals("localhost") || masterHostname.equals(getHostname());
     }
@@ -249,12 +248,11 @@ public class NetUtil {
     /**
      * <p>getMasterURL.</p>
      *
-     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
      * @param path a {@link java.lang.String} object.
      * @return a {@link java.net.URL} object.
      * @throws java.net.MalformedURLException if any.
      */
-    public static URL getMasterURL(Configuration conf, String path) throws MalformedURLException {
+    public static URL getMasterURL(ImmutableConfig conf, String path) throws MalformedURLException {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
 
@@ -264,10 +262,9 @@ public class NetUtil {
     /**
      * <p>getMasterUrl.</p>
      *
-     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
      * @return a {@link java.lang.String} object.
      */
-    public static String getMasterUrl(Configuration conf) {
+    public static String getMasterUrl(ImmutableConfig conf) {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST);
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
         return "http://" + host + ":" + port;

@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexingFilter;
 import ai.platon.pulsar.persist.WebPage;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.oro.text.regex.PatternMatcher;
 import org.apache.oro.text.regex.Perl5Matcher;
 
@@ -180,9 +179,6 @@ public class MoreIndexingFilter implements IndexingFilter {
         // MimeTypeParameterList parameterList = mimeType.getParameters()
 
         return doc;
-    }
-
-    public void addIndexBackendOptions(Configuration conf) {
     }
 
     @Override

@@ -17,7 +17,6 @@
 package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import org.apache.hadoop.conf.Configuration;
 
 import java.util.HashMap;
 import java.util.WeakHashMap;
@@ -31,7 +30,7 @@ import java.util.function.Function;
  */
 public class ObjectCache {
 
-    private static final WeakHashMap<Configuration, ObjectCache> CACHE = new WeakHashMap<>();
+    private static final WeakHashMap<ImmutableConfig, ObjectCache> CACHE = new WeakHashMap<>();
 
     private final HashMap<String, Object> objectMap = new HashMap<>();
 
@@ -41,20 +40,9 @@ public class ObjectCache {
     /**
      * <p>get.</p>
      *
-     * @param conf a {@link ai.platon.pulsar.common.config.ImmutableConfig} object.
      * @return a {@link ai.platon.pulsar.common.ObjectCache} object.
      */
     public static ObjectCache get(ImmutableConfig conf) {
-        return get(conf.unbox());
-    }
-
-    /**
-     * <p>get.</p>
-     *
-     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
-     * @return a {@link ai.platon.pulsar.common.ObjectCache} object.
-     */
-    public static ObjectCache get(Configuration conf) {
         ObjectCache objectCache = CACHE.get(conf);
         if (objectCache == null) {
             objectCache = new ObjectCache();

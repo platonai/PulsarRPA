@@ -103,7 +103,7 @@ class GenerateComponent(
     }
 
     override fun setup(jobConf: ImmutableConfig) {
-        crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID)
+        crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
         batchId = jobConf.get(CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES)
         fetchMode = jobConf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.BROWSER)
 

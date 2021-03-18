@@ -17,7 +17,7 @@
 
 package ai.platon.pulsar.common.domain;
 
-import org.apache.hadoop.util.StringUtils;
+import ai.platon.pulsar.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -65,7 +65,7 @@ class DomainSuffixesReader {
                 throw new IOException("xml file is not valid");
             }
         } catch (ParserConfigurationException | SAXException ex) {
-            LOG.warn(StringUtils.stringifyException(ex));
+            LOG.warn(Strings.stringifyException(ex));
             throw new IOException(ex.getMessage());
         }
 

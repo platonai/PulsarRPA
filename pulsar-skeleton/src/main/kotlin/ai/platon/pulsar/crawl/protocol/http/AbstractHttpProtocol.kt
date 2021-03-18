@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.crawl.protocol.http
 
-
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.IllegalApplicationContextStateException

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common;
 
-import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +22,6 @@ public class ReflectionUtils {
     private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
 
     private static final Class<?>[] EMPTY_ARRAY = new Class[]{};
-
-    volatile private static SerializationFactory serialFactory = null;
 
     /**
      * <p>newInstance.</p>

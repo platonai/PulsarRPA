@@ -70,7 +70,7 @@ class PrimerParser(conf: ImmutableConfig) {
         // remove unwanted link tags from the linkParams map
         val ignoreTags = conf.getStrings("parser.html.outlinks.ignore_tags")
         var i = 0
-        while (ignoreTags != null && i < ignoreTags.size) {
+        while (i < ignoreTags.size) {
             if (!forceTags.contains(ignoreTags[i])) {
                 linkParams.remove(ignoreTags[i])
             }

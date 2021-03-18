@@ -23,7 +23,7 @@
 
     <profiles>
         <profile>
-            <id>apache-release</id>
+            <id>platon-release</id>
             <build>
                 <defaultGoal>install</defaultGoal>
                 <plugins>

@@ -55,13 +55,10 @@
     <logger name="org.springframework.core" level="INFO"/>
     <logger name="org.springframework.core.env" level="INFO"/>
 
-    <logger name="org.apache.hadoop.conf.Configuration" level="WARN"/>
     <logger name="org.apache.gora" level="ERROR"/>
     <logger name="org.apache.zookeeper" level="ERROR"/>
     <logger name="org.apache.solr" level="INFO"/>
-    <logger name="org.apache.hadoop" level="WARN"/>
     <logger name="io.netty" level="WARN"/>
-    <logger name="org.apache.hadoop.mapreduce.Job" level="WARN"/>
     <logger name="io.netty.handler.logging" level="INFO"/>
 
 </configuration>
