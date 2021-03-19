@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+  
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<gora-otd>
+
+    <class name="org.apache.gora.examples.generated.Employee" keyClass="java.lang.String" document="frontier">
+        <field name="name" docfield="name" type="string"/>
+        <field name="dateOfBirth" docfield="dateOfBirth" type="int64"/>
+        <field name="ssn" docfield="ssn" type="string"/>
+        <field name="salary" docfield="salary" type="int32"/>
+        <field name="boss" docfield="boss" type="document"/>
+        <field name="webpage" docfield="webpage" type="document"/>
+    </class>
+
+    <class name="org.apache.gora.examples.generated.WebPage" keyClass="java.lang.String" document="webpage">
+        <field name="url" docfield="url" type="string"/>
+        <field name="content" docfield="content" type="binary"/>
+        <field name="parsedContent" docfield="pContent" type="list"/>
+        <field name="outlinks" docfield="links.out" type="document"/>
+        <field name="headers" docfield="headers" type="document"/>
+        <field name="metadata" docfield="metadata" type="document"/>
+        <field name="byteData" docfield="byteData" type="document"/>
+        <field name="stringData" docfield="stringData" type="document"/>
+    </class>
+
+    <class name="org.apache.gora.examples.generated.TokenDatum" keyClass="java.lang.String" document="TokenDatum">
+        <field name="count" docfield="count" type="int32"/>
+    </class>
+
+
+</gora-otd>

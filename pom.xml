@@ -406,6 +406,11 @@
                 <artifactId>pulsar-chrome-devtools</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-gora-mongodb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
