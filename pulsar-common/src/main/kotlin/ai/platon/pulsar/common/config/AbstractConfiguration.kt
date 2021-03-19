@@ -173,8 +173,7 @@ abstract class AbstractConfiguration {
      * or null if no such property exists.
      */
     open operator fun get(name: String): String? {
-        // spring environment has the highest priority
-        return environment?.get(name) ?: conf[name]
+        return System.getProperty(name) ?: environment?.get(name) ?: conf[name]
     }
 
     /**
@@ -190,8 +189,7 @@ abstract class AbstractConfiguration {
      * doesn't exist.
      */
     open operator fun get(name: String, defaultValue: String): String {
-        // spring environment has the highest priority
-        return environment?.get(name) ?: conf[name] ?: defaultValue
+        return System.getProperty(name) ?: environment?.get(name) ?: conf[name] ?: defaultValue
     }
 
     /**

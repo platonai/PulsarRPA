@@ -69,7 +69,9 @@ public class NetUtil {
             con.setConnectTimeout((int) PROXY_CONNECTION_TIMEOUT.toMillis());
             con.connect();
 
-            log.debug("Proxy is available {} for {}", proxy, url);
+            if (proxy != null) {
+                log.debug("Proxy is available {} for {}", proxy, url);
+            }
 
             reachable = true;
             con.disconnect();

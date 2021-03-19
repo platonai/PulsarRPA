@@ -1,0 +1,68 @@
+package ai.platon.pulsar.crawl.common
+
+import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.sleepSeconds
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.slf4j.LoggerFactory
+import java.time.Duration
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class TestMetrics {
+
+    init {
+        System.setProperty("metrics.report.initial.delay", Duration.ZERO.toString())
+        System.setProperty("metrics.graphite.report.interval", Duration.ofSeconds(10).toString())
+        System.setProperty("graphite.pickled.batch.size", "10")
+        System.setProperty("graphite.server", "crawl2")
+        System.setProperty(CapabilityTypes.METRICS_ENABLED, "true")
+    }
+
+    private val logger = LoggerFactory.getLogger(TestMetrics::class.java)
+    private val conf = MutableConfig()
+    private val metrics = AppMetrics(conf)
+
+    @Before
+    fun setup() {
+        metrics.start()
+    }
+
+    @After
+    fun tearDown() {
+        metrics.close()
+    }
+
+    @Test
+    fun testProperties() {
+        if (!NetUtil.testHttpNetwork(metrics.hostname, 2004)) {
+            logger.warn("Graphite server is not available")
+            return
+        }
+
+        assertEquals(10, metrics.batchSize)
+        assertEquals(Duration.ZERO, metrics.initialDelay)
+        assertEquals(Duration.ofSeconds(10), metrics.graphiteReportInterval)
+        assertEquals("crawl2", metrics.hostname)
+        assertTrue { NetUtil.testHttpNetwork(metrics.hostname, 2004) }
+    }
+
+    @Test
+    fun testGraphiteReporter() {
+        if (!NetUtil.testHttpNetwork(metrics.hostname, 2004)) {
+            logger.warn("Graphite server is not available")
+            return
+        }
+
+        val counters = IntRange(1, 10).map { AppMetrics.reg.counter("test.c$it") }
+        var i = 0
+        while (i++ < 60) {
+            counters.forEachIndexed { j, c -> c.inc(j.toLong()) }
+            sleepSeconds(1)
+        }
+    }
+}

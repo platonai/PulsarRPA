@@ -94,16 +94,19 @@ class AppMetrics(
         }
     }
 
+    private val logger = LoggerFactory.getLogger(AppMetrics::class.java)
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val isEnabled = conf.getBoolean(CapabilityTypes.METRICS_ENABLED, false)
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
 
-    private val initialDelay = conf.getDuration("metrics.report.initial.delay", Duration.ofMinutes(3))
-    private val csvReportInterval = conf.getDuration("metrics.csv.report.interval", Duration.ofMinutes(5))
-    private val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
-    private val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
-    private val hostname = conf.get("graphite.server", "crawl2")
+    val initialDelay = conf.getDuration("metrics.report.initial.delay", Duration.ofMinutes(3))
+    val csvReportInterval = conf.getDuration("metrics.csv.report.interval", Duration.ofMinutes(5))
+    val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
+    val graphiteReportInterval = conf.getDuration("metrics.graphite.report.interval", Duration.ofMinutes(2))
+    val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
+    val hostname = conf.get("graphite.server", "")
+    val batchSize = conf.getInt("graphite.pickled.batch.size", 100)
 
     private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
 
@@ -128,7 +131,7 @@ class AppMetrics(
 //            .convertDurationsTo(TimeUnit.MILLISECONDS)
 //            .build(reportDir.toFile())
 
-        val pickledGraphite = PickledGraphite(InetSocketAddress(hostname, 2004))
+        val pickledGraphite = PickledGraphite(InetSocketAddress(hostname, 2004), batchSize)
         graphiteReporter = GraphiteReporter.forRegistry(metricRegistry)
             .prefixedWith("pulsar")
             .convertRatesTo(TimeUnit.SECONDS)
@@ -166,8 +169,9 @@ class AppMetrics(
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
             counterReporter.start(initialDelay, counterReportInterval)
 
-            if (NetUtil.testHttpNetwork(hostname, 80)) {
-                graphiteReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
+            if (hostname.isNotBlank() && NetUtil.testHttpNetwork(hostname, 80)) {
+                graphiteReporter.start(initialDelay.seconds, graphiteReportInterval.seconds, TimeUnit.SECONDS)
+                logger.info("GraphiteReporter is started, report interval: {}", graphiteReportInterval)
             }
 
             val now = LocalDateTime.now()

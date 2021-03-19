@@ -37,6 +37,10 @@
   <packaging>jar</packaging>
 
   <name>Pulsar Gora MongoDB</name>
+  <description>
+    Since gora-0.x requires mongo-java-driver while spring-boot-2.4.x does not support it,
+    we make a shaded jar to hide mongo-java-driver.
+  </description>
 
   <properties>
     <osgi.import>*</osgi.import>
@@ -46,10 +50,6 @@
     <avro.version>1.8.1</avro.version>
   </properties>
 
-  <!--
-  Since gora-0.8 requires mongo-java-driver while spring-boot-2.4.x do not support it,
-  make a shaded jar to hide mongo-java-driver
-  -->
   <build>
     <plugins>
       <plugin>
