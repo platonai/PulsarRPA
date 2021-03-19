@@ -39,9 +39,48 @@
   <name>Pulsar Gora MongoDB</name>
 
   <properties>
-    <avro.version>1.8.2</avro.version>
+    <osgi.import>*</osgi.import>
+    <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
+    <mongo.driver.version>3.5.0</mongo.driver.version>
     <mongo.embed.version>2.0.0</mongo.embed.version>
+    <avro.version>1.8.1</avro.version>
   </properties>
+
+  <!--
+  Since gora-0.8 requires mongo-java-driver while spring-boot-2.4.x do not support it,
+  make a shaded jar to hide mongo-java-driver
+  -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+<!--              <minimizeJar>true</minimizeJar>-->
+              <artifactSet>
+                <excludes>
+                  <exclude>junit:junit</exclude>
+                  <exclude>jmock:*</exclude>
+                  <exclude>*:xml-apis</exclude>
+                  <exclude>log4j:log4j:jar:</exclude>
+                  <exclude>commons-logging:*</exclude>
+                  <exclude>*:guava</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>ch.qos.logback:*</exclude>
+                </excludes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
@@ -50,6 +89,7 @@
       <scope>compile</scope>
     </dependency>
 
+    <!-- For Configuration -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
@@ -64,7 +104,8 @@
     <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>mongo-java-driver</artifactId>
-      <version>3.12.8</version>
+      <version>${mongo.driver.version}</version>
+      <scope>compile</scope>
     </dependency>
 
     <dependency>

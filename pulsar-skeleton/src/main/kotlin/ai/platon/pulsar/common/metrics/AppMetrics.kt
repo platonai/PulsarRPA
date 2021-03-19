@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.metrics
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
@@ -102,9 +103,11 @@ class AppMetrics(
     private val csvReportInterval = conf.getDuration("metrics.csv.report.interval", Duration.ofMinutes(5))
     private val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
     private val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
+    private val hostname = conf.get("graphite.server", "crawl2")
 
     private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
-//    private val jmxReporter: JmxReporter
+
+    //    private val jmxReporter: JmxReporter
 //    private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter
     private val graphiteReporter: GraphiteReporter
@@ -121,11 +124,10 @@ class AppMetrics(
 //            .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
 //            .build()
 //        csvReporter = CsvReporter.forRegistry(metricRegistry)
-//                .convertRatesTo(TimeUnit.SECONDS)
-//                .convertDurationsTo(TimeUnit.MILLISECONDS)
-//             .build(reportDir.toFile())
+//            .convertRatesTo(TimeUnit.SECONDS)
+//            .convertDurationsTo(TimeUnit.MILLISECONDS)
+//            .build(reportDir.toFile())
 
-        val hostname = "crawl2"
         val pickledGraphite = PickledGraphite(InetSocketAddress(hostname, 2004))
         graphiteReporter = GraphiteReporter.forRegistry(metricRegistry)
             .prefixedWith("pulsar")
@@ -163,6 +165,10 @@ class AppMetrics(
             // csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
             counterReporter.start(initialDelay, counterReportInterval)
+
+            if (NetUtil.testHttpNetwork(hostname, 80)) {
+                graphiteReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
+            }
 
             val now = LocalDateTime.now()
             var delay = Duration.between(now, now.plusHours(1).truncatedTo(ChronoUnit.HOURS))
