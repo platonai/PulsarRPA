@@ -9,10 +9,12 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.FileSizeUnits
 import com.codahale.metrics.*
-import com.codahale.metrics.jmx.JmxReporter
+import com.codahale.metrics.graphite.GraphiteReporter
+import com.codahale.metrics.graphite.PickledGraphite
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
+import java.net.InetSocketAddress
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.time.Duration
@@ -102,9 +104,10 @@ class AppMetrics(
     private val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
 
     private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
-    private val jmxReporter: JmxReporter
-    private val csvReporter: CsvReporter
+//    private val jmxReporter: JmxReporter
+//    private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter
+    private val graphiteReporter: GraphiteReporter
     private val counterReporter = EnumCounterReporter(metricRegistry.enumCounterRegistry, conf = conf)
     private val hourlyTimer = java.util.Timer()
     private val dailyTimer = java.util.Timer()
@@ -114,13 +117,22 @@ class AppMetrics(
     init {
         Files.createDirectories(reportDir)
 
-        jmxReporter = JmxReporter.forRegistry(metricRegistry)
-            .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
-            .build()
-        csvReporter = CsvReporter.forRegistry(metricRegistry)
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build(reportDir.toFile())
+//        jmxReporter = JmxReporter.forRegistry(metricRegistry)
+//            .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
+//            .build()
+//        csvReporter = CsvReporter.forRegistry(metricRegistry)
+//                .convertRatesTo(TimeUnit.SECONDS)
+//                .convertDurationsTo(TimeUnit.MILLISECONDS)
+//             .build(reportDir.toFile())
+
+        val hostname = "crawl2"
+        val pickledGraphite = PickledGraphite(InetSocketAddress(hostname, 2004))
+        graphiteReporter = GraphiteReporter.forRegistry(metricRegistry)
+            .prefixedWith("pulsar")
+            .convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .filter(MetricFilter.ALL)
+            .build(pickledGraphite)
 
         val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
         val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
@@ -147,8 +159,8 @@ class AppMetrics(
 
     fun start() {
         if (isEnabled) {
-            jmxReporter.start()
-            csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
+            // jmxReporter.start()
+            // csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
             counterReporter.start(initialDelay, counterReportInterval)
 
@@ -166,11 +178,10 @@ class AppMetrics(
             hourlyTimer.cancel()
             dailyTimer.cancel()
 
-            slf4jReporter.report()
-
-            csvReporter.close()
+//            csvReporter.close()
             slf4jReporter.close()
-            jmxReporter.close()
+//            jmxReporter.close()
+            graphiteReporter.close()
 
             counterReporter.close()
         }

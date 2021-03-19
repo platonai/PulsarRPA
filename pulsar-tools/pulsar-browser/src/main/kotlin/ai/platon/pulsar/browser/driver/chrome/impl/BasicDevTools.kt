@@ -87,7 +87,7 @@ abstract class BasicDevTools(
         private val numInvokes = metrics.counter("$metricsPrefix.invokes")
         private val numAccepts = metrics.counter("$metricsPrefix.accepts")
         private val gauges = mapOf(
-                "idleTime" to Gauge<String> { idleTime.readable() }
+                "idleTime" to Gauge { idleTime.readable() }
         )
 
         init {

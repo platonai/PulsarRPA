@@ -18,7 +18,8 @@ import java.util.*
  */
 open class MutableConfig : ImmutableConfig {
 
-    @JvmOverloads
+    constructor(): this("", true)
+
     constructor(profile: String = "", loadDefaultResource: Boolean = true) : super(profile, loadDefaultResource)
 
     constructor(loadDefaultResource: Boolean): this("", loadDefaultResource)

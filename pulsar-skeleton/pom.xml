@@ -91,7 +91,7 @@
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-jmx</artifactId>
+            <artifactId>metrics-graphite</artifactId>
         </dependency>
 
         <!-- TODO: remove selenium dependency -->

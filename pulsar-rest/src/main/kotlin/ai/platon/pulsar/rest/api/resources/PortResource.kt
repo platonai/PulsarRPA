@@ -1,9 +1,8 @@
 package ai.platon.pulsar.rest.api.resources
 
-import ai.platon.pulsar.rest.api.ServerInstance
+import ai.platon.pulsar.rest.api.entities.ServerInstance
 import ai.platon.pulsar.rest.api.common.PortManager
 import org.springframework.web.bind.annotation.*
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 @RestController
