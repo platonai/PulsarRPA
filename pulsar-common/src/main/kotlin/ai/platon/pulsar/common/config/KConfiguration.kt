@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AbstractConfiguration.Companion.APPLICATION_SPECIFIED_RESOURCES
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
 import org.codehaus.stax2.XMLStreamReader2
@@ -34,6 +35,8 @@ class KConfiguration(
     private var resources = ArrayList<Resource>()
     private var properties: Properties? = null
     private val XML_INPUT_FACTORY = com.ctc.wstx.stax.WstxInputFactory()
+
+    val loadedResources get() = resources.map { it.name }
 
     constructor(conf: KConfiguration): this() {
         synchronized(conf) {
@@ -145,6 +148,12 @@ class KConfiguration(
             }
         }
         return result.entries.iterator()
+    }
+
+    override fun toString(): String {
+        return resources.joinToString(", ", "[", "]") {
+            it.name.substringAfterLast("/")
+        }
     }
 
     private fun loadResources(

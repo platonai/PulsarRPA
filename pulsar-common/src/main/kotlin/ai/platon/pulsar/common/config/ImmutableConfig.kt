@@ -9,10 +9,18 @@ package ai.platon.pulsar.common.config
  */
 open class ImmutableConfig : AbstractConfiguration {
 
-    @JvmOverloads
-    constructor(profile: String = "", loadDefaultResource: Boolean = true) : super(profile, loadDefaultResource)
+    constructor(): this("", false, listOf())
 
-    constructor(loadDefaultResource: Boolean): this("", loadDefaultResource)
+    constructor(loadDefaults: Boolean): this(
+        System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        loadDefaults
+    )
+
+    constructor(
+        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        loadDefaults: Boolean = true,
+        resources: Iterable<String> = DEFAULT_RESOURCES
+    ): super(profile, loadDefaults, resources)
 
     constructor(conf: KConfiguration) : super(conf)
 
@@ -41,13 +49,10 @@ open class ImmutableConfig : AbstractConfiguration {
     }
 
     companion object {
-        /** Constant `EMPTY`  */
         val EMPTY = ImmutableConfig()
 
-        /** Constant `DEFAULT`  */
         val UNSAFE = ImmutableConfig()
 
-        /** Constant `DEFAULT`  */
-        val DEFAULT = ImmutableConfig(loadDefaultResource = true)
+        val DEFAULT = ImmutableConfig(loadDefaults = true)
     }
 }

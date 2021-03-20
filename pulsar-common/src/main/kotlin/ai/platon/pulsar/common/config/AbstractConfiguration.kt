@@ -43,31 +43,34 @@ import java.util.stream.Stream
 abstract class AbstractConfiguration {
     private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
-    private var profile = ""
-    private val fullPathResources = LinkedHashSet<URL>()
+    var profile = ""
+        private set
+    val mode get() = if (isDistributedFs) "cluster" else "local"
 
     /**
      * we will remove dependency on [KConfiguration] later
      */
-    protected lateinit var conf: KConfiguration
+    protected val conf: KConfiguration
 
     /**
      * Spring core is the first class dependency now, we will remove dependency on [KConfiguration] later
      */
     var environment: Environment? = null
 
+    private val fullPathResources = LinkedHashSet<URL>()
+
     /**
      * Create a [ai.platon.pulsar.common.config.AbstractConfiguration]. This will load the standard
      * resources, `pulsar-default.xml`, `pulsar-site.xml`, `pulsar-task.xml`
      * and hadoop resources.
      */
-    @JvmOverloads
     constructor(
         profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
         loadDefaults: Boolean = true,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ) {
-        loadConfResources(loadDefaults, profile, resources)
+        conf = KConfiguration(loadDefaults)
+        loadConfResources(profile, loadDefaults, resources)
     }
 
     /**
@@ -79,9 +82,8 @@ abstract class AbstractConfiguration {
         this.conf = KConfiguration(conf)
     }
 
-    private fun loadConfResources(loadDefaults: Boolean, profile: String, extraResources: Iterable<String>) {
-        conf = KConfiguration(loadDefaults)
-        extraResources.forEach(Consumer { e: String -> resources.add(e) })
+    private fun loadConfResources(profile: String, loadDefaults: Boolean, extraResources: Iterable<String>) {
+        extraResources.toCollection(resources)
         this.profile = profile
         if (!loadDefaults) {
             return
@@ -92,7 +94,6 @@ abstract class AbstractConfiguration {
         val specifiedResources =
             System.getProperty(CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES, APPLICATION_SPECIFIED_RESOURCES)
         specifiedResources.split(",".toRegex()).forEach { resources.add(it) }
-        val mode = if (isDistributedFs) "cluster" else "local"
         for (name in resources) {
             val realResource = getRealResource(profile, mode, name)
             if (realResource != null) {
@@ -101,6 +102,7 @@ abstract class AbstractConfiguration {
                 LOG.info("Resource not find: $name")
             }
         }
+
         fullPathResources.forEach { conf.addResource(it) }
         LOG.info(toString())
     }
@@ -112,10 +114,9 @@ abstract class AbstractConfiguration {
             "$prefix/$suffix", "$prefix/$profile/$suffix",
             "$prefix/$name", "$prefix/$profile/$name",
             name
-        )
+        ).map { it.replace("//", "/") }.distinct().sortedByDescending { it.length }
 
-        val resource = listOf(*searchPaths).sortedByDescending { it.length }
-            .mapNotNull { getResource(it) }.firstOrNull()
+        val resource = searchPaths.mapNotNull { getResource(it) }.firstOrNull()
         if (resource != null) {
             LOG.info("Find legacy resource: $resource")
         }
@@ -512,7 +513,6 @@ abstract class AbstractConfiguration {
      * @return a [java.net.URL] object.
      */
     fun getResource(resource: String): URL? {
-        // System.err.println("Search path: " + resource);
         return SParser.wrap(resource).resource
     }
 
@@ -557,18 +557,11 @@ abstract class AbstractConfiguration {
         return SParser(get(name))
     }
 
-    /** {@inheritDoc}  */
-    override fun toString(): String {
-        val sb = StringBuilder("Expected $conf")
-        if (!profile.isEmpty()) {
-            sb.append(", profile: ").append(profile)
-        }
-        return sb.toString()
-    }
+    override fun toString() = "profile: <$profile> | $conf"
 
     companion object {
         val LOG = LoggerFactory.getLogger(AbstractConfiguration::class.java)
-        val DEFAULT_RESOURCES = LinkedHashSet<String>()
         const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml"
+        val DEFAULT_RESOURCES = LinkedHashSet<String>()
     }
 }

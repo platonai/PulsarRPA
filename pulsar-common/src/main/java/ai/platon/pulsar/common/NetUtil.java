@@ -166,7 +166,7 @@ public class NetUtil {
                 mozilla, appleWebKit, chrome, safari);
     }
     
-    public static String gethost() {
+    public static String getHostname() {
         try {return "" + InetAddress.getLocalHost();}
         catch(UnknownHostException uhe) {return "" + uhe;}
     }
@@ -192,8 +192,8 @@ public class NetUtil {
      * @return a boolean.
      */
     public static boolean isMaster(ImmutableConfig conf) {
-        String masterhost = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
-        return masterhost.equals("localhost") || masterhost.equals(gethost());
+        String master = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
+        return master.equals("localhost") || master.equals(getHostname());
     }
 
     public static URL getMasterURL(ImmutableConfig conf, String path) throws MalformedURLException {

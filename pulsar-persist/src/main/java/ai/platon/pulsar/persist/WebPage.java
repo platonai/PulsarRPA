@@ -576,7 +576,26 @@ final public class WebPage implements Comparable<WebPage> {
      */
     @NotNull
     public String getArgs() {
-        return page.getOptions() == null ? "" : page.getOptions().toString();
+        if (page.getOptions() == null) {
+            return "";
+        }
+
+        String args = page.getOptions().toString().trim();
+        // fix cacheContent
+        String search = "-cacheContent";
+        int pos = args.indexOf(search);
+        if (pos != -1) {
+            pos += search.length();
+            if (pos == args.length()) {
+                args = args.replace(search, search + " true");
+            } else {
+                String s = args.substring(pos).trim();
+                if (s.charAt(0) == '-') {
+                    args = args.replace(search, search + " true");
+                }
+            }
+        }
+        return args;
     }
 
     /**

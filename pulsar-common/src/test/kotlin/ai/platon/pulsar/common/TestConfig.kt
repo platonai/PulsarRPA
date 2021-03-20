@@ -1,100 +1,92 @@
-package ai.platon.pulsar.common;
+package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.MutableConfig;
-import ai.platon.pulsar.common.config.VolatileConfig;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
-
-import java.time.Duration;
-
-import static org.junit.Assert.*;
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
+import org.apache.commons.lang3.StringUtils
+import org.junit.Test
+import java.time.Duration
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
  */
-public class TestConfig {
-
+class TestConfig {
     @Test
-    public void testConfig() {
-        ImmutableConfig conf = new ImmutableConfig(false);
-        System.out.println(conf.toString());
-        assertFalse(conf.toString().contains("core-default.xml"));
-
-        conf = new ImmutableConfig();
-        assertTrue(conf.toString().contains("core-default.xml"));
+    fun testConfig() {
+        var conf = ImmutableConfig()
+        println(conf.toString())
+        assertFalse("pulsar-task.xml" in conf.toString())
+        conf = ImmutableConfig(profile = "default", loadDefaults = true)
+        assertTrue("pulsar-task.xml" in conf.toString())
+        assertEquals("test", conf["pulsar.config.id"])
+        assertEquals("amazon_tmp", conf["storage.crawl.id"])
     }
 
     @Test
-    public void testDuration() {
-        MutableConfig conf = new MutableConfig();
+    fun testDuration() {
+        val conf = MutableConfig()
         // ISO-8601 format
-        conf.set("d1", "p3d");
-        conf.set("d2", "pt2h");
-        conf.set("d3", "pt3m");
-        conf.set("d4", "-pt3s");
-        assertEquals("PT72H", conf.getDuration("d1", Duration.ZERO).toString());
-        assertEquals("PT2H", conf.getDuration("d2", Duration.ZERO).toString());
-        assertEquals("PT3M", conf.getDuration("d3", Duration.ZERO).toString());
-        assertEquals("PT-3S", conf.getDuration("d4", Duration.ZERO).toString());
+        conf["d1"] = "p3d"
+        conf["d2"] = "pt2h"
+        conf["d3"] = "pt3m"
+        conf["d4"] = "-pt3s"
+        assertEquals("PT72H", conf.getDuration("d1", Duration.ZERO).toString())
+        assertEquals("PT2H", conf.getDuration("d2", Duration.ZERO).toString())
+        assertEquals("PT3M", conf.getDuration("d3", Duration.ZERO).toString())
+        assertEquals("PT-3S", conf.getDuration("d4", Duration.ZERO).toString())
 
         // Hadoop format
-        conf.set("hd1", "1d");
-        conf.set("hd2", "3m");
-        conf.set("hd3", "5s");
-        assertEquals("PT24H", conf.getDuration("hd1", Duration.ZERO).toString());
-        assertEquals("PT3M", conf.getDuration("hd2", Duration.ZERO).toString());
-        assertEquals("PT5S", conf.getDuration("hd3", Duration.ZERO).toString());
+        conf["hd1"] = "1d"
+        conf["hd2"] = "3m"
+        conf["hd3"] = "5s"
+        assertEquals("PT24H", conf.getDuration("hd1", Duration.ZERO).toString())
+        assertEquals("PT3M", conf.getDuration("hd2", Duration.ZERO).toString())
+        assertEquals("PT5S", conf.getDuration("hd3", Duration.ZERO).toString())
     }
 
     @Test
-    public void testCollection() {
-        MutableConfig conf = new MutableConfig();
-
-        conf.set("test.collection", "a\nb,\nc,\nd");
-        assertEquals(3, conf.getTrimmedStringCollection("test.collection").size());
-
-        conf.getTrimmedStringCollection("test.collection").stream().map(l -> l + " -> " + l.length())
-                .forEach(System.out::println);
-
-        conf.set("test.collection", "a,\nb,\nc,\nd");
-        assertEquals(4, conf.getTrimmedStringCollection("test.collection").size());
+    fun testCollection() {
+        val conf = MutableConfig()
+        conf["test.collection"] = "a\nb,\nc,\nd"
+        assertEquals(3, conf.getTrimmedStringCollection("test.collection").size.toLong())
+        conf.getTrimmedStringCollection("test.collection").stream().map { l: String -> l + " -> " + l.length }
+            .forEach { x: String? -> println(x) }
+        conf["test.collection"] = "a,\nb,\nc,\nd"
+        assertEquals(4, conf.getTrimmedStringCollection("test.collection").size.toLong())
     }
 
     @Test
-    public void testStrings() {
-        MutableConfig conf = new MutableConfig();
-
-        String n1 = "n1";
-        String v1 = "a,b,c,d";
-        conf.set(n1, v1);
-
-        assertEquals(v1, conf.get(n1));
-        assertEquals(4, conf.getStrings(n1).length);
+    fun testStrings() {
+        val conf = MutableConfig()
+        val n1 = "n1"
+        val v1 = "a,b,c,d"
+        conf[n1] = v1
+        assertEquals(v1, conf[n1])
+        assertEquals(4, conf.getStrings(n1).size)
     }
 
     @Test
-    public void testStrings2() {
-        VolatileConfig conf = new VolatileConfig();
-
-        String n1 = "n1";
-        String v1 = "a,b,c,d";
-        conf.set(n1, v1);
-
-        assertEquals(v1, conf.get(n1));
-        assertEquals(4, conf.getStrings(n1).length);
+    fun testStrings2() {
+        val conf = VolatileConfig()
+        val n1 = "n1"
+        val v1 = "a,b,c,d"
+        conf[n1] = v1
+        assertEquals(v1, conf[n1])
+        assertEquals(4, conf.getStrings(n1).size)
     }
 
     @Test
-    public void testFallback() {
-        MutableConfig mutableConfig = new MutableConfig();
-        String n1 = "n1";
-        String v1 = "a,b,c,d";
-        mutableConfig.set(n1, v1);
-
-        VolatileConfig conf = new VolatileConfig(mutableConfig);
-        assertEquals(v1, conf.get(n1));
-        System.out.println(StringUtils.join(conf.getStrings(n1), ", "));
-        assertEquals(4, conf.getStrings(n1).length);
+    fun testFallback() {
+        val mutableConfig = MutableConfig()
+        val n1 = "n1"
+        val v1 = "a,b,c,d"
+        mutableConfig[n1] = v1
+        val conf = VolatileConfig(mutableConfig)
+        assertEquals(v1, conf[n1])
+        println(StringUtils.join(conf.getStrings(n1), ", "))
+        assertEquals(4, conf.getStrings(n1).size)
     }
 }

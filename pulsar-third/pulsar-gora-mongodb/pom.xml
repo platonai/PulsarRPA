@@ -81,6 +81,14 @@
                   <pattern>com.mongodb</pattern>
                   <shadedPattern>ai.pulsar.shaded.com.mongodb</shadedPattern>
                 </relocation>
+                <relocation>
+                  <pattern>org.jdom</pattern>
+                  <shadedPattern>ai.pulsar.shaded.org.jdom</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.bson</pattern>
+                  <shadedPattern>ai.pulsar.shaded.org.bson</shadedPattern>
+                </relocation>
               </relocations>
             </configuration>
           </execution>

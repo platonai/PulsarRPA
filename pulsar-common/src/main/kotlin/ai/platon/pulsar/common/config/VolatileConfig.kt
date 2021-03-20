@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.config
 
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
@@ -14,12 +13,20 @@ open class VolatileConfig : MutableConfig {
     private val ttls: MutableMap<String, Int> = ConcurrentHashMap()
     val variables: MutableMap<String, Any> = ConcurrentHashMap()
 
-    @JvmOverloads
-    constructor(profile: String = "", loadDefaultResource: Boolean = true) : super(profile, loadDefaultResource)
+    constructor(): this("", false, listOf())
 
-    constructor(loadDefaultResource: Boolean): this("", loadDefaultResource)
+    constructor(loadDefaults: Boolean): this(
+        System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        loadDefaults
+    )
 
-    constructor(fallbackConfig: ImmutableConfig) : super("", false) {
+    constructor(
+        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        loadDefaults: Boolean = true,
+        resources: Iterable<String> = DEFAULT_RESOURCES
+    ): super(profile, loadDefaults, resources)
+
+    constructor(fallbackConfig: ImmutableConfig) : this("", false) {
         this.fallbackConfig = fallbackConfig
         if (fallbackConfig is VolatileConfig) {
             ttls.putAll(fallbackConfig.ttls)

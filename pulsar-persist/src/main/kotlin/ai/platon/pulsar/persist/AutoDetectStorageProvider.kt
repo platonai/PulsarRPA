@@ -76,6 +76,8 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
          */
         @Throws(ClassNotFoundException::class)
         fun <K, V : Persistent> detectDataStoreClass(conf: ImmutableConfig): Class<out DataStore<K, V>> {
+//            println("............")
+//            println(detectDataStoreClassName(conf))
             return Class.forName(detectDataStoreClassName(conf)) as Class<out DataStore<K, V>>
         }
     }

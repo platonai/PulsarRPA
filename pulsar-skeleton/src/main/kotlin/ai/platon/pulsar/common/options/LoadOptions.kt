@@ -270,6 +270,9 @@ open class LoadOptions(
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
+    @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
+    var version = "20210321"
+
     /**
      * If shortenKey is set, also ignore url query when fetch pages
      * */

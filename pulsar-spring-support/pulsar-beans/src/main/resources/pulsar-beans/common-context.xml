@@ -6,6 +6,7 @@
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig">
+        <constructor-arg name="loadDefaults" value="true" />
         <property name="environment" ref="environment"/>
     </bean>
 

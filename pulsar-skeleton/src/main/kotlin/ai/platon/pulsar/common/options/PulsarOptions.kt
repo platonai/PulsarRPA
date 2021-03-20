@@ -56,7 +56,7 @@ open class PulsarOptions(
         try {
             doParse()
         } catch (e: Throwable) {
-            log.warn(Strings.stringifyException(e))
+            log.warn("Parse failed \n$args", e)
             return false
         }
 

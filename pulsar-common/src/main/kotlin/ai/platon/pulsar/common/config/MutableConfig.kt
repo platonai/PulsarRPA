@@ -1,13 +1,11 @@
 package ai.platon.pulsar.common.config
 
-import kotlin.jvm.JvmOverloads
 import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
 import java.lang.Boolean.toString
 import java.lang.Integer.toString
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 
 /**
  *
@@ -18,11 +16,18 @@ import java.util.*
  */
 open class MutableConfig : ImmutableConfig {
 
-    constructor(): this("", true)
+    constructor(): this("", false, listOf())
 
-    constructor(profile: String = "", loadDefaultResource: Boolean = true) : super(profile, loadDefaultResource)
+    constructor(loadDefaults: Boolean): this(
+        System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        loadDefaults
+    )
 
-    constructor(loadDefaultResource: Boolean): this("", loadDefaultResource)
+    constructor(
+        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
+        loadDefaults: Boolean = true,
+        resources: Iterable<String> = DEFAULT_RESOURCES
+    ): super(profile, loadDefaults, resources)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {
         this.environment = conf.environment

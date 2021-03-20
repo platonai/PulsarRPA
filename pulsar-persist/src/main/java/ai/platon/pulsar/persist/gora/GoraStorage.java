@@ -2,6 +2,7 @@ package ai.platon.pulsar.persist.gora;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.persist.HadoopUtils;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
@@ -17,34 +18,13 @@ import java.util.Properties;
 import static ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 
-/**
- * Created by vincent on 17-5-15.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
- *
- * @author vincent
- * @version $Id: $Id
- */
 public class GoraStorage {
-    /** Constant <code>log</code> */
     public static final Logger log = LoggerFactory.getLogger(GoraStorage.class);
 
     // load properties from gora.properties
-    /** Constant <code>properties</code> */
     public static Properties properties = DataStoreFactory.createProps();
     private static Map<String, Object> dataStores = new HashMap<>();
 
-    /**
-     * <p>createDataStore.</p>
-     *
-     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
-     * @param keyClass a {@link java.lang.Class} object.
-     * @param persistentClass a {@link java.lang.Class} object.
-     * @param <K> a K object.
-     * @param <V> a V object.
-     * @return a {@link org.apache.gora.store.DataStore} object.
-     * @throws org.apache.gora.util.GoraException if any.
-     * @throws java.lang.ClassNotFoundException if any.
-     */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
     createDataStore(ImmutableConfig conf, Class<K> keyClass, Class<V> persistentClass)
@@ -54,16 +34,6 @@ public class GoraStorage {
         return createDataStore(conf, keyClass, persistentClass, dataStoreClass);
     }
 
-    /**
-     * Creates a store for the given persistentClass. Currently supports WebPage store
-     *
-     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
-     * @param keyClass a {@link java.lang.Class} object.
-     * @param persistentClass a {@link java.lang.Class} object.
-     * @param dataStoreClass a {@link java.lang.Class} object.
-     * @return a {@link org.apache.gora.store.DataStore} object.
-     * @throws org.apache.gora.util.GoraException if any.
-     */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
     createDataStore(ImmutableConfig conf,
@@ -85,7 +55,7 @@ public class GoraStorage {
 
         Object o = dataStores.get(schema);
         if (o == null) {
-            org.apache.hadoop.conf.Configuration hadoopConf = new org.apache.hadoop.conf.Configuration();
+            org.apache.hadoop.conf.Configuration hadoopConf = HadoopUtils.INSTANCE.toHadoopConfiguration(conf);
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
                     keyClass, persistentClass, hadoopConf, properties, schema);
 
