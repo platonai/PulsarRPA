@@ -31,12 +31,12 @@ public class NetUtil {
     /**
      * <p>testNetwork.</p>
      *
-     * @param ip a {@link java.lang.String} object.
+     * @param host a {@link java.lang.String} object.
      * @param port a int.
      * @return a boolean.
      */
-    public static boolean testNetwork(String ip, int port) {
-        return testTcpNetwork(ip, port);
+    public static boolean testNetwork(String host, int port) {
+        return testTcpNetwork(host, port);
     }
 
     /**
@@ -80,15 +80,12 @@ public class NetUtil {
 
         return reachable;
     }
-
-    /**
-     * <p>testHttpNetwork.</p>
-     *
-     * @param host a {@link java.lang.String} object.
-     * @param port a int.
-     * @return a boolean.
-     */
+    
     public static boolean testHttpNetwork(String host, int port) {
+        if (host.isBlank()) {
+            return false;
+        }
+
         try {
             URL url = new URL("http", host, port, "/");
             return testHttpNetwork(url);
@@ -98,31 +95,20 @@ public class NetUtil {
         return false;
     }
 
-    /**
-     * <p>testTcpNetwork.</p>
-     *
-     * @param ip a {@link java.lang.String} object.
-     * @param port a int.
-     * @return a boolean.
-     */
-    public static boolean testTcpNetwork(String ip, int port) {
-        return testTcpNetwork(ip, port, CONNECTION_TIMEOUT);
+    public static boolean testTcpNetwork(String host, int port) {
+        return testTcpNetwork(host, port, CONNECTION_TIMEOUT);
     }
 
-    /**
-     * <p>testTcpNetwork.</p>
-     *
-     * @param ip a {@link java.lang.String} object.
-     * @param port a int.
-     * @param timeout a {@link java.time.Duration} object.
-     * @return a boolean.
-     */
-    public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
+    public static boolean testTcpNetwork(String host, int port, Duration timeout) {
+        if (host.isBlank()) {
+            return false;
+        }
+
         boolean reachable = false;
         Socket socket = new Socket();
 
         try {
-            socket.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
+            socket.connect(new InetSocketAddress(host, port), (int)timeout.toMillis());
             reachable = socket.isConnected();
             socket.close();
         } catch (Exception ignored) {
@@ -131,27 +117,11 @@ public class NetUtil {
 
         return reachable;
     }
-
-    /**
-     * <p>getAgentString.</p>
-     *
-     * @param agentName a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
+    
     public static String getAgentString(String agentName) {
         return agentName;
     }
-
-    /**
-     * <p>getAgentString.</p>
-     *
-     * @param agentName a {@link java.lang.String} object.
-     * @param agentVersion a {@link java.lang.String} object.
-     * @param agentDesc a {@link java.lang.String} object.
-     * @param agentURL a {@link java.lang.String} object.
-     * @param agentEmail a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
+    
     public static String getAgentString(String agentName, String agentVersion,
                                         String agentDesc, String agentURL, String agentEmail) {
 
@@ -190,39 +160,18 @@ public class NetUtil {
         }
         return buf.toString();
     }
-
-    /**
-     * <p>getChromeUserAgent.</p>
-     *
-     * @param mozilla a {@link java.lang.String} object.
-     * @param appleWebKit a {@link java.lang.String} object.
-     * @param chrome a {@link java.lang.String} object.
-     * @param safari a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
+    
     public static String getChromeUserAgent(String mozilla, String appleWebKit, String chrome, String safari) {
         return String.format("Mozilla/%s (X11; Linux x86_64) AppleWebKit/%s (KHTML, like Gecko) Chrome/%s Safari/%s",
                 mozilla, appleWebKit, chrome, safari);
     }
-
-    /**
-     * Return hostname without throwing exception.
-     *
-     * @return hostname
-     */
-    public static String getHostname() {
+    
+    public static String gethost() {
         try {return "" + InetAddress.getLocalHost();}
         catch(UnknownHostException uhe) {return "" + uhe;}
     }
-
-    /**
-     * Attempt to obtain the host name of the given string which contains
-     * an IP address and an optional port.
-     *
-     * @param ipPort string of form ip[:port]
-     * @return Host name or null if the name can not be determined
-     */
-    public static String getHostNameOfIP(String ipPort) {
+    
+    public static String gethostOfIP(String ipPort) {
         if (null == ipPort || !IP_PORT_PATTERN.matcher(ipPort).matches()) {
             return null;
         }
@@ -243,17 +192,10 @@ public class NetUtil {
      * @return a boolean.
      */
     public static boolean isMaster(ImmutableConfig conf) {
-        String masterHostname = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
-        return masterHostname.equals("localhost") || masterHostname.equals(getHostname());
+        String masterhost = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
+        return masterhost.equals("localhost") || masterhost.equals(gethost());
     }
 
-    /**
-     * <p>getMasterURL.</p>
-     *
-     * @param path a {@link java.lang.String} object.
-     * @return a {@link java.net.URL} object.
-     * @throws java.net.MalformedURLException if any.
-     */
     public static URL getMasterURL(ImmutableConfig conf, String path) throws MalformedURLException {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
@@ -261,24 +203,12 @@ public class NetUtil {
         return new URL("http", host, port, path);
     }
 
-    /**
-     * <p>getMasterUrl.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public static String getMasterUrl(ImmutableConfig conf) {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST);
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
         return "http://" + host + ":" + port;
     }
 
-    /**
-     * <p>isExternalLink.</p>
-     *
-     * @param sourceUrl a {@link java.lang.String} object.
-     * @param destUrl a {@link java.lang.String} object.
-     * @return a boolean.
-     */
     public static boolean isExternalLink(String sourceUrl, String destUrl) {
         try {
             String toHost = new URL(destUrl).getHost().toLowerCase();

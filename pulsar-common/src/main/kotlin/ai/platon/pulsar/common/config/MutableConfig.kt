@@ -24,7 +24,9 @@ open class MutableConfig : ImmutableConfig {
 
     constructor(loadDefaultResource: Boolean): this("", loadDefaultResource)
 
-    constructor(conf: ImmutableConfig) : super(conf.unbox())
+    constructor(conf: ImmutableConfig) : super(conf.unbox()) {
+        this.environment = conf.environment
+    }
 
     /**
      * Set the `value` of the `name` property. If

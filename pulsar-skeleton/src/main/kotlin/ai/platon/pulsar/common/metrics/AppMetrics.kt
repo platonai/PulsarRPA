@@ -1,9 +1,6 @@
 package ai.platon.pulsar.common.metrics
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -100,21 +97,46 @@ class AppMetrics(
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
 
+    val name = AppContext.APP_NAME
     val initialDelay = conf.getDuration("metrics.report.initial.delay", Duration.ofMinutes(3))
     val csvReportInterval = conf.getDuration("metrics.csv.report.interval", Duration.ofMinutes(5))
     val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
     val graphiteReportInterval = conf.getDuration("metrics.graphite.report.interval", Duration.ofMinutes(2))
     val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
-    val hostname = conf.get("graphite.server", "")
+    val hostname = conf.get("graphite.server", "crawl2")
     val batchSize = conf.getInt("graphite.pickled.batch.size", 100)
 
     private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
 
-    //    private val jmxReporter: JmxReporter
-//    private val csvReporter: CsvReporter
-    private val slf4jReporter: CodahaleSlf4jReporter
-    private val graphiteReporter: GraphiteReporter
-    private val counterReporter = EnumCounterReporter(metricRegistry.enumCounterRegistry, conf = conf)
+    private val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
+    private val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
+//    private val jmxReporter: JmxReporter = JmxReporter.forRegistry(metricRegistry)
+//        .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
+//        .build()
+//    private val csvReporter: CsvReporter = CsvReporter.forRegistry(metricRegistry)
+//        .convertRatesTo(TimeUnit.SECONDS)
+//        .convertDurationsTo(TimeUnit.MILLISECONDS)
+//        .build(reportDir.toFile())
+    private val slf4jReporter = CodahaleSlf4jReporter.forRegistry(metricRegistry)
+        .scheduleOn(executor).shutdownExecutorOnStop(true)
+        .outputTo(LoggerFactory.getLogger(AppMetrics::class.java))
+        .convertRatesTo(TimeUnit.SECONDS)
+        .convertDurationsTo(TimeUnit.MILLISECONDS)
+        .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
+        .build()
+    private val counterReporter = EnumCounterReporter(metricRegistry.enumCounterRegistry, conf = conf).apply {
+        outputTo(LoggerFactory.getLogger(EnumCounterReporter::class.java))
+    }
+    private val pickledGraphite get() = hostname.takeIf { NetUtil.testNetwork(hostname, 2004) }
+        ?.let { PickledGraphite(InetSocketAddress(it, 2004), batchSize) }
+    private var graphiteReporter: GraphiteReporter? = pickledGraphite?.let { pickled ->
+        GraphiteReporter.forRegistry(metricRegistry)
+            .prefixedWith(name)
+            .convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .filter(MetricFilter.ALL)
+            .build(pickled)
+    }
     private val hourlyTimer = java.util.Timer()
     private val dailyTimer = java.util.Timer()
 
@@ -122,33 +144,6 @@ class AppMetrics(
 
     init {
         Files.createDirectories(reportDir)
-
-//        jmxReporter = JmxReporter.forRegistry(metricRegistry)
-//            .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
-//            .build()
-//        csvReporter = CsvReporter.forRegistry(metricRegistry)
-//            .convertRatesTo(TimeUnit.SECONDS)
-//            .convertDurationsTo(TimeUnit.MILLISECONDS)
-//            .build(reportDir.toFile())
-
-        val pickledGraphite = PickledGraphite(InetSocketAddress(hostname, 2004), batchSize)
-        graphiteReporter = GraphiteReporter.forRegistry(metricRegistry)
-            .prefixedWith("pulsar")
-            .convertRatesTo(TimeUnit.SECONDS)
-            .convertDurationsTo(TimeUnit.MILLISECONDS)
-            .filter(MetricFilter.ALL)
-            .build(pickledGraphite)
-
-        val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
-        val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
-        slf4jReporter = CodahaleSlf4jReporter.forRegistry(metricRegistry)
-                .scheduleOn(executor).shutdownExecutorOnStop(true)
-                .outputTo(LoggerFactory.getLogger(AppMetrics::class.java))
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
-                .build()
-        counterReporter.outputTo(LoggerFactory.getLogger(EnumCounterReporter::class.java))
     }
 
     fun inc(count: Int, vararg counters: Enum<*>) {
@@ -169,8 +164,8 @@ class AppMetrics(
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
             counterReporter.start(initialDelay, counterReportInterval)
 
-            if (hostname.isNotBlank() && NetUtil.testHttpNetwork(hostname, 80)) {
-                graphiteReporter.start(initialDelay.seconds, graphiteReportInterval.seconds, TimeUnit.SECONDS)
+            if (NetUtil.testNetwork(hostname, 2004)) {
+                graphiteReporter?.start(initialDelay.seconds, graphiteReportInterval.seconds, TimeUnit.SECONDS)
                 logger.info("GraphiteReporter is started, report interval: {}", graphiteReportInterval)
             }
 
@@ -191,7 +186,8 @@ class AppMetrics(
 //            csvReporter.close()
             slf4jReporter.close()
 //            jmxReporter.close()
-            graphiteReporter.close()
+            graphiteReporter?.close()
+            graphiteReporter = null
 
             counterReporter.close()
         }

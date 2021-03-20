@@ -16,6 +16,10 @@ open class ImmutableConfig : AbstractConfiguration {
 
     constructor(conf: KConfiguration) : super(conf)
 
+    constructor(conf: ImmutableConfig) : super(conf.unbox()) {
+        this.environment = conf.environment
+    }
+
     /**
      *
      * toMutableConfig.
@@ -44,6 +48,6 @@ open class ImmutableConfig : AbstractConfiguration {
         val UNSAFE = ImmutableConfig()
 
         /** Constant `DEFAULT`  */
-        val DEFAULT = ImmutableConfig(KConfiguration())
+        val DEFAULT = ImmutableConfig(loadDefaultResource = true)
     }
 }

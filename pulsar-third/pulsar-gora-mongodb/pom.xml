@@ -45,7 +45,8 @@
   <properties>
     <osgi.import>*</osgi.import>
     <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
-    <mongo.driver.version>3.5.0</mongo.driver.version>
+<!--    <mongo.driver.version>3.5.0</mongo.driver.version>-->
+    <mongo.driver.version>3.12.8</mongo.driver.version>
     <mongo.embed.version>2.0.0</mongo.embed.version>
     <avro.version>1.8.1</avro.version>
   </properties>
@@ -75,6 +76,12 @@
                   <exclude>ch.qos.logback:*</exclude>
                 </excludes>
               </artifactSet>
+              <relocations>
+                <relocation>
+                  <pattern>com.mongodb</pattern>
+                  <shadedPattern>ai.pulsar.shaded.com.mongodb</shadedPattern>
+                </relocation>
+              </relocations>
             </configuration>
           </execution>
         </executions>
