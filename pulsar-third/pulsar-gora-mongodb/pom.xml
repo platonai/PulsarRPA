@@ -45,8 +45,8 @@
   <properties>
     <osgi.import>*</osgi.import>
     <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
-<!--    <mongo.driver.version>3.5.0</mongo.driver.version>-->
-    <mongo.driver.version>3.12.8</mongo.driver.version>
+    <mongo.driver.version>3.5.0</mongo.driver.version>
+<!--    <mongo.driver.version>3.12.8</mongo.driver.version>-->
     <mongo.embed.version>2.0.0</mongo.embed.version>
     <avro.version>1.8.1</avro.version>
   </properties>
@@ -64,16 +64,29 @@
             </goals>
             <configuration>
 <!--              <minimizeJar>true</minimizeJar>-->
+<!--              <filters>-->
+<!--                <filter>-->
+<!--                  <artifact>*:*</artifact>-->
+<!--                  <excludes>-->
+<!--                    <exclude>META-INF/*</exclude>-->
+<!--                  </excludes>-->
+<!--                </filter>-->
+<!--              </filters>-->
               <artifactSet>
                 <excludes>
                   <exclude>junit:junit</exclude>
                   <exclude>jmock:*</exclude>
                   <exclude>*:xml-apis</exclude>
                   <exclude>log4j:log4j:jar:</exclude>
-                  <exclude>commons-logging:*</exclude>
-                  <exclude>*:guava</exclude>
-                  <exclude>org.slf4j:*</exclude>
                   <exclude>ch.qos.logback:*</exclude>
+<!--                  <exclude>org.jetbrains:*</exclude>-->
+<!--                  <exclude>org.intellij:*</exclude>-->
+<!--                  <exclude>org.javax:*</exclude>-->
+                  <exclude>org.slf4j:*</exclude>
+<!--                  <exclude>com.google.guava:*</exclude>-->
+<!--                  <exclude>commons-logging:*</exclude>-->
+<!--                  <exclude>kotlin:*</exclude>-->
+<!--                  <exclude>kotlinx:*</exclude>-->
                 </excludes>
               </artifactSet>
               <relocations>
@@ -82,12 +95,12 @@
                   <shadedPattern>ai.pulsar.shaded.com.mongodb</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>org.jdom</pattern>
-                  <shadedPattern>ai.pulsar.shaded.org.jdom</shadedPattern>
-                </relocation>
-                <relocation>
                   <pattern>org.bson</pattern>
                   <shadedPattern>ai.pulsar.shaded.org.bson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.jdom</pattern>
+                  <shadedPattern>ai.pulsar.shaded.org.jdom</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
@@ -102,18 +115,6 @@
       <groupId>org.apache.gora</groupId>
       <artifactId>gora-core</artifactId>
       <scope>compile</scope>
-    </dependency>
-
-    <!-- For Configuration -->
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.1.1</version>
     </dependency>
 
     <dependency>
@@ -133,6 +134,18 @@
           <artifactId>ant</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <!-- For Configuration -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.1.1</version>
     </dependency>
 
     <dependency>
@@ -177,6 +190,12 @@
       <groupId>de.flapdoodle.embed</groupId>
       <artifactId>de.flapdoodle.embed.mongo</artifactId>
       <version>${mongo.embed.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
+      <version>${hadoop.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

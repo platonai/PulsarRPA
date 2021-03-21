@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
@@ -20,7 +19,7 @@ open class PulsarOptions(
      * */
     val argv: Array<String>
 ) : Parameterized {
-    protected val log = LoggerFactory.getLogger(PulsarOptions::class.java)
+    protected val logger = LoggerFactory.getLogger(PulsarOptions::class.java)
 
     init { normalize(argv) }
 
@@ -29,7 +28,7 @@ open class PulsarOptions(
     var allowParameterOverwriting = true
     // arguments
     val args: String get() = argv.joinToString(DEFAULT_DELIMETER)
-    protected val registeredObjects: MutableSet<Any> = HashSet()
+    private val registeredObjects: MutableSet<Any> = HashSet()
     protected lateinit var jc: JCommander
 
     open var isHelp: Boolean = false
@@ -56,7 +55,7 @@ open class PulsarOptions(
         try {
             doParse()
         } catch (e: Throwable) {
-            log.warn("Parse failed \n$args", e)
+            logger.warn("Failed to parse \n$args", e)
             return false
         }
 
@@ -83,7 +82,7 @@ open class PulsarOptions(
     }
 
     /**
-     * TODO: there is a bug to handle overwriting boolean field with arity = 0, e.g. "-parse -parse"
+     * TODO: fix bug to handle overwriting boolean field with arity = 0, e.g. "-parse -parse"
      * */
     private fun doParse() {
         registeredObjects.add(this)

@@ -14,6 +14,7 @@ import kotlin.test.assertTrue
  * Created by vincent on 17-1-14.
  */
 class TestConfig {
+
     @Test
     fun testConfig() {
         var conf = ImmutableConfig()

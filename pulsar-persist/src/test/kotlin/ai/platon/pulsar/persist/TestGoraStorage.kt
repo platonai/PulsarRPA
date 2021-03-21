@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.gora.mongodb.store.MongoStore
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -26,7 +27,7 @@ import kotlin.test.assertTrue
 class TestGoraStorage {
 
     companion object {
-        val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
+        private val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
         private val conf = VolatileConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
         private var store: DataStore<String, GWebPage> = webDb.store
@@ -52,7 +53,7 @@ class TestGoraStorage {
     }
 
     @After
-    fun teardown() {
+    fun tearDown() {
     }
 
     @Test

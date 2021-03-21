@@ -599,9 +599,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setOptions.</p>
-     *
-     * @param args a {@link java.lang.String} object.
+     * <p>set load arguments.</p>
      */
     public void setArgs(@NotNull String args) {
         page.setOptions(args);
@@ -609,8 +607,6 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * <p>getConfiguredUrl.</p>
-     *
-     * @return a {@link java.lang.String} object.
      */
     @NotNull
     public String getConfiguredUrl() {
@@ -622,9 +618,6 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getQuery.</p>
-     *
-     * @return a {@link java.lang.String} object.
      * @deprecated
      */
     @Nullable
@@ -633,10 +626,6 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setQuery.</p>
-     *
-     * @param query a {@link java.lang.String} object.
-     * @deprecated
      */
     public void setQuery(@Nullable String query) {
         getMetadata().set(Name.QUERY, query);

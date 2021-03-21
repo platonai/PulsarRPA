@@ -410,6 +410,12 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-gora-mongodb</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.mongodb</groupId>
+                        <artifactId>mongo-java-driver</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>

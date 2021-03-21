@@ -19,10 +19,12 @@ package ai.platon.pulsar.gora.mongodb.store;
 
 import ai.platon.pulsar.gora.mongodb.GoraMongodbTestDriver;
 import de.flapdoodle.embed.mongo.distribution.Version;
+import org.junit.Ignore;
 
 /**
  * Perform {@link TestMongoStore} tests on MongoDB 2.6.x server.
  */
+@Ignore
 public class TestMongoStore26 extends TestMongoStore {
 
   static {

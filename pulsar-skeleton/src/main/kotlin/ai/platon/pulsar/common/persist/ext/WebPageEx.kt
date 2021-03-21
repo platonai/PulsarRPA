@@ -11,7 +11,6 @@ val WebPage.loadEventHandler: LoadEventHandler?
  * Get or create a LoadOptions from the args
  *
  * @return a LoadOptions object.
- *
  */
 val WebPage.options: LoadOptions get() =
     variables.variables.computeIfAbsent(args) { LoadOptions.parse(args, conf) } as LoadOptions
