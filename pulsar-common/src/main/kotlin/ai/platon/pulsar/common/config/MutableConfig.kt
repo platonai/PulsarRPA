@@ -16,7 +16,7 @@ import java.time.Instant
  */
 open class MutableConfig : ImmutableConfig {
 
-    constructor(): this("", false, listOf())
+    constructor(): this(false)
 
     constructor(loadDefaults: Boolean): this(
         System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),

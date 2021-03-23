@@ -9,7 +9,7 @@
 
     <artifactId>pulsar-app-resources</artifactId>
     <name>Pulsar App Resources</name>
-    <description>Common resources</description>
+    <description>Common application resources</description>
 
     <build>
         <plugins>

@@ -939,7 +939,8 @@ final public class WebPage implements Comparable<WebPage> {
      * @return a {@link ai.platon.pulsar.persist.CrawlStatus} object.
      */
     @NotNull
-    public CrawlStatus getCrawlStatus() {
+    public
+    CrawlStatus getCrawlStatus() {
         return new CrawlStatus(page.getCrawlStatus().byteValue());
     }
 

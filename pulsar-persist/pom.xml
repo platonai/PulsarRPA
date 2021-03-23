@@ -21,19 +21,6 @@
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
 
-    <build>
-        <plugins>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.gora</groupId>-->
-<!--                <artifactId>gora-maven-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <sourceDirectory>${basedir}/src/resources/avro</sourceDirectory>-->
-<!--                    <outputDirectory>${basedir}/src/main/java</outputDirectory>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-        </plugins>
-    </build>
-
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
@@ -44,9 +31,23 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-gora-mongodb</artifactId>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-core</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ai.platon.pulsar</groupId>-->
+<!--            <artifactId>gora-shaded-mongodb</artifactId>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-shaded-mongodb</artifactId>
         </dependency>
 
         <dependency>
@@ -87,10 +88,6 @@
             <artifactId>commons-collections</artifactId>
             <version>3.2.2</version>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.app.master
 
+import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.context.PulsarContexts
@@ -9,6 +10,7 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationPreparedEvent
+import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
@@ -48,9 +50,10 @@ class Application {
 }
 
 fun main(args: Array<String>) {
-    val event = ApplicationListener<ApplicationPreparedEvent> { PulsarContexts.activate(it.applicationContext) }
-    SpringApplication(Application::class.java).apply {
-        addListeners(event)
-        run(*args)
+    runApplication<Application>(*args) {
+        // setAdditionalProfiles("rest", "crawler", "amazon")
+        addInitializers(PulsarContextInitializer())
+        setRegisterShutdownHook(true)
+        setLogStartupInfo(true)
     }
 }

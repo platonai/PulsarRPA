@@ -9,7 +9,7 @@ package ai.platon.pulsar.common.config
  */
 open class ImmutableConfig : AbstractConfiguration {
 
-    constructor(): this("", false, listOf())
+    constructor(): this(false)
 
     constructor(loadDefaults: Boolean): this(
         System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),

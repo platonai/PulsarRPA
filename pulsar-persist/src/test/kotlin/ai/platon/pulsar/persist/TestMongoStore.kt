@@ -2,8 +2,8 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.gora.mongodb.store.MongoStore
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.apache.gora.mongodb.store.MongoStore
 import org.junit.Test
 import kotlin.test.assertEquals
 

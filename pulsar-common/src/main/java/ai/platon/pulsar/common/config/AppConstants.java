@@ -119,7 +119,7 @@ public interface AppConstants {
     /** A minimal file backend store */
     String FILE_BACKEND_STORE_CLASS = "ai.platon.pulsar.persist.gora.FileBackendPageStore";
 //    String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
-    String MONGO_STORE_CLASS = "ai.platon.pulsar.gora.mongodb.store.MongoStore";
+    String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
 
     /**

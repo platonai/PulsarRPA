@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
-import ai.platon.pulsar.gora.mongodb.store.MongoStore
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
+import org.apache.gora.mongodb.store.MongoStore
 import org.apache.gora.persistency.impl.DirtyCollectionWrapper
 import org.apache.gora.persistency.impl.DirtyListWrapper
 import org.apache.gora.store.DataStore
@@ -58,6 +58,8 @@ class TestGoraStorage {
 
     @Test
     fun testWebDb() {
+        val store = MongoStore<String, GWebPage>()
+
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
         var page = WebPage.newInternalPage(url)
         assertEquals(url, page.url)
@@ -150,7 +152,13 @@ class TestGoraStorage {
         val wrapper = page.links as DirtyCollectionWrapper<*>
         assertTrue(wrapper.isDirty)
         assertTrue(wrapper.isEmpty())
-        val links = DirtyListWrapper(Lists.newArrayList<CharSequence>(AppConstants.EXAMPLE_URL + "/-1", AppConstants.EXAMPLE_URL + "/-2", AppConstants.EXAMPLE_URL + "/1000000"))
+        val links = DirtyListWrapper(
+            Lists.newArrayList<CharSequence>(
+                AppConstants.EXAMPLE_URL + "/-1",
+                AppConstants.EXAMPLE_URL + "/-2",
+                AppConstants.EXAMPLE_URL + "/1000000"
+            )
+        )
         page.links = links
         store.put(key, page)
         store.flush()

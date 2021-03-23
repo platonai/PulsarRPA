@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Notice:
+  A shaded jar can not be a submodule of the solution for unknown reason,
+  We can not use pulsar-third.pom as the parent pom,
+  But we noticed that hbase-shaded-client is OK with such a structure.
+  -->
+
+  <parent>
+    <groupId>org.apache.gora</groupId>
+    <artifactId>gora</artifactId>
+    <version>0.8</version>
+  </parent>
+
+  <artifactId>gora-shaded-mongodb</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Gora Shaded MongoDB</name>
+  <description>
+    Since gora-0.x requires mongo-java-driver while spring-boot-2.4.x does not support it,
+    we make a shaded jar to hide mongo-java-driver.
+  </description>
+
+  <properties>
+    <osgi.import>*</osgi.import>
+    <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
+<!--    <mongo.driver.version>3.5.0</mongo.driver.version>-->
+    <mongo.driver.version>3.12.8</mongo.driver.version>
+    <mongo.embed.version>2.0.0</mongo.embed.version>
+    <avro.version>1.8.1</avro.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+<!--              <minimizeJar>true</minimizeJar>-->
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/license/**</exclude>
+                    <exclude>META-INF/*</exclude>
+                    <exclude>META-INF/maven/**</exclude>
+                    <exclude>LICENSE</exclude>
+                    <exclude>NOTICE</exclude>
+                    <exclude>/*.txt</exclude>
+                    <exclude>build.properties</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <artifactSet>
+                <excludes>
+                  <exclude>junit:junit</exclude>
+                  <exclude>jmock:*</exclude>
+                  <exclude>*:xml-apis</exclude>
+                  <exclude>org.javax:*</exclude>
+                  <exclude>com.google.guava:*</exclude>
+                  <exclude>commons-logging:*</exclude>
+
+                  <exclude>com.google.guava:*</exclude>
+                  <exclude>com.google.code.gson:*</exclude>
+                  <exclude>org.springframework:*</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>org.slf4j.impl:*</exclude>
+                  <exclude>log4j:log4j:*</exclude>
+                  <exclude>log4j:log4j:jar:</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>ch.qos.logback:*</exclude>
+
+                  <exclude>org.jetbrains:*</exclude>
+                  <exclude>org.intellij:*</exclude>
+                  <exclude>kotlin:*</exclude>
+                  <exclude>kotlinx:*</exclude>
+                  <exclude>org.jetbrains.kotlin:*</exclude>
+                  <exclude>org.jetbrains.kotlinx:*</exclude>
+                </excludes>
+              </artifactSet>
+              <relocations>
+                <relocation>
+                  <pattern>com.mongodb</pattern>
+                  <shadedPattern>ai.platon.shaded.com.mongodb</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.mongodb</pattern>
+                  <shadedPattern>ai.platon.shaded.org.mongodb</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.bson</pattern>
+                  <shadedPattern>ai.platon.shaded.org.bson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.jdom</pattern>
+                  <shadedPattern>ai.platon.shaded.org.jdom</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.gora</groupId>
+      <artifactId>gora-mongodb</artifactId>
+      <version>0.8</version>
+<!--      <version>${gora.version}</version>-->
+    </dependency>
+
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>${mongo.driver.version}</version>
+    </dependency>
+  </dependencies>
+
+</project>

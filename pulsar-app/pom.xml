@@ -25,9 +25,9 @@
 
     <modules>
         <module>pulsar-app-resources</module>
-        <module>pulsar-sql-qa</module>
-        <module>pulsar-test</module>
+<!--        <module>pulsar-sql-qa</module>-->
+<!--        <module>pulsar-test</module>-->
         <module>pulsar-master</module>
-        <module>pulsar-examples</module>
+<!--        <module>pulsar-examples</module>-->
     </modules>
 </project>

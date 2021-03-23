@@ -27,6 +27,5 @@
         <module>pulsar-boilerpipe</module>
         <module>pulsar-jsoup</module>
         <module>pulsar-chrome-devtools</module>
-        <module>pulsar-gora-mongodb</module>
     </modules>
 </project>
