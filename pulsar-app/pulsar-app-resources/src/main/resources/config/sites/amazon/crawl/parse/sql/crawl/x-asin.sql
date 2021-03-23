@@ -40,8 +40,11 @@ select
     cast(dom_all_hrefs(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `sellerID`,
     cast(dom_all_hrefs(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `marketplaceID`,
     cast(dom_all_texts(dom, '#desktop_buybox #merchant-info, #tabular-buybox tr:has(td:contains(Ships from)) td, #buybox-tabular tr:has(td:contains(Ships from)) td') as varchar) as `shipsfrom`,
-    dom_first_text(dom, '#glow-ingress-block') as `globaldeliverto`,
-    dom_first_text(dom, '#contextualIngressPtLabel_deliveryShortLine, #glowContextualIngressPt_feature_div, div[data-feature-name=glowContextualIngressPt]') as `deliverto`,
+
+    to_json(map(
+       'globaldeliverto', dom_first_text(dom, '#glow-ingress-block'),
+       'deliverto', dom_first_text(dom, '#contextualIngressPtLabel_deliveryShortLine, #glowContextualIngressPt_feature_div, div[data-feature-name=glowContextualIngressPt]')
+    )) as `deliverto`,
 
     str_abbreviate(dom_first_text(dom, '#availability, #outOfStock'), 1024) as `instock`,
     dom_first_text(dom, '#selectQuantity select option:last-child') as `quantity`,
@@ -92,9 +95,12 @@ select
     dom_all_texts(dom, 'div#cr-dp-summarization-attributes div[data-hook=cr-summarization-attribute]') as `scoresbyfeature`,
     dom_first_href(dom, '#reviews-medley-footer a') as `reviewsurl`,
 
-    dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'href') as `href`,
-    dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'referer') as `referer`,
-    dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'label') as `label`,
+    dom_first_attr(dom_owner_document(dom), 'head meta[name=keywords]', 'content') as `meta_keywords`,
+    dom_first_attr(dom_owner_document(dom), 'head meta[name=description]', 'content') as `meta_description`,
+
+    dom_first_attr(dom, '#PulsarMetaInformation', 'href') as `href`,
+    dom_first_attr(dom, '#PulsarMetaInformation', 'referer') as `referer`,
+    dom_first_attr(dom, '#PulsarMetaInformation', 'label') as `label`,
     time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
 
     dom_ch(dom) as `numchars`,
