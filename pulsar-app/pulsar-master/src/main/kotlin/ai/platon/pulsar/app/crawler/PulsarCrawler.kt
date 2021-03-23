@@ -28,8 +28,6 @@ class PulsarCrawler(
         LinkExtractors.fromResource(resource)
             .map { Hyperlink(it, args = "-i 1s") }
             .toCollection(fetchCache.nReentrantQueue)
-        println(".............................")
-        println(fetchCache.nReentrantQueue.size)
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")

@@ -134,7 +134,7 @@ class AppMetrics(
             .prefixedWith(name)
             .convertRatesTo(TimeUnit.SECONDS)
             .convertDurationsTo(TimeUnit.MILLISECONDS)
-            .filter(MetricFilter.ALL)
+            .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
             .build(pickled)
     }
     private val hourlyTimer = java.util.Timer()
