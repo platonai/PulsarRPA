@@ -186,7 +186,6 @@ abstract class AbstractPulsarSession(
      * @param options The load options for all urls
      * @return The web pages
      */
-    @JvmOverloads
     override fun loadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): Collection<WebPage> {
         ensureActive()
         val normUrls = normalize(urls, options, areItems)

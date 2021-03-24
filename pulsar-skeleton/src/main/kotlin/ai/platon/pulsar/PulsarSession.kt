@@ -48,7 +48,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Create a new options, with a new volatile config
      * */
-    open fun options(args: String = ""): LoadOptions
+    fun options(args: String = ""): LoadOptions
     fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     fun normalize(

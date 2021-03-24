@@ -303,9 +303,6 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
             <!-- platon-release is enabled by default in maven-apache-parent -->
             <!-- see http://maven.apache.org/pom/asf/ -->
             <plugin>

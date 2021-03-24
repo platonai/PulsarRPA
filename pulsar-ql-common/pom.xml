@@ -21,6 +21,14 @@
     <artifactId>pulsar-ql-common</artifactId>
     <name>Pulsar QL Common</name>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- Internal -->
         <dependency>

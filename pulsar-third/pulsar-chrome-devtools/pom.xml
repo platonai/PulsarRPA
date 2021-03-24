@@ -22,6 +22,14 @@
     </developer>
   </developers>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>ai.platon.pulsar</groupId>

@@ -21,6 +21,18 @@
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>

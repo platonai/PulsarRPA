@@ -96,7 +96,7 @@ abstract class AbstractPulsarContext(
     /**
      * All open sessions
      * */
-    val sessions = ConcurrentSkipListMap<Int, BasicPulsarSession>()
+    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
 
     /**
      * Registered closeables, will be closed by Pulsar object

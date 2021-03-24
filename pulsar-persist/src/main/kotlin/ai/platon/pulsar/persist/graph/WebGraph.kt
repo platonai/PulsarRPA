@@ -109,9 +109,9 @@ class WebGraph : DirectedWeightedPseudograph<WebVertex, WebEdge> {
         fun createExporter(): GraphExporter<WebVertex, WebEdge> {
             // create GraphML exporter
             val exporter = GraphMLExporter<WebVertex, WebEdge>(
-                    VertexNameProvider { it.url?:""},
+                { it.url },
                     null,
-                    EdgeNameProvider { it.toString() },
+                { it.toString() },
                     null
             )
             // set to export the internal edge weights

@@ -42,6 +42,11 @@
   </organization>
 
   <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+    </plugins>
     <resources>
       <resource>
         <directory>src/main/java</directory>
