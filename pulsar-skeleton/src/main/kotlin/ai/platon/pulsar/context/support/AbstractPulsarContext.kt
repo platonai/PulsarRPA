@@ -1,6 +1,8 @@
 package ai.platon.pulsar.context.support
 
+import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.PulsarEnvironment
+import ai.platon.pulsar.BasicPulsarSession
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -94,7 +96,7 @@ abstract class AbstractPulsarContext(
     /**
      * All open sessions
      * */
-    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
+    val sessions = ConcurrentSkipListMap<Int, BasicPulsarSession>()
 
     /**
      * Registered closeables, will be closed by Pulsar object
@@ -119,10 +121,14 @@ abstract class AbstractPulsarContext(
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
 
-    override fun createSession(): PulsarSession {
-        val session = PulsarSession(this, unmodifiedConfig.toVolatileConfig())
-        return session.also { sessions[it.id] = it }
-    }
+    @Throws(BeansException::class)
+    fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
+        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
+
+    @Throws(BeansException::class)
+    inline fun <reified T : Any> getBeanOrNull(): T? = getBeanOrNull(T::class)
+
+    abstract override fun createSession(): AbstractPulsarSession
 
     override fun closeSession(session: PulsarSession) {
         sessions.remove(session.id)

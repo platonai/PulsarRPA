@@ -32,10 +32,12 @@ import java.time.Duration
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
 object DomFunctions {
-    private val sqlContext get() = SQLContexts.activeContext!!
+    private val sqlContext get() = SQLContexts.activate()
 
-    @UDFunction(description = "Load the page specified by url from db, if absent or expired, " +
-            "fetch it from the web, and then parse it into a document")
+    @UDFunction(
+        description = "Load the page specified by url from db, if absent or expired, " +
+                "fetch it from the web, and then parse it into a document"
+    )
     @JvmStatic
     fun load(@H2Context conn: Connection, configuredUrl: String): ValueDom {
         if (!sqlContext.isActive) return ValueDom.NIL
@@ -50,10 +52,9 @@ object DomFunctions {
         if (!sqlContext.isActive) return ValueDom.NIL
 
         val h2session = H2SessionFactory.getH2Session(conn)
-        return sqlContext.getSession(h2session.serialId).run {
-            val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
-            parseValueDom(load(normUrl))
-        }
+        val session = sqlContext.getSession(h2session.serialId)
+        val normUrl = session.normalize(configuredUrl).apply { options.expires = Duration.ZERO }
+        return session.parseValueDom(session.load(normUrl))
     }
 
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
@@ -66,7 +67,7 @@ object DomFunctions {
         return sqlContext.getSession(h2session).run {
             val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
             val eventHandler = DefaultJsEventHandler("", expressions)
-            normUrl.options.conf!!.putBean(eventHandler)
+            normUrl.options.conf.putBean(eventHandler)
             parseValueDom(load(normUrl))
         }
     }
@@ -373,8 +374,8 @@ object DomFunctions {
 
         val tree = TreeParser1(rootElement).parse()
         val gson = GsonBuilder()
-                .setPrettyPrinting()
-                .create()
+            .setPrettyPrinting()
+            .create()
         return gson.toJson(tree)
     }
 

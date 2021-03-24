@@ -1,9 +1,9 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.BasicPulsarContext
+import ai.platon.pulsar.context.support.StaticPulsarContext
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.model.WebPageFormatter
@@ -18,7 +18,7 @@ class TestExtractCases : TestBase() {
     private val newsDetailUrl = TestResource.newsDetailUrl
     private val urlGroups = TestResource.urlGroups
 
-    private val pc = PulsarContexts.activate(BasicPulsarContext())
+    private val pc = PulsarContexts.activate(StaticPulsarContext())
 
     @Test
     fun testSavePages() {

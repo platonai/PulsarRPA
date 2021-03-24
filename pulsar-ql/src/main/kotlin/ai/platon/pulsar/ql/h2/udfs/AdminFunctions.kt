@@ -13,7 +13,7 @@ import java.sql.Connection
 @UDFGroup(namespace = "ADMIN")
 object AdminFunctions {
     val log = LoggerFactory.getLogger(AdminFunctions::class.java)
-    private val sqlContext get() = SQLContexts.activeContext!!
+    private val sqlContext get() = SQLContexts.activate()
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context conn: Connection, message: String): String {

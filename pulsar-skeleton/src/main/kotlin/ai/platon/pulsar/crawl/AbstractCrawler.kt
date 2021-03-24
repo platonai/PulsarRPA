@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 interface Crawler: AutoCloseable
 
 abstract class AbstractCrawler(
-        val session: PulsarSession = PulsarContexts.createSession(),
-        val autoClose: Boolean = true
+    val session: PulsarSession = PulsarContexts.createSession(),
+    val autoClose: Boolean = true
 ): Crawler {
     val closed = AtomicBoolean()
     open val isActive get() = !closed.get() && AppContext.isActive

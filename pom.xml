@@ -73,11 +73,13 @@
         <module>pulsar-tools</module>
         <module>pulsar-third</module>
         <module>pulsar-ql-common</module>
+
+        <module>pulsar-spring-support</module>
         <module>pulsar-ql</module>
         <module>pulsar-rest</module>
 
-        <module>pulsar-spring-support</module>
         <module>pulsar-app</module>
+        <module>pulsar-client</module>
     </modules>
 
     <profiles>
@@ -431,6 +433,13 @@
                 <artifactId>pulsar-dom</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-beans</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
@@ -439,12 +448,6 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-beans</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -458,6 +461,12 @@
                 <version>${project.version}</version>
             </dependency>
 
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-qa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Other dependency -->
             <dependency>
@@ -514,7 +523,6 @@
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
         <autolink.version>0.10.0</autolink.version>
-        <avro.version>1.8.1</avro.version>
     </properties>
 
 </project>

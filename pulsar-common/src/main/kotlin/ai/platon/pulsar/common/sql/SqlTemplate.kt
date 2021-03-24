@@ -6,11 +6,15 @@ class SqlTemplate constructor(
         val template: String,
         val resource: String? = null,
         val name: String = RandomStringUtils.randomAlphabetic(4),
-        var display: String = resource?.substringAfterLast("/") ?: "SQL#${template.hashCode()}"
+        var display: String = generateDisplay(resource, template)
 ) {
     fun createInstance(url: String) = createInstance(template, url)
 
     companion object {
+        private fun generateDisplay(resource: String?, template: String): String {
+            return resource?.substringAfterLast("/") ?: "SQL#${template.hashCode()}"
+        }
+
         fun load(resource: String, name: String = RandomStringUtils.randomAlphabetic(4)): SqlTemplate {
             return SqlTemplate(SqlUtils.loadSql(resource), resource = resource, name = name)
         }

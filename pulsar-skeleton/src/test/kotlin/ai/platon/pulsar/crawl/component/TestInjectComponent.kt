@@ -13,7 +13,7 @@ import java.nio.file.Paths
 
 fun main(args: Array<String>) {
     val context = ClassPathXmlApplicationContext(
-            System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION))
+            System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION))
     val conf = context.getBean(MutableConfig::class.java)
 
     val opts = InjectOptions(args, conf)

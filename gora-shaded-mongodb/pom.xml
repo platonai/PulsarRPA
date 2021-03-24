@@ -41,15 +41,6 @@
     we make a shaded jar to hide mongo-java-driver.
   </description>
 
-  <properties>
-    <osgi.import>*</osgi.import>
-    <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
-<!--    <mongo.driver.version>3.5.0</mongo.driver.version>-->
-    <mongo.driver.version>3.12.8</mongo.driver.version>
-    <mongo.embed.version>2.0.0</mongo.embed.version>
-    <avro.version>1.8.1</avro.version>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -111,8 +102,7 @@
     <dependency>
       <groupId>org.apache.gora</groupId>
       <artifactId>gora-mongodb</artifactId>
-      <version>0.8</version>
-<!--      <version>${gora.version}</version>-->
+      <version>${gora.version}</version>
     </dependency>
 
     <dependency>
@@ -121,5 +111,13 @@
       <version>${mongo.driver.version}</version>
     </dependency>
   </dependencies>
+
+  <properties>
+    <!-- gora-0.8 use mongo-java-driver:3.5.0 by default -->
+    <!--    <mongo.driver.version>3.5.0</mongo.driver.version>-->
+    <mongo.driver.version>3.12.8</mongo.driver.version>
+    <mongo.embed.version>2.0.0</mongo.embed.version>
+    <gora.version>0.8</gora.version>
+  </properties>
 
 </project>

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.BasicPulsarSession
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -54,15 +55,15 @@ open class UrlQueueCollector(
  * 3. all urls have to not be fetched before or expired against the last version
  * */
 open class HyperlinkCollector(
-        /**
+    /**
          * The pulsar session to use
          * */
         val session: PulsarSession,
-        /**
+    /**
          * The urls of portal pages from where hyper links are extracted from
          * */
         val seeds: Queue<NormUrl>,
-        /**
+    /**
          * The priority of this collector
          * */
         priority: Priority13 = Priority13.NORMAL
@@ -163,9 +164,9 @@ open class HyperlinkCollector(
 }
 
 open class CircularHyperlinkCollector(
-        session: PulsarSession,
-        seeds: Queue<NormUrl>,
-        priority: Priority13 = Priority13.HIGHER
+    session: PulsarSession,
+    seeds: Queue<NormUrl>,
+    priority: Priority13 = Priority13.HIGHER
 ) : HyperlinkCollector(session, seeds, priority) {
     private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
     protected val iterator = Iterators.cycle(seeds)
@@ -173,9 +174,9 @@ open class CircularHyperlinkCollector(
     override var name = "CircularHC"
 
     constructor(
-            session: PulsarSession,
-            seed: NormUrl,
-            priority: Priority13 = Priority13.HIGHER
+        session: PulsarSession,
+        seed: NormUrl,
+        priority: Priority13 = Priority13.HIGHER
     ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
@@ -201,9 +202,9 @@ open class CircularHyperlinkCollector(
 }
 
 open class PeriodicalHyperlinkCollector(
-        session: PulsarSession,
-        val seed: NormUrl,
-        priority: Priority13 = Priority13.HIGHER
+    session: PulsarSession,
+    val seed: NormUrl,
+    priority: Priority13 = Priority13.HIGHER
 ) : CircularHyperlinkCollector(session, seed, priority) {
     private val log = LoggerFactory.getLogger(PeriodicalHyperlinkCollector::class.java)
     private var position = 0
@@ -244,7 +245,7 @@ open class PeriodicalHyperlinkCollector(
 
     companion object {
         fun fromConfig(
-                resource: String, session: PulsarSession, priority: Priority13 = Priority13.NORMAL
+            resource: String, session: PulsarSession, priority: Priority13 = Priority13.NORMAL
         ): Sequence<PeriodicalHyperlinkCollector> {
             return ResourceLoader.readAllLines(resource)
                     .asSequence()

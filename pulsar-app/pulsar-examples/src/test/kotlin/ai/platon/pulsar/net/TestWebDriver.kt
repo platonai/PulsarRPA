@@ -1,6 +1,7 @@
 package ai.platon.pulsar.net
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
@@ -27,7 +28,7 @@ class TestWebDriver {
             System.setProperty(PROXY_USE_PROXY, "no")
         }
 
-        val context = BasicPulsarContext()
+        val context = PulsarContexts.activate()
         val conf = context.unmodifiedConfig
         val driverControl = WebDriverControl(conf)
         val driverPoolManager = DefaultWebDriverPoolManager(conf)

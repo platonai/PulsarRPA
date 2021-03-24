@@ -31,7 +31,7 @@ import java.time.Instant;
 @SuppressWarnings("unused")
 public interface AppConstants {
 
-    String APP_CONTEXT_CONFIG_LOCATION = "classpath*:/pulsar-beans/app-context.xml";
+    String PULSAR_CONTEXT_CONFIG_LOCATION = "classpath*:/pulsar-beans/app-context.xml";
     String SCENT_CONTEXT_CONFIG_LOCATION = "classpath*:/scent-beans/app-context.xml";
     String MAPR_CONTEXT_CONFIG_LOCATION = "classpath*:/mapr/mapr-beans/mapr-context.xml";
 

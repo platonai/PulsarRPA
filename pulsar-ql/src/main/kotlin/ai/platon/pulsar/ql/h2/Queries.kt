@@ -1,17 +1,17 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
+import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
-import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import ai.platon.pulsar.ql.QuerySession
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
@@ -41,7 +41,7 @@ object Queries {
      * or an array of strings represented by a [ValueArray]
      * @return A collection of [WebPage]s
      */
-    fun loadAll(session: QuerySession, portal: Value): Collection<WebPage> {
+    fun loadAll(session: PulsarSession, portal: Value): Collection<WebPage> {
         var pages: Collection<WebPage> = listOf()
 
         when (portal) {
@@ -76,9 +76,11 @@ object Queries {
      * @param transformer    The transformer used to translate a Web page into something else
      * @return A collection of O
      */
-    fun <O> loadAll(session: QuerySession,
-                    configuredUrls: Value, restrictCss: String, offset: Int, limit: Int,
-                    transformer: (Element, String, Int, Int) -> Collection<O>): Collection<O> {
+    fun <O> loadAll(
+        session: PulsarSession,
+        configuredUrls: Value, restrictCss: String, offset: Int, limit: Int,
+        transformer: (Element, String, Int, Int) -> Collection<O>
+    ): Collection<O> {
         val collection: Collection<O>
 
         when (configuredUrls) {
@@ -100,10 +102,11 @@ object Queries {
     }
 
     fun loadOutPages(
-            session: QuerySession,
-            portalUrl: String, restrictCss: String,
-            offset: Int, limit: Int,
-            normalize: Boolean, ignoreQuery: Boolean): Collection<WebPage> {
+        session: PulsarSession,
+        portalUrl: String, restrictCss: String,
+        offset: Int, limit: Int,
+        normalize: Boolean, ignoreQuery: Boolean
+    ): Collection<WebPage> {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 
         val normUrl = session.normalize(portalUrl)
@@ -200,11 +203,11 @@ object Queries {
      */
     fun toResultSet(objects: Iterable<Any>): ResultSet {
         val rs = SimpleResultSet()
-        val first = objects.firstOrNull()?:return rs
+        val first = objects.firstOrNull() ?: return rs
         val primaryConstructor = first::class.primaryConstructor ?: return rs
 
         val propertyNames = primaryConstructor.parameters.mapIndexed { i, kParameter ->
-            kParameter.name?:"C${1 + i}"
+            kParameter.name ?: "C${1 + i}"
         }
         propertyNames.forEach {
             rs.addColumn(it.toUpperCase())
@@ -213,9 +216,9 @@ object Queries {
         val memberProperties = first::class.memberProperties.filter { it.name in propertyNames }
         objects.forEach { obj ->
             val values = memberProperties
-                    .filter { it.name in propertyNames }
-                    .map { it.getter.call(obj).toString() }
-                    .toTypedArray()
+                .filter { it.name in propertyNames }
+                .map { it.getter.call(obj).toString() }
+                .toTypedArray()
             rs.addRow(*values)
         }
 

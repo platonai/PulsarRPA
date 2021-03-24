@@ -6,7 +6,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
-import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.AbstractSQLSession
+import ai.platon.pulsar.ql.BasicSQLSession
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
@@ -32,7 +33,7 @@ object CommonFunctions {
 
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
-    private val sqlContext get() = SQLContexts.activeContext!!
+    private val sqlContext get() = SQLContexts.activate()
     private val unmodifiedConfig get() = sqlContext.unmodifiedConfig
 
     /**
@@ -541,7 +542,7 @@ object CommonFunctions {
         return null
     }
 
-    private fun getSession(conn: Connection): QuerySession {
+    private fun getSession(conn: Connection): AbstractSQLSession {
         return H2SessionFactory.getSession(conn)
     }
 

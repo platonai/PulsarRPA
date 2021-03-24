@@ -1,10 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.ql.DbSession
-import ai.platon.pulsar.ql.H2Config
-import ai.platon.pulsar.ql.QuerySession
-import ai.platon.pulsar.ql.SQLContexts
+import ai.platon.pulsar.ql.*
 import org.h2.engine.*
 import org.h2.jdbc.JdbcConnection
 import org.h2.message.TraceSystem
@@ -53,22 +50,22 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val querySession = sqlContext.createSession(DbSession(h2session.serialId, h2session))
-        require(querySession.id == h2session.serialId)
+        val sqlSession = sqlContext.createSession(SessionDelegate(h2session.serialId, h2session))
+        require(sqlSession.id == h2session.serialId)
 
-        log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
-                querySession, h2session, ci.url)
+        log.info("SQLSession {} is created for h2session <{}>, connection: <{}>",
+            sqlSession, h2session, ci.url)
 
         return h2session
     }
 
     @Synchronized
-    fun getSession(serialId: Int): QuerySession {
-        return sqlContext.getSession(serialId)
+    fun getSession(serialId: Int): AbstractSQLSession {
+        return sqlContext.getSession(serialId) as AbstractSQLSession
     }
 
     @Synchronized
-    fun getSession(connection: Connection): QuerySession {
+    fun getSession(connection: Connection): AbstractSQLSession {
         val conn = connection as JdbcConnection
         return getSession(conn.session)
     }
@@ -76,14 +73,15 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @Synchronized
     fun getH2Session(connection: Connection): Session {
         val conn = connection as JdbcConnection
-        return getSession(conn.session).dbSession.implementation as Session
+        val s = getSession(conn.session)
+        return s.sessionDelegate.implementation as Session
     }
 
     @Synchronized
-    fun getSession(sessionInterface: SessionInterface): QuerySession {
+    fun getSession(sessionInterface: SessionInterface): AbstractSQLSession {
         val h2session = sessionInterface as Session
         // TODO: or just use hash code so no need to modify h2database to expose serialId
-        return sqlContext.getSession(h2session.serialId)
+        return sqlContext.getSession(h2session.serialId) as AbstractSQLSession
     }
 
     @Synchronized

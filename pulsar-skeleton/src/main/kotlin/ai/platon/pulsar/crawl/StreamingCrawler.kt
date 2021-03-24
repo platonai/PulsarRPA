@@ -104,6 +104,7 @@ open class StreamingCrawler<T : UrlAware>(
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
     private val taskTimeout = Duration.ofMinutes(10)
+
     @Volatile
     private var flowState = FlowState.CONTINUE
 

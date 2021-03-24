@@ -1,12 +1,12 @@
 package ai.platon.pulsar.ql.h2.udas
 
-import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.ql.AbstractSQLSession
+import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.api.Aggregate
 import org.h2.api.AggregateFunction
-import org.h2.engine.Session
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -18,7 +18,7 @@ import java.util.*
 @UDAggregation(name = "GROUP_FETCH")
 class GroupFetch : Aggregate {
 
-    private var conn: Connection? = null
+    private lateinit var conn: Connection
     private val urls = ArrayList<String>()
 
     override fun init(conn: Connection) {
@@ -36,11 +36,10 @@ class GroupFetch : Aggregate {
     override fun add(o: Any?) {
         if (o == null) return
 
-        val url: String?
-        if (o is Value) {
-            url = o.string
+        val url = if (o is Value) {
+            o.string
         } else {
-            url = o.toString()
+            o.toString()
         }
 
         if (url != null && url.length >= SHORTEST_URL_LENGTH) {
@@ -49,8 +48,8 @@ class GroupFetch : Aggregate {
     }
 
     override fun getResult(): Any {
-        val session = H2SessionFactory.getSession(conn!!)
-        val h2session = session.dbSession.implementation as org.h2.engine.Session
+        val session = H2SessionFactory.getSession(conn)
+        val h2session = session.sessionDelegate.implementation as org.h2.engine.Session
         session.parallelLoadAll(urls)
         val values = urls.map { url -> DataType.convertToValue(h2session, url, Value.STRING) }.toTypedArray()
         return ValueArray.get(values)
