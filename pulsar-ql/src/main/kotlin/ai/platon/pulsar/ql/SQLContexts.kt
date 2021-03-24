@@ -36,7 +36,7 @@ open class H2SQLContext(
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
             H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
-        log.info("SQLSession is created | #{}/{}", session.id, id)
+        log.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as H2SQLSession
     }
 
@@ -101,7 +101,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
             H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
-        log.info("Session is created | #{}/{}", session.id, id)
+        log.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as H2SQLSession
     }
 

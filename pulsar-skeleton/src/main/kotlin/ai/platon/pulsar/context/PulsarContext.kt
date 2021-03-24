@@ -19,6 +19,8 @@ import java.net.URL
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
 interface PulsarContext: AutoCloseable {
+    val id: Int
+
     val pulsarEnvironment: PulsarEnvironment
 
     val applicationContext: ApplicationContext

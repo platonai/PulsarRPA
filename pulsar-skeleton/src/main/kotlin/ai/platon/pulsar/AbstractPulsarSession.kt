@@ -360,7 +360,7 @@ abstract class AbstractPulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closableObjects.forEach { o -> o.close() }
-            log.info("Session #{} is closed", display)
+            log.info("Session is closed | #{}", display)
         }
     }
 

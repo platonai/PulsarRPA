@@ -37,15 +37,9 @@ abstract class AbstractSQLContext constructor(
     override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ) : AbstractPulsarContext(applicationContext, pulsarEnvironment), SQLContext {
 
-    companion object {
-        val instanceSequencer = AtomicInteger()
-    }
-
     private val log = LoggerFactory.getLogger(AbstractSQLContext::class.java)
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
-
-    val id = instanceSequencer.incrementAndGet()
 
     var status: Status = Status.NOT_READY
 
@@ -123,10 +117,12 @@ abstract class AbstractSQLContext constructor(
     override fun closeSession(sessionId: Int) {
         ensureRunning()
         sqlSessions.remove(sessionId)?.close()
-        log.debug("Session is closed | #{}/{}", sessionId, id)
+        log.info("SQLSession is closed | #{}/{}/{}", id, sessionId, sqlSessions.size)
     }
 
     override fun close() {
+        log.info("Closing SQLContext #{}, sql sessions: {}", id, sqlSessions.keys.joinToString { "$it" })
+
         if (closed.compareAndSet(false, true)) {
             status = Status.CLOSING
 
@@ -135,8 +131,6 @@ abstract class AbstractSQLContext constructor(
             sqlSessions.clear()
 
             status = Status.CLOSED
-
-            log.info("SQLContext is closed | #$id")
         }
 
         super.close()

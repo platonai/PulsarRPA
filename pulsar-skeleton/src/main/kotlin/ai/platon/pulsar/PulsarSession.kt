@@ -14,6 +14,12 @@ import ai.platon.pulsar.persist.WebPage
 import java.nio.file.Path
 
 interface PulsarSession : AutoCloseable {
+
+    /**
+     * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
+     * */
+    val id: Int
+
     /**
      * The pulsar context
      * */
@@ -24,10 +30,6 @@ interface PulsarSession : AutoCloseable {
      * */
     val sessionConfig: VolatileConfig
 
-    /**
-     * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
-     * */
-    val id: Int
     val unmodifiedConfig: ImmutableConfig
 
     /**

@@ -32,6 +32,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
@@ -43,7 +44,14 @@ abstract class AbstractPulsarContext(
         override val applicationContext: AbstractApplicationContext,
         override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
+
+    companion object {
+        val instanceSequencer = AtomicInteger()
+    }
+
     private val log = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
+
+    override val id = instanceSequencer.incrementAndGet()
 
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
@@ -132,6 +140,7 @@ abstract class AbstractPulsarContext(
 
     override fun closeSession(session: PulsarSession) {
         session.close()
+        log.info("Removing PulsarSession #{}", session.id)
         sessions.remove(session.id)
     }
 
@@ -388,7 +397,7 @@ abstract class AbstractPulsarContext(
     }
 
     private fun doClose() {
-        log.info("Closing PulsarContext #{}", hashCode())
+        log.info("Closing PulsarContext #{}", id)
 
         kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
 
