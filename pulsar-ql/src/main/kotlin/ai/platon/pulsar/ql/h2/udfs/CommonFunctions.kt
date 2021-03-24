@@ -7,7 +7,6 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.AbstractSQLSession
-import ai.platon.pulsar.ql.BasicSQLSession
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context

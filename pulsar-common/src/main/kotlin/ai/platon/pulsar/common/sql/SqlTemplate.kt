@@ -10,6 +10,8 @@ class SqlTemplate constructor(
 ) {
     fun createInstance(url: String) = createInstance(template, url)
 
+    override fun toString() = template
+
     companion object {
         private fun generateDisplay(resource: String?, template: String): String {
             return resource?.substringAfterLast("/") ?: "SQL#${template.hashCode()}"

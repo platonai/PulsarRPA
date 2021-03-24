@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.context.PulsarContext
 import org.h2.engine.SessionInterface
+import java.sql.ResultSet
 
 interface SQLContext: PulsarContext {
     val isActive: Boolean
@@ -15,4 +16,8 @@ interface SQLContext: PulsarContext {
     fun getSession(sessionId: Int): SQLSession
 
     fun closeSession(sessionId: Int)
+
+    fun execute(sql: String)
+
+    fun executeQuery(sql: String): ResultSet
 }

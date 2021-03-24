@@ -131,6 +131,7 @@ abstract class AbstractPulsarContext(
     abstract override fun createSession(): AbstractPulsarSession
 
     override fun closeSession(session: PulsarSession) {
+        session.close()
         sessions.remove(session.id)
     }
 
@@ -387,9 +388,11 @@ abstract class AbstractPulsarContext(
     }
 
     private fun doClose() {
-        if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
+        log.info("Closing PulsarContext #{}", hashCode())
 
+        kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
+
+        if (closed.compareAndSet(false, true)) {
             sessions.values.forEach {
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }

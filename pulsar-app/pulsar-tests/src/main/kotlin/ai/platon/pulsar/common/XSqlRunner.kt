@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.sql.SqlConverter
 import ai.platon.pulsar.common.sql.SqlTemplate
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.h2.SqlUtils
@@ -30,6 +31,9 @@ class XSqlRunner(
         val document = loadResourceAsDocument(url) ?: session.loadDocument(url, loadArgs)
 
         val sql = sqlTemplate.createInstance(url)
+        if (sql.isBlank()) {
+            throw IllegalArgumentException("Illegal sql template: ${sqlTemplate.resource}")
+        }
 
         var rs = extractor.query(sql, printResult = true)
 
@@ -53,10 +57,16 @@ class XSqlRunner(
             val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
             val sqlTemplate = SqlTemplate.load(resource, name = name)
 
-            if (sqlTemplate.template.contains("create table", ignoreCase = true)) {
-                log.info(SqlConverter.createSql2extractSql(sqlTemplate.template))
-            } else {
-                execute(url, sqlTemplate)
+            when {
+                sqlTemplate.template.isBlank() -> {
+                    log.warn("Failed to load SQL template <{}>", resource)
+                }
+                sqlTemplate.template.contains("create table", ignoreCase = true) -> {
+                    log.info(SqlConverter.createSql2extractSql(sqlTemplate.template))
+                }
+                else -> {
+                    execute(url, sqlTemplate)
+                }
             }
         }
     }

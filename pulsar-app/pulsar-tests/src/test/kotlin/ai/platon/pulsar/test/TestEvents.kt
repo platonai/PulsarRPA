@@ -5,6 +5,7 @@ import ai.platon.pulsar.crawl.DefaultLoadEventHandler
 import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.component.FetchComponent
+import org.junit.Before
 import org.junit.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,6 +18,15 @@ class TestEvents: TestBase() {
 
     @Autowired
     lateinit var fetchComponent: FetchComponent
+
+    @Before
+    fun setup() {
+        val metrics = fetchComponent.fetchMetrics
+        assertNotNull(metrics)
+        metrics.tasks.mark(-metrics.tasks.count)
+        metrics.successTasks.mark(-metrics.successTasks.count)
+        metrics.persists.mark(-metrics.persists.count)
+    }
 
     @Test
     fun `When a page is fetched then events are fired and metrics are recorded`() {

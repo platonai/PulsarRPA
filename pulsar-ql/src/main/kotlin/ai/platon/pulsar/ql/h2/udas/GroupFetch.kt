@@ -1,7 +1,5 @@
 package ai.platon.pulsar.ql.h2.udas
 
-import ai.platon.pulsar.ql.AbstractSQLSession
-import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.h2.H2SessionFactory

@@ -50,7 +50,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val sqlSession = sqlContext.createSession(SessionDelegate(h2session.serialId, h2session))
+        val sqlSession = sqlContext.createSession(H2SessionDelegate(h2session.serialId, h2session))
         require(sqlSession.id == h2session.serialId)
 
         log.info("SQLSession {} is created for h2session <{}>, connection: <{}>",

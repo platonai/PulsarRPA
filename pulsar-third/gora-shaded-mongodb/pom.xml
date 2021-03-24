@@ -20,22 +20,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- Notice:
-  A shaded jar can not be a submodule of the solution for unknown reason,
-  We can not use pulsar-third.pom as the parent pom,
-  But we noticed that hbase-shaded-client is OK with such a structure.
-  -->
-
   <parent>
-    <groupId>org.apache.gora</groupId>
-    <artifactId>gora</artifactId>
-    <version>0.8</version>
+    <groupId>ai.platon.pulsar</groupId>
+    <artifactId>pulsar-third</artifactId>
+    <version>1.5.8-SNAPSHOT</version>
   </parent>
 
   <artifactId>gora-shaded-mongodb</artifactId>
   <packaging>jar</packaging>
 
-  <name>Gora Shaded MongoDB</name>
+  <name>Pulsar Gora Shaded MongoDB</name>
   <description>
     Since gora-0.x requires mongo-java-driver while spring-boot-2.4.x does not support it,
     we make a shaded jar to hide mongo-java-driver.
@@ -70,7 +64,7 @@
               </filters>
               <artifactSet>
                 <includes>
-                  <include>org.apache.gora:*</include>
+                  <include>org.apache.gora:gora-mongodb</include>
                   <include>com.mongodb:*</include>
                   <include>org.mongodb:*</include>
                   <include>org.bson:*</include>

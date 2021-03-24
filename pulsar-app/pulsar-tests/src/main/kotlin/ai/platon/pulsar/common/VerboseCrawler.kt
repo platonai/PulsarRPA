@@ -12,9 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
-) : AutoCloseable {
+) {
     val log = LoggerFactory.getLogger(VerboseCrawler::class.java)
-    val closed = AtomicBoolean()
 
     constructor(context: PulsarContext) : this(context.createSession())
 
@@ -91,11 +90,5 @@ open class VerboseCrawler(
 
     fun truncate() {
         session.context.webDb.truncate()
-    }
-
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-
-        }
     }
 }

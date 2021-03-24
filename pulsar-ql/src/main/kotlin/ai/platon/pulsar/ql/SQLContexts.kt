@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -13,24 +12,32 @@ import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.ql.h2.H2MemoryDb
+import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
+import java.sql.Connection
 
-open class BasicSQLContext(
+open class H2SQLContext(
     applicationContext: AbstractApplicationContext
 ) : AbstractSQLContext(applicationContext) {
 
-    private val log = LoggerFactory.getLogger(BasicSQLContext::class.java)
+    private val log = LoggerFactory.getLogger(H2SQLContext::class.java)
+
+    private val db = H2MemoryDb()
+
+    override val randomConnection: Connection get() = db.getRandomConnection()
 
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
-        val session = sqlSessions.computeIfAbsent(sessionDelegate) {
-            BasicSQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
+        require(sessionDelegate is H2SessionDelegate)
+        val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
+            H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
-        log.info("Session is created | #{}/{}", session.id, id)
-        return session as BasicSQLSession
+        log.info("SQLSession is created | #{}/{}", session.id, id)
+        return session as H2SQLSession
     }
 
     override fun createSession(): BasicPulsarSession {
@@ -39,9 +46,9 @@ open class BasicSQLContext(
     }
 }
 
-class StaticSQLContext(
+class StaticH2SQLContext(
     override val applicationContext: StaticApplicationContext = StaticApplicationContext()
-) : BasicSQLContext(applicationContext) {
+) : H2SQLContext(applicationContext) {
     /**
      * The unmodified config
      * */
@@ -85,12 +92,17 @@ open class ClassPathXmlSQLContext(configLocation: String) :
 
     private val log = LoggerFactory.getLogger(ClassPathXmlSQLContext::class.java)
 
+    private val db = H2MemoryDb()
+
+    override val randomConnection: Connection get() = db.getRandomConnection()
+
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
-        val session = sqlSessions.computeIfAbsent(sessionDelegate) {
-            BasicSQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
+        require(sessionDelegate is H2SessionDelegate)
+        val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
+            H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
         log.info("Session is created | #{}/{}", session.id, id)
-        return session as BasicSQLSession
+        return session as H2SQLSession
     }
 
     override fun createSession(): BasicPulsarSession {
@@ -116,7 +128,7 @@ object SQLContexts {
 
     @Synchronized
     fun activate(context: ApplicationContext): SQLContext =
-        activate(BasicSQLContext(context as AbstractApplicationContext))
+        activate(H2SQLContext(context as AbstractApplicationContext))
 
     @Synchronized
     fun activate(contextLocation: String): SQLContext = activate(ClassPathXmlSQLContext(contextLocation))
