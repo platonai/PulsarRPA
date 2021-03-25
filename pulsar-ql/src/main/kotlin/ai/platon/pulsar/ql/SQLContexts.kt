@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.ql.h2.H2MemoryDb
+import ai.platon.pulsar.ql.h2.H2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
@@ -31,7 +32,7 @@ open class H2SQLContext(
 
     override val randomConnection: Connection get() = db.getRandomConnection()
 
-    override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
+    override fun createSession(sessionDelegate: SessionDelegate): H2SQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
             H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
@@ -124,7 +125,7 @@ object SQLContexts {
         ?: activate(DefaultClassPathXmlSQLContext())
 
     @Synchronized
-    fun activate(context: AbstractSQLContext): SQLContext = context.also { PulsarContexts.activate(it) }
+    fun activate(context: SQLContext): SQLContext = context.also { PulsarContexts.activate(it) }
 
     @Synchronized
     fun activate(context: ApplicationContext): SQLContext =

@@ -394,7 +394,7 @@ class ChromeLauncher(
         // delete user data dir only if it's in the system tmp dir
         if (target.startsWith(AppPaths.SYS_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
-            if (Files.exists(target)) {
+            if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
                 log.warn("Failed to delete browser cache, try again | {}", target)
                 forceDeleteDirectory(target)
 

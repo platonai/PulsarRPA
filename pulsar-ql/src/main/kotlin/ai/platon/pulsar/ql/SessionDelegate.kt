@@ -6,7 +6,7 @@ package ai.platon.pulsar.ql
  */
 abstract class SessionDelegate(val id: Int, val implementation: Any) {
     open val sqlSequence: Int = 0
-    open val name: String = "(delegate)"
+    open val name: String = "(session delegate)"
 
     override fun hashCode() = id
 

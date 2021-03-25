@@ -2,8 +2,6 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.context.support.AbstractPulsarContext
-import ai.platon.pulsar.context.support.BasicPulsarContext
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by vincent on 18-1-17.

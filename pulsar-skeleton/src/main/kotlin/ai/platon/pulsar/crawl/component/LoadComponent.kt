@@ -51,8 +51,8 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
     }
 
-    private val log = LoggerFactory.getLogger(LoadComponent::class.java)
-    private val tracer = log.takeIf { it.isTraceEnabled }
+    private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
+    private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val fetchMetrics get() = fetchComponent.fetchMetrics
     private val closed = AtomicBoolean()
@@ -202,10 +202,10 @@ class LoadComponent(
                     if (status.isSuccess) {
                         knownPages.add(page)
                     } else {
-                        log.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
+                        logger.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
                     }
                 }
-                else -> log.error("Unknown fetch reason {} | {} {}", reason, url, opt)
+                else -> logger.error("Unknown fetch reason {} | {} {}", reason, url, opt)
             }
         }
 
@@ -213,7 +213,7 @@ class LoadComponent(
             return knownPages
         }
 
-        log.debug("Fetching {} urls with options {}", pendingUrls.size, options)
+        logger.debug("Fetching {} urls with options {}", pendingUrls.size, options)
         val updatedPages = try {
             globalCache.fetchingUrls.addAll(pendingUrls)
             if (options.preferParallel) {
@@ -232,9 +232,9 @@ class LoadComponent(
         }
 
         knownPages.addAll(updatedPages)
-        if (log.isInfoEnabled) {
-            val verbose = log.isDebugEnabled
-            log.info("{}", LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose))
+        if (logger.isInfoEnabled) {
+            val verbose = logger.isDebugEnabled
+            logger.info("{}", LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose))
         }
 
         return knownPages
@@ -272,6 +272,7 @@ class LoadComponent(
             try {
                 beforeFetch(page, normUrl.options)
                 require(page.isNotInternal) { "Internal page ${page.url}" }
+
                 fetchComponent.fetchContent(page)
                 // require(page.args == normUrl.options.toString())
                 // require(page.volatileConfig == normUrl.options.volatileConfig)
@@ -312,7 +313,7 @@ class LoadComponent(
         val url = normUrl.spec
         val options = normUrl.options
         if (globalCache.fetchingUrls.contains(url)) {
-            log.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
+            logger.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
             return WebPage.NIL
         }
 
@@ -365,14 +366,15 @@ class LoadComponent(
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         globalCache.fetchingUrls.add(page.url)
+        logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
 
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         update(page, options)
 
-        if (log.isInfoEnabled) {
-            val verbose = log.isDebugEnabled
-            log.info(CompletedPageFormatter(page, withSymbolicLink = verbose).toString())
+        if (logger.isInfoEnabled) {
+            val verbose = logger.isDebugEnabled
+            logger.info(CompletedPageFormatter(page, withSymbolicLink = verbose).toString())
         }
 
         globalCache.fetchingUrls.remove(page.url)
@@ -471,12 +473,12 @@ class LoadComponent(
         var p = page
         val reprUrl = p.reprUrl
         if (reprUrl.equals(p.url, ignoreCase = true)) {
-            log.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
+            logger.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
             return p
         }
 
         if (options.noRedirect) {
-            log.warn("Redirect is prohibit, url: $reprUrl")
+            logger.warn("Redirect is prohibit, url: $reprUrl")
             return p
         }
 

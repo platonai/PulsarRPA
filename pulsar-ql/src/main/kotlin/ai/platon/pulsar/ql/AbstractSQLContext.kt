@@ -52,7 +52,7 @@ abstract class AbstractSQLContext constructor(
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
-    protected val sqlSessions = ConcurrentHashMap<Int, AbstractSQLSession>()
+    val sqlSessions = ConcurrentHashMap<Int, AbstractSQLSession>()
 
     private val closed = AtomicBoolean()
 

@@ -31,18 +31,18 @@ import java.util.concurrent.atomic.AtomicInteger
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 abstract class AbstractPulsarSession(
-        /**
-         * The pulsar context
-         * */
-        override val context: AbstractPulsarContext,
-        /**
-         * The session scope volatile config, every setting is supposed to be changed at any time and any place
-         * */
-        override val sessionConfig: VolatileConfig,
-        /**
-         * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
-         * */
-        override val id: Int
+    /**
+     * The pulsar context
+     * */
+    override val context: AbstractPulsarContext,
+    /**
+     * The session scope volatile config, every setting is supposed to be changed at any time and any place
+     * */
+    override val sessionConfig: VolatileConfig,
+    /**
+     * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
+     * */
+    override val id: Int
 ) : PulsarSession {
 
     companion object {
@@ -57,6 +57,7 @@ abstract class AbstractPulsarSession(
     private val log = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
+
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * TODO: session scoped?
@@ -87,22 +88,22 @@ abstract class AbstractPulsarSession(
     override fun options(args: String) = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
-            context.normalize(url, options, toItemOption)
+        context.normalize(url, options, toItemOption)
 
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean) =
-            context.normalizeOrNull(url, options, toItemOption)
+        context.normalizeOrNull(url, options, toItemOption)
 
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean) =
-            context.normalize(urls, options, toItemOption).onEach { it.options }
+        context.normalize(urls, options, toItemOption).onEach { it.options }
 
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean) =
-            context.normalize(url, options, toItemOption)
+        context.normalize(url, options, toItemOption)
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean) =
-            context.normalizeOrNull(url, options, toItemOption)
+        context.normalizeOrNull(url, options, toItemOption)
 
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean) =
-            context.normalize(urls, options, toItemOption).onEach { it.options }
+        context.normalize(urls, options, toItemOption).onEach { it.options }
 
     /**
      * Inject a url
@@ -152,7 +153,7 @@ abstract class AbstractPulsarSession(
             val (url, options) = normUrl
             val now = Instant.now()
             return pageCache.getDatum(url, options.expires, now)
-                    ?: context.load(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+                ?: context.load(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
         }
 
         return context.load(normUrl)
@@ -162,10 +163,12 @@ abstract class AbstractPulsarSession(
     override suspend fun loadDeferred(url: String, options: LoadOptions) = loadDeferred(normalize(url, options))
 
     @Throws(Exception::class)
-    override suspend fun loadDeferred(url: UrlAware, args: String): WebPage = loadDeferred(normalize(url, options(args)))
+    override suspend fun loadDeferred(url: UrlAware, args: String): WebPage =
+        loadDeferred(normalize(url, options(args)))
 
     @Throws(Exception::class)
-    override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage = loadDeferred(normalize(url, options))
+    override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage =
+        loadDeferred(normalize(url, options))
 
     @Throws(Exception::class)
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
@@ -173,7 +176,7 @@ abstract class AbstractPulsarSession(
             val (url, options) = normUrl
             val now = Instant.now()
             return pageCache.getDatum(url, options.expires, now)
-                    ?: context.loadDeferred(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+                ?: context.loadDeferred(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
         }
 
         return context.loadDeferred(normUrl)
@@ -273,38 +276,52 @@ abstract class AbstractPulsarSession(
         return fieldCss.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
     }
 
-    override fun scrape(url: String, args: String, restrictCss: String, fieldCss: Iterable<String>): List<Map<String, String?>> {
+    override fun scrape(
+        url: String,
+        args: String,
+        restrictCss: String,
+        fieldCss: Iterable<String>
+    ): List<Map<String, String?>> {
         return loadDocument(url, args).select(restrictCss).map { ele ->
             fieldCss.associateWith { ele.selectFirstOrNull(it)?.text() }
         }
     }
 
-    override fun scrape(url: String, args: String, restrictCss: String, fieldCss: Map<String, String>): List<Map<String, String?>> {
+    override fun scrape(
+        url: String,
+        args: String,
+        restrictCss: String,
+        fieldCss: Map<String, String>
+    ): List<Map<String, String?>> {
         return loadDocument(url, args).select(restrictCss).map { ele ->
             fieldCss.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
         }
     }
 
     override fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Iterable<String>) =
-            scrapeOutPages(portalUrl, args, ":root", fieldsCss)
+        scrapeOutPages(portalUrl, args, ":root", fieldsCss)
 
-    override fun scrapeOutPages(portalUrl: String,
-                                args: String, restrictCss: String, fieldsCss: Iterable<String>): List<Map<String, String?>> {
+    override fun scrapeOutPages(
+        portalUrl: String,
+        args: String, restrictCss: String, fieldsCss: Iterable<String>
+    ): List<Map<String, String?>> {
         return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
-                .mapNotNull { it.selectFirstOrNull(restrictCss) }
-                .map { ele -> fieldsCss.associateWith { ele.firstTextOrNull(it) } }
-                .toList()
+            .mapNotNull { it.selectFirstOrNull(restrictCss) }
+            .map { ele -> fieldsCss.associateWith { ele.firstTextOrNull(it) } }
+            .toList()
     }
 
     override fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Map<String, String>) =
-            scrapeOutPages(portalUrl, args, ":root", fieldsCss)
+        scrapeOutPages(portalUrl, args, ":root", fieldsCss)
 
-    override fun scrapeOutPages(portalUrl: String,
-                                args: String, restrictCss: String, fieldsCss: Map<String, String>): List<Map<String, String?>> {
+    override fun scrapeOutPages(
+        portalUrl: String,
+        args: String, restrictCss: String, fieldsCss: Map<String, String>
+    ): List<Map<String, String?>> {
         return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
-                .mapNotNull { it.selectFirstOrNull(restrictCss) }
-                .map { ele -> fieldsCss.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
-                .toList()
+            .mapNotNull { it.selectFirstOrNull(restrictCss) }
+            .map { ele -> fieldsCss.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
+            .toList()
     }
 
     override fun cache(page: WebPage): WebPage = page.also { pageCache.putDatum(it.url, it) }
@@ -423,8 +440,8 @@ abstract class AbstractPulsarSession(
         }
     }
 
-    private fun <T> ensureActive(action: () -> T): T
-            = if (isActive) action() else throw IllegalApplicationContextStateException("Pulsar session is not alive")
+    private fun <T> ensureActive(action: () -> T): T =
+        if (isActive) action() else throw IllegalApplicationContextStateException("Pulsar session is not alive")
 
     private fun <T> ensureActive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
 }
