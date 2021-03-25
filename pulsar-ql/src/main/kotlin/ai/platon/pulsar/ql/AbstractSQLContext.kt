@@ -16,21 +16,8 @@ import java.text.MessageFormat
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The SQLContext fuses h2database and pulsar big data engine
- * So we can use SQL to do big data tasks, include but not limited:
- * <ul>
- * <li>Web spider</li>
- * <li>Web scraping</li>
- * <li>Search engine</li>
- * <li>Collect data from variable data source</li>
- * <li>Information extraction</li>
- * <li>TODO: NLP processing</li>
- * <li>TODO: knowledge graph</li>
- * <li>TODO: machine learning</li>
- * </ul>
  */
 abstract class AbstractSQLContext constructor(
     override val applicationContext: AbstractApplicationContext,

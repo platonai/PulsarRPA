@@ -13,7 +13,9 @@ abstract class AbstractSQLSession(
 
     override val registeredAllUdfClasses = mutableListOf<Class<out Any>>()
 
-    override fun parseValueDom(page: WebPage): ValueDom {
-        return ValueDom.get(parse(page))
-    }
+    override fun parseValueDom(page: WebPage) = ValueDom.get(parse(page))
+
+    override fun execute(sql: String) = sqlContext.execute(sql)
+
+    override fun executeQuery(sql: String) = sqlContext.executeQuery(sql)
 }

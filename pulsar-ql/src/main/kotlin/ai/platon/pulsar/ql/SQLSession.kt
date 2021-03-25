@@ -6,8 +6,11 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.SessionInterface
 import java.sql.Connection
+import java.sql.ResultSet
 
 interface SQLSession : PulsarSession {
+    val sqlContext get() = context as SQLContext
+
     val sessionDelegate: SessionDelegate
 
     val registeredAllUdfClasses: List<Class<out Any>>
@@ -27,4 +30,8 @@ interface SQLSession : PulsarSession {
     fun registerUdfsInPackage(session: SessionInterface, classLoader: ClassLoader, packageName: String)
 
     fun registerUdfs(session: SessionInterface, udfClass: Class<out Any>)
+
+    fun execute(sql: String)
+
+    fun executeQuery(sql: String): ResultSet
 }
