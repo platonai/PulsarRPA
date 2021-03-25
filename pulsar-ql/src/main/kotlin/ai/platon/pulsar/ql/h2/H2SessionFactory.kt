@@ -1,9 +1,12 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
+import org.h2.api.ErrorCode
 import org.h2.engine.*
 import org.h2.jdbc.JdbcConnection
+import org.h2.message.DbException
 import org.h2.message.TraceSystem
 import org.h2.util.JdbcUtils
 import org.h2.util.Utils
@@ -42,6 +45,12 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
      */
     @Synchronized
     override fun createSession(ci: ConnectionInfo): Session {
+        if (!sqlContext.isActive) {
+            throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, "SQL context is closed")
+        }
+
+        log.debug("Creating SQL session for h2 connection | {}", ci.url)
+
         val h2session = org.h2.engine.Engine.getInstance().createSession(ci)
         SysProperties.serializeJavaObject = ci.isPersistent
 
@@ -51,6 +60,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
         }
 
         val sqlSession = sqlContext.createSession(H2SessionDelegate(h2session.serialId, h2session))
+        sqlSession.sessionConfig.set(CapabilityTypes.SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
         require(sqlSession.id == h2session.serialId)
 
         log.info("SQLSession {} is created for h2session <{}>, connection: <{}>",
