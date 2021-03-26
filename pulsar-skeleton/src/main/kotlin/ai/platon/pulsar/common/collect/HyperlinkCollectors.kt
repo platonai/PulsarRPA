@@ -28,16 +28,13 @@ open class UrlQueueCollector(
 
     var loadArgs: String? = null
 
-    private val unsafeConf = VolatileConfig.UNSAFE
-
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         var collected = 0
 
         queue.poll()?.let {
-            val args = LoadOptions.merge(it.args, loadArgs, unsafeConf).toString()
-            val hyperlink = Hyperlinks.toHyperlink(it).also { it.args = args }
+            val hyperlink = Hyperlinks.toHyperlink(it).also { it.args = "${it.args} $loadArgs" }
 
             if (sink.add(hyperlink)) {
                 ++collected

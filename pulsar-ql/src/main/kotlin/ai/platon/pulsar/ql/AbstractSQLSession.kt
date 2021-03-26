@@ -4,6 +4,7 @@ import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.types.ValueDom
+import kotlin.reflect.KClass
 
 abstract class AbstractSQLSession(
     context: AbstractPulsarContext,
@@ -11,7 +12,9 @@ abstract class AbstractSQLSession(
     config: SessionConfig
 ) : AbstractPulsarSession(context, config, sessionDelegate.id), SQLSession {
 
-    override val registeredAllUdfClasses = mutableListOf<Class<out Any>>()
+    override val udfClassSamples: MutableList<KClass<out Any>> = mutableListOf()
+
+    override val registeredAllUdfClasses: MutableList<Class<out Any>> = mutableListOf()
 
     override fun parseValueDom(page: WebPage) = ValueDom.get(parse(page))
 

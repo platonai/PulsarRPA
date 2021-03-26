@@ -3,15 +3,19 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDFGroup
+import ai.platon.pulsar.ql.h2.udfs.StringFunctions
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.SessionInterface
 import java.sql.Connection
 import java.sql.ResultSet
+import kotlin.reflect.KClass
 
 interface SQLSession : PulsarSession {
     val sqlContext get() = context as SQLContext
 
     val sessionDelegate: SessionDelegate
+
+    val udfClassSamples: List<KClass<out Any>>
 
     val registeredAllUdfClasses: List<Class<out Any>>
 

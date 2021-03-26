@@ -30,7 +30,7 @@ public interface CapabilityTypes {
     /**
      * Common Parameters
      */
-    String LEGACY_CONFIG_PROFILE = "hadoop.config.profile";
+    String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
     /** Constant <code>SYSTEM_PROPERTY_SPECIFIED_RESOURCES="system.property.specified.resources"</code> */
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
