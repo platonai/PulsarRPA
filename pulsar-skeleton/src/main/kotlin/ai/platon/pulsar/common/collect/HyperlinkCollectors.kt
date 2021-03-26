@@ -1,11 +1,8 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.BasicPulsarSession
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.url.*
 import ai.platon.pulsar.persist.WebDb
@@ -31,17 +28,19 @@ open class UrlQueueCollector(
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        var collected = 0
+        ++collectCount
+        var count = 0
 
         queue.poll()?.let {
-            val hyperlink = Hyperlinks.toHyperlink(it).also { it.args = "${it.args} $loadArgs" }
+            val hyperlink = Hyperlinks.toHyperlink(it).also { it.args += " $loadArgs" }
 
             if (sink.add(hyperlink)) {
-                ++collected
+                ++count
             }
         }
 
-        return collected
+        collectedCount += count
+        return count
     }
 }
 
@@ -69,7 +68,7 @@ open class HyperlinkCollector(
         var globalCollects: Int = 0
 
         private val gauges = mapOf(
-                "globalCollects" to Gauge { globalCollects }
+            "globalCollects" to Gauge { globalCollects }
         )
 
         init { AppMetrics.reg.registerAll(this, gauges) }
@@ -80,12 +79,11 @@ open class HyperlinkCollector(
     private val fatLinkExtractor = FatLinkExtractor(session)
 
     private var parsedSeedCount = 0
-    private var collectedHyperlinkCount = 0
-    private val averageHyperlinkCount get() = collectedHyperlinkCount / parsedSeedCount.coerceAtLeast(1)
+    private val averageLinkCount get() = collectedCount / parsedSeedCount.coerceAtLeast(1)
 
     override var name: String = "HC"
 
-    override val estimatedSize: Int get() = averageHyperlinkCount * seeds.size
+    override val estimatedSize: Int get() = averageLinkCount * seeds.size
 
     var collects: Int = 0
 
@@ -102,13 +100,14 @@ open class HyperlinkCollector(
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         ++globalCollects
-        ++collects
+        ++collectCount
 
-        var collected = 0
+        var count = 0
         kotlin.runCatching {
-            collected += collectTo0(sink)
+            count += collectTo0(sink)
         }.onFailure { log.warn("Failed to collect links", it) }
-        return collected
+        collectedCount += count
+        return count
     }
 
     private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
@@ -124,7 +123,7 @@ open class HyperlinkCollector(
     }
 
     protected fun createFatLinkAndCollectTo(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
-        var collected = 0
+        var count = 0
         val fatLink = fatLinks[seed.spec]
         if (fatLink != null) {
             log.warn("The batch still has {} active tasks | idle: {} | {}",
@@ -144,9 +143,9 @@ open class HyperlinkCollector(
 
             val size = sink.size
             fatLink.tailLinks.toCollection(sink)
-            collected = fatLink.tailLinks.size
+            count = fatLink.tailLinks.size
             val size2 = sink.size
-            collectedHyperlinkCount += size2
+            collectedCount += size2
 
             log.info("{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
                     page.id,
@@ -155,7 +154,7 @@ open class HyperlinkCollector(
                     fatLinkExtractor.counters.loadedSeeds, seed)
         }
 
-        return collected
+        return count
     }
 
 }

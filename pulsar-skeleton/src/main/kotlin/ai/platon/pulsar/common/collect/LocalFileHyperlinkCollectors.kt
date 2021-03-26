@@ -52,17 +52,20 @@ open class LocalFileHyperlinkCollector(
     override fun hasMore() = hyperlinks.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        var collected = 0
+        ++collectCount
+        var count = 0
 
         cache.removeFirstOrNull()?.let {
             if (sink.add(it)) {
-               ++collected
+               ++count
             } else {
                 log.warn("Can not collect link | {}", it)
             }
         }
 
-        return collected
+        collectedCount += count
+
+        return count
     }
 
     private fun ensureLoaded(): LocalFileHyperlinkCollector {
@@ -89,11 +92,15 @@ open class CircularLocalFileHyperlinkCollector(
     protected val iterator = Iterators.cycle(hyperlinks)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        var collected = 0
+        ++collectCount
+
+        var count = 0
         if (hasMore() && iterator.hasNext()) {
-            collected += collectTo(iterator.next(), sink)
+            count += collectTo(iterator.next(), sink)
         }
-        return collected
+
+        collectedCount += count
+        return count
     }
 }
 
@@ -148,14 +155,15 @@ open class PeriodicalLocalFileHyperlinkCollector(
     override fun hasMore() = (!isFinished || isExpired) && iterator.hasNext()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
+        ++collectCount
         ++counters.collects
 
         resetIfNecessary()
 
         var i = 0
-        var collected = 0
+        var count = 0
         while (i++ < batchSize && hasMore() && iterator.hasNext()) {
-            collected += collectTo(iterator.next(), sink)
+            count += collectTo(iterator.next(), sink)
             ++counters.collected
             position.incrementAndGet()
         }
@@ -164,8 +172,9 @@ open class PeriodicalLocalFileHyperlinkCollector(
             finishTimes[round] = Instant.now()
         }
 
-        roundCollected += collected
-        return collected
+        roundCollected += count
+        collectedCount += count
+        return count
     }
 
     override fun toString(): String {

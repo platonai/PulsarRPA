@@ -13,6 +13,8 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
         const val DEFAULT_CAPACITY = 100
     }
 
+    val estimatedSize: Int
+
     fun shuffle()
 }
 
@@ -27,6 +29,8 @@ abstract class AbstractLoadingQueue(
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 //    protected val implementation = ArrayBlockingQueue<UrlAware>(capacity)
     protected val implementation = LinkedList<UrlAware>()
+
+    override val estimatedSize: Int get() = loader.estimatedSize
 
     @get:Synchronized
     val freeSlots get() = capacity - implementation.size

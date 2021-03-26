@@ -7,6 +7,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 interface FetchCache {
+    val name: String
     val nonReentrantQueue: Queue<UrlAware>
     val nReentrantQueue: Queue<UrlAware>
     val reentrantQueue: Queue<UrlAware>
@@ -15,16 +16,20 @@ interface FetchCache {
     val totalSize get() = queues.sumOf { it.size }
 }
 
-open class ConcurrentFetchCache(conf: ImmutableConfig): FetchCache {
+open class ConcurrentFetchCache(
+    override val name: String = "",
+    conf: ImmutableConfig
+): FetchCache {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
 }
 
 class LoadingFetchCache(
-        val urlLoader: ExternalUrlLoader,
-        val priority: Int = Priority13.NORMAL.value,
-        val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
+    override val name: String = "",
+    val urlLoader: ExternalUrlLoader,
+    val priority: Int = Priority13.NORMAL.value,
+    val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ) : FetchCache, Loadable<UrlAware> {
 
     companion object {

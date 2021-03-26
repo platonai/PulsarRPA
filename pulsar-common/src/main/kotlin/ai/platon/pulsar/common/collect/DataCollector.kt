@@ -11,7 +11,10 @@ interface DataCollector<T> {
      * The collector cache capacity. At most [capacity] items can be collected to the cache from the source
      * */
     val capacity: Int
+    val size: Int
     val estimatedSize: Int
+    val collectCount: Int
+    val collectedCount: Int
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableList<T>): Int
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
@@ -32,6 +35,10 @@ abstract class AbstractDataCollector<E>: DataCollector<E> {
     override var name: String = "DC"
     override val capacity: Int = DEFAULT_CAPACITY
     override val estimatedSize: Int = 0
+    override val size: Int get() = estimatedSize
+
+    override var collectCount: Int = 0
+    override var collectedCount: Int = 0
 
     override fun collectTo(element: E, sink: MutableList<E>): Int {
         sink.add(element)
