@@ -53,13 +53,14 @@ import java.net.URL
  * Html parser
  */
 class HtmlParser(
-        private val parseFilters: ParseFilters,
-        private val conf: ImmutableConfig
+    private val parseFilters: ParseFilters,
+    private val conf: ImmutableConfig
 ) : Parser {
     private val log = LoggerFactory.getLogger(HtmlParser::class.java)
     private val tracer = log.takeIf { it.isDebugEnabled }
     private val defaultCharEncoding = conf.get(CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8")
-    private val cachingPolicy = conf.get(CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
+    private val cachingPolicy =
+        conf.get(CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private val volatileConfig = conf.toVolatileConfig()
     private val primerParser = PrimerParser(conf)
 
@@ -69,10 +70,10 @@ class HtmlParser(
 
     override fun getParams(): Params {
         return Params.of(
-                "className", this.javaClass.simpleName,
-                "defaultCharEncoding", defaultCharEncoding,
-                "cachingPolicy", cachingPolicy,
-                "parseFilters", parseFilters
+            "className", this.javaClass.simpleName,
+            "defaultCharEncoding", defaultCharEncoding,
+            "cachingPolicy", cachingPolicy,
+            "parseFilters", parseFilters
         )
     }
 
@@ -95,12 +96,14 @@ class HtmlParser(
 
     @Throws(MalformedURLException::class, Exception::class)
     private fun doParse(page: WebPage): ParseContext {
-        tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
-                page.id,
-                Strings.readableBytes(page.contentLength),
-                page.protocolStatus,
-                page.htmlIntegrity,
-                page.url)
+        tracer?.trace(
+            "{}.\tParsing page | {} | {} | {} | {}",
+            page.id,
+            Strings.readableBytes(page.contentLength),
+            page.protocolStatus,
+            page.htmlIntegrity,
+            page.url
+        )
 
         val baseUrl = page.baseUrl ?: page.url
         val baseURL = URL(baseUrl)

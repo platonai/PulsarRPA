@@ -13,6 +13,18 @@ enum class FlowState {
 }
 
 /**
+ * Both 0 and 200 is a good state
+ * */
+data class CheckState(
+    val code: Int = 0,
+    val message: String = "",
+    val scope: String = "unspecified"
+) {
+    val isOK get() = code == 0 || code == 200
+    val isNotOK get() = code != 0
+}
+
+/**
  * Smaller value, higher priority, keep consistent with PriorityQueue
  *
  * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one

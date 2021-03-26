@@ -54,9 +54,9 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
      */
     fun filter(parseContext: ParseContext) {
         // loop on each filter
-        parseFilters.forEach {
-            if (it.isRelevant(parseContext)) {
-                val result = kotlin.runCatching { it.filter(parseContext) }
+        parseFilters.forEach { filter ->
+            if (filter.isRelevant(parseContext).isOK) {
+                val result = kotlin.runCatching { filter.filter(parseContext) }
                         .onFailure { log.warn("Unexpected exception", it) }
                         .getOrNull()
 

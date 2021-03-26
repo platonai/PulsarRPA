@@ -397,7 +397,7 @@ abstract class AbstractPulsarContext(
     }
 
     private fun doClose() {
-        log.info("Closing PulsarContext #{}", id)
+        log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
         kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
 

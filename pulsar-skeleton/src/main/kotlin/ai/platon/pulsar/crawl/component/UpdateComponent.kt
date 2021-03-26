@@ -153,6 +153,7 @@ class UpdateComponent(
         if (page.marks.isInactive) {
             return
         }
+
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
             CrawlStatusCodes.FETCHED,

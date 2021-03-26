@@ -65,11 +65,10 @@ open class FetchComponent(
         val protocolFactory: ProtocolFactory,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
-    protected final val log = LoggerFactory.getLogger(FetchComponent::class.java)
-    private val tracer = log.takeIf { it.isTraceEnabled }
+    private final val logger = LoggerFactory.getLogger(FetchComponent::class.java)
+    private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
-    private val conf = immutableConfig.toVolatileConfig()
     val isActive get() = !closed.get()
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
@@ -79,7 +78,7 @@ open class FetchComponent(
      * @param url The url of web page to fetch
      * @return The fetch result
      */
-    fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, conf))
+    fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
      * Fetch a url
@@ -131,7 +130,7 @@ open class FetchComponent(
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
-            log.warn(e.message)
+            logger.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         } finally {
             afterFetch(page)
@@ -152,7 +151,7 @@ open class FetchComponent(
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
-            log.warn(e.message)
+            logger.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         } finally {
             afterFetch(page)
@@ -171,7 +170,7 @@ open class FetchComponent(
         val url = page.url
         val pageDatum = output.pageDatum
         if (pageDatum == null) {
-            log.warn("No content | {}", page.configuredUrl)
+            logger.warn("No content | {}", page.configuredUrl)
         }
 
         page.headers.putAll(output.headers.asMultimap())
@@ -200,7 +199,7 @@ open class FetchComponent(
             ProtocolStatus.WEB_DRIVER_TIMEOUT,
             ProtocolStatus.SCRIPT_TIMEOUT -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackTimeout(url) }
 
-            else -> CrawlStatus.STATUS_RETRY.also { log.warn("Unknown protocol status $protocolStatus") }
+            else -> CrawlStatus.STATUS_RETRY.also { logger.warn("Unknown protocol status $protocolStatus") }
         }
 
         val updatedPage = when(crawlStatus) {

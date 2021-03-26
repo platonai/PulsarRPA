@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -36,8 +37,13 @@ abstract class AbstractParseFilter(
 
     override val children = mutableListOf<ParseFilter>()
 
-    override fun isRelevant(parseContext: ParseContext): Boolean {
-        return parseContext.page.protocolStatus.isSuccess
+    override fun isRelevant(parseContext: ParseContext): CheckState {
+        val status = parseContext.page.protocolStatus
+        return if (status.isSuccess) {
+            CheckState()
+        } else {
+            CheckState(status.minorCode, message = status.toString())
+        }
     }
 
     override fun filter(parseContext: ParseContext): ParseResult {

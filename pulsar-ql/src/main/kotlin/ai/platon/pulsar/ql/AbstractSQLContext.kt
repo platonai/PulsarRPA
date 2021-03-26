@@ -50,7 +50,7 @@ abstract class AbstractSQLContext constructor(
 
         status = Status.RUNNING
 
-        log.info("SQLContext is created | #$id")
+        log.info("SQLContext is created | {}/{} | {}", id, sessions.size, this::class.java.simpleName)
     }
 
     override fun execute(sql: String) {

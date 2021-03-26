@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 
@@ -40,7 +41,7 @@ interface ParseFilter : Parameterized, AutoCloseable {
 
     fun addLast(child: ParseFilter)
 
-    fun isRelevant(parseContext: ParseContext): Boolean
+    fun isRelevant(parseContext: ParseContext): CheckState
 
     fun onBeforeFilter(parseContext: ParseContext)
 

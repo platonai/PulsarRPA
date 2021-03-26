@@ -13,6 +13,7 @@ import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import com.google.common.util.concurrent.MoreExecutors
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.*
 
@@ -23,6 +24,8 @@ class BatchFetchComponent(
         protocolFactory: ProtocolFactory,
         immutableConfig: ImmutableConfig
 ) : FetchComponent(fetchMetrics, protocolFactory, immutableConfig) {
+    private final val logger = LoggerFactory.getLogger(BatchFetchComponent::class.java)
+
     constructor(webDb: WebDb, immutableConfig: ImmutableConfig)
             : this(webDb, null, null, ProtocolFactory(immutableConfig), immutableConfig)
 
@@ -165,8 +168,8 @@ class BatchFetchComponent(
             val mode = options.fetchMode
             // TODO: save url with options
             lazyFetchTaskManager?.commitLazyTasks(mode, lazyTasks, conf)
-            if (log.isDebugEnabled) {
-                log.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
+            if (logger.isDebugEnabled) {
+                logger.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
             }
         }
         return eagerTasks
@@ -176,12 +179,12 @@ class BatchFetchComponent(
         try {
             return future.get(35, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
-            log.warn("Interrupted when fetch resource", e)
+            logger.warn("Interrupted when fetch resource", e)
             Thread.currentThread().interrupt()
         } catch (e: ExecutionException) {
-            log.warn(e.toString())
+            logger.warn(e.toString())
         } catch (e: TimeoutException) {
-            log.warn("Fetch resource timeout", e)
+            logger.warn("Fetch resource timeout", e)
         }
         return WebPage.NIL
     }
