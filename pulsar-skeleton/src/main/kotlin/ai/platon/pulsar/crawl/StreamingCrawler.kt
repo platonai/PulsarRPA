@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
+import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.measure.FileSizeUnits
@@ -392,8 +393,8 @@ open class StreamingCrawler<T : UrlAware>(
     private fun handleRetry(url: UrlAware, page: WebPage?) {
         val gCache = globalCache
         if (gCache != null && !gCache.isFetching(url)) {
-            val cache = gCache.fetchCacheManager.normalCache.nReentrantQueue
-            if (cache.add(url)) {
+            val cache = gCache.fetchCacheManager.delayCache
+            if (cache.add(DelayUrl(url, Duration.ofMinutes(2)))) {
                 globalMetrics.retries.mark()
                 if (page != null) {
                     val retry = 1 + page.fetchRetries

@@ -3,8 +3,30 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.FetchCatchManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.url.UrlAware
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.DelayQueue
+import java.util.concurrent.Delayed
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+
+open class DelayUrl(
+    val url: UrlAware,
+    val delay: Duration
+) : Delayed {
+    val startTime = Instant.now() + delay
+
+    override fun compareTo(other: Delayed): Int {
+        return Duration.between(startTime, (other as DelayUrl).startTime).toMillis().toInt()
+    }
+
+    override fun getDelay(unit: TimeUnit): Long {
+        val delay = Duration.between(startTime, Instant.now())
+        return unit.convert(delay.toMillis(), TimeUnit.MILLISECONDS)
+    }
+}
 
 /**
  * The fetch catch manager
@@ -35,6 +57,7 @@ interface FetchCatchManager {
     val highestCache: FetchCache
 
     val realTimeCache: FetchCache
+    val delayCache: DelayQueue<DelayUrl>
 
     fun initialize()
 }
@@ -42,7 +65,7 @@ interface FetchCatchManager {
 /**
  * The abstract fetch catch manager
  * */
-abstract class AbstractFetchCatchManager(val conf: ImmutableConfig): FetchCatchManager {
+abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatchManager {
     protected val initialized = AtomicBoolean()
     override val totalItems get() = ensureInitialized().caches.values.sumOf { it.totalSize }
 
@@ -71,15 +94,21 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig): FetchCatchM
 /**
  * The global cache
  * */
-open class ConcurrentFetchCatchManager(conf: ImmutableConfig): AbstractFetchCatchManager(conf) {
+open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCatchManager(conf) {
     /**
      * The priority fetch caches
      * */
     override val caches = ConcurrentSkipListMap<Int, FetchCache>()
+
     /**
      * The real time fetch cache
      * */
     override val realTimeCache: FetchCache = ConcurrentFetchCache("realtime", conf)
+
+    /**
+     * The delayed fetch cache
+     * */
+    override val delayCache = DelayQueue<DelayUrl>()
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
@@ -89,10 +118,10 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig): AbstractFetchCatc
 }
 
 class LoadingFetchCatchManager(
-        val urlLoader: ExternalUrlLoader,
-        val capacity: Int = 10_000,
-        conf: ImmutableConfig
-): ConcurrentFetchCatchManager(conf) {
+    val urlLoader: ExternalUrlLoader,
+    val capacity: Int = 10_000,
+    conf: ImmutableConfig
+) : ConcurrentFetchCatchManager(conf) {
     /**
      * The real time fetch cache
      * */

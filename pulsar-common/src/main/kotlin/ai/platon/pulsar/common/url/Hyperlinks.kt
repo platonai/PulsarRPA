@@ -7,13 +7,15 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.Delayed
+import java.util.concurrent.TimeUnit
 
 interface PseudoUrl
 
 /**
  * The UrlAware interface.
  * */
-interface UrlAware: Comparable<UrlAware> {
+interface UrlAware {
     /**
      * The url, it can be configured or not
      * */
@@ -51,7 +53,7 @@ interface UrlAware: Comparable<UrlAware> {
 /**
  * The StatefulUrl interface. A StatefulUrl is an UrlAware and has status.
  * */
-interface StatefulUrl: UrlAware, Comparable<UrlAware> {
+interface StatefulUrl: UrlAware {
     var authToken: String?
     var remoteAddr: String?
     var status: Int
@@ -98,7 +100,7 @@ abstract class AbstractUrl(
 
     override fun hashCode() = url.hashCode()
 
-    override fun compareTo(other: UrlAware) = url.compareTo(other.url)
+//    override fun compareTo(other: UrlAware) = url.compareTo(other.url)
 
     override fun toString() = url
 }

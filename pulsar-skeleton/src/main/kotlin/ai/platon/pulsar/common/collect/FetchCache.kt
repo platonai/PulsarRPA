@@ -2,9 +2,14 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.url.*
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.DelayQueue
+import java.util.concurrent.Delayed
+import java.util.concurrent.TimeUnit
 
 interface FetchCache {
     val name: String
@@ -19,7 +24,7 @@ interface FetchCache {
 open class ConcurrentFetchCache(
     override val name: String = "",
     conf: ImmutableConfig
-): FetchCache {
+) : FetchCache {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
