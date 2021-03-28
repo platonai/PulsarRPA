@@ -576,9 +576,7 @@ final public class WebPage implements Comparable<WebPage> {
             return "";
         }
 
-        String args = page.getOptions().toString().trim();
-        // arity0 to arity1
-        return StringsKt.arity0ToArity1(args, "-cacheContent");
+        return page.getOptions().toString().trim();
     }
 
     /**

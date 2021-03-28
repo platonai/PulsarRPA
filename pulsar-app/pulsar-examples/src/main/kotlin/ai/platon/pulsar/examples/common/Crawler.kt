@@ -93,6 +93,9 @@ open class Crawler(
 //        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
 
         val pages = i.loadAll(links, options.createItemOptions())
+        pages.forEach {
+            println(it.url)
+        }
 
         val query = options.query
         if (query != null) {

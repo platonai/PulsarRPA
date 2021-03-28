@@ -1,9 +1,10 @@
 package ai.platon.pulsar.client.examples
 
+import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SqlTemplate
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.Gson
 import java.net.URI
 import java.net.http.HttpClient
@@ -12,6 +13,7 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
 import java.time.Instant
+import kotlin.streams.toList
 
 data class ScrapeResultSet(
     val name: String,
@@ -51,16 +53,40 @@ class Scraper(val host: String, val authToken: String) {
     private val scrapeService = "$baseUri/q"
     private val statusService = "$baseUri/status"
 
-    fun scrape(url: String, sqls: Map<String, String>) {
+    fun scrape(url: String, sqls: Map<String, String>): String {
         val requestEntity: Any = ScrapeRequestV2(authToken, url, "-i 1s", sqls, priority = "HIGHER5")
         val request = post(scrapeService, requestEntity)
-        val uuid = client.send(request, BodyHandlers.ofString()).body()
+        return client.send(request, BodyHandlers.ofString()).body()
+    }
 
+    fun await(uuid: String) {
         var responseEntity: ScrapeResponseV2? = null
         var i = 0
         while (i++ < 30 && responseEntity?.resultSets == null) {
             responseEntity = getStatus(uuid)
-            println(Gson().toJson(responseEntity))
+            println(jacksonObjectMapper().writeValueAsString(responseEntity))
+            sleepSeconds(5)
+        }
+    }
+
+    fun scrapeAll(urls: Iterable<String>, sqls: Map<String, String>): List<String> {
+        return urls.map { scrape(it, sqls) }
+    }
+
+    fun awaitAll(uuids: Iterable<String>) {
+        val responses = mutableMapOf<String, ScrapeResponseV2?>()
+
+        var i = 0
+        while (i++ < 60) {
+            uuids.toList().parallelStream().forEach {
+                if (responses[it]?.resultSets == null) {
+                    val response = getStatus(it)
+                    responses[it] = response
+                    if (response?.resultSets != null) {
+                        println(jacksonObjectMapper().writeValueAsString(response))
+                    }
+                }
+            }
             sleepSeconds(5)
         }
     }
@@ -103,5 +129,7 @@ fun main() {
         .associate { it.first to SqlTemplate.load(it.second).template }
 
     val scraper = Scraper("crawl3", authToken)
-    scraper.scrape(productUrl, sqls)
+    val urls = LinkExtractors.fromResource("urls/amazon-product-urls.txt").take(5)
+    val uuids = scraper.scrapeAll(urls, sqls)
+    scraper.awaitAll(uuids)
 }

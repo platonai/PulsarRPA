@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.common.arity0ToArity1
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
@@ -137,9 +138,14 @@ open class PulsarOptions(
         const val DEFAULT_DELIMETER = " "
         val CMD_SPLIT_PATTERN = Pattern.compile("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\\S+")
 
+        /**
+         * Normalize the raw arguments, convert old version args to current version
+         * */
         @JvmOverloads
         fun normalize(args: String, seps: String = ","): String {
-            return StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length))
+            val args1 = StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length))
+            // in old version, -cacheContent has arity 0, but current version is 1, we need a convert
+            return arity0ToArity1(args1, "-cacheContent")
         }
 
         fun normalize(argv: Array<String>) {

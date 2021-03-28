@@ -17,12 +17,15 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
     }
 
     fun bestSeller() {
-        val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs/ref=zg_bs_unv_hg_0_1063236_2"
-        i.load(portalUrl)
+        val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs -i 1s"
+        val document = i.loadDocument(portalUrl)
+        document.select("a[href~=/dp/]").forEach {
+            println(it.attr("abs:href"))
+        }
     }
 
     fun smartHome() {
-        val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
+        val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011"
     }
 
     fun jp() {
@@ -44,6 +47,6 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 fun main() {
     withContext { cx ->
         cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-        AmazonCrawler(cx).laptops()
+        AmazonCrawler(cx).bestSeller()
     }
 }
