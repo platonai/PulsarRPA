@@ -26,7 +26,9 @@
     <version>1.5.9-SNAPSHOT</version>
   </parent>
 
+  <groupId>org.apache.gora</groupId>
   <artifactId>gora-shaded-mongodb</artifactId>
+  <version>0.8</version>
   <packaging>jar</packaging>
 
   <name>Pulsar Gora Shaded MongoDB</name>
