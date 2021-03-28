@@ -26,6 +26,7 @@
     <version>1.5.8-SNAPSHOT</version>
   </parent>
 
+  <groupId>org.apache.gora</groupId>
   <artifactId>gora-shaded-mongodb</artifactId>
   <packaging>jar</packaging>
 
