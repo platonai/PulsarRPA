@@ -52,7 +52,7 @@ class Scraper(val host: String, val authToken: String) {
     private val statusService = "$baseUri/status"
 
     fun scrape(url: String, sqls: Map<String, String>) {
-        val requestEntity: Any = ScrapeRequestV2(authToken, url, "-i 1s", sqls)
+        val requestEntity: Any = ScrapeRequestV2(authToken, url, "-i 1s", sqls, priority = "HIGHER5")
         val request = post(scrapeService, requestEntity)
         val uuid = client.send(request, BodyHandlers.ofString()).body()
 
@@ -102,6 +102,6 @@ fun main() {
         .map { it.key to "$resourcePrefix/${it.value}" }
         .associate { it.first to SqlTemplate.load(it.second).template }
 
-    val scraper = Scraper("crawl1", authToken)
+    val scraper = Scraper("crawl3", authToken)
     scraper.scrape(productUrl, sqls)
 }

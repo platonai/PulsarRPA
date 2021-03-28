@@ -159,11 +159,19 @@ open class FetchComponent(
     }
 
     private fun beforeFetch(page: WebPage) {
-        page.loadEventHandler?.onBeforeFetch?.invoke(page)
+        try {
+            page.loadEventHandler?.onBeforeFetch?.invoke(page)
+        } catch (e: Throwable) {
+            log.warn("Failed to invoke beforeFetch | ${page.configuredUrl}", e)
+        }
     }
 
     private fun afterFetch(page: WebPage) {
-        page.loadEventHandler?.onAfterFetch?.invoke(page)
+        try {
+            page.loadEventHandler?.onAfterFetch?.invoke(page)
+        } catch (e: Throwable) {
+            log.warn("Failed to invoke afterFetch | ${page.configuredUrl}", e)
+        }
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {

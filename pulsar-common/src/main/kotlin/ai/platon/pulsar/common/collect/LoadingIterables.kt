@@ -4,10 +4,11 @@ import java.util.*
 import kotlin.NoSuchElementException
 
 open class ConcurrentLoadingIterable<E>(
-        val collector: DataCollector<E>,
-        val realTimeCollector: DataCollector<E>? = null,
-        val lowerCacheSize: Int = 20,
-        val upperCacheSize: Int = 1_000_000
+    val collector: DataCollector<E>,
+    val realTimeCollector: DataCollector<E>? = null,
+    val delayCollector: DataCollector<E>? = null,
+    val lowerCacheSize: Int = 20,
+    val upperCacheSize: Int = 1_000_000
 ): Iterable<E> {
 
     private val cache = Collections.synchronizedList(LinkedList<E>())
@@ -35,6 +36,7 @@ open class ConcurrentLoadingIterable<E>(
     ): Iterator<E> {
         private val collector = iterable.collector
         private val realTimeCollector = iterable.realTimeCollector
+        private val delayCollector = iterable.delayCollector
         private val cache = iterable.cache
 
         @Synchronized
@@ -48,6 +50,10 @@ open class ConcurrentLoadingIterable<E>(
         override fun hasNext(): Boolean {
             if (realTimeCollector != null && realTimeCollector.hasMore()) {
                 realTimeCollector.collectTo(0, cache)
+            }
+
+            if (delayCollector != null && delayCollector.hasMore()) {
+                delayCollector.collectTo(0, cache)
             }
 
             while (cache.isEmpty() && collector.hasMore()) {

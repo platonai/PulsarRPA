@@ -54,7 +54,7 @@ class StreamingCrawlerMetrics {
 
 open class StreamingCrawler<T : UrlAware>(
     private val urls: Sequence<T>,
-    private val crawlOptions: LoadOptions,
+    private val defaultOptions: LoadOptions,
     session: PulsarSession = PulsarContexts.createSession(),
     /**
      * A optional global cache which will hold the retry tasks
@@ -100,6 +100,7 @@ open class StreamingCrawler<T : UrlAware>(
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
+    private val defaultArgs = defaultOptions.toString()
 
     private var proxyOutOfService = 0
     private var quit = false
@@ -143,7 +144,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        log.info("Starting streaming crawler ... | {}", crawlOptions)
+        log.info("Starting streaming crawler ... | {}", defaultOptions)
 
         globalRunningInstances.incrementAndGet()
 
@@ -324,7 +325,9 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
-        if (page == null || page.protocolStatus.isRetry) {
+        if (page == null) {
+            handleRetry(url, page)
+        } else if (page.isContentUpdated && page.protocolStatus.isRetry) {
             handleRetry(url, page)
         }
 
@@ -339,7 +342,8 @@ open class StreamingCrawler<T : UrlAware>(
     @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
         // apply the default options, arguments in the url has the highest priority
-        val options = LoadOptions.merge(crawlOptions, url.args)
+        val options = session.options("$defaultArgs ${url.args}")
+
         return session.runCatching { loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()
@@ -393,12 +397,13 @@ open class StreamingCrawler<T : UrlAware>(
     private fun handleRetry(url: UrlAware, page: WebPage?) {
         val gCache = globalCache
         if (gCache != null && !gCache.isFetching(url)) {
+            val retries = 1L + (page?.fetchRetries ?: 0)
+            val delay = Duration.ofMinutes(5L + 5 * retries)
             val cache = gCache.fetchCacheManager.delayCache
-            if (cache.add(DelayUrl(url, Duration.ofMinutes(2)))) {
+            if (cache.add(DelayUrl(url, delay))) {
                 globalMetrics.retries.mark()
                 if (page != null) {
-                    val retry = 1 + page.fetchRetries
-                    log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retry}th"))
+                    log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
                 }
             } else {
                 globalMetrics.gone.mark()

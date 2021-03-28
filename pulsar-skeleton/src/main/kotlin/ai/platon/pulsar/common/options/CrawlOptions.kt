@@ -17,7 +17,7 @@ import java.util.*
  */
 class CrawlOptions(argv: Array<String>) : CommonOptions(argv) {
 
-    @Parameter(names = ["-log", "-verbose"], description = "Log level for this crawl task")
+    @Parameter(names = ["-verbose"], description = "Log level for this crawl task")
     var verbose = 0
     @Parameter(names = ["-i", "--fetch-interval"], converter = DurationConverter::class, description = "Fetch interval")
     var fetchInterval = Duration.ofHours(1)

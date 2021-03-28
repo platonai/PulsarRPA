@@ -1,10 +1,10 @@
 package ai.platon.pulsar.crawl.common.options
 
-import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.arity0ToArity1
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.*
 import com.google.common.collect.Lists
-import junit.framework.Assert.assertTrue
 import org.apache.commons.collections4.CollectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
@@ -12,6 +12,7 @@ import org.junit.Test
 import java.time.Duration
 import java.util.*
 import java.util.stream.Stream
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 16-7-20.
@@ -19,22 +20,22 @@ import java.util.stream.Stream
  */
 class TestPulsarOptions {
     private val links = Lists.newArrayList(
-            "http://www.news.cn/comments/index.htm",
-            "http://xinhuanet.com/silkroad/index.htm",
-            "http://www.news.cn/video/xhwsp/index.htm",
-            "http://www.xinhuanet.com/company/legal.htm",
-            "http://www.xinhuanet.com/politics/xhll.htm",
-            "http://www.xinhuanet.com/datanews/index.htm",
-            "http://www.news.cn/politics/leaders/index.htm",
-            "http://www.xinhuanet.com/company/copyright.htm",
-            "http://www.xinhuanet.com/company/contact-us.htm",
-            "http://forum.home.news.cn/detail/140976763/1.html",
-            "http://www.bjnews.com.cn/news/2017/06/20/447390.html",
-            "http://www.bjnews.com.cn/news/2017/06/20/447403.html",
-            "http://www.bjnews.com.cn/news/2017/06/19/447269.html",
-            "http://www.bjnews.com.cn/news/2017/06/20/447414.html",
-            "http://www.bjnews.com.cn/news/2017/06/20/447354.html",
-            "http://www.bjnews.com.cn/news/2017/06/19/447316.html"
+        "http://www.news.cn/comments/index.htm",
+        "http://xinhuanet.com/silkroad/index.htm",
+        "http://www.news.cn/video/xhwsp/index.htm",
+        "http://www.xinhuanet.com/company/legal.htm",
+        "http://www.xinhuanet.com/politics/xhll.htm",
+        "http://www.xinhuanet.com/datanews/index.htm",
+        "http://www.news.cn/politics/leaders/index.htm",
+        "http://www.xinhuanet.com/company/copyright.htm",
+        "http://www.xinhuanet.com/company/contact-us.htm",
+        "http://forum.home.news.cn/detail/140976763/1.html",
+        "http://www.bjnews.com.cn/news/2017/06/20/447390.html",
+        "http://www.bjnews.com.cn/news/2017/06/20/447403.html",
+        "http://www.bjnews.com.cn/news/2017/06/19/447269.html",
+        "http://www.bjnews.com.cn/news/2017/06/20/447414.html",
+        "http://www.bjnews.com.cn/news/2017/06/20/447354.html",
+        "http://www.bjnews.com.cn/news/2017/06/19/447316.html"
     )
 
     private val conf = VolatileConfig()
@@ -63,16 +64,16 @@ class TestPulsarOptions {
             assertEquals(args, 200, options.linkOptions.maxUrlLength.toLong())
 
             val eopts = EntityOptions.parse(args)
-            assertEquals("article", eopts.getName())
-            assertEquals("body", eopts.getRoot())
-            assertTrue(eopts.getCssRules().containsKey("title"))
-            assertTrue(eopts.getCssRules().containsValue("#title"))
+            assertEquals("article", eopts.name)
+            assertEquals("body", eopts.root)
+            assertTrue(eopts.cssRules.containsKey("title"))
+            assertTrue(eopts.cssRules.containsValue("#title"))
 
-            assertEquals("comments", eopts.getCollectionOptions().getName())
-            assertEquals("#comments", eopts.getCollectionOptions().getRoot())
-            assertEquals(".comment", eopts.getCollectionOptions().getItem())
-            assertTrue(eopts.getCollectionOptions().getCssRules().containsKey("author"))
-            assertTrue(eopts.getCollectionOptions().getCssRules().containsValue(".content"))
+            assertEquals("comments", eopts.collectionOptions.getName())
+            assertEquals("#comments", eopts.collectionOptions.getRoot())
+            assertEquals(".comment", eopts.collectionOptions.getItem())
+            assertTrue(eopts.collectionOptions.cssRules.containsKey("author"))
+            assertTrue(eopts.collectionOptions.cssRules.containsValue(".content"))
         }
     }
 
@@ -162,6 +163,20 @@ class TestPulsarOptions {
     fun testOptionHelp() {
         LoadOptions.helpList.forEach {
             println(it)
+        }
+    }
+
+    @Test
+    fun testFixArity1() {
+        val search = "-cacheContent"
+        val argsList = listOf(
+            "-label test $search",
+            "-label test $search -parse",
+            "$search -parse"
+        )
+        argsList.forEach { args ->
+            val args1 = arity0ToArity1(args, search)
+            assertTrue("$search true" in args1, args)
         }
     }
 

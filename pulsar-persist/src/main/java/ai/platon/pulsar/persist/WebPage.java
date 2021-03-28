@@ -16,11 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.AppContext;
-import ai.platon.pulsar.common.DateTimes;
-import ai.platon.pulsar.common.HtmlIntegrity;
-import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.url.Urls;
 import ai.platon.pulsar.persist.gora.generated.*;
@@ -581,21 +577,8 @@ final public class WebPage implements Comparable<WebPage> {
         }
 
         String args = page.getOptions().toString().trim();
-        // fix cacheContent
-        String search = "-cacheContent";
-        int pos = args.indexOf(search);
-        if (pos != -1) {
-            pos += search.length();
-            if (pos == args.length()) {
-                args = args.replace(search, search + " true");
-            } else {
-                String s = args.substring(pos).trim();
-                if (s.charAt(0) == '-') {
-                    args = args.replace(search, search + " true");
-                }
-            }
-        }
-        return args;
+        // arity0 to arity1
+        return StringsKt.arity0ToArity1(args, "-cacheContent");
     }
 
     /**

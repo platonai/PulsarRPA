@@ -80,11 +80,11 @@ class HtmlParser(
     override fun parse(page: WebPage): ParseResult {
         return try {
             // The base url is set by protocol. Might be different from url if the request redirected
-            beforeParse(page)
+            beforeHtmlParse(page)
 
             val parseContext = doParse(page)
 
-            parseContext.document?.let { afterParse(page, it) }
+            parseContext.document?.let { afterHtmlParse(page, it) }
 
             parseContext.parseResult
         } catch (e: MalformedURLException) {
@@ -123,12 +123,26 @@ class HtmlParser(
         return parseContext
     }
 
-    private fun beforeParse(page: WebPage) {
-        page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
+    /**
+     *
+     * */
+    private fun beforeHtmlParse(page: WebPage) {
+        try {
+            page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
+        } catch (e: Throwable) {
+            log.warn("Failed to invoke beforeHtmlParse | ${page.configuredUrl}", e)
+        }
     }
 
-    private fun afterParse(page: WebPage, document: FeaturedDocument) {
-        page.loadEventHandler?.onAfterHtmlParse?.invoke(page, document)
+    /**
+     *
+     * */
+    private fun afterHtmlParse(page: WebPage, document: FeaturedDocument) {
+        try {
+            page.loadEventHandler?.onAfterHtmlParse?.invoke(page, document)
+        } catch (e: Throwable) {
+            log.warn("Failed to invoke afterHtmlParse | ${page.configuredUrl}", e)
+        }
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {

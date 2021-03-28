@@ -11,9 +11,10 @@ class MultiSourceHyperlinkIterable(
         val lowerCacheSize: Int = 100
 ) : Iterable<Hyperlink> {
     private val realTimeCollector = FetchCacheCollector(fetchCacheManager.realTimeCache, Priority13.HIGHEST)
+    private val delayCollector = DelayCacheCollector(fetchCacheManager.delayCache, Priority13.HIGHER5)
     private val multiSourceCollector = MultiSourceDataCollector<Hyperlink>()
 
-    val loadingIterable = ConcurrentLoadingIterable(multiSourceCollector, realTimeCollector, lowerCacheSize)
+    val loadingIterable = ConcurrentLoadingIterable(multiSourceCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
     val collectors get() = multiSourceCollector.collectors
 

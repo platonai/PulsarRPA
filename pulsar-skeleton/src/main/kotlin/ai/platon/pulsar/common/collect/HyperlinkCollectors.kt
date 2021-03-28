@@ -13,6 +13,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.DelayQueue
 
 open class UrlQueueCollector(
         val queue: Queue<UrlAware>,
@@ -276,6 +277,26 @@ open class FetchCacheCollector(
     private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
         val url = queue.poll() ?: return 0
         sink.add(Hyperlinks.toHyperlink(url))
+        return 1
+    }
+}
+
+open class DelayCacheCollector(
+    private val queue: DelayQueue<DelayUrl>,
+    priority: Int = Priority13.HIGHER.value
+): AbstractPriorityDataCollector<Hyperlink>(priority) {
+
+    override var name = "DelayCacheC"
+
+    constructor(queue: DelayQueue<DelayUrl>, priority: Priority13): this(queue, priority.value)
+
+    @Synchronized
+    override fun hasMore() = queue.isNotEmpty()
+
+    @Synchronized
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+        val url = queue.poll() ?: return 0
+        sink.add(Hyperlinks.toHyperlink(url.url))
         return 1
     }
 }

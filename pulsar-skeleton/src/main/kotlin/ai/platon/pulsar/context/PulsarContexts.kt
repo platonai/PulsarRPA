@@ -1,5 +1,6 @@
 package ai.platon.pulsar.context
 
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
 import ai.platon.pulsar.context.support.StaticPulsarContext
@@ -7,23 +8,32 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 
 object PulsarContexts {
+    private val logger = getLogger(this)
     private val contexts = mutableSetOf<PulsarContext>()
-    private var activeContext: PulsarContext? = null
+    var activeContext: PulsarContext? = null
+        private set
 
     @Synchronized
     fun activate() = activeContext ?: activate(StaticPulsarContext())
 
     @Synchronized
     fun activate(context: PulsarContext): PulsarContext {
+        val activated = activeContext
+        if (activated != null && activated::class == context::class) {
+            logger.info("Context is already activated | {}", activated::class)
+            return activated
+        }
+
         contexts.add(context)
         activeContext = context
         context.registerShutdownHook()
+        logger.info("Active contexts | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
         return context
     }
 
     @Synchronized
-    fun activate(applicationContext: ApplicationContext)
-            = activate(BasicPulsarContext(applicationContext as AbstractApplicationContext))
+    fun activate(applicationContext: ApplicationContext) =
+        activate(BasicPulsarContext(applicationContext as AbstractApplicationContext))
 
     @Synchronized
     fun createSession() = activate().createSession()

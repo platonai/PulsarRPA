@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test
 
+import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.crawl.*
@@ -28,7 +29,7 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
                 println("$this " + page.loadEventHandler)
                 assertSame(thisHandler, page.loadEventHandler)
                 assertTrue(page.isCachedContentEnabled)
-                page.variables["VAR_IS_SCRAPE"] = true
+                page.variables[VAR_IS_SCRAPE] = true
             }
         }
         override var onBeforeHtmlParse = object: WebPageHandler() {
@@ -41,7 +42,7 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
             override fun invoke(page: WebPage, document: FeaturedDocument) {
                 println("............onAfterHtmlParse " + page.id)
                 assertSame(thisHandler, page.loadEventHandler)
-                assertTrue(page.hasVar("VAR_IS_SCRAPE"))
+                assertTrue(page.hasVar(VAR_IS_SCRAPE))
             }
         }
         override var onAfterParse = object: WebPageHandler() {
@@ -73,7 +74,7 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
                     assertNotNull(page.cachedContent) { "if the page is fetched, the content must be cached" }
                 }
             }
-            assertTrue(page.hasVar("VAR_IS_SCRAPE"))
+            assertTrue(page.hasVar(VAR_IS_SCRAPE))
         }
     }
 

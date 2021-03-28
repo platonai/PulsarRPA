@@ -154,6 +154,7 @@ class PageParser(
             LOG.warn("No parser found for <" + page.contentType + ">\n" + e.message)
             return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, page.contentType)
         } catch (e: Throwable) {
+            LOG.warn("Failed to parse | ${page.configuredUrl}", e)
             return ParseResult.failed(e)
         } finally {
             afterParse(page)
@@ -161,11 +162,19 @@ class PageParser(
     }
 
     private fun beforeParse(page: WebPage) {
-        page.loadEventHandler?.onBeforeParse?.invoke(page)
+        try {
+            page.loadEventHandler?.onBeforeParse?.invoke(page)
+        } catch (e: Throwable) {
+            LOG.warn("Failed to invoke beforeParser handler", e)
+        }
     }
 
     private fun afterParse(page: WebPage) {
-        page.loadEventHandler?.onAfterParse?.invoke(page)
+        try {
+            page.loadEventHandler?.onAfterParse?.invoke(page)
+        } catch (e: Throwable) {
+            LOG.warn("Failed to invoke afterParser handler", e)
+        }
     }
 
     /**
@@ -182,7 +191,11 @@ class PageParser(
 
         for (parser in parsers) {
             val millis = measureTimeMillis {
+println("===== 2000 " + parser::class)
+
                 parseResult = takeIf { maxParseTime.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
+
+println("===== 2100")
             }
             parseResult.parser = parser
 
@@ -211,14 +224,14 @@ class PageParser(
     }
 
     /**
-     * TODO: signature is not useful for product pages
+     * TODO: signature is not useful for pages change rapidly
      * */
     private fun processSuccess(page: WebPage, parseResult: ParseResult) {
         val prevSig = page.signature
         if (prevSig != null) {
             page.prevSignature = prevSig
         }
-        signature?.calculate(page)?.let { page.setSignature(it) }
+        signature.calculate(page)?.let { page.setSignature(it) }
 
         if (parseResult.hypeLinks.isNotEmpty()) {
             processLinks(page, parseResult.hypeLinks)

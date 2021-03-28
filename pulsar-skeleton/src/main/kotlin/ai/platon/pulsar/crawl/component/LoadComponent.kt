@@ -349,7 +349,11 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
-        page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
+        try {
+            page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
+        } catch (e: Throwable) {
+            logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
+        }
     }
 
     private fun afterLoad(page: WebPage, options: LoadOptions) {
@@ -361,7 +365,11 @@ class LoadComponent(
             persist(page, options)
         }
 
-        page.loadEventHandler?.onAfterLoad?.invoke(page)
+        try {
+            page.loadEventHandler?.onAfterLoad?.invoke(page)
+        } catch (e: Throwable) {
+            logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
+        }
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
@@ -374,7 +382,7 @@ class LoadComponent(
 
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
-            logger.info(CompletedPageFormatter(page, withSymbolicLink = verbose).toString())
+            logger.info(CompletedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString())
         }
 
         globalCache.fetchingUrls.remove(page.url)
@@ -515,10 +523,14 @@ class LoadComponent(
     }
 
     private fun parse(page: WebPage, options: LoadOptions) {
-        parseComponent?.takeIf { options.parse }?.also {
-            val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
-            tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
+        val parser = parseComponent?.takeIf { options.parse }
+        if (parser == null) {
+            logger.info("Parser is null")
+            return
         }
+
+        val parseResult = parser.parse(page, options.query, options.reparseLinks, options.noFilter)
+        tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
     }
 
     private fun persist(page: WebPage, options: LoadOptions) {

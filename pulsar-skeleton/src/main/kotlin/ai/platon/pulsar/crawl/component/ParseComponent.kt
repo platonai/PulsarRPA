@@ -20,6 +20,7 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -40,7 +41,7 @@ class ParseComponent(
         val pageParser: PageParser,
         val conf: ImmutableConfig
 ) {
-    private val log = LoggerFactory.getLogger(ParseComponent::class.java)
+    private val logger = LoggerFactory.getLogger(ParseComponent::class.java)
     private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
     constructor(conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), conf)
