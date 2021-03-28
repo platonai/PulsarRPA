@@ -77,8 +77,8 @@ class Scraper(val host: String, val authToken: String) {
         val responses = mutableMapOf<String, ScrapeResponseV2?>()
 
         var i = 0
-        while (i++ < 60) {
-            uuids.toList().parallelStream().forEach {
+        while (i++ < 1000) {
+            uuids.forEach {
                 if (responses[it]?.resultSets == null) {
                     val response = getStatus(it)
                     responses[it] = response
@@ -128,8 +128,10 @@ fun main() {
         .map { it.key to "$resourcePrefix/${it.value}" }
         .associate { it.first to SqlTemplate.load(it.second).template }
 
-    val scraper = Scraper("crawl3", authToken)
-    val urls = LinkExtractors.fromResource("urls/amazon-product-urls.txt").take(5)
-    val uuids = scraper.scrapeAll(urls, sqls)
-    scraper.awaitAll(uuids)
+    val urls = LinkExtractors.fromResource("urls/amazon-product-urls.txt").take(500)
+    listOf("crawl0", "crawl1", "crawl2", "crawl3").parallelStream().forEach { host ->
+        val scraper = Scraper(host, authToken)
+        val uuids = scraper.scrapeAll(urls, sqls)
+        scraper.awaitAll(uuids)
+    }
 }
