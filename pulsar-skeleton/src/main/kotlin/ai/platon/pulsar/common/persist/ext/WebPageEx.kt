@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.persist.ext
 
+import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.persist.WebPage
@@ -12,8 +13,12 @@ val WebPage.loadEventHandler: LoadEventHandler?
  *
  * @return a LoadOptions object.
  */
-val WebPage.options: LoadOptions get() =
-    variables.variables.computeIfAbsent(args) { LoadOptions.parse(args, conf) } as LoadOptions
+val WebPage.options: LoadOptions
+    get() {
+        return variables.variables.computeIfAbsent(VAR_LOAD_OPTIONS) {
+            LoadOptions.parse(args, conf)
+        } as LoadOptions
+    }
 
 /**
  * Get the page label

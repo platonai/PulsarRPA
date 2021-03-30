@@ -1,8 +1,7 @@
-package ai.platon.pulsar.net
+package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager

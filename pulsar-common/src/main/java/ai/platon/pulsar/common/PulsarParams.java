@@ -209,6 +209,8 @@ public class PulsarParams extends Params {
      * */
     public static final String VAR_IS_SCRAPE = "IS_SCRAPE";
 
+    public static final String VAR_LOAD_OPTIONS = "LOAD_OPTIONS";
+
     /**
      * <p>Constructor for PulsarParams.</p>
      */

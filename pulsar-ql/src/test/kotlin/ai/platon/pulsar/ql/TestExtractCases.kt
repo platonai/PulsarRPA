@@ -173,8 +173,8 @@ select
     dom_first_text(dom, '#summary-service') as logistics,
     dom_base_uri(dom) as baseuri
 from load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
-where DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) > 0
-order by DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00);
+where dom_first_float(dom, '.p-price .price', 0.00) > 0
+order by dom_first_float(dom, '.p-price .price', 0.00);
 """.trimIndent()
 
         execute(sql)

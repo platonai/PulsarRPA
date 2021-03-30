@@ -3,18 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-app</artifactId>
+        <artifactId>pulsar-app-resources</artifactId>
         <version>1.5.9-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-app-resources</artifactId>
-    <packaging>pom</packaging>
-
-    <name>Pulsar App Resources</name>
-    <description>Common application resources</description>
-
-    <modules>
-        <module>pulsar-app-common-resources</module>
-        <module>pulsar-amazon-resources</module>
-    </modules>
+    <artifactId>pulsar-app-common-resources</artifactId>
+    <name>Pulsar App Common Resources</name>
+    <description>Pulsar App Common Resources</description>
 </project>

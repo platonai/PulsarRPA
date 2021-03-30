@@ -42,8 +42,8 @@
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-app-resources</artifactId>
-            <version>${project.version}</version>
+            <artifactId>pulsar-amazon-resources</artifactId>
+            <version>1.5.9-SNAPSHOT</version>
         </dependency>
 
         <dependency>

@@ -6,7 +6,7 @@
 <configuration>
 
   <property>
-    <name>scent.domain</name>
+    <name>pulsar.domain</name>
     <value>default</value>
     <description>Scent need apriori knowledge to do the web mining,
     currently, we write apriori knowledge domain by domain,

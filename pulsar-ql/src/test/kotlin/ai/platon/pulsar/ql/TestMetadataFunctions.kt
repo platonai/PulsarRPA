@@ -6,14 +6,14 @@ import kotlin.test.assertEquals
 
 class TestMetadataFunctions : TestBase() {
     private val urlGroups = TestResource.urlGroups
+    private val session = PulsarContexts.createSession()
 
     @Test
     fun testMetadata() {
-        val url = urlGroups["mia"]!![2]
+        val url = urlGroups["jd"]!![2]
 
-        val pulsar = PulsarContexts.createSession()
-        val page = pulsar.load(url)
-        val doc = pulsar.parse(page)
+        val page = session.load(url)
+        val doc = session.parse(page)
         assertEquals(page.url, doc.location)
 
         execute("SELECT * FROM META_PARSE('$url')")

@@ -34,8 +34,6 @@ object TestResource {
         /////////////////////////////////////////////////////////
         // The sites below are well tested
 
-        "https://www.mia.com/formulas.html",
-        "https://www.mia.com/diapers.html",
         "http://category.dangdang.com/cid4002590.html",
         "https://list.mogujie.com/book/magic/51894",
         "https://list.jd.com/list.html?cat=6728,6742,13246",

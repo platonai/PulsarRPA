@@ -574,8 +574,8 @@ public interface CapabilityTypes {
      */
     String CACHING_FORBIDDEN_ALL = "all";
 
-    /** Constant <code>PULSAR_DOMAIN="scent.domain"</code> */
-    String PULSAR_DOMAIN = "scent.domain";
+    /** Constant <code>PULSAR_DOMAIN="pulsar.domain"</code> */
+    String PULSAR_DOMAIN = "pulsar.domain";
     /** Constant <code>SCENT_TASK_IDENT="scent.task.ident"</code> */
     String SCENT_TASK_IDENT = "scent.task.ident";
     /** Constant <code>SCENT_FILE_SERVER_HOST="scent.file.server.host"</code> */

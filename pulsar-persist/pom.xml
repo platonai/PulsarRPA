@@ -53,10 +53,6 @@
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>ai.platon.pulsar</groupId>-->
-<!--            <artifactId>gora-shaded-mongodb</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-shaded-mongodb</artifactId>

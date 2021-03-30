@@ -329,8 +329,9 @@ open class LoadOptions(
         return itemOptions
     }
 
-    fun isExpired(time: Instant): Boolean {
-        return time > expireAt || time + expires < Instant.now()
+    fun isExpired(prevFetchTime: Instant): Boolean {
+        val now = Instant.now()
+        return now >= expireAt || prevFetchTime + expires < now
     }
 
     open fun itemOptions2MajorOptions() {

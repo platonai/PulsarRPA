@@ -1058,6 +1058,11 @@ final public class WebPage implements Comparable<WebPage> {
         return lastFetchTime;
     }
 
+    @NotNull
+    public Instant getLastFetchTime() {
+        return getLastFetchTime(Instant.now());
+    }
+
     /**
      * <p>getFetchInterval.</p>
      *

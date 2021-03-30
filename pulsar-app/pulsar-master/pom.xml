@@ -55,14 +55,6 @@
             <artifactId>gora-core</artifactId>
             <scope>compile</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>ai.platon.pulsar</groupId>-->
-<!--            <artifactId>gora-shaded-mongodb</artifactId>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

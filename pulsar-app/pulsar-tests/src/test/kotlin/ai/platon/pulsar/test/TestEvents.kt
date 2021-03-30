@@ -1,8 +1,6 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.DefaultLoadEventHandler
-import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.component.FetchComponent
 import org.junit.Before
@@ -13,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class TestEvents: TestBase() {
+class TestEvents : TestBase() {
     private val log = LoggerFactory.getLogger(TestEvents::class.java)
 
     @Autowired

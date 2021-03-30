@@ -26,7 +26,7 @@ data class ScrapeRequestV2(
     val args: String? = null,
     val sqls: Map<String, String> = mutableMapOf(),
     val callbackUrl: String? = null,
-    var priority: String = Priority13.HIGHER2.name
+    val priority: String = Priority13.HIGHER2.name
 )
 
 data class ScrapeResponseV2(
@@ -40,11 +40,6 @@ data class ScrapeResponseV2(
     val pageStatusCode: Int? = null,
     val version: String = "20210312",
     var resultSets: MutableList<ScrapeResultSet>? = mutableListOf()
-)
-
-data class ScrapeStatusRequest(
-    val authToken: String,
-    val uuid: String
 )
 
 class Scraper(val host: String, val authToken: String) {
@@ -69,20 +64,22 @@ class Scraper(val host: String, val authToken: String) {
         }
     }
 
-    fun scrapeAll(urls: Iterable<String>, sqls: Map<String, String>): List<String> {
+    fun scrapeAll(urls: Collection<String>, sqls: Map<String, String>): List<String> {
         return urls.map { scrape(it, sqls) }
     }
 
-    fun awaitAll(uuids: Iterable<String>) {
+    fun awaitAll(uuids: Collection<String>) {
         val responses = mutableMapOf<String, ScrapeResponseV2?>()
 
         var i = 0
-        while (i++ < 1000) {
+        var finished = 0
+        while (i++ < 1000 && finished < uuids.size) {
             uuids.forEach {
                 if (responses[it]?.resultSets == null) {
                     val response = getStatus(it)
                     responses[it] = response
                     if (response?.resultSets != null) {
+                        ++finished
                         println(jacksonObjectMapper().writeValueAsString(response))
                     }
                 }
@@ -114,7 +111,6 @@ class Scraper(val host: String, val authToken: String) {
 
 fun main() {
     val authToken = "rhlwTRBk-1-de14124c7ace3d93e38a705bae30376c"
-    val productUrl = "https://www.amazon.com/dp/B000KETAF2"
     val resourcePrefix = "sql/crawl"
     val sqls = mapOf(
         "asin" to "x-asin.sql",

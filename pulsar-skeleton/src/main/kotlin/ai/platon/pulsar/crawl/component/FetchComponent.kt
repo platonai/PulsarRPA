@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -50,6 +51,10 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
             it.conf = options.conf
             it.args = options.toString()
             it.isCachedContentEnabled = options.cacheContent
+
+            // it.fetchInterval = options.expires
+
+            it.variables[VAR_LOAD_OPTIONS] = options
         }
     }
 }
@@ -280,7 +285,9 @@ open class FetchComponent(
             page.fetchRetries = 0
         }
 
-        updateFetchTime(page)
+        val options = page.options
+        val nextFetchTime = Instant.now() + options.expires
+        updateFetchTime(page, nextFetchTime)
         updateMarks(page)
 
         return page
@@ -323,10 +330,10 @@ open class FetchComponent(
             }
         }
 
-        fun updateFetchTime(page: WebPage, newFetchTime: Instant = Instant.now()) {
+        fun updateFetchTime(page: WebPage, nextFetchTime: Instant = Instant.now()) {
             page.prevFetchTime = page.fetchTime
-            page.fetchTime = newFetchTime
-            page.putFetchTimeHistory(newFetchTime)
+            page.fetchTime = nextFetchTime
+            page.putFetchTimeHistory(nextFetchTime)
         }
     }
 }
