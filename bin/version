@@ -3,7 +3,7 @@
 bin=$(dirname "$0")
 bin=$(cd "$bin">/dev/null || exit; pwd)
 
- . "$bin"/include/pulsar-config.sh
+ . "$bin"/include/config.sh
 
 VERSION="v$(cat "$PULSAR_HOME"/VERSION)"
 

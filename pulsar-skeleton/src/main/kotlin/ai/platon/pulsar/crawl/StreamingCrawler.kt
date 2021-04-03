@@ -6,8 +6,8 @@ import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
-import ai.platon.pulsar.common.measure.FileSizeUnits
-import ai.platon.pulsar.common.message.CompletedPageFormatter
+import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyException
@@ -162,7 +162,7 @@ open class StreamingCrawler<T : UrlAware>(
                 }
 
                 // The largest disk must have at least 10GiB remaining space
-                if (AppMetrics.freeSpace.maxOfOrNull { FileSizeUnits.convert(it, "G") } ?: 0.0 < 10.0) {
+                if (AppMetrics.freeSpace.maxOfOrNull { ByteUnit.convert(it, "G") } ?: 0.0 < 10.0) {
                     // log.error("Disk space is full!")
                     // return@runInScope
                 }
@@ -400,15 +400,17 @@ open class StreamingCrawler<T : UrlAware>(
             val retries = 1L + (page?.fetchRetries ?: 0)
             val delay = Duration.ofMinutes(5L + 5 * retries)
             val cache = gCache.fetchCacheManager.delayCache
+            // fetch immediately, do not check the database
+            url.args += " -i 0s"
             if (cache.add(DelayUrl(url, delay))) {
                 globalMetrics.retries.mark()
                 if (page != null) {
-                    log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
+                    log.info("{}", LoadedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
                 }
             } else {
                 globalMetrics.gone.mark()
                 if (page != null) {
-                    log.info("{}", CompletedPageFormatter(page, prefix = "Gone"))
+                    log.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
                 } else {
                     log.info("Page is gone | {}", url)
                 }

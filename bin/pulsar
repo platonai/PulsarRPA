@@ -76,7 +76,7 @@ bin=$(cd "$bin">/dev/null || exit; pwd)
 
 if [ "$PULSAR_HOME" = "" ]; then
  # shellcheck source=bin/include/config.sh
-source "$bin"/include/pulsar-config.sh
+source "$bin"/include/config.sh
 fi
 
 bin="$PULSAR_HOME"/bin
@@ -111,7 +111,7 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-app/pulsar-master
-  CLASS=ai.platon.pulsar.app.master.PulsarMasterKt
+  CLASS=ai.platon.pulsar.common.master.PulsarMasterKt
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-app/pulsar-master
   CLASS=ai.platon.pulsar.app.h2.H2ShellKt

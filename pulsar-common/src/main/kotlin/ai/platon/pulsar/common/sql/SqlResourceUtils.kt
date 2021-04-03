@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.sql
 import ai.platon.pulsar.common.ResourceLoader
 import org.apache.commons.lang3.StringUtils
 
-object SqlUtils {
+object SqlResourceUtils {
     /**
      * Load sql and convert column name
      * A convert column name is like AS `Breadcrumbs last link -> category`

@@ -10,7 +10,7 @@ package ai.platon.pulsar.common.measure
  *
  * [baeldung](https://www.baeldung.com/javax-measure)
  * */
-object FileSizeUnits {
+object ByteUnit {
 
     fun convert(bytes: Int, unit: String) = convert(bytes.toLong(), unit)
 

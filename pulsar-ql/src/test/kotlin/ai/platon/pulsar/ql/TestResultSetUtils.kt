@@ -1,33 +1,18 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.ql.annotation.H2Context
-import ai.platon.pulsar.ql.h2.SqlUtils
+import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.ql.h2.addColumn
-import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
-import org.h2.tools.SimpleResultSet
-import org.h2.value.ValueArray
 import org.h2.value.ValueString
-import org.junit.Assert
 import org.junit.Test
 import java.sql.Types
-import java.util.*
-import kotlin.reflect.KParameter
-import kotlin.reflect.KVisibility
-import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.jvm.internal.impl.resolve.constants.ArrayValue
-import kotlin.reflect.jvm.javaType
 import kotlin.test.assertEquals
 
 /**
  * Created by vincent on 17-7-29.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class TestSqlUtils {
+class TestResultSetUtils {
 
     @Test
     fun testResultSetFormatter() {
@@ -48,7 +33,7 @@ class TestSqlUtils {
             select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
             from load_and_select('$url', ':root body');
         """.trimIndent()
-        val actualUrl = SqlUtils.extractUrlFromFromClause(sql)
+        val actualUrl = ResultSetUtils.extractUrlFromFromClause(sql)
         assertEquals(url, actualUrl)
     }
 
@@ -76,7 +61,7 @@ class TestSqlUtils {
         println(ResultSetFormatter(rs, withHeader = true).toString())
 
         rs.beforeFirst()
-        val newRs = SqlUtils.transpose(rs)
+        val newRs = ResultSetUtils.transpose(rs)
         var i = 0
         while (rs.next()) {
             ++i

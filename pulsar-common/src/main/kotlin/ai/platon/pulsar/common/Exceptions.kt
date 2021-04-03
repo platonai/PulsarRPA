@@ -21,3 +21,7 @@ open class NotSupportedException : RuntimeException {
 
     constructor(cause: Throwable) : super(cause) {}
 }
+
+fun Throwable.stringify() = Strings.stringifyException(this)
+
+fun Throwable.simplify() = Strings.simplifyException(this)

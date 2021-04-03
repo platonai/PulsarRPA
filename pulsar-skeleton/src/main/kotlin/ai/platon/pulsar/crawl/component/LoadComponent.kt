@@ -3,9 +3,10 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.CompletedPageFormatter
-import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
+import ai.platon.pulsar.common.message.LoadedPageFormatter
+import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
@@ -63,6 +64,9 @@ class LoadComponent(
     @Volatile
     private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
+    @Volatile
+    var lastPageReport: String? = null
+        protected set
 
     constructor(
             webDb: WebDb,
@@ -232,9 +236,11 @@ class LoadComponent(
         }
 
         knownPages.addAll(updatedPages)
+
+        val verbose = logger.isDebugEnabled
+        lastPageReport = LoadedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose).toString()
         if (logger.isInfoEnabled) {
-            val verbose = logger.isDebugEnabled
-            logger.info("{}", LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose))
+            logger.info(lastPageReport)
         }
 
         return knownPages
@@ -318,9 +324,12 @@ class LoadComponent(
         }
 
         // less than 1 seconds means do not check the database
-        val page0 = if (options.expires.seconds > 1) {
-            webDb.get(url, options.ignoreQuery)
-        } else WebPage.NIL
+        // NOTE: if we do not check the database, necessary information is lost
+//        val page0 = if (options.expires.seconds > 1) {
+//            webDb.get(url, options.ignoreQuery)
+//        } else WebPage.NIL
+
+        val page0 = webDb.get(url)
 
         val reason = getFetchReason(page0, options)
         val fetchEntry = if (page0.isNil) {
@@ -328,6 +337,7 @@ class LoadComponent(
         } else {
             FetchEntry(page0, options, normUrl.hrefSpec)
         }
+//        require(page0.options == options)
 
         val page = fetchEntry.page
 
@@ -373,6 +383,7 @@ class LoadComponent(
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
+        // require(page.options == options)
         globalCache.fetchingUrls.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
@@ -382,7 +393,7 @@ class LoadComponent(
 
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
-            logger.info(CompletedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString())
+            logger.info(LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString())
         }
 
         globalCache.fetchingUrls.remove(page.url)
@@ -437,14 +448,14 @@ class LoadComponent(
             return FetchReason.DO_NOT_FETCH
         }
 
-        // Fetch a page already fetched before if necessary
+        // Fetch a page already fetched before if it's expired
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
             statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)
         }
 
-        // if (now > lastTime + expires), it's expired
+        // if (now >= expireAt || now > lastTime + expires), it's expired
         if (options.isExpired(lastFetchTime)) {
             return FetchReason.EXPIRED
         }
@@ -557,7 +568,7 @@ class LoadComponent(
             val bytes = page.content?.array()?.size ?: 0
             if (bytes > 0) {
                 metrics.contentPersists.mark()
-                metrics.persistContentMBytes.mark(bytes.toLong() / 1024 / 1024)
+                metrics.persistContentMBytes.inc(ByteUnit.convert(bytes, "M").toLong())
             }
         }
         tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)

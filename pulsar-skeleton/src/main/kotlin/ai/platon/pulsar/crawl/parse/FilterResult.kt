@@ -18,35 +18,34 @@ package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.url.LabeledHyperlink
-import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import ai.platon.pulsar.persist.model.DomStatistics
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.reflect.KClass
 
-class ParseResult(
-        majorCode: Short = NOTPARSED,
-        minorCode: Int = SUCCESS_OK,
-        message: String? = null
+class FilterResult(
+    majorCode: Short = NOTPARSED,
+    minorCode: Int = SUCCESS_OK,
+    message: String? = null
 ) : ParseStatus(majorCode, minorCode, message) {
-    val hypeLinks = mutableSetOf<HyperlinkPersistable>()
-    var domStatistics: DomStatistics? = null
-    var parsers = mutableListOf<KClass<out Parser>>()
+    val filters = mutableListOf<KClass<out ParseFilter>>()
     var flowStatus = FlowState.CONTINUE
 
     val shouldContinue get() = flowStatus == FlowState.CONTINUE
     val shouldBreak get() = flowStatus == FlowState.BREAK
 
     companion object {
-        val labeledHypeLinks = ConcurrentSkipListSet<LabeledHyperlink>()
 
-        fun failed(minorCode: Int, message: String?): ParseResult {
-            return ParseResult(ParseStatusCodes.FAILED, minorCode, message)
+        fun success(minorCode: Int = SUCCESS_OK): FilterResult {
+            return FilterResult(ParseStatusCodes.SUCCESS, minorCode)
         }
 
-        fun failed(e: Throwable): ParseResult {
-            return ParseResult(ParseStatusCodes.FAILED, ParseStatusCodes.FAILED_EXCEPTION, e.message)
+        fun failed(minorCode: Int, message: String?): FilterResult {
+            return FilterResult(ParseStatusCodes.FAILED, minorCode, message)
+        }
+
+        fun failed(e: Throwable): FilterResult {
+            return FilterResult(ParseStatusCodes.FAILED, ParseStatusCodes.FAILED_EXCEPTION, e.message)
         }
     }
 }

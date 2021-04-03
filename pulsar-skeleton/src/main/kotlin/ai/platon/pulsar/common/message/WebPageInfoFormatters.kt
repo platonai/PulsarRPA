@@ -52,7 +52,7 @@ class PageFormatter(val page: WebPage) {
     }
 }
 
-class CompletedPageFormatter(
+class LoadedPageFormatter(
         private val page: WebPage,
         private val prefix: String = "",
         private val withOptions: Boolean = false,
@@ -81,6 +81,8 @@ class CompletedPageFormatter(
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     private val category get() = page.pageCategory.symbol()
+//    private val prevFetchTime get() = if (page.isLoaded) " | ${page.prevFetchTime} | " else ""
+    private val prevFetchTime get() = " | ${page.prevFetchTime} | "
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
@@ -94,7 +96,7 @@ class CompletedPageFormatter(
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s [%4d] %13s in %10s, $jsFmt fc:$fetchCount $fieldFmt$failure$proxyFmt" +
+    private val fmt get() = "%3d. $prefix1 %s [%4d] %13s in %10s, $jsFmt fc:$fetchCount $prevFetchTime$fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 
     override fun toString(): String {
@@ -138,7 +140,7 @@ class CompletedPageFormatter(
     }
 }
 
-class LoadCompletedPagesFormatter(
+class LoadedPagesFormatter(
         val pages: Collection<WebPage>,
         val startTime: Instant,
         val withSymbolicLink: Boolean = false
@@ -148,7 +150,7 @@ class LoadCompletedPagesFormatter(
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
         pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(CompletedPageFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
+            sb.append(i.inc()).append(".\t").append(LoadedPageFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
         }
         return sb.toString()
     }

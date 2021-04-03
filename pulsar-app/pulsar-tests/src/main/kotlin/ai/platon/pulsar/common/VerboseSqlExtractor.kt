@@ -3,7 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.SQLContext
-import ai.platon.pulsar.ql.h2.SqlUtils
+import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import java.sql.ResultSet
 
 open class VerboseSqlExtractor(val sqlContext: SQLContext): VerboseCrawler(sqlContext) {
@@ -40,7 +40,7 @@ open class VerboseSqlExtractor(val sqlContext: SQLContext): VerboseCrawler(sqlCo
             val rs = sqlContext.executeQuery(sql)
 
             rs.beforeFirst()
-            val count = SqlUtils.count(rs)
+            val count = ResultSetUtils.count(rs)
 
             if (printResult) {
                 rs.beforeFirst()

@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -80,10 +81,11 @@ class FetchMetrics(
     val tasks = registry.meter(this, "tasks")
     val successTasks = registry.meter(this, "successTasks")
     val finishedTasks = registry.meter(this, "finishedTasks")
-    val persists = registry.meter(this, "persists")
-    val contentPersists = registry.meter(this, "contentPersists")
+    val persists = registry.multiMetric(this, "persists")
+    val contentPersists = registry.multiMetric(this, "contentPersists")
+    val meterContentMBytes = registry.multiMetric(this, "contentBytes")
+    val persistContentMBytes = registry.multiMetric(this, "persistContentMBytes")
     val meterContentBytes = registry.meter(this, "contentBytes")
-    val persistContentMBytes = registry.meter(this, "persistContentMBytes")
 
     val histogramContentBytes = registry.histogram(this, "contentBytes")
     val pageImages = registry.histogram(this, "pageImages")
@@ -183,6 +185,7 @@ class FetchMetrics(
         val bytes = page.contentLength
         histogramContentBytes.update(bytes)
         meterContentBytes.mark(bytes)
+        meterContentMBytes.inc(ByteUnit.convert(bytes, "M").toLong())
 
         page.activeDomStats["lastStat"]?.apply {
             pageAnchors.update(na)

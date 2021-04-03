@@ -51,7 +51,10 @@ class Scraper(val host: String, val authToken: String) {
     fun scrape(url: String, sqls: Map<String, String>): String {
         val requestEntity: Any = ScrapeRequestV2(authToken, url, "-i 1s", sqls, priority = "HIGHER5")
         val request = post(scrapeService, requestEntity)
-        return client.send(request, BodyHandlers.ofString()).body()
+        // return client.send(request, BodyHandlers.ofString()).body()
+        require(requestEntity is ScrapeRequestV2)
+        println(jacksonObjectMapper().writeValueAsString(requestEntity))
+        return ""
     }
 
     fun await(uuid: String) {

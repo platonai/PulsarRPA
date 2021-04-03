@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!--  NOTE: web.xml is not used in Spring Boot. -->
-<web-app xmlns="http://geronimo.apache.org/xml/ns/j2ee/web-1.0" configId="platon.ai" />

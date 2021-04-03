@@ -10,16 +10,14 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.common.metrics.EnumCounterUtils
-import ai.platon.pulsar.common.measure.FileSizeUnits
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
-import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
-import ai.platon.pulsar.persist.metadata.Name
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -309,7 +307,7 @@ class TaskScheduler(
 
         EnumCounterUtils.increaseRDepth(page.distance, enumCounters)
 
-        enumCounters.inc(Counter.rMbytes, FileSizeUnits.convert(page.contentLength, "M").toInt())
+        enumCounters.inc(Counter.rMbytes, ByteUnit.convert(page.contentLength, "M").toInt())
     }
 
     private fun logFetchFailure(message: String) {

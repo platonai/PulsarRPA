@@ -1,14 +1,13 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.message.CompletedPageFormatter
+import ai.platon.pulsar.common.message.LoadedPageFormatter
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.metadata.Name
 import org.junit.Test
-import java.time.Duration
 import java.time.Instant
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 /**
@@ -34,15 +33,21 @@ class TestWebPage: TestBase() {
         assertEquals(option, page.variables[PulsarParams.VAR_LOAD_OPTIONS])
         assertEquals(normalizedArgs, page.args)
 
-        sleepSeconds(10)
+        sleepSeconds(5)
+        val expireAt = Instant.now()
+        sleepSeconds(5)
 
-        page = session.load(url, args)
+        val options2 = session.options("$args -expireAt $expireAt")
+        assertTrue { options2.isExpired(page.lastFetchTime) }
+
+        page = session.load(url, options2)
         assertTrue { page.protocolStatus.isSuccess }
         assertTrue { page.isContentUpdated }
+        assertEquals(options2, page.options)
         val prevFetchTime2 = page.prevFetchTime
         val fetchTime2 = page.fetchTime
 
-        println(CompletedPageFormatter(page, "", true, true, true, true))
+        println(LoadedPageFormatter(page, "", true, true, true, true))
         println("Fetch time history: " + page.getFetchTimeHistory(""))
         println("prevFetchTime: " + page.prevFetchTime)
         println("fetchTime: " + page.fetchTime)

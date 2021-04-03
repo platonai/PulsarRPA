@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.persist.ext
 import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.LoadEventHandler
+import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.persist.WebPage
 
 val WebPage.loadEventHandler: LoadEventHandler?
@@ -19,6 +20,8 @@ val WebPage.options: LoadOptions
             LoadOptions.parse(args, conf)
         } as LoadOptions
     }
+
+val WebPage.isExpired: Boolean get() = options.isExpired(lastFetchTime)
 
 /**
  * Get the page label

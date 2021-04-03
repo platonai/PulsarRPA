@@ -1,7 +1,8 @@
 Pulsar README
 ===================
-Pulsar focus on web data processing, it extends SQL to handle the entire life cycle of web data processing:
-crawling, web scraping, data mining, BI, etc.
+**The Web is your own database.**
+
+Turn the Web into tables and charts using simple SQLs.
 
 ## Other language
 [Chinese](README.zh.md)
@@ -9,133 +10,60 @@ crawling, web scraping, data mining, BI, etc.
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- X-SQL: eXtends SQL to manage web data: crawling, web scraping, data mining, BI, etc.
+- X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, BI on Web.
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
-- BI Integration: turn Web sites into tables and charts using just one simple SQL
+- BI Integration: turn large websites into tables and charts using just one simple SQL
 - Big data: large scale, various storage: HBase/MongoDB
 
 For more information check out [platon.ai](http://platon.ai)
 
 ## X-SQL
-Crawl and scrape a single page:
+
+Scrape a product page:
 
     select
-        dom_text(dom) as title,
-        dom_abs_href(dom) as link
+        dom_first_text(dom, '#productTitle') as `title`,
+        dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
+        dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
+        array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
+        dom_base_uri(dom) as `baseUri`
     from
-        load_and_select('https://en.wikipedia.org/wiki/topology', '.references a.external');
+        load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
 
-The SQL above downloads a Web page from wikipedia, find out the references section and extract all external reference links.
-
-Crawl out pages from a portal and scrape each one:
+Scrape pages from a portal:
 
     select
-        dom_first_text(dom, '.sku-name') as name,
-        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) as price,
-        DOM_FIRST_FLOAT(dom, '#page_opprice', 0.00) as tag_price,
-        dom_first_text(dom, '#comment-count .count') as comments,
-        dom_first_text(dom, '#summary-service') as logistics,
-        dom_base_uri(dom) as baseuri
+        dom_first_text(dom, '#productTitle') as `title`,
+        dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
+        dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
+        array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
+        dom_base_uri(dom) as `baseUri`
     from
-        load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
-    where
-        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00) > 0
-    order by
-        DOM_FIRST_FLOAT(dom, '.p-price .price', 0.00);
+        load_out_pages('https://www.amazon.com/Best-Sellers/zgbs', 'a[href~=/dp/]')
 
-The SQL above visits a portal page in jd.com, downloads detail pages and then scrape data from them.
-
-You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/).
-
-Check [sql-history.sql](sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs).
-
-## Use pulsar as a library
-Scrape out pages from a portal url using native api:
-Add maven dependency to your project:
-
-    <dependency>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-protocol</artifactId>
-        <version>1.5.9-SNAPSHOT</version>
-    </dependency>
-
-And then scrape web pages using simple native api:
-
-    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-
-    val session = PulsarContexts.createSession()
-    session.scrapeOutPages(url,
-                "-expires 1d -itemExpires 7d -outLink a[href~=item]",
-                ".product-intro",
-                listOf(".sku-name", ".p-price"))
-
-Scrape out pages from a portal url using x-sql:
-Add maven dependency to your project:
-
-    <dependency>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-ql</artifactId>
-        <version>1.5.9-SNAPSHOT</version>
-    </dependency>
-
-then scrape web pages using:
-
-    select
-        dom_first_text(dom, '.sku-name') as name,
-        dom_first_text(dom, '.p-price') as price
-    from
-        load_out_pages('$url -i 1d -ii 7d', 'a[href~=item]')
-
-Check out [Tutorials](https://github.com/platonai/pulsar-tutorials) for details.
-
-## Use pulsar as an X-SQL server
-Once pulsar runs in X-SQL server mode, the web can be used just like the normal database.
-You can use our customized [Metabase](https://github.com/platonai/metabase) to write X-SQLs and turn web sites into tables and 
-charts immediately. Everyone in your company can ask questions and learn from WEB DATA now, for the first time.
+Here is a real world REST request to scrape every field in a product page from amazon.com:
+[Scrape amazon.com](pulsar-client/src/main/resources/requests/amazon-product.json)
 
 # Build & Run
 ## Check & install dependencies
 
     bin/tools/install-depends.sh
 
-## Install mongodb
-MongoDB is optional but is recommended. You can skip this step, in such case, all data will lose after pulsar shutdown.
-Ubuntu/Debian:
-
-    sudo apt install mongodb
-
 ## Build from source
 
     git clone https://github.com/platonai/pulsar.git
     cd pulsar && mvn -DskipTests=true
 
-## Run the native api demo
-
-    bin/pulsar example ManualKt
-
 ## Start pulsar server
 
     bin/pulsar
 
-## Use sql console
+## Issue a request to scrape
 
-    bin/pulsar sql
+    # Bash
+    bin/tools/scrape/query.sh
+
+    # PHP
     
+
 Now you can execute any x-sql using the command line.
-    
-## Use web console
-Open web console [http://localhost:8082](http://localhost:8082) using your favourite browser now, enjoy playing with X-SQL.
-
-## Use Metabase
-[Metabase](https://github.com/platonai/metabase) is the easy, open source way for everyone in your company to ask questions and learn from data.
-With X-SQL support, everyone can organize knowledge not just from the company's internal data, but also
-from the web.
-
-    git clone https://github.com/platonai/pulsar-metabase.git
-    cd pulsar-metabase
-    bin/build && bin/start
-
-# Enterprise Edition:
-
-Pulsar Enterprise Edition supports Auto Web Mining: advanced machine learning, no rules or training required,
-turn web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/)

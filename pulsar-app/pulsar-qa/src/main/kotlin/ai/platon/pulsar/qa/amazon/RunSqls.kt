@@ -50,7 +50,7 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     ).map { it.first to "$resourcePrefix/${it.second}" }
 
     cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-//    val xsqlFilter = { xsql: String -> "x-similar-items.sql" in xsql }
-    val xsqlFilter = { xsql: String -> true }
+    val xsqlFilter = { xsql: String -> "x-similar-items.sql" in xsql }
+//    val xsqlFilter = { xsql: String -> true }
     XSqlRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
 }

@@ -45,10 +45,7 @@ interface ParseFilter : Parameterized, AutoCloseable {
 
     fun onBeforeFilter(parseContext: ParseContext)
 
-    /**
-     * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
-     */
-    fun filter(parseContext: ParseContext): ParseResult
+    fun filter(parseContext: ParseContext): FilterResult
 
     fun onAfterFilter(parseContext: ParseContext)
 

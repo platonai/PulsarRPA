@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.FileSizeUnits
+import ai.platon.pulsar.common.measure.ByteUnit
 import com.codahale.metrics.*
 import com.codahale.metrics.graphite.GraphiteReporter
 import com.codahale.metrics.graphite.PickledGraphite
@@ -79,7 +79,7 @@ class AppMetrics(
         // OSHI cached the value, so it's fast and safe to be called frequently
         val availableMemory get() = systemInfo.hardware.memory.available
         val freeSpace get() = FileSystems.getDefault().fileStores
-            .filter { FileSizeUnits.convert(it.totalSpace, "G") > 20 }
+            .filter { ByteUnit.convert(it.totalSpace, "G") > 20 }
             .map { it.unallocatedSpace }
 
         init {

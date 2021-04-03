@@ -1,5 +1,3 @@
--- noinspection SqlResolveForFile
--- noinspection SqlNoDataSourceInspectionForFile
 
 select
     dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'normalizedUrl') as `url`,
@@ -26,15 +24,15 @@ select
     dom_first_text(dom, '#centerCol div i:contains(Prime Day Deal)') as `isprime`,
 
     to_json(map(
-        'isbs', str_left(dom_first_text(dom, '#acBadge_feature_div i:contains(Best Seller)'), 8),
-        'isac', str_left(dom_first_text(dom, '#acBadge_feature_div span:contains(Amazon)'), 8),
-        'iscoupon', str_left(dom_first_text(dom, '#centerCol #couponBadgeRegularVpc'), 8),
-        'isprime', str_left(dom_first_text(dom, '#centerCol div i:contains(Prime Day Deal)'), 8),
-        'isaddcart', str_left(dom_first_text(dom, '#addToCart_feature_div span:contains(Add to Cart), #submit.add-to-cart-ubb-announce'), 8),
-        'isbuy', str_left(dom_first_text(dom, '#buyNow span:contains(Buy now)'), 8),
-        'isa', array_length(dom_all_imgs(dom, '#prodDetails img[src], #productDescription img[src]')),
-        'iscpfb', str_left(dom_first_text(dom, '#climatePledgeFriendlyBadge'), 8)
-    )) as tags,
+            'isbs', str_left(dom_first_text(dom, '#acBadge_feature_div i:contains(Best Seller)'), 8),
+            'isac', str_left(dom_first_text(dom, '#acBadge_feature_div span:contains(Amazon)'), 8),
+            'iscoupon', str_left(dom_first_text(dom, '#centerCol #couponBadgeRegularVpc'), 8),
+            'isprime', str_left(dom_first_text(dom, '#centerCol div i:contains(Prime Day Deal)'), 8),
+            'isaddcart', str_left(dom_first_text(dom, '#addToCart_feature_div span:contains(Add to Cart), #submit.add-to-cart-ubb-announce'), 8),
+            'isbuy', str_left(dom_first_text(dom, '#buyNow span:contains(Buy now)'), 8),
+            'isa', array_length(dom_all_imgs(dom, '#prodDetails img[src], #productDescription img[src]')),
+            'iscpfb', str_left(dom_first_text(dom, '#climatePledgeFriendlyBadge'), 8)
+        )) as tags,
 
     cast(dom_all_texts(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `soldby`,
     cast(dom_all_hrefs(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `sellerID`,
@@ -42,9 +40,9 @@ select
     cast(dom_all_texts(dom, '#desktop_buybox #merchant-info, #tabular-buybox tr:has(td:contains(Ships from)) td, #buybox-tabular tr:has(td:contains(Ships from)) td') as varchar) as `shipsfrom`,
 
     to_json(map(
-       'globaldeliverto', dom_first_text(dom, '#glow-ingress-block'),
-       'deliverto', dom_first_text(dom, '#contextualIngressPtLabel_deliveryShortLine, #glowContextualIngressPt_feature_div, div[data-feature-name=glowContextualIngressPt]')
-    )) as `deliverto`,
+            'globaldeliverto', dom_first_text(dom, '#glow-ingress-block'),
+            'deliverto', dom_first_text(dom, '#contextualIngressPtLabel_deliveryShortLine, #glowContextualIngressPt_feature_div, div[data-feature-name=glowContextualIngressPt]')
+        )) as `deliverto`,
 
     str_abbreviate(dom_first_text(dom, '#availability, #outOfStock'), 1024) as `instock`,
     dom_first_text(dom, '#selectQuantity select option:last-child') as `quantity`,

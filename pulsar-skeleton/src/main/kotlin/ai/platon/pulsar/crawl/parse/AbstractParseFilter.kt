@@ -46,15 +46,27 @@ abstract class AbstractParseFilter(
         }
     }
 
-    override fun filter(parseContext: ParseContext): ParseResult {
+    override fun filter(parseContext: ParseContext): FilterResult {
+        if (isRelevant(parseContext).isNotOK) {
+            return FilterResult()
+        }
+
         onBeforeFilter(parseContext)
-        val result = doFilter(parseContext)
+        var result = doFilter(parseContext)
         onAfterFilter(parseContext)
 
-        children.forEach { it.filter(parseContext) }
+        if (result.shouldContinue) {
+            children.forEach {
+                if (result.shouldContinue) {
+                    result = it.filter(parseContext)
+                }
+            }
+        }
 
         return result
     }
+
+    protected abstract fun doFilter(parseContext: ParseContext): FilterResult
 
     override fun onBeforeFilter(parseContext: ParseContext) {
 
@@ -63,8 +75,6 @@ abstract class AbstractParseFilter(
     override fun onAfterFilter(parseContext: ParseContext) {
 
     }
-
-    open fun doFilter(parseContext: ParseContext) = parseContext.parseResult
 
     override fun addFirst(child: ParseFilter) {
         child.parent = this

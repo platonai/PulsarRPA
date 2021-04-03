@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.CompletedPageFormatter
+import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.crawl.component.FetchComponent
@@ -160,7 +160,7 @@ class FetchLoop(
             }
 
             withContext(Dispatchers.IO) {
-                log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page).toString())
+                log.takeIf { it.isInfoEnabled }?.info(LoadedPageFormatter(page).toString())
                 if (!isCanceled) {
                     write(page.key, page)
                     enumCounters.inc(CommonCounter.rPersist)

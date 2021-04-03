@@ -191,13 +191,9 @@ class PageParser(
 
         for (parser in parsers) {
             val millis = measureTimeMillis {
-println("===== 2000 " + parser::class)
-
                 parseResult = takeIf { maxParseTime.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
-
-println("===== 2100")
             }
-            parseResult.parser = parser
+            parseResult.parsers.add(parser::class)
 
             if (log.isDebugEnabled && millis > 10_000) {
                 val m = page.pageModel

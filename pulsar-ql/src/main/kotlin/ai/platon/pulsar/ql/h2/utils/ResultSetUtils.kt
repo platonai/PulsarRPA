@@ -1,8 +1,10 @@
-package ai.platon.pulsar.ql.h2
+package ai.platon.pulsar.ql.h2.utils
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
+import ai.platon.pulsar.ql.h2.addColumn
 import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
@@ -15,9 +17,9 @@ import java.sql.*
 import java.util.*
 import kotlin.collections.ArrayList
 
-object SqlUtils {
-    val sqlLog = LoggerFactory.getLogger(SqlUtils.javaClass.packageName + ".log")
-    private val log = LoggerFactory.getLogger(SqlUtils::class.java)
+object ResultSetUtils {
+    private val logger = getLogger(this)
+    val sqlLog = LoggerFactory.getLogger(ResultSetUtils.javaClass.packageName + ".log")
 
     private val a = AppConstants.SHORTEST_VALID_URL_LENGTH
     private const val b = 2048
@@ -64,7 +66,7 @@ object SqlUtils {
             IntRange(0, columnCount - 1).forEach inner@{ j ->
                 val a = rs.getArray(j + 1)
                 if (a.array !is kotlin.Array<*>) {
-                    log.warn("The {}th column is expected to be an array, actual {}", j + 1, a.array.javaClass.name)
+                    logger.warn("The {}th column is expected to be an array, actual {}", j + 1, a.array.javaClass.name)
                     rows[i][j] = null
                     return@inner
                 }
@@ -124,100 +126,6 @@ object SqlUtils {
         return sinkRs
     }
 
-    @Throws(SQLException::class)
-    fun executeInsert(sourceRs: ResultSet, sinkConnection: Connection, sinkTable: String, dryRun: Boolean = false): Int {
-        sinkConnection.autoCommit = false
-
-        var affectedRows = 0
-        val columnCount = sourceRs.metaData.columnCount
-        val prefix = "insert into `$sinkTable`("
-        val postfix = ") values(" + StringUtils.repeat("?", ", ", columnCount) + ")"
-        val insertSql = IntRange(1, columnCount).joinToString(", ", prefix, postfix) {
-            "`" + sourceRs.metaData.getColumnLabel(it) + "`"
-        }
-
-        sinkConnection.prepareStatement(insertSql).use { stmt ->
-            sourceRs.beforeFirst()
-
-            while (sourceRs.next()) {
-                try {
-                    IntRange(1, columnCount).forEach { k ->
-                        when (sourceRs.metaData.getColumnType(k)) {
-                            Types.BOOLEAN -> stmt.setBoolean(k, sourceRs.getBoolean(k))
-                            Types.FLOAT -> stmt.setFloat(k, sourceRs.getFloat(k))
-                            Types.INTEGER -> stmt.setInt(k, sourceRs.getInt(k))
-                            else -> stmt.setString(k, Strings.stripNonPrintableChar(sourceRs.getString(k)))
-                        }
-                    }
-                } catch (e: SQLException) {
-                    log.warn("Failed to create stmt {}", e.message)
-                }
-            }
-
-            if (dryRun) {
-                val sql = "insert" + stmt.toString().substringAfter("insert") + ";"
-                sqlLog.info(sql)
-            } else {
-                affectedRows = stmt.executeUpdate()
-                sinkConnection.commit()
-            }
-        }
-
-        return affectedRows
-    }
-
-    @Throws(SQLException::class)
-    fun executeBatchInsert(sourceResultSets: Iterable<ResultSet>, sinkConnection: Connection, sinkTable: String, dryRun: Boolean = false): Int {
-        if (!sourceResultSets.iterator().hasNext()) {
-            return 0
-        }
-
-        sinkConnection.autoCommit = false
-
-        var rows = 0
-        var affectedRows: IntArray? = null
-        val sample = sourceResultSets.first()
-        val columnCount = sample.metaData.columnCount
-        val prefix = "insert into `$sinkTable`("
-        val postfix = ") values(" + StringUtils.repeat("?", ", ", columnCount) + ")"
-        val insertSql = IntRange(1, columnCount).joinToString(", ", prefix, postfix) {
-            "`" + sample.metaData.getColumnLabel(it) + "`"
-        }
-
-        sinkConnection.prepareStatement(insertSql).use { stmt ->
-            sourceResultSets.forEach { rs ->
-                rs.beforeFirst()
-                while (rs.next()) {
-                    try {
-                        IntRange(1, columnCount).forEach { k ->
-                            when (rs.metaData.getColumnType(k)) {
-                                Types.BOOLEAN -> stmt.setBoolean(k, rs.getBoolean(k))
-                                Types.FLOAT -> stmt.setFloat(k, rs.getFloat(k))
-                                Types.INTEGER -> stmt.setInt(k, rs.getInt(k))
-                                else -> stmt.setString(k, Strings.stripNonPrintableChar(rs.getString(k)))
-                            }
-                        }
-
-                        ++rows
-                        stmt.addBatch()
-                    } catch (e: SQLException) {
-                        log.warn("Failed to create stmt {}", e.message)
-                    }
-                }
-            }
-
-            if (dryRun) {
-                val sql = "insert" + stmt.toString().substringAfter("insert") + ";"
-                sqlLog.info(sql)
-            } else {
-                affectedRows = stmt.executeBatch()
-                sinkConnection.commit()
-            }
-        }
-
-        return affectedRows?.sum()?:0
-    }
-
     fun joinSimpleTables(tableNames: List<String>, stat: Statement): ResultSet {
         if (tableNames.isEmpty()) {
             return SimpleResultSet().apply { autoClose = true }
@@ -240,7 +148,8 @@ object SqlUtils {
         val rows2 = rows.filterNot { it.value.all { it == null || it == "null" } }
         if (rows2.values.isNotEmpty()) {
             rows2.values.first().forEachIndexed { i, _ ->
-                rs2.addColumn("C$i", DataType.convertTypeToSQLType(Value.STRING), 0, 0) }
+                rs2.addColumn("C$i", DataType.convertTypeToSQLType(Value.STRING), 0, 0)
+            }
             rows2.values.forEach { rs2.addRow(*it.toTypedArray()) }
         }
         return rs2
@@ -257,12 +166,21 @@ object SqlUtils {
     }
 
     @Throws(SQLException::class)
+    fun getEntitiesFromResultSetTo(resultSet: ResultSet, destination: MutableList<Map<String, Any?>>): MutableList<Map<String, Any?>> {
+        resultSet.beforeFirst()
+        while (resultSet.next()) {
+            destination.add(getEntityFromCurrentRecord(resultSet))
+        }
+        return destination
+    }
+
+    @Throws(SQLException::class)
     fun getEntitiesFromResultSets(resultSets: Iterable<ResultSet>): List<Map<String, Any?>> {
         return resultSets.map<ResultSet, Map<String, Any>> {
             mapOf(
-                    "result" to getEntitiesFromResultSet(it),
-                    "statement" to it.statement,
-                    "columnCount" to it.metaData.columnCount
+                "result" to getEntitiesFromResultSet(it),
+                "statement" to it.statement,
+                "columnCount" to it.metaData.columnCount
             )
         }
     }
@@ -290,9 +208,9 @@ object SqlUtils {
     fun toJson(resultSets: List<ResultSet>): String {
         val entities = resultSets.map {
             mapOf(
-                    "result" to getEntitiesFromResultSet(it),
-                    "statement" to it.statement,
-                    "columnCount" to it.metaData.columnCount
+                "result" to getEntitiesFromResultSet(it),
+                "statement" to it.statement,
+                "columnCount" to it.metaData.columnCount
             )
         }
         val gson = GsonBuilder().serializeNulls().create()

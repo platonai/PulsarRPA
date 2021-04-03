@@ -14,6 +14,7 @@ import java.sql.ResultSet
 object AmazonFunctions {
 
     /**
+     * @param conn      The auto injected jdbc connection by h2 engine
      * @param url       The url to access
      * @param keyword   The keyword
      * @return          The AmazonSuggestion list
@@ -24,8 +25,9 @@ object AmazonFunctions {
         val session = H2SessionFactory.getSession(conn)
 
         val amazonSearcher = AmazonSearcherJsEventHandler(keyword)
-        session.sessionConfig.putBean(amazonSearcher)
-        session.load(url, "-i 0s")
+        val options = session.options("-i 0s")
+        options.conf.putBean(amazonSearcher)
+        session.load(url, options)
 
         val rs = ResultSets.newSimpleResultSet("alias", "keyword", "isfb", "crid")
         amazonSearcher.suggestions.forEach {

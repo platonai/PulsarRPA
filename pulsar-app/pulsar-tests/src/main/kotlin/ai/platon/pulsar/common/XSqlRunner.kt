@@ -5,10 +5,9 @@ import ai.platon.pulsar.common.sql.SqlConverter
 import ai.platon.pulsar.common.sql.SqlTemplate
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.SQLContexts
-import ai.platon.pulsar.ql.h2.SqlUtils
+import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
@@ -38,13 +37,13 @@ class XSqlRunner(
         var rs = extractor.query(sql, printResult = true)
 
         if (sqlTemplate.resource?.contains("x-similar-items.sql") == true) {
-            rs = SqlUtils.transpose(rs)
+            rs = ResultSetUtils.transpose(rs)
             println("Transposed: ")
             rs.beforeFirst()
             println(ResultSetFormatter(rs, withHeader = true).toString())
         }
 
-        val count = SqlUtils.count(rs)
+        val count = ResultSetUtils.count(rs)
         val path = session.export(document)
         log.info("Extracted $count records, exported://$path")
 

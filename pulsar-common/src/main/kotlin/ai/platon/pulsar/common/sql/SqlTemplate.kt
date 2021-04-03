@@ -18,7 +18,7 @@ class SqlTemplate constructor(
         }
 
         fun load(resource: String, name: String = RandomStringUtils.randomAlphabetic(4)): SqlTemplate {
-            return SqlTemplate(SqlUtils.loadSql(resource), resource = resource, name = name)
+            return SqlTemplate(SqlResourceUtils.loadSql(resource), resource = resource, name = name)
         }
 
         fun createInstance(sqlTemplate: String, url: String): String {

@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -17,15 +18,16 @@ object LoadOptionDefaults {
     var lazyFlush = true
     var parse = false
     var storeContent = true
+    var cacheContent = true
+    /**
+     * We may use jit retry in test environment
+     * */
+    var nJitRetry = 0
 }
 
 /**
  * Created by vincent on 19-4-24.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
- *
- * The expires field supports both ISO-8601 standard and hadoop time duration format
- * ISO-8601 standard : PnDTnHnMn.nS
- * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
 open class LoadOptions(
     argv: Array<String>,
@@ -53,6 +55,10 @@ open class LoadOptions(
      * Web page expiry time
      * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,
      * guess it means "expires at"
+     *
+     * The expires field supports both ISO-8601 standard and hadoop time duration format
+     * ISO-8601 standard : PnDTnHnMn.nS
+     * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
      * */
     @ApiPublic
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
@@ -208,7 +214,7 @@ open class LoadOptions(
 
     @Parameter(names = ["-cacheContent", "--cache-content"], arity = 1,
             description = "Cache the page content so it is still available after it be cleared for persistent")
-    var cacheContent = false
+    var cacheContent = LoadOptionDefaults.cacheContent
 
     @ApiPublic
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
@@ -217,7 +223,7 @@ open class LoadOptions(
 
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
             description = "Retry at most n times if RETRY(1601) code return when fetching a page")
-    var nJitRetry = 0
+    var nJitRetry = LoadOptionDefaults.nJitRetry
 
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
             description = "If false, flush persisted pages into database as soon as possible")
@@ -329,9 +335,15 @@ open class LoadOptions(
         return itemOptions
     }
 
-    fun isExpired(prevFetchTime: Instant): Boolean {
+    /**
+     * Check if the page has been expired.
+     * A page is expired if
+     * 1. the last fetch time is before [expireAt]
+     * 2. (the last fetch time + [expires]) is passed
+     * */
+    fun isExpired(lastFetchTime: Instant): Boolean {
         val now = Instant.now()
-        return now >= expireAt || prevFetchTime + expires < now
+        return expireAt >= lastFetchTime || now >= lastFetchTime + expires
     }
 
     open fun itemOptions2MajorOptions() {

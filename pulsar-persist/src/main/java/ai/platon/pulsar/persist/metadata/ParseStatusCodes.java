@@ -17,7 +17,7 @@
 package ai.platon.pulsar.persist.metadata;
 
 /**
- * <p>ParseStatusCodes interface.</p>
+ * <p>Parse status codes</p>
  *
  * @author vincent
  * @version $Id: $Id
@@ -41,13 +41,10 @@ public interface ParseStatusCodes {
 
     // Use different type for primary codes and secondary codes to make less errors
     // Secondary success codes:
-    /** Constant <code>SUCCESS_OK=0</code> */
     int SUCCESS_OK = 0;
 
-    /** Constant <code>SUCCESS_IGNORE=1</code> */
     int SUCCESS_IGNORE = 1;
 
-    /** Constant <code>SUCCESS_EXT=2</code> */
     int SUCCESS_EXT = 2;
 
     /**
