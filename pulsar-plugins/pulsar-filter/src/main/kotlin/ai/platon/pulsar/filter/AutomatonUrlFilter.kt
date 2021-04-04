@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.filter.common.RegexRule
-import ai.platon.pulsar.filter.common.RegexUrlFilterBase
+import ai.platon.pulsar.filter.common.AbstractRegexUrlFilter
 import dk.brics.automaton.RegExp
 import dk.brics.automaton.RunAutomaton
 import java.io.IOException
@@ -35,7 +35,7 @@ import java.io.Reader
  * @author Jrme Charron
  * @see [dk.brics.automaton](http://www.brics.dk/automaton/)
  */
-class AutomatonUrlFilter(reader: Reader?, conf: ImmutableConfig) : RegexUrlFilterBase(reader, conf) {
+class AutomatonUrlFilter(reader: Reader?, conf: ImmutableConfig) : AbstractRegexUrlFilter(reader, conf) {
 
     constructor(conf: ImmutableConfig): this(null, conf)
 

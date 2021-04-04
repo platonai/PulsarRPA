@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.filter.common
 
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.UrlFilter
 import org.slf4j.LoggerFactory
@@ -32,14 +31,7 @@ import java.util.*
  * Generic [URL filter][UrlFilter] based on regular
  * expressions.
  *
- *
- *
- *
  * The regular expressions rules are expressed in a file.
- *
- *
- *
- *
  *
  * The format of this file is made of many rules (one per line):
  * `
@@ -47,13 +39,12 @@ import java.util.*
 ` *
  * where plus (`+`)means go ahead and index it and minus (
  * `-`)means no.
- *
  */
-abstract class RegexUrlFilterBase(
+abstract class AbstractRegexUrlFilter(
         var reader: Reader?,
         val conf: ImmutableConfig
 ): UrlFilter {
-    val LOG = LoggerFactory.getLogger(RegexUrlFilterBase::class.java)
+    val LOG = LoggerFactory.getLogger(AbstractRegexUrlFilter::class.java)
 
     /**
      * Applicable rules
@@ -76,7 +67,7 @@ abstract class RegexUrlFilterBase(
             try {
                 rules = readRules(reader!!)
             } catch (e: Exception) {
-                UrlFilter.LOG.error(e.message)
+                LOG.error(e.message)
                 throw RuntimeException(e.message, e)
             }
         }
@@ -128,8 +119,7 @@ abstract class RegexUrlFilterBase(
             if (l.isEmpty()) continue
 
             val first = l[0]
-            var sign: Boolean
-            sign = when (first) {
+            val sign = when (first) {
                 '+' -> true
                 '-' -> false
                 ' ', '\n', '#' -> continue@loop
@@ -154,7 +144,7 @@ abstract class RegexUrlFilterBase(
          */
         @JvmStatic
         @Throws(IOException::class, IllegalArgumentException::class)
-        fun main(filter: RegexUrlFilterBase, args: Array<String>) {
+        fun main(filter: AbstractRegexUrlFilter, args: Array<String>) {
             val reader = BufferedReader(InputStreamReader(System.`in`))
             var line: String
             while (reader.readLine().also { line = it } != null) {

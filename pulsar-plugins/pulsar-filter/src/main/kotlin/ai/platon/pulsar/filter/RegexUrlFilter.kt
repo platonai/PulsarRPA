@@ -22,11 +22,9 @@ package ai.platon.pulsar.filter
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.filter.common.RegexRule
-import ai.platon.pulsar.filter.common.RegexUrlFilterBase
+import ai.platon.pulsar.filter.common.AbstractRegexUrlFilter
 import java.io.FileNotFoundException
-import java.io.IOException
 import java.io.Reader
 import java.util.regex.Pattern
 
@@ -37,7 +35,7 @@ import java.util.regex.Pattern
 class RegexUrlFilter(
         reader: Reader?,
         conf: ImmutableConfig
-) : RegexUrlFilterBase(reader, conf) {
+) : AbstractRegexUrlFilter(reader, conf) {
 
     constructor(conf: ImmutableConfig): this(null, conf)
 
@@ -54,7 +52,6 @@ class RegexUrlFilter(
                 ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }
 
-    // Inherited Javadoc
     override fun createRule(sign: Boolean, regex: String): RegexRule {
         return RegexRuleImpl(sign, regex)
     }
@@ -64,24 +61,10 @@ class RegexUrlFilter(
         override fun match(url: String): Boolean {
             return pattern.matcher(url).find()
         }
-
     }
 
     companion object {
         const val URLFILTER_REGEX_FILE = "urlfilter.regex.file"
         const val URLFILTER_REGEX_RULES = "urlfilter.regex.rules"
-        /*
-         * ------------------------------------
-         * </implementation:RegexUrlFilterBase>
-         * * ------------------------------------
-         */
-        @Throws(IOException::class)
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val conf = MutableConfig()
-            val filter = RegexUrlFilter(conf)
-            conf[URLFILTER_REGEX_RULES] = "+^http://sh.lianjia.com/ershoufang/pg(.*)$\n+^http://sh.lianjia.com/ershoufang/SH(.+)/{0,1}$\n-.+\n "
-            main(filter, args)
-        }
     }
 }

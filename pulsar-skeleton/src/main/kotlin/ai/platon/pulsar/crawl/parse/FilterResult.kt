@@ -17,10 +17,8 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.url.LabeledHyperlink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.reflect.KClass
 
 class FilterResult(

@@ -34,9 +34,4 @@ interface UrlFilter {
     fun isValid(urlString: String): Boolean {
         return filter(urlString) != null
     }
-
-    companion object {
-        @JvmField
-        val LOG = LoggerFactory.getLogger(UrlFilter::class.java)
-    }
 }
