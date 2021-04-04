@@ -93,9 +93,10 @@ open class WebDriverFactory(
     }
 
     /**
-     * TODO: choose a best browser automatically: which one faster yet still have good result
      * Speed: native > htmlunit > chrome
      * Quality: chrome > htmlunit > native
+     *
+     * We support CHROME only now
      */
     private fun getBrowserType(mutableConfig: ImmutableConfig?): BrowserType {
         return mutableConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)

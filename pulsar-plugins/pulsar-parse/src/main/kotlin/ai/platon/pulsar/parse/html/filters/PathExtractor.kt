@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.EntityOptions
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
+import ai.platon.pulsar.crawl.parse.FilterResult
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.crawl.parse.html.ParseContext
@@ -40,26 +41,22 @@ class PathExtractor(
     /**
      * Extract all fields in the page
      */
-    override fun doFilter(parseContext: ParseContext): ParseResult {
+    override fun doFilter(parseContext: ParseContext): FilterResult {
         val page = parseContext.page
-        val parseResult = parseContext.parseResult
         val parser = JsoupParser(page, conf)
 
         val document = parseContext.document?: parser.parse()
         parseContext.document = document
 
-        parseResult.majorCode = ParseStatus.SUCCESS
-
-        val query = page.query?:page.args.toString()
+        val query = page.query?: page.args
         val options = EntityOptions.parse(query)
         if (!options.hasRules()) {
-            parseResult.minorCode = ParseStatus.SUCCESS_EXT
-            return parseResult
+            return FilterResult.success(ParseStatus.SUCCESS_EXT)
         }
 
         val fieldCollections = parser.extractAll(options)
         if (fieldCollections.isEmpty()) {
-            return parseResult
+            return FilterResult.success()
         }
 
         // All last extracted fields are cleared, so we just keep the last extracted fields
@@ -87,7 +84,7 @@ class PathExtractor(
         page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
         enumCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
 
-        return parseResult
+        return FilterResult.success()
     }
 
     private fun collectPageFeatures(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {
