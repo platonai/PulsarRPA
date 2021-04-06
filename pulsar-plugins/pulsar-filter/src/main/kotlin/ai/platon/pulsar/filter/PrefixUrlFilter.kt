@@ -25,7 +25,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.TrieStringMatcher
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.util.*
@@ -42,7 +42,7 @@ import java.util.*
  * The format of this file is one URL prefix per line.
  *
  */
-class PrefixUrlFilter(conf: ImmutableConfig) : UrlFilter {
+class PrefixUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
     private var trie: TrieStringMatcher? = null
 
     init {

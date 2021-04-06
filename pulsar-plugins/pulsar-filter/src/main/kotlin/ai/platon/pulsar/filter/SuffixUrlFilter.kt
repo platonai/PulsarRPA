@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.SuffixStringMatcher
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
@@ -125,7 +125,7 @@ import java.util.*
  *
  * @author Andrzej Bialecki
  */
-class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : UrlFilter {
+class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : CrawlUrlFilter {
     private lateinit var suffixes: SuffixStringMatcher
     var isModeAccept = false
     private var filterFromPath = false

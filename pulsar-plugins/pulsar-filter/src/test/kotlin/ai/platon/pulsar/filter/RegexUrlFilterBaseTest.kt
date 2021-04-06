@@ -20,7 +20,7 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.junit.Assert
 import java.io.BufferedReader
 import java.io.Reader
@@ -30,7 +30,7 @@ import kotlin.streams.toList
 // JDK imports
 abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testDir) {
 
-    protected abstract fun getURLFilter(reader: Reader): UrlFilter
+    protected abstract fun getURLFilter(reader: Reader): CrawlUrlFilter
 
     protected fun bench(loops: Int, file: String) {
         try {
@@ -75,7 +75,7 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
         }
     }
 
-    protected fun test(filter: UrlFilter, expected: List<FilteredURL>) {
+    protected fun test(filter: CrawlUrlFilter, expected: List<FilteredURL>) {
         expected.forEach(Consumer { url: FilteredURL ->
             val result = filter.filter(url.url)
             if (result != null) {

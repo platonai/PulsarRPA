@@ -1002,9 +1002,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getPrevFetchTime.</p>
+     * The previous fetch time, updated at the fetch stage
      *
-     * @return a {@link java.time.Instant} object.
+     * @return The previous fetch time.
      */
     @NotNull
     public Instant getPrevFetchTime() {
@@ -1045,8 +1045,8 @@ final public class WebPage implements Comparable<WebPage> {
      * If fetchTime is before now, the result is the fetchTime
      * If fetchTime is after now, it means that schedule has modified it for the next fetch, the result is prevFetchTime
      *
-     * @param now a {@link java.time.Instant} object.
-     * @return a {@link java.time.Instant} object.
+     * @param now The imprecise current time
+     * @return The last fetch time
      */
     @NotNull
     public Instant getLastFetchTime(@NotNull Instant now) {

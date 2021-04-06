@@ -17,7 +17,7 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import java.util.regex.Pattern
 
 /**
@@ -56,7 +56,7 @@ import java.util.regex.Pattern
  * @see [ Uniform Resource
  * Identifiers
 ](http://www.ietf.org/rfc/rfc2396.txt) */
-class UrlValidator(conf: ImmutableConfig) : UrlFilter {
+class UrlValidator(conf: ImmutableConfig) : CrawlUrlFilter {
     private var maxTldLength: Int
     override fun filter(urlString: String): String? {
         return if (isValid(urlString)) urlString else null

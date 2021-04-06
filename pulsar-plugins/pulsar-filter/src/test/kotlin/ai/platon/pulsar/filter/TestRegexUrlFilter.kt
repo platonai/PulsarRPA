@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringRunner
@@ -32,7 +32,7 @@ import java.io.Reader
 @RunWith(SpringRunner::class)
 class TestRegexUrlFilter : RegexUrlFilterBaseTest("sample") {
 
-    override fun getURLFilter(reader: Reader): UrlFilter {
+    override fun getURLFilter(reader: Reader): CrawlUrlFilter {
         return RegexUrlFilter(reader, conf)
     }
 

@@ -19,7 +19,7 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlNormalizer
+import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizer
 
 /**
  * This UrlNormalizer doesn't change urls. It is sometimes useful if for a given
@@ -28,7 +28,7 @@ import ai.platon.pulsar.crawl.filter.UrlNormalizer
  *
  * @author Andrzej Bialecki
  */
-class PassUrlNormalizer(conf: ImmutableConfig?) : UrlNormalizer {
+class PassUrlNormalizer(conf: ImmutableConfig?) : CrawlUrlNormalizer {
 
     override fun normalize(url: String, scope: String): String? {
         return url

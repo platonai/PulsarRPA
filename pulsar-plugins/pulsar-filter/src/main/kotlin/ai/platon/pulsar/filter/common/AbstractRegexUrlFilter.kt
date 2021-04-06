@@ -19,7 +19,7 @@
 package ai.platon.pulsar.filter.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
@@ -28,7 +28,7 @@ import java.io.Reader
 import java.util.*
 
 /**
- * Generic [URL filter][UrlFilter] based on regular
+ * Generic [URL filter][CrawlUrlFilter] based on regular
  * expressions.
  *
  * The regular expressions rules are expressed in a file.
@@ -43,7 +43,7 @@ import java.util.*
 abstract class AbstractRegexUrlFilter(
         var reader: Reader?,
         val conf: ImmutableConfig
-): UrlFilter {
+): CrawlUrlFilter {
     val LOG = LoggerFactory.getLogger(AbstractRegexUrlFilter::class.java)
 
     /**

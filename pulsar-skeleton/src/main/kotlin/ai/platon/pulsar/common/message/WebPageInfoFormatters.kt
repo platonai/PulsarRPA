@@ -2,10 +2,12 @@ package ai.platon.pulsar.common.message
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
@@ -76,12 +78,12 @@ class LoadedPageFormatter(
             } else ""
         }
 
+    private val fetchReason get() = page.variables[VAR_FETCH_REASON]?.toString()?.take(2)?:""
     private val prefix0 get() = if (page.isContentUpdated) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     private val category get() = page.pageCategory.symbol()
-//    private val prevFetchTime get() = if (page.isLoaded) " | ${page.prevFetchTime} | " else ""
     private val prevFetchTime get() = " | ${page.prevFetchTime} | "
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
@@ -96,7 +98,8 @@ class LoadedPageFormatter(
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s [%4d] %13s in %10s, $jsFmt fc:$fetchCount $prevFetchTime$fieldFmt$failure$proxyFmt" +
+    private val fmt get() = "%3d. $prefix1 %s $fetchReason [%4d] %13s in %10s," +
+            " $jsFmt fc:$fetchCount $prevFetchTime$fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 
     override fun toString(): String {

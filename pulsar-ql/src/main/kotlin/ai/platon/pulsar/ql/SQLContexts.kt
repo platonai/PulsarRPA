@@ -10,7 +10,7 @@ import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
-import ai.platon.pulsar.crawl.filter.UrlNormalizers
+import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.ql.h2.H2MemoryDb
 import ai.platon.pulsar.ql.h2.H2SQLSession
@@ -57,7 +57,7 @@ class StaticH2SQLContext(
     /**
      * Url normalizers
      * */
-    override val urlNormalizers = getBeanOrNull() ?: UrlNormalizers(unmodifiedConfig)
+    override val urlNormalizers = getBeanOrNull() ?: CrawlUrlNormalizers(unmodifiedConfig)
     /**
      * The web db
      * */

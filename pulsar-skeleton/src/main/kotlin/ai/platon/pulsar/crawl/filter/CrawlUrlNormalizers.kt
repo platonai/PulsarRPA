@@ -79,15 +79,15 @@ import java.util.*
  *
  * @author Andrzej Bialecki
  */
-class UrlNormalizers(
-        val urlNormalizers: List<UrlNormalizer>,
-        val scope: String = SCOPE_DEFAULT,
-        val conf: ImmutableConfig
+class CrawlUrlNormalizers(
+    val urlNormalizers: List<CrawlUrlNormalizer>,
+    val scope: String = SCOPE_DEFAULT,
+    val conf: ImmutableConfig
 ) {
-    private val LOG = LoggerFactory.getLogger(UrlNormalizers::class.java)
+    private val LOG = LoggerFactory.getLogger(CrawlUrlNormalizers::class.java)
 
     // Reserved
-    private val scopedUrlNormalizers: Map<String, UrlNormalizer> = HashMap()
+    private val scopedUrlNormalizers: Map<String, CrawlUrlNormalizer> = HashMap()
     private val maxLoops = conf.getInt("urlnormalizer.loop.count", 1)
 
     constructor(conf: ImmutableConfig): this(listOf(), SCOPE_DEFAULT, conf)
@@ -95,11 +95,11 @@ class UrlNormalizers(
     /**
      * TODO : not implemented
      */
-    fun getURLNormalizers(scope: String): List<UrlNormalizer> {
+    fun getURLNormalizers(scope: String): List<CrawlUrlNormalizer> {
         return urlNormalizers
     }
 
-    fun findByClassName(name: String): UrlNormalizer? {
+    fun findByClassName(name: String): CrawlUrlNormalizer? {
         return urlNormalizers.firstOrNull { it.javaClass.simpleName == name || it.javaClass.name == name }
     }
 

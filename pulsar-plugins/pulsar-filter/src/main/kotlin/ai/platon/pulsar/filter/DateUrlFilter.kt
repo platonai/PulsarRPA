@@ -23,7 +23,7 @@ import ai.platon.pulsar.common.DateTimeDetector
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import java.time.ZoneId
 import java.util.*
 
@@ -31,7 +31,7 @@ import java.util.*
  * Filters URLs based on a file of regular expressions using the
  * [Java Regex implementation][java.util.regex].
  */
-class DateUrlFilter(val conf: ImmutableConfig) : UrlFilter {
+class DateUrlFilter(val conf: ImmutableConfig) : CrawlUrlFilter {
     private val configFile: String? = null
     private val rules: Set<String> = LinkedHashSet()
     private val detector = DateTimeDetector()

@@ -9,10 +9,13 @@ object FetchReason {
     const val EXPIRED = 2
     const val SMALL_CONTENT = 3
     const val MISS_FIELD = 4
+    const val SCHEDULED = 2
     const val TEMP_MOVED = 300
     const val RETRY = 301
 
     val codes = HashMap<Int, String>()
+
+    val refreshCodes = listOf(NEW_PAGE, EXPIRED, SCHEDULED, SMALL_CONTENT, RETRY, MISS_FIELD)
 
     fun toString(code: Int): String {
         return codes.getOrDefault(code, "unknown")

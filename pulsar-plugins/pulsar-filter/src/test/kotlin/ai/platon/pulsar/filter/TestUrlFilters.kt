@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.UrlFilters
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilters
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,7 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 class TestUrlFilters : UrlFilterTestBase() {
     @Autowired
-    private val urlFilters: UrlFilters? = null
+    private val urlFilters: CrawlUrlFilters? = null
 
     @Test
     fun testUrlFilter() {

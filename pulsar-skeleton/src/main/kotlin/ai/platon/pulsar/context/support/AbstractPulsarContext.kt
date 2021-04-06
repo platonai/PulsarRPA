@@ -2,7 +2,6 @@ package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.PulsarEnvironment
-import ai.platon.pulsar.BasicPulsarSession
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -19,7 +18,7 @@ import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
-import ai.platon.pulsar.crawl.filter.UrlNormalizers
+import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -61,7 +60,7 @@ abstract class AbstractPulsarContext(
     /**
      * Url normalizers
      * */
-    open val urlNormalizers: UrlNormalizers get() = getBean()
+    open val urlNormalizers: CrawlUrlNormalizers get() = getBean()
 
     /**
      * The web db

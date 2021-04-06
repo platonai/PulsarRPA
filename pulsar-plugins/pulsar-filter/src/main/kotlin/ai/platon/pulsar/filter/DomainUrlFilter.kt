@@ -21,9 +21,8 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import ai.platon.pulsar.common.domain.DomainSuffixes
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -52,7 +51,7 @@ import java.util.*
  *
  * property "urlfilter.domain.file" in ./config/pulsar-*.xml, and * attribute "file" in plugin.xml of this plugin
  */
-class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
+class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
     val domainSet: MutableSet<String> = LinkedHashSet()
     val tlds: DomainSuffixes = DomainSuffixes.getInstance()
 

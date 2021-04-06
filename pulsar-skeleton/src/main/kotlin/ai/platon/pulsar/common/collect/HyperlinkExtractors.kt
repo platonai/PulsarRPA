@@ -27,13 +27,17 @@ import java.time.Duration
 import java.time.Instant
 
 open class HyperlinkExtractor(
-        val page: WebPage,
-        val document: FeaturedDocument,
-        val cssSelector: String
+    val page: WebPage,
+    val document: FeaturedDocument,
+    val cssSelector: String
 ) {
     private val log = LoggerFactory.getLogger(HyperlinkExtractor::class.java)
 
-    constructor(session: PulsarSession, page: WebPage, cssSelector: String): this(page, session.parse(page), cssSelector)
+    constructor(session: PulsarSession, page: WebPage, cssSelector: String) : this(
+        page,
+        session.parse(page),
+        cssSelector
+    )
 
     fun extract() = extractTo(LinkedHashSet())
 
@@ -54,20 +58,21 @@ open class HyperlinkExtractor(
 }
 
 open class RegexHyperlinkExtractor(
-        val page: WebPage,
-        val document: FeaturedDocument,
-        val restrictCss: String,
-        val urlPattern: String
+    val page: WebPage,
+    val document: FeaturedDocument,
+    val restrictCss: String,
+    val urlPattern: String
 ) {
     private val log = LoggerFactory.getLogger(RegexHyperlinkExtractor::class.java)
 
     private val urlRegex = urlPattern.toRegex()
 
-    constructor(session: PulsarSession,
-                page: WebPage,
-                restrictCss: String,
-                urlPattern: String
-    ): this(page, session.parse(page), restrictCss, urlPattern)
+    constructor(
+        session: PulsarSession,
+        page: WebPage,
+        restrictCss: String,
+        urlPattern: String
+    ) : this(page, session.parse(page), restrictCss, urlPattern)
 
     fun extract(): MutableCollection<Hyperlink> {
         return extractTo(LinkedHashSet())
@@ -84,8 +89,8 @@ open class RegexHyperlinkExtractor(
         var i = 0
         val parsedUrls = restrictedSection.collectNotNull { node ->
             node.takeIf { it.isAnchor }?.attr("abs:href")
-                    ?.takeIf { Urls.isValidUrl(it) && it.matches(urlRegex) }
-                    ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, referer = page.url) }
+                ?.takeIf { Urls.isValidUrl(it) && it.matches(urlRegex) }
+                ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, referer = page.url) }
         }
         parsedUrls.toCollection(fetchUrls)
 
@@ -95,37 +100,41 @@ open class RegexHyperlinkExtractor(
     }
 }
 
-class FatLinkExtractor(val session: PulsarSession) {
-
+class FatLinkExtractor(
+    val session: PulsarSession,
+    val urlNormalizer: (String) -> String = { url: String -> url }
+) {
     private val log = LoggerFactory.getLogger(FatLinkExtractor::class.java)
 
     companion object {
 
         data class Counters(
-                var unfilteredLinks: Int = 0,
-                var regexMatchedLinks: Int = 0,
-                var allowLinks: Int = 0,
-                var freshLinks: Int = 0,
-                var lastFailedLinks: Int = 0,
-                var expiredLinks: Int = 0,
-                var fetchLinks: Int = 0,
-                var failedSeeds: Int = 0,
-                var loadedSeeds: Int = 0
+            var unfilteredLinks: Int = 0,
+            var regexMatchedLinks: Int = 0,
+            var allowLinks: Int = 0,
+            var freshLinks: Int = 0,
+            var lastFailedLinks: Int = 0,
+            var expiredLinks: Int = 0,
+            var fetchLinks: Int = 0,
+            var failedSeeds: Int = 0,
+            var loadedSeeds: Int = 0
         )
 
         val globalCounters = Counters()
 
         private val gauges = mapOf(
-                "unfilteredLinks" to Gauge { globalCounters.unfilteredLinks },
-                "regexMatchedLinks" to Gauge { globalCounters.regexMatchedLinks },
-                "freshLinks" to Gauge { globalCounters.freshLinks },
-                "lastFailedLinks" to Gauge { globalCounters.lastFailedLinks },
-                "expiredLinks" to Gauge { globalCounters.expiredLinks },
-                "fetchLinks" to Gauge { globalCounters.fetchLinks },
-                "loadedSeeds" to Gauge { globalCounters.loadedSeeds }
+            "unfilteredLinks" to Gauge { globalCounters.unfilteredLinks },
+            "regexMatchedLinks" to Gauge { globalCounters.regexMatchedLinks },
+            "freshLinks" to Gauge { globalCounters.freshLinks },
+            "lastFailedLinks" to Gauge { globalCounters.lastFailedLinks },
+            "expiredLinks" to Gauge { globalCounters.expiredLinks },
+            "fetchLinks" to Gauge { globalCounters.fetchLinks },
+            "loadedSeeds" to Gauge { globalCounters.loadedSeeds }
         )
 
-        init { AppMetrics.reg.registerAll(this, gauges) }
+        init {
+            AppMetrics.reg.registerAll(this, gauges)
+        }
     }
 
     private val webDb = session.context.getBean<WebDb>()
@@ -167,7 +176,11 @@ class FatLinkExtractor(val session: PulsarSession) {
         return createFatLink(seed, page, document, denyList)
     }
 
-    fun createFatLink(page: WebPage, document: FeaturedDocument, options: LoadOptions): Pair<WebPage, CrawlableFatLink>? {
+    fun createFatLink(
+        page: WebPage,
+        document: FeaturedDocument,
+        options: LoadOptions
+    ): Pair<WebPage, CrawlableFatLink>? {
         return createFatLink(NormUrl(page.url, options), page, document)
     }
 
@@ -181,7 +194,7 @@ class FatLinkExtractor(val session: PulsarSession) {
      * vivid link, the vivid link can be parsed and saved recently
      * */
     fun createFatLink(
-            seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<Hyperlink>
+        seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<Hyperlink>
     ): Pair<WebPage, CrawlableFatLink>? {
         val fatLinkSpec = seed.spec
         val options = seed.options
@@ -198,12 +211,14 @@ class FatLinkExtractor(val session: PulsarSession) {
         globalCounters.fetchLinks += vividLinks.size
 
         if (vividLinks.isEmpty()) {
-            log.info("{}. No new link in portal page({}), prev fetch time: {} | <{}> | {}",
-                    page.id,
-                    Strings.readableBytes(page.contentLength.toLong()),
-                    Duration.between(page.prevFetchTime, now).readable(),
-                    selector,
-                    seed)
+            log.info(
+                "{}. No new link in portal page({}), latest fetch at: {} | <{}> | {}",
+                page.id,
+                Strings.readableBytes(page.contentLength),
+                Duration.between(page.prevFetchTime, now).readable(),
+                selector,
+                seed
+            )
             log.info("{}. {}", page.id, ObjectConverter.asMap(counters).entries.joinToString())
 
             if (document != null && counters.unfilteredLinks == 0) {
@@ -227,7 +242,7 @@ class FatLinkExtractor(val session: PulsarSession) {
     }
 
     private fun parseVividLinks(
-            seed: NormUrl, page: WebPage, document: FeaturedDocument, denyList: Collection<Hyperlink>
+        seed: NormUrl, page: WebPage, document: FeaturedDocument, denyList: Collection<Hyperlink>
     ): List<StatefulHyperlink> {
         val now = Instant.now()
         val fatLinkSpec = seed.spec
@@ -235,30 +250,38 @@ class FatLinkExtractor(val session: PulsarSession) {
         val selector = options.outLinkSelector
         val urlRegex = options.outLinkPattern.toRegex()
 
+//        var normalizer = { url: String -> url }
+//        if (options.outLinkPattern.contains("/dp/")) {
+//            normalizer = { url: String -> url }
+//        }
+
+        /**
+         * TODO: should normalize the out links
+         * */
         return HyperlinkExtractor(page, document, selector).extract()
-                .asSequence()
-                .onEach { ++counters.unfilteredLinks; ++globalCounters.unfilteredLinks }
-                .filter { it.url.matches(urlRegex) }
-                .onEach { ++counters.regexMatchedLinks; ++globalCounters.regexMatchedLinks }
-                .filter { it !in denyList }
-                .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
-                .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
-                .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
-                .onEach { it.args = "-i 0s" }
-                .toList()
+            .asSequence()
+            .onEach { ++counters.unfilteredLinks; ++globalCounters.unfilteredLinks }
+            .filter { it.url.matches(urlRegex) }
+            .onEach { ++counters.regexMatchedLinks; ++globalCounters.regexMatchedLinks }
+            .filter { it !in denyList }
+            .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
+            .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
+            .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
+            .onEach { it.args = "-i 0s" }
+            .toList()
     }
 
     private fun loadVividLinks(
-            page: WebPage, options: LoadOptions, denyList: Collection<Hyperlink>
+        page: WebPage, options: LoadOptions, denyList: Collection<Hyperlink>
     ): List<StatefulHyperlink> {
         val now = Instant.now()
         // TODO: add flag to indicate whether the vivid links are expired
         return page.vividLinks.asSequence()
-                .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, referer = page.url) }
-                .filterNot { it in denyList }
-                .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
-                .onEach { it.args = "-i 0s" }
-                .toList()
+            .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, referer = page.url) }
+            .filterNot { it in denyList }
+            .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
+            .onEach { it.args = "-i 0s" }
+            .toList()
     }
 
     /**
@@ -295,17 +318,19 @@ class FatLinkExtractor(val session: PulsarSession) {
 }
 
 private fun reportHyperlink(
-        page: WebPage,
-        links: Collection<Hyperlink>,
-        fetchUrls: Collection<Hyperlink>,
-        log: Logger
+    page: WebPage,
+    links: Collection<Hyperlink>,
+    fetchUrls: Collection<Hyperlink>,
+    log: Logger
 ) {
     if (page.contentLength < 100) {
         log.info("Portal page is illegal (too small) | {}", page.url)
     } else {
         val exportLink = AppPaths.uniqueSymbolicLinkForUri(page.url)
         val readableBytes = Strings.readableBytes(page.contentLength.toLong())
-        log.info("{}. There are {} links in portal page ({}), total {} fetch urls | file://{} | {}",
-                page.id, links.size, readableBytes, fetchUrls.size, exportLink, page.url)
+        log.info(
+            "{}. There are {} links in portal page ({}), total {} fetch urls | file://{} | {}",
+            page.id, links.size, readableBytes, fetchUrls.size, exportLink, page.url
+        )
     }
 }

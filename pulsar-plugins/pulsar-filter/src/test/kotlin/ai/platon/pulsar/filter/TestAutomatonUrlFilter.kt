@@ -1,16 +1,15 @@
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.junit.Test
 import java.io.Reader
-import java.nio.file.Paths
 
 /**
  * Created by vincent on 17-2-23.
  */
 class TestAutomatonUrlFilter : RegexUrlFilterBaseTest("automaton/sample") {
 
-    override fun getURLFilter(reader: Reader): UrlFilter {
+    override fun getURLFilter(reader: Reader): CrawlUrlFilter {
         return AutomatonUrlFilter(reader, conf)
     }
 

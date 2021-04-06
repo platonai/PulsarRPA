@@ -24,14 +24,14 @@ import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.FSUtils
 import ai.platon.pulsar.common.LocalFSUtils
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.filter.UrlFilter
+import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import java.util.*
 
 /**
  * Filters URLs based on a file of regular expressions using the
  * [Java Regex implementation][java.util.regex].
  */
-class BannedUrlFilter(val conf: ImmutableConfig) : UrlFilter {
+class BannedUrlFilter(val conf: ImmutableConfig) : CrawlUrlFilter {
     private val bannedUrls: MutableSet<String> = HashSet()
     private val unreachableHosts: MutableSet<String> = HashSet()
 

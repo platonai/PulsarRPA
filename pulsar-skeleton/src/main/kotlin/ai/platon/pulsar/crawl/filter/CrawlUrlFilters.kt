@@ -20,17 +20,15 @@ package ai.platon.pulsar.crawl.filter
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.slf4j.LoggerFactory
-import java.util.*
-import java.util.stream.Collectors
 
 /**
- * Creates and caches [UrlFilter] implementing plugins.
+ * Creates and caches [CrawlUrlFilter] implementing plugins.
  */
-class UrlFilters(
-        val urlFilters: List<UrlFilter>,
-        val conf: ImmutableConfig
+class CrawlUrlFilters(
+    val urlFilters: List<CrawlUrlFilter>,
+    val conf: ImmutableConfig
 ) {
-    val LOG = LoggerFactory.getLogger(UrlFilters::class.java)
+    val LOG = LoggerFactory.getLogger(CrawlUrlFilters::class.java)
 
     constructor(conf: ImmutableConfig): this(listOf(), conf)
 

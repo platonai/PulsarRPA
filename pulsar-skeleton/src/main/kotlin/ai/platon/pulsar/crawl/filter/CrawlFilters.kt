@@ -29,17 +29,17 @@ import java.util.*
  * TODO : Move to plugin, urlfilter/contentfilter, etc
  */
 class CrawlFilters(
-        val crawlFilters: List<CrawlFilter>,
-        val urlNormalizers: UrlNormalizers,
-        val urlFilters: UrlFilters,
-        val scope: String,
-        val conf: ImmutableConfig
+    val crawlFilters: List<CrawlFilter>,
+    val urlNormalizers: CrawlUrlNormalizers,
+    val urlFilters: CrawlUrlFilters,
+    val scope: String,
+    val conf: ImmutableConfig
 ) {
     constructor(conf: ImmutableConfig) : this(
             listOf(),
-            UrlNormalizers(conf),
-            UrlFilters(conf),
-            UrlNormalizers.SCOPE_DEFAULT,
+            CrawlUrlNormalizers(conf),
+            CrawlUrlFilters(conf),
+            CrawlUrlNormalizers.SCOPE_DEFAULT,
             conf
     )
 
@@ -51,7 +51,7 @@ class CrawlFilters(
         return normalizeToEmpty(url).isNotEmpty()
     }
 
-    fun normalizeToEmpty(url: String, scope: String = UrlNormalizers.SCOPE_DEFAULT): String {
+    fun normalizeToEmpty(url: String, scope: String = CrawlUrlNormalizers.SCOPE_DEFAULT): String {
         return normalizeToEmpty(url)
     }
 
@@ -60,7 +60,7 @@ class CrawlFilters(
         return normUrl ?: ""
     }
 
-    fun normalizeToNull(url: String, scope: String = UrlNormalizers.SCOPE_DEFAULT): String? {
+    fun normalizeToNull(url: String, scope: String = CrawlUrlNormalizers.SCOPE_DEFAULT): String? {
         if (url.isEmpty()) {
             return null
         }

@@ -22,7 +22,7 @@ package ai.platon.pulsar.crawl.filter
  * Interface used to convert URLs to normal form and optionally perform
  * substitutions
  */
-interface UrlNormalizer {
+interface CrawlUrlNormalizer {
     /* Interface for URL normalization */
     fun normalize(url: String, scope: String): String?
 

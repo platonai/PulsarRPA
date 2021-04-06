@@ -57,6 +57,8 @@ class MultiMetric(
         hourlyCounter.inc(n)
         meter.mark(n)
     }
+
+    fun inc(n: Int) = inc(n.toLong())
 }
 
 class AppMetrics(
@@ -75,6 +77,7 @@ class AppMetrics(
         val reg = defaultMetricRegistry
 
         val startTime = Instant.now()
+        val elapsedTime get() = Duration.between(startTime, Instant.now())
         val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         val availableMemory get() = systemInfo.hardware.memory.available
@@ -85,6 +88,7 @@ class AppMetrics(
         init {
             mapOf(
                 "startTime" to Gauge { startTime },
+                "elapsedTime" to Gauge { elapsedTime },
                 "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
                 "freeSpace" to Gauge { freeSpace.map { Strings.readableBytes(it) } }
             ).let { reg.registerAll(this, it) }

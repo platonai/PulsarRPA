@@ -286,7 +286,12 @@ open class FetchComponent(
         }
 
         val options = page.options
-        val nextFetchTime = Instant.now() + options.expires
+        val now = Instant.now()
+        val nextFetchTime = when {
+            protocolStatus.isSuccess -> now + options.expires
+            page.fetchRetries > 3 -> now + options.expires
+            else -> now
+        }
         updateFetchTime(page, nextFetchTime)
         updateMarks(page)
 

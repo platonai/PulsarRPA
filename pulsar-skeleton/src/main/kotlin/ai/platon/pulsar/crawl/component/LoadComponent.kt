@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
+import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
@@ -27,6 +28,7 @@ import org.apache.avro.util.Utf8
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.URL
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -190,11 +192,6 @@ class LoadComponent(
             val status = page.protocolStatus
 
             when (reason) {
-                FetchReason.NEW_PAGE,
-                FetchReason.EXPIRED,
-                FetchReason.SMALL_CONTENT,
-                FetchReason.RETRY,
-                FetchReason.MISS_FIELD -> pendingUrls.add(url)
                 FetchReason.TEMP_MOVED -> {
                     // TODO: batch redirect
                     page = redirect(page, opt)
@@ -209,6 +206,7 @@ class LoadComponent(
                         logger.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
                     }
                 }
+                in FetchReason.refreshCodes -> pendingUrls.add(url)
                 else -> logger.error("Unknown fetch reason {} | {} {}", reason, url, opt)
             }
         }
@@ -337,7 +335,6 @@ class LoadComponent(
         } else {
             FetchEntry(page0, options, normUrl.hrefSpec)
         }
-//        require(page0.options == options)
 
         val page = fetchEntry.page
 
@@ -346,13 +343,10 @@ class LoadComponent(
             return redirect(page, options)
         }
 
-        val refresh = reason == FetchReason.NEW_PAGE
-                || reason == FetchReason.EXPIRED
-                || reason == FetchReason.SMALL_CONTENT
-                || reason == FetchReason.RETRY
-                || reason == FetchReason.MISS_FIELD
+        val refresh = reason in FetchReason.refreshCodes
         if (refresh) {
-            page.variables[VAR_REFRESH] = refresh
+            page.variables[VAR_REFRESH] = reason
+            page.variables[VAR_FETCH_REASON] = reason
         }
 
         return page
@@ -393,7 +387,8 @@ class LoadComponent(
 
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
-            logger.info(LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString())
+            val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString()
+            logger.info(report)
         }
 
         globalCache.fetchingUrls.remove(page.url)
@@ -448,8 +443,14 @@ class LoadComponent(
             return FetchReason.DO_NOT_FETCH
         }
 
-        // Fetch a page already fetched before if it's expired
         val now = Instant.now()
+        val duration = Duration.between(page.fetchTime, now)
+        val days = duration.toDays()
+        if (duration.toMillis() > 0 && days in 1..29) {
+            return FetchReason.SCHEDULED
+        }
+
+        // Fetch a page already fetched before if it's expired
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
             statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)

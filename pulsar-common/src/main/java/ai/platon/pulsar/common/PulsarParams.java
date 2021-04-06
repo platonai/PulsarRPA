@@ -171,38 +171,26 @@ public class PulsarParams extends Params {
      * Index document fields
      */
     public static final String DOC_FIELD_PUBLISH_TIME = "publish_time";
-    /** Constant <code>DOC_FIELD_MODIFIED_TIME="modified_time"</code> */
     public static final String DOC_FIELD_MODIFIED_TIME = "modified_time";
-    /** Constant <code>DOC_FIELD_ARTICLE_TILE="article_title"</code> */
     public static final String DOC_FIELD_ARTICLE_TILE = "article_title";
-    /** Constant <code>DOC_FIELD_PAGE_TITLE="page_title"</code> */
     public static final String DOC_FIELD_PAGE_TITLE = "page_title";
-    /** Constant <code>DOC_FIELD_CONTENT_TILE="article_title"</code> */
     public static final String DOC_FIELD_CONTENT_TILE = "article_title";
-    /** Constant <code>DOC_FIELD_PAGE_CATEGORY="page_category"</code> */
     public static final String DOC_FIELD_PAGE_CATEGORY = "page_category";
-    /** Constant <code>DOC_FIELD_LINKS_COUNT="links_count"</code> */
     public static final String DOC_FIELD_LINKS_COUNT = "links_count";
-    /** Constant <code>DOC_FIELD_HTML_CONTENT="html_content"</code> */
     public static final String DOC_FIELD_HTML_CONTENT = "html_content";
-    /** Constant <code>DOC_FIELD_TEXT_CONTENT="text_content"</code> */
     public static final String DOC_FIELD_TEXT_CONTENT = "text_content";
-    /** Constant <code>DOC_FIELD_TEXT_CONTENT_LENGTH="text_content_length"</code> */
     public static final String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
-    /** Constant <code>DOC_FIELD_HTML_CONTENT_LENGTH="html_content_length"</code> */
     public static final String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
     /**
      * Temporary variable holders
      */
     public static final String VAR_LINKS_COUNT = "links_count";
-    /** Constant <code>VAR_DROPPED_LINKS_COUNT="dropped_links_count"</code> */
     public static final String VAR_DROPPED_LINKS_COUNT = "dropped_links_count";
-    /** Constant <code>VAR_PAGE_EXISTENCE="page_existence"</code> */
     public static final String VAR_PAGE_EXISTENCE = "page_existence";
-    /** Constant <code>VAR_PAGE_CONTENT_LENGTH="page_content_length"</code> */
     public static final String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
-    /** Constant <code>VAR_GENERATE_FORCE_FIRST="generate_force_first"</code> */
     public static final String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
+    public static final String VAR_FETCH_REASON = "fetch_reason";
+
     /**
      * If this task is a scrape task
      * TODO: this is a temporary solution

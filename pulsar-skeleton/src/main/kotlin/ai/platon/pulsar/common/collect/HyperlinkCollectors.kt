@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.DelayQueue
 
 open class UrlQueueCollector(
-        val queue: Queue<UrlAware>,
-        priority: Priority13 = Priority13.NORMAL
+    val queue: Queue<UrlAware>,
+    priority: Priority13 = Priority13.NORMAL
 ) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     override var name = "UrlQueueC"
@@ -53,17 +53,17 @@ open class UrlQueueCollector(
  * */
 open class HyperlinkCollector(
     /**
-         * The pulsar session to use
-         * */
-        val session: PulsarSession,
+     * The pulsar session to use
+     * */
+    val session: PulsarSession,
     /**
-         * The urls of portal pages from where hyper links are extracted from
-         * */
-        val seeds: Queue<NormUrl>,
+     * The urls of portal pages from where hyper links are extracted from
+     * */
+    val seeds: Queue<NormUrl>,
     /**
-         * The priority of this collector
-         * */
-        priority: Priority13 = Priority13.NORMAL
+     * The priority of this collector
+     * */
+    priority: Priority13 = Priority13.NORMAL
 ) : AbstractPriorityDataCollector<Hyperlink>(priority), CrawlableFatLinkCollector {
     companion object {
         var globalCollects: Int = 0
@@ -72,10 +72,15 @@ open class HyperlinkCollector(
             "globalCollects" to Gauge { globalCollects }
         )
 
-        init { AppMetrics.reg.registerAll(this, gauges) }
+        init {
+            AppMetrics.reg.registerAll(this, gauges)
+        }
     }
 
     private val log = LoggerFactory.getLogger(HyperlinkCollector::class.java)
+
+    var urlNormalizer = { url: String -> url }
+
     private val webDb = session.context.getBean<WebDb>()
     private val fatLinkExtractor = FatLinkExtractor(session)
 
@@ -115,8 +120,10 @@ open class HyperlinkCollector(
         val seed = seeds.poll()
 
         if (seed == null) {
-            log.info("Total {}/{} seeds are processed, all done",
-                    fatLinkExtractor.counters.loadedSeeds, FatLinkExtractor.globalCounters.loadedSeeds)
+            log.info(
+                "Total {}/{} seeds are processed, all done",
+                fatLinkExtractor.counters.loadedSeeds, FatLinkExtractor.globalCounters.loadedSeeds
+            )
             return 0
         }
 
@@ -127,8 +134,10 @@ open class HyperlinkCollector(
         var count = 0
         val fatLink = fatLinks[seed.spec]
         if (fatLink != null) {
-            log.warn("The batch still has {} active tasks | idle: {} | {}",
-                    fatLink.numActive, fatLink.idleTime.readable(), seed)
+            log.warn(
+                "The batch still has {} active tasks | idle: {} | {}",
+                fatLink.numActive, fatLink.idleTime.readable(), seed
+            )
             return 0
         }
 
@@ -148,11 +157,13 @@ open class HyperlinkCollector(
             val size2 = sink.size
             collectedCount += size2
 
-            log.info("{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
-                    page.id,
-                    fatLink.label, fatLink.size,
-                    size2 - size, size, size2,
-                    fatLinkExtractor.counters.loadedSeeds, seed)
+            log.info(
+                "{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
+                page.id,
+                fatLink.label, fatLink.size,
+                size2 - size, size, size2,
+                fatLinkExtractor.counters.loadedSeeds, seed
+            )
         }
 
         return count
@@ -245,26 +256,26 @@ open class PeriodicalHyperlinkCollector(
             resource: String, session: PulsarSession, priority: Priority13 = Priority13.NORMAL
         ): Sequence<PeriodicalHyperlinkCollector> {
             return ResourceLoader.readAllLines(resource)
-                    .asSequence()
-                    .filterNot { it.startsWith("#") }
-                    .filterNot { it.isBlank() }
-                    .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
-                    .filter { Urls.isValidUrl(it.spec) }
-                    .map { PeriodicalHyperlinkCollector(session, it, priority) }
+                .asSequence()
+                .filterNot { it.startsWith("#") }
+                .filterNot { it.isBlank() }
+                .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
+                .filter { Urls.isValidUrl(it.spec) }
+                .map { PeriodicalHyperlinkCollector(session, it, priority) }
         }
     }
 }
 
 open class FetchCacheCollector(
-        private val fetchCache: FetchCache,
-        priority: Int = Priority13.HIGHER.value
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
+    private val fetchCache: FetchCache,
+    priority: Int = Priority13.HIGHER.value
+) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     override var name = "FetchCacheC"
 
     private val hyperlinkQueues get() = fetchCache.queues
 
-    constructor(fetchCache: FetchCache, priority: Priority13): this(fetchCache, priority.value)
+    constructor(fetchCache: FetchCache, priority: Priority13) : this(fetchCache, priority.value)
 
     @Synchronized
     override fun hasMore() = hyperlinkQueues.any { it.isNotEmpty() }
@@ -284,11 +295,11 @@ open class FetchCacheCollector(
 open class DelayCacheCollector(
     private val queue: DelayQueue<DelayUrl>,
     priority: Int = Priority13.HIGHER.value
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
+) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     override var name = "DelayCacheC"
 
-    constructor(queue: DelayQueue<DelayUrl>, priority: Priority13): this(queue, priority.value)
+    constructor(queue: DelayQueue<DelayUrl>, priority: Priority13) : this(queue, priority.value)
 
     @Synchronized
     override fun hasMore() = queue.isNotEmpty()
