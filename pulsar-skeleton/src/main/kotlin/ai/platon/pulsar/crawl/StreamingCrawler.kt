@@ -325,10 +325,10 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
-        if (page == null) {
-            handleRetry(url, page)
-        } else if (page.isContentUpdated && page.protocolStatus.isRetry) {
-            handleRetry(url, page)
+        when {
+            page == null -> handleRetry(url, page)
+            page.crawlStatus.isRetry -> handleRetry(url, page)
+            page.crawlStatus.isGone -> log.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
         }
 
         if (page != null) {
@@ -395,26 +395,28 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry(url: UrlAware, page: WebPage?) {
-        val gCache = globalCache
-        if (gCache != null && !gCache.isFetching(url)) {
-            val retries = 1L + (page?.fetchRetries ?: 0)
-            val delay = Duration.ofMinutes(5L + 5 * retries)
-            val cache = gCache.fetchCacheManager.delayCache
-            // fetch immediately, do not check the database
-            url.args += " -i 0s"
-            if (retries <= 3) {
-                cache.add(DelayUrl(url, delay))
-                globalMetrics.retries.mark()
-                if (page != null) {
-                    log.info("{}", LoadedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
-                }
+        if (globalCache == null || globalCache.isFetching(url)) {
+            return
+        }
+
+        val retries = 1L + (page?.fetchRetries ?: 0)
+        val delay = Duration.ofMinutes(5L + 5 * retries)
+        val cache = globalCache.fetchCacheManager.delayCache
+        // fetch immediately, do not check the database
+        url.args += " -i 0s"
+        if (retries <= 3) {
+            cache.add(DelayUrl(url, delay))
+            globalMetrics.retries.mark()
+            if (page != null) {
+                log.info("{}", LoadedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
+            }
+        } else {
+            // should not go here, because the page should be marked as GONE
+            globalMetrics.gone.mark()
+            if (page != null) {
+                log.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
             } else {
-                globalMetrics.gone.mark()
-                if (page != null) {
-                    log.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
-                } else {
-                    log.info("Page is gone | {}", url)
-                }
+                log.info("Page is gone (unexpected) | {}", url)
             }
         }
     }

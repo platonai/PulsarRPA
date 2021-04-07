@@ -36,10 +36,10 @@ class CrawlStatus constructor(private val status: Byte) : CrawlStatusCodes {
         init {
             NAMES[CrawlStatusCodes.UNFETCHED] = "status_unfetched"
             NAMES[CrawlStatusCodes.FETCHED] = "status_fetched"
+            NAMES[CrawlStatusCodes.RETRY] = "status_retry"
             NAMES[CrawlStatusCodes.GONE] = "status_gone"
             NAMES[CrawlStatusCodes.REDIR_TEMP] = "status_redir_temp"
             NAMES[CrawlStatusCodes.REDIR_PERM] = "status_redir_perm"
-            NAMES[CrawlStatusCodes.RETRY] = "status_retry"
             NAMES[CrawlStatusCodes.NOTMODIFIED] = "status_notmodified"
         }
     }
@@ -54,6 +54,8 @@ class CrawlStatus constructor(private val status: Byte) : CrawlStatusCodes {
             CrawlStatusCodes.FETCHED,
             CrawlStatusCodes.NOTMODIFIED
         )
+    val isRetry get() = status == CrawlStatusCodes.RETRY
+    val isGone get() = status == CrawlStatusCodes.GONE
 
     override fun equals(other: Any?): Boolean {
         return other is CrawlStatus && status.toInt() == other.code

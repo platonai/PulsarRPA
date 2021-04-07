@@ -255,6 +255,9 @@ open class FetchComponent(
         return crawlStatus
     }
 
+    /**
+     * TODO: do this in update phrase
+     * */
     private fun updatePage(page: WebPage, pageDatum: PageDatum?,
                            protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
@@ -281,18 +284,6 @@ open class FetchComponent(
             }
         }
 
-        if (protocolStatus.isSuccess) {
-            page.fetchRetries = 0
-        }
-
-        val options = page.options
-        val now = Instant.now()
-        val nextFetchTime = when {
-            protocolStatus.isSuccess -> now + options.expires
-            page.fetchRetries > 3 -> now + options.expires
-            else -> now
-        }
-        updateFetchTime(page, nextFetchTime)
         updateMarks(page)
 
         return page
@@ -335,10 +326,16 @@ open class FetchComponent(
             }
         }
 
+        @Deprecated("Moved to FetchSchedule")
         fun updateFetchTime(page: WebPage, nextFetchTime: Instant = Instant.now()) {
-            page.prevFetchTime = page.fetchTime
+            val now = Instant.now()
+            page.putFetchTimeHistory(now)
+
+            // Only if the fetch time is in the past, assign prevFetchTime to be it
+            if (page.fetchTime.isBefore(now)) {
+                page.prevFetchTime = page.fetchTime
+            }
             page.fetchTime = nextFetchTime
-            page.putFetchTimeHistory(nextFetchTime)
         }
     }
 }

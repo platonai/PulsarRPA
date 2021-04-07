@@ -57,16 +57,12 @@ class UpdateComponent(
     }
 
     private val enumCounters = AppMetrics.reg.enumCounterRegistry
-    private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
-    private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 
     constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, conf)
 
     override fun getParams(): Params {
         return Params.of(
                 "className", this.javaClass.simpleName,
-                "fetchRetryMax", fetchRetryMax,
-                "maxFetchInterval", maxFetchInterval,
                 "fetchSchedule", fetchSchedule.javaClass.simpleName
         )
     }
@@ -154,6 +150,12 @@ class UpdateComponent(
             return
         }
 
+        val prevFetchTime = page.prevFetchTime
+        val fetchTime = page.fetchTime
+        var prevModifiedTime = page.prevModifiedTime
+        var modifiedTime = page.modifiedTime
+        val newModifiedTime = page.sniffModifiedTime()
+
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
             CrawlStatusCodes.FETCHED,
@@ -175,11 +177,6 @@ class UpdateComponent(
                     }
                 }
 
-                val prevFetchTime = page.prevFetchTime
-                val fetchTime = page.fetchTime
-                var prevModifiedTime = page.prevModifiedTime
-                var modifiedTime = page.modifiedTime
-                val newModifiedTime = page.sniffModifiedTime()
                 if (newModifiedTime.isAfter(modifiedTime)) {
                     prevModifiedTime = modifiedTime
                     modifiedTime = newModifiedTime
@@ -187,7 +184,7 @@ class UpdateComponent(
 
                 fetchSchedule.setFetchSchedule(page, prevFetchTime, prevModifiedTime, fetchTime, modifiedTime, modified)
                 val fetchInterval = page.fetchInterval
-                if (fetchInterval > maxFetchInterval && !page.marks.isInactive) {
+                if (fetchInterval > fetchSchedule.maxFetchInterval && !page.marks.isInactive) {
                     LOG.info("Force re-fetch page " + page.url + ", fetch interval : " + fetchInterval)
                     fetchSchedule.forceRefetch(page, false)
                 }
@@ -203,14 +200,9 @@ class UpdateComponent(
                 }
             }
             CrawlStatusCodes.RETRY -> {
-                fetchSchedule.setPageRetrySchedule(page, Instant.EPOCH, page.prevModifiedTime, page.fetchTime)
-                if (page.fetchRetries < fetchRetryMax) {
-                    page.setCrawlStatus(CrawlStatusCodes.UNFETCHED.toInt())
-                } else {
-                    page.setCrawlStatus(CrawlStatusCodes.GONE.toInt())
-                }
+                fetchSchedule.setPageRetrySchedule(page, prevFetchTime, prevModifiedTime, fetchTime)
             }
-            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page, Instant.EPOCH, page.prevModifiedTime, page.fetchTime)
+            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page, prevFetchTime, prevModifiedTime, fetchTime)
         }
     }
 }

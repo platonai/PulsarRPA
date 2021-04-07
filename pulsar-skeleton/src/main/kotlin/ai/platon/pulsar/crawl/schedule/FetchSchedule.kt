@@ -20,7 +20,9 @@ package ai.platon.pulsar.crawl.schedule
 
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.persist.WebPage
+import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * This interface defines the contract for implementations that manipulate fetch
@@ -42,6 +44,8 @@ interface FetchSchedule : Parameterized {
          */
         const val STATUS_NOTMODIFIED = 2
     }
+
+    val maxFetchInterval: Duration
 
     /**
      * Initialize fetch schedule related data. Implementations should at least set
@@ -121,7 +125,7 @@ interface FetchSchedule : Parameterized {
      * @param curTime reference time(usually set to the time when the fetch list generation process was started).
      * @return true, if the page should be considered for inclusion in the current fetch list, otherwise false.
      * */
-    fun shouldFetch(page: WebPage, curTime: Instant): Boolean
+    fun shouldFetch(page: WebPage, now: Instant): Boolean
 
     /**
      * This method resets fetchTime, fetchInterval, modifiedTime and page

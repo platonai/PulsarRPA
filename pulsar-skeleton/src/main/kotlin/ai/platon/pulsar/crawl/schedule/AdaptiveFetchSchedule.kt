@@ -97,9 +97,34 @@ open class AdaptiveFetchSchedule(
         updateRefetchTime(page, newInterval, fetchTime, prevModifiedTime, newModifiedTime)
     }
 
+    /**
+     * This method specifies how to schedule refetching of pages marked as GONE.
+     * Default implementation increases fetchInterval by 50% but the value may
+     * never exceed `maxInterval`.
+     *
+     * @param page
+     * @return adjusted page information, including all original information.
+     * NOTE: this may be a different instance than
+     */
+    override fun setPageGoneSchedule(
+        page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
+        val prevInterval = page.fetchInterval.seconds.toFloat()
+        var newInterval = prevInterval
+        // no page is truly GONE ... just increase the interval by 50%
+        // and try much later.
+        newInterval = if (newInterval < maxFetchInterval.seconds) {
+            prevInterval * 1.5f
+        } else {
+            maxFetchInterval.seconds * 0.9f
+        }
+
+        page.setFetchInterval(newInterval)
+        page.fetchTime = fetchTime.plus(page.fetchInterval)
+    }
+
     protected fun getFetchInterval(page: WebPage, fetchTime_: Instant, modifiedTime: Instant, state: Int): Duration {
         var fetchTime = fetchTime_
-        var interval = page.getFetchInterval(TimeUnit.SECONDS)
+        var interval = page.fetchInterval.seconds
         when (state) {
             FetchSchedule.STATUS_MODIFIED -> interval *= (1.0f - DEC_RATE).toLong()
             FetchSchedule.STATUS_NOTMODIFIED -> interval *= (1.0f + INC_RATE).toLong()

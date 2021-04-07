@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
@@ -78,7 +79,8 @@ class LoadedPageFormatter(
             } else ""
         }
 
-    private val fetchReason get() = page.variables[VAR_FETCH_REASON]?.toString()?.take(2)?:""
+    private val fetchReasonCode get() = (page.variables[VAR_FETCH_REASON] as? Int) ?: FetchReason.UNKNOWN
+    private val fetchReason get() = FetchReason.toString(fetchReasonCode).take(3)
     private val prefix0 get() = if (page.isContentUpdated) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)

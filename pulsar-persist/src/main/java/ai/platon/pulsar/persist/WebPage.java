@@ -1040,31 +1040,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * Get last fetch time
-     * <p>
-     * If fetchTime is before now, the result is the fetchTime
-     * If fetchTime is after now, it means that schedule has modified it for the next fetch, the result is prevFetchTime
-     *
-     * @param now The imprecise current time
-     * @return The last fetch time
-     */
-    @NotNull
-    public Instant getLastFetchTime(@NotNull Instant now) {
-        Instant lastFetchTime = getFetchTime();
-        if (lastFetchTime.isAfter(now)) {
-            // fetch time is in the further, updated by schedule
-            lastFetchTime = getPrevFetchTime();
-        }
-        return lastFetchTime;
-    }
-
-    @NotNull
-    public Instant getLastFetchTime() {
-        return getLastFetchTime(Instant.now());
-    }
-
-    /**
-     * <p>getFetchInterval.</p>
+     * The fetch interval
      *
      * @return a {@link java.time.Duration} object.
      */
@@ -1080,16 +1056,6 @@ final public class WebPage implements Comparable<WebPage> {
      */
     public void setFetchInterval(@NotNull Duration interval) {
         page.setFetchInterval((int) interval.getSeconds());
-    }
-
-    /**
-     * <p>getFetchInterval.</p>
-     *
-     * @param destUnit a {@link java.util.concurrent.TimeUnit} object.
-     * @return a long.
-     */
-    public long getFetchInterval(@NotNull TimeUnit destUnit) {
-        return destUnit.convert(page.getFetchInterval(), TimeUnit.SECONDS);
     }
 
     /**

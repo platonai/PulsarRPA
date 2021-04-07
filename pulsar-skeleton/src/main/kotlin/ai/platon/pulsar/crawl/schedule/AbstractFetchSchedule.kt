@@ -22,13 +22,14 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import ai.platon.pulsar.persist.metadata.Mark
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
 
 /**
  * This class provides common methods for implementations of
@@ -40,14 +41,17 @@ abstract class AbstractFetchSchedule(
         val conf: ImmutableConfig,
         val messageWriter: MiscMessageWriter? = null
 ) : FetchSchedule {
-    private var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
-    private var maxInterval = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(90))
-    private val impreciseNow = Instant.now()
+    protected var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
+    protected val impreciseNow = Instant.now()
+    protected var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
+    override val maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 
     override fun getParams(): Params {
         return Params.of(
-                "defaultInterval", defaultInterval,
-                "maxInterval", maxInterval
+            "defaultInterval", defaultInterval,
+            "maxInterval", maxFetchInterval,
+            "fetchRetryMax", fetchRetryMax,
+            "maxFetchInterval", maxFetchInterval,
         )
     }
 
@@ -77,33 +81,26 @@ abstract class AbstractFetchSchedule(
     override fun setFetchSchedule(
             page: WebPage, prevFetchTime: Instant,
             prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {
-        // page.fetchRetries = 0
-    }
+        val now = Instant.now()
+        val protocolStatus = page.protocolStatus
+        val options = page.options
 
-    /**
-     * This method specifies how to schedule refetching of pages marked as GONE.
-     * Default implementation increases fetchInterval by 50% but the value may
-     * never exceed `maxInterval`.
-     *
-     * @param page
-     * @return adjusted page information, including all original information.
-     * NOTE: this may be a different instance than
-     */
-    override fun setPageGoneSchedule(
-            page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
-        val prevInterval = page.getFetchInterval(TimeUnit.SECONDS)
-        var newInterval = prevInterval.toFloat()
-        // no page is truly GONE ... just increase the interval by 50%
-        // and try much later.
-        newInterval = if (newInterval < maxInterval.seconds) {
-            prevInterval * 1.5f
-        } else {
-            maxInterval.seconds * 0.9f
+        if (protocolStatus.isSuccess) {
+            page.fetchRetries = 0
         }
 
-        page.setFetchInterval(newInterval)
-        page.prevFetchTime = page.fetchTime
-        page.fetchTime = fetchTime.plus(page.fetchInterval)
+        val fetchInterval = when {
+            protocolStatus.isSuccess -> options.expires
+            else -> Duration.ZERO
+        }
+
+        // Only if the fetch time is in the past, assign prevFetchTime to be it
+        page.prevFetchTime = fetchTime
+        page.fetchInterval = fetchInterval
+        page.fetchTime = fetchTime.plus(fetchInterval)
+        page.modifiedTime = modifiedTime
+        page.prevModifiedTime = prevModifiedTime
+        page.putFetchTimeHistory(now)
     }
 
     /**
@@ -117,10 +114,28 @@ abstract class AbstractFetchSchedule(
      * @param fetchTime        current fetch time
      */
     override fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
-        page.prevFetchTime = page.fetchTime
-        page.fetchTime = fetchTime.plus(1, ChronoUnit.DAYS)
-        // TODO: handle retry scope
         page.fetchRetries++
+        page.prevFetchTime = fetchTime
+        // retry immediately, this is the default behaviour
+        page.fetchTime = Instant.now()
+
+        val crawlStatus = if (page.fetchRetries < fetchRetryMax) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
+        page.setCrawlStatus(crawlStatus.toInt())
+    }
+
+    /**
+     * This method specifies how to schedule refetching of pages marked as GONE.
+     * Default implementation increases fetchInterval by 50% but the value may
+     * never exceed `maxInterval`.
+     *
+     * @param page
+     * @return adjusted page information, including all original information.
+     * NOTE: this may be a different instance than
+     */
+    override fun setPageGoneSchedule(
+            page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
+        page.fetchInterval = ChronoUnit.CENTURIES.duration
+        page.fetchTime = fetchTime.plus(page.fetchInterval)
     }
 
     /**
@@ -140,27 +155,32 @@ abstract class AbstractFetchSchedule(
      * `fetchTime`, if it is higher than the
      *
      * @param page    Web page to fetch
-     * @param curTime reference time (usually set to the time when the fetchlist
+     * @param now reference time (usually set to the time when the fetchlist
      * generation process was started).
      * @return true, if the page should be considered for inclusion in the current
      * fetchlist, otherwise false.
      */
-    override fun shouldFetch(page: WebPage, curTime: Instant): Boolean {
+    override fun shouldFetch(page: WebPage, now: Instant): Boolean {
         if (page.hasMark(Mark.INACTIVE)) {
             return false
         }
+
+        if (page.options.isExpired(now)) {
+            return true
+        }
+
         // Pages are never truly GONE - we have to check them from time to time.
         // pages with too long fetchInterval are adjusted so that they fit within
         // maximum fetchInterval (batch retention period).
         val fetchTime = page.fetchTime
-        if (curTime.plus(maxInterval).isBefore(fetchTime)) {
-            if (page.fetchInterval > maxInterval) {
-                page.setFetchInterval(maxInterval.seconds * 0.9f)
+        if (now.plus(maxFetchInterval).isBefore(fetchTime)) {
+            if (page.fetchInterval > maxFetchInterval) {
+                page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
             }
             page.prevFetchTime = page.fetchTime
-            page.fetchTime = curTime
+            page.fetchTime = now
         }
-        return fetchTime.isBefore(curTime)
+        return fetchTime.isBefore(now)
     }
 
     /**
@@ -177,8 +197,8 @@ abstract class AbstractFetchSchedule(
             return
         }
         // reduce fetchInterval so that it fits within the max value
-        if (page.fetchInterval > maxInterval) {
-            page.setFetchInterval(maxInterval.seconds * 0.9f)
+        if (page.fetchInterval > maxFetchInterval) {
+            page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
         }
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
         page.fetchRetries = 0

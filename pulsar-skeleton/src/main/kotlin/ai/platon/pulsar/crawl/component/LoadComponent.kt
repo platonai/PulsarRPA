@@ -444,21 +444,22 @@ class LoadComponent(
         }
 
         val now = Instant.now()
-        val duration = Duration.between(page.fetchTime, now)
-        val days = duration.toDays()
-        if (duration.toMillis() > 0 && days in 1..29) {
-            return FetchReason.SCHEDULED
-        }
 
         // Fetch a page already fetched before if it's expired
-        val lastFetchTime = page.getLastFetchTime(now)
-        if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
+        val prevFetchTime = page.prevFetchTime
+        if (prevFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
             statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)
         }
 
         // if (now >= expireAt || now > lastTime + expires), it's expired
-        if (options.isExpired(lastFetchTime)) {
+        if (options.isExpired(prevFetchTime)) {
             return FetchReason.EXPIRED
+        }
+
+        val duration = Duration.between(page.fetchTime, now)
+        val days = duration.toDays()
+        if (duration.toMillis() > 0 && days < 3) {
+            return FetchReason.SCHEDULED
         }
 
         if (page.contentLength < options.requireSize) {
@@ -478,7 +479,7 @@ class LoadComponent(
     }
 
     /**
-     * TODO: not used in browser mode, redirect inside a browser instead
+     * NOTE: not used in browser mode, redirect inside a browser instead
      * */
     private fun redirect(page: WebPage, options: LoadOptions): WebPage {
         if (!isActive) {
@@ -522,12 +523,6 @@ class LoadComponent(
         }
 
         if (page.protocolStatus.isCanceled) {
-            return
-        }
-
-        val protocolStatus = page.protocolStatus
-        if (protocolStatus.isFailed) {
-            updateComponent.updateFetchSchedule(page)
             return
         }
 

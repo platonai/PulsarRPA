@@ -198,7 +198,7 @@ class MiscMessageWriter(
     fun debugIllegalLastFetchTime(page: WebPage) {
         val report = String.format("ft: {} lft: {}, fc: {} fh: {} status: {} mk: {}",
                 page.fetchTime,
-                page.getLastFetchTime(Instant.now()),
+                page.prevFetchTime,
                 page.fetchCount,
                 page.getFetchTimeHistory(""),
                 page.protocolStatus,
