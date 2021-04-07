@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.common
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.WebPageBatchHandler

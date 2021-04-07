@@ -28,12 +28,6 @@
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
 
-        <!-- SSL support, required by httpclient(deprecated) -->
-<!--        <dependency>-->
-<!--            <groupId>commons-httpclient</groupId>-->
-<!--            <artifactId>commons-httpclient</artifactId>-->
-<!--            <version>3.1</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -42,6 +36,10 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-chrome-driver</artifactId>
         </dependency>
     </dependencies>
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig

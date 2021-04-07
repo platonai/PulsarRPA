@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.urls
 
 import org.junit.Test
 import org.nibor.autolink.LinkExtractor

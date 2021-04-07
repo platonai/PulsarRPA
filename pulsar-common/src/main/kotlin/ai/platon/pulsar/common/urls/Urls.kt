@@ -1,8 +1,7 @@
-package ai.platon.pulsar.common.url
+package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.Strings
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
 import java.net.URI
@@ -12,13 +11,14 @@ import java.net.URL
 object Urls {
 
     @JvmStatic
-    fun getURLOrNull(url: String): URL? {
-        if (url.isBlank()) return null
+    fun getURLOrNull(url: String?): URL? {
+        if (url.isNullOrBlank()) return null
+
         return kotlin.runCatching { URL(url) }.getOrNull()
     }
 
     @JvmStatic
-    fun isValidUrl(url: String): Boolean {
+    fun isValidUrl(url: String?): Boolean {
         return getURLOrNull(url) != null
     }
 

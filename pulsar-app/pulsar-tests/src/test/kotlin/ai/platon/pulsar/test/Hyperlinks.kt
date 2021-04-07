@@ -2,7 +2,7 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument

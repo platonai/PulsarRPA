@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import org.junit.Test

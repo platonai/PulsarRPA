@@ -1,10 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.url.Urls
-import com.google.common.collect.Sets
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import ai.platon.pulsar.common.urls.Urls
 import org.junit.Test
 import java.net.URL
 import kotlin.test.assertEquals

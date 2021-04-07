@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.fetch.indexer
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
 import ai.platon.pulsar.crawl.common.JobInitialized

@@ -2,14 +2,9 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.url.*
-import java.time.Duration
-import java.time.Instant
+import ai.platon.pulsar.common.urls.*
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.DelayQueue
-import java.util.concurrent.Delayed
-import java.util.concurrent.TimeUnit
 
 interface FetchCache {
     val name: String

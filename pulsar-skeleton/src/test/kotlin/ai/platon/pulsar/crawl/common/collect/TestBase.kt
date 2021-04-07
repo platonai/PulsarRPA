@@ -3,10 +3,9 @@ package ai.platon.pulsar.crawl.common.collect
 import ai.platon.pulsar.common.collect.TemporaryLocalFileUrlLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.junit.Before
-import org.junit.BeforeClass
 
 open class TestBase {
     protected val conf = ImmutableConfig()

@@ -17,7 +17,7 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.url.LabeledHyperlink
+import ai.platon.pulsar.common.urls.LabeledHyperlink
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes

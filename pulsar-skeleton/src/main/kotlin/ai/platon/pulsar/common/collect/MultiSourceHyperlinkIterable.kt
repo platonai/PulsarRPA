@@ -1,10 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.url.Hyperlink
-import ai.platon.pulsar.common.url.UrlAware
-import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
+import ai.platon.pulsar.common.urls.Hyperlink
 
 class MultiSourceHyperlinkIterable(
         val fetchCacheManager: FetchCatchManager,

@@ -20,7 +20,7 @@ package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.KConfigurable
-import ai.platon.pulsar.common.url.Urls.getURLOrNull
+import ai.platon.pulsar.common.urls.Urls.getURLOrNull
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizer
 import org.apache.oro.text.regex.*
 import org.slf4j.LoggerFactory
@@ -75,9 +75,9 @@ class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, Cr
     }
 
     override fun normalize(url: String, scope: String): String? {
-        var urlString: String? = url
+        var urlString: String = url
 
-        val u = getURLOrNull(urlString!!) ?: return null
+        val u = getURLOrNull(urlString) ?: return null
         val protocol = u.protocol
         var host = u.host
         var port = u.port
@@ -115,8 +115,8 @@ class BasicUrlNormalizer(override var conf: ImmutableConfig) : KConfigurable, Cr
             try {
                 urlString = URL(protocol, host, port, file).toString()
             } catch (e: MalformedURLException) {
-                urlString = null
                 LOG.warn(e.message)
+                return null
             }
         }
 

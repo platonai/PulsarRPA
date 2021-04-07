@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.collect.*
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.url.Hyperlink
-import ai.platon.pulsar.common.url.PlainUrl
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.PlainUrl
 import org.apache.commons.collections4.map.MultiValueMap
 import org.junit.Test
 import java.nio.file.Paths

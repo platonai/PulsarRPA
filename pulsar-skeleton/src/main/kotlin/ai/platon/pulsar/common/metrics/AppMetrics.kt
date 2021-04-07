@@ -59,6 +59,10 @@ class MultiMetric(
     }
 
     fun inc(n: Int) = inc(n.toLong())
+
+    fun reset() {
+        inc(-counter.count)
+    }
 }
 
 class AppMetrics(

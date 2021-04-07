@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.urls
 
-import ai.platon.pulsar.common.url.*
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -25,26 +24,26 @@ class TestHyperlinks {
 
     @Test
     fun testEquals() {
-        var u1: UrlAware = Hyperlink(uc.urlString1)
-        var u2: UrlAware = Hyperlink(uc.urlString1, "hello", Int.MAX_VALUE)
+        var u1: UrlAware = Hyperlink(UrlCommon.urlString1)
+        var u2: UrlAware = Hyperlink(UrlCommon.urlString1, "hello", Int.MAX_VALUE)
         assertEquals(u1, u2)
 
-        u1 = Hyperlink(uc.urlString1)
-        u2 = Hyperlink(uc.urlString1, args = "-i 0s")
+        u1 = Hyperlink(UrlCommon.urlString1)
+        u2 = Hyperlink(UrlCommon.urlString1, args = "-i 0s")
         assertEquals(u1, u2 as Hyperlink)
 
-        u1 = Hyperlink(uc.urlString1)
-        u2 = StatefulHyperlink(uc.urlString1)
+        u1 = Hyperlink(UrlCommon.urlString1)
+        u2 = StatefulHyperlink(UrlCommon.urlString1)
         assertEquals(u1, u2)
 
-        u1 = Hyperlink(uc.urlString1)
-        u2 = StatefulFatLink(uc.urlString1, tailLinks = listOf())
+        u1 = Hyperlink(UrlCommon.urlString1)
+        u2 = StatefulFatLink(UrlCommon.urlString1, tailLinks = listOf())
         assertEquals(u1, u2)
 
-        u1 = Hyperlink(uc.urlString1)
-        u2 = Hyperlink(uc.urlString2)
+        u1 = Hyperlink(UrlCommon.urlString1)
+        u2 = Hyperlink(UrlCommon.urlString2)
         assertNotEquals(u1, u2)
 
-        assertEquals(Hyperlink(uc.urlString1), Hyperlink(uc.urlString1, args = "-i 0s"))
+        assertEquals(Hyperlink(UrlCommon.urlString1), Hyperlink(UrlCommon.urlString1, args = "-i 0s"))
     }
 }

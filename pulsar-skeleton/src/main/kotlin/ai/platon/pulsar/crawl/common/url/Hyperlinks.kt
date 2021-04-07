@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common.url
 
 import ai.platon.pulsar.common.config.AppConstants.PSEUDO_URL_BASE
-import ai.platon.pulsar.common.url.StatefulHyperlink
+import ai.platon.pulsar.common.urls.StatefulHyperlink
 import ai.platon.pulsar.crawl.*
 import org.apache.commons.lang3.RandomStringUtils
 import java.time.Duration

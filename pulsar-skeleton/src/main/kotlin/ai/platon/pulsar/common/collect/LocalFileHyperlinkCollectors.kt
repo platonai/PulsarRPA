@@ -4,8 +4,8 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.url.Hyperlink
-import ai.platon.pulsar.common.url.Hyperlinks
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.Hyperlinks
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory

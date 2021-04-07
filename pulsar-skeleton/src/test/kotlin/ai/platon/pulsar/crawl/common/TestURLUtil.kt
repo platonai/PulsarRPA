@@ -24,7 +24,7 @@ import ai.platon.pulsar.crawl.common.URLUtil.getDomainSuffix
 import ai.platon.pulsar.crawl.common.URLUtil.getHostBatches
 import ai.platon.pulsar.crawl.common.URLUtil.toASCII
 import ai.platon.pulsar.crawl.common.URLUtil.toUNICODE
-import ai.platon.pulsar.common.url.Urls.resolveURL
+import ai.platon.pulsar.common.urls.Urls.resolveURL
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.domain.DomainSuffixes

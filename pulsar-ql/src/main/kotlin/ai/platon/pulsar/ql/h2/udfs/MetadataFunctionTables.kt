@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.url
+package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Delayed
-import java.util.concurrent.TimeUnit
 
 interface PseudoUrl
 

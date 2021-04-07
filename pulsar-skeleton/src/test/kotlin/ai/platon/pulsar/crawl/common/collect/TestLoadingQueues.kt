@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common.collect
 
 import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingQueue
-import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.urls.Hyperlink
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

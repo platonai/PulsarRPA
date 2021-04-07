@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import java.nio.file.Files

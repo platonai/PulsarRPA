@@ -1,6 +1,6 @@
 package ai.platon.pulsar.client
 
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient

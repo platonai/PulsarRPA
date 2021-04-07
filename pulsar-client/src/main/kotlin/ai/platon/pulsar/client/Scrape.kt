@@ -1,9 +1,7 @@
-package ai.platon.pulsar.client.examples
+package ai.platon.pulsar.client
 
-import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.sql.SqlTemplate
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.gson.Gson
 import java.net.URI
@@ -13,11 +11,10 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
 import java.time.Instant
-import kotlin.streams.toList
 
 data class ScrapeResultSet(
     val name: String,
-    val records: List<Map<String, Any?>>? = null
+    val records: List<Map<String, Any?>>? = null,
 )
 
 data class ScrapeRequestV2(
@@ -26,7 +23,7 @@ data class ScrapeRequestV2(
     val args: String? = null,
     val sqls: Map<String, String> = mutableMapOf(),
     val callbackUrl: String? = null,
-    val priority: String = Priority13.HIGHER2.name
+    val priority: String = Priority13.HIGHER2.name,
 )
 
 data class ScrapeResponseV2(
@@ -39,7 +36,7 @@ data class ScrapeResponseV2(
     val statusCode: Int? = null,
     val pageStatusCode: Int? = null,
     val version: String = "20210312",
-    var resultSets: MutableList<ScrapeResultSet>? = mutableListOf()
+    var resultSets: MutableList<ScrapeResultSet>? = mutableListOf(),
 )
 
 class Scraper(val host: String, val authToken: String) {
@@ -50,11 +47,10 @@ class Scraper(val host: String, val authToken: String) {
 
     fun scrape(url: String, sqls: Map<String, String>): String {
         val requestEntity: Any = ScrapeRequestV2(authToken, url, "-i 1s", sqls, priority = "HIGHER5")
-        val request = post(scrapeService, requestEntity)
-        // return client.send(request, BodyHandlers.ofString()).body()
-        require(requestEntity is ScrapeRequestV2)
         println(jacksonObjectMapper().writeValueAsString(requestEntity))
-        return ""
+
+        val request = post(scrapeService, requestEntity)
+        return client.send(request, BodyHandlers.ofString()).body()
     }
 
     fun await(uuid: String) {
@@ -73,16 +69,16 @@ class Scraper(val host: String, val authToken: String) {
 
     fun awaitAll(uuids: Collection<String>) {
         val responses = mutableMapOf<String, ScrapeResponseV2?>()
+        val finishedUUIDs = mutableListOf<String>()
 
         var i = 0
-        var finished = 0
-        while (i++ < 1000 && finished < uuids.size) {
-            uuids.forEach {
-                if (responses[it]?.resultSets == null) {
-                    val response = getStatus(it)
-                    responses[it] = response
+        while (i++ < 1000 && finishedUUIDs.size < uuids.size) {
+            uuids.forEach { uuid ->
+                if (responses[uuid]?.resultSets == null) {
+                    val response = getStatus(uuid)
+                    responses[uuid] = response
                     if (response?.resultSets != null) {
-                        ++finished
+                        finishedUUIDs.add(uuid)
                         println(jacksonObjectMapper().writeValueAsString(response))
                     }
                 }
@@ -109,28 +105,5 @@ class Scraper(val host: String, val authToken: String) {
             .header("Content-Type", "application/json")
             .POST(BodyPublishers.ofString(requestBody))
             .build()
-    }
-}
-
-fun main() {
-    val authToken = "rhlwTRBk-1-de14124c7ace3d93e38a705bae30376c"
-    val resourcePrefix = "sql/crawl"
-    val sqls = mapOf(
-        "asin" to "x-asin.sql",
-        "sims-1" to "x-asin-sims-consolidated-1.sql",
-        "sims-2" to "x-asin-sims-consolidated-2.sql",
-        "sims-3" to "x-asin-sims-consolidated-3.sql",
-        "sims-consider" to "x-asin-sims-consider.sql",
-        "similar-items" to "x-similar-items.sql",
-        "reviews" to "x-asin-reviews.sql"
-    ).entries
-        .map { it.key to "$resourcePrefix/${it.value}" }
-        .associate { it.first to SqlTemplate.load(it.second).template }
-
-    val urls = LinkExtractors.fromResource("urls/amazon-product-urls.txt").take(500)
-    listOf("crawl0", "crawl1", "crawl2", "crawl3").parallelStream().forEach { host ->
-        val scraper = Scraper(host, authToken)
-        val uuids = scraper.scrapeAll(urls, sqls)
-        scraper.awaitAll(uuids)
     }
 }

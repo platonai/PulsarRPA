@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.url.UrlAware
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink

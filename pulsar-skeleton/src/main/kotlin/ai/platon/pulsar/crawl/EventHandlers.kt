@@ -1,7 +1,8 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -391,6 +392,8 @@ interface JsEventHandler {
 }
 
 abstract class AbstractJsEventHandler: JsEventHandler {
+    private val log = getLogger(AbstractJsEventHandler::class)
+
     open var delayMillis = 500L
     open var verbose = false
 
@@ -405,13 +408,13 @@ abstract class AbstractJsEventHandler: JsEventHandler {
     protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
         var value: Any? = null
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
-//            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
+            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
             val v = evaluate(driver, it)
             if (v is String) {
                 val s = Strings.stripNonPrintableChar(v)
-//                log.takeIf { verbose }?.info("Result >>>$s<<<")
+                log.takeIf { verbose }?.info("Result >>>$s<<<")
             } else if (v is Int || v is Long) {
-//                log.takeIf { verbose }?.info("Result >>>$v<<<")
+                log.takeIf { verbose }?.info("Result >>>$v<<<")
             }
             value = v
         }

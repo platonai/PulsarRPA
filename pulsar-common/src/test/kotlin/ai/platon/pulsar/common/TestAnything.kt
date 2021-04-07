@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.url.UrlTree
+import ai.platon.pulsar.common.urls.UrlTree
 import com.google.common.collect.Multiset
 import com.google.common.collect.TreeMultimap
 import com.google.common.collect.TreeMultiset
@@ -12,8 +12,6 @@ import org.apache.commons.math3.util.Precision
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
-import java.io.FileWriter
-import java.io.PrintWriter
 import java.math.BigInteger
 import java.time.Duration
 import java.time.Instant

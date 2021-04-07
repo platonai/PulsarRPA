@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.common.urls.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig

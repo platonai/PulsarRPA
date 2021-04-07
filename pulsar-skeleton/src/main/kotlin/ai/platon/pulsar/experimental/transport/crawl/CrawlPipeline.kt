@@ -1,6 +1,6 @@
 package ai.platon.pulsar.experimental.transport.crawl
 
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.experimental.transport.*

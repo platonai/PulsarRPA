@@ -5,7 +5,7 @@ import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache

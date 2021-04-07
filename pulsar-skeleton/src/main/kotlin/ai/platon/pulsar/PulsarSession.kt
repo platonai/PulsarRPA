@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.PageCatch

@@ -14,8 +14,8 @@ import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
-import ai.platon.pulsar.common.url.PseudoUrl
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.PseudoUrl
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink

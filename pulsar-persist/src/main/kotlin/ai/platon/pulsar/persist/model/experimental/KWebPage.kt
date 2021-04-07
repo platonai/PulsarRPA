@@ -22,9 +22,9 @@ import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.HtmlIntegrity.Companion.fromString
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.url.Urls.normalize
-import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
-import ai.platon.pulsar.common.url.Urls.unreverseUrl
+import ai.platon.pulsar.common.urls.Urls.normalize
+import ai.platon.pulsar.common.urls.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.common.urls.Urls.unreverseUrl
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.*

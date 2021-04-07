@@ -17,7 +17,7 @@
 package ai.platon.pulsar.crawl.index;
 
 import ai.platon.pulsar.common.DateTimes;
-import ai.platon.pulsar.common.url.Urls;
+import ai.platon.pulsar.common.urls.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
 import ai.platon.pulsar.persist.WebPage;

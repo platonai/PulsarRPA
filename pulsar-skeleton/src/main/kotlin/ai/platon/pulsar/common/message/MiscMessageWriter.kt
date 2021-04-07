@@ -3,13 +3,12 @@ package ai.platon.pulsar.common.message
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.MultiSinkMessageWriter
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.url.Hyperlink
-import ai.platon.pulsar.common.url.LabeledHyperlink
+import ai.platon.pulsar.common.urls.LabeledHyperlink
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.PageCounters.Self

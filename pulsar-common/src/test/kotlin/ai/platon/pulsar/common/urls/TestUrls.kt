@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.urls
 
-import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.common.url.Urls.reverseUrl
-import ai.platon.pulsar.common.url.Urls.unreverseUrl
+import ai.platon.pulsar.common.urls.Urls.reverseUrl
+import ai.platon.pulsar.common.urls.Urls.unreverseUrl
 import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -33,28 +32,28 @@ class TestUrls {
         println(reverseUrl("http://sz.sxrb.com/sxxww/dspd/szpd/wsjk"))
         println(reverseUrl("http://sz.sxrb.com/sxxww/"))
 
-        assertReverse(uc.urlString1, uc.reversedUrlString1)
-        assertReverse(uc.urlString2, uc.reversedUrlString2)
-        assertReverse(uc.urlString3, uc.reversedUrlString3)
-        assertReverse(uc.urlString4, uc.reversedUrlString4)
-        assertReverse(uc.urlString5, uc.reversedUrlString5)
-        assertReverse(uc.urlString5, uc.reversedUrlString5)
-        assertReverse(uc.urlString6, uc.reversedUrlString6)
-        assertReverse(uc.urlString7, uc.reversedUrlString7)
-        assertReverse(uc.urlString8, uc.reversedUrlString8)
+        assertReverse(UrlCommon.urlString1, UrlCommon.reversedUrlString1)
+        assertReverse(UrlCommon.urlString2, UrlCommon.reversedUrlString2)
+        assertReverse(UrlCommon.urlString3, UrlCommon.reversedUrlString3)
+        assertReverse(UrlCommon.urlString4, UrlCommon.reversedUrlString4)
+        assertReverse(UrlCommon.urlString5, UrlCommon.reversedUrlString5)
+        assertReverse(UrlCommon.urlString5, UrlCommon.reversedUrlString5)
+        assertReverse(UrlCommon.urlString6, UrlCommon.reversedUrlString6)
+        assertReverse(UrlCommon.urlString7, UrlCommon.reversedUrlString7)
+        assertReverse(UrlCommon.urlString8, UrlCommon.reversedUrlString8)
     }
 
     @Test
     @Throws(Exception::class)
     fun testUnreverseUrl() {
         println(unreverseUrl("com.sxrb.www:http/sxxww/zthj/xmtdt/6619357.shtml"))
-        assertUnreverse(uc.reversedUrlString1, uc.urlString1)
-        assertUnreverse(uc.reversedUrlString2, uc.urlString2)
-        assertUnreverse(uc.reversedUrlString3, uc.urlString3)
-        assertUnreverse(uc.reversedUrlString4, uc.urlString4)
-        assertUnreverse(uc.reversedUrlString5, uc.urlString5rev)
-        assertUnreverse(uc.reversedUrlString6, uc.urlString6)
-        assertUnreverse(uc.reversedUrlString7, uc.urlString7)
+        assertUnreverse(UrlCommon.reversedUrlString1, UrlCommon.urlString1)
+        assertUnreverse(UrlCommon.reversedUrlString2, UrlCommon.urlString2)
+        assertUnreverse(UrlCommon.reversedUrlString3, UrlCommon.urlString3)
+        assertUnreverse(UrlCommon.reversedUrlString4, UrlCommon.urlString4)
+        assertUnreverse(UrlCommon.reversedUrlString5, UrlCommon.urlString5rev)
+        assertUnreverse(UrlCommon.reversedUrlString6, UrlCommon.urlString6)
+        assertUnreverse(UrlCommon.reversedUrlString7, UrlCommon.urlString7)
     }
 
     @Test

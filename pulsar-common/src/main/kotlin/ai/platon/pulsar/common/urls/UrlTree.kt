@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.url
+package ai.platon.pulsar.common.urls
 
 import java.util.*
 

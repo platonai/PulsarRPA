@@ -9,9 +9,9 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.options.UrlNormalizer
-import ai.platon.pulsar.common.url.PlainUrl
-import ai.platon.pulsar.common.url.UrlAware
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.PlainUrl
+import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent

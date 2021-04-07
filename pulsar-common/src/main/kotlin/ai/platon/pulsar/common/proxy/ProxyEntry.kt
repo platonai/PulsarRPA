@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils

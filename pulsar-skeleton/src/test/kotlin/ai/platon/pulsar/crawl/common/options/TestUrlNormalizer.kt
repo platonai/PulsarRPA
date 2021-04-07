@@ -3,8 +3,7 @@ package ai.platon.pulsar.crawl.common.options
 import ai.platon.pulsar.common.config.AppConstants.EXAMPLE_URL
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.UrlNormalizer
-import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.urls.Hyperlink
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals

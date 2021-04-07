@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.C
 import ai.platon.pulsar.common.config.CapabilityTypes.SESSION_DOCUMENT_CACHE_SIZE
 import ai.platon.pulsar.common.config.CapabilityTypes.SESSION_PAGE_CACHE_SIZE
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.ConcurrentSkipListSet

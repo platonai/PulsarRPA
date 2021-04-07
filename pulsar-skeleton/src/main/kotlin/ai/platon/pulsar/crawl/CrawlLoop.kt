@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.collect.DataCollector
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
 import java.util.*
 

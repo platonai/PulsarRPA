@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.FetchCatchManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap

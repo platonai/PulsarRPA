@@ -56,11 +56,15 @@ class KConfiguration(
      * @param value property value.
      */
     operator fun set(name: String, value: String?) {
-        props[name] = value
+        if (value == null) {
+            unset(name)
+        } else {
+            props[name] = value
+        }
     }
 
     fun unset(name: String) {
-        props[name] = null
+        props.remove(name)
     }
 
     operator fun get(name: String): String? {

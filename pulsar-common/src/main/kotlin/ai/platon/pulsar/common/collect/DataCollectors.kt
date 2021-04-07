@@ -2,10 +2,9 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.sleep
-import ai.platon.pulsar.common.url.CrawlableFatLink
-import ai.platon.pulsar.common.url.FatLink
+import ai.platon.pulsar.common.urls.CrawlableFatLink
+import ai.platon.pulsar.common.urls.FatLink
 import java.time.Duration
-import java.util.Collections.synchronizedList
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 

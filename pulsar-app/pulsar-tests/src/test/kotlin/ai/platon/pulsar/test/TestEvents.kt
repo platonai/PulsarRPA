@@ -23,7 +23,7 @@ class TestEvents : TestBase() {
         assertNotNull(metrics)
         metrics.tasks.mark(-metrics.tasks.count)
         metrics.successTasks.mark(-metrics.successTasks.count)
-        metrics.persists.mark(-metrics.persists.count)
+        metrics.persists.reset()
     }
 
     @Test
@@ -46,7 +46,7 @@ class TestEvents : TestBase() {
                 assertTrue { page.crawlStatus.isFetched }
                 assertEquals(1, metrics.tasks.count)
                 assertEquals(1, metrics.successTasks.count)
-                assertEquals(0, metrics.persistContentMBytes.count)
+                assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
 
             onAfterLoadPipeline.addLast { page ->
@@ -60,8 +60,8 @@ class TestEvents : TestBase() {
 
                 assertEquals(1, metrics.tasks.count)
                 assertEquals(1, metrics.successTasks.count)
-                assertEquals(1, metrics.persists.count)
-                assertEquals(0, metrics.persistContentMBytes.count)
+                assertEquals(1, metrics.persists.counter.count)
+                assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
         }
 

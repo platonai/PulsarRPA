@@ -2,13 +2,12 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.net.URL
-import java.util.concurrent.atomic.AtomicBoolean
 
 open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()

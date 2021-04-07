@@ -3,8 +3,8 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.common.url.Urls.reverseUrlOrNull
+import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.Urls.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage

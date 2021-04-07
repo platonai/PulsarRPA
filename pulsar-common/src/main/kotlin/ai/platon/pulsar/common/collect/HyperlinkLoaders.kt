@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.UrlExtractor
-import ai.platon.pulsar.common.url.Hyperlink
-import ai.platon.pulsar.common.url.HyperlinkDatum
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.HyperlinkDatum
+import ai.platon.pulsar.common.urls.UrlAware
 import com.google.gson.GsonBuilder
 import org.slf4j.LoggerFactory
 import java.nio.file.Files

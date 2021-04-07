@@ -4,7 +4,7 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.common.url.*
+import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.persist.WebDb
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
@@ -91,8 +91,6 @@ open class HyperlinkCollector(
 
     override val estimatedSize: Int get() = averageLinkCount * seeds.size
 
-    var collects: Int = 0
-
     /**
      * Track the status of this batch, we need a notice when the batch is finished
      * */
@@ -132,43 +130,43 @@ open class HyperlinkCollector(
 
     protected fun createFatLinkAndCollectTo(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
         var count = 0
-        val fatLink = fatLinks[seed.spec]
-        if (fatLink != null) {
-            log.warn(
-                "The batch still has {} active tasks | idle: {} | {}",
-                fatLink.numActive, fatLink.idleTime.readable(), seed
-            )
+        val knownFatLink = fatLinks[seed.spec]
+        if (knownFatLink != null) {
+            log.warn("Still has {} active tasks | idle: {} | {}",
+                knownFatLink.numActive, knownFatLink.idleTime.readable(), seed)
             return 0
         }
 
         ++parsedSeedCount
-        fatLinkExtractor.createFatLink(seed, sink)?.also { (page, fatLink) ->
-            fatLinks[fatLink.url] = fatLink
-            require(fatLink.url == seed.spec)
-
-            val options = seed.options
-            fatLink.tailLinks.forEach {
-                it.args += " -taskId ${options.taskId} -taskTime ${options.taskTime}"
-            }
-
-            val size = sink.size
-            fatLink.tailLinks.toCollection(sink)
-            count = fatLink.tailLinks.size
-            val size2 = sink.size
-            collectedCount += size2
-
-            log.info(
-                "{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
-                page.id,
-                fatLink.label, fatLink.size,
-                size2 - size, size, size2,
-                fatLinkExtractor.counters.loadedSeeds, seed
-            )
+        val (page, fatLink) = fatLinkExtractor.createFatLink(seed, sink)
+        if (page == null || fatLink == null) {
+            return 0
         }
+
+        fatLinks[fatLink.url] = fatLink
+        require(fatLink.url == seed.spec)
+
+        val options = seed.options
+        fatLink.tailLinks.forEach {
+            it.args += " -taskId ${options.taskId} -taskTime ${options.taskTime}"
+        }
+
+        val size = sink.size
+        fatLink.tailLinks.toCollection(sink)
+        count = fatLink.tailLinks.size
+        val size2 = sink.size
+        collectedCount += size2
+
+        log.info(
+            "{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
+            page.id,
+            fatLink.label, fatLink.size,
+            size2 - size, size, size2,
+            fatLinkExtractor.counters.loadedSeeds, seed
+        )
 
         return count
     }
-
 }
 
 open class CircularHyperlinkCollector(

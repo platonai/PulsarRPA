@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.urls
 
 object UrlCommon {
     val urlString1 = "http://foo.com/"

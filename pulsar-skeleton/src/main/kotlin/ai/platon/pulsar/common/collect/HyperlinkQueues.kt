@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.UrlAware
 import com.google.common.collect.HashMultiset
 
 class ConcurrentLoadingQueue(

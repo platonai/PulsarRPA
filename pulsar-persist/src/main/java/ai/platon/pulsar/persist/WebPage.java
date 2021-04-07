@@ -18,7 +18,7 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.common.url.Urls;
+import ai.platon.pulsar.common.urls.Urls;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;

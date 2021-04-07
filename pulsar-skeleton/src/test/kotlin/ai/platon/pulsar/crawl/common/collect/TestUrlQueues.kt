@@ -2,9 +2,8 @@ package ai.platon.pulsar.crawl.common.collect
 
 import ai.platon.pulsar.common.collect.ConcurrentNEntrantQueue
 import ai.platon.pulsar.common.collect.ConcurrentNonReentrantQueue
-import ai.platon.pulsar.common.url.Hyperlink
-import ai.platon.pulsar.common.url.PlainUrl
-import ai.platon.pulsar.common.url.UrlAware
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.UrlAware
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
