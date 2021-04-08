@@ -3,8 +3,9 @@ package ai.platon.pulsar.common.persist.ext
 import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.LoadEventHandler
-import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.persist.WebPage
+import java.time.Duration
+import java.time.Instant
 
 val WebPage.loadEventHandler: LoadEventHandler?
     get() = this.conf.getBean(LoadEventHandler::class.java)
@@ -21,9 +22,20 @@ val WebPage.options: LoadOptions
         } as LoadOptions
     }
 
-val WebPage.isExpired: Boolean get() = options.isExpired(lastFetchTime)
-
 /**
  * Get the page label
  */
 val WebPage.label: String get() = options.label
+
+fun WebPage.updateFetchTime(lastFetchTime: Instant, nextFetchTime: Instant) {
+    prevFetchTime = lastFetchTime
+    fetchTime = nextFetchTime
+}
+
+fun WebPage.updateFetchTime(lastFetchTime: Instant, interval: Duration) {
+    fetchInterval = interval
+    prevFetchTime = lastFetchTime
+    fetchTime = lastFetchTime + fetchInterval
+
+    updateFetchTimeHistory(prevFetchTime)
+}

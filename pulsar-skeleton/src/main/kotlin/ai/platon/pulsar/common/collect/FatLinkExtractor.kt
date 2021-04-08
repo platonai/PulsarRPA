@@ -94,7 +94,11 @@ class FatLinkExtractor(
 //            // the vivid links are OK
 //        }
 
-        val document = page.takeIf { it.content != null }?.let { session.parse(it) }
+        if (page.content == null) {
+            return page to CrawlableFatLink("", tailLinks = listOf())
+        }
+
+        val document = session.parse(page)
         return createFatLink(seed, page, document, denyList)
     }
 

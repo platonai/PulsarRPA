@@ -23,9 +23,11 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.persist.ext.updateFetchTime
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 /**
@@ -111,15 +113,14 @@ open class AdaptiveFetchSchedule(
         val prevInterval = page.fetchInterval.seconds.toFloat()
         var newInterval = prevInterval
         // no page is truly GONE ... just increase the interval by 50%
-        // and try much later.
+        // and try much later
         newInterval = if (newInterval < maxFetchInterval.seconds) {
             prevInterval * 1.5f
         } else {
             maxFetchInterval.seconds * 0.9f
         }
 
-        page.setFetchInterval(newInterval)
-        page.fetchTime = fetchTime.plus(page.fetchInterval)
+        page.updateFetchTime(prevFetchTime, Duration.ofMillis(newInterval.toLong()))
     }
 
     protected fun getFetchInterval(page: WebPage, fetchTime_: Instant, modifiedTime: Instant, state: Int): Duration {

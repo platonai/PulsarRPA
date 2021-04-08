@@ -13,8 +13,8 @@ open class NormUrl constructor(
 ): Comparable<NormUrl> {
 
     @Throws(MalformedURLException::class)
-    constructor(spec: String, options: LoadOptions, href: String? = null):
-            this(URL(spec), options, href?.let { URL(href) })
+    constructor(spec: String, options: LoadOptions, hrefSpec: String? = null):
+            this(URL(spec), options, hrefSpec?.let { URL(hrefSpec) })
 
     val spec = url.toString()
     val hrefSpec = href?.toString()

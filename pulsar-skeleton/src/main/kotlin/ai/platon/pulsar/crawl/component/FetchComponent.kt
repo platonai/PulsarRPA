@@ -36,12 +36,11 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = null) {
 
-    constructor(url: String, options: LoadOptions, href: String? = null):
+    constructor(url: String, options: LoadOptions, href: String? = null) :
             this(WebPage.newWebPage(url, options.conf, href), options)
 
     init {
@@ -66,9 +65,9 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
  */
 @Component
 open class FetchComponent(
-        val fetchMetrics: FetchMetrics? = null,
-        val protocolFactory: ProtocolFactory,
-        val immutableConfig: ImmutableConfig
+    val fetchMetrics: FetchMetrics? = null,
+    val protocolFactory: ProtocolFactory,
+    val immutableConfig: ImmutableConfig,
 ) : AutoCloseable {
     private final val logger = LoggerFactory.getLogger(FetchComponent::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
@@ -195,30 +194,35 @@ open class FetchComponent(
             ProtocolStatus.CANCELED -> CrawlStatus.STATUS_UNFETCHED
 
             ProtocolStatus.MOVED_PERMANENTLY,
-            ProtocolStatus.MOVED_TEMPORARILY -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
+            ProtocolStatus.MOVED_TEMPORARILY,
+            -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
 
             ProtocolStatus.UNAUTHORIZED,
             ProtocolStatus.ROBOTS_DENIED,
             ProtocolStatus.UNKNOWN_HOST,
             ProtocolStatus.GONE,
-            ProtocolStatus.NOT_FOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics?.trackHostUnreachable(url) }
+            ProtocolStatus.NOT_FOUND,
+            -> CrawlStatus.STATUS_GONE.also { fetchMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.EXCEPTION,
             ProtocolStatus.RETRY,
-            ProtocolStatus.BLOCKED -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackHostUnreachable(url) }
+            ProtocolStatus.BLOCKED,
+            -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.REQUEST_TIMEOUT,
             ProtocolStatus.THREAD_TIMEOUT,
             ProtocolStatus.WEB_DRIVER_TIMEOUT,
-            ProtocolStatus.SCRIPT_TIMEOUT -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackTimeout(url) }
+            ProtocolStatus.SCRIPT_TIMEOUT,
+            -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackTimeout(url) }
 
             else -> CrawlStatus.STATUS_RETRY.also { logger.warn("Unknown protocol status $protocolStatus") }
         }
 
-        val updatedPage = when(crawlStatus) {
+        val updatedPage = when (crawlStatus) {
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
-            CrawlStatus.STATUS_REDIR_PERM -> updatePage(page, pageDatum, protocolStatus, crawlStatus)
+            CrawlStatus.STATUS_REDIR_PERM,
+            -> updatePage(page, pageDatum, protocolStatus, crawlStatus)
             else -> updatePage(page, null, protocolStatus, crawlStatus)
         }
 
@@ -258,8 +262,10 @@ open class FetchComponent(
     /**
      * TODO: do this in update phrase
      * */
-    private fun updatePage(page: WebPage, pageDatum: PageDatum?,
-                           protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
+    private fun updatePage(
+        page: WebPage, pageDatum: PageDatum?,
+        protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus,
+    ): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
 
         pageDatum?.also {
@@ -269,8 +275,8 @@ open class FetchComponent(
             if (ms != null) {
                 page.activeDomStatus = ms.status
                 page.activeDomStats = mapOf(
-                        "initStat" to ms.initStat, "initD" to ms.initD,
-                        "lastStat" to ms.lastStat, "lastD" to ms.lastD
+                    "initStat" to ms.initStat, "initD" to ms.initD,
+                    "lastStat" to ms.lastStat, "lastD" to ms.lastD
                 )
             }
 
@@ -300,7 +306,7 @@ open class FetchComponent(
         fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
             page.crawlStatus = crawlStatus
             page.protocolStatus = protocolStatus
-            page.increaseFetchCount()
+            page.updateFetchCount()
         }
 
         fun updateMarks(page: WebPage) {
@@ -324,18 +330,6 @@ open class FetchComponent(
             } else {
                 log.warn("Failed to determine content type!")
             }
-        }
-
-        @Deprecated("Moved to FetchSchedule")
-        fun updateFetchTime(page: WebPage, nextFetchTime: Instant = Instant.now()) {
-            val now = Instant.now()
-            page.putFetchTimeHistory(now)
-
-            // Only if the fetch time is in the past, assign prevFetchTime to be it
-            if (page.fetchTime.isBefore(now)) {
-                page.prevFetchTime = page.fetchTime
-            }
-            page.fetchTime = nextFetchTime
         }
     }
 }

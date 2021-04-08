@@ -2,7 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SqlConverter
-import ai.platon.pulsar.common.sql.SqlTemplate
+import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.ql.SQLContext
@@ -22,21 +22,21 @@ class XSqlRunner(
 
     fun execute(url: String, sqlResource: String): ResultSet {
         val name = sqlResource.substringAfterLast("/").substringBeforeLast(".sql")
-        val sqlTemplate = SqlTemplate.load(sqlResource, name = name)
+        val sqlTemplate = SQLTemplate.load(sqlResource, name = name)
         return execute(url, sqlTemplate)
     }
 
-    fun execute(url: String, sqlTemplate: SqlTemplate): ResultSet {
+    fun execute(url: String, SQLTemplate: SQLTemplate): ResultSet {
         val document = loadResourceAsDocument(url) ?: session.loadDocument(url, loadArgs)
 
-        val sql = sqlTemplate.createInstance(url)
+        val sql = SQLTemplate.createInstance(url)
         if (sql.isBlank()) {
-            throw IllegalArgumentException("Illegal sql template: ${sqlTemplate.resource}")
+            throw IllegalArgumentException("Illegal sql template: ${SQLTemplate.resource}")
         }
 
         var rs = extractor.query(sql, printResult = true)
 
-        if (sqlTemplate.resource?.contains("x-similar-items.sql") == true) {
+        if (SQLTemplate.resource?.contains("x-similar-items.sql") == true) {
             rs = ResultSetUtils.transpose(rs)
             println("Transposed: ")
             rs.beforeFirst()
@@ -54,7 +54,7 @@ class XSqlRunner(
         var i = 0
         sqls.forEach { (url, resource) ->
             val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
-            val sqlTemplate = SqlTemplate.load(resource, name = name)
+            val sqlTemplate = SQLTemplate.load(resource, name = name)
 
             when {
                 sqlTemplate.template.isBlank() -> {

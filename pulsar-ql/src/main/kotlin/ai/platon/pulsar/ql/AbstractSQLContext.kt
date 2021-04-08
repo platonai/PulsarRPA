@@ -3,6 +3,9 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
@@ -18,10 +21,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
+ * The abstract SQL context, every X-SQL staff should be within the SQL context
  */
 abstract class AbstractSQLContext constructor(
     override val applicationContext: AbstractApplicationContext,
-    override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
+    override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment(),
 ) : AbstractPulsarContext(applicationContext, pulsarEnvironment), SQLContext {
 
     private val log = LoggerFactory.getLogger(AbstractSQLContext::class.java)
@@ -51,6 +55,11 @@ abstract class AbstractSQLContext constructor(
         status = Status.RUNNING
 
         log.info("SQLContext is created | {}/{} | {}", id, sessions.size, this::class.java.simpleName)
+    }
+
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
+        val normUrl = super.normalize(url, options, toItemOption)
+        return NormUrl(SQLUtils.unsanitizeUrl(normUrl.spec), normUrl.options, hrefSpec = normUrl.hrefSpec)
     }
 
     override fun execute(sql: String) {

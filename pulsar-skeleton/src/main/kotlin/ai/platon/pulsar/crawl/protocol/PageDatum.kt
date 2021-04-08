@@ -34,35 +34,35 @@ import java.util.*
  * The page datum to update a WebPage
  * */
 class PageDatum(
-        /**
-         * The permanent internal address, the storage key, and is the same as the page's url if not redirected
-         */
-        val url: String,
-        /**
-         * The last working address, it might redirect to url, or it might have additional random parameters.
-         * location may be different from url, it's generally normalized.
-         */
-        var location: String = url,
-        /**
-         * The protocol status
-         * */
-        var status: ProtocolStatus = ProtocolStatus.STATUS_CANCELED,
-        /**
-         * The binary content retrieved.
-         */
-        var content: ByteArray? = null,
-        /**
-         * The media type of the retrieved content.
-         */
-        var contentType: String? = null,
-        /**
-         * Other protocol-specific data.
-         */
-        val headers: MultiMetadata = MultiMetadata(),
-        /**
-         * Other protocol-specific data.
-         */
-        val metadata: MultiMetadata = MultiMetadata()
+    /**
+     * The permanent internal address, the storage key, and is the same as the page's url if not redirected
+     */
+    val url: String,
+    /**
+     * The last working address, it might redirect to url, or it might have additional random parameters.
+     * location may be different from url, it's generally normalized.
+     */
+    var location: String = url,
+    /**
+     * The protocol status
+     * */
+    var protocolStatus: ProtocolStatus = ProtocolStatus.STATUS_CANCELED,
+    /**
+     * The binary content retrieved.
+     */
+    var content: ByteArray? = null,
+    /**
+     * The media type of the retrieved content.
+     */
+    var contentType: String? = null,
+    /**
+     * Other protocol-specific data.
+     */
+    val headers: MultiMetadata = MultiMetadata(),
+    /**
+     * Other protocol-specific data.
+     */
+    val metadata: MultiMetadata = MultiMetadata(),
 ) {
     var pageCategory: OpenPageCategory? = null
     var proxyEntry: ProxyEntry? = null
@@ -71,10 +71,12 @@ class PageDatum(
     var activeDomMultiStatus: ActiveDomMultiStatus? = null
     var activeDomUrls: ActiveDomUrls? = null
 
-    val contentLength get() = (content?.size?:0).toLong()
+    val contentLength get() = (content?.size ?: 0).toLong()
 
-    constructor(url: String, location: String, content: ByteArray?, contentType: String?, metadata: MultiMetadata,
-                mimeTypeResolver: MimeTypeResolver): this(url, location, ProtocolStatus.STATUS_CANCELED, content, contentType, metadata) {
+    constructor(
+        url: String, location: String, content: ByteArray?, contentType: String?, metadata: MultiMetadata,
+        mimeTypeResolver: MimeTypeResolver,
+    ) : this(url, location, ProtocolStatus.STATUS_CANCELED, content, contentType, metadata) {
         resolveMimeType(contentType, url, content, mimeTypeResolver)
     }
 
@@ -96,12 +98,12 @@ class PageDatum(
 
     override fun toString(): String {
         return Params.of(
-                "serializeId", serializeId,
-                "url", url,
-                "location", location,
-                "headers", headers,
-                "metadata", metadata,
-                "contentType", contentType
+            "serializeId", serializeId,
+            "url", url,
+            "location", location,
+            "headers", headers,
+            "metadata", metadata,
+            "contentType", contentType
         ).formatAsLine()
     }
 

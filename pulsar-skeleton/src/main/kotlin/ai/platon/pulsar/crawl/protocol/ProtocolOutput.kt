@@ -26,7 +26,7 @@ class ProtocolOutput(
         val headers: MultiMetadata,
         val protocolStatus: ProtocolStatus
 ) {
-    constructor(pageDatum: PageDatum) : this(pageDatum, pageDatum.headers, pageDatum.status)
+    constructor(pageDatum: PageDatum) : this(pageDatum, pageDatum.headers, pageDatum.protocolStatus)
     constructor(status: ProtocolStatus) : this(null, MultiMetadata(), status)
 
     val length get() = pageDatum?.contentLength ?: 0

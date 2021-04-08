@@ -116,7 +116,7 @@ open class BrowserEmulator(
         try {
             val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
             navigateTask.pageDatum.apply {
-                status = interactResult.protocolStatus
+                protocolStatus = interactResult.protocolStatus
                 activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
                 activeDomUrls = interactResult.activeDomMessage?.urls
             }
@@ -124,7 +124,7 @@ open class BrowserEmulator(
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            navigateTask.pageDatum.status = ProtocolStatus.retry(RetryScope.PRIVACY)
+            navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
         return eventHandler.onAfterNavigate(navigateTask)

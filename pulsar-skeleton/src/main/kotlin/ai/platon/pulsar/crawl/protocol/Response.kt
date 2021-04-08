@@ -29,10 +29,10 @@ abstract class Response(
 ) {
     /** The permanent internal address */
     val url get() = page.url
-    val status get() = pageDatum.status
+    val status get() = pageDatum.protocolStatus
     val headers get() = pageDatum.headers
     /** The protocol's response code, it must be compatible with standard http response code */
-    val httpCode get() = pageDatum.status.minorCode
+    val httpCode get() = pageDatum.protocolStatus.minorCode
     val length get() = pageDatum.contentLength
 
     /** The value of a named header.  */

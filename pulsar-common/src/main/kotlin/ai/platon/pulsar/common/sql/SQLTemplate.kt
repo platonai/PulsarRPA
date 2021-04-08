@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.sql
 
 import org.apache.commons.lang3.RandomStringUtils
 
-class SqlTemplate constructor(
+class SQLTemplate constructor(
         val template: String,
         val resource: String? = null,
         val name: String = RandomStringUtils.randomAlphabetic(4),
@@ -17,14 +17,18 @@ class SqlTemplate constructor(
             return resource?.substringAfterLast("/") ?: "SQL#${template.hashCode()}"
         }
 
-        fun load(resource: String, name: String = RandomStringUtils.randomAlphabetic(4)): SqlTemplate {
-            return SqlTemplate(SqlResourceUtils.loadSql(resource), resource = resource, name = name)
+        fun load(resource: String, name: String = RandomStringUtils.randomAlphabetic(4)): SQLTemplate {
+            return SQLTemplate(SQLUtils.loadSql(resource), resource = resource, name = name)
         }
 
+        /**
+         * TODO: prevent SQL injection
+         * */
         fun createInstance(sqlTemplate: String, url: String): String {
-            return sqlTemplate.replace("{{url}}", url)
-                    .replace("@url", "'$url'")
-                    .replace("{{snippet: url}}", "'$url'")
+            val sanitizedUrl = SQLUtils.sanitizeUrl(url)
+            return sqlTemplate.replace("{{url}}", sanitizedUrl)
+                    .replace("@url", "'$sanitizedUrl'")
+                    .replace("{{snippet: url}}", "'$sanitizedUrl'")
         }
     }
 }

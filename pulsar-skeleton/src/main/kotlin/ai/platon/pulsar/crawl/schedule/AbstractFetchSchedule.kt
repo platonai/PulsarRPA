@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
+import ai.platon.pulsar.common.persist.ext.updateFetchTime
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
@@ -64,24 +65,20 @@ abstract class AbstractFetchSchedule(
      * @param page
      */
     override fun initializeSchedule(page: WebPage) {
-        page.prevFetchTime = page.fetchTime
-        page.fetchTime = impreciseNow
+        page.updateFetchTime(page.fetchTime, Instant.now())
         page.fetchInterval = defaultInterval
-        // TODO: FetchComponent handles retries
-        // page.fetchRetries = 0
+        page.fetchRetries = 0
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
     }
 
     /**
-     * Sets the `fetchInterval` and `fetchTime` on a
-     * successfully fetched page. NOTE: this implementation resets the retry
-     * counter - extending classes should call super.setFetchSchedule() to
-     * preserve this behavior.
+     * Sets the `fetchInterval` and `fetchTime` on a successfully fetched page.
+     * NOTE: this implementation resets the retry counter -
+     * extending classes should call super.setFetchSchedule() to preserve this behavior.
      */
     override fun setFetchSchedule(
             page: WebPage, prevFetchTime: Instant,
             prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {
-        val now = Instant.now()
         val protocolStatus = page.protocolStatus
         val options = page.options
 
@@ -95,12 +92,9 @@ abstract class AbstractFetchSchedule(
         }
 
         // Only if the fetch time is in the past, assign prevFetchTime to be it
-        page.prevFetchTime = fetchTime
-        page.fetchInterval = fetchInterval
-        page.fetchTime = fetchTime.plus(fetchInterval)
+        page.updateFetchTime(fetchTime, fetchInterval)
         page.modifiedTime = modifiedTime
         page.prevModifiedTime = prevModifiedTime
-        page.putFetchTimeHistory(now)
     }
 
     /**
@@ -115,9 +109,8 @@ abstract class AbstractFetchSchedule(
      */
     override fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
         page.fetchRetries++
-        page.prevFetchTime = fetchTime
         // retry immediately, this is the default behaviour
-        page.fetchTime = Instant.now()
+        page.updateFetchTime(fetchTime, Instant.now())
 
         val crawlStatus = if (page.fetchRetries < fetchRetryMax) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
         page.setCrawlStatus(crawlStatus.toInt())
@@ -134,8 +127,7 @@ abstract class AbstractFetchSchedule(
      */
     override fun setPageGoneSchedule(
             page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
-        page.fetchInterval = ChronoUnit.CENTURIES.duration
-        page.fetchTime = fetchTime.plus(page.fetchInterval)
+        page.updateFetchTime(prevFetchTime, ChronoUnit.CENTURIES.duration)
     }
 
     /**
@@ -177,8 +169,7 @@ abstract class AbstractFetchSchedule(
             if (page.fetchInterval > maxFetchInterval) {
                 page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
             }
-            page.prevFetchTime = page.fetchTime
-            page.fetchTime = now
+            page.updateFetchTime(fetchTime, now)
         }
         return fetchTime.isBefore(now)
     }
@@ -204,16 +195,15 @@ abstract class AbstractFetchSchedule(
         page.fetchRetries = 0
         page.setSignature("".toByteArray())
         page.modifiedTime = Instant.EPOCH
-        page.prevFetchTime = page.fetchTime
-        if (asap) {
-            page.fetchTime = Instant.now()
-        }
+
+        val fetchTime = page.fetchTime
+        val fetchInterval = if (asap) Duration.ZERO else page.fetchInterval
+        page.updateFetchTime(fetchTime, Instant.now() + fetchInterval)
     }
 
     protected fun updateRefetchTime(page: WebPage, interval: Duration, fetchTime: Instant, prevModifiedTime: Instant, modifiedTime: Instant) {
         page.fetchInterval = interval
-        page.prevFetchTime = page.fetchTime
-        page.fetchTime = fetchTime.plus(interval)
+        page.updateFetchTime(fetchTime, fetchTime.plus(interval))
         page.prevModifiedTime = prevModifiedTime
         page.modifiedTime = modifiedTime
     }

@@ -266,7 +266,7 @@ final public class WebPage implements Comparable<WebPage> {
         page.setLocation(url);
         page.setModifiedTime(Instant.EPOCH);
         page.setPrevFetchTime(Instant.EPOCH);
-        page.setFetchTime(Instant.parse("3000-01-01T00:00:00Z"));
+        page.setFetchTime(Instant.EPOCH.plus(ChronoUnit.CENTURIES.getDuration()));
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());
         page.setFetchPriority(FETCH_PRIORITY_MIN);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
@@ -886,60 +886,29 @@ final public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    /**
-     * *****************************************************************************
-     * Fetch fields
-     * ******************************************************************************
-     *
-     * @return a int.
-     */
     public int getFetchCount() {
         return page.getFetchCount();
     }
 
-    /**
-     * <p>setFetchCount.</p>
-     *
-     * @param count a int.
-     */
     public void setFetchCount(int count) {
         page.setFetchCount(count);
     }
 
-    /**
-     * <p>increaseFetchCount.</p>
-     */
-    public void increaseFetchCount() {
+    public void updateFetchCount() {
         int count = getFetchCount();
         setFetchCount(count + 1);
     }
 
-    /**
-     * <p>getCrawlStatus.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.CrawlStatus} object.
-     */
     @NotNull
     public
     CrawlStatus getCrawlStatus() {
         return new CrawlStatus(page.getCrawlStatus().byteValue());
     }
 
-    /**
-     * <p>setCrawlStatus.</p>
-     *
-     * @param crawlStatus a {@link ai.platon.pulsar.persist.CrawlStatus} object.
-     */
     public void setCrawlStatus(@NotNull CrawlStatus crawlStatus) {
         page.setCrawlStatus(crawlStatus.getCode());
     }
 
-    /**
-     * Set crawl status
-     *
-     * @param value a int.
-     * @see CrawlStatus
-     */
     public void setCrawlStatus(int value) {
         page.setCrawlStatus(value);
     }
@@ -976,16 +945,16 @@ final public class WebPage implements Comparable<WebPage> {
      * <p>
      * Location may be different from url, it's generally normalized.
      *
-     * @param value a {@link java.lang.String} object.
+     * @param value The location.
      */
     public void setLocation(@NotNull String value) {
         page.setBaseUrl(value);
     }
 
     /**
-     * <p>getFetchTime.</p>
+     * The next fetch time
      *
-     * @return a {@link java.time.Instant} object.
+     * @return The next fetch time
      */
     @NotNull
     public Instant getFetchTime() {
@@ -993,9 +962,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setFetchTime.</p>
+     * The next fetch time
      *
-     * @param time a {@link java.time.Instant} object.
+     * @param time The next fetch time
      */
     public void setFetchTime(@NotNull Instant time) {
         page.setFetchTime(time.toEpochMilli());
@@ -1011,76 +980,36 @@ final public class WebPage implements Comparable<WebPage> {
         return Instant.ofEpochMilli(page.getPrevFetchTime());
     }
 
-    /**
-     * <p>setPrevFetchTime.</p>
-     *
-     * @param time a {@link java.time.Instant} object.
-     */
     public void setPrevFetchTime(@NotNull Instant time) {
         page.setPrevFetchTime(time.toEpochMilli());
     }
 
-    /**
-     * <p>Get the previous crawl time for out pages.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     @NotNull
     public Instant getPrevCrawlTime1() {
         return Instant.ofEpochMilli(page.getPrevCrawlTime1());
     }
 
-    /**
-     * <p>Set the previous crawl time for out pages.</p>
-     *
-     * @param time a {@link java.time.Instant} object.
-     */
     public void setPrevCrawlTime1(@NotNull Instant time) {
         page.setPrevCrawlTime1(time.toEpochMilli());
     }
 
-    /**
-     * The fetch interval
-     *
-     * @return a {@link java.time.Duration} object.
-     */
     @NotNull
     public Duration getFetchInterval() {
         return Duration.ofSeconds(page.getFetchInterval());
     }
 
-    /**
-     * <p>setFetchInterval.</p>
-     *
-     * @param interval a {@link java.time.Duration} object.
-     */
     public void setFetchInterval(@NotNull Duration interval) {
         page.setFetchInterval((int) interval.getSeconds());
     }
 
-    /**
-     * <p>setFetchInterval.</p>
-     *
-     * @param interval a long.
-     */
     public void setFetchInterval(long interval) {
         page.setFetchInterval((int) interval);
     }
 
-    /**
-     * <p>setFetchInterval.</p>
-     *
-     * @param interval a float.
-     */
     public void setFetchInterval(float interval) {
         page.setFetchInterval(Math.round(interval));
     }
 
-    /**
-     * <p>getProtocolStatus.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.ProtocolStatus} object.
-     */
     @NotNull
     public ProtocolStatus getProtocolStatus() {
         GProtocolStatus protocolStatus = page.getProtocolStatus();
@@ -1090,11 +1019,6 @@ final public class WebPage implements Comparable<WebPage> {
         return ProtocolStatus.box(protocolStatus);
     }
 
-    /**
-     * <p>setProtocolStatus.</p>
-     *
-     * @param protocolStatus a {@link ai.platon.pulsar.persist.ProtocolStatus} object.
-     */
     public void setProtocolStatus(@NotNull ProtocolStatus protocolStatus) {
         page.setProtocolStatus(protocolStatus.unbox());
     }
@@ -1120,99 +1044,47 @@ final public class WebPage implements Comparable<WebPage> {
         return ProtocolHeaders.box(page.getHeaders());
     }
 
-    /**
-     * <p>getReprUrl.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getReprUrl() {
         return page.getReprUrl() == null ? "" : page.getReprUrl().toString();
     }
 
-    /**
-     * <p>setReprUrl.</p>
-     *
-     * @param value a {@link java.lang.String} object.
-     */
     public void setReprUrl(@NotNull String value) {
         page.setReprUrl(value);
     }
 
-    /**
-     * Get the number of crawl scope retries
-     *
-     * @return a int.
-     * @see ai.platon.pulsar.persist.RetryScope
-     */
     public int getFetchRetries() {
         return page.getFetchRetries();
     }
 
-    /**
-     * Set the number of crawl scope retries
-     *
-     * @param value a int.
-     * @see ai.platon.pulsar.persist.RetryScope
-     */
     public void setFetchRetries(int value) {
         page.setFetchRetries(value);
     }
 
-    /**
-     * <p>getLastTimeout.</p>
-     *
-     * @return a {@link java.time.Duration} object.
-     */
     @NotNull
     public Duration getLastTimeout() {
         String s = getMetadata().get(Name.RESPONSE_TIME);
         return s == null ? Duration.ZERO : Duration.parse(s);
     }
 
-    /**
-     * <p>getModifiedTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     @NotNull
     public Instant getModifiedTime() {
         return Instant.ofEpochMilli(page.getModifiedTime());
     }
 
-    /**
-     * <p>setModifiedTime.</p>
-     *
-     * @param value a {@link java.time.Instant} object.
-     */
     public void setModifiedTime(@NotNull Instant value) {
         page.setModifiedTime(value.toEpochMilli());
     }
 
-    /**
-     * <p>getPrevModifiedTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     @NotNull
     public Instant getPrevModifiedTime() {
         return Instant.ofEpochMilli(page.getPrevModifiedTime());
     }
 
-    /**
-     * <p>setPrevModifiedTime.</p>
-     *
-     * @param value a {@link java.time.Instant} object.
-     */
     public void setPrevModifiedTime(@NotNull Instant value) {
         page.setPrevModifiedTime(value.toEpochMilli());
     }
 
-    /**
-     * <p>sniffModifiedTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     @NotNull
     public Instant sniffModifiedTime() {
         Instant modifiedTime = getModifiedTime();
@@ -1241,12 +1113,6 @@ final public class WebPage implements Comparable<WebPage> {
         return modifiedTime;
     }
 
-    /**
-     * <p>getFetchTimeHistory.</p>
-     *
-     * @param defaultValue a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getFetchTimeHistory(@NotNull String defaultValue) {
         String s = getMetadata().get(Name.FETCH_TIME_HISTORY);
@@ -1257,10 +1123,8 @@ final public class WebPage implements Comparable<WebPage> {
      * *****************************************************************************
      * Parsing
      * ******************************************************************************
-     *
-     * @param fetchTime a {@link java.time.Instant} object.
      */
-    public void putFetchTimeHistory(@NotNull Instant fetchTime) {
+    public void updateFetchTimeHistory(@NotNull Instant fetchTime) {
         String fetchTimeHistory = getMetadata().get(Name.FETCH_TIME_HISTORY);
         fetchTimeHistory = DateTimes.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
         getMetadata().set(Name.FETCH_TIME_HISTORY, fetchTimeHistory);

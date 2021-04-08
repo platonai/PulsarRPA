@@ -76,8 +76,8 @@ open class EventHandler(
         pageSourceBytes.mark(length.toLong())
 
         pageDatum.pageCategory = sniffPageCategory(task.page)
-        pageDatum.status = checkErrorPage(task.page, pageDatum.status)
-        if (!pageDatum.status.isSuccess) {
+        pageDatum.protocolStatus = checkErrorPage(task.page, pageDatum.protocolStatus)
+        if (!pageDatum.protocolStatus.isSuccess) {
             // The browser shows internal error page, which is no value to store
             task.pageSource = ""
             pageDatum.lastBrowser = task.driver.browserType
@@ -85,12 +85,12 @@ open class EventHandler(
         }
 
         // Check if the page source is integral
-        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.status, task.task)
+        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.protocolStatus, task.task)
         // Check browse timeout event, transform status to be success if the page source is good
-        if (pageDatum.status.isTimeout) {
+        if (pageDatum.protocolStatus.isTimeout) {
             if (integrity.isOK) {
                 // fetch timeout but content is OK
-                pageDatum.status = ProtocolStatus.STATUS_SUCCESS
+                pageDatum.protocolStatus = ProtocolStatus.STATUS_SUCCESS
             }
             handleBrowseTimeout(task)
         }
@@ -101,7 +101,7 @@ open class EventHandler(
             task.pageSource = normalizePageSource(task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
-            pageDatum.status = handleBrokenPageSource(task.task, integrity)
+            pageDatum.protocolStatus = handleBrokenPageSource(task.task, integrity)
             logBrokenPage(task.task, task.pageSource, integrity)
         }
 
@@ -172,7 +172,7 @@ open class EventHandler(
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
             val driverConfig = task.driverConfig
             log.info("Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
-                    task.pageDatum.status.minorName,
+                    task.pageDatum.protocolStatus.minorName,
                     elapsed,
                     Strings.readableBytes(length),
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
@@ -243,7 +243,7 @@ open class EventHandler(
     }
 
     private fun exportIfNecessary(task: NavigateTask) {
-        exportIfNecessary(task.pageSource, task.pageDatum.status, task.page)
+        exportIfNecessary(task.pageSource, task.pageDatum.protocolStatus, task.page)
     }
 
     private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage) {
@@ -268,7 +268,7 @@ open class EventHandler(
     }
 
     private fun takeScreenshotIfNecessary(task: NavigateTask) {
-        if (takeScreenshot && task.pageDatum.status.isSuccess) {
+        if (takeScreenshot && task.pageDatum.protocolStatus.isSuccess) {
             val driver = task.driver
             if (driver is ManagedWebDriver) {
                 takeScreenshot(task.pageDatum.contentLength, task.page, driver.driver as RemoteWebDriver)

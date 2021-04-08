@@ -7,7 +7,7 @@ import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
-class UrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
+class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
     companion object {
         fun registerEventHandlers(url: ListenableHyperlink, options: LoadOptions) {
             url.loadEventHandler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))

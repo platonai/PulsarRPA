@@ -184,19 +184,13 @@ class UpdateComponent(
 
                 fetchSchedule.setFetchSchedule(page, prevFetchTime, prevModifiedTime, fetchTime, modifiedTime, modified)
                 val fetchInterval = page.fetchInterval
-                if (fetchInterval > fetchSchedule.maxFetchInterval && !page.marks.isInactive) {
+                if (fetchInterval > fetchSchedule.maxFetchInterval) {
                     LOG.info("Force re-fetch page " + page.url + ", fetch interval : " + fetchInterval)
                     fetchSchedule.forceRefetch(page, false)
                 }
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    enumCounters.inc(Counter.rBadModTime)
-                    messageWriter?.reportBadModifiedTime(Params.of(
-                            "PFT", prevFetchTime, "FT", fetchTime,
-                            "PMT", prevModifiedTime, "MT", modifiedTime,
-                            "HMT", page.headers.lastModified,
-                            "U", page.url
-                    ).formatAsLine())
+                    handleBadModified(page)
                 }
             }
             CrawlStatusCodes.RETRY -> {
@@ -204,5 +198,15 @@ class UpdateComponent(
             }
             CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page, prevFetchTime, prevModifiedTime, fetchTime)
         }
+    }
+
+    private fun handleBadModified(page: WebPage) {
+        enumCounters.inc(Counter.rBadModTime)
+        messageWriter?.reportBadModifiedTime(Params.of(
+            "PFT", page.prevFetchTime, "FT", page.fetchTime,
+            "PMT", page.prevModifiedTime, "MT", page.modifiedTime,
+            "HMT", page.headers.lastModified,
+            "U", page.url
+        ).formatAsLine())
     }
 }

@@ -53,13 +53,26 @@ class StreamingCrawlerMetrics {
 }
 
 open class StreamingCrawler<T : UrlAware>(
-    private val urls: Sequence<T>,
-    private val defaultOptions: LoadOptions,
+    /**
+     * The url sequence
+     * */
+    val urls: Sequence<T>,
+    /**
+     * The default load options
+     * */
+    val defaultOptions: LoadOptions,
+    /**
+     * The default pulsar session to use
+     * */
     session: PulsarSession = PulsarContexts.createSession(),
     /**
      * A optional global cache which will hold the retry tasks
      * */
     val globalCache: GlobalCache? = null,
+    /**
+     * The crawl event handler
+     * */
+    val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
     autoClose: Boolean = true
 ) : AbstractCrawler(session, autoClose) {
     companion object {
@@ -115,8 +128,6 @@ open class StreamingCrawler<T : UrlAware>(
     var proxyPool: ProxyPool? = null
 
     val id = instanceSequencer.incrementAndGet()
-
-    val crawlEventHandler = DefaultCrawlEventHandler()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() }

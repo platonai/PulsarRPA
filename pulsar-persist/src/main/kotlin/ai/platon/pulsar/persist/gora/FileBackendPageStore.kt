@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * A very simple file backend storage for Web pages
@@ -71,13 +73,14 @@ class FileBackendPageStore(
     }
 
     private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): WebPage {
-        val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE).apply {
-            location = url
-            fetchCount = 1
-            fetchTime = lastModified
-            prevFetchTime = fetchTime
-            crawlStatus = CrawlStatus.STATUS_FETCHED
-            protocolStatus = ProtocolStatus.STATUS_SUCCESS
+        val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE)
+        page.also {
+            it.location = url
+            it.fetchCount = 1
+            it.prevFetchTime = lastModified
+            it.fetchTime = lastModified + ChronoUnit.CENTURIES.duration
+            it.crawlStatus = CrawlStatus.STATUS_FETCHED
+            it.protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }
 
         page.content = ByteBuffer.wrap(content)
