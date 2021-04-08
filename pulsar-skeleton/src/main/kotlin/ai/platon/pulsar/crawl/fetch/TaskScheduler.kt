@@ -299,7 +299,7 @@ class TaskScheduler(
         enumCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
 
         totalPages.incrementAndGet()
-        totalBytes.addAndGet(page.contentLength.toLong())
+        totalBytes.addAndGet(page.contentLength)
 
         if (page.isSeed) {
             enumCounters.inc(Counter.rSeeds)

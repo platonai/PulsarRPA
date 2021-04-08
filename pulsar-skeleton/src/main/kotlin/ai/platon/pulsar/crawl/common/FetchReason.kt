@@ -39,7 +39,7 @@ object FetchReason {
         symbols[UNKNOWN] = "U"
         symbols[DO_NOT_FETCH] = ""
         symbols[NEW_PAGE] = "N"
-        symbols[EXPIRED] = "E"
+        symbols[EXPIRED] = "EX"
         symbols[SMALL_CONTENT] = "SC"
         symbols[MISS_FIELD] = "MF"
         symbols[TEMP_MOVED] = "TM"

@@ -18,14 +18,18 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.crawl.signature.SignatureComparator
+import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
@@ -33,7 +37,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.time.Duration
 import java.time.Instant
 
 /**
@@ -43,27 +46,30 @@ import java.time.Instant
  */
 @Component
 class UpdateComponent(
-        val webDb: WebDb,
-        val fetchSchedule: FetchSchedule,
-        val scoringFilters: ScoringFilters? = null,
-        val messageWriter: MiscMessageWriter? = null,
-        val conf: ImmutableConfig
+    val webDb: WebDb,
+    val fetchSchedule: FetchSchedule,
+    val scoringFilters: ScoringFilters? = null,
+    val messageWriter: MiscMessageWriter? = null,
+    val conf: ImmutableConfig,
 ) : Parameterized {
     val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
 
     companion object {
         enum class Counter { rCreated, rNewDetail, rPassed, rLoaded, rNotExist, rDepthUp, rUpdated, rTotalUpdates, rBadModTime }
-        init { AppMetrics.reg.register(Counter::class.java) }
+
+        init {
+            AppMetrics.reg.register(Counter::class.java)
+        }
     }
 
     private val enumCounters = AppMetrics.reg.enumCounterRegistry
 
-    constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, conf)
+    constructor(webDb: WebDb, conf: ImmutableConfig) : this(webDb, DefaultFetchSchedule(conf), null, null, conf)
 
     override fun getParams(): Params {
         return Params.of(
-                "className", this.javaClass.simpleName,
-                "fetchSchedule", fetchSchedule.javaClass.simpleName
+            "className", this.javaClass.simpleName,
+            "fetchSchedule", fetchSchedule.javaClass.simpleName
         )
     }
 
@@ -113,9 +119,9 @@ class UpdateComponent(
 
         if (missingFieldsLastRound != 0 || brokenEntityLastRound != 0 || brokenSubEntityLastRound != 0) {
             val message = Params.of(
-                    "missingFields", missingFieldsLastRound,
-                    "brokenEntity", brokenEntityLastRound,
-                    "brokenSubEntity", brokenSubEntityLastRound
+                "missingFields", missingFieldsLastRound,
+                "brokenEntity", brokenEntityLastRound,
+                "brokenSubEntity", brokenSubEntityLastRound
             ).formatAsLine()
 
             messageWriter?.reportBrokenEntity(page.url, message)
@@ -145,6 +151,12 @@ class UpdateComponent(
         }
     }
 
+    data class ModifyInfo(
+        var prevModifiedTime: Instant,
+        var modifiedTime: Instant,
+        var modified: Int,
+    )
+
     fun updateFetchSchedule(page: WebPage) {
         if (page.marks.isInactive) {
             return
@@ -152,52 +164,69 @@ class UpdateComponent(
 
         val prevFetchTime = page.prevFetchTime
         val fetchTime = page.fetchTime
-        var prevModifiedTime = page.prevModifiedTime
-        var modifiedTime = page.modifiedTime
-        val newModifiedTime = page.sniffModifiedTime()
 
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
             CrawlStatusCodes.FETCHED,
             CrawlStatusCodes.REDIR_TEMP,
             CrawlStatusCodes.REDIR_PERM,
-            CrawlStatusCodes.NOTMODIFIED -> {
-                var modified = FetchSchedule.STATUS_UNKNOWN
-                if (crawlStatus.code == CrawlStatusCodes.NOTMODIFIED.toInt()) {
-                    modified = FetchSchedule.STATUS_NOTMODIFIED
-                }
+            CrawlStatusCodes.NOTMODIFIED,
+            -> {
+                val m = handleModifiedTime(page, crawlStatus)
 
-                val prevSig = page.prevSignature
-                val signature = page.signature
-                if (prevSig != null && signature != null) {
-                    modified = if (SignatureComparator.compare(prevSig, signature) != 0) {
-                        FetchSchedule.STATUS_MODIFIED
-                    } else {
-                        FetchSchedule.STATUS_NOTMODIFIED
-                    }
-                }
+                fetchSchedule.setFetchSchedule(page,
+                    prevFetchTime,
+                    m.prevModifiedTime,
+                    fetchTime,
+                    m.modifiedTime,
+                    m.modified)
 
-                if (newModifiedTime.isAfter(modifiedTime)) {
-                    prevModifiedTime = modifiedTime
-                    modifiedTime = newModifiedTime
-                }
-
-                fetchSchedule.setFetchSchedule(page, prevFetchTime, prevModifiedTime, fetchTime, modifiedTime, modified)
                 val fetchInterval = page.fetchInterval
                 if (fetchInterval > fetchSchedule.maxFetchInterval) {
-                    LOG.info("Force re-fetch page " + page.url + ", fetch interval : " + fetchInterval)
+                    LOG.info("Force re-fetch page with interval {} | {}", fetchInterval, page.url)
                     fetchSchedule.forceRefetch(page, false)
-                }
-
-                if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    handleBadModified(page)
                 }
             }
             CrawlStatusCodes.RETRY -> {
-                fetchSchedule.setPageRetrySchedule(page, prevFetchTime, prevModifiedTime, fetchTime)
+                fetchSchedule.setPageRetrySchedule(page, prevFetchTime, page.prevModifiedTime, fetchTime)
             }
-            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page, prevFetchTime, prevModifiedTime, fetchTime)
+            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page,
+                prevFetchTime,
+                page.prevModifiedTime,
+                fetchTime)
         }
+    }
+
+    private fun handleModifiedTime(page: WebPage, crawlStatus: CrawlStatus): ModifyInfo {
+        var prevModifiedTime = page.prevModifiedTime
+        var modifiedTime = page.modifiedTime
+        val newModifiedTime = page.sniffModifiedTime()
+
+        var modified = FetchSchedule.STATUS_UNKNOWN
+        if (crawlStatus.code == CrawlStatusCodes.NOTMODIFIED.toInt()) {
+            modified = FetchSchedule.STATUS_NOTMODIFIED
+        }
+
+        val prevSig = page.prevSignature
+        val signature = page.signature
+        if (prevSig != null && signature != null) {
+            modified = if (SignatureComparator.compare(prevSig, signature) != 0) {
+                FetchSchedule.STATUS_MODIFIED
+            } else {
+                FetchSchedule.STATUS_NOTMODIFIED
+            }
+        }
+
+        if (newModifiedTime.isAfter(modifiedTime)) {
+            prevModifiedTime = modifiedTime
+            modifiedTime = newModifiedTime
+        }
+
+        if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
+            handleBadModified(page)
+        }
+
+        return ModifyInfo(prevModifiedTime, modifiedTime, modified)
     }
 
     private fun handleBadModified(page: WebPage) {

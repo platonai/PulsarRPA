@@ -45,7 +45,7 @@ abstract class AbstractFetchSchedule(
     protected var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
     protected val impreciseNow = Instant.now()
     protected var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
-    override val maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
+    override val maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, ChronoUnit.CENTURIES.duration)
 
     override fun getParams(): Params {
         return Params.of(

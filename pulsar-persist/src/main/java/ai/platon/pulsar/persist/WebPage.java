@@ -1267,9 +1267,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>Getter for the field <code>cachedContent</code>.</p>
-     *
-     * @return a {@link java.nio.ByteBuffer} object.
+     * Get the cached content
      */
     @Nullable
     public ByteBuffer getCachedContent() {
@@ -1277,18 +1275,14 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>Setter for the field <code>cachedContent</code>.</p>
-     *
-     * @param cachedContent a {@link java.nio.ByteBuffer} object.
+     * Set the cached content, keep the page content unmodified
      */
     public void setCachedContent(ByteBuffer cachedContent) {
         this.cachedContent = cachedContent;
     }
 
     /**
-     * <p>getUncachedContent.</p>
-     *
-     * @return a {@link java.nio.ByteBuffer} object.
+     * Get the uncached content
      */
     @Nullable
     public ByteBuffer getPersistContent() {
@@ -1312,7 +1306,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * TODO: Encoding is always UTF-8?
      *
-     * @return a {@link java.lang.String} object.
+     * Get the page content as a string
      */
     @NotNull
     public String getContentAsString() {
@@ -1320,9 +1314,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getContentAsInputStream.</p>
-     *
-     * @return a {@link java.io.ByteArrayInputStream} object.
+     * Get the page content as input stream
      */
     @NotNull
     public ByteArrayInputStream getContentAsInputStream() {
@@ -1337,9 +1329,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getContentAsSaxInputSource.</p>
-     *
-     * @return a {@link org.xml.sax.InputSource} object.
+     * Get the page content as sax input source
      */
     @NotNull
     public InputSource getContentAsSaxInputSource() {
@@ -1352,9 +1342,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setContent.</p>
-     *
-     * @param value a {@link java.lang.String} object.
+     * Set the page content
      */
     public void setContent(@Nullable String value) {
         if (value != null) {
@@ -1365,9 +1353,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setContent.</p>
-     *
-     * @param value an array of {@link byte} objects.
+     * Set the page content
      */
     public void setContent(@Nullable byte[] value) {
         if (value != null) {
@@ -1378,9 +1364,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setContent.</p>
+     * Set the page content
      *
-     * @param value a {@link java.nio.ByteBuffer} object.
+     * @param value a ByteBuffer.
      */
     public void setContent(@Nullable ByteBuffer value) {
         if (value != null) {
@@ -1408,7 +1394,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
      *
-     * @return a int.
+     * @return The content length
      */
     public long getContentLength() {
         return getMetadata().getLong(Name.CONTENT_BYTES, 0);
@@ -1417,11 +1403,16 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * TODO: use a field
      */
-    public void setContentLength(long bytes) {
+    private void setContentLength(long bytes) {
         long lastBytes = getContentLength();
         Metadata metadata = getMetadata();
         metadata.set(Name.LAST_CONTENT_BYTES, lastBytes);
         metadata.set(Name.CONTENT_BYTES, bytes);
+        metadata.set(Name.AVE_CONTENT_BYTES, getAverageContentBytes(bytes));
+    }
+
+    private long getAverageContentBytes(long bytes) {
+        Metadata metadata = getMetadata();
 
         int count = getFetchCount();
         long lastAveBytes = metadata.getLong(Name.AVE_CONTENT_BYTES, 0);
@@ -1434,10 +1425,10 @@ final public class WebPage implements Comparable<WebPage> {
             aveBytes = (lastAveBytes * count + bytes) / (count + 1);
         }
 
-        metadata.set(Name.AVE_CONTENT_BYTES, aveBytes);
+        return aveBytes;
     }
 
-    public long getPersistContentBytes() {
+    public long getPersistContentLength() {
         return getMetadata().getLong(Name.PERSIST_CONTENT_BYTES, 0);
     }
 
@@ -1635,51 +1626,26 @@ final public class WebPage implements Comparable<WebPage> {
         return Strings.toHexString(sig);
     }
 
-    /**
-     * <p>getPageTitle.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getPageTitle() {
         return page.getPageTitle() == null ? "" : page.getPageTitle().toString();
     }
 
-    /**
-     * <p>setPageTitle.</p>
-     *
-     * @param pageTitle a {@link java.lang.String} object.
-     */
     public void setPageTitle(String pageTitle) {
         page.setPageTitle(pageTitle);
     }
 
-    /**
-     * <p>getContentTitle.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getContentTitle() {
         return page.getContentTitle() == null ? "" : page.getContentTitle().toString();
     }
 
-    /**
-     * <p>setContentTitle.</p>
-     *
-     * @param contentTitle a {@link java.lang.String} object.
-     */
     public void setContentTitle(String contentTitle) {
         if (contentTitle != null) {
             page.setContentTitle(contentTitle);
         }
     }
 
-    /**
-     * <p>sniffTitle.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String sniffTitle() {
         String title = getContentTitle();
@@ -1698,40 +1664,20 @@ final public class WebPage implements Comparable<WebPage> {
         return title;
     }
 
-    /**
-     * <p>getPageText.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getPageText() {
         return page.getPageText() == null ? "" : page.getPageText().toString();
     }
 
-    /**
-     * <p>setPageText.</p>
-     *
-     * @param value a {@link java.lang.String} object.
-     */
     public void setPageText(String value) {
         if (value != null && !value.isEmpty()) page.setPageText(value);
     }
 
-    /**
-     * <p>getContentText.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getContentText() {
         return page.getContentText() == null ? "" : page.getContentText().toString();
     }
 
-    /**
-     * <p>setContentText.</p>
-     *
-     * @param textContent a {@link java.lang.String} object.
-     */
     public void setContentText(String textContent) {
         if (textContent != null && !textContent.isEmpty()) {
             page.setContentText(textContent);
@@ -1739,60 +1685,30 @@ final public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    /**
-     * <p>getContentTextLen.</p>
-     *
-     * @return a int.
-     */
     public int getContentTextLen() {
         return page.getContentTextLen();
     }
 
-    /**
-     * Set all text fields cascaded, including content, content text and page text.
-     *
-     * @param text a {@link java.lang.String} object.
-     */
     public void setTextCascaded(String text) {
         setContent(text);
         setContentText(text);
         setPageText(text);
     }
 
-    /**
-     * {WebPage#setParseStatus} must be called later if the status is empty
-     *
-     * @return a {@link ai.platon.pulsar.persist.ParseStatus} object.
-     */
     @NotNull
     public ParseStatus getParseStatus() {
         GParseStatus parseStatus = page.getParseStatus();
         return ParseStatus.box(parseStatus == null ? GParseStatus.newBuilder().build() : parseStatus);
     }
 
-    /**
-     * <p>setParseStatus.</p>
-     *
-     * @param parseStatus a {@link ai.platon.pulsar.persist.ParseStatus} object.
-     */
     public void setParseStatus(ParseStatus parseStatus) {
         page.setParseStatus(parseStatus.unbox());
     }
 
-    /**
-     * Embedded hyperlinks which direct outside of the current domain.
-     *
-     * @return a {@link java.util.Map} object.
-     */
     public Map<CharSequence, GHypeLink> getLiveLinks() {
         return page.getLiveLinks();
     }
 
-    /**
-     * <p>getSimpleLiveLinks.</p>
-     *
-     * @return a {@link java.util.Collection} object.
-     */
     public Collection<String> getSimpleLiveLinks() {
         return CollectionUtils.collect(page.getLiveLinks().keySet(), CharSequence::toString);
     }
@@ -1808,83 +1724,38 @@ final public class WebPage implements Comparable<WebPage> {
         liveLinks.forEach(l -> links.put(l.getUrl(), l.unbox()));
     }
 
-    /**
-     * <p>setLiveLinks.</p>
-     *
-     * @param links the value to set.
-     */
     public void setLiveLinks(Map<CharSequence, GHypeLink> links) {
         page.setLiveLinks(links);
     }
 
-    /**
-     * <p>addLiveLink.</p>
-     *
-     * @param hyperLink a {@link HyperlinkPersistable} object.
-     */
     public void addLiveLink(HyperlinkPersistable hyperLink) {
         page.getLiveLinks().put(hyperLink.getUrl(), hyperLink.unbox());
     }
 
-    /**
-     * <p>getVividLinks.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
     public Map<CharSequence, CharSequence> getVividLinks() {
         return page.getVividLinks();
     }
 
-    /**
-     * <p>getSimpleVividLinks.</p>
-     *
-     * @return a {@link java.util.Collection} object.
-     */
     public Collection<String> getSimpleVividLinks() {
         return CollectionUtils.collect(page.getVividLinks().keySet(), CharSequence::toString);
     }
 
-    /**
-     * <p>setVividLinks.</p>
-     *
-     * @param links a {@link java.util.Map} object.
-     */
     public void setVividLinks(Map<CharSequence, CharSequence> links) {
         page.setVividLinks(links);
     }
 
-    /**
-     * <p>getDeadLinks.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     public List<CharSequence> getDeadLinks() {
         return page.getDeadLinks();
     }
 
-    /**
-     * <p>setDeadLinks.</p>
-     *
-     * @param deadLinks a {@link java.util.List} object.
-     */
     public void setDeadLinks(List<CharSequence> deadLinks) {
         page.setDeadLinks(deadLinks);
     }
 
-    /**
-     * <p>getLinks.</p>
-     *
-     * @return a {@link java.util.List} object.
-     */
     public List<CharSequence> getLinks() {
         return page.getLinks();
     }
 
-    /**
-     * <p>setLinks.</p>
-     *
-     * @param links a {@link java.util.List} object.
-     */
     public void setLinks(List<CharSequence> links) {
         page.setLinks(links);
     }
@@ -2001,57 +1872,27 @@ final public class WebPage implements Comparable<WebPage> {
         page.setAnchor(anchor);
     }
 
-    /**
-     * <p>getInlinkAnchors.</p>
-     *
-     * @return an array of {@link java.lang.String} objects.
-     */
     public String[] getInlinkAnchors() {
         return StringUtils.split(getMetadata().getOrDefault(Name.ANCHORS, ""), "\n");
     }
 
-    /**
-     * <p>setInlinkAnchors.</p>
-     *
-     * @param anchors a {@link java.util.Collection} object.
-     */
     public void setInlinkAnchors(Collection<CharSequence> anchors) {
         getMetadata().set(Name.ANCHORS, StringUtils.join(anchors, "\n"));
     }
 
-    /**
-     * <p>getAnchorOrder.</p>
-     *
-     * @return a int.
-     */
     public int getAnchorOrder() {
         int order = page.getAnchorOrder();
         return order < 0 ? MAX_LIVE_LINK_PER_PAGE : order;
     }
 
-    /**
-     * <p>setAnchorOrder.</p>
-     *
-     * @param order a int.
-     */
     public void setAnchorOrder(int order) {
         page.setAnchorOrder(order);
     }
 
-    /**
-     * <p>getContentPublishTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     public Instant getContentPublishTime() {
         return Instant.ofEpochMilli(page.getContentPublishTime());
     }
 
-    /**
-     * <p>setContentPublishTime.</p>
-     *
-     * @param publishTime a {@link java.time.Instant} object.
-     */
     public void setContentPublishTime(Instant publishTime) {
         page.setContentPublishTime(publishTime.toEpochMilli());
     }
@@ -2060,12 +1901,6 @@ final public class WebPage implements Comparable<WebPage> {
         return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(AppContext.INSTANCE.getImprecise2DaysAhead());
     }
 
-    /**
-     * <p>updateContentPublishTime.</p>
-     *
-     * @param newPublishTime a {@link java.time.Instant} object.
-     * @return a boolean.
-     */
     public boolean updateContentPublishTime(Instant newPublishTime) {
         if (!isValidContentModifyTime(newPublishTime)) {
             return false;
@@ -2080,84 +1915,38 @@ final public class WebPage implements Comparable<WebPage> {
         return true;
     }
 
-    /**
-     * <p>getPrevContentPublishTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     public Instant getPrevContentPublishTime() {
         return Instant.ofEpochMilli(page.getPrevContentPublishTime());
     }
 
-    /**
-     * <p>setPrevContentPublishTime.</p>
-     *
-     * @param publishTime a {@link java.time.Instant} object.
-     */
     public void setPrevContentPublishTime(Instant publishTime) {
         page.setPrevContentPublishTime(publishTime.toEpochMilli());
     }
 
-    /**
-     * <p>getRefContentPublishTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     public Instant getRefContentPublishTime() {
         return Instant.ofEpochMilli(page.getRefContentPublishTime());
     }
 
-    /**
-     * <p>setRefContentPublishTime.</p>
-     *
-     * @param publishTime a {@link java.time.Instant} object.
-     */
     public void setRefContentPublishTime(Instant publishTime) {
         page.setRefContentPublishTime(publishTime.toEpochMilli());
     }
 
-    /**
-     * <p>getContentModifiedTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     public Instant getContentModifiedTime() {
         return Instant.ofEpochMilli(page.getContentModifiedTime());
     }
 
-    /**
-     * <p>setContentModifiedTime.</p>
-     *
-     * @param modifiedTime a {@link java.time.Instant} object.
-     */
     public void setContentModifiedTime(Instant modifiedTime) {
         page.setContentModifiedTime(modifiedTime.toEpochMilli());
     }
 
-    /**
-     * <p>getPrevContentModifiedTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     public Instant getPrevContentModifiedTime() {
         return Instant.ofEpochMilli(page.getPrevContentModifiedTime());
     }
 
-    /**
-     * <p>setPrevContentModifiedTime.</p>
-     *
-     * @param modifiedTime a {@link java.time.Instant} object.
-     */
     public void setPrevContentModifiedTime(Instant modifiedTime) {
         page.setPrevContentModifiedTime(modifiedTime.toEpochMilli());
     }
 
-    /**
-     * <p>updateContentModifiedTime.</p>
-     *
-     * @param newModifiedTime a {@link java.time.Instant} object.
-     * @return a boolean.
-     */
     public boolean updateContentModifiedTime(Instant newModifiedTime) {
         if (!isValidContentModifyTime(newModifiedTime)) {
             return false;
@@ -2172,30 +1961,14 @@ final public class WebPage implements Comparable<WebPage> {
         return true;
     }
 
-    /**
-     * <p>getPrevRefContentPublishTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     public Instant getPrevRefContentPublishTime() {
         return Instant.ofEpochMilli(page.getPrevRefContentPublishTime());
     }
 
-    /**
-     * <p>setPrevRefContentPublishTime.</p>
-     *
-     * @param publishTime a {@link java.time.Instant} object.
-     */
     public void setPrevRefContentPublishTime(Instant publishTime) {
         page.setPrevRefContentPublishTime(publishTime.toEpochMilli());
     }
 
-    /**
-     * <p>updateRefContentPublishTime.</p>
-     *
-     * @param newRefPublishTime a {@link java.time.Instant} object.
-     * @return a boolean.
-     */
     public boolean updateRefContentPublishTime(Instant newRefPublishTime) {
         if (!isValidContentModifyTime(newRefPublishTime)) {
             return false;

@@ -80,13 +80,13 @@ class LoadedPageFormatter(
         }
 
     private val fetchReasonCode get() = (page.variables[VAR_FETCH_REASON] as? Int) ?: FetchReason.DO_NOT_FETCH
-    private val fetchReason get() = FetchReason.toSymbol(fetchReasonCode)
+    private val fetchReason get() = FetchReason.toSymbol(fetchReasonCode).takeIf { it.isNotBlank() }?.let { " for $it " }
     private val prefix0 get() = if (page.isContentUpdated) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     private val category get() = page.pageCategory.symbol()
-    private val prevFetchTime get() = " | ${page.prevFetchTime} | "
+    private val prevFetchTime get() = page.prevFetchTime
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
@@ -100,8 +100,8 @@ class LoadedPageFormatter(
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s $fetchReason [%4d] %13s in %10s," +
-            " $jsFmt fc:$fetchCount $prevFetchTime$fieldFmt$failure$proxyFmt" +
+    private val fmt get() = "%3d. $prefix1 %s${fetchReason}got %d %13s in %s at $prevFetchTime," +
+            " $jsFmt fc:$fetchCount | $fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 
     override fun toString(): String {

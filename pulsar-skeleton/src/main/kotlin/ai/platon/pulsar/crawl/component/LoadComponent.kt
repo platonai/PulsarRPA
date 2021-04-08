@@ -462,7 +462,7 @@ class LoadComponent(
             return FetchReason.SCHEDULED
         }
 
-        if (page.contentLength < options.requireSize) {
+        if (page.persistContentLength < options.requireSize) {
             return FetchReason.SMALL_CONTENT
         }
 
