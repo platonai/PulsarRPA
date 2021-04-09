@@ -83,6 +83,16 @@ interface FetchSchedule : Parameterized {
                          prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int)
 
     /**
+     * This method specifies how to schedule refetching of pages marked as GONE.
+     * Default implementation increases fetchInterval by 50%, and if it exceeds
+     * the `maxInterval` it calls
+     * [.forceRefetch].
+     *
+     * @param page The page
+     */
+    fun setPageGoneSchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant)
+
+    /**
      * This method adjusts the fetch schedule if fetching needs to be re-tried due
      * to transient errors. The default implementation sets the next fetch time 1
      * day in the future and increases the retry counter.Set
@@ -93,16 +103,6 @@ interface FetchSchedule : Parameterized {
      * @param fetchTime        current fetch time
      */
     fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant)
-
-    /**
-     * This method specifies how to schedule refetching of pages marked as GONE.
-     * Default implementation increases fetchInterval by 50%, and if it exceeds
-     * the `maxInterval` it calls
-     * [.forceRefetch].
-     *
-     * @param page The page
-     */
-    fun setPageGoneSchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant)
 
     /**
      * Calculates last fetch time of the given CrawlDatum.
@@ -137,4 +137,5 @@ interface FetchSchedule : Parameterized {
      * time is set.
      */
     fun forceRefetch(page: WebPage, asap: Boolean)
+
 }

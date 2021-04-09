@@ -49,7 +49,6 @@ class NewsMonitorFetchSchedule(
         messageWriter: MiscMessageWriter
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
-    private val impreciseNow = Instant.now()
     private val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
     private val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
     private val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)

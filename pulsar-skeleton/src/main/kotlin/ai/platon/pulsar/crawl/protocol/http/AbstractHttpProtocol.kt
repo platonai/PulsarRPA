@@ -157,7 +157,7 @@ abstract class AbstractHttpProtocol: Protocol {
         val content = pageDatum.content
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         val contentType = response.getHeader(HttpHeaders.CONTENT_TYPE)
-        pageDatum.resolveMimeType(contentType, url, content, mimeTypeResolver)
+        pageDatum.contentType = resolveMimeType(contentType, url, content)
 
         val headers = pageDatum.headers
         val status: ProtocolStatus
@@ -202,6 +202,10 @@ abstract class AbstractHttpProtocol: Protocol {
         }
 
         return ProtocolOutput(pageDatum, headers, status)
+    }
+
+    private fun resolveMimeType(contentType: String?, url: String, data: ByteArray?): String? {
+        return mimeTypeResolver.autoResolveContentType(contentType, url, data)
     }
 
     private fun getFailedResponse(lastThrowable: Throwable?, tryCount: Int, maxRry: Int): ProtocolOutput {

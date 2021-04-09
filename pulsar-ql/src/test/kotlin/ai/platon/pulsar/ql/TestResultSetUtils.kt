@@ -1,8 +1,10 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.ql.h2.addColumn
+import org.apache.http.client.utils.URLEncodedUtils
 import org.h2.value.ValueString
 import org.junit.Test
 import java.sql.Types
@@ -27,14 +29,38 @@ class TestResultSetUtils {
     }
 
     @Test
-    fun `Extract url from sql's from clause using regex`() {
-        val url = "http://amazon.com/a/reviews/123?pageNumber=21&a=b"
-        val sql = """
-            select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
-            from load_and_select('$url', ':root body');
-        """.trimIndent()
-        val actualUrl = ResultSetUtils.extractUrlFromFromClause(sql)
-        assertEquals(url, actualUrl)
+    fun testExtractUrlFromFromClause() {
+        val urls = listOf(
+            "http://amazon.com/a/reviews/123?pageNumber=21&a=b",
+            """https://www.amazon.com/s?k="Boys^27+Novelty+Belt+Buckles"&rh=n:9057119011&page=1""",
+            """https://www.amazon.com/s?k="Boys%27+Novelty+Belt+Buckles"&rh=n:9057119011&page=1""",
+            """https://www.amazon.com/s?k="Boys%27+Novelty+Belt+Buckles"&rh=n:9057119011&page=1 -i 1h -retry"""
+        )
+        val sqlTemplates = listOf(
+            """
+                select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
+                from load_and_select(@url, ':root body');
+            """,
+            """
+                select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
+                from load_and_select(     @url, ':root body');
+            """,
+            """
+                select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
+                from load_and_select(     @url     , ':root body');
+            """,
+            """
+                select dom_first_text(dom, 'div:contains(https://www.amazon.com/)'), dom_first_text(dom, '.price')
+                FROM LOAD_AND_SELECT(     @url     , ':root body');
+            """
+        ).map { it.trimIndent() }
+
+        urls.forEach { url ->
+            sqlTemplates.map { template -> SQLTemplate.createInstance(template, url) }.forEach { sql ->
+                val actualUrl = ResultSetUtils.extractUrlFromFromClause(sql)
+                assertEquals(url, actualUrl, sql)
+            }
+        }
     }
 
     @Test

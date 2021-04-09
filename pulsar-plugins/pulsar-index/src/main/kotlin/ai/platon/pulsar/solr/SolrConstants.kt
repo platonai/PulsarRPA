@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -6,9 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,19 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.crawl.protocol
+package ai.platon.pulsar.solr
 
-import ai.platon.pulsar.persist.PageDatum
-import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.metadata.MultiMetadata
+import ai.platon.pulsar.solr.SolrConstants
 
-class ProtocolOutput(
-    val pageDatum: PageDatum?,
-    val headers: MultiMetadata,
-    val protocolStatus: ProtocolStatus
-) {
-    constructor(pageDatum: PageDatum) : this(pageDatum, pageDatum.headers, pageDatum.protocolStatus)
-    constructor(status: ProtocolStatus) : this(null, MultiMetadata(), status)
-
-    val length get() = pageDatum?.contentLength ?: 0
+interface SolrConstants {
+    companion object {
+        const val SOLR_PREFIX = "solr."
+        const val USE_AUTH = SOLR_PREFIX + "auth"
+        const val USERNAME = SOLR_PREFIX + "auth.username"
+        const val PASSWORD = SOLR_PREFIX + "auth.password"
+    }
 }

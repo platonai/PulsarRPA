@@ -75,6 +75,9 @@ abstract class AbstractFetchSchedule(
      * Sets the `fetchInterval` and `fetchTime` on a successfully fetched page.
      * NOTE: this implementation resets the retry counter -
      * extending classes should call super.setFetchSchedule() to preserve this behavior.
+
+     * @param prevFetchTime The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
+     * @param fetchTime The current fetch time, it's almost now
      */
     override fun setFetchSchedule(
             page: WebPage, prevFetchTime: Instant,
@@ -92,7 +95,7 @@ abstract class AbstractFetchSchedule(
         }
 
         // Only if the fetch time is in the past, assign prevFetchTime to be it
-        page.updateFetchTime(fetchTime, fetchInterval)
+        page.updateFetchTime(prevFetchTime, fetchTime, fetchInterval)
         page.modifiedTime = modifiedTime
         page.prevModifiedTime = prevModifiedTime
     }
@@ -127,7 +130,7 @@ abstract class AbstractFetchSchedule(
      */
     override fun setPageGoneSchedule(
             page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
-        page.updateFetchTime(prevFetchTime, ChronoUnit.CENTURIES.duration)
+        page.updateFetchTime(prevFetchTime, fetchTime, ChronoUnit.CENTURIES.duration)
     }
 
     /**

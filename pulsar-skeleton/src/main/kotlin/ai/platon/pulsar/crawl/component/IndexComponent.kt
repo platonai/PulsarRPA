@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.component.IndexComponent
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.index.IndexWriters
 import ai.platon.pulsar.crawl.index.IndexingFilters
@@ -16,9 +15,9 @@ import java.time.Instant
  */
 @Component
 class IndexComponent(
-        var indexingFilters: IndexingFilters,
-        var indexWriters: IndexWriters,
-        private var conf: ImmutableConfig
+    var indexingFilters: IndexingFilters,
+    var indexWriters: IndexWriters,
+    private var conf: ImmutableConfig
 ) {
     private var indexWritersAreOpen = false
 
@@ -29,16 +28,15 @@ class IndexComponent(
         }
     }
 
-    fun open(indexerUrl: String?) {
+    fun open(indexerUrl: String) {
         if (!indexWritersAreOpen) {
             indexWriters.open(indexerUrl)
             indexWritersAreOpen = true
         }
     }
 
-    fun index(page: WebPage): IndexDocument {
-        var doc = IndexDocument(page.key)
-        doc = indexingFilters.filter(doc, page.url, page)
+    fun index(page: WebPage): IndexDocument? {
+        val doc = indexingFilters.filter(IndexDocument(page.key), page.url, page)
         if (doc != null) {
             indexWriters.write(doc)
         }

@@ -100,7 +100,7 @@ class LoadedPageFormatter(
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s${fetchReason}got %d %13s in %s at $prevFetchTime," +
+    private val fmt get() = "%3d. $prefix1 %s${fetchReason}got %d %13s in %s, prev at $prevFetchTime," +
             " $jsFmt fc:$fetchCount | $fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 

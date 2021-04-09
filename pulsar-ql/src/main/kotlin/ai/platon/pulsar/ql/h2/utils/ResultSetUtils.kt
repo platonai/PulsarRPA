@@ -218,7 +218,7 @@ object ResultSetUtils {
     }
 
     /**
-     * A simple method to find extract url from a sql's from clause, for example,
+     * A simple method to extract url from a sql's from clause, for example,
      * extract `https://jd.com/` from the following sql:
      *
      * > select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
@@ -228,20 +228,37 @@ object ResultSetUtils {
      * @return The url extracted from the sql, null if no such url
      * */
     fun extractUrlFromFromClause(sql: String): String? {
-        val pos = sql.indexOf("from", ignoreCase = true)
-        if (pos <= 0) return null
-
-        val input = sql.substring(pos)
-        val linkExtractor = LinkExtractor.builder()
-            .linkTypes(EnumSet.of(LinkType.URL))
-            .build()
-        val links = linkExtractor.extractLinks(input).iterator()
-
-        return if (links.hasNext()) {
-            val link = links.next()
-            input.substring(link.beginIndex, link.endIndex)
-        } else {
-            null
+        val len = sql.length
+        var i = 0
+        var j = 0
+        i = sql.indexOf("from", ignoreCase = true)
+        if (i <= 0) {
+            return null
         }
+
+        while (sql[i] != '(' && i < len) {
+            ++i
+        }
+        if (i == len) {
+            return null
+        }
+
+        while (sql[i] != '\'' && i < len) {
+            ++i
+        }
+        ++i
+        if (i >= len) {
+            return null
+        }
+
+        j = i + 1
+        while (sql[j] != '\'' && i < len) {
+            ++j
+        }
+        if (j == len) {
+            return null
+        }
+
+        return sql.substring(i, j)
     }
 }

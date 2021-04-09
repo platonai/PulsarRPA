@@ -384,14 +384,13 @@ class LoadComponent(
 
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         update(page, options)
+        globalCache.fetchingUrls.remove(page.url)
 
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
             val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString()
             logger.info(report)
         }
-
-        globalCache.fetchingUrls.remove(page.url)
     }
 
     private fun filterUrlToNull(url: NormUrl): NormUrl? {

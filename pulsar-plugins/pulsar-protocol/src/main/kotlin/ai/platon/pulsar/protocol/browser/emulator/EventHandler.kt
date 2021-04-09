@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.crawl.protocol.PageDatum
+import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.nodes.node.ext.ExportPaths
 import ai.platon.pulsar.persist.ProtocolStatus

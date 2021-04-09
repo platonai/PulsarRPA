@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class JITIndexer(
-        private val scoringFilters: ScoringFilters,
-        private val indexingFilters: IndexingFilters,
-        private val indexWriters: IndexWriters,
-        val conf: ImmutableConfig
+    private val scoringFilters: ScoringFilters,
+    private val indexingFilters: IndexingFilters,
+    private val indexWriters: IndexWriters,
+    val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
 
     private val id: Int = instanceSequence.incrementAndGet()

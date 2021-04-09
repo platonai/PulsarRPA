@@ -162,8 +162,8 @@ class UpdateComponent(
             return
         }
 
-        val prevFetchTime = page.prevFetchTime
-        val fetchTime = page.fetchTime
+        val prevFetchTime = page.fetchTime
+        val fetchTime = Instant.now()
 
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
@@ -175,11 +175,7 @@ class UpdateComponent(
                 val m = handleModifiedTime(page, crawlStatus)
 
                 fetchSchedule.setFetchSchedule(page,
-                    prevFetchTime,
-                    m.prevModifiedTime,
-                    fetchTime,
-                    m.modifiedTime,
-                    m.modified)
+                    prevFetchTime, m.prevModifiedTime, fetchTime, m.modifiedTime, m.modified)
 
                 val fetchInterval = page.fetchInterval
                 if (fetchInterval > fetchSchedule.maxFetchInterval) {
@@ -191,9 +187,7 @@ class UpdateComponent(
                 fetchSchedule.setPageRetrySchedule(page, prevFetchTime, page.prevModifiedTime, fetchTime)
             }
             CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page,
-                prevFetchTime,
-                page.prevModifiedTime,
-                fetchTime)
+                prevFetchTime, page.prevModifiedTime, fetchTime)
         }
     }
 

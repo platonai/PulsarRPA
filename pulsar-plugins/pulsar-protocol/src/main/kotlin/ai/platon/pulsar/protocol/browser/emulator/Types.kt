@@ -6,10 +6,9 @@ import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.protocol.PageDatum
+import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import org.openqa.selenium.support.ui.Sleeper
 import java.time.Duration
 import java.time.Instant
 
@@ -67,6 +66,10 @@ class BrowserError(
         const val EMPTY_RESPONSE = "ERR_EMPTY_RESPONSE"
         const val CONNECTION_RESET = "ERR_CONNECTION_RESET"
     }
+}
+
+interface Sleeper {
+    fun sleep(duration: Duration)
 }
 
 class CancellableSleeper(val task: FetchTask): Sleeper {

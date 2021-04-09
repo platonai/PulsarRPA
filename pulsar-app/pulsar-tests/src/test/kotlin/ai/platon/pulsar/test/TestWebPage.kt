@@ -38,7 +38,7 @@ class TestWebPage: TestBase() {
         sleepSeconds(5)
 
         val options2 = session.options("$args -expireAt $expireAt")
-        assertTrue { options2.isExpired(page.lastFetchTime) }
+        assertTrue { options2.isExpired(page.prevFetchTime) }
 
         page = session.load(url, options2)
         assertTrue { page.protocolStatus.isSuccess }
@@ -51,7 +51,6 @@ class TestWebPage: TestBase() {
         println("Fetch time history: " + page.getFetchTimeHistory(""))
         println("prevFetchTime: " + page.prevFetchTime)
         println("fetchTime: " + page.fetchTime)
-        println("lastFetchTime: " + page.lastFetchTime)
         val responseTime = page.metadata[Name.RESPONSE_TIME]?:""
         println(responseTime)
         println(Instant.now())

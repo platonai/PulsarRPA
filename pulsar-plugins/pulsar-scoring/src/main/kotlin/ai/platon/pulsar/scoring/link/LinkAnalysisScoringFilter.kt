@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.scoring.link
 
-import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.index.IndexDocument

@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.protocol
 
+import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.WebPage
 
 /**

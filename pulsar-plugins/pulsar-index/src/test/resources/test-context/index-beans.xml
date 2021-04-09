@@ -36,7 +36,7 @@
         <constructor-arg value="indexer-mapping.xml"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="solrIndexWriter" class="ai.platon.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
+    <bean id="solrIndexWriter" class="ai.platon.pulsar.solr.SolrIndexWriter" destroy-method="close">
         <constructor-arg ref="indexerMapping"/>
         <constructor-arg ref="conf"/>
     </bean>

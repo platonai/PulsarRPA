@@ -33,8 +33,7 @@ import java.time.temporal.ChronoUnit
  *
  * NOTE: values of DEC_FACTOR and INC_FACTOR higher than 0.4f may destabilize
  * the algorithm, so that the fetch interval either increases or decreases
- * infinitely, with little relevance to the page changes. Please use
- *
+ * infinitely, with little relevance to the page changes
  *
  * @author Vincent Zhang
  */
