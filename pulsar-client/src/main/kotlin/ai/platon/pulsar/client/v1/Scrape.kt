@@ -62,6 +62,7 @@ class Scraper(val host: String, val authToken: String) {
             .timeout(Duration.ofMinutes(2))
             .GET()
             .build()
+        println(request.uri())
         val responseBody = client.send(request, BodyHandlers.ofString()).body()
         return Gson().fromJson(responseBody, ScrapeResponse::class.java)
     }

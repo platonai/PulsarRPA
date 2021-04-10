@@ -236,6 +236,7 @@ object ResultSetUtils {
             return null
         }
 
+        // find "(" in from clause "from load_and_select('https:"
         while (sql[i] != '(' && i < len) {
             ++i
         }
@@ -243,14 +244,17 @@ object ResultSetUtils {
             return null
         }
 
+        // find the first single quote
         while (sql[i] != '\'' && i < len) {
             ++i
         }
+        // the start of the url
         ++i
         if (i >= len) {
             return null
         }
 
+        // find the second single quote
         j = i + 1
         while (sql[j] != '\'' && i < len) {
             ++j

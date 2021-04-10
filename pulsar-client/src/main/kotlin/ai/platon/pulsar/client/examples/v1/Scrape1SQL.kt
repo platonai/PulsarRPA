@@ -21,7 +21,7 @@ fun main() {
     val scraper = Scraper(host, authToken)
     val uuid = scraper.scrape(sql)
     println(uuid)
-    // scraper.await(uuid)
+    scraper.await(uuid)
 
     exitProcess(0)
 }
