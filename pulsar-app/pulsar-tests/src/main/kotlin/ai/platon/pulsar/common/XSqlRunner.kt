@@ -26,17 +26,17 @@ class XSqlRunner(
         return execute(url, sqlTemplate)
     }
 
-    fun execute(url: String, SQLTemplate: SQLTemplate): ResultSet {
+    fun execute(url: String, template: SQLTemplate): ResultSet {
         val document = loadResourceAsDocument(url) ?: session.loadDocument(url, loadArgs)
 
-        val sql = SQLTemplate.createInstance(url)
+        val sql = template.createInstance(url)
         if (sql.isBlank()) {
-            throw IllegalArgumentException("Illegal sql template: ${SQLTemplate.resource}")
+            throw IllegalArgumentException("Illegal sql template: ${template.resource}")
         }
 
         var rs = extractor.query(sql, printResult = true)
 
-        if (SQLTemplate.resource?.contains("x-similar-items.sql") == true) {
+        if (template.resource?.contains("x-similar-items.sql") == true) {
             rs = ResultSetUtils.transpose(rs)
             println("Transposed: ")
             rs.beforeFirst()
@@ -54,17 +54,17 @@ class XSqlRunner(
         var i = 0
         sqls.forEach { (url, resource) ->
             val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
-            val sqlTemplate = SQLTemplate.load(resource, name = name)
+            val template = SQLTemplate.load(resource, name = name)
 
             when {
-                sqlTemplate.template.isBlank() -> {
+                template.template.isBlank() -> {
                     log.warn("Failed to load SQL template <{}>", resource)
                 }
-                sqlTemplate.template.contains("create table", ignoreCase = true) -> {
-                    log.info(SqlConverter.createSql2extractSql(sqlTemplate.template))
+                template.template.contains("create table", ignoreCase = true) -> {
+                    log.info(SqlConverter.createSql2extractSql(template.template))
                 }
                 else -> {
-                    execute(url, sqlTemplate)
+                    execute(url, template)
                 }
             }
         }

@@ -4,7 +4,7 @@ import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import org.h2.api.ErrorCode

@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs

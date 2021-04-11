@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.sites.amazon.AmazonSearcherJsEventHandler
+import ai.platon.pulsar.common.urls.sites.amazon.AmazonUrls
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -12,6 +13,18 @@ import java.sql.ResultSet
 @Suppress("unused")
 @UDFGroup(namespace = "AMAZON")
 object AmazonFunctions {
+
+    @UDFunction
+    @JvmStatic
+    fun findAsin(@H2Context conn: Connection, url: String): String {
+        return AmazonUrls.findAsin(url) ?: ""
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun findAsinOrNull(@H2Context conn: Connection, url: String): String? {
+        return AmazonUrls.findAsin(url)
+    }
 
     /**
      * @param conn      The auto injected jdbc connection by h2 engine

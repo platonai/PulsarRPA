@@ -12,47 +12,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-app</artifactId>
+        <artifactId>pulsar-sites-support</artifactId>
         <version>1.5.9-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-examples</artifactId>
-    <name>Pulsar Examples</name>
+    <artifactId>pulsar-site-amazon</artifactId>
+    <name>Pulsar Site Amazon</name>
 
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-ql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-beans</artifactId>
-        </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-site-amazon</artifactId>
-        <version>1.5.9-SNAPSHOT</version>
-        <scope>compile</scope>
-      </dependency>
     </dependencies>
 
 </project>

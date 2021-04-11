@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware

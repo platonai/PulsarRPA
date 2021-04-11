@@ -18,7 +18,7 @@ object AmazonUrls {
      * */
     fun isAmazonIndexPage(url: String): Boolean {
         val indexPagePatterns = arrayOf("/zgbs/", "/most-wished-for/", "/new-releases/", "/movers-and-shakers/")
-        return isAmazon(url) && (indexPagePatterns.any { url.contains(it)})
+        return isAmazon(url) && (indexPagePatterns.any { url.contains(it) })
     }
 
     /**

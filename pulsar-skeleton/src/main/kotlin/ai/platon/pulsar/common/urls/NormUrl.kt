@@ -1,15 +1,25 @@
-package ai.platon.pulsar.common.options
+package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.options.LoadOptions
 import java.net.MalformedURLException
 import java.net.URL
 
+/**
+ * A normalized url.
+ *
+ * Every NormUrl contains two urls: url and href, url stands for Uniform Resource Locator,
+ * both for external webpage and internal database, and href stands for Hyperlink Reference,
+ * which is a url extracted from a HTML document.
+ *
+ * The href is the first choice to locate a resource, because it's
+ * extracted from a HTML document without modification while the url might be normalized.
+ * */
 open class NormUrl constructor(
-        val url: URL,
-        val options: LoadOptions,
-        var href: URL? = null
+    val url: URL,
+    val options: LoadOptions,
+    var href: URL? = null
 ): Comparable<NormUrl> {
 
     @Throws(MalformedURLException::class)

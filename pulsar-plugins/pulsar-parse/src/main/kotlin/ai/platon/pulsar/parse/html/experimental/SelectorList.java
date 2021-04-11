@@ -1,6 +1,6 @@
 package ai.platon.pulsar.parse.html.experimental;
 
-import ai.platon.pulsar.common.options.EntityOptions;
+import ai.platon.pulsar.common.options.deprecated.EntityOptions;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.persist.WebDb
 import com.codahale.metrics.Gauge

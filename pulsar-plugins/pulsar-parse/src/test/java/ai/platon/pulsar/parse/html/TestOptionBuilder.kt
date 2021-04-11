@@ -19,7 +19,7 @@
 package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.options.EntityOptions
+import ai.platon.pulsar.common.options.deprecated.EntityOptions
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test

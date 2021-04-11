@@ -58,7 +58,7 @@ class CrawlOptions(argv: Array<String>) : CommonOptions(argv) {
     private fun init(conf: ImmutableConfig) {
         this.fetchInterval = conf.getDuration(CapabilityTypes.FETCH_INTERVAL, fetchInterval)
         this.score = conf.getInt(CapabilityTypes.INJECT_SCORE, score)
-        this.depth = conf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, depth)!!
+        this.depth = conf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, depth)
         this.linkOptions = LinkOptions("", conf)
     }
 

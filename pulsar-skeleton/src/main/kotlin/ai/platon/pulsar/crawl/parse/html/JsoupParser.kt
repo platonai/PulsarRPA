@@ -1,8 +1,8 @@
 package ai.platon.pulsar.crawl.parse.html
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.options.CollectionOptions
-import ai.platon.pulsar.common.options.EntityOptions
+import ai.platon.pulsar.common.options.deprecated.CollectionOptions
+import ai.platon.pulsar.common.options.deprecated.EntityOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.isNil
 import ai.platon.pulsar.persist.WebPage

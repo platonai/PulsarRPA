@@ -2,7 +2,7 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
 -- asin 所在页面 广告位 追踪
--- set @url='https://www.amazon.com/Etekcity-Multifunction-Stainless-Batteries-Included/dp/B0113UZJE2/ref=zg_bs_home-garden_21?_encoding=UTF8&psc=1&refRID=TS59NMS2K6A2PSXTTS4F';
+-- set @url='https://www.amazon.com/dp/B0113UZJE2'
 select
     dom_base_uri(dom) as url,
     str_substring_between(dom_base_uri(dom), '/dp/', '/ref=') as asin,

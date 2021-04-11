@@ -2,12 +2,12 @@ package ai.platon.pulsar.experimental.transport
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.KConfigurable
-import io.netty.util.concurrent.EventExecutor
+import java.util.concurrent.ExecutorService
 import kotlin.reflect.KClass
 
 abstract class AbstractChannelHandlerContext(
     override val pipeline: DefaultChannelPipeline,
-    override val executor: EventExecutor?,
+    override val executor: ExecutorService?,
     override val name: String,
     override val handler: ChannelHandler?
 ) : ChannelHandlerContext {
@@ -16,7 +16,7 @@ abstract class AbstractChannelHandlerContext(
     override var next: ChannelHandlerContext? = null
 
     constructor(
-        pipeline: DefaultChannelPipeline, executor: EventExecutor?,
+        pipeline: DefaultChannelPipeline, executor: ExecutorService?,
         name: String, handlerClass: KClass<out ChannelHandler>
     ) : this(pipeline, executor, name, null)
 

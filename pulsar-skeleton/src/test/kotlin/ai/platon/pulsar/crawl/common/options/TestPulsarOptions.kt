@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.common.options
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.arity0ToArity1
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.*
+import ai.platon.pulsar.common.options.deprecated.EntityOptions
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.CollectionUtils
 import org.junit.Assert.assertEquals
@@ -69,9 +69,9 @@ class TestPulsarOptions {
             assertTrue(eopts.cssRules.containsKey("title"))
             assertTrue(eopts.cssRules.containsValue("#title"))
 
-            assertEquals("comments", eopts.collectionOptions.getName())
-            assertEquals("#comments", eopts.collectionOptions.getRoot())
-            assertEquals(".comment", eopts.collectionOptions.getItem())
+            assertEquals("comments", eopts.collectionOptions.name)
+            assertEquals("#comments", eopts.collectionOptions.root)
+            assertEquals(".comment", eopts.collectionOptions.item)
             assertTrue(eopts.collectionOptions.cssRules.containsKey("author"))
             assertTrue(eopts.collectionOptions.cssRules.containsValue(".content"))
         }

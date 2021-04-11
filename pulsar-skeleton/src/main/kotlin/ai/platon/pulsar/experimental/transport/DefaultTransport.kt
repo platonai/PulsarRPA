@@ -1,9 +1,8 @@
 package ai.platon.pulsar.experimental.transport
 
 import ai.platon.pulsar.common.readableClassName
-import io.netty.util.concurrent.EventExecutor
-import io.netty.util.concurrent.EventExecutorGroup
 import java.util.*
+import java.util.concurrent.ExecutorService
 
 class DefaultChannelPipeline(override val channel: Channel) : ChannelPipeline {
     companion object {
@@ -107,14 +106,14 @@ class DefaultChannelPipeline(override val channel: Channel) : ChannelPipeline {
     }
 
     private fun newContext(
-        group: EventExecutorGroup?,
+        group: ExecutorServiceGroup?,
         name: String,
         handler: ChannelHandler
     ): AbstractChannelHandlerContext {
         return DefaultChannelHandlerContext(this, childExecutor(group), name, handler)
     }
 
-    private fun childExecutor(group: EventExecutorGroup?): EventExecutor? {
+    private fun childExecutor(group: ExecutorServiceGroup?): ExecutorService? {
         return group?.next()
     }
 
@@ -163,7 +162,7 @@ class DefaultChannelPipeline(override val channel: Channel) : ChannelPipeline {
 
 class DefaultChannelHandlerContext(
     pipeline: DefaultChannelPipeline,
-    executor: EventExecutor?,
+    executor: ExecutorService?,
     name: String,
     override var handler: ChannelHandler
 ) : AbstractChannelHandlerContext(pipeline, executor, name, handler::class) {

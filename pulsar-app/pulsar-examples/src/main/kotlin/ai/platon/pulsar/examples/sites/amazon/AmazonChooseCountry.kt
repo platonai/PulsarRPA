@@ -43,7 +43,7 @@ fun main() {
     withContext { cx ->
         val context = cx as AbstractPulsarContext
         val session = context.createSession()
-        val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
+        val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011"
         val args = "-i 1s"
 
         val unmodifiedConfig = context.unmodifiedConfig.unbox()

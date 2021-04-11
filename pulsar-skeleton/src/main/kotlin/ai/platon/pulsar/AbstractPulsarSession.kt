@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext

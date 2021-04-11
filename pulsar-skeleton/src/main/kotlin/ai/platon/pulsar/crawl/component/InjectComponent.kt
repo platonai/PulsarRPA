@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.crawl.inject.SeedBuilder

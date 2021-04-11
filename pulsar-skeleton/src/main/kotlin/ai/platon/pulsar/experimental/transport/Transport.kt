@@ -1,7 +1,7 @@
 package ai.platon.pulsar.experimental.transport
 
 import ai.platon.pulsar.common.config.KConfigurable
-import io.netty.util.concurrent.EventExecutor
+import java.util.concurrent.ExecutorService
 
 interface Channel: KConfigurable {
     val pipeline: ChannelPipeline
@@ -36,7 +36,7 @@ interface ChannelHandlerContext: KConfigurable {
     val channel: Channel
     val handler: ChannelHandler?
     val pipeline: ChannelPipeline
-    val executor: EventExecutor?
+    val executor: ExecutorService?
 
     var prev: ChannelHandlerContext?
     var next: ChannelHandlerContext?

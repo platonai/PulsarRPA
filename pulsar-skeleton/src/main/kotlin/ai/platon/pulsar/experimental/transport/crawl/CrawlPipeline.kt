@@ -5,19 +5,19 @@ import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.experimental.transport.*
 import ai.platon.pulsar.persist.WebPage
-import io.netty.util.concurrent.EventExecutor
+import java.util.concurrent.ExecutorService
 
 class UrlContext(
     val url: String,
     pipeline: DefaultChannelPipeline,
-    executor: EventExecutor,
+    executor: ExecutorService,
     name: String,
     override var handler: ChannelHandler
-): AbstractChannelHandlerContext(pipeline, executor, name, handler::class) {
+) : AbstractChannelHandlerContext(pipeline, executor, name, handler::class) {
     override val channel: Channel = pipeline.channel
 }
 
-class UrlHandle: ChannelHandlerAdapter() {
+class UrlHandle : ChannelHandlerAdapter() {
     override fun handlerAdded(context: ChannelHandlerContext) {
         TODO("Not yet implemented")
     }
@@ -38,30 +38,31 @@ class UrlHandle: ChannelHandlerAdapter() {
 class UrlAwareHandlerContext(
     val url: UrlAware,
     pipeline: DefaultChannelPipeline,
-    executor: EventExecutor,
+    executor: ExecutorService,
     name: String,
-    override var handler: ChannelHandler
-): AbstractChannelHandlerContext(pipeline, executor, name, handler) {
+    override var handler: ChannelHandler,
+) : AbstractChannelHandlerContext(pipeline, executor, name, handler) {
     override val channel: Channel = pipeline.channel
 }
 
 class WebPageHandlerContext(
     val page: WebPage,
     pipeline: DefaultChannelPipeline,
-    executor: EventExecutor,
+    executor: ExecutorService,
     name: String,
-    override var handler: ChannelHandler
-): AbstractChannelHandlerContext(pipeline, executor, name, handler) {
+    override var handler: ChannelHandler,
+) : AbstractChannelHandlerContext(pipeline, executor, name, handler) {
+
     override val channel: Channel = pipeline.channel
 }
 
 class HtmlDocumentHandlerContext(
     val document: FeaturedDocument,
     pipeline: DefaultChannelPipeline,
-    executor: EventExecutor,
+    executor: ExecutorService,
     name: String,
-    override var handler: ChannelHandler
-): AbstractChannelHandlerContext(pipeline, executor, name, handler) {
+    override var handler: ChannelHandler,
+) : AbstractChannelHandlerContext(pipeline, executor, name, handler) {
     override val channel: Channel = pipeline.channel
 }
 

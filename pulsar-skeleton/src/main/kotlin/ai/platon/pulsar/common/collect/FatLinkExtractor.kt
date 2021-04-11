@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.ObjectConverter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.Hyperlink

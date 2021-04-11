@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
