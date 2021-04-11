@@ -40,7 +40,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -473,13 +472,23 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>hasVar.</p>
+     * Check if the page scope temporary variable with name {@name} exist
      *
-     * @param name a {@link java.lang.String} object.
-     * @return a boolean.
+     * @param name The variable name to check
+     * @return true if the variable exist
      */
     public boolean hasVar(@NotNull String name) {
         return variables.contains(name);
+    }
+
+    /**
+     * Get a page scope temporary variable
+     *
+     * @param name a {@link String} object.
+     * @return a Object or null.
+     */
+    public Object getVar(@NotNull String name) {
+        return variables.get(name);
     }
 
     /**
@@ -494,6 +503,16 @@ final public class WebPage implements Comparable<WebPage> {
             variables.remove(name);
         }
         return exist;
+    }
+
+    /**
+     * Get a page scope temporary variable
+     *
+     * @param name The variable name.
+     * @param value The variable value.
+     */
+    public void setVar(@NotNull String name, @NotNull Object value) {
+        variables.set(name, value);
     }
 
     public boolean isLoaded() {
@@ -516,51 +535,23 @@ final public class WebPage implements Comparable<WebPage> {
         this.cachedContentEnabled = cachedContentEnabled;
     }
 
-    /**
-     * <p>Getter for the field <code>conf</code>.</p>
-     *
-     * @return a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     */
     @NotNull
     public VolatileConfig getConf() {
         return conf;
     }
 
-    /**
-     * <p>Setter for the field <code>conf</code>.</p>
-     *
-     * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     */
     public void setConf(@NotNull VolatileConfig conf) {
         this.conf = conf;
     }
 
-    /**
-     * <p>getMetadata.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.Metadata} object.
-     */
     public Metadata getMetadata() {
         return Metadata.box(page.getMetadata());
     }
 
-    /**
-     * *****************************************************************************
-     * Creation fields
-     * ******************************************************************************
-     *
-     * @return a {@link ai.platon.pulsar.persist.CrawlMarks} object.
-     */
     public CrawlMarks getMarks() {
         return CrawlMarks.box(page.getMarkers());
     }
 
-    /**
-     * <p>hasMark.</p>
-     *
-     * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
-     * @return a boolean.
-     */
     public boolean hasMark(Mark mark) {
         return page.getMarkers().get(wrapKey(mark)) != null;
     }
@@ -568,7 +559,6 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * All options are saved here, including crawl options, link options, entity options and so on
      *
-     * @return a {@link java.lang.String} object.
      */
     @NotNull
     public String getArgs() {
@@ -612,108 +602,52 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.QUERY, query);
     }
 
-    /**
-     * <p>getFetchedLinkCount.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public int getFetchedLinkCount() {
         return getMetadata().getInt(Name.FETCHED_LINK_COUNT, 0);
     }
 
-    /**
-     * <p>setFetchedLinkCount.</p>
-     *
-     * @param count The count of fetched link
-     */
     public void setFetchedLinkCount(int count) {
         getMetadata().set(Name.FETCHED_LINK_COUNT, count);
     }
 
-    /**
-     * <p>getZoneId.</p>
-     *
-     * @return a {@link java.time.ZoneId} object.
-     */
     @NotNull
     public ZoneId getZoneId() {
         return page.getZoneId() == null ? AppContext.INSTANCE.getDefaultZoneId() : ZoneId.of(page.getZoneId().toString());
     }
 
-    /**
-     * <p>setZoneId.</p>
-     *
-     * @param zoneId a {@link java.time.ZoneId} object.
-     */
     public void setZoneId(@NotNull ZoneId zoneId) {
         page.setZoneId(zoneId.getId());
     }
 
-    /**
-     * <p>getBatchId.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String getBatchId() {
         return page.getBatchId() == null ? "" : page.getBatchId().toString();
     }
 
-    /**
-     * <p>setBatchId.</p>
-     *
-     * @param value a {@link java.lang.String} object.
-     */
     public void setBatchId(String value) {
         page.setBatchId(value);
     }
 
-    /**
-     * <p>markSeed.</p>
-     */
     public void markSeed() {
         getMetadata().set(Name.IS_SEED, YES_STRING);
     }
 
-    /**
-     * <p>unmarkSeed.</p>
-     */
     public void unmarkSeed() {
         getMetadata().remove(Name.IS_SEED);
     }
 
-    /**
-     * <p>isSeed.</p>
-     *
-     * @return a boolean.
-     */
     public boolean isSeed() {
         return getMetadata().contains(Name.IS_SEED);
     }
 
-    /**
-     * <p>getDistance.</p>
-     *
-     * @return a int.
-     */
     public int getDistance() {
         int distance = page.getDistance();
         return distance < 0 ? DISTANCE_INFINITE : distance;
     }
 
-    /**
-     * <p>setDistance.</p>
-     *
-     * @param newDistance a int.
-     */
     public void setDistance(int newDistance) {
         page.setDistance(newDistance);
     }
 
-    /**
-     * <p>updateDistance.</p>
-     *
-     * @param newDistance a int.
-     */
     public void updateDistance(int newDistance) {
         int oldDistance = getDistance();
         if (newDistance < oldDistance) {
@@ -721,11 +655,6 @@ final public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    /**
-     * Fetch mode is used to determine the protocol before fetch
-     *
-     * @return a {@link ai.platon.pulsar.persist.metadata.FetchMode} object.
-     */
     @NotNull
     public FetchMode getFetchMode() {
         return FetchMode.fromString(getMetadata().get(Name.FETCH_MODE));
@@ -734,73 +663,37 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
      *
-     * @param mode a {@link ai.platon.pulsar.persist.metadata.FetchMode} object.
      */
     public void setFetchMode(@NotNull FetchMode mode) {
         getMetadata().set(Name.FETCH_MODE, mode.name());
     }
 
-    /**
-     * <p>getLastBrowser.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.metadata.BrowserType} object.
-     */
     @NotNull
     public BrowserType getLastBrowser() {
         return BrowserType.fromString(getMetadata().get(Name.BROWSER));
     }
 
-    /**
-     * <p>setLastBrowser.</p>
-     *
-     * @param browser a {@link ai.platon.pulsar.persist.metadata.BrowserType} object.
-     */
     public void setLastBrowser(@NotNull BrowserType browser) {
         getMetadata().set(Name.BROWSER, browser.name());
     }
 
-    /**
-     * <p>getHtmlIntegrity.</p>
-     *
-     * @return a {@link ai.platon.pulsar.common.HtmlIntegrity} object.
-     */
     @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
         return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
     }
 
-    /**
-     * <p>setHtmlIntegrity.</p>
-     *
-     * @param integrity a {@link ai.platon.pulsar.common.HtmlIntegrity} object.
-     */
     public void setHtmlIntegrity(@NotNull HtmlIntegrity integrity) {
         getMetadata().set(Name.HTML_INTEGRITY, integrity.name());
     }
 
-    /**
-     * <p>getFetchPriority.</p>
-     *
-     * @return a int.
-     */
     public int getFetchPriority() {
         return page.getFetchPriority() > 0 ? page.getFetchPriority() : FETCH_PRIORITY_DEFAULT;
     }
 
-    /**
-     * <p>setFetchPriority.</p>
-     *
-     * @param priority a int.
-     */
     public void setFetchPriority(int priority) {
         page.setFetchPriority(priority);
     }
 
-    /**
-     * <p>sniffFetchPriority.</p>
-     *
-     * @return a int.
-     */
     public int sniffFetchPriority() {
         int priority = getFetchPriority();
 
@@ -812,30 +705,15 @@ final public class WebPage implements Comparable<WebPage> {
         return priority;
     }
 
-    /**
-     * <p>getCreateTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     @NotNull
     public Instant getCreateTime() {
         return Instant.ofEpochMilli(page.getCreateTime());
     }
 
-    /**
-     * <p>setCreateTime.</p>
-     *
-     * @param createTime a {@link java.time.Instant} object.
-     */
     public void setCreateTime(@NotNull Instant createTime) {
         page.setCreateTime(createTime.toEpochMilli());
     }
 
-    /**
-     * <p>getGenerateTime.</p>
-     *
-     * @return a {@link java.time.Instant} object.
-     */
     @NotNull
     public Instant getGenerateTime() {
         String generateTime = getMetadata().get(Name.GENERATE_TIME);
@@ -849,20 +727,10 @@ final public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    /**
-     * <p>setGenerateTime.</p>
-     *
-     * @param generateTime a {@link java.time.Instant} object.
-     */
     public void setGenerateTime(@NotNull Instant generateTime) {
         getMetadata().set(Name.GENERATE_TIME, generateTime.toString());
     }
 
-    /**
-     * <p>getModelSyncTime.</p>
-     *
-     * @return The time to sync the page model.
-     */
     @Nullable
     public Instant getModelSyncTime() {
         String modelSyncTime = getMetadata().get(Name.MODEL_SYNC_TIME);
@@ -873,11 +741,6 @@ final public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    /**
-     * <p>setModelSyncTime.</p>
-     *
-     * @param modelSyncTime The time to sync the page model.
-     */
     public void setModelSyncTime(@Nullable Instant modelSyncTime) {
         if (modelSyncTime != null) {
             getMetadata().set(Name.MODEL_SYNC_TIME, modelSyncTime.toString());

@@ -146,6 +146,7 @@ open class BrowserEmulator(
 
         checkState(driver)
         checkState(task)
+        // href has the higher priority to locate a resource
         val location = task.href ?: task.url
         driver.navigateTo(location)
 
@@ -178,11 +179,10 @@ open class BrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
-        val eventHandler = volatileConfig?.getBean(JsEventHandler::class)
+        val eventHandler = volatileConfig.getBean(JsEventHandler::class)
 
         jsCheckDOMState(task, result)
 
-        // TODO: check performance issue
         task.driver.bringToFront()
 
         if (result.state.isContinue) {

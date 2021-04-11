@@ -1,0 +1,14 @@
+package ai.platon.pulsar.persist.jackson
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import com.fasterxml.jackson.module.kotlin.kotlinModule
+
+/**
+ * jacksonObjectMapper with java 8 data time support
+ * */
+fun pulsarObjectMapper(): ObjectMapper = jsonMapper {
+    addModule(JavaTimeModule())
+    addModule(kotlinModule())
+}
