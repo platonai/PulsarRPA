@@ -26,6 +26,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -158,17 +159,16 @@ class HtmlParser(
 
     private fun setMetaInfos(page: WebPage, document: FeaturedDocument) {
         val metadata = document.document.selectFirstOrNull("#${PULSAR_META_INFORMATION_ID}") ?: return
+
         // The normalizedUrl
         page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
         page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
 
+        val options = page.options
         metadata.attr("normalizedUrl", page.url)
-        if (page.args.isNotBlank()) {
-            val options = LoadOptions.parse(page.args, volatileConfig)
-            metadata.attr("label", options.label)
-            metadata.attr("taskId", options.taskId)
-            metadata.attr("taskTime", options.taskTime)
-        }
+        metadata.attr("label", options.label)
+        metadata.attr("taskId", options.taskId)
+        metadata.attr("taskTime", options.taskTime)
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {

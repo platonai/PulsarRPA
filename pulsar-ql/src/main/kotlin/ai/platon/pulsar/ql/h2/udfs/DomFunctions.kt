@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.DefaultJsEventHandler
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
@@ -146,6 +147,18 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun elementSiblingIndex(dom: ValueDom) = dom.element.elementSiblingIndex()
+
+    /**
+     * The normalized uri
+     * */
+    @UDFunction
+    @JvmStatic
+    fun uri(dom: ValueDom): String {
+        return dom.element.ownerDocument().selectFirstOrNull("#PulsarMetaInformation")
+            ?.attr("normalizedUrl")
+            ?.takeIf { Urls.isValidUrl(it) }
+            ?: baseUri(dom)
+    }
 
     @UDFunction
     @JvmStatic

@@ -18,11 +18,20 @@ class TestAsins : QABase() {
     }
 
     @Test
-    fun `Ensure top reviews exist`() {
+    fun `When extract reviews then success`() {
         val sqlResource = "$resourcePrefix/crawl/x-asin-top-reviews.sql"
         val template = SQLTemplate.load(sqlResource)
         val fields = listOf("comment_id")
         assertAllNotBlank(defaultUrl, template, fields)
+    }
+
+    @Test
+    fun `When extract buy choice then success`() {
+        val url = "https://www.amazon.com/dp/B07TWFVDWT"
+        val sqlResource = "$resourcePrefix/crawl/x-asin-buy-choice.sql"
+        val template = SQLTemplate.load(sqlResource)
+        val fields = listOf("price", "shipping", "soldby", "addtocart")
+        assertAllNotBlank(url, template, fields)
     }
 
     @Test

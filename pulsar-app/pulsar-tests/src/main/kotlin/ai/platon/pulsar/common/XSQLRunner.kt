@@ -11,10 +11,10 @@ import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
-class XSqlRunner(
-    val cx: SQLContext = SQLContexts.activate()
+class XSQLRunner(
+    val cx: SQLContext = SQLContexts.activate(),
 ) {
-    private val log = LoggerFactory.getLogger(XSqlRunner::class.java)
+    private val log = LoggerFactory.getLogger(XSQLRunner::class.java)
 
     val loadArgs = "-i 1d -retry -nJitRetry 3"
     val extractor = VerboseSqlExtractor(cx)

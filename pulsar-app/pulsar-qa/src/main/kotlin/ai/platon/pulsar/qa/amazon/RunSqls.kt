@@ -1,6 +1,6 @@
 package ai.platon.pulsar.qa.amazon
 
-import ai.platon.pulsar.common.XSqlRunner
+import ai.platon.pulsar.common.XSQLRunner
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.ql.withSQLContext
@@ -52,5 +52,5 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
     val xsqlFilter = { xsql: String -> "x-similar-items.sql" in xsql }
 //    val xsqlFilter = { xsql: String -> true }
-    XSqlRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
+    XSQLRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
 }
