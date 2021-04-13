@@ -4,7 +4,7 @@
 -- set @url='https://www.amazon.com/dp/B0113UZJE2'
 select
     dom_base_uri(dom) as url,
-    str_substring_between(dom_base_uri(dom), '/dp/', '/ref=') as asin,
+    amazon_find_asin(dom_base_uri(dom)) as asin,
     dom_first_own_text(dom_owner_body(dom), '#sims-consolidated-1_feature_div h2.a-carousel-heading') as carousel_title,
     dom_first_text(dom_owner_body(dom), '#sims-consolidated-1_feature_div h2.a-carousel-heading div.sp_desktop_sponsored_label') as is_sponsored,
     dom_element_sibling_index(dom) as ad_asin_position,
@@ -14,8 +14,8 @@ select
     dom_first_attr(dom, 'div[data-asin] a img[data-a-dynamic-image]', 'src') as ad_asin_img,
     dom_first_text(dom, 'div[data-asin] > div > a i.a-icon-star') as ad_asin_score,
     str_substring_after(dom_first_attr(dom, 'div[data-asin] > div > a i.a-icon-star', 'class'), ' a-star-') as ad_asin_score_2,
-    dom_first_text(dom, 'div[data-asin] a:contains(out of 5 stars) ~ a[href~=reviews]') as ad_asin_starnum,
+    dom_first_text(dom, 'div[data-asin] > div > a i.a-icon-star ~ span') as ad_asin_starnum,
     dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'label') as `label`,
     time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
-    'sims' as `ad_type`
-from load_and_select(@url, 'ol.a-carousel li');
+    'sims-carousel' as `ad_type`
+from load_and_select(@url, 'ol.a-carousel li:has(i.a-icon-star)');

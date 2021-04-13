@@ -151,7 +151,11 @@ open class BrowserEmulator(
         driver.navigateTo(location)
 
         val interactTask = InteractTask(task, driverConfig, driver)
-        return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
+        return if (driver.supportJavascript) {
+            takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
+        } else {
+            InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+        }
     }
 
     @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)

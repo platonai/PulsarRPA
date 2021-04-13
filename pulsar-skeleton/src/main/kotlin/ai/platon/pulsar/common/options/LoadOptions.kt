@@ -3,7 +3,6 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -15,14 +14,32 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 object LoadOptionDefaults {
+    /**
+     * The default expire time, some time we may need expire all pages by default, for example, in test mode
+     * */
+    var expires = ChronoUnit.CENTURIES.duration
+    /**
+     * The default time to expire
+     * */
+    var expireAt = Instant.now() + ChronoUnit.CENTURIES.duration
     var lazyFlush = true
     var parse = false
     var storeContent = true
     var cacheContent = true
     /**
-     * We may use jit retry in test environment
+     * The are several cases to enable jit retry
+     * For example, in test environment
      * */
     var nJitRetry = 0
+    /**
+     * The default browser
+     * */
+    var browser = BrowserType.CHROME
+    /**
+     * Set to be true if we are doing unit test or other test
+     * We will talk more, log more and trace more in test mode
+     * */
+    var test = 0
 }
 
 /**
@@ -63,13 +80,13 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var expires = ChronoUnit.CENTURIES.duration
+    var expires = LoadOptionDefaults.expires
 
     /** Web page expire time */
     @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var expireAt = Instant.EPOCH + ChronoUnit.CENTURIES.duration
+    var expireAt = LoadOptionDefaults.expireAt
 
     /** Arrange links */
     @ApiPublic
@@ -126,7 +143,7 @@ open class LoadOptions(
 
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
-    var browser = BrowserType.CHROME
+    var browser = LoadOptionDefaults.browser
 
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
@@ -276,6 +293,9 @@ open class LoadOptions(
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
+    @Parameter(names = ["-test", "--test"], description = "The test level, 0 to disable, we will talk more in test mode")
+    var test = LoadOptionDefaults.test
+
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
     var version = "20210321"
 
@@ -360,6 +380,7 @@ open class LoadOptions(
     }
 
     fun apply(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+        setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
         setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)

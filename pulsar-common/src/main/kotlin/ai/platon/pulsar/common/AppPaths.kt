@@ -40,6 +40,10 @@ object AppPaths {
     val LOCAL_DATA_DIR = DATA_DIR.resolve("data")
     @RequiredDirectory
     val LOCAL_STORAGE_DIR = LOCAL_DATA_DIR.resolve("store")
+    @RequiredDirectory
+    val LOCAL_TEST_DATA_DIR = LOCAL_DATA_DIR.resolve( "test")
+    @RequiredDirectory
+    val LOCAL_TEST_WEB_PAGE_DIR = LOCAL_TEST_DATA_DIR.resolve( "web")
 
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR
@@ -144,6 +148,11 @@ object AppPaths {
     }
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
+
+    fun testDataPath(url: String): Path {
+        val filename = fromUri(url, "", ".htm")
+        return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
+    }
 
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = Urls.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"

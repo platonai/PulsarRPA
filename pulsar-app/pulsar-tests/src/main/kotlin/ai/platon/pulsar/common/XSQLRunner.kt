@@ -1,10 +1,8 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
-import ai.platon.pulsar.common.sql.SqlConverter
-import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.dom.Documents
-import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.common.sql.SQLConverter
+import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
@@ -16,27 +14,28 @@ class XSQLRunner(
 ) {
     private val log = LoggerFactory.getLogger(XSQLRunner::class.java)
 
-    val loadArgs = "-i 1d -retry -nJitRetry 3"
+    val loadArgs = "-retry -nJitRetry 3"
     val extractor = VerboseSqlExtractor(cx)
     val session = extractor.session
 
     fun execute(url: String, sqlResource: String): ResultSet {
         val name = sqlResource.substringAfterLast("/").substringBeforeLast(".sql")
-        val sqlTemplate = SQLTemplate.load(sqlResource, name = name)
-        return execute(url, sqlTemplate)
+        val sqlTemplate = SQLInstance.load(url, sqlResource, name = name)
+        return execute(sqlTemplate)
     }
 
-    fun execute(url: String, template: SQLTemplate): ResultSet {
-        val document = loadResourceAsDocument(url) ?: session.loadDocument(url, loadArgs)
+    fun execute(sqlInstance: SQLInstance): ResultSet {
+        val url = sqlInstance.url
+        val document = session.loadDocument(url, loadArgs)
 
-        val sql = template.createInstance(url)
+        val sql = sqlInstance.sql
         if (sql.isBlank()) {
-            throw IllegalArgumentException("Illegal sql template: ${template.resource}")
+            throw IllegalArgumentException("Illegal sql template: ${sqlInstance.template.resource}")
         }
 
         var rs = extractor.query(sql, printResult = true)
 
-        if (template.resource?.contains("x-similar-items.sql") == true) {
+        if (sqlInstance.template.resource?.contains("x-similar-items.sql") == true) {
             rs = ResultSetUtils.transpose(rs)
             println("Transposed: ")
             rs.beforeFirst()
@@ -44,8 +43,7 @@ class XSQLRunner(
         }
 
         val count = ResultSetUtils.count(rs)
-        val path = session.export(document)
-        log.info("Extracted $count records, exported://$path")
+        log.info("Extracted $count records")
 
         return rs
     }
@@ -54,30 +52,19 @@ class XSQLRunner(
         var i = 0
         sqls.forEach { (url, resource) ->
             val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
-            val template = SQLTemplate.load(resource, name = name)
+            val sqlInstance = SQLInstance.load(url, resource, name = name)
 
             when {
-                template.template.isBlank() -> {
+                sqlInstance.template.template.isBlank() -> {
                     log.warn("Failed to load SQL template <{}>", resource)
                 }
-                template.template.contains("create table", ignoreCase = true) -> {
-                    log.info(SqlConverter.createSql2extractSql(template.template))
+                sqlInstance.template.template.contains("create table", ignoreCase = true) -> {
+                    log.info(SQLConverter.createSql2extractSql(sqlInstance.template.template))
                 }
                 else -> {
-                    execute(url, template)
+                    execute(sqlInstance)
                 }
             }
         }
-    }
-
-    private fun loadResourceAsDocument(url: String): FeaturedDocument? {
-        val filename = AppPaths.fromUri(url, "", ".htm")
-        val resource = "cache/web/export/$filename"
-
-        if (ResourceLoader.exists(resource)) {
-            return Documents.parse(ResourceLoader.readString(resource), url)
-        }
-
-        return null
     }
 }

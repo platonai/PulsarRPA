@@ -5,6 +5,7 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.chrome.ChromeDriver
@@ -14,13 +15,13 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
 
 /**
- * TODO: no selenium dependency
+ * TODO: remove selenium dependency
  * */
 class ManagedWebDriver(
-        browserInstanceId: BrowserInstanceId,
-        val driver: org.openqa.selenium.WebDriver,
-        val priority: Int = 1000
-): AbstractWebDriver(browserInstanceId, instanceSequencer.incrementAndGet()) {
+    browserInstanceId: BrowserInstanceId,
+    val driver: org.openqa.selenium.WebDriver,
+    val priority: Int = 1000,
+) : AbstractWebDriver(browserInstanceId, instanceSequencer.incrementAndGet()) {
     companion object {
         val instanceSequencer = AtomicInteger()
     }
@@ -41,10 +42,11 @@ class ManagedWebDriver(
     /**
      * The actual url return by the browser
      * */
-    override val currentUrl: String? get() = if (isQuit) null else
-        driver.runCatching { currentUrl }
-            .onFailure { log.warn("Unexpected exception", it) }
-            .getOrNull()
+    override val currentUrl: String?
+        get() = if (isQuit) null else
+            driver.runCatching { currentUrl }
+                .onFailure { log.warn("Unexpected exception", it) }
+                .getOrNull()
 
     /**
      * The real time page source return by the browser
@@ -54,20 +56,36 @@ class ManagedWebDriver(
     /**
      * The id of the session to the browser
      * */
-    override val sessionId: String? get() = when {
-        isQuit -> null
-        driver is ChromeDevtoolsDriver -> driver.runCatching { sessionId }.getOrNull()?.toString()
-        else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
-    }
+    override val sessionId: String?
+        get() = when {
+            isQuit -> null
+            driver is MockWebDriver || driver is ChromeDevtoolsDriver ->
+                driver.runCatching { sessionId }.getOrNull()?.toString()
+            else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+        }
 
     /**
      * The browser type
      * */
-    override val browserType: BrowserType get() = when (driver) {
-        is ChromeDevtoolsDriver -> BrowserType.CHROME
-        is ChromeDriver -> BrowserType.SELENIUM_CHROME
-        else -> BrowserType.CHROME
-    }
+    override val browserType: BrowserType
+        get() = when (driver) {
+            is MockWebDriver -> BrowserType.MOCK_CHROME
+            is ChromeDevtoolsDriver -> BrowserType.CHROME
+            is ChromeDriver -> BrowserType.SELENIUM_CHROME
+            else -> BrowserType.CHROME
+        }
+
+    override val supportJavascript: Boolean
+        get() = when (driver) {
+            is MockWebDriver -> false
+            else -> true
+        }
+
+    override val mockedPageSource: Boolean
+        get() = when (driver) {
+            is MockWebDriver -> true
+            else -> false
+        }
 
     /**
      * Navigate to the url
@@ -86,6 +104,7 @@ class ManagedWebDriver(
     override fun evaluate(expression: String): Any? {
         return when {
             isNotWorking -> null
+            driver is MockWebDriver -> driver.evaluate(expression)
             driver is ChromeDevtoolsDriver -> driver.evaluate(expression)
             driver is ChromeDriver -> driver.executeScript(expression)
             else -> null
@@ -93,18 +112,30 @@ class ManagedWebDriver(
     }
 
     override fun bringToFront() {
-        if (driver is ChromeDevtoolsDriver) {
-            driver.takeIf { isWorking }?.runCatching { bringToFront() }
-        } else {
-            evaluateSilently(";document.blur();")
+        when (driver) {
+            is MockWebDriver -> {
+                driver.bringToFront()
+            }
+            is ChromeDevtoolsDriver -> {
+                driver.takeIf { isWorking }?.runCatching { bringToFront() }
+            }
+            else -> {
+                evaluateSilently(";document.blur();")
+            }
         }
     }
 
     override fun stopLoading() {
-        if (driver is ChromeDevtoolsDriver) {
-            driver.takeIf { isWorking }?.runCatching { stopLoading() }
-        } else {
-            evaluateSilently(";window.stop();")
+        when (driver) {
+            is MockWebDriver -> {
+                driver.takeIf { isWorking }?.runCatching { stopLoading() }
+            }
+            is ChromeDevtoolsDriver -> {
+                driver.takeIf { isWorking }?.runCatching { stopLoading() }
+            }
+            else -> {
+                evaluateSilently(";window.stop();")
+            }
         }
     }
 

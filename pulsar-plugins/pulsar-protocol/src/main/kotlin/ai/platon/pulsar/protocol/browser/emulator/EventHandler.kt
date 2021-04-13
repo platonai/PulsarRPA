@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.PageDatum
@@ -199,8 +200,10 @@ open class EventHandler(
             }
         }
 
-        exportIfNecessary(task)
-        takeScreenshotIfNecessary(task)
+        if (!task.driver.mockedPageSource) {
+            exportIfNecessary(task)
+            takeScreenshotIfNecessary(task)
+        }
 
         return ForwardingResponse(task.page, pageDatum)
     }
@@ -249,6 +252,17 @@ open class EventHandler(
     private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
             return
+        }
+
+        val test = page.options.test
+        if (test > 0 && status.isSuccess) {
+            try {
+                val path = AppPaths.testDataPath(page.url)
+                Files.writeString(path, pageSource)
+                log.info("Exported as test data: file://{}", path)
+            } catch (e: IOException) {
+                log.warn(e.toString())
+            }
         }
 
         val shouldExport = (log.isInfoEnabled && !status.isSuccess) || log.isDebugEnabled

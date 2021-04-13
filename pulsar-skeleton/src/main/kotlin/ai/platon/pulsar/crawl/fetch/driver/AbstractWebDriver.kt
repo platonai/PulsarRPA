@@ -28,6 +28,14 @@ abstract class AbstractWebDriver(
      * */
     override var url: String = ""
     /**
+     * Whether the web driver has javascript support
+     * */
+    override val supportJavascript: Boolean = true
+    /**
+     * Whether the web page source is mocked
+     * */
+    override val mockedPageSource: Boolean = true
+    /**
      * Driver status
      * */
     val status = AtomicReference(Status.UNKNOWN)

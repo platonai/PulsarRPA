@@ -3,7 +3,7 @@
 
 select
     dom_base_uri(dom) as `url`,
-    dom_first_slim_html(dom_owner_body(dom), '.product-title h1 a, a[data-hook=product-link]') as `asin`,
+    amazon_find_asin(dom_base_uri(dom)) as asin,
     dom_first_href(dom, 'a.review-title-content, a[data-hook=review-title]') as `reviews_url`,
     dom_first_text(dom_owner_body(dom), '#filter-info-section div[data-hook=cr-filter-info-review-rating-count], #filter-info-section') as `ratingcount`,
     dom_attr(dom, 'id') as `comment_id`,
@@ -25,4 +25,4 @@ select
     time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `task_time`,
 
     dom_own_texts(dom_select_first(dom, 'a[data-hook=format-strip]')) as `sku`
-from load_and_select('{{url}}', '#cm-cr-dp-review-list > div[data-hook=review]');
+from load_and_select(@url, '#cm-cr-dp-review-list > div[data-hook=review]');

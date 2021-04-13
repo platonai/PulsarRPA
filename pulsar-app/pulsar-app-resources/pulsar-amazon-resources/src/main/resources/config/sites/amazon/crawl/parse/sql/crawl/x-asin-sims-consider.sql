@@ -3,7 +3,7 @@
 
 select
     dom_base_uri(dom) as url,
-    str_substring_between(dom_base_uri(dom), '/dp/', '/ref=') as asin,
+    amazon_find_asin(dom_base_uri(dom)) as asin,
     dom_first_text(dom, 'h4') as carousel_title,
     dom_first_href(dom, 'div#value-pick-title-row a') as ad_asin_url,
     dom_first_text(dom, 'div#value-pick-title-row a') as ad_asin_title,

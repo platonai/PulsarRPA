@@ -182,8 +182,8 @@ open class MutableConfig : ImmutableConfig {
      * @param value new value
      * @param <T> a T object.
     </T> */
-    fun <T : Enum<T>?> setEnum(name: String, value: T) {
-        set(name, value.toString())
+    fun <T : Enum<T>> setEnum(name: String, value: T) {
+        set(name, value.name)
     }
 
     /**

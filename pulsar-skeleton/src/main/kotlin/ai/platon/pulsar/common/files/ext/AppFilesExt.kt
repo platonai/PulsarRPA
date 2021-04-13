@@ -1,13 +1,13 @@
 package ai.platon.pulsar.common.files.ext
 
-import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.AppPaths.FILE_CACHE_DIR
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
-import com.google.common.net.InternetDomainName
-import org.apache.commons.codec.digest.DigestUtils
 import org.jsoup.nodes.Document
 import java.nio.file.Files
 import java.nio.file.Path
@@ -18,7 +18,13 @@ fun AppFiles.export(status: ProtocolStatus, content: String, page: WebPage): Pat
     return AppFiles.export(StringBuilder(), status, content, page)
 }
 
-fun AppFiles.export(sb: StringBuilder, status: ProtocolStatus, content: String, page: WebPage, suffix: String = ".htm"): Path {
+fun AppFiles.export(
+    sb: StringBuilder,
+    status: ProtocolStatus,
+    content: String,
+    page: WebPage,
+    suffix: String = ".htm",
+): Path {
     val document = Documents.parse(content, page.baseUrl)
     document.absoluteLinks()
     val prettyHtml = document.prettyHtml
@@ -48,7 +54,7 @@ fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffi
 //    val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
 
     val filename = AppPaths.fromUri(page.url, suffix = suffix)
-    val path = AppPaths.WEB_CACHE_DIR.resolve("original").resolve(browser).resolve("$ident-$filename")
+    val path = WEB_CACHE_DIR.resolve("original").resolve(browser).resolve("$ident-$filename")
     saveTo(content, path, true)
 
     return path
@@ -56,13 +62,13 @@ fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffi
 
 fun AppFiles.export(page: WebPage, ident: String = "", suffix: String = ""): Path {
     val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, "", suffix)
-    val path = FILE_CACHE_DIR.resolve(ident).resolve(filename)
+    val path = WEB_CACHE_DIR.resolve(ident).resolve(filename)
     Files.deleteIfExists(path)
-    AppFiles.saveTo(page.content?.array()?: "(empty)".toByteArray(), path)
+    AppFiles.saveTo(page.content?.array() ?: "(empty)".toByteArray(), path)
     return path
 }
 
 fun AppFiles.export(doc: Document, ident: String = ""): Path {
-    val path = FILE_CACHE_DIR.resolve(ident).resolve(AppPaths.fromUri(doc.baseUri(), "", ".htm"))
+    val path = WEB_CACHE_DIR.resolve(ident).resolve(AppPaths.fromUri(doc.baseUri(), "", ".htm"))
     return AppFiles.saveTo(doc.outerHtml(), path)
 }

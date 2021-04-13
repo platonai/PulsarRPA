@@ -190,10 +190,10 @@ class ChromeLauncher(
         userDataDir = options.userDataDir
 
         // if the data dir is the default dir, we might have problem to prepare user dir
-        if ("context\\default" !in userDataDir.toString()) {
-            kotlin.runCatching { prepareUserDataDir() }.onFailure {
-                log.warn("Failed to prepare user data dir", it)
-            }
+        if ("context\\default--" !in userDataDir.toString()) {
+        }
+        kotlin.runCatching { prepareUserDataDir() }.onFailure {
+            log.warn("Failed to prepare user data dir", it)
         }
 
         val port = launchChromeProcess(chromeBinaryPath, options)

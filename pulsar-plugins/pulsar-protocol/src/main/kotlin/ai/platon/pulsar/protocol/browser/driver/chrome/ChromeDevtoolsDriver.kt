@@ -29,14 +29,22 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-internal data class DeviceMetrics(val width: Int, val height: Int, val deviceScaleFactor: Double, val mobile: Boolean)
+internal data class DeviceMetrics(
+    val width: Int,
+    val height: Int,
+    val deviceScaleFactor: Double,
+    val mobile: Boolean
+)
 
+/**
+ * TODO: inherit from ai.platon.pulsar.crawl.fetch.driver.WebDriver
+ * */
 class ChromeDevtoolsDriver(
-        private val launcherConfig: LauncherConfig,
-        private val launchOptions: ChromeDevtoolsOptions,
-        private val browserControl: WebDriverControl,
-        private val browserInstanceManager: BrowserInstanceManager
-): RemoteWebDriver() {
+    private val launcherConfig: LauncherConfig,
+    private val launchOptions: ChromeDevtoolsOptions,
+    private val browserControl: WebDriverControl,
+    private val browserInstanceManager: BrowserInstanceManager,
+) : RemoteWebDriver() {
     private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
     val dataDir get() = launchOptions.userDataDir
@@ -47,6 +55,7 @@ class ChromeDevtoolsDriver(
     val scriptTimeout get() = browserControl.scriptTimeout
     val scrollDownCount get() = browserControl.scrollDownCount
     val scrollInterval get() = browserControl.scrollInterval
+
     // TODO: load blocking rules from config files
     val enableUrlBlocking get() = browserControl.enableUrlBlocking
     val clientLibJs = browserControl.parseLibJs(false)
@@ -100,7 +109,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     override fun get(url: String) {
-        takeIf { browserControl.jsInvadingEnabled }?.getInvaded(url)?:getNoInvaded(url)
+        takeIf { browserControl.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
 
     @Throws(NoSuchSessionException::class)
@@ -167,7 +176,7 @@ class ChromeDevtoolsDriver(
     override fun getPageSource(): String {
         try {
             val evaluate = runtime.evaluate("document.documentElement.outerHTML")
-            return evaluate?.result?.value?.toString()?:""
+            return evaluate?.result?.value?.toString() ?: ""
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
@@ -240,13 +249,15 @@ class ChromeDevtoolsDriver(
                             page.captureScreenshot()
                         }
 
-                        log.debug("It takes {} to take screenshot | {}", DateTimes.elapsedTime(startTime).readable(), navigateUrl)
+                        log.debug("It takes {} to take screenshot | {}",
+                            DateTimes.elapsedTime(startTime).readable(),
+                            navigateUrl)
                         outputType.convertFromBase64Png(screenshot)
                     }
                     log.takeIf { result == null }?.warn("Timeout to take screenshot | {}", navigateUrl)
                 }
             }
-            return result?:throw ScreenshotException("Failed to take screenshot | $navigateUrl")
+            return result ?: throw ScreenshotException("Failed to take screenshot | $navigateUrl")
         } catch (e: ScreenshotException) {
             throw e
         } catch (e: ChromeDevToolsInvocationException) {

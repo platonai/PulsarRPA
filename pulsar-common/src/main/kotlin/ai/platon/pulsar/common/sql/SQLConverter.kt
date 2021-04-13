@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.sql
 
 import org.apache.commons.lang3.StringUtils
 
-object SqlConverter {
+object SQLConverter {
     fun createSql2extractSql(createSql: String): String {
         val prefix = "select\n"
         val postfix = "\nfrom load_and_select(@url, '')"
