@@ -1,7 +1,6 @@
 package ai.platon.pulsar.qa.amazon
 
-import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.qa.AssertEntry
+import ai.platon.pulsar.qa.CheckEntry
 import ai.platon.pulsar.qa.QABase
 import ai.platon.pulsar.qa.assertAllRecordsNotBlank
 import kotlin.test.Test
@@ -14,6 +13,6 @@ class TestCategory : QABase() {
     @Test
     fun `When extract asin then success`() {
         val fields = listOf("results", "pagination")
-        assertAllRecordsNotBlank(AssertEntry(defaultUrl, defaultSqlResource, fields))
+        assertAllRecordsNotBlank(CheckEntry(defaultUrl, defaultSqlResource, fields))
     }
 }

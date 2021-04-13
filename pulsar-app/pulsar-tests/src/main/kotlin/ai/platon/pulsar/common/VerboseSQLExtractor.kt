@@ -6,7 +6,7 @@ import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import java.sql.ResultSet
 
-open class VerboseSqlExtractor(val sqlContext: SQLContext): VerboseCrawler(sqlContext) {
+open class VerboseSQLExtractor(val sqlContext: SQLContext): VerboseCrawler(sqlContext) {
 
     fun execute(sql: String, printResult: Boolean = true, formatAsList: Boolean = false) {
         if (sql.isBlank()) {

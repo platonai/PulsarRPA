@@ -32,6 +32,15 @@ object ResultSetUtils {
         return count
     }
 
+    fun count(rs: ResultSet, predicate: (ResultSet) -> Boolean): Int {
+        var count = 0
+        rs.beforeFirst()
+        while (rs.next()) {
+            if (predicate(rs)) ++count
+        }
+        return count
+    }
+
     fun countRemaining(rs: ResultSet): Int {
         var count = 0
         while (rs.next()) ++count

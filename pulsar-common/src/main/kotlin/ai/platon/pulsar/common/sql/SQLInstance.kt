@@ -7,14 +7,14 @@ class SQLInstance(
     val template: SQLTemplate,
     val name: String = template.name,
 ) {
-    val sql by lazy { template.createInstance(url) }
+    val sql = template.createInstance(url)
 
     override fun toString() = sql
 
     companion object {
-        private val randomName: String = RandomStringUtils.randomAlphabetic(4)
+        private val generatedName: String = RandomStringUtils.randomAlphabetic(4)
 
-        fun load(url: String, resource: String, name: String = randomName): SQLInstance {
+        fun load(url: String, resource: String, name: String = generatedName): SQLInstance {
             val template = SQLTemplate.load(resource, name = name)
             return SQLInstance(url, template, name)
         }

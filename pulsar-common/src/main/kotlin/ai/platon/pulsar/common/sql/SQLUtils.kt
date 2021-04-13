@@ -28,7 +28,7 @@ object SQLUtils {
      * Load sql and convert column name
      * A convert column name is like AS `Breadcrumbs last link -> category`
      * */
-    fun loadConvertSql(fileResource: String): String {
+    fun loadConvertSQL(fileResource: String): String {
         return ResourceLoader.readAllLines(fileResource)
                 .asSequence()
                 .filterNot { it.trim().startsWith("-- ") }
@@ -41,7 +41,7 @@ object SQLUtils {
                 .joinToString("\n") { it }
     }
 
-    fun loadSql(fileResource: String): String {
+    fun loadSQL(fileResource: String): String {
         return ResourceLoader.readAllLines(fileResource)
                 .asSequence()
                 .filterNot { it.trim().startsWith("-- ") }

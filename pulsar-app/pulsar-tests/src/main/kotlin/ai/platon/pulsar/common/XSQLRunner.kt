@@ -15,7 +15,7 @@ class XSQLRunner(
     private val log = LoggerFactory.getLogger(XSQLRunner::class.java)
 
     val loadArgs = "-retry -nJitRetry 3"
-    val extractor = VerboseSqlExtractor(cx)
+    val extractor = VerboseSQLExtractor(cx)
     val session = extractor.session
 
     fun execute(url: String, sqlResource: String): ResultSet {
@@ -59,7 +59,7 @@ class XSQLRunner(
                     log.warn("Failed to load SQL template <{}>", resource)
                 }
                 sqlInstance.template.template.contains("create table", ignoreCase = true) -> {
-                    log.info(SQLConverter.createSql2extractSql(sqlInstance.template.template))
+                    log.info(SQLConverter.createSQL2extractSQL(sqlInstance.template.template))
                 }
                 else -> {
                     execute(sqlInstance)

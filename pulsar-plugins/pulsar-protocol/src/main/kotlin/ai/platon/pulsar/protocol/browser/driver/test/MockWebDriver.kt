@@ -112,6 +112,8 @@ class MockWebDriver(
     }
 
     private fun loadMockPageSource(url: String): String? {
-        return AppPaths.testDataPath(url).takeIf { Files.exists(it) }?.let { Files.readString(it) }
+        val path = AppPaths.testDataPath(url)
+        log.info("Load from path: \n{}", path)
+        return path.takeIf { Files.exists(it) }?.let { Files.readString(it) }
     }
 }
