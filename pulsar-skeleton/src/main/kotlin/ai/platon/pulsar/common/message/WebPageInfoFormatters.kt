@@ -16,6 +16,7 @@ import ai.platon.pulsar.persist.model.ActiveDomStat
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.DecimalFormat
+import java.time.Duration
 import java.time.Instant
 
 class PageFormatter(val page: WebPage) {
@@ -85,7 +86,7 @@ class LoadedPageFormatter(
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     private val category get() = page.pageCategory.symbol()
-    private val prevFetchTime get() = page.prevFetchTime
+    private val prevFetchTime get() = Duration.between(page.prevFetchTime, Instant.now()).takeIf { !it.isNegative }
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
@@ -99,7 +100,7 @@ class LoadedPageFormatter(
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %13s in %s, prev at $prevFetchTime," +
+    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %13s in %s, last fetch $prevFetchTime ago," +
             " $jsFmt fc:$fetchCount | $fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 

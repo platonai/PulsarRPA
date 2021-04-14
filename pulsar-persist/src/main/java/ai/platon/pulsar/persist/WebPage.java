@@ -508,7 +508,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * Get a page scope temporary variable
      *
-     * @param name The variable name.
+     * @param name  The variable name.
      * @param value The variable value.
      */
     public void setVar(@NotNull String name, @NotNull Object value) {
@@ -558,7 +558,6 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * All options are saved here, including crawl options, link options, entity options and so on
-     *
      */
     @NotNull
     public String getArgs() {
@@ -597,6 +596,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
+     *
      */
     public void setQuery(@Nullable String query) {
         getMetadata().set(Name.QUERY, query);
@@ -662,7 +662,6 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
-     *
      */
     public void setFetchMode(@NotNull FetchMode mode) {
         getMetadata().set(Name.FETCH_MODE, mode.name());
@@ -763,8 +762,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public
-    CrawlStatus getCrawlStatus() {
+    public CrawlStatus getCrawlStatus() {
         return new CrawlStatus(page.getCrawlStatus().byteValue());
     }
 
@@ -1168,7 +1166,7 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * TODO: Encoding is always UTF-8?
-     *
+     * <p>
      * Get the page content as a string
      */
     @NotNull
@@ -1761,7 +1759,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     private boolean isValidContentModifyTime(Instant publishTime) {
-        return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(AppContext.INSTANCE.getImprecise2DaysAhead());
+        return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME);
     }
 
     public boolean updateContentPublishTime(Instant newPublishTime) {

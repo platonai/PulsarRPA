@@ -90,8 +90,8 @@ class AppMetricRegistry: MetricRegistry() {
     private fun elapsedSeconds(counter: Counter): Long {
         val fullName = metrics.entries.firstOrNull { it.value == counter }?.key?:""
         return when {
-            "daily" in fullName -> AppContext.todayElapsed.seconds.coerceAtMost(AppContext.elapsed.seconds)
-            "hourly" in fullName -> AppContext.tohourElapsed.seconds.coerceAtMost(AppContext.elapsed.seconds)
+            "daily" in fullName -> AppContext.elapsedToday.seconds.coerceAtMost(AppContext.elapsed.seconds)
+            "hourly" in fullName -> AppContext.elapsedThisHour.seconds.coerceAtMost(AppContext.elapsed.seconds)
             else -> AppContext.elapsed.seconds
         }.coerceAtLeast(1)
     }

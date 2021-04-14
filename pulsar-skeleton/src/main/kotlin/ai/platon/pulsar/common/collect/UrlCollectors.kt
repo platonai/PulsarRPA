@@ -139,7 +139,8 @@ open class HyperlinkCollector(
         }
 
         fatLinks[fatLink.url] = fatLink
-        require(fatLink.url == seed.spec)
+        // url might be normalized, href is exactly the same as seed.spec
+        require(fatLink.href == seed.spec)
 
         val options = seed.options
         fatLink.tailLinks.forEach {
