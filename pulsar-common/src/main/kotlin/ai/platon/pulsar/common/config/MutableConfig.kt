@@ -18,14 +18,16 @@ open class MutableConfig : ImmutableConfig {
 
     constructor(): this(false)
 
+    constructor(profile: String): this(profile, true, listOf())
+
     constructor(loadDefaults: Boolean): this(
         System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
-        loadDefaults
+        loadDefaults, listOf()
     )
 
     constructor(
-        profile: String = System.getProperty(CapabilityTypes.LEGACY_CONFIG_PROFILE, ""),
-        loadDefaults: Boolean = true,
+        profile: String,
+        loadDefaults: Boolean,
         resources: Iterable<String> = DEFAULT_RESOURCES
     ): super(profile, loadDefaults, resources)
 

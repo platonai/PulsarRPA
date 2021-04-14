@@ -436,8 +436,8 @@ class LoadComponent(
             return FetchReason.RETRY
         }
 
-        // Failed to fetch the page last time, it might be caused by page is gone reason
-        // in such case, do not fetch it even it it's expired, unless the -retry flag is set
+        // Failed to fetch the page last time, it might be caused by page is gone
+        // in such case, do not fetch it even it it's expired, unless the -retryFailed flag is set
         if (protocolStatus.isFailed && !options.retryFailed) {
             return FetchReason.DO_NOT_FETCH
         }

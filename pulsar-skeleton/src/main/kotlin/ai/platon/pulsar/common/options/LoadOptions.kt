@@ -27,6 +27,10 @@ object LoadOptionDefaults {
     var storeContent = true
     var cacheContent = true
     /**
+     * Retry or not if a page is gone
+     * */
+    var retryFailed = false
+    /**
      * The are several cases to enable jit retry
      * For example, in test environment
      * */
@@ -236,7 +240,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
             description = "Retry fetching the page if it's failed last time")
-    var retryFailed = false
+    var retryFailed = LoadOptionDefaults.retryFailed
 
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
             description = "Retry at most n times if RETRY(1601) code return when fetching a page")

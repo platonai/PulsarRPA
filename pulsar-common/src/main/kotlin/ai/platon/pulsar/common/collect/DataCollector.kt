@@ -34,10 +34,16 @@ abstract class AbstractDataCollector<E>: DataCollector<E> {
 
     override var name: String = "DC"
     override val capacity: Int = DEFAULT_CAPACITY
+    override val size: Int get() = 0
     override val estimatedSize: Int = 0
-    override val size: Int get() = estimatedSize
 
+    /**
+     * The total count of collect attempt
+     * */
     override var collectCount: Int = 0
+    /**
+     * The total collected count
+     * */
     override var collectedCount: Int = 0
 
     override fun collectTo(element: E, sink: MutableList<E>): Int {

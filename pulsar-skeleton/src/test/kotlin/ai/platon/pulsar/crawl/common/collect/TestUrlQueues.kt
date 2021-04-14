@@ -2,20 +2,20 @@ package ai.platon.pulsar.crawl.common.collect
 
 import ai.platon.pulsar.common.collect.ConcurrentNEntrantQueue
 import ai.platon.pulsar.common.collect.ConcurrentNonReentrantQueue
+import ai.platon.pulsar.common.urls.ComparableUrlAware
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.UrlAware
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class TestUrlQueues {
     val urls = IntRange(1, 100)
-            .map { "https://www.amazon.com/s?k=insomnia&i=aps&page=$it" }
-            .map { Hyperlink(it) }
+        .map { "https://www.amazon.com/s?k=insomnia&i=aps&page=$it" }
+        .map { Hyperlink(it) }
 
     @Test
     fun testConcurrentNEntrantUrlQueue() {
-        val queue = ConcurrentNEntrantQueue<UrlAware>(3)
+        val queue = ConcurrentNEntrantQueue<ComparableUrlAware>(3)
         queue.addAll(urls)
 
         assertTrue { queue.size == urls.size }
@@ -30,7 +30,7 @@ class TestUrlQueues {
 
     @Test
     fun testConcurrentNonEntrantUrlQueue() {
-        val queue = ConcurrentNonReentrantQueue<UrlAware>()
+        val queue = ConcurrentNonReentrantQueue<ComparableUrlAware>()
         queue.addAll(urls)
 
         assertTrue { queue.size == urls.size }

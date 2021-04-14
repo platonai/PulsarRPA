@@ -67,7 +67,7 @@ interface FetchCatchManager {
  * */
 abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatchManager {
     protected val initialized = AtomicBoolean()
-    override val totalItems get() = ensureInitialized().caches.values.sumOf { it.totalSize }
+    override val totalItems get() = ensureInitialized().caches.values.sumOf { it.size }
 
     override val lowestCache: FetchCache get() = ensureInitialized().caches[Priority13.LOWEST.value]!!
     override val lower5Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER5.value]!!

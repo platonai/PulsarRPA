@@ -33,7 +33,11 @@ class MimeTypeDatum(
     val contentType: String?,
     val metadata: MultiMetadata,
     val mimeTypeResolver: MimeTypeResolver,
-)
+) {
+    fun resolve(): String? {
+        return mimeTypeResolver.autoResolveContentType(contentType, url, content)
+    }
+}
 
 class TestMimeTypeResolver {
     private val conf = ImmutableConfig()
@@ -46,27 +50,27 @@ class TestMimeTypeResolver {
         val p = MultiMetadata()
         c = MimeTypeDatum("http://www.foo.com/", "http://www.foo.com/",
             "".toByteArray(charset("UTF8")), "text/html; charset=UTF-8", p, mimeTypeResolver)
-        assertEquals("text/html", c.contentType)
+        assertEquals("text/html", c.resolve())
         c = MimeTypeDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
             "".toByteArray(charset("UTF8")), "", p, mimeTypeResolver)
-        assertEquals("text/html", c.contentType)
+        assertEquals("text/html", c.resolve())
         c = MimeTypeDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
             "".toByteArray(charset("UTF8")), null, p, mimeTypeResolver)
-        assertEquals("text/html", c.contentType)
+        assertEquals("text/html", c.resolve())
         c = MimeTypeDatum("http://www.foo.com/", "http://www.foo.com/",
             "<html></html>".toByteArray(charset("UTF8")), "", p, mimeTypeResolver)
-        assertEquals("text/html", c.contentType)
+        assertEquals("text/html", c.resolve())
         c = MimeTypeDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
             "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, mimeTypeResolver)
-        assertEquals("text/html", c.contentType)
+        assertEquals("text/html", c.resolve())
         c = MimeTypeDatum("http://www.foo.com/foo.png", "http://www.foo.com/",
             "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, mimeTypeResolver)
-        assertEquals("text/html", c.contentType)
+        assertEquals("text/html", c.resolve())
         c = MimeTypeDatum("http://www.foo.com/", "http://www.foo.com/",
             "".toByteArray(charset("UTF8")), "", p, mimeTypeResolver)
-        assertEquals(MimeTypes.OCTET_STREAM, c.contentType)
+        assertEquals(MimeTypes.OCTET_STREAM, c.resolve())
         c = MimeTypeDatum("http://www.foo.com/", "http://www.foo.com/",
             "".toByteArray(charset("UTF8")), null, p, mimeTypeResolver)
-        assertNotNull(c.contentType)
+        assertNotNull(c.resolve())
     }
 }

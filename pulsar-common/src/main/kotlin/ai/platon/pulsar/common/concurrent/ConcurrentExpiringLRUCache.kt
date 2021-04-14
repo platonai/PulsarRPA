@@ -18,15 +18,12 @@ class ExpiringItem<T>(
     }
 }
 
-/**
- * TODO: see DelayQueue
- * */
 class ConcurrentExpiringLRUCache<T>(
         val capacity: Int,
         val ttl: Duration = CACHE_TTL
 ) {
     companion object {
-        val CACHE_TTL = Duration.ofMinutes(5)!!
+        val CACHE_TTL = Duration.ofMinutes(5)
         const val CACHE_CAPACITY = 100
     }
 

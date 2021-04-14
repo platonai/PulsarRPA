@@ -48,10 +48,12 @@ interface UrlAware {
     val label: String
 }
 
+interface ComparableUrlAware: UrlAware, Comparable<UrlAware>
+
 /**
  * The StatefulUrl interface. A StatefulUrl is an UrlAware and has status.
  * */
-interface StatefulUrl: UrlAware {
+interface StatefulUrl: ComparableUrlAware {
     var authToken: String?
     var remoteAddr: String?
     var status: Int
@@ -64,7 +66,7 @@ abstract class AbstractUrl(
         override var args: String? = null,
         override var referer: String? = null,
         override var href: String? = null
-): UrlAware {
+): UrlAware, ComparableUrlAware {
 
     override val configuredUrl get() = if (args != null) "$url $args" else url
 
@@ -94,6 +96,10 @@ abstract class AbstractUrl(
             is UrlAware -> url == other.url
             else -> false
         }
+    }
+
+    override fun compareTo(other: UrlAware): Int {
+        return url.compareTo(other.url)
     }
 
     override fun hashCode() = url.hashCode()

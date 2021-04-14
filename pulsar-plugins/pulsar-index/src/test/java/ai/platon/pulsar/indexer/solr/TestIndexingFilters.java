@@ -24,6 +24,7 @@ import ai.platon.pulsar.crawl.index.IndexingException;
 import ai.platon.pulsar.crawl.index.IndexingFilters;
 import ai.platon.pulsar.persist.WebPage;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,19 +69,5 @@ public class TestIndexingFilters {
 
         String key = Urls.reverseUrlOrEmpty(url);
         filters.filter(new IndexDocument(key), url, page);
-    }
-
-    /**
-     * Test behaviour when IndexDocument is null
-     */
-    @Test
-    public void testIndexDocumentNullIndexingFilter() throws IndexingException {
-        String url = "http://www.example.com/";
-        WebPage page = WebPage.newTestWebPage(url);
-        page.setPageText("text");
-        page.setPageTitle("title");
-        IndexDocument doc = filters.filter(null, url, page);
-
-        assertNull(doc);
     }
 }

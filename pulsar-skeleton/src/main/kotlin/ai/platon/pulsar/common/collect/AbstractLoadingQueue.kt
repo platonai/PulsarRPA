@@ -1,7 +1,9 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.urls.UrlAware
+import java.time.Duration
 import java.util.*
 
 interface LoadingQueue<T>: Queue<T>, Loadable<T> {
@@ -13,7 +15,9 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
         const val DEFAULT_CAPACITY = 100
     }
 
-    val estimatedSize: Int
+    val externalSize: Int
+
+    val estimatedExternalSize: Int
 
     fun shuffle()
 }
@@ -27,10 +31,29 @@ abstract class AbstractLoadingQueue(
         val priority: Int = Priority13.NORMAL.value,
         val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
-//    protected val implementation = ArrayBlockingQueue<UrlAware>(capacity)
+
+    companion object {
+        private const val ESTIMATED_EXTERNAL_SIZE_KEY = "EES"
+    }
+
+    private val expiringCache = ConcurrentExpiringLRUCache<Int>(1, Duration.ofMinutes(1))
+
     protected val implementation = LinkedList<UrlAware>()
 
-    override val estimatedSize: Int get() = loader.estimatedSize
+    /**
+     * The cache size
+     * */
+    @get:Synchronized
+    override val size: Int get() = tryRefresh().implementation.size
+
+    /**
+     * Query the underlying database, try to use estimatedExternalSize
+     * */
+    override val externalSize: Int
+        get() = loader.countRemaining()
+
+    override val estimatedExternalSize: Int
+        get() = expiringCache.computeIfAbsent(ESTIMATED_EXTERNAL_SIZE_KEY) { externalSize }
 
     @get:Synchronized
     val freeSlots get() = capacity - implementation.size
@@ -99,9 +122,6 @@ abstract class AbstractLoadingQueue(
         peek()
         return implementation.poll()
     }
-
-    @get:Synchronized
-    override val size: Int get() = tryRefresh().implementation.size
 
     private fun tryRefresh(): AbstractLoadingQueue {
         if (freeSlots > 0) {

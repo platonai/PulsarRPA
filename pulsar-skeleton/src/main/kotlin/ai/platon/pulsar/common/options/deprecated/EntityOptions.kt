@@ -24,14 +24,14 @@ class EntityOptions : PulsarOptions {
     var root: String = ""
 
     @DynamicParameter(names = ["-F"], description = "Pulsar field extractors to extract sub entity fields")
-    val cssRules: MutableMap<String, String> = HashMap()
+    var cssRules: MutableMap<String, String> = HashMap()
 
     @DynamicParameter(names = ["-X"], description = "XPath selectors")
-    val xpathRules: MutableMap<String, String> = HashMap()
+    var xpathRules: MutableMap<String, String> = HashMap()
 
     @DynamicParameter(names = ["-R"], description = "Regex selectors")
-    val regexRules: MutableMap<String, String> = HashMap()
-    val collectionOptions = CollectionOptions()
+    var regexRules: MutableMap<String, String> = HashMap()
+    var collectionOptions = CollectionOptions()
 
     protected constructor() {
         addObjects(this, collectionOptions)

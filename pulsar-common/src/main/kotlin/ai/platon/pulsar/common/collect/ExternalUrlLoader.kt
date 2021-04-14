@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
+import kotlin.jvm.Throws
 
 /**
  * */
@@ -14,11 +15,6 @@ interface ExternalUrlLoader {
          * */
         const val LOAD_SIZE = 100
     }
-
-    /**
-     * The estimated size to load of the external storage
-     * */
-    var estimatedSize: Int
 
     /**
      * The delay time to load after another load
@@ -49,6 +45,14 @@ interface ExternalUrlLoader {
      * */
     fun hasMore(): Boolean
     /**
+     * Count remaining size
+     * */
+    fun countRemaining(): Int
+    /**
+     * Count remaining size
+     * */
+    fun countRemaining(group: Int, priority: Int): Int
+    /**
      * Load items from the source to the sink
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>,
@@ -75,14 +79,17 @@ abstract class AbstractExternalUrlLoader(
         override var loadDelay: Duration = Duration.ofSeconds(10)
 ): ExternalUrlLoader {
 
-    override var estimatedSize: Int = Int.MAX_VALUE
-
+    @Volatile
     protected var lastLoadTime = Instant.EPOCH
     override val isExpired get() = lastLoadTime + loadDelay < Instant.now()
 
     override fun expire() { lastLoadTime = Instant.EPOCH }
     override fun reset() { lastLoadTime = Instant.EPOCH }
     override fun hasMore(): Boolean = isExpired
+
+    override fun countRemaining() = 0
+
+    override fun countRemaining(group: Int, priority: Int) = 0
 
     override fun saveAll(urls: Iterable<UrlAware>, group: Int) = urls.forEach { save(it, group) }
 
