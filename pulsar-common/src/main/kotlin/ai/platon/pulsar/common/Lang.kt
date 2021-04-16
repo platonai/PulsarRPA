@@ -63,10 +63,6 @@ enum class Priority13(val value: Int) {
             }
         }
 
-        fun valueOf(value: Int, defaultValue: Priority13): Priority13 {
-            return values().firstOrNull { it.value == value } ?: defaultValue
-        }
-
         @Throws(IllegalArgumentException::class)
         fun valueOfOrThrow(name: String): Priority13 {
             return try {
@@ -75,6 +71,10 @@ enum class Priority13(val value: Int) {
                 throw IllegalArgumentException("Illegal priority name $name, " +
                         "must be one of ${values().map { it.name }}")
             }
+        }
+
+        fun valueOf(value: Int, defaultValue: Priority13): Priority13 {
+            return values().firstOrNull { it.value == value } ?: defaultValue
         }
     }
 }

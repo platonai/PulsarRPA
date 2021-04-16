@@ -839,7 +839,7 @@ class KWebPage : Comparable<KWebPage> {
         set(value) { page.anchorOrder = value }
 
     private fun isValidContentModifyTime(publishTime: Instant): Boolean {
-        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(AppContext.imprecise2DaysAhead)
+        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME)
     }
 
     fun updateContentPublishTime(newPublishTime: Instant): Boolean {

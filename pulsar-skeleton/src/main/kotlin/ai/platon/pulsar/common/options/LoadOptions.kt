@@ -64,9 +64,9 @@ open class LoadOptions(
     var taskId = LocalDate.now().toString()
 
     @ApiPublic
-    @Parameter(names = ["-taskTime", "--task-time"],
+    @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
             description = "The task time, we usually use a task time to indicate a batch of a task")
-    var taskTime = LocalDate.now().toString()
+    var taskTime = Instant.now()
 
     @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
@@ -489,6 +489,16 @@ open class LoadOptions(
                     it.set(options, value)
                 }
             }
+        }
+
+        fun getOptionNames(fieldName: String): List<String> {
+            return declaredFields
+                .asSequence()
+                .filter { it.name == fieldName }
+                .flatMap { it.annotations.toList() }
+                .filterIsInstance<Parameter>()
+                .flatMap { it.names.toList() }
+                .toList()
         }
 
         fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }

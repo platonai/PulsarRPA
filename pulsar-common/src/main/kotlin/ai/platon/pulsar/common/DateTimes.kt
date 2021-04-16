@@ -19,17 +19,18 @@ object DateTimes {
     const val HOURS_OF_MONTH = HOURS_OF_DAY * 30
     const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
     val ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365))
+    val zoneId = AppContext.defaultZoneId
 
     fun format(time: Long): String {
-        return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(time))
+        return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(zoneId).format(Instant.ofEpochMilli(time))
     }
 
     fun format(time: Instant): String {
-        return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(time)
+        return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(zoneId).format(time)
     }
 
     fun format(time: Instant, format: String): String {
-        return DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault()).format(time)
+        return DateTimeFormatter.ofPattern(format).withZone(zoneId).format(time)
     }
 
     fun format(localTime: LocalDateTime): String {
@@ -37,6 +38,10 @@ object DateTimes {
     }
 
     fun format(localTime: LocalDateTime, format: String): String {
+        return DateTimeFormatter.ofPattern(format).format(localTime)
+    }
+
+    fun format(localTime: OffsetDateTime, format: String): String {
         return DateTimeFormatter.ofPattern(format).format(localTime)
     }
 

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
+import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
@@ -48,7 +49,7 @@ class LoadComponent(
     val parseComponent: ParseComponent? = null,
     val updateComponent: UpdateComponent,
     val statusTracker: AppStatusTracker? = null,
-    val immutableConfig: ImmutableConfig
+    val immutableConfig: ImmutableConfig,
 ) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
@@ -59,23 +60,26 @@ class LoadComponent(
 
     private val fetchMetrics get() = fetchComponent.fetchMetrics
     private val closed = AtomicBoolean()
+
     /**
      * TODO: only check active before blocking calls
      * */
     private val isActive get() = !closed.get()
+
     @Volatile
     private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
+
     @Volatile
     var lastPageReport: String? = null
         protected set
 
     constructor(
-            webDb: WebDb,
-            globalCache: GlobalCache,
-            fetchComponent: BatchFetchComponent,
-            updateComponent: UpdateComponent,
-            immutableConfig: ImmutableConfig
+        webDb: WebDb,
+        globalCache: GlobalCache,
+        fetchComponent: BatchFetchComponent,
+        updateComponent: UpdateComponent,
+        immutableConfig: ImmutableConfig,
     ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, immutableConfig)
 
     /**
@@ -388,7 +392,7 @@ class LoadComponent(
 
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
-            val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = verbose).toString()
+            val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
             logger.info(report)
         }
     }
@@ -399,8 +403,9 @@ class LoadComponent(
 
     private fun filterUrlToNull(url: String): String? {
         if (url.length <= AppConstants.SHORTEST_VALID_URL_LENGTH
-                || url.contains(AppConstants.NIL_PAGE_URL)
-                || url.contains(AppConstants.EXAMPLE_URL)) {
+            || url.contains(AppConstants.NIL_PAGE_URL)
+            || url.contains(AppConstants.EXAMPLE_URL)
+        ) {
             return null
         }
 
@@ -574,7 +579,7 @@ class LoadComponent(
         if (limit < 0) throw IllegalArgumentException("Argument limit must be greater than 0")
 
         val pages = links.asSequence().drop(start).take(limit).map { load(it, options) }
-                .filter { it.protocolStatus.isSuccess }.toList()
+            .filter { it.protocolStatus.isSuccess }.toList()
         if (!options.lazyFlush) {
             flush()
         }
@@ -593,11 +598,13 @@ class LoadComponent(
      * @param logLevel The log level
      * @return The scrape result
      */
-    fun scrapeOutPages(portalUrl: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
-                       query: String, logLevel: Int): Map<String, Any> {
+    fun scrapeOutPages(
+        portalUrl: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
+        query: String, logLevel: Int,
+    ): Map<String, Any> {
         val conf = immutableConfig.toVolatileConfig()
         return scrapeOutPages(portalUrl, LoadOptions.parse(loadArgs, conf), parse(linkArgs),
-                start, limit, LoadOptions.parse(loadArgs2, conf), query, logLevel)
+            start, limit, LoadOptions.parse(loadArgs2, conf), query, logLevel)
     }
 
     /**
@@ -613,11 +620,12 @@ class LoadComponent(
      * @return The scrape result
      */
     fun scrapeOutPages(
-            portalUrl: String, options: LoadOptions,
-            linkOptions: LinkOptions,
-            start: Int, limit: Int, loadOptions2: LoadOptions,
-            query: String,
-            logLevel: Int): Map<String, Any> {
+        portalUrl: String, options: LoadOptions,
+        linkOptions: LinkOptions,
+        start: Int, limit: Int, loadOptions2: LoadOptions,
+        query: String,
+        logLevel: Int,
+    ): Map<String, Any> {
         if (!isActive) {
             return mapOf()
         }
@@ -636,10 +644,10 @@ class LoadComponent(
         val counters = intArrayOf(0, 0, 0)
         if (page.protocolStatus.isSuccess) {
             filteredLinks = page.liveLinks.values.asSequence()
-                    .filter { l -> l.url.toString() != portalUrl }
-                    .filter { l -> !page.deadLinks.contains(Utf8(l.url.toString())) }
-                    .filter { linkOptions.asGHypeLinkPredicate().test(it) }
-                    .toList()
+                .filter { l -> l.url.toString() != portalUrl }
+                .filter { l -> !page.deadLinks.contains(Utf8(l.url.toString())) }
+                .filter { linkOptions.asGHypeLinkPredicate().test(it) }
+                .toList()
             loadOptions2.query = query
             outPages = loadOutPages(filteredLinks, start, limit, loadOptions2)
             outPages.map { it.pageCounters }.forEach {
@@ -661,7 +669,7 @@ class LoadComponent(
             // log.debug(page.getPageCounters().asStringMap().toString());
             outDocs = outPages.map {
                 WebPageFormatter(it).withLinks(loadOptions2.withLinks).withText(loadOptions2.withText)
-                        .withEntities(loadOptions2.withModel).toMap()
+                    .withEntities(loadOptions2.withModel).toMap()
             }
         }
 
@@ -677,10 +685,10 @@ class LoadComponent(
         response["refCounter"] = refCounter
         // Main document
         response["doc"] = WebPageFormatter(page)
-                .withLinks(options.withLinks)
-                .withText(options.withText)
-                .withEntities(options.withModel)
-                .toMap()
+            .withLinks(options.withLinks)
+            .withText(options.withText)
+            .withEntities(options.withModel)
+            .toMap()
         // Outgoing document
         response["docs"] = outDocs
         if (logLevel > 0) {
@@ -708,11 +716,12 @@ class LoadComponent(
      * Not stable
      */
     private fun buildDebugInfo(
-            logLevel: Int, linkOptions: LinkOptions, options: LoadOptions, loadOptions2: LoadOptions): Map<String, String> {
+        logLevel: Int, linkOptions: LinkOptions, options: LoadOptions, loadOptions2: LoadOptions,
+    ): Map<String, String> {
         val debugInfo: MutableMap<String, String> = HashMap()
         val counter = intArrayOf(0)
         val linkReport = linkOptions.getReport().stream()
-                .map { r: String -> (++counter[0]).toString() + ".\t" + r }.collect(Collectors.joining("\n"))
+            .map { r: String -> (++counter[0]).toString() + ".\t" + r }.collect(Collectors.joining("\n"))
         debugInfo["logLevel"] = logLevel.toString()
         debugInfo["options"] = options.toString()
         debugInfo["loadOptions2"] = loadOptions2.toString()

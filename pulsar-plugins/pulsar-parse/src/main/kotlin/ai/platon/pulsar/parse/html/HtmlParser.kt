@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.parse.html
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_ID
@@ -168,7 +169,7 @@ class HtmlParser(
         metadata.attr("normalizedUrl", page.url)
         metadata.attr("label", options.label)
         metadata.attr("taskId", options.taskId)
-        metadata.attr("taskTime", options.taskTime)
+        metadata.attr("taskTime", options.taskTime.toString())
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {

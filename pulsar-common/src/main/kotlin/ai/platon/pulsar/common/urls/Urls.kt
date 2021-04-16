@@ -128,6 +128,10 @@ object Urls {
         return url to args
     }
 
+    fun mergeUrlArgs(url: String, args: String? = null): String {
+        return if (args.isNullOrBlank()) url else "$url $args"
+    }
+
     @JvmStatic
     fun getUrlWithoutParameters(url: String): String {
         try {

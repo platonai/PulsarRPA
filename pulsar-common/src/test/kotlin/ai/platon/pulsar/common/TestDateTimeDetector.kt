@@ -127,6 +127,28 @@ class TestDateTimeDetector {
     }
 
     @Test
+    fun testDetectJava8Chrono() {
+        val text = "2021-04-15T13:04:00.840771700Z"
+        val instant = Instant.parse(text)
+        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+        val localDate = zonedDateTime.toLocalDate()
+        val localDateTime = zonedDateTime.toLocalDateTime()
+
+        println(instant)
+        println(zonedDateTime)
+        println(localDate)
+        println(localDateTime)
+
+        val texts = mapOf(
+            "2021-04-15T13:04:00.840771700Z" to instant,
+            "2021-04-15T21:04:00.840771700+08:00[Asia/Shanghai]" to zonedDateTime,
+            "2021-04-15T21:04:00.840771700" to localDateTime
+        )
+
+        texts.map { DateTimeDetector().detectDateTime(it.key) to it.value }.forEach { println(it) }
+    }
+
+    @Test
     fun testDateTimeDetector() {
         val detector = DateTimeDetector()
         val zoneId = ZoneId.systemDefault()

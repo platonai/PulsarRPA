@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import com.beust.jcommander.Parameter
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -81,6 +82,12 @@ class TestLoadOptions {
         assertTrue(message) { options.incognito }
         assertTrue(message) { options.parse }
         assertEquals(Duration.ofDays(1), options.expires, message)
+    }
+
+    @Test
+    fun testOptionNames() {
+        assertTrue { arrayOf("-l", "-label", "--label").all { it in LoadOptions.getOptionNames("label") } }
+        assertTrue { arrayOf("-storeContent", "--store-content").all { it in LoadOptions.getOptionNames("storeContent") } }
     }
 
     @Test
