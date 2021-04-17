@@ -526,7 +526,7 @@ class LoadComponent(
             return
         }
 
-        if (page.protocolStatus.isCanceled) {
+        if (!page.isFetched || page.protocolStatus.isCanceled) {
             return
         }
 

@@ -116,6 +116,11 @@ final public class WebPage implements Comparable<WebPage> {
     private boolean isLoaded = false;
 
     /**
+     * If this page is fetched from internet
+     */
+    private boolean isFetched = false;
+
+    /**
      * If we should keep the content in memory even if it's cleared for persistence
      */
     private boolean cachedContentEnabled = false;
@@ -521,6 +526,14 @@ final public class WebPage implements Comparable<WebPage> {
 
     public void setLoaded(boolean loaded) {
         isLoaded = loaded;
+    }
+
+    public boolean isFetched() {
+        return isFetched;
+    }
+
+    public void setFetched(boolean fetched) {
+        isFetched = fetched;
     }
 
     public boolean isContentUpdated() {

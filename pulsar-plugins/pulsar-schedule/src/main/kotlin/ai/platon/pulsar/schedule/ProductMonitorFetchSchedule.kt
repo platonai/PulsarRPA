@@ -38,8 +38,8 @@ class ProductMonitorFetchSchedule(
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
     override fun setFetchSchedule(page: WebPage,
-                                  prevFetchTime: Instant, prevModifiedTime: Instant,
-                                  fetchTime: Instant, modifiedTime: Instant, state: Int) {
+                                  newPrevFetchTime: Instant, prevModifiedTime: Instant,
+                                  currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
         // 1. for every seed, re-fetch it every day
         // 2. for every index page, re-fetch it every day
         // 3. for every detail page, we will re-fetch it 90 days later if there are enough resource
@@ -58,7 +58,7 @@ class ProductMonitorFetchSchedule(
             page.marks.put(Mark.INACTIVE, YES_STRING)
         }
 
-        updateRefetchTime(page, fetchInterval, fetchTime, prevModifiedTime, modifiedTime)
+        updateRefetchTime(page, fetchInterval, currentFetchTime, prevModifiedTime, modifiedTime)
     }
 
     private fun isIndexPage(page: WebPage): Boolean {

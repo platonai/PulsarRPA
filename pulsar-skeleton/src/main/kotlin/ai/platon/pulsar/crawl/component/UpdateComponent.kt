@@ -163,11 +163,10 @@ class UpdateComponent(
             return
         }
 
-        val prevFetchTime = page.fetchTime
-        val fetchTime = Instant.now()
-        if (prevFetchTime.isAfter(fetchTime)) {
-            LOG.warn("Illegal prev fetch time: {} | {}", prevFetchTime, LoadedPageFormatter(page))
-        }
+        val now = Instant.now()
+        val fetchTime = now
+        // why a
+        val prevFetchTime = if (page.fetchTime.isAfter(now)) page.prevFetchTime else page.fetchTime
 
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
@@ -190,8 +189,8 @@ class UpdateComponent(
             CrawlStatusCodes.RETRY -> {
                 fetchSchedule.setPageRetrySchedule(page, prevFetchTime, page.prevModifiedTime, fetchTime)
             }
-            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page,
-                prevFetchTime, page.prevModifiedTime, fetchTime)
+            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(
+                page, prevFetchTime, page.prevModifiedTime, fetchTime)
         }
     }
 

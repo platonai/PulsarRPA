@@ -1,11 +1,15 @@
 package ai.platon.pulsar.common.metrics
 
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.prependReadableClassName
 import com.codahale.metrics.*
 import kotlin.reflect.KClass
 
-class AppMetricRegistry: MetricRegistry() {
+class AppMetricRegistry : MetricRegistry() {
+
+    private val elapsedToday get() = DateTimes.elapsedToday.seconds.coerceAtMost(DateTimes.elapsed.seconds)
+    private val elapsedThisHour get() = DateTimes.elapsedThisHour.seconds.coerceAtMost(DateTimes.elapsed.seconds)
+
     val enumCounterRegistry = EnumCounterRegistry()
     val enumCounters: MutableMap<Enum<*>, Counter> = mutableMapOf()
     val dailyCounters = mutableSetOf<Counter>()
@@ -88,11 +92,11 @@ class AppMetricRegistry: MetricRegistry() {
     }
 
     private fun elapsedSeconds(counter: Counter): Long {
-        val fullName = metrics.entries.firstOrNull { it.value == counter }?.key?:""
+        val fullName = metrics.entries.firstOrNull { it.value == counter }?.key ?: ""
         return when {
-            "daily" in fullName -> AppContext.elapsedToday.seconds.coerceAtMost(AppContext.elapsed.seconds)
-            "hourly" in fullName -> AppContext.elapsedThisHour.seconds.coerceAtMost(AppContext.elapsed.seconds)
-            else -> AppContext.elapsed.seconds
+            "daily" in fullName -> elapsedToday
+            "hourly" in fullName -> elapsedThisHour
+            else -> DateTimes.elapsed.seconds
         }.coerceAtLeast(1)
     }
 
@@ -124,7 +128,7 @@ class AppMetricRegistry: MetricRegistry() {
         hourlyCounters.forEach { it.dec(it.count) }
     }
 
-    fun <T: Enum<T>> setValue(counter: T, value: Int) {
+    fun <T : Enum<T>> setValue(counter: T, value: Int) {
         enumCounterRegistry.setValue(counter, value)
         enumCounters[counter]?.let { it.dec(it.count); it.inc(value.toLong()) }
     }

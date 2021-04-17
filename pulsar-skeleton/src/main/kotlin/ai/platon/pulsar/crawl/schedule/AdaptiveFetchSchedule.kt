@@ -26,7 +26,6 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 /**
  * This class implements an adaptive re-fetch algorithm. This works as follows:
@@ -86,16 +85,16 @@ open class AdaptiveFetchSchedule(
     }
 
     override fun setFetchSchedule(
-        page: WebPage, prevFetchTime: Instant,
-        prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {
+        page: WebPage, newPrevFetchTime: Instant,
+        prevModifiedTime: Instant, currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
         var newModifiedTime = modifiedTime
-        super.setFetchSchedule(page, prevFetchTime, prevModifiedTime, fetchTime, newModifiedTime, state)
+        super.setFetchSchedule(page, newPrevFetchTime, prevModifiedTime, currentFetchTime, newModifiedTime, state)
         if (newModifiedTime < AppConstants.TCP_IP_STANDARDIZED_TIME) {
-            newModifiedTime = fetchTime
+            newModifiedTime = currentFetchTime
         }
 
-        val newInterval = getFetchInterval(page, fetchTime, newModifiedTime, state)
-        updateRefetchTime(page, newInterval, fetchTime, prevModifiedTime, newModifiedTime)
+        val newInterval = getFetchInterval(page, currentFetchTime, newModifiedTime, state)
+        updateRefetchTime(page, newInterval, currentFetchTime, prevModifiedTime, newModifiedTime)
     }
 
     /**
@@ -108,7 +107,7 @@ open class AdaptiveFetchSchedule(
      * NOTE: this may be a different instance than
      */
     override fun setPageGoneSchedule(
-        page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
+        page: WebPage, newPrevFetchTime: Instant, prevModifiedTime: Instant, currentFetchTime: Instant) {
         val prevInterval = page.fetchInterval.seconds.toFloat()
         var newInterval = prevInterval
         // no page is truly GONE ... just increase the interval by 50%
@@ -120,7 +119,7 @@ open class AdaptiveFetchSchedule(
         }
 
         page.setFetchInterval(newInterval)
-        page.fetchTime = fetchTime.plus(page.fetchInterval)
+        page.fetchTime = currentFetchTime.plus(page.fetchInterval)
     }
 
     protected fun getFetchInterval(page: WebPage, fetchTime_: Instant, modifiedTime: Instant, state: Int): Duration {

@@ -3,13 +3,15 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimeDetector
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 @UDFGroup(namespace = "TIME")
-object TimeFunctions {
+object DateTimeFunctions {
+    private val logger = getLogger(DateTimeFunctions::class)
     private val defaultDateTime = Instant.EPOCH.atZone(DateTimes.zoneId).toLocalDateTime()
 
     @UDFunction
@@ -27,8 +29,14 @@ object TimeFunctions {
             return formatDefaultDateTime(pattern)
         }
 
-        val instant = DateTimes.parseBestInstant(text)
-        return DateTimeFormatter.ofPattern(pattern).format(instant)
+        try {
+            val instant = DateTimes.parseBestInstant(text)
+            return DateTimeFormatter.ofPattern(pattern).withZone(DateTimes.zoneId).format(instant)
+        } catch (t: Throwable) {
+            logger.warn("Failed handle date time: {}", text)
+        }
+
+        return formatDefaultDateTime(pattern)
     }
 
     private fun formatDefaultDateTime(pattern: String): String {

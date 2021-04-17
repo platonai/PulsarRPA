@@ -27,8 +27,8 @@ val WebPage.options: LoadOptions
  */
 val WebPage.label: String get() = options.label
 
-fun WebPage.updateFetchTime(prevFetchTime0: Instant, nextFetchTime: Instant) {
-    prevFetchTime = prevFetchTime0
+fun WebPage.updateFetchTime(newPrevFetchTime: Instant, nextFetchTime: Instant) {
+    prevFetchTime = newPrevFetchTime
     fetchTime = nextFetchTime
 
     updateFetchTimeHistory(prevFetchTime)
@@ -36,15 +36,15 @@ fun WebPage.updateFetchTime(prevFetchTime0: Instant, nextFetchTime: Instant) {
 
 /**
  * Update the fetch time
- * @param prevFetchTime0 The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
- * @param fetchTime0 The current fetch time, it's almost now
+ * @param newPrevFetchTime The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
+ * @param currentFetchTime The current fetch time, it's almost now
  * @param fetchInterval0 The interval between now and the next fetch
  * */
-fun WebPage.updateFetchTime(prevFetchTime0: Instant, fetchTime0: Instant, fetchInterval0: Duration) {
-    fetchInterval = fetchInterval0
-    prevFetchTime = prevFetchTime0
+fun WebPage.updateFetchTime(newPrevFetchTime: Instant, currentFetchTime: Instant, newFetchInterval: Duration) {
+    fetchInterval = newFetchInterval
+    prevFetchTime = newPrevFetchTime
     // the next time supposed to fetch
-    fetchTime = fetchTime0 + fetchInterval
+    fetchTime = currentFetchTime + fetchInterval
 
     updateFetchTimeHistory(prevFetchTime)
 }
