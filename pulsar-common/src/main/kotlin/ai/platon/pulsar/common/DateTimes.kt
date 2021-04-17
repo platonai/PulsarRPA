@@ -14,12 +14,27 @@ object DateTimes {
     val PATH_SAFE_FORMAT_2 = SimpleDateFormat("MMdd.HH")
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
+
     const val MILLIS_OF_SECOND = 1000L
     const val HOURS_OF_DAY = 24L
     const val HOURS_OF_MONTH = HOURS_OF_DAY * 30
     const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
     val ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365))
-    val zoneId = AppContext.defaultZoneId
+
+    var zoneId = ZoneId.of("Asia/Shanghai")
+    var zoneOffSet = ZoneOffset.of("+08:00")
+
+    /**
+     * Date time
+     */
+    val startTime = Instant.now()
+
+    val midnight get() = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+    val startOfHour get() = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+
+    val elapsed get() = Duration.between(startTime, Instant.now())
+    val elapsedToday get() = Duration.between(midnight, LocalDateTime.now())
+    val elapsedThisHour get() = Duration.between(startOfHour, LocalDateTime.now())
 
     fun format(time: Long): String {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(zoneId).format(Instant.ofEpochMilli(time))
@@ -118,22 +133,59 @@ object DateTimes {
         return DateUtils.formatDate(Date.from(time))
     }
 
+    @JvmOverloads
     @JvmStatic
-    fun parseInstant(text: String, defaultValue: Instant): Instant {
-        try { // equals to Instant.parse()
+    fun parseInstant(text: String, defaultValue: Instant = Instant.EPOCH): Instant {
+        try {
+            // equals to Instant.parse()
             return DateTimeFormatter.ISO_INSTANT.parse(text) { temporal: TemporalAccessor? -> Instant.from(temporal) }
         } catch (ignored: Throwable) {
         }
         return defaultValue
     }
 
+    /**
+     * Accept the following format:
+     * 1. yyyy-MM-dd[ HH[:mm[:ss]]]
+     * 2. ISO_INSTANT, or yyyy-MM-ddTHH:mm:ssZ
+     * */
+    @JvmOverloads
     @JvmStatic
-    fun parseDuration(durationStr: String, defaultValue: Duration): Duration {
+    fun parseBestInstant(
+        text: String,
+        defaultValue: Instant = Instant.EPOCH,
+        zoneId: ZoneId = ZoneId.systemDefault()
+    ): Instant {
         try {
-            return Duration.parse(durationStr)
-        } catch (ignored: Throwable) {
-        }
+            val dateRegex = "\\d{4}-\\d{2}-\\d{2}"
+            val pattern = "yyyy-MM-dd[ HH[:mm[:ss]]]"
+
+            return when {
+                text.matches("${dateRegex}T\\d{2}.+Z".toRegex()) -> {
+                    Instant.parse(text)
+                }
+                text.matches("$dateRegex\\s+\\d{2}:.+".toRegex()) -> {
+                    DateTimeFormatter.ofPattern(pattern).parse(text) { LocalDateTime.from(it) }
+                        .atZone(zoneId).toInstant()
+                }
+                text.matches(dateRegex.toRegex()) -> {
+                    DateTimeFormatter.ofPattern(pattern).parse(text) { LocalDate.from(it) }
+                        .atStartOfDay().atZone(zoneId).toInstant()
+                }
+                else -> defaultValue
+            }
+        } catch (ignored: Throwable) {}
+
         return defaultValue
+    }
+
+    @JvmStatic
+    fun parseDuration(duration: String, defaultValue: Duration): Duration {
+        return try {
+            Duration.parse(duration)
+        } catch (ignored: Throwable) {
+            defaultValue
+        }
     }
 
     @JvmStatic

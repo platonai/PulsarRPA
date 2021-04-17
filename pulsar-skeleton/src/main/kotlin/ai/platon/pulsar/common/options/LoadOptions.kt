@@ -63,6 +63,11 @@ open class LoadOptions(
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
     var taskId = LocalDate.now().toString()
 
+    /**
+     * The task time accepts date time format as the following:
+     * 1. ISO_INSTANT: yyyy-MM-ddThh:MM:ssZ
+     * 2. yyyy-MM-dd[ hh[:MM[:ss]]]
+     * */
     @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
             description = "The task time, we usually use a task time to indicate a batch of a task")

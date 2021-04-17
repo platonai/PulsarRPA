@@ -94,7 +94,6 @@ abstract class AbstractFetchSchedule(
             else -> Duration.ZERO
         }
 
-        // Only if the fetch time is in the past, assign prevFetchTime to be it
         page.updateFetchTime(prevFetchTime, fetchTime, fetchInterval)
         page.modifiedTime = modifiedTime
         page.prevModifiedTime = prevModifiedTime
@@ -186,22 +185,21 @@ abstract class AbstractFetchSchedule(
      * fetchTime to now. If false, force refetch whenever the next fetch
      * time is set.
      */
-    override fun forceRefetch(page: WebPage, asap: Boolean) {
+    override fun forceRefetch(page: WebPage, prevFetchTime: Instant, asap: Boolean) {
         if (page.hasMark(Mark.INACTIVE)) {
             return
         }
+
         // reduce fetchInterval so that it fits within the max value
         if (page.fetchInterval > maxFetchInterval) {
             page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
         }
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
         page.fetchRetries = 0
-        page.setSignature("".toByteArray())
-        page.modifiedTime = Instant.EPOCH
 
-        val fetchTime = page.fetchTime
         val fetchInterval = if (asap) Duration.ZERO else page.fetchInterval
-        page.updateFetchTime(fetchTime, Instant.now() + fetchInterval)
+        val nextFetchTime = Instant.now() + fetchInterval
+        page.updateFetchTime(prevFetchTime, nextFetchTime)
     }
 
     protected fun updateRefetchTime(page: WebPage, interval: Duration, fetchTime: Instant, prevModifiedTime: Instant, modifiedTime: Instant) {

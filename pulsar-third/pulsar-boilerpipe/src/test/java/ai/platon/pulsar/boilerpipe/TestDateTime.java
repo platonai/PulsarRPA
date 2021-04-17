@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
  * Created by vincent on 16-11-9.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-public class TestScent {
+public class TestDateTime {
 
     public static Pattern INDEX_PAGE_URL_PATTERN = Pattern.compile(".+(index|tags|chanel).+");
 

@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -164,6 +165,9 @@ class UpdateComponent(
 
         val prevFetchTime = page.fetchTime
         val fetchTime = Instant.now()
+        if (prevFetchTime.isAfter(fetchTime)) {
+            LOG.warn("Illegal prev fetch time: {} | {}", prevFetchTime, LoadedPageFormatter(page))
+        }
 
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
@@ -180,7 +184,7 @@ class UpdateComponent(
                 val fetchInterval = page.fetchInterval
                 if (fetchInterval > fetchSchedule.maxFetchInterval) {
                     LOG.info("Force re-fetch page with interval {} | {}", fetchInterval, page.url)
-                    fetchSchedule.forceRefetch(page, false)
+                    fetchSchedule.forceRefetch(page, prevFetchTime, false)
                 }
             }
             CrawlStatusCodes.RETRY -> {

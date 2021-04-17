@@ -136,6 +136,6 @@ interface FetchSchedule : Parameterized {
      * fetchTime to now. If false, force refetch whenever the next fetch
      * time is set.
      */
-    fun forceRefetch(page: WebPage, asap: Boolean)
+    fun forceRefetch(page: WebPage, prevFetchTime: Instant, asap: Boolean)
 
 }

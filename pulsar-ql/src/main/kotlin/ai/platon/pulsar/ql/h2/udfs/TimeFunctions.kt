@@ -10,23 +10,25 @@ import java.time.format.DateTimeFormatter
 
 @UDFGroup(namespace = "TIME")
 object TimeFunctions {
-    private val defaultDateTime = Instant.EPOCH.atZone(AppContext.defaultZoneId).toLocalDateTime()
+    private val defaultDateTime = Instant.EPOCH.atZone(DateTimes.zoneId).toLocalDateTime()
 
     @UDFunction
     @JvmOverloads
     @JvmStatic
     fun firstMysqlDateTime(text: String?, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
+        return firstDateTime(text, pattern)
+    }
+
+    @UDFunction
+    @JvmOverloads
+    @JvmStatic
+    fun firstDateTime(text: String?, pattern: String = "yyyy-MM-dd HH:mm:ss"): String {
         if (text.isNullOrBlank()) {
             return formatDefaultDateTime(pattern)
         }
 
-        // java 8 formats
-        if ('T' in text && text.endsWith("Z")) {
-            return DateTimes.format(Instant.parse(text), pattern)
-        }
-
-        val s = DateTimeDetector(AppContext.defaultZoneId).detectDateTime(text)?.let { DateTimes.format(it, pattern) }
-        return s ?: formatDefaultDateTime(pattern)
+        val instant = DateTimes.parseBestInstant(text)
+        return DateTimeFormatter.ofPattern(pattern).format(instant)
     }
 
     private fun formatDefaultDateTime(pattern: String): String {

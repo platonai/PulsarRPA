@@ -15,12 +15,15 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.fail
+import kotlin.test.assertTrue
+import java.time.ZoneOffset
+
+
+
 
 /**
  * Created by vincent on 16-7-20.
@@ -81,13 +84,51 @@ class TestDateTimes {
     }
 
     @Test
+    fun testDateTimeFormatter2() {
+        val d = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2016-06-16 12:21:18")
+        assertEquals("Thu Jun 16 12:21:18 CST 2016", d.toString())
+        assertEquals("2016-06-16T04:21:18Z", d.toInstant().toString())
+
+        var t = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            .parse("2016-06-16 12:21:18") { LocalDateTime.from(it) }
+        assertEquals("2016-06-16T12:21:18", t.toString())
+
+        val pattern = "yyyy-MM-dd[ HH[:mm[:ss]]]"
+        t = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16 12:21") { LocalDateTime.from(it) }
+        assertEquals("2016-06-16T12:21", t.toString())
+        t = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16 12") { LocalDateTime.from(it) }
+        assertEquals("2016-06-16T12:00", t.toString())
+        var ld = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16") { LocalDate.from(it) }
+        assertEquals("2016-06-16", ld.toString())
+    }
+
+    @Test
+    fun testParseBestInstant() {
+        val dateRegex = "\\d{4}-\\d{2}-\\d{2}"
+        assertTrue { "2016-06-16".matches(dateRegex.toRegex()) }
+        assertTrue { "2016-06-16 12:21:18".matches("$dateRegex\\s+\\d{2}:.+".toRegex()) }
+
+        assertEquals("2016-06-16T04:21:18Z", DateTimes.parseBestInstant("2016-06-16 12:21:18").toString())
+        assertEquals("2016-06-16T04:21:00Z", DateTimes.parseBestInstant("2016-06-16 12:21").toString())
+        assertEquals("2016-06-16T04:00:00Z", DateTimes.parseBestInstant("2016-06-16 12:00").toString())
+        assertEquals("2016-06-15T16:00:00Z", DateTimes.parseBestInstant("2016-06-16").toString())
+    }
+
+    @Test
     fun testTimeZone() {
+        val now = LocalDateTime.now()
+
         val tz = TimeZone.getTimeZone("Asia/Shanghai")
         println(tz)
         val offset = tz.rawOffset
         println(offset)
         println(TimeZone.getDefault().id)
         println(ZoneId.systemDefault().id)
+
+        val zoneId = DateTimes.zoneId
+        assertEquals("Asia/Shanghai", DateTimes.zoneId.id)
+        assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffSet)
+        println(DateTimes.zoneOffSet)
     }
 
     @Test

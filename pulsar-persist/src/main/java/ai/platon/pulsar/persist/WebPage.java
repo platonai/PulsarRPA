@@ -612,7 +612,7 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public ZoneId getZoneId() {
-        return page.getZoneId() == null ? AppContext.INSTANCE.getDefaultZoneId() : ZoneId.of(page.getZoneId().toString());
+        return page.getZoneId() == null ? DateTimes.INSTANCE.getZoneId() : ZoneId.of(page.getZoneId().toString());
     }
 
     public void setZoneId(@NotNull ZoneId zoneId) {

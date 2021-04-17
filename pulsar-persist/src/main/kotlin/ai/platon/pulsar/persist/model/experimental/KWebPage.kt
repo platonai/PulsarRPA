@@ -17,6 +17,7 @@
 package ai.platon.pulsar.persist.model.experimental
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.HtmlIntegrity
@@ -164,7 +165,7 @@ class KWebPage : Comparable<KWebPage> {
         }
 
     var zoneId: ZoneId
-        get() = if (page.zoneId == null) AppContext.defaultZoneId else ZoneId.of(page.zoneId.toString())
+        get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
         set(zoneId) {
             page.zoneId = zoneId.id
         }

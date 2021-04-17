@@ -29,8 +29,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.Instant;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -751,10 +750,20 @@ public class SParser {
     }
 
     /**
-     * <p>getInstant.</p>
+     * Try to detect a date time from the text and convert it to be a instant
+     * If no date time detected, return Instant.EPOCH
+     */
+    public Instant getInstant() {
+        return getInstant(Instant.EPOCH);
+    }
+
+    /**
+     * Try to detect a date time from the text and convert it to be a instant
+     * If no date time detected, return defaultValue
      *
-     * @param defaultValue a {@link java.time.Instant} object.
-     * @return a {@link java.time.Instant} object.
+     * Accept the following format:
+     * 1. yyyy-MM-dd[ HH[:mm[:ss]]]
+     * 2. ISO_INSTANT, or yyyy-MM-ddTHH:mm:ssZ
      */
     public Instant getInstant(Instant defaultValue) {
         if (value == null) {
@@ -765,17 +774,9 @@ public class SParser {
             return Instant.ofEpochMilli(getLong(defaultValue.toEpochMilli()));
         }
 
-        return DateTimes.parseInstant(value, defaultValue);
+        return DateTimes.parseBestInstant(value);
     }
 
-    /**
-     * <p>getPath.</p>
-     *
-     * @param defaultValue      a {@link java.nio.file.Path} object.
-     * @param createDirectories a boolean.
-     * @return a {@link java.nio.file.Path} object.
-     * @throws java.io.IOException if any.
-     */
     public Path getPath(Path defaultValue, boolean createDirectories) throws IOException {
         Path path = (value != null) ? Paths.get(value) : defaultValue;
         if (createDirectories) {
@@ -784,12 +785,6 @@ public class SParser {
         return path;
     }
 
-    /**
-     * <p>getPath.</p>
-     *
-     * @param defaultValue a {@link java.nio.file.Path} object.
-     * @return a {@link java.nio.file.Path} object.
-     */
     public Path getPath(Path defaultValue) {
         try {
             Path path = (value != null) ? Paths.get(value) : defaultValue;
@@ -801,11 +796,6 @@ public class SParser {
         return defaultValue;
     }
 
-    /**
-     * <p>getPathOrNull.</p>
-     *
-     * @return a {@link java.nio.file.Path} object.
-     */
     @Nullable
     public Path getPathOrNull() {
         try {
