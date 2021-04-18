@@ -165,7 +165,7 @@ class UpdateComponent(
 
         val now = Instant.now()
         val fetchTime = now
-        // why a
+        // TODO: in which case a the last fetch time is after now? does it indicate a bug?
         val prevFetchTime = if (page.fetchTime.isAfter(now)) page.prevFetchTime else page.fetchTime
 
         val crawlStatus = page.crawlStatus

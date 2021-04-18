@@ -222,8 +222,8 @@ open class FetchComponent(
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
             CrawlStatus.STATUS_REDIR_PERM,
-            -> updatePage(page, pageDatum, protocolStatus, crawlStatus)
-            else -> updatePage(page, null, protocolStatus, crawlStatus)
+            -> updateFetchedPage(page, pageDatum, protocolStatus, crawlStatus)
+            else -> updateFetchedPage(page, null, protocolStatus, crawlStatus)
         }
 
         if (crawlStatus.isFetched) {
@@ -231,6 +231,8 @@ open class FetchComponent(
         } else if (crawlStatus.isFailed) {
             fetchMetrics?.trackFailedUrl(url)
         }
+
+        updatedPage.isFetched = true
 
         return updatedPage
     }
@@ -262,7 +264,7 @@ open class FetchComponent(
     /**
      * TODO: do this in update phrase
      * */
-    private fun updatePage(
+    private fun updateFetchedPage(
         page: WebPage, pageDatum: PageDatum?,
         protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus,
     ): WebPage {
