@@ -12,6 +12,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.DelayQueue
+import kotlin.jvm.Throws
 
 open class QueueCollector(
     val queue: Queue<UrlAware>,
@@ -31,24 +32,25 @@ open class QueueCollector(
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
-        var count = 0
+        beforeCollect()
 
-        queue.poll()?.let {
-            val hyperlink = Hyperlinks.toHyperlink(it).also { it.args += " $loadArgs" }
+//        var count = 0
+//        val url = queue.poll()
+//        if (url != null && sink.add(Hyperlinks.toHyperlink(url).also { it.args += " $loadArgs" })) {
+//            ++count
+//        }
 
-            if (sink.add(hyperlink)) {
-                ++count
-            }
-        }
+        val count = queue.poll()
+            ?.let { Hyperlinks.toHyperlink(it).also { it.args += " $loadArgs" } }
+            ?.takeIf { sink.add(it) }
+            ?.let { 1 } ?: 0
 
-        collectedCount += count
-        return count
+        return afterCollect(count)
     }
 }
 
 /**
- * Collect hyper links from the given [seeds]. The urls are restricted by [loadArguments] and [urlPattern].
+ * Collect hyper links from the given [seeds]. The urls are restricted by [loadArguments] and [urlNormalizer].
  * 1. all urls are restricted by css outLinkSelector
  * 2. all urls are restricted by urlPattern
  * 3. all urls have to not be fetched before or expired against the last version
@@ -98,19 +100,17 @@ open class HyperlinkCollector(
     override fun hasMore() = seeds.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
+        beforeCollect()
 
-        var count = 0
-        kotlin.runCatching {
-            count += collectTo0(sink)
-        }.onFailure { log.warn("Failed to collect links", it) }
+        val count = kotlin.runCatching { collectToUnsafe(sink) }
+            .onFailure { log.warn("Failed to collect links", it) }
+            .getOrDefault(1)
 
-        collectedCount += count
-
-        return count
+        return afterCollect(count)
     }
 
-    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
+    @Throws(Exception::class)
+    private fun collectToUnsafe(sink: MutableCollection<Hyperlink>): Int {
         val seed = seeds.poll()
 
         if (seed == null) {
@@ -188,15 +188,13 @@ open class CircularHyperlinkCollector(
     ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
-        var count = 0
+        beforeCollect()
 
-        kotlin.runCatching {
-            count += collectTo0(sink)
-        }.onFailure { log.warn("Failed to collect" + it.message) }
+        val count = kotlin.runCatching { collectTo0(sink) }
+            .onFailure { log.warn("Failed to collect" + it.message) }
+            .getOrDefault(0)
 
-        collectedCount += count
-        return count
+        return afterCollect(count)
     }
 
     private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
@@ -234,16 +232,13 @@ open class PeriodicalHyperlinkCollector(
     override fun hasMore() = synchronized(iterator) { isExpired && iterator.hasNext() }
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
-        var count = 0
+        beforeCollect()
 
-        kotlin.runCatching {
-            count += collectTo0(sink)
-        }.onFailure { log.warn("Failed to collect", it) }
+        val count = kotlin.runCatching { collectTo0(sink) }
+            .onFailure { log.warn("Failed to collect", it) }
+            .getOrDefault(0)
 
-        collectedCount += count
-
-        return count
+        return afterCollect(count)
     }
 
     private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
@@ -300,17 +295,19 @@ open class FetchCacheCollector(
 
     @Synchronized
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
-        return queues.sumOf { consume(it, sink) }
+        beforeCollect()
+        val count = queues.sumOf { consume(it, sink) }
+        return afterCollect(count)
     }
 
     private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
-        val url = queue.poll() ?: return 0
-        if (sink.add(Hyperlinks.toHyperlink(url))) {
-            ++collectedCount
-            return 1
-        }
-        return 0
+//        var count = 0
+//        val url = queue.poll()
+//        if (url != null && sink.add(Hyperlinks.toHyperlink(url))) {
+//            ++count
+//        }
+//        return count
+        return queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it)) }?.let { 1 } ?: 0
     }
 }
 
@@ -334,14 +331,15 @@ open class DelayCacheCollector(
 
     @Synchronized
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
-        val url = queue.poll() ?: return 0
+        beforeCollect()
 
-        if (sink.add(Hyperlinks.toHyperlink(url.url))) {
-            ++collectedCount
-            return 1
-        }
+//        var count = 0
+//        val url = queue.poll()
+//        if (url != null && sink.add(Hyperlinks.toHyperlink(url.url))) {
+//            ++count
+//        }
+        val count = queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it.url)) }?.let { 1 } ?: 0
 
-        return 0
+        return afterCollect(count)
     }
 }

@@ -14,7 +14,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class TestDataCollectors: TestBase() {
+class TestDataCollectors : TestBase() {
 
     private val lowerCacheSize = 10
 
@@ -29,23 +29,29 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when collect from collector with loading fetch cache then sink has items`() {
-        val fetchCache = LoadingFetchCache("", urlLoader)
-        assertTrue { fetchCache.size > 0 }
-        val collector = FetchCacheCollector(fetchCache, fetchCache.priority)
+        val source = LoadingFetchCache("", urlLoader)
         val sink = mutableListOf<Hyperlink>()
+
+        assertTrue { source.size > 0 }
+        assertTrue { sink.isEmpty() }
+
+        val collector = FetchCacheCollector(source, source.priority)
         collector.collectTo(sink)
+
         assertTrue { sink.isNotEmpty() }
     }
 
     @Test
     fun `when add a item to queue then queue is not empty`() {
-        val fetchCache = LoadingFetchCache("", TemporaryLocalFileUrlLoader())
-        fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
-        assertTrue { fetchCache.size == 1 }
-        val collector = FetchCacheCollector(fetchCache, fetchCache.priority)
-        assertTrue { collector.hasMore() }
+        val source = LoadingFetchCache("", TemporaryLocalFileUrlLoader())
         val sink = mutableListOf<Hyperlink>()
+
+        source.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
+        assertTrue { source.size == 1 }
+        val collector = FetchCacheCollector(source, source.priority)
+        assertTrue { collector.hasMore() }
         collector.collectTo(sink)
+
         assertTrue { sink.isNotEmpty() }
     }
 
@@ -123,7 +129,7 @@ class TestDataCollectors: TestBase() {
 
         val cache = fetchIterable.fetchCacheManager.lower2Cache
         LinkExtractors.fromResource("seeds/head100/most-wished-for.txt")
-                .mapTo(cache.nonReentrantQueue) { Hyperlink(it) }
+            .mapTo(cache.nonReentrantQueue) { Hyperlink(it) }
 
         var i = 0
         fetchIterable.forEach {

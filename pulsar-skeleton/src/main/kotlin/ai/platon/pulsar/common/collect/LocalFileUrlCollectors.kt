@@ -52,20 +52,16 @@ open class LocalFileHyperlinkCollector(
     override fun hasMore() = hyperlinks.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
-        var count = 0
+        beforeCollect()
 
-        cache.removeFirstOrNull()?.let {
-            if (sink.add(it)) {
-               ++count
-            } else {
-                log.warn("Can not collect link | {}", it)
-            }
-        }
+//        var count = 0
+//        val url = cache.removeFirstOrNull()
+//        if (url != null && sink.add(url)) {
+//            ++count
+//        }
+        val count = cache.removeFirstOrNull()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
 
-        collectedCount += count
-
-        return count
+        return afterCollect(count)
     }
 
     private fun ensureLoaded(): LocalFileHyperlinkCollector {
@@ -92,15 +88,14 @@ open class CircularLocalFileHyperlinkCollector(
     protected val iterator = Iterators.cycle(hyperlinks)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
+        beforeCollect()
 
         var count = 0
         if (hasMore() && iterator.hasNext()) {
             count += collectTo(iterator.next(), sink)
         }
 
-        collectedCount += count
-        return count
+        return afterCollect(count)
     }
 }
 
@@ -155,7 +150,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
     override fun hasMore() = (!isFinished || isExpired) && iterator.hasNext()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        ++collectCount
+        beforeCollect()
         ++counters.collects
 
         resetIfNecessary()
@@ -173,8 +168,8 @@ open class PeriodicalLocalFileHyperlinkCollector(
         }
 
         roundCollected += count
-        collectedCount += count
-        return count
+
+        return afterCollect(count)
     }
 
     override fun toString(): String {

@@ -1,12 +1,15 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import java.time.Duration
+import java.time.Instant
 
 /**
  * The data collector interface
  * */
 interface DataCollector<T> {
     var name: String
+
     /**
      * The collector cache capacity. At most [capacity] items can be collected to the cache from the source
      * */
@@ -15,6 +18,9 @@ interface DataCollector<T> {
     val estimatedSize: Int
     val collectCount: Int
     val collectedCount: Int
+    val firstCollectTime: Instant
+    val lastCollectedTime: Instant
+    val collectTime: Duration
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableList<T>): Int
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
@@ -22,12 +28,12 @@ interface DataCollector<T> {
     fun collectTo(index: Int, sink: MutableList<T>): Int
 }
 
-interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCollector<T>> {
+interface PriorityDataCollector<T> : DataCollector<T>, Comparable<PriorityDataCollector<T>> {
     val priority: Int
     override fun compareTo(other: PriorityDataCollector<T>) = priority - other.priority
 }
 
-abstract class AbstractDataCollector<E>: DataCollector<E> {
+abstract class AbstractDataCollector<E> : DataCollector<E> {
     companion object {
         const val DEFAULT_CAPACITY = 1000
     }
@@ -41,14 +47,20 @@ abstract class AbstractDataCollector<E>: DataCollector<E> {
      * The total count of collect attempt
      * */
     override var collectCount: Int = 0
+
     /**
      * The total collected count
      * */
     override var collectedCount: Int = 0
 
+    override var firstCollectTime = Instant.EPOCH
+
+    override var lastCollectedTime = Instant.EPOCH
+
+    override val collectTime: Duration get() = Duration.between(firstCollectTime, lastCollectedTime)
+
     override fun collectTo(element: E, sink: MutableList<E>): Int {
-        sink.add(element)
-        return 1
+        return collectTo(sink.size - 1, element, sink)
     }
 
     override fun collectTo(index: Int, element: E, sink: MutableList<E>): Int {
@@ -64,12 +76,31 @@ abstract class AbstractDataCollector<E>: DataCollector<E> {
     }
 
     override fun toString() = name
+
+    protected fun beforeCollect() {
+        if (firstCollectTime == Instant.EPOCH) {
+            firstCollectTime = Instant.now()
+        }
+
+        ++collectCount
+    }
+
+    protected fun afterCollect(collected: Int): Int {
+        collectedCount += collected
+
+        if (collected > 0) {
+            lastCollectedTime = Instant.now()
+        }
+
+        return collected
+    }
 }
 
 abstract class AbstractPriorityDataCollector<T>(
-        override val priority: Int = Priority13.NORMAL.value,
-        override val capacity: Int = DEFAULT_CAPACITY
-): AbstractDataCollector<T>(), PriorityDataCollector<T> {
-    constructor(priority: Priority13): this(priority.value)
+    override val priority: Int = Priority13.NORMAL.value,
+    override val capacity: Int = DEFAULT_CAPACITY,
+) : AbstractDataCollector<T>(), PriorityDataCollector<T> {
+    constructor(priority: Priority13) : this(priority.value)
+
     override var name: String = "PriorityDC"
 }
