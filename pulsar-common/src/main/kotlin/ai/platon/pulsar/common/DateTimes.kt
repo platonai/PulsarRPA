@@ -99,6 +99,10 @@ object DateTimes {
         return format(LocalDateTime.now())
     }
 
+    fun elapsedTime(): Duration {
+        return elapsedTime(startTime, Instant.now())
+    }
+
     fun elapsedTime(start: Long): Duration {
         return elapsedTime(Instant.ofEpochMilli(start), Instant.now())
     }

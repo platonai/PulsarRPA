@@ -18,7 +18,7 @@ open class QueueCollector(
     priority: Priority13 = Priority13.NORMAL
 ) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
-    override var name = "UrlQueueC"
+    override var name = "QueueC"
 
     override val size: Int
         get() = queue.size
