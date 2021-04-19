@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.readable
 import java.time.Duration
 import java.time.Instant
 
@@ -75,7 +76,20 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
         return list.size
     }
 
-    override fun toString() = name
+    override fun toString(): String {
+        val elapsedTime = Duration.between(firstCollectTime, lastCollectedTime)
+        val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
+        return String.format("%s - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
+            name,
+            collectedCount,
+            String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
+            collectCount,
+            String.format("%.2f", 1.0 * collectCount / elapsedSeconds),
+            elapsedTime.readable(),
+            size, estimatedSize,
+            firstCollectTime, lastCollectedTime
+        )
+    }
 
     protected fun beforeCollect() {
         if (firstCollectTime == Instant.EPOCH) {
@@ -103,4 +117,19 @@ abstract class AbstractPriorityDataCollector<T>(
     constructor(priority: Priority13) : this(priority.value)
 
     override var name: String = "PriorityDC"
+
+    override fun toString(): String {
+        val elapsedTime = Duration.between(firstCollectTime, lastCollectedTime)
+        val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
+        return String.format("%s(%d) - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
+            name, priority,
+            collectedCount,
+            String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
+            collectCount,
+            String.format("%.2f", 1.0 * collectCount / elapsedSeconds),
+            elapsedTime.readable(),
+            size, estimatedSize,
+            firstCollectTime, lastCollectedTime
+        )
+    }
 }

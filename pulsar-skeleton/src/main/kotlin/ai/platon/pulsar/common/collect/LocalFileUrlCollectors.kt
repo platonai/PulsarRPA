@@ -39,7 +39,7 @@ open class LocalFileHyperlinkCollector(
 
     val fileName = path.fileName.toString()
 
-    override var name = fileName.substringBefore(".")
+    override var name = fileName
 
     var loadArgs: String? = null
 
@@ -54,11 +54,6 @@ open class LocalFileHyperlinkCollector(
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         beforeCollect()
 
-//        var count = 0
-//        val url = cache.removeFirstOrNull()
-//        if (url != null && sink.add(url)) {
-//            ++count
-//        }
         val count = cache.removeFirstOrNull()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
 
         return afterCollect(count)
@@ -174,7 +169,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
 
     override fun toString(): String {
         return "$name - round: $round collected: ${counters.collected} " +
-                "startTime: $startTime expires: $expires priority: $priority"
+                "startTime: $startTime expires: $expires priority: $priority | ${super.toString()}"
     }
 
     private fun resetIfNecessary() {

@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.persist.WebDb
 import com.google.common.collect.Iterators
@@ -12,11 +11,10 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.DelayQueue
-import kotlin.jvm.Throws
 
 open class QueueCollector(
-    val queue: Queue<UrlAware>,
-    priority: Priority13 = Priority13.NORMAL
+    val queue: Queue<UrlAware> = ConcurrentLinkedQueue(),
+    priority: Int = Priority13.NORMAL.value
 ) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     override var name = "QueueC"
@@ -29,16 +27,12 @@ open class QueueCollector(
 
     var loadArgs: String? = null
 
+    constructor(priority: Priority13): this(ConcurrentLinkedQueue(), priority.value)
+
     override fun hasMore() = queue.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         beforeCollect()
-
-//        var count = 0
-//        val url = queue.poll()
-//        if (url != null && sink.add(Hyperlinks.toHyperlink(url).also { it.args += " $loadArgs" })) {
-//            ++count
-//        }
 
         val count = queue.poll()
             ?.let { Hyperlinks.toHyperlink(it).also { it.args += " $loadArgs" } }
@@ -103,8 +97,8 @@ open class HyperlinkCollector(
         beforeCollect()
 
         val count = kotlin.runCatching { collectToUnsafe(sink) }
-            .onFailure { log.warn("Failed to collect links", it) }
-            .getOrDefault(1)
+            .onFailure { log.warn("Collect failed - ", it) }
+            .getOrDefault(0)
 
         return afterCollect(count)
     }
@@ -191,7 +185,7 @@ open class CircularHyperlinkCollector(
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
-            .onFailure { log.warn("Failed to collect" + it.message) }
+            .onFailure { log.warn("Collect failed - " + it.message) }
             .getOrDefault(0)
 
         return afterCollect(count)
@@ -235,7 +229,7 @@ open class PeriodicalHyperlinkCollector(
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
-            .onFailure { log.warn("Failed to collect", it) }
+            .onFailure { log.warn("Collect failed", it) }
             .getOrDefault(0)
 
         return afterCollect(count)
@@ -301,12 +295,6 @@ open class FetchCacheCollector(
     }
 
     private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
-//        var count = 0
-//        val url = queue.poll()
-//        if (url != null && sink.add(Hyperlinks.toHyperlink(url))) {
-//            ++count
-//        }
-//        return count
         return queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it)) }?.let { 1 } ?: 0
     }
 }
@@ -333,11 +321,6 @@ open class DelayCacheCollector(
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         beforeCollect()
 
-//        var count = 0
-//        val url = queue.poll()
-//        if (url != null && sink.add(Hyperlinks.toHyperlink(url.url))) {
-//            ++count
-//        }
         val count = queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it.url)) }?.let { 1 } ?: 0
 
         return afterCollect(count)
