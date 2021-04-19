@@ -46,14 +46,13 @@
 
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-app-resources</artifactId>
+            <artifactId>pulsar-app-common-resources</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
