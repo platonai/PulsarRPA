@@ -71,7 +71,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
             description = "The task time, we usually use a task time to indicate a batch of a task")
-    var taskTime = Instant.now()
+    var taskTime = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 
     @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")

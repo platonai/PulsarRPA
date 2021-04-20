@@ -19,12 +19,12 @@ interface CrawlableFatLinkCollector {
 }
 
 open class MultiSourceDataCollector<E>(
-        priority: Priority13 = Priority13.NORMAL
+        priority: Priority13 = Priority13.NORMAL,
 ): AbstractPriorityDataCollector<E>(priority) {
 
-    val collectors: ConcurrentLinkedQueue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
+    override var name: String = "MultiSourceDC"
 
-    override var name = "MultiSourceDC"
+    val collectors: ConcurrentLinkedQueue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
 
     private val roundCounter = AtomicInteger()
     private val collectedCounter = AtomicInteger()
@@ -92,6 +92,7 @@ open class PauseDataCollector<E>(
         val sleeper: () -> Unit = { sleep(pause) },
         priority: Priority13 = Priority13.LOWEST
 ): AbstractPriorityDataCollector<E>(priority) {
+
     override var name: String = "PauseDC"
 
     private var collected = 0

@@ -55,33 +55,19 @@ enum class Priority13(val value: Int) {
     LOWEST(Int.MAX_VALUE / 10);
 
     companion object {
-        fun valueOf(name: String, defaultValue: Priority13): Priority13 {
-            return try {
-                valueOf(name)
-            } catch (t: Throwable) {
-                defaultValue
-            }
+        fun valueOfOrNull(name: String): Priority13? {
+            return values().firstOrNull { it.name == name }
         }
 
         @Throws(IllegalArgumentException::class)
-        fun valueOfOrThrow(name: String): Priority13 {
-            return try {
-                valueOf(name)
-            } catch (t: Throwable) {
-                throw IllegalArgumentException("Illegal priority name $name, " +
-                        "must be one of ${values().map { it.name }}")
-            }
-        }
-
-        fun valueOf(value: Int, defaultValue: Priority13): Priority13 {
-            return values().firstOrNull { it.value == value } ?: defaultValue
-        }
-
-        @Throws(IllegalArgumentException::class)
-        fun valueOfOrThrow(value: Int): Priority13 {
+        fun valueOf(value: Int): Priority13 {
             return values().firstOrNull { it.value == value }
                 ?: throw IllegalArgumentException("Illegal priority value $value, " +
-                    "must be one of ${values().map { it.value }}")
+                        "must be one of ${values().map { it.value }}")
+        }
+
+        fun valueOfOrNull(value: Int): Priority13? {
+            return values().firstOrNull { it.value == value }
         }
     }
 }

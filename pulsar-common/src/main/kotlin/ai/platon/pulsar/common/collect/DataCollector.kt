@@ -39,8 +39,9 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
         const val DEFAULT_CAPACITY = 1000
     }
 
-    override var name: String = "DC"
     override val capacity: Int = DEFAULT_CAPACITY
+    override var name: String = "DC"
+
     override val size: Int get() = 0
     override val estimatedSize: Int = 0
 
@@ -112,17 +113,19 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
 
 abstract class AbstractPriorityDataCollector<T>(
     override val priority: Int = Priority13.NORMAL.value,
-    override val capacity: Int = DEFAULT_CAPACITY,
 ) : AbstractDataCollector<T>(), PriorityDataCollector<T> {
-    constructor(priority: Priority13) : this(priority.value)
 
+    override val capacity: Int = DEFAULT_CAPACITY
     override var name: String = "PriorityDC"
+
+    constructor(priority: Priority13) : this(priority.value)
 
     override fun toString(): String {
         val elapsedTime = Duration.between(firstCollectTime, lastCollectedTime)
         val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
-        return String.format("%s(%d) - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
-            name, priority,
+        val priorityName = Priority13.valueOfOrNull(priority)?.let { "$it, $priority" } ?: "$priority"
+        return String.format("%s(%s) - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
+            name, priorityName,
             collectedCount,
             String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
             collectCount,

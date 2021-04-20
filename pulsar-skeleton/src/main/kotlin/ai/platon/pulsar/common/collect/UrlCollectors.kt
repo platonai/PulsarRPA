@@ -269,12 +269,12 @@ open class PeriodicalHyperlinkCollector(
 
 open class FetchCacheCollector(
     private val fetchCache: FetchCache,
-    priority: Int = Priority13.HIGHER.value
+    priority: Int = Priority13.HIGHER.value,
 ) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
-    override var name = "FetchCacheC"
-
     private val queues get() = fetchCache.queues
+
+    override var name: String = "FetchCacheC"
 
     override val size: Int
         get() = fetchCache.size

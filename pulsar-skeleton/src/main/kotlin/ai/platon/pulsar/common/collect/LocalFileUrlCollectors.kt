@@ -24,22 +24,23 @@ open class LocalFileHyperlinkCollector(
          * The priority
          * */
         priority: Int = Priority13.NORMAL.value,
-        /**
-         * The cache capacity, we assume that all items in the file are loaded into the cache
-         * */
-        capacity: Int = 1_000_000
-): AbstractPriorityDataCollector<Hyperlink>(priority, capacity) {
+): AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
-
     private val urlLoader = LocalFileUrlLoader(path)
     private val isLoaded = AtomicBoolean()
-
     private val cache: MutableList<Hyperlink> = Collections.synchronizedList(LinkedList())
 
-    val fileName = path.fileName.toString()
+    /**
+     * The cache capacity, we assume that all items in the file are loaded into the cache
+     * */
+    override val capacity: Int = 1_000_000
+    /**
+     * The collector name
+     * */
+    override var name: String = path.fileName.toString()
 
-    override var name = fileName
+    val fileName = path.fileName.toString()
 
     var loadArgs: String? = null
 
@@ -47,7 +48,7 @@ open class LocalFileHyperlinkCollector(
 
     override val estimatedSize: Int get() = hyperlinks.size
 
-    constructor(path: Path, priority: Priority13, capacity: Int = 1_000_000): this(path, priority.value, capacity)
+    constructor(path: Path, priority: Priority13): this(path, priority.value)
 
     override fun hasMore() = hyperlinks.isNotEmpty()
 
@@ -76,9 +77,10 @@ open class LocalFileHyperlinkCollector(
 
 open class CircularLocalFileHyperlinkCollector(
         path: Path,
-        priority: Priority13 = Priority13.NORMAL,
-        capacity: Int = DEFAULT_CAPACITY
-): LocalFileHyperlinkCollector(path, priority, capacity) {
+        priority: Priority13 = Priority13.NORMAL
+): LocalFileHyperlinkCollector(path, priority.value) {
+
+    override var name: String = "CircularLFHC"
 
     protected val iterator = Iterators.cycle(hyperlinks)
 
@@ -98,8 +100,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
         path: Path,
         val options: LoadOptions,
         priority: Priority13 = Priority13.NORMAL,
-        capacity: Int = DEFAULT_CAPACITY
-): CircularLocalFileHyperlinkCollector(path, priority, capacity) {
+): CircularLocalFileHyperlinkCollector(path, priority) {
     private val log = LoggerFactory.getLogger(PeriodicalLocalFileHyperlinkCollector::class.java)
 
     companion object {
@@ -122,6 +123,8 @@ open class PeriodicalLocalFileHyperlinkCollector(
             AppMetrics.reg.registerAll(this, gauges)
         }
     }
+
+    override var name: String = "PeriodicalLFHC"
 
     private val position = AtomicInteger()
     val uuid = UUID.randomUUID()
