@@ -21,7 +21,18 @@ object DateTimes {
     const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
     val ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365))
 
+    /**
+     * The default zone id, it will be configurable
+     * */
     var zoneId = ZoneId.of("Asia/Shanghai")
+    /**
+     * The default zone offset, it must be consistent with zoneId
+     *
+     * There is no one-to-one mapping. A ZoneId defines a geographic extent in which a set of different ZoneOffsets is used over time. If the timezone uses daylight saving time, its ZoneOffset will be different between summer and winter.
+     * Furthermore, the daylight saving time rules may have changed over time, so the ZoneOffset could be different for e.g. 13/10/2015 compared to 13/10/1980.
+     * So you can only find the ZoneOffset for a ZoneId on a particular Instant.
+     * See also [Tz_database](https://en.wikipedia.org/wiki/Tz_database)
+     * */
     var zoneOffSet = ZoneOffset.of("+08:00")
 
     /**
@@ -35,6 +46,14 @@ object DateTimes {
     val elapsed get() = Duration.between(startTime, Instant.now())
     val elapsedToday get() = Duration.between(midnight, LocalDateTime.now())
     val elapsedThisHour get() = Duration.between(startOfHour, LocalDateTime.now())
+
+    fun zoneIdOrDefault(name: String): ZoneId {
+        return if (name in ZoneId.getAvailableZoneIds()) {
+            ZoneId.of(name)
+        } else {
+            zoneId
+        }
+    }
 
     fun format(time: Long): String {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(zoneId).format(Instant.ofEpochMilli(time))
