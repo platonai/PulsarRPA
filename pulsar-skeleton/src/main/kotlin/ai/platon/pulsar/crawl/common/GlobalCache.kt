@@ -4,8 +4,8 @@ import ai.platon.pulsar.common.collect.ConcurrentFetchCatchManager
 import ai.platon.pulsar.common.collect.FetchCatchManager
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.CACHE_CAPACITY
-import ai.platon.pulsar.common.config.CapabilityTypes.SESSION_DOCUMENT_CACHE_SIZE
-import ai.platon.pulsar.common.config.CapabilityTypes.SESSION_PAGE_CACHE_SIZE
+import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_DOCUMENT_CACHE_SIZE
+import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_PAGE_CACHE_SIZE
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -23,11 +23,11 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * The page cache capacity
      * */
-    private val pageCacheCapacity = conf.getUint(SESSION_PAGE_CACHE_SIZE, CACHE_CAPACITY)
+    private val pageCacheCapacity = conf.getUint(GLOBAL_PAGE_CACHE_SIZE, CACHE_CAPACITY)
     /**
      * The document cache capacity
      * */
-    private val documentCacheCapacity = conf.getUint(SESSION_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY)
+    private val documentCacheCapacity = conf.getUint(GLOBAL_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY)
     /**
      * The fetch cache manager, hold on queues of fetch items
      * */

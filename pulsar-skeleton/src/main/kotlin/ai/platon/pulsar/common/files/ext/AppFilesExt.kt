@@ -64,11 +64,12 @@ fun AppFiles.export(page: WebPage, ident: String = "", suffix: String = ""): Pat
     val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, "", suffix)
     val path = WEB_CACHE_DIR.resolve(ident).resolve(filename)
     Files.deleteIfExists(path)
-    AppFiles.saveTo(page.content?.array() ?: "(empty)".toByteArray(), path)
+    saveTo(page.content?.array() ?: "(empty)".toByteArray(), path)
     return path
 }
 
 fun AppFiles.export(doc: Document, ident: String = ""): Path {
-    val path = WEB_CACHE_DIR.resolve(ident).resolve(AppPaths.fromUri(doc.baseUri(), "", ".htm"))
-    return AppFiles.saveTo(doc.outerHtml(), path)
+    val filename = AppPaths.fromUri(doc.baseUri(), "", ".htm")
+    val path = WEB_CACHE_DIR.resolve(ident).resolve(filename)
+    return saveTo(doc.outerHtml(), path)
 }

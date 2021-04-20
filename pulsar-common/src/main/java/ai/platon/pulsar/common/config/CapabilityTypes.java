@@ -544,11 +544,13 @@ public interface CapabilityTypes {
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
     /**
-     * Crawl
+     * The size of global page cache
      * */
-    String SESSION_PAGE_CACHE_SIZE = "session.page.cache.size";
-    /** Constant <code>SESSION_DOCUMENT_CACHE_SIZE="session.document.cache.size"</code> */
-    String SESSION_DOCUMENT_CACHE_SIZE = "session.document.cache.size";
+    String GLOBAL_PAGE_CACHE_SIZE = "global.page.cache.size";
+    /**
+     * The size of global document cache
+     * */
+    String GLOBAL_DOCUMENT_CACHE_SIZE = "global.document.cache.size";
 
     /**
      * Stat

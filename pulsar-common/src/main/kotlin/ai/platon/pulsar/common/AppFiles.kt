@@ -14,7 +14,7 @@ import java.util.zip.ZipInputStream
 
 object AppFiles {
 
-    val log = LoggerFactory.getLogger(AppFiles::class.java)!!
+    private val logger = getLogger(AppFiles::class.java)
 
     fun saveTo(any: Any, path: Path, deleteIfExists: Boolean = false): Path {
         return saveTo(any.toString().toByteArray(), path, deleteIfExists)
@@ -135,7 +135,7 @@ object AppFiles {
             val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(url, "", ".task"))
             Files.write(path, url.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
-            log.error(e.toString())
+            logger.error(e.toString())
         }
     }
 
@@ -148,7 +148,7 @@ object AppFiles {
         try {
             return String(Files.readAllBytes(path))
         } catch (e: IOException) {
-            log.error(e.toString())
+            logger.error(e.toString())
         }
 
         return null
@@ -161,7 +161,7 @@ object AppFiles {
         try {
             Files.write(AppPaths.PATH_UNREACHABLE_HOSTS, report.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
-            log.error(e.toString())
+            logger.error(e.toString())
         }
     }
 }

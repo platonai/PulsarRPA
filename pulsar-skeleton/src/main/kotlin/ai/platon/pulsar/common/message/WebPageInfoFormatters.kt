@@ -82,7 +82,7 @@ class LoadedPageFormatter(
         }
 
     private val fetchReason get() = buildFetchReason()
-    private val prefix0 get() = if (page.isContentUpdated) "Fetched" else "Loaded"
+    private val prefix0 get() = if (page.isFetched) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
