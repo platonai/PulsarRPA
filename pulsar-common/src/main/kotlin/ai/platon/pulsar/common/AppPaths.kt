@@ -149,8 +149,8 @@ object AppPaths {
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
 
-    fun testDataPath(url: String): Path {
-        val filename = fromUri(url, "", ".htm")
+    fun mockPagePath(uri: String): Path {
+        val filename = fromUri(uri, "", ".htm")
         return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
     }
 

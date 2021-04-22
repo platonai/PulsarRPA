@@ -858,11 +858,17 @@ final public class WebPage implements Comparable<WebPage> {
         page.setPrevFetchTime(time.toEpochMilli());
     }
 
+    /**
+     * The previous crawl time, used for fat link crawl, which means both the page itself and out pages are fetched
+     * */
     @NotNull
     public Instant getPrevCrawlTime1() {
         return Instant.ofEpochMilli(page.getPrevCrawlTime1());
     }
 
+    /**
+     * The previous crawl time, used for fat link crawl, which means both the page itself and out pages are fetched
+     * */
     public void setPrevCrawlTime1(@NotNull Instant time) {
         page.setPrevCrawlTime1(time.toEpochMilli());
     }
@@ -1005,25 +1011,21 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getFirstCrawlTime.</p>
-     *
-     * @param defaultValue a {@link java.time.Instant} object.
-     * @return a {@link java.time.Instant} object.
+     * Get the first fetch time
      */
-    public @NotNull
-    Instant getFirstCrawlTime(@NotNull Instant defaultValue) {
-        Instant firstCrawlTime = null;
+    public @Nullable Instant getFirstFetchTime() {
+        Instant firstFetchTime = null;
 
-        String fetchTimeHistory = getFetchTimeHistory("");
-        if (!fetchTimeHistory.isEmpty()) {
-            String[] times = fetchTimeHistory.split(",");
+        String history = getFetchTimeHistory("");
+        if (!history.isEmpty()) {
+            String[] times = history.split(",");
             Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
             if (time.isAfter(Instant.EPOCH)) {
-                firstCrawlTime = time;
+                firstFetchTime = time;
             }
         }
 
-        return firstCrawlTime == null ? defaultValue : firstCrawlTime;
+        return firstFetchTime;
     }
 
     /**

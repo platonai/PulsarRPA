@@ -21,13 +21,11 @@ package ai.platon.pulsar.index
 import ai.platon.pulsar.crawl.common.URLUtil.getDomainName
 import ai.platon.pulsar.crawl.index.IndexingFilter
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.index.MetadataIndexer
 import kotlin.Throws
 import ai.platon.pulsar.crawl.index.IndexingException
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.persist.WebPage
 import java.net.MalformedURLException
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.DateTimes.isoInstantFormat
 import ai.platon.pulsar.common.config.Params
 import java.net.URL
@@ -95,9 +93,9 @@ class MetadataIndexer(
     private fun addTime(doc: IndexDocument, url: String, page: WebPage) {
         val now = Instant.now()
         val crawlTimeStr = isoInstantFormat(now)
-        val firstCrawlTime = page.getFirstCrawlTime(now)
+        val firstFetchTime = page.firstFetchTime ?: now
         val fetchTimeHistory = page.getFetchTimeHistory(crawlTimeStr)
-        doc.add("first_crawl_time", isoInstantFormat(firstCrawlTime))
+        doc.add("first_crawl_time", isoInstantFormat(firstFetchTime))
         doc.add("last_crawl_time", crawlTimeStr)
         doc.add("fetch_time_history", fetchTimeHistory)
         val indexTimeStr = isoInstantFormat(now)

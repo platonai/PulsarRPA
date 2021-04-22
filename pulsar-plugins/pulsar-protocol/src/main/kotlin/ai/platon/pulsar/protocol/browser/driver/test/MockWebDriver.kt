@@ -121,15 +121,24 @@ class MockWebDriver(
     }
 
     private fun loadMockPageSourceOrNull(url: String): String? {
+        val mockPath = AppPaths.mockPagePath(url)
+        if (!Files.exists(mockPath)) {
+            val path = searchExport(url)
+            if (path != null) {
+                Files.copy(path, mockPath)
+            }
+        }
+
+        log.info("Loading from path: \n{}", mockPath)
+        return mockPath.takeIf { Files.exists(it) }?.let { Files.readString(it) }
+    }
+
+    private fun searchExport(url: String): Path? {
         val fileId = AppPaths.fileId(url)
         val searchPath = AppPaths.WEB_CACHE_DIR.resolve("original")
         val matcher = { path: Path, attr: BasicFileAttributes ->
             attr.isRegularFile && path.toAbsolutePath().toString().let { fileId in it && "OK" in it }
         }
-        val path = Files.find(searchPath, 10, matcher).findFirst()
-            .orElse(AppPaths.testDataPath(url))
-
-        log.info("Loading from path: \n{}", path)
-        return path.takeIf { Files.exists(it) }?.let { Files.readString(it) }
+        return Files.find(searchPath, 10, matcher).findFirst().orElse(null)
     }
 }

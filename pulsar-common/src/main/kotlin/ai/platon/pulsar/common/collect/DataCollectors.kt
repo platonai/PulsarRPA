@@ -27,10 +27,8 @@ open class MultiSourceDataCollector<E>(
     val collectors: ConcurrentLinkedQueue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
 
     private val roundCounter = AtomicInteger()
-    private val collectedCounter = AtomicInteger()
 
     val round get() = roundCounter.get()
-    val totalCollected get() = collectedCounter.get()
 
     constructor(initCollectors: Iterable<PriorityDataCollector<E>>, priority: Priority13 = Priority13.NORMAL
     ): this(priority) {
@@ -42,9 +40,6 @@ open class MultiSourceDataCollector<E>(
         initCollectors.toCollection(collectors)
     }
 
-    /**
-     * TODO: ConcurrentModificationException occurs at java.base/java.util.LinkedList$ListItr.next(LinkedList.java:892)
-     * */
     override fun hasMore() = collectors.any { it.hasMore() }
 
     /**
@@ -61,7 +56,8 @@ open class MultiSourceDataCollector<E>(
 
     private fun collectTo0(sink: MutableList<E>): Int {
         var collected = 0
-        // The returned map preserves the entry iteration order of the keys produced from the original collection.
+        // groupBy: the returned map preserves the entry iteration order of the keys produced from the original collection.
+        // so the order is guaranteed
         val groupedCollectors = collectors.sortedBy { it.priority }.groupBy { it.priority }
         while (collected == 0 && hasMore()) {
             groupedCollectors.forEach { (_, collectors) ->

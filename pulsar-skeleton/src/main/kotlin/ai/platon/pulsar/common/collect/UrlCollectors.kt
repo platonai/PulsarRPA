@@ -132,6 +132,7 @@ open class HyperlinkCollector(
             return 0
         }
 
+        page.prevCrawlTime1 = Instant.now()
         fatLinks[fatLink.url] = fatLink
         // url might be normalized, href is exactly the same as seed.spec
         require(fatLink.href == seed.spec)
