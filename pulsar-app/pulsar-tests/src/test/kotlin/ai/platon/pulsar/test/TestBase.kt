@@ -2,6 +2,7 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
+import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.junit.Test
@@ -14,7 +15,7 @@ import kotlin.test.assertTrue
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
-@ContextConfiguration(initializers = [PulsarContextInitializer::class])
+@ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class TestBase {
 
     @Autowired

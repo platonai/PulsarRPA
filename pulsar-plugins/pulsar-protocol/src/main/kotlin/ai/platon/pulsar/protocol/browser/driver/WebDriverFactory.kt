@@ -87,14 +87,8 @@ open class WebDriverFactory(
 
     private fun createMockChromeDevtoolsDriver(
             browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities): MockWebDriver {
-        val launcherConfig = LauncherConfig().apply {
-            supervisorProcess = driverControl.supervisorProcess
-            supervisorProcessArgs.addAll(driverControl.supervisorProcessArgs)
-        }
-        val launchOptions = driverControl.createChromeDevtoolsOptions(capabilities).apply {
-            userDataDir = browserInstanceId.dataDir
-        }
-        return MockWebDriver(launcherConfig, launchOptions, driverControl, browserInstanceManager)
+        val backupDriverCreator = { createChromeDevtoolsDriver(browserInstanceId, capabilities) }
+        return MockWebDriver(backupDriverCreator)
     }
 
     private fun setProxy(capabilities: DesiredCapabilities, proxyServer: String) {

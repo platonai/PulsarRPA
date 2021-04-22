@@ -200,7 +200,7 @@ open class EventHandler(
             }
         }
 
-        if (!task.driver.mockedPageSource) {
+        if (!task.driver.isMockedPageSource) {
             exportIfNecessary(task)
             takeScreenshotIfNecessary(task)
         }
@@ -255,17 +255,7 @@ open class EventHandler(
         }
 
         val test = page.options.test
-        if (test > 0 && status.isSuccess) {
-            try {
-                val path = AppPaths.testDataPath(page.url)
-                Files.writeString(path, pageSource)
-                log.info("Exported as test data: file://{}", path)
-            } catch (e: IOException) {
-                log.warn(e.toString())
-            }
-        }
-
-        val shouldExport = (log.isInfoEnabled && !status.isSuccess) || log.isDebugEnabled
+        val shouldExport = log.isDebugEnabled || test > 0 || (log.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             val path = AppFiles.export(status, pageSource, page)
 

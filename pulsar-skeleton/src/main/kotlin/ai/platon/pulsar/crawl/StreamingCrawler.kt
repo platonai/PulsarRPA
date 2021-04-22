@@ -135,6 +135,16 @@ open class StreamingCrawler<T : UrlAware>(
 
     init {
         AppMetrics.reg.registerAll(this, "$id.g", gauges)
+
+        val cache = globalCache
+        if (cache != null) {
+            val cacheGauges = mapOf(
+                "pageCacheSize" to Gauge { cache.pageCache.size },
+                "documentCacheSize" to Gauge { cache.documentCache.size }
+            )
+            AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
+        }
+
         generateFinishCommand()
     }
 
@@ -266,6 +276,8 @@ open class StreamingCrawler<T : UrlAware>(
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
             runUrlTask(url)
+            // web page and document are very large, we need remove them from cache as soon as possible
+            globalCache?.removePDCache(url.url)
             lastActiveTime = Instant.now()
             globalRunningTasks.decrementAndGet()
         }

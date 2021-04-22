@@ -34,7 +34,7 @@ abstract class AbstractWebDriver(
     /**
      * Whether the web page source is mocked
      * */
-    override val mockedPageSource: Boolean = true
+    override val isMockedPageSource: Boolean = false
     /**
      * Driver status
      * */

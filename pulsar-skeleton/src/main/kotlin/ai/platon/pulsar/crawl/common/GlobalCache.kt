@@ -12,8 +12,14 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.ConcurrentSkipListSet
 
+/**
+ * TODO: WebPage is very large, we need a loading cache
+ * */
 typealias PageCatch = ConcurrentExpiringLRUCache<WebPage>
 
+/**
+ * TODO: FeaturedDocument is very large, we need a loading cache
+ * */
 typealias DocumentCatch = ConcurrentExpiringLRUCache<FeaturedDocument>
 
 /**
@@ -46,4 +52,21 @@ open class GlobalCache(val conf: ImmutableConfig) {
     fun isFetching(url: String) = fetchingUrls.contains(url)
 
     fun isFetching(url: UrlAware) = isFetching(url.url)
+
+    /**
+     * Put page and document to cache
+     * */
+    fun putPDCache(page: WebPage, document: FeaturedDocument) {
+        val url = page.url
+        pageCache.computeIfAbsent(url) { page }
+        documentCache.computeIfAbsent(url) { document }
+    }
+
+    /**
+     * Remove item from page cache and document cache
+     * */
+    fun removePDCache(url: String) {
+        pageCache.remove(url)
+        documentCache.remove(url)
+    }
 }

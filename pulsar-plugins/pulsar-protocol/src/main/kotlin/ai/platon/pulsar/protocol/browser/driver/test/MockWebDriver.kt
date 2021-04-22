@@ -1,11 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver.test
 
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
-import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
-import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
@@ -13,28 +10,40 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
 
-/**
- * TODO: inherit from ai.platon.pulsar.crawl.fetch.driver.WebDriver
- * */
 class MockWebDriver(
-    launcherConfig: LauncherConfig,
-    launchOptions: ChromeDevtoolsOptions,
-    browserControl: WebDriverControl,
-    browserInstanceManager: BrowserInstanceManager,
+    backupDriverCreator: () -> ChromeDevtoolsDriver,
 ) : RemoteWebDriver() {
     private val log = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
-    private val backupDriver by lazy {
-        ChromeDevtoolsDriver(launcherConfig, launchOptions, browserControl, browserInstanceManager)
-    }
+    private val backupDriver by lazy { backupDriverCreator() }
 
     private var lastSessionId: SessionId? = null
     private var navigateUrl = ""
-    private var mockPageSource: String? = null
 
-    private val backupDriverOrNull get() = if (mockPageSource == null) backupDriver else null
+    var mockPageSource: String? = null
+        private set
+
+    private val backupDriverOrNull
+        @Synchronized
+        get() = if (mockPageSource == null) backupDriver else null
+
+    val realDriver: RemoteWebDriver get() = backupDriverOrNull ?: this
+
+    val browserType: BrowserType
+        get() = if (realDriver is ChromeDevtoolsDriver)
+            BrowserType.CHROME else BrowserType.MOCK_CHROME
+
+    val supportJavascript: Boolean
+        get() = when (realDriver) {
+            is ChromeDevtoolsDriver -> true
+            else -> false
+        }
+
+    val isMockedPageSource: Boolean get() = mockPageSource != null
 
     @Throws(NoSuchSessionException::class)
     override fun get(url: String) {
@@ -42,7 +51,7 @@ class MockWebDriver(
 
         lastSessionId = SessionId(UUID.randomUUID().toString())
         navigateUrl = url
-        mockPageSource = loadMockPageSource(url)
+        mockPageSource = loadMockPageSourceOrNull(url)
         if (mockPageSource == null) {
             log.info("Resource does not exist, fallback to ChromeDevtoolsDriver | {}", url)
         }
@@ -111,9 +120,16 @@ class MockWebDriver(
         backupDriverOrNull?.close()
     }
 
-    private fun loadMockPageSource(url: String): String? {
-        val path = AppPaths.testDataPath(url)
-        log.info("Load from path: \n{}", path)
+    private fun loadMockPageSourceOrNull(url: String): String? {
+        val fileId = AppPaths.fileId(url)
+        val searchPath = AppPaths.WEB_CACHE_DIR.resolve("original")
+        val matcher = { path: Path, attr: BasicFileAttributes ->
+            attr.isRegularFile && path.toAbsolutePath().toString().let { fileId in it && "OK" in it }
+        }
+        val path = Files.find(searchPath, 10, matcher).findFirst()
+            .orElse(AppPaths.testDataPath(url))
+
+        log.info("Loading from path: \n{}", path)
         return path.takeIf { Files.exists(it) }?.let { Files.readString(it) }
     }
 }

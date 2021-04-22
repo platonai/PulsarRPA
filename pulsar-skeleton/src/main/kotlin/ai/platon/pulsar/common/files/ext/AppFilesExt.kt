@@ -49,10 +49,6 @@ fun AppFiles.export(
 fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
     val browser = page.lastBrowser.name.toLowerCase()
 
-//    val u = Urls.getURLOrNull(page.url)?: return AppPaths.TMP_DIR
-//    val domain = if (Strings.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
-//    val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
-
     val filename = AppPaths.fromUri(page.url, suffix = suffix)
     val path = WEB_CACHE_DIR.resolve("original").resolve(browser).resolve("$ident-$filename")
     saveTo(content, path, true)
@@ -60,7 +56,7 @@ fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffi
     return path
 }
 
-fun AppFiles.export(page: WebPage, ident: String = "", suffix: String = ""): Path {
+fun AppFiles.export(page: WebPage, ident: String = "", suffix: String = ".htm"): Path {
     val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, "", suffix)
     val path = WEB_CACHE_DIR.resolve(ident).resolve(filename)
     Files.deleteIfExists(path)

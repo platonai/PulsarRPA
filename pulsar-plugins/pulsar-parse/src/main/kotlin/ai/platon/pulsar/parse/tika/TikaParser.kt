@@ -61,12 +61,12 @@ class TikaParser(
 
     override fun parse(page: WebPage): ParseResult {
         val baseUrl = page.location
-        val base: URL
-        base = try {
+        val base = try {
             URL(baseUrl)
         } catch (e: MalformedURLException) {
             return failed(e)
         }
+
         // get the right parser using the mime type as a clue
         val mimeType = page.contentType
         val tikamd = Metadata()
@@ -91,6 +91,7 @@ class TikaParser(
             LOG.error("Error parsing " + page.url, e)
             return failed(e)
         }
+
         var pageTitle: String? = ""
         var pageText: String? = ""
         val hypeLinks = mutableSetOf<HyperlinkPersistable>()
@@ -102,10 +103,12 @@ class TikaParser(
             pageText = primerParser.getPageText(root) // extract text
             pageTitle = primerParser.getPageTitle(root) // extract title
         }
+
         if (!metaTags.noFollow) { // okay to follow links
             val baseTag = primerParser.getBaseURLFromTag(root)
             primerParser.collectLinks(baseTag ?: base, hypeLinks, root, null)
         }
+
         page.setPageTitle(pageTitle)
         page.setPageText(pageText)
         for (name in tikamd.names()) {
@@ -114,6 +117,7 @@ class TikaParser(
             }
             page.metadata[name] = tikamd[name]
         }
+
         // no hypeLinks? try OutlinkExtractor e.g works for mime types where no
         // explicit markup for anchors
         val parseResult = ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK)
@@ -126,10 +130,12 @@ class TikaParser(
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
             parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
-        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult, metaTags = metaTags, documentFragment = root))
+
+        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult))
         if (metaTags.noCache) { // not okay to cache
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
+
         return parseResult
     }
 }

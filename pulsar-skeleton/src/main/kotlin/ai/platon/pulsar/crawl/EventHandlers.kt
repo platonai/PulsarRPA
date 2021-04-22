@@ -326,7 +326,13 @@ interface LoadEventHandler {
     var onAfterFetch: WebPageHandler
     var onBeforeParse: WebPageHandler
     var onBeforeHtmlParse: WebPageHandler
+    /**
+     * TODO: not used yet
+     * */
     var onBeforeExtract: WebPageHandler
+    /**
+     * TODO: not used yet
+     * */
     var onAfterExtract: HtmlDocumentHandler
     var onAfterHtmlParse: HtmlDocumentHandler
     var onAfterParse: WebPageHandler

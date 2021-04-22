@@ -124,26 +124,6 @@ class PrimerParser(conf: ImmutableConfig) {
     }
 
     /**
-     * Collect links use [PrimerParser]
-     * NOTE: If we are using native browser mode, the link parsing can be done inside the browser
-     * */
-    fun collectLinks(baseURLHint: URL, parseContext: ParseContext, crawlFilters: CrawlFilters) {
-        crawlFilters.normalizeToNull(parseContext.page.url)?:return
-
-        val docRoot = parseContext.documentFragment?:return
-        val parseResult = parseContext.parseResult
-        val metaTags = parseContext.metaTags
-        if (metaTags != null && !metaTags.noFollow) {
-            // okay to follow links
-            val baseURL = getBaseURLFromTag(docRoot) ?: baseURLHint
-            collectLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
-        }
-
-        parseContext.page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
-        parseContext.page.variables[PulsarParams.VAR_LINKS_COUNT] = parseResult.hypeLinks.size
-    }
-
-    /**
      * This method takes a [StringBuffer] and a DOM [Node], and will
      * append the content text found beneath the first `title` node to
      * the `StringBuffer`.

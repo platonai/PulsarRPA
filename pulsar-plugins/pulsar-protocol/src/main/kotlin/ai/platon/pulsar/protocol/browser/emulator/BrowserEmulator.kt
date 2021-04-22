@@ -69,6 +69,8 @@ open class BrowserEmulator(
     @Throws(IllegalApplicationContextStateException::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         checkState()
+        // page.lastBrowser is used by AppFiles.export, so it have to be set before export
+        task.page.lastBrowser = driver.browserType
 
         if (task.nRetries > fetchMaxRetry) {
             return FetchResult.crawlRetry(task).also { log.info("Too many task retries, emit crawl retry | {}", task.url) }

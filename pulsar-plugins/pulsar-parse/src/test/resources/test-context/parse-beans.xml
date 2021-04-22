@@ -12,21 +12,13 @@
         <constructor-arg value="conf" />
     </bean>
 
-    <bean id="metaTagsParser" class="ai.platon.pulsar.parse.metatags.MetaTagsParser">
-        <constructor-arg value="conf" />
-    </bean>
-
     <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.filters.BoilerpipeExtractor">
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters">
         <constructor-arg>
             <list>
-                <ref bean="jsParseFilter" />
                 <ref bean="boilerpipeFilter" />
             </list>
         </constructor-arg>
@@ -48,8 +40,6 @@
         <constructor-arg>
             <list>
                 <ref bean="htmlParser"/>
-                <ref bean="tikaParser"/>
-                <ref bean="jsParseFilter"/>
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>

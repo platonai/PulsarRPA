@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
@@ -77,13 +78,13 @@ class ManagedWebDriver(
 
     override val supportJavascript: Boolean
         get() = when (driver) {
-            is MockWebDriver -> false
+            is MockWebDriver -> driver.supportJavascript
             else -> true
         }
 
-    override val mockedPageSource: Boolean
+    override val isMockedPageSource: Boolean
         get() = when (driver) {
-            is MockWebDriver -> true
+            is MockWebDriver -> driver.isMockedPageSource
             else -> false
         }
 

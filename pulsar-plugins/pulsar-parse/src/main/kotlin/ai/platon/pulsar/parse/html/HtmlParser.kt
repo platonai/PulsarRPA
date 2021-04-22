@@ -18,14 +18,12 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_ID
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.urls.Urls
@@ -56,7 +54,7 @@ import java.net.URL
  */
 class HtmlParser(
     private val parseFilters: ParseFilters,
-    private val conf: ImmutableConfig
+    private val conf: ImmutableConfig,
 ) : Parser {
     private val log = LoggerFactory.getLogger(HtmlParser::class.java)
     private val tracer = log.takeIf { it.isDebugEnabled }
@@ -84,7 +82,9 @@ class HtmlParser(
             // The base url is set by protocol. Might be different from url if the request redirected
             beforeHtmlParse(page)
 
-            val parseContext = doParse(page)
+            val parseContext = parseHTMLDocument(page)
+
+            parseFilters.filter(parseContext)
 
             parseContext.document?.let { afterHtmlParse(page, it) }
 
@@ -94,35 +94,6 @@ class HtmlParser(
         } catch (e: Exception) {
             failed(ParseStatusCodes.FAILED_INVALID_FORMAT, e.message)
         }
-    }
-
-    @Throws(MalformedURLException::class, Exception::class)
-    private fun doParse(page: WebPage): ParseContext {
-        tracer?.trace(
-            "{}.\tParsing page | {} | {} | {} | {}",
-            page.id,
-            Strings.readableBytes(page.contentLength),
-            page.protocolStatus,
-            page.htmlIntegrity,
-            page.url
-        )
-
-        val baseUrl = page.baseUrl ?: page.url
-        val baseURL = URL(baseUrl)
-        if (page.encoding == null) {
-            primerParser.detectEncoding(page)
-        }
-
-        val (document, documentFragment) = parseJsoup(baseUrl, page.contentAsSaxInputSource)
-        val metaTags = parseMetaTags(baseURL, documentFragment, page)
-        val parseResult = initParseResult(metaTags)
-
-        val parseContext = ParseContext(page, parseResult, FeaturedDocument(document), metaTags, documentFragment)
-        parseContext.document?.let { setMetaInfos(page, it) }
-
-        parseFilters.filter(parseContext)
-
-        return parseContext
     }
 
     /**
@@ -145,6 +116,33 @@ class HtmlParser(
         } catch (e: Throwable) {
             log.warn("Failed to invoke afterHtmlParse | ${page.configuredUrl}", e)
         }
+    }
+
+    @Throws(Exception::class)
+    private fun parseHTMLDocument(page: WebPage): ParseContext {
+        tracer?.trace(
+            "{}.\tParsing page | {} | {} | {} | {}",
+            page.id,
+            Strings.readableBytes(page.contentLength),
+            page.protocolStatus,
+            page.htmlIntegrity,
+            page.url
+        )
+
+        val baseUrl = page.baseUrl ?: page.url
+        val baseURL = URL(baseUrl)
+        if (page.encoding == null) {
+            primerParser.detectEncoding(page)
+        }
+
+        val (document, documentFragment) = parseJsoup(baseUrl, page.contentAsSaxInputSource)
+        val metaTags = parseMetaTags(baseURL, documentFragment, page)
+        val parseResult = initParseResult(metaTags)
+
+        val parseContext = ParseContext(page, parseResult, FeaturedDocument(document))
+        parseContext.document?.let { setMetaInfos(page, it) }
+
+        return parseContext
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {

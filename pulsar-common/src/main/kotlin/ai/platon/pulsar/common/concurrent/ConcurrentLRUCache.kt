@@ -17,6 +17,8 @@ class ConcurrentLRUCache<K, V> {
     var ttl: Long
         private set
 
+    val size get() = cache.size
+
     constructor(capacity: Int) : this(0, capacity) {}
     /**
      * Construct a least recently used cache

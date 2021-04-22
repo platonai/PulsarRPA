@@ -12,8 +12,5 @@ import org.w3c.dom.DocumentFragment
 class ParseContext constructor(
         val page: WebPage,
         val parseResult: ParseResult = ParseResult(),
-        var document: FeaturedDocument? = null,
-        val metaTags: HTMLMetaTags? = null,
-        // deprecated, may not support in further version. Use jsoup instead
-        val documentFragment: DocumentFragment? = null
+        var document: FeaturedDocument? = null
 )

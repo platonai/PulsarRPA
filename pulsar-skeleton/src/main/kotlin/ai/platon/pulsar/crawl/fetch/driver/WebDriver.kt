@@ -16,7 +16,7 @@ interface WebDriver {
     val name: String
     val browserType: BrowserType
     val supportJavascript: Boolean
-    val mockedPageSource: Boolean
+    val isMockedPageSource: Boolean
     val sessionId: String?
     val currentUrl: String?
     val pageSource: String

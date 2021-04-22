@@ -24,10 +24,12 @@ class ConcurrentExpiringLRUCache<T>(
 ) {
     companion object {
         val CACHE_TTL = Duration.ofMinutes(5)
-        const val CACHE_CAPACITY = 1000
+        const val CACHE_CAPACITY = 200
     }
 
     val cache = ConcurrentLRUCache<String, ExpiringItem<T>>(ttl.seconds, capacity)
+
+    val size get() = cache.size
 
     fun put(key: String, item: ExpiringItem<T>) {
         cache.put(key, item)
