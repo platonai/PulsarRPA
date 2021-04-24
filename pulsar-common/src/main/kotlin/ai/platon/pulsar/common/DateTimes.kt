@@ -15,6 +15,7 @@ object DateTimes {
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
 
+    // inaccurate date time
     const val MILLIS_OF_SECOND = 1000L
     const val HOURS_OF_DAY = 24L
     const val HOURS_OF_MONTH = HOURS_OF_DAY * 30

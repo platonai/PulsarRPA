@@ -184,8 +184,8 @@ open class StreamingCrawler<T : UrlAware>(
 
                 // The largest disk must have at least 10GiB remaining space
                 if (AppMetrics.freeSpace.maxOfOrNull { ByteUnit.convert(it, "G") } ?: 0.0 < 10.0) {
-                    // log.error("Disk space is full!")
-                    // return@runInScope
+                    log.error("Disk space is full!")
+                    return@startCrawlLoop
                 }
 
                 if (url.isNil) {

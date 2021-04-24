@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.ObjectConverter
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -11,6 +12,7 @@ import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.StatefulHyperlink
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizer
+import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebDb
@@ -20,9 +22,14 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 
+data class PageFatLink(
+    val page: WebPage,
+    val fatLink: CrawlableFatLink
+)
+
 class FatLinkExtractor(
     val session: PulsarSession,
-    val normalizer: UrlNormalizer? = null
+    val normalizer: UrlNormalizerPipeline? = null
 ) {
     private val log = LoggerFactory.getLogger(FatLinkExtractor::class.java)
 
@@ -36,7 +43,7 @@ class FatLinkExtractor(
             var lastFailedLinks: Int = 0,
             var expiredLinks: Int = 0,
             var fetchLinks: Int = 0,
-            var failedSeeds: Int = 0,
+            var badSeeds: Int = 0,
             var loadedSeeds: Int = 0
         )
 
@@ -64,9 +71,21 @@ class FatLinkExtractor(
         createFatLink(page, document, options)
     }
 
-    fun createFatLink(seed: NormUrl): Pair<WebPage?, CrawlableFatLink?> = createFatLink(seed, listOf())
+    fun createFatLink(seed: NormUrl): PageFatLink? = createFatLink(seed, listOf())
 
-    fun createFatLink(seed: NormUrl, denyList: Collection<Hyperlink>): Pair<WebPage?, CrawlableFatLink?> {
+    fun createFatLink(seed: NormUrl, page: WebPage, denyList: Collection<Hyperlink>): PageFatLink? {
+        ++counters.loadedSeeds
+        ++globalCounters.loadedSeeds
+
+        if (page.content == null) {
+            return null
+        }
+
+        val document = session.parse(page)
+        return createFatLink(seed, page, document, denyList)
+    }
+
+    fun createFatLink(seed: NormUrl, denyList: Collection<Hyperlink>): PageFatLink? {
         // TODO: we can use an event handler to extract links
 //        val handler = object: HtmlDocumentHandler() {
 //            override val name = CapabilityTypes.FETCH_AFTER_EXTRACT_HANDLER
@@ -77,40 +96,22 @@ class FatLinkExtractor(
 //        seed.options.volatileConfig?.putBean(handler.name, handler)
 
         seed.options.cacheContent = true
-        val page = session.load(seed).takeIf { it.protocolStatus.isSuccess }
-        if (page == null) {
-            ++counters.failedSeeds
-            ++globalCounters.failedSeeds
-            log.warn("Failed to load seed | {} | {}", page?.protocolStatus, seed)
-            return page to CrawlableFatLink("", tailLinks = listOf())
+        val page = session.load(seed)
+        if (!page.protocolStatus.isSuccess) {
+            ++counters.badSeeds
+            ++globalCounters.badSeeds
+            LoadedPageFormatter(page, prefix = "Bad seed", withOptions = true).also { log.warn(it.toString()) }
+            return null
         }
 
-        ++counters.loadedSeeds
-        ++globalCounters.loadedSeeds
-
-//        val now = Instant.now()
-//        val duration = Duration.between(page.prevFetchTime, now)
-//        if (duration < seed.options.expires) {
-//            // the vivid links are OK
-//        }
-
-        if (page.content == null) {
-            return page to CrawlableFatLink("", tailLinks = listOf())
-        }
-
-        val document = session.parse(page)
-        return createFatLink(seed, page, document, denyList)
+        return createFatLink(seed, page, denyList)
     }
 
-    fun createFatLink(
-        page: WebPage,
-        document: FeaturedDocument,
-        options: LoadOptions
-    ): Pair<WebPage?, CrawlableFatLink?> {
+    fun createFatLink(page: WebPage, document: FeaturedDocument, options: LoadOptions): PageFatLink? {
         return createFatLink(NormUrl(page.url, options), page, document)
     }
 
-    fun createFatLink(seed: NormUrl, page: WebPage, document: FeaturedDocument): Pair<WebPage?, CrawlableFatLink?> {
+    fun createFatLink(seed: NormUrl, page: WebPage, document: FeaturedDocument): PageFatLink? {
         return createFatLink(seed, page, document, listOf())
     }
 
@@ -121,7 +122,7 @@ class FatLinkExtractor(
      * */
     fun createFatLink(
         seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<Hyperlink>
-    ): Pair<WebPage?, CrawlableFatLink?> {
+    ): PageFatLink? {
         val fatLinkSpec = seed.spec
         val options = seed.options
         val selector = options.outLinkSelector
@@ -152,7 +153,7 @@ class FatLinkExtractor(
                 log.info("{}. No any link in the page, exported to {}", page.id, path)
             }
 
-            return page to null
+            return PageFatLink(page, CrawlableFatLink(fatLinkSpec))
         }
 
         // update vivid links
@@ -165,7 +166,8 @@ class FatLinkExtractor(
 
         val args = "-label ${options.label}"
         val normalizedFatLink = normalizer?.invoke(fatLinkSpec) ?: fatLinkSpec
-        return page to CrawlableFatLink(normalizedFatLink, href = fatLinkSpec, args = args, tailLinks = vividLinks)
+        val fatLink = CrawlableFatLink(normalizedFatLink, href = fatLinkSpec, args = args, tailLinks = vividLinks)
+        return PageFatLink(page, fatLink)
     }
 
     private fun parseVividLinks(

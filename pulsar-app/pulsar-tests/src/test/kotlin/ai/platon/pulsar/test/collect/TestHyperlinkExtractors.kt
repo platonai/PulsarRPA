@@ -38,13 +38,13 @@ class TestHyperlinkExtractors: TestBase() {
         val url = session.normalize(portalUrl)
         url.options.outLinkSelector = "a[href~=/dp/]"
 
-        val (page, fatLink) = extractor.createFatLink(url)
+        val (page, fatLink) = extractor.createFatLink(url) ?: return
         assertNotNull(page)
         assertNotNull(fatLink)
         assertEquals(portalUrl, fatLink.url)
 
         val tailLinks = fatLink.tailLinks
-        tailLinks.forEach { println(it) }
+        tailLinks.forEachIndexed { i, l -> println("$i. $l") }
         tailLinks.forEach {
             val asin = AmazonUrls.findAsin(it.url) ?: ""
             assertTrue { asin in it.url }

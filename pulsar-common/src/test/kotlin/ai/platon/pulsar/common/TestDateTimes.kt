@@ -7,23 +7,19 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
-import org.junit.Assert
-import org.junit.Ignore
-import org.junit.Test
 import java.sql.Timestamp
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.test.Ignore
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import java.time.ZoneOffset
-
-
-
 
 /**
  * Created by vincent on 16-7-20.
@@ -31,6 +27,11 @@ import java.time.ZoneOffset
  */
 class TestDateTimes {
     private val pattern = "yyyy-MM-dd HH:mm:ss"
+    val seconds = 3600 * 24 + 3600 * 2 + 60 * 30 + 30L
+    val instant = Instant.parse("2021-04-21T00:30:59.520Z")
+    val date = LocalDate.parse("2021-04-21")
+    val dateTime = LocalDateTime.parse("2021-04-21T00:30:59")
+    val duration = Duration.between(instant.minusSeconds(seconds), instant)
 
     @Test
     fun testDateTimeConvert() {
@@ -61,8 +62,20 @@ class TestDateTimes {
         val now = Instant.now()
         println(now.epochSecond)
         println(now.epochSecond / 60)
-        // System.out.println(now.getLong(ChronoField.MINUTE_OF_DAY));
-        println(Int.MAX_VALUE)
+        println(now.getLong(ChronoField.MINUTE_OF_DAY))
+        assertTrue { now.epochSecond < Int.MAX_VALUE }
+    }
+
+    @Test
+    fun testChronoFields() {
+        // println(instant.getLong(ChronoField.MILLI_OF_SECOND))
+        assertEquals(520, instant.getLong(ChronoField.MILLI_OF_SECOND))
+
+        // println(date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
+        assertEquals(7, date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
+
+        // println(dateTime.getLong(ChronoField.MINUTE_OF_DAY))
+        assertEquals(30, dateTime.getLong(ChronoField.MINUTE_OF_DAY))
     }
 
     @Test
@@ -81,7 +94,7 @@ class TestDateTimes {
         println(format(Instant.now(), "yyyy-MM-dd HH:mm:ss"))
         println(now("yyyy/MM/dd"))
         val t = NumberUtils.toInt(format(Instant.now(), "yyyyMMddHH"), 0)
-        Assert.assertTrue(t > 0)
+        assertTrue(t > 0)
         println(t)
     }
 
@@ -136,19 +149,60 @@ class TestDateTimes {
     @Test
     fun testDuration() {
         val epoch = Instant.EPOCH
-        val now = Instant.now()
-        val gap = Duration.between(epoch, now)
-        println(gap.toDays())
-        println(gap)
-        val days = ChronoUnit.DAYS.between(epoch, now)
-        println(days)
+        val gap = Duration.between(epoch, instant)
+        // println(gap.toDays())
+        assertEquals(18738, gap.toDays())
+        // println(gap)
+        assertEquals("PT449712H30M59.52S", gap.toString())
+        val days = ChronoUnit.DAYS.between(epoch, instant)
+//        println(days)
+        assertEquals(18738, days)
         println(Duration.ofDays(365 * 100.toLong()).seconds)
         println(Duration.ofMinutes(60).toMillis())
-        println(DurationFormatUtils.formatDuration(gap.toMillis(), "d\' days \'H\' hours \'m\' minutes \'s\' seconds\'"))
+        println(DurationFormatUtils.formatDuration(gap.toMillis(),
+            "d\' days \'H\' hours \'m\' minutes \'s\' seconds\'"))
         println(DurationFormatUtils.formatDuration(gap.toMillis(), "d\'days\' H:mm:ss"))
         val durationToMidnight = Duration.between(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS), LocalDateTime.now())
         println(durationToMidnight.plusDays(1))
-        Assert.assertEquals(Duration.ofSeconds(1), parseDuration("PT1S", Duration.ZERO))
+        assertEquals(Duration.ofSeconds(1), parseDuration("PT1S", Duration.ZERO))
+    }
+
+    @Test
+    fun testTemporalDefaultRange() {
+        val p = Period.ofDays(30)
+        println(p)
+
+        var r = date.range(ChronoField.DAY_OF_MONTH)
+        println("DAY_OF_MONTH: $r")
+
+        r = date.range(ChronoField.DAY_OF_WEEK)
+        println("DAY_OF_WEEK: $r")
+
+        r = date.range(ChronoField.YEAR)
+        println("YEAR: $r")
+
+        r = date.range(ChronoField.DAY_OF_YEAR)
+        println("DAY_OF_YEAR: $r")
+
+        r = date.range(ChronoField.YEAR_OF_ERA)
+        println("YEAR_OF_ERA: $r")
+
+        r = date.range(ChronoField.EPOCH_DAY)
+        println("EPOCH_DAY: $r")
+
+        r = date.range(ChronoField.PROLEPTIC_MONTH)
+        println("PROLEPTIC_MONTH: $r")
+
+        r = date.range(ChronoField.ERA)
+        println("ERA: $r")
+    }
+
+    @Test
+    fun testTemporalRange() {
+        // kotlin general range
+        val range = dateTime.rangeTo(dateTime + Duration.ofSeconds(3600))
+        println(range)
+        assertTrue { dateTime in range }
     }
 
     @Test
@@ -178,7 +232,9 @@ class TestDateTimes {
         try {
             val date = DateUtils.parseDate(dateString, *DateTimeDetector.COMMON_DATE_TIME_FORMATS)
             // Date date = DateUtils.parseDate(dateString);
-            dateString = DateFormatUtils.format(date, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.pattern, TimeZone.getTimeZone("PRC"))
+            dateString = DateFormatUtils.format(date,
+                DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.pattern,
+                TimeZone.getTimeZone("PRC"))
             println(dateString)
             dateString = DateTimeFormatter.ISO_INSTANT.format(date.toInstant())
             println(dateString)
@@ -228,8 +284,8 @@ class TestDateTimes {
             uselessTime = Instant.now()
         }
         cost3 = Instant.now().toEpochMilli() - start.toEpochMilli()
-        Assert.assertTrue(cost <= cost2)
-        Assert.assertTrue("System.currentTimeMillis() should be faster then Instant.now()", cost2 < cost3)
+        assertTrue(cost <= cost2)
+        assertTrue(cost2 < cost3, "System.currentTimeMillis() should be faster then Instant.now()")
         println("$cost, $cost2, $cost3")
     }
 }

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.urls.sites.amazon
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.preprocess.AbstractUrlNormalizer
 import ai.platon.pulsar.common.urls.Urls
 import org.apache.commons.lang3.StringUtils
@@ -28,7 +29,23 @@ object AmazonUrls {
         return isAmazon(url) && url.contains("/dp/")
     }
 
-    fun findAsin(url: String, open: String = "/dp/", close: String = "/ref="): String? {
+    fun findAsin(url: String): String? {
+        val pos = url.indexOf("/dp/") + "/dp/".length
+        if (pos > AppConstants.SHORTEST_VALID_URL_LENGTH) {
+            var pos2 = pos
+            while (pos2 < url.length && url[pos2].isLetterOrDigit()) {
+                ++pos2
+            }
+
+            if (pos2 <= url.length) {
+                return url.substring(pos, pos2)
+            }
+        }
+
+        return null
+    }
+
+    fun findAsinDeprecated(url: String, open: String = "/dp/", close: String = "/ref="): String? {
         var open0 = open
         var close0 = close
 

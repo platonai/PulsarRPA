@@ -3,6 +3,8 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.common.urls.preprocess.UrlNormalizer
+import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.persist.WebDb
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
@@ -65,10 +67,10 @@ open class HyperlinkCollector(
 ) : AbstractPriorityDataCollector<Hyperlink>(priority), CrawlableFatLinkCollector {
     private val log = LoggerFactory.getLogger(HyperlinkCollector::class.java)
 
-    var urlNormalizer = { url: String -> url }
+    var urlNormalizer: UrlNormalizerPipeline = UrlNormalizerPipeline()
 
     private val webDb = session.context.getBean<WebDb>()
-    private val fatLinkExtractor = FatLinkExtractor(session)
+    private val fatLinkExtractor = FatLinkExtractor(session, urlNormalizer)
 
     private var parsedSeedCount = 0
     private val averageLinkCount
@@ -96,29 +98,17 @@ open class HyperlinkCollector(
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         beforeCollect()
 
-        val count = kotlin.runCatching { collectToUnsafe(sink) }
-            .onFailure { log.warn("Collect failed - ", it) }
+        val count = kotlin.runCatching { collectTo0(sink) }
+            .onFailure { log.warn("Collect failed", it) }
             .getOrDefault(0)
 
         return afterCollect(count)
     }
 
     @Throws(Exception::class)
-    private fun collectToUnsafe(sink: MutableCollection<Hyperlink>): Int {
-        val seed = seeds.poll()
+    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
+        val seed = seeds.poll() ?: return 0
 
-        if (seed == null) {
-            log.info("Total {}/{} seeds are processed, all done",
-                fatLinkExtractor.counters.loadedSeeds,
-                FatLinkExtractor.globalCounters.loadedSeeds)
-            return 0
-        }
-
-        return createFatLinkAndCollectTo(seed, sink)
-    }
-
-    protected fun createFatLinkAndCollectTo(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
-        var count = 0
         val knownFatLink = fatLinks[seed.spec]
         if (knownFatLink != null) {
             log.warn("Still has {} active tasks | idle: {} | {}",
@@ -126,11 +116,22 @@ open class HyperlinkCollector(
             return 0
         }
 
+        return collectToUnsafe(seed, sink)
+    }
+
+    @Throws(Exception::class)
+    protected fun collectToUnsafe(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
         ++parsedSeedCount
-        val (page, fatLink) = fatLinkExtractor.createFatLink(seed, sink)
-        if (page == null || fatLink == null) {
-            return 0
-        }
+        seed.options.cacheContent = true
+        val p = session.load(seed).takeIf { it.protocolStatus.isSuccess } ?: return 0
+
+        val pageFatLink = fatLinkExtractor.createFatLink(seed, p, sink) ?: return 0
+
+        return collectToUnsafe(seed, pageFatLink, sink)
+    }
+
+    private fun collectToUnsafe(seed: NormUrl, pageFatLink: PageFatLink, sink: MutableCollection<Hyperlink>): Int {
+        val (page, fatLink) = pageFatLink
 
         page.prevCrawlTime1 = Instant.now()
         fatLinks[fatLink.url] = fatLink
@@ -138,25 +139,23 @@ open class HyperlinkCollector(
         require(fatLink.href == seed.spec)
 
         val options = seed.options
-        fatLink.tailLinks.forEach {
+        val tailLinks = fatLink.tailLinks.distinct().onEach {
             it.args += " -taskId ${options.taskId} -taskTime ${options.taskTime}"
         }
 
         val size = sink.size
-        fatLink.tailLinks.toCollection(sink)
-        count = fatLink.tailLinks.size
+        tailLinks.toCollection(sink)
         val size2 = sink.size
-        collectedCount += size2
 
         log.info(
             "{}. Added fat link <{}>({}), added {}({} -> {}) fetch urls | {}. {}",
             page.id,
             fatLink.label, fatLink.size,
-            size2 - size, size, size2,
-            fatLinkExtractor.counters.loadedSeeds, seed
+            tailLinks.size, size, size2,
+            parsedSeedCount, seed
         )
 
-        return count
+        return tailLinks.size
     }
 }
 
@@ -199,7 +198,7 @@ open class CircularHyperlinkCollector(
             if (iterator.hasNext()) iterator.next() else null
         }
 
-        seed?.let { count += createFatLinkAndCollectTo(seed, sink) }
+        seed?.let { count += collectToUnsafe(it, sink) }
 
         return count
     }
@@ -249,7 +248,7 @@ open class PeriodicalHyperlinkCollector(
         }
 
         return if (seed != null) {
-            createFatLinkAndCollectTo(seed, sink)
+            collectToUnsafe(seed, sink)
         } else 0
     }
 

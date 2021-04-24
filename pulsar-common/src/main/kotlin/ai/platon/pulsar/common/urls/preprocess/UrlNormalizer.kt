@@ -20,7 +20,18 @@ class StripQueryUrlNormalizer : AbstractUrlNormalizer() {
     }
 }
 
-class UrlNormalizerPipeline(val normalizers: MutableList<UrlNormalizer>) : AbstractUrlNormalizer() {
+class UrlNormalizerPipeline(
+    val normalizers: MutableList<UrlNormalizer> = mutableListOf()
+) : AbstractUrlNormalizer() {
+
+    fun addFirst(normalizer: UrlNormalizer) {
+        normalizers.add(0, normalizer)
+    }
+
+    fun addLast(normalizer: UrlNormalizer) {
+        normalizers.add(normalizer)
+    }
+
     override fun invoke(url: String?): String? {
         var normalizedUrl: String? = url
         normalizers.forEach {

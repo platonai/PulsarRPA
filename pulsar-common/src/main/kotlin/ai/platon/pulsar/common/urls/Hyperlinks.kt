@@ -380,7 +380,7 @@ open class CrawlableFatLink(
         /**
          * The tail links
          * */
-        tailLinks: List<StatefulHyperlink>
+        tailLinks: List<StatefulHyperlink> = listOf()
 ): StatefulFatLink(url, text, order, referer, args, href, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
