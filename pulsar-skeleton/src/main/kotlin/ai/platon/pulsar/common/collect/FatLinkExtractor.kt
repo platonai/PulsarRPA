@@ -29,7 +29,7 @@ data class PageFatLink(
 
 class FatLinkExtractor(
     val session: PulsarSession,
-    val normalizer: UrlNormalizerPipeline? = null
+    val normalizer: UrlNormalizerPipeline = UrlNormalizerPipeline()
 ) {
     private val log = LoggerFactory.getLogger(FatLinkExtractor::class.java)
 
