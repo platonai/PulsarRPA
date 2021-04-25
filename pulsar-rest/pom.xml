@@ -176,6 +176,10 @@
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
         </dependency>
+      <dependency>
+        <groupId>ai.platon.pulsar</groupId>
+        <artifactId>pulsar-ql</artifactId>
+      </dependency>
     </dependencies>
 
 </project>

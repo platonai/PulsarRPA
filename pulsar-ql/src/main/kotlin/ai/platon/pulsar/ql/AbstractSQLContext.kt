@@ -34,8 +34,8 @@ abstract class AbstractSQLContext constructor(
 
     var status: Status = Status.NOT_READY
 
-    protected abstract val randomConnection: Connection
-    private val connectionPool = ArrayBlockingQueue<Connection>(1000)
+    abstract val randomConnection: Connection
+    val connectionPool = ArrayBlockingQueue<Connection>(1000)
     private val resultSetType = ResultSet.TYPE_SCROLL_SENSITIVE
     private val resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
 

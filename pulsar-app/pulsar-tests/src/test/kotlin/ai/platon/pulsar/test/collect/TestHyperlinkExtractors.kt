@@ -33,8 +33,7 @@ class TestHyperlinkExtractors: TestBase() {
 
     @Test
     fun testFatLinkExtractor() {
-        val normalizer = AsinUrlNormalizer()
-        val extractor = FatLinkExtractor(session, normalizer)
+        val extractor = FatLinkExtractor(session).apply { normalizer.addFirst(AsinUrlNormalizer()) }
         val url = session.normalize(portalUrl)
         url.options.outLinkSelector = "a[href~=/dp/]"
 

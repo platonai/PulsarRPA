@@ -175,7 +175,10 @@ object ResultSetUtils {
     }
 
     @Throws(SQLException::class)
-    fun getEntitiesFromResultSetTo(resultSet: ResultSet, destination: MutableList<Map<String, Any?>>): MutableList<Map<String, Any?>> {
+    fun getEntitiesFromResultSetTo(
+        resultSet: ResultSet,
+        destination: MutableList<Map<String, Any?>>,
+    ): MutableList<Map<String, Any?>> {
         resultSet.beforeFirst()
         while (resultSet.next()) {
             destination.add(getEntityFromCurrentRecord(resultSet))

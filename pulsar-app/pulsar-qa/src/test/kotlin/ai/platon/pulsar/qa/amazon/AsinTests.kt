@@ -6,7 +6,7 @@ import ai.platon.pulsar.qa.assertAllRecordsNotBlank
 import ai.platon.pulsar.qa.assertAnyRecordsNotBlank
 import kotlin.test.Test
 
-class TestAsins : QABase() {
+class AsinTests : QABase() {
     private val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
     private val defaultSqlResource = "$resourcePrefix/crawl/x-asin.sql"
     private val defaultUrl = "https://www.amazon.com/dp/B07L4RR1N2"

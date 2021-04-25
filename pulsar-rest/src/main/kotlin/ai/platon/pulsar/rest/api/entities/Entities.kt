@@ -1,68 +1,32 @@
 package ai.platon.pulsar.rest.api.entities
 
 import ai.platon.pulsar.common.ResourceStatus
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
-import org.springframework.data.mongodb.core.index.CompoundIndex
-import org.springframework.data.mongodb.core.index.Indexed
-import org.springframework.data.mongodb.core.mapping.Document
-import java.util.*
-import javax.persistence.*
+import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 
-data class BrowserInstance(
-        var id: Long,
-        var ip: String,
-        var username: String,
-        var password: String,
-        var userAgent: String,
-        var sesssion: String,
-        var created: Date,
-        var modified: Date
+data class ScrapeRequest(
+    val sql: String,
 )
 
-data class ServerInstance(
-    val id: Long,
-    val ip: String,
-    val port: Int = 0,
-    val type: String
+data class ScrapeResponse(
+    var uuid: String? = null,
+    var statusCode: Int = ResourceStatus.SC_CREATED,
+    var pageStatusCode: Int = ProtocolStatusCodes.CREATED,
+    var pageContentBytes: Int = 0,
+    var resultSet: List<Map<String, Any?>>? = null,
 ) {
-    enum class Type {
-        FetchService, PulsarMaster
-    }
+    val status: String get() = ResourceStatus.getStatusText(statusCode)
+    val pageStatus: String get() = ProtocolStatus.getMinorName(pageStatusCode)
 }
+
+data class ScrapeStatusRequest(
+    val uuid: String,
+)
 
 /**
- * Mongodb document
+ * W3 resources
  * */
-@Document
-@CompoundIndex(
-    name = "partition_group_priority_status",
-    def = "{'partition': 1, 'group': 1, 'priority': 1, 'status': 1}"
+data class W3DocumentRequest(
+    var url: String,
+    val args: String? = null,
 )
-data class CrawlSeed(
-    var url: String = "",
-    var args: String? = null,
-    var referer: String? = null,
-    var anchorText: String? = null,
-    var label: String? = null,
-    var order: Int = 0,
-    var group: Int = 0,
-    var priority: Int = 0,
-    @Indexed
-    var partition: Int = 0,
-    @Indexed
-    var status: Int = ResourceStatus.SC_CREATED
-) {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    var id: String? = null
-
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Indexed
-    var createdAt: Date = Date()
-
-    @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    var modifiedAt: Date = Date()
-}

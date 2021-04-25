@@ -14,6 +14,10 @@ data class CheckEntry(
     val transpose: Boolean = false
 )
 
+/*******************************
+ * Assert any records not blank
+ * *****************************/
+
 fun assertAnyRecordsNotBlank(url: String, rs: ResultSet, fields: Iterable<String>, message: String? = null) {
     fields.forEach { field ->
         assertAnyRecordsNotBlank(url, rs, field, message)
@@ -32,7 +36,7 @@ fun assertAnyRecordsNotBlank(check: CheckEntry) {
 }
 
 fun assertAnyRecordsNotBlank(url: String, rs: ResultSet, field: String, message: String? = null) {
-    val numNonBlanks = ResultSetUtils.count(rs) { it.getString(field).isNotBlank() }
+    val numNonBlanks = ResultSetUtils.count(rs) { it.getString(field)?.isNotBlank() == true }
 
     var msg = message?.let { "\n$message" } ?: ""
     msg = "Field <$field> must not be blank$msg\n$url"
@@ -43,6 +47,45 @@ fun assertAnyRecordsNotBlank(sql: SQLInstance, field: String, message: String? =
     val rs = XSQLRunner().execute(sql)
     assertAnyRecordsNotBlank(sql.url, rs, field, message)
 }
+
+/*******************************
+ * Assert most records not blank
+ * *****************************/
+
+fun assertMostRecordsNotBlank(url: String, rs: ResultSet, fields: Iterable<String>, message: String? = null) {
+    fields.forEach { field ->
+        assertMostRecordsNotBlank(url, rs, field, message)
+    }
+}
+
+fun assertMostRecordsNotBlank(sql: SQLInstance, fields: Iterable<String>, message: String? = null) {
+    val rs = XSQLRunner().execute(sql)
+    assertMostRecordsNotBlank(sql.url, rs, fields, message)
+}
+
+fun assertMostRecordsNotBlank(check: CheckEntry) {
+    val (url, resource, fields, message) = check
+    val sql = SQLInstance.load(url, resource)
+    assertMostRecordsNotBlank(sql, fields, message)
+}
+
+fun assertMostRecordsNotBlank(url: String, rs: ResultSet, field: String, message: String? = null) {
+    val expectedCount = ResultSetUtils.count(rs) / 2
+    val numNonBlanks = ResultSetUtils.count(rs) { it.getString(field)?.isNotBlank() == true }
+
+    var msg = message?.let { "\n$message" } ?: ""
+    msg = "Non-blank field <$field> must be more than <$expectedCount>, actual <$numNonBlanks> $msg\n$url"
+    assertTrue(msg) { numNonBlanks > expectedCount }
+}
+
+fun assertMostRecordsNotBlank(sql: SQLInstance, field: String, message: String? = null) {
+    val rs = XSQLRunner().execute(sql)
+    assertMostRecordsNotBlank(sql.url, rs, field, message)
+}
+
+/*******************************
+ * Assert all records not blank
+ * *****************************/
 
 fun assertAllRecordsNotBlank(sql: SQLInstance, field: String, message: String? = null) {
     assertAllRecordsNotBlank(sql, listOf(field), message)
@@ -66,7 +109,7 @@ fun assertAllRecordsNotBlank(url: String, rs: ResultSet, fields: Iterable<String
 }
 
 fun assertAllRecordsNotBlank(url: String, rs: ResultSet, field: String, message: String? = null) {
-    val numBlanks = ResultSetUtils.count(rs) { it.getString(field).isBlank() }
+    val numBlanks = ResultSetUtils.count(rs) { it.getString(field)?.isBlank() == true }
 
     var msg = message?.let { "\n$message" } ?: ""
     msg = "Field <$field> must not be blank$msg\n$url"

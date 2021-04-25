@@ -5,7 +5,7 @@ import ai.platon.pulsar.qa.QABase
 import ai.platon.pulsar.qa.assertAllRecordsNotBlank
 import kotlin.test.Test
 
-class TestCategory : QABase() {
+class CategoryTests : QABase() {
     private val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
     private val defaultSqlResource = "$resourcePrefix/category-navigation.sql"
     private val defaultUrl = "https://www.amazon.com/b?node=19562656011"

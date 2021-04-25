@@ -5,7 +5,7 @@ import ai.platon.pulsar.qa.QABase
 import ai.platon.pulsar.qa.assertAnyRecordsNotBlank
 import kotlin.test.Test
 
-class TestReviews : QABase() {
+class ReviewTests : QABase() {
     private val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
     private val sqlResource = "$resourcePrefix/crawl/x-asin-reviews.sql"
 
