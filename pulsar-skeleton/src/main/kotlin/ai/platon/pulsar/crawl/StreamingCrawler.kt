@@ -276,7 +276,7 @@ open class StreamingCrawler<T : UrlAware>(
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
             runUrlTask(url)
-            // web page and document are very large, we need remove them from cache as soon as possible
+            // webpages and documents are very large, we need remove them from the cache as soon as possible
             globalCache?.removePDCache(url.url)
             lastActiveTime = Instant.now()
             globalRunningTasks.decrementAndGet()

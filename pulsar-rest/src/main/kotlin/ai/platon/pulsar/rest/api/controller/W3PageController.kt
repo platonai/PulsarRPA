@@ -1,10 +1,8 @@
-package ai.platon.scent.rest.api.controller
+package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.scent.rest.api.serialize.W3DocumentRequest
-import ai.platon.scent.rest.api.service.LoadService
+import ai.platon.pulsar.rest.api.service.LoadService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 /**
  * The controller to handle www resources

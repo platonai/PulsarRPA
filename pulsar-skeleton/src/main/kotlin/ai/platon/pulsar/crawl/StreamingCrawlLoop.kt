@@ -1,11 +1,12 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicBoolean
 
 open class StreamingCrawlLoop(
     /**
@@ -19,49 +20,59 @@ open class StreamingCrawlLoop(
     /**
      * Default LoadOptions for all load tasks within this crawl loop
      * */
-    options: LoadOptions = session.options()
+    options: LoadOptions = session.options(),
 ) : AbstractCrawlLoop(globalCache, options) {
     private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
-    private val isStarted = AtomicBoolean()
-    private val isStopped = AtomicBoolean()
+    @Volatile
+    private var running = false
     private var crawlJob: Job? = null
+    val isRunning get() = running
 
-    override val crawler by lazy {
-        StreamingCrawler(fetchIterable.asSequence(), options, session, globalCache)
-    }
+    //    override val crawler by lazy {
+//        StreamingCrawler(fetchIterable.asSequence(), options, session, globalCache)
+//    }
+    override lateinit var crawler: StreamingCrawler<Hyperlink>
 
+    @Synchronized
     override fun start() {
-        if (isStarted.get()) {
-            log.warn("Crawl loop is already started")
+        if (running) {
+            log.warn("Crawl loop is already running")
             return
         }
-        isStarted.set(true)
+        running = true
 
         if (collectors.isEmpty()) {
             fetchIterable.addDefaultCollectors()
         }
 
-        val report = collectors.sortedBy { it.priority }.joinToString("\n") {
-            "${it.priority} | <$it>"
+        val report = collectors.sortedBy { it.priority }.joinToString("\n") { c ->
+            val priorityName = Priority13.values().firstOrNull { it.value == c.priority }?.name ?: ""
+            String.format("%10d %s %s", c.priority, c.name, priorityName)
         }
         log.info("Registered hyperlink collectors: \n$report")
+
+        val urls = fetchIterable.asSequence()
+        crawler = StreamingCrawler(urls, crawlOptions, session, globalCache)
 
         GlobalScope.launch {
             crawlJob = launch { crawler.run() }
         }
     }
 
+    @Synchronized
     override fun stop() {
-        if (!isStarted.get() || isStopped.get()) {
+        if (!running) {
             return
         }
-        isStopped.set(true)
+        running = false
 
+        collectors.clear()
         crawler.quit()
         runBlocking {
             crawlJob?.cancelAndJoin()
             crawlJob = null
         }
     }
+
 }

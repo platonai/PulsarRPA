@@ -101,6 +101,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-boot</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-ql</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>commons-lang</groupId>
@@ -176,10 +180,6 @@
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
         </dependency>
-      <dependency>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-ql</artifactId>
-      </dependency>
     </dependencies>
 
 </project>

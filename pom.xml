@@ -535,6 +535,7 @@
                 <artifactId>jackson-module-kotlin</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>bson</artifactId>

@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.measureTimeMillis
 
-class SinkAwareLoadEventHandler(
-    val hyperlink: SinkAwareHyperlink,
+class ScrapingLoadEventHandler(
+    val hyperlink: ScrapingHyperlink,
     val response: ScrapeResponse,
 ) : DefaultLoadEventHandler() {
     init {
@@ -54,26 +54,26 @@ class SinkAwareLoadEventHandler(
     }
 }
 
-open class SinkAwareHyperlink(
+open class ScrapingHyperlink(
     val request: ScrapeRequest,
-    val scrapeSQL: NormScrapeSQL,
+    val scrapeSQL: ScrapingSQL,
     val session: PulsarSession,
-    protected val globalCache: GlobalCache,
+    val globalCache: GlobalCache,
+    val uuid: String = UUID.randomUUID().toString()
 ) : ListenableHyperlink(scrapeSQL.url), Future<ScrapeResponse> {
 
-    private val logger = getLogger(SinkAwareHyperlink::class)
+    private val logger = getLogger(ScrapingHyperlink::class)
 
     private val sqlContext get() = session.context as AbstractSQLContext
     private val connectionPool get() = sqlContext.connectionPool
     private val randomConnection get() = sqlContext.randomConnection
 
-    val uuid = UUID.randomUUID().toString()
     val response = ScrapeResponse(uuid)
     protected val isCancelled = AtomicBoolean()
     protected val isDone = CountDownLatch(1)
 
     override var args: String? = "${scrapeSQL.args} -parse"
-    override var loadEventHandler: LoadEventPipelineHandler = SinkAwareLoadEventHandler(this, response)
+    override var loadEventHandler: LoadEventPipelineHandler = ScrapingLoadEventHandler(this, response)
 
     override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
         isCancelled.set(true)
@@ -145,8 +145,6 @@ open class SinkAwareHyperlink(
 
             rs = executeQuery(sql)
 
-            // The cache may grow large, will use a persistable cache
-            // TODO: avoid the list copy
             val resultSet = mutableListOf<Map<String, Any?>>()
             ResultSetUtils.getEntitiesFromResultSetTo(rs, resultSet)
             response.resultSet = resultSet
@@ -163,13 +161,13 @@ open class SinkAwareHyperlink(
         return rs
     }
 
-    protected fun executeQuery(sql: String): ResultSet {
+    private fun executeQuery(sql: String): ResultSet {
 //        return session.executeQuery(sql)
         val connection = connectionPool.poll() ?: randomConnection
         return executeQuery(sql, connection).also { connectionPool.offer(connection) }
     }
 
-    protected fun executeQuery(sql: String, conn: Connection): ResultSet {
+    private fun executeQuery(sql: String, conn: Connection): ResultSet {
         var result: ResultSet? = null
         val millis = measureTimeMillis {
             conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)?.use { st ->

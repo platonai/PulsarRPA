@@ -3,7 +3,6 @@ package ai.platon.pulsar.rest.api.controller
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
-import ai.platon.pulsar.rest.api.entities.ScrapeTaskStatus
 import ai.platon.pulsar.rest.api.service.ScrapeService
 import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
@@ -13,7 +12,7 @@ import javax.servlet.http.HttpServletRequest
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "x/a",
+    "x",
     consumes = [MediaType.APPLICATION_JSON_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
@@ -25,7 +24,7 @@ class ScrapeController(
      * @param request The extract request
      * @return The uuid of the task
      * */
-    @PostMapping("q")
+    @PostMapping("e")
     fun execute(@RequestBody request: ScrapeRequest): ScrapeResponse {
         return scrapeService.executeQuery(request)
     }
@@ -34,7 +33,7 @@ class ScrapeController(
      * @param request The extract request
      * @return The uuid of the task
      * */
-    @PostMapping("q")
+    @PostMapping("s")
     fun submitJob(@RequestBody request: ScrapeRequest): String {
         return scrapeService.submitJob(request)
     }
@@ -50,7 +49,7 @@ class ScrapeController(
         @RequestParam authToken: String,
         httpRequest: HttpServletRequest,
     ): ScrapeResponse {
-        val request = ScrapeStatusRequest(authToken, uuid)
+        val request = ScrapeStatusRequest(uuid)
         return scrapeService.getStatus(request)
     }
 }

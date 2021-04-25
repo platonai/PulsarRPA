@@ -4,8 +4,9 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.rest.api.common.PseudoSinkAwareHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
-import ai.platon.pulsar.rest.api.common.SinkAwareHyperlink
+import ai.platon.pulsar.rest.api.common.ScrapingHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
@@ -51,8 +52,13 @@ class ScrapeService(
         }
     }
 
-    private fun createScrapeHyperlink(request: ScrapeRequest): SinkAwareHyperlink {
-        val scrapeSQL = ScrapeAPIUtils.normalizeScrapeSQL(request.sql)
-        return SinkAwareHyperlink(request, scrapeSQL, session, globalCache)
+    private fun createScrapeHyperlink(request: ScrapeRequest): ScrapingHyperlink {
+        val sql = request.sql
+        return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
+            val scrapeSQL = ScrapeAPIUtils.normalizeScrapeSQL(sql)
+            ScrapingHyperlink(request, scrapeSQL, session, globalCache)
+        } else {
+            PseudoSinkAwareHyperlink(request, session, globalCache)
+        }
     }
 }

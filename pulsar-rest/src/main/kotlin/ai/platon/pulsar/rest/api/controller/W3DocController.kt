@@ -1,4 +1,4 @@
-package ai.platon.scent.rest.api.controller
+package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.rest.api.entities.W3DocumentRequest
 import ai.platon.pulsar.rest.api.service.LoadService
