@@ -43,20 +43,21 @@ class NewsFetchSchedule(
 ) : AdaptiveFetchSchedule(conf, messageWriter) {
     private val LOG = LoggerFactory.getLogger(NewsFetchSchedule::class.java)
 
-    override fun setFetchSchedule(page: WebPage,
-                                  newPrevFetchTime: Instant, prevModifiedTime: Instant,
-                                  currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
-        var time = modifiedTime
+    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+        var time = m.modifiedTime
         if (time.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            time = currentFetchTime
+            time = m.fetchTime
         }
+
         var interval = Duration.ofDays(365 * 10.toLong())
         if (page.isSeed) {
-            interval = adjustSeedFetchInterval(page, currentFetchTime, time)
+            interval = adjustSeedFetchInterval(page, m.fetchTime, time)
         } else {
             page.marks.put(Mark.INACTIVE, AppConstants.YES_STRING)
         }
-        updateRefetchTime(page, interval, currentFetchTime, prevModifiedTime, time)
+
+        m.fetchTime = time
+        updateRefetchTime(page, interval, m)
     }
 
     private fun adjustSeedFetchInterval(page: WebPage, fetchTime: Instant, modifiedTime: Instant): Duration {

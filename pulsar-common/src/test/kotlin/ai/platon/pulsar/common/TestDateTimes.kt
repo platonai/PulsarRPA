@@ -62,7 +62,6 @@ class TestDateTimes {
         val now = Instant.now()
         println(now.epochSecond)
         println(now.epochSecond / 60)
-        println(now.getLong(ChronoField.MINUTE_OF_DAY))
         assertTrue { now.epochSecond < Int.MAX_VALUE }
     }
 
@@ -127,6 +126,10 @@ class TestDateTimes {
         assertEquals("2016-06-16T04:21:00Z", DateTimes.parseBestInstant("2016-06-16 12:21").toString())
         assertEquals("2016-06-16T04:00:00Z", DateTimes.parseBestInstant("2016-06-16 12:00").toString())
         assertEquals("2016-06-15T16:00:00Z", DateTimes.parseBestInstant("2016-06-16").toString())
+
+        assertEquals("2016-06-16T04:21:18Z", DateTimes.parseBestInstant("2016-06-16T12:21:18").toString())
+        assertEquals("2016-06-16T04:21:00Z", DateTimes.parseBestInstant("2016-06-16T12:21").toString())
+        assertEquals("2016-06-16T04:00:00Z", DateTimes.parseBestInstant("2016-06-16T12:00").toString())
     }
 
     @Test

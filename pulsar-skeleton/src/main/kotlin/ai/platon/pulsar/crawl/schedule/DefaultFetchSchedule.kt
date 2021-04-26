@@ -37,6 +37,4 @@ import java.time.Instant
 class DefaultFetchSchedule(
         conf: ImmutableConfig,
         messageWriter: MiscMessageWriter? = null
-) : AbstractFetchSchedule(conf, messageWriter) {
-
-}
+) : AbstractFetchSchedule(conf, messageWriter)

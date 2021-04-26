@@ -26,6 +26,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.AdaptiveFetchSchedule
+import ai.platon.pulsar.crawl.schedule.ModifyInfo
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
@@ -48,49 +49,46 @@ class NewsMonitorFetchSchedule(
         messageWriter: MiscMessageWriter
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
-    private val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
     private val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
     private val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)
     // Check semi-inactive pages at 1 o'clock at night
     private val semiInactivePageCheckTime = middleNight.plusHours(25)
 
-    override fun setFetchSchedule(page: WebPage,
-                                  newPrevFetchTime: Instant, prevModifiedTime: Instant,
-                                  currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
-        var newModifiedTime = modifiedTime
+    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+        var newModifiedTime = m.modifiedTime
         if (newModifiedTime.isBefore(TCP_IP_STANDARDIZED_TIME)) {
-            newModifiedTime = currentFetchTime
+            newModifiedTime = m.fetchTime
         }
 
         val distance = page.distance
         val interval: Duration
         if (page.isSeed) {
-            interval = adjustSeedFetchInterval(page, currentFetchTime, newModifiedTime, state)
+            interval = adjustSeedFetchInterval(page, m.fetchTime, newModifiedTime, m.modified)
         } else if (distance < maxDistance && veryLikeIndexPage(page)) {
             // TODO : search for new seed pages from navigator(non-leaf) pages.
             // We should monitor seed pages at day, and search for new seed pages at night
             // We should have two mode : monitor mode and explore mode
             // Under monitor mode, we just check seed again and again to detect the changes
             // And under explore mode, indexing pages are detected automatically
-            interval = adjustSeedFetchInterval(page, currentFetchTime, newModifiedTime, state)
+            interval = adjustSeedFetchInterval(page, m.fetchTime, newModifiedTime, m.modified)
         } else if (veryLikeDetailPage(page)) {
             // Detail pages are fetched only once, once it's mark
             interval = Duration.ofDays(365 * 10L)
             page.marks.put(Mark.INACTIVE, YES_STRING)
-        } else if (newModifiedTime.isAfter(middleNightInstant) && newModifiedTime.isAfter(prevModifiedTime)) {
+        } else if (newModifiedTime.isAfter(middleNightInstant) && newModifiedTime.isAfter(m.prevModifiedTime)) {
             val refArticles = page.pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
             val fetchCount = page.fetchCount
             if (refArticles > fetchCount / 10 - 1) {
                 // There are still bugs for modify time calculation
-                super.setFetchSchedule(page, newPrevFetchTime, prevModifiedTime, currentFetchTime, newModifiedTime, state)
+                super.setFetchSchedule(page, m)
             }
             return
         } else {
-            interval = adjustSemiInactivePageFetchInterval(page, currentFetchTime, newModifiedTime, state)
+            interval = adjustSemiInactivePageFetchInterval(page, m.fetchTime, newModifiedTime, m.modified)
             page.marks.put(Mark.SEMI_INACTIVE, YES_STRING)
         }
 
-        updateRefetchTime(page, interval, currentFetchTime, prevModifiedTime, newModifiedTime)
+        updateRefetchTime(page, interval, m)
     }
 
     private fun veryLikeIndexPage(page: WebPage): Boolean {

@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.AdaptiveFetchSchedule
+import ai.platon.pulsar.crawl.schedule.ModifyInfo
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import java.time.Duration
@@ -37,9 +38,7 @@ class ProductMonitorFetchSchedule(
         messageWriter: MiscMessageWriter
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
-    override fun setFetchSchedule(page: WebPage,
-                                  newPrevFetchTime: Instant, prevModifiedTime: Instant,
-                                  currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
+    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
         // 1. for every seed, re-fetch it every day
         // 2. for every index page, re-fetch it every day
         // 3. for every detail page, we will re-fetch it 90 days later if there are enough resource
@@ -58,7 +57,7 @@ class ProductMonitorFetchSchedule(
             page.marks.put(Mark.INACTIVE, YES_STRING)
         }
 
-        updateRefetchTime(page, fetchInterval, currentFetchTime, prevModifiedTime, modifiedTime)
+        updateRefetchTime(page, fetchInterval, m)
     }
 
     private fun isIndexPage(page: WebPage): Boolean {

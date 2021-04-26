@@ -78,7 +78,8 @@ class FileBackendPageStore(
             it.location = url
             it.fetchCount = 1
             it.prevFetchTime = lastModified
-            it.fetchTime = lastModified + ChronoUnit.CENTURIES.duration
+            it.fetchTime = lastModified
+            it.fetchInterval = ChronoUnit.DECADES.duration
             it.crawlStatus = CrawlStatus.STATUS_FETCHED
             it.protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }

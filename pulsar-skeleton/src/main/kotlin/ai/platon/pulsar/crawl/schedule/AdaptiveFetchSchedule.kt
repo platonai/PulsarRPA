@@ -18,14 +18,15 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * This class implements an adaptive re-fetch algorithm. This works as follows:
@@ -62,8 +63,8 @@ import java.time.Instant
  * @author Andrzej Bialecki
  */
 open class AdaptiveFetchSchedule(
-        conf: ImmutableConfig,
-        messageWriter: MiscMessageWriter? = null
+    conf: ImmutableConfig,
+    messageWriter: MiscMessageWriter? = null,
 ) : AbstractFetchSchedule(conf, messageWriter) {
 
     protected var INC_RATE = conf.getFloat(CapabilityTypes.SCHEDULE_INC_RATE, 0.2f)
@@ -77,24 +78,23 @@ open class AdaptiveFetchSchedule(
 
     override fun getParams(): Params {
         return Params.of(
-                "className", javaClass.simpleName,
-                "MIN_INTERVAL", MIN_INTERVAL,
-                "MAX_INTERVAL", MAX_INTERVAL,
-                "SEED_MAX_INTERVAL", SEED_MAX_INTERVAL
+            "className", javaClass.simpleName,
+            "MIN_INTERVAL", MIN_INTERVAL,
+            "MAX_INTERVAL", MAX_INTERVAL,
+            "SEED_MAX_INTERVAL", SEED_MAX_INTERVAL
         ).merge(super.getParams())
     }
 
-    override fun setFetchSchedule(
-        page: WebPage, newPrevFetchTime: Instant,
-        prevModifiedTime: Instant, currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
-        var newModifiedTime = modifiedTime
-        super.setFetchSchedule(page, newPrevFetchTime, prevModifiedTime, currentFetchTime, newModifiedTime, state)
-        if (newModifiedTime < AppConstants.TCP_IP_STANDARDIZED_TIME) {
-            newModifiedTime = currentFetchTime
+    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+        val newModifiedTime = m.modifiedTime
+        super.setFetchSchedule(page, m)
+
+        if (m.modifiedTime < AppConstants.TCP_IP_STANDARDIZED_TIME) {
+            m.modifiedTime = m.fetchTime
         }
 
-        val newInterval = getFetchInterval(page, currentFetchTime, newModifiedTime, state)
-        updateRefetchTime(page, newInterval, currentFetchTime, prevModifiedTime, newModifiedTime)
+        val newInterval = getFetchInterval(page, m.fetchTime, newModifiedTime, m.modified)
+        updateRefetchTime(page, newInterval, m)
     }
 
     /**
@@ -107,7 +107,8 @@ open class AdaptiveFetchSchedule(
      * NOTE: this may be a different instance than
      */
     override fun setPageGoneSchedule(
-        page: WebPage, newPrevFetchTime: Instant, prevModifiedTime: Instant, currentFetchTime: Instant) {
+        page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
+    ) {
         val prevInterval = page.fetchInterval.seconds.toFloat()
         var newInterval = prevInterval
         // no page is truly GONE ... just increase the interval by 50%
@@ -118,8 +119,10 @@ open class AdaptiveFetchSchedule(
             maxFetchInterval.seconds * 0.9f
         }
 
+        val now = Instant.now()
         page.setFetchInterval(newInterval)
-        page.fetchTime = currentFetchTime.plus(page.fetchInterval)
+        page.prevFetchTime = now
+        page.fetchTime = now.plusSeconds(newInterval.toLong())
     }
 
     protected fun getFetchInterval(page: WebPage, fetchTime_: Instant, modifiedTime: Instant, state: Int): Duration {

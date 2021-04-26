@@ -1022,7 +1022,7 @@ class KWebPage : Comparable<KWebPage> {
             page.baseUrl = url
             page.setModifiedTime(Instant.now())
             page.fetchTime = Instant.parse("3000-01-01T00:00:00Z")
-            page.fetchInterval = ChronoUnit.CENTURIES.duration
+            page.fetchInterval = ChronoUnit.DECADES.duration
             page.fetchPriority = AppConstants.FETCH_PRIORITY_MIN
             page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
             page.distance = AppConstants.DISTANCE_INFINITE // or -1?

@@ -40,13 +40,11 @@ class ScrapeController(
 
     /**
      * @param uuid The uuid of the task last submitted
-     * @param authToken The auth token
      * @return The execution result
      * */
     @GetMapping("status", consumes = [MediaType.ALL_VALUE])
     fun status(
         @RequestParam uuid: String,
-        @RequestParam authToken: String,
         httpRequest: HttpServletRequest,
     ): ScrapeResponse {
         val request = ScrapeStatusRequest(uuid)

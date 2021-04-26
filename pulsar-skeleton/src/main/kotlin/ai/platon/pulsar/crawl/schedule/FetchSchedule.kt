@@ -23,6 +23,20 @@ import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
 
+data class ModifyInfo(
+    /**
+     * The actual latest fetch time, WebPage.fetchTime will be updated by this value
+     * */
+    var fetchTime: Instant,
+    /**
+     * The previous actual latest fetch time
+     * */
+    var prevFetchTime: Instant,
+    var prevModifiedTime: Instant,
+    var modifiedTime: Instant,
+    var modified: Int,
+)
+
 /**
  * This interface defines the contract for implementations that manipulate fetch
  * times and re-fetch intervals.
@@ -64,10 +78,10 @@ interface FetchSchedule : Parameterized {
      * support different re-fetching schedules.
      *
      * @param page             The Web page
-     * @param newPrevFetchTime The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
-     * @param prevModifiedTime previous value of modifiedTime, or 0 if not available
-     * @param currentFetchTime The current fetch time, it's almost now
-     * @param modifiedTime     last time the content was modified. This information comes from
+     * @param prevFetchTime    The prev fetch time, (prev fetch time) = (the latest actual fetch time)
+     * @param modifiedTime     The previous value of modifiedTime, or 0 if not available
+     * @param fetchTime        The current fetch time, it's almost now, will be updated to the further
+     * @param modifiedTime     The last time the content was modified. This information comes from
      * the protocol implementations, or is set to < 0 if not available.
      * Most FetchSchedule implementations should update the value in
      * @param state            if [STATUS_MODIFIED], then the content is considered to be
@@ -79,11 +93,7 @@ interface FetchSchedule : Parameterized {
      * changed; implementations are free to follow a sensible default
      * behavior.
      */
-    fun setFetchSchedule(
-        page: WebPage,
-        newPrevFetchTime: Instant,
-        prevModifiedTime: Instant, currentFetchTime: Instant, modifiedTime: Instant, state: Int,
-    )
+    fun setFetchSchedule(page: WebPage, m: ModifyInfo)
 
     /**
      * This method specifies how to schedule refetching of pages marked as GONE.
@@ -95,7 +105,7 @@ interface FetchSchedule : Parameterized {
      */
     fun setPageGoneSchedule(
         page: WebPage,
-        newPrevFetchTime: Instant, prevModifiedTime: Instant, currentFetchTime: Instant,
+        prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
     )
 
     /**
@@ -106,11 +116,11 @@ interface FetchSchedule : Parameterized {
      * @param page             The page
      * @param newPrevFetchTime    previous fetch time
      * @param prevModifiedTime previous modified time
-     * @param currentFetchTime        current fetch time
+     * @param fetchTime        current fetch time
      */
     fun setPageRetrySchedule(
         page: WebPage,
-        newPrevFetchTime: Instant, prevModifiedTime: Instant, currentFetchTime: Instant,
+        prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
     )
 
     /**
@@ -118,7 +128,7 @@ interface FetchSchedule : Parameterized {
      *
      * @return the date as a long.
      */
-    fun calculateLastFetchTime(page: WebPage): Instant
+    fun estimatePrevFetchTime(page: WebPage): Instant
 
     /**
      * This method provides information whether the page is suitable for selection

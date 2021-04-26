@@ -38,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -826,9 +827,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * The next fetch time
+     * The latest fetch time
      *
-     * @return The next fetch time
+     * @return The latest fetch time
      */
     @NotNull
     public Instant getFetchTime() {
@@ -836,9 +837,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * The next fetch time
+     * The latest fetch time
      *
-     * @param time The next fetch time
+     * @param time The latest fetch time
      */
     public void setFetchTime(@NotNull Instant time) {
         page.setFetchTime(time.toEpochMilli());
@@ -875,11 +876,15 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public Duration getFetchInterval() {
-        return Duration.ofSeconds(page.getFetchInterval());
+        int seconds = page.getFetchInterval();
+        if (seconds < 0) {
+            seconds = (int)ChronoUnit.DECADES.getDuration().getSeconds();
+        }
+        return Duration.ofSeconds(seconds);
     }
 
-    public void setFetchInterval(@NotNull Duration interval) {
-        page.setFetchInterval((int) interval.getSeconds());
+    public void setFetchInterval(@NotNull Duration duration) {
+        page.setFetchInterval((int) duration.getSeconds());
     }
 
     public void setFetchInterval(long interval) {

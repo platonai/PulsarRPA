@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
+import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
@@ -382,6 +383,7 @@ class LoadComponent(
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         // require(page.options == options)
+        page.setVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE, page.prevFetchTime)
         globalCache.fetchingUrls.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
@@ -435,6 +437,9 @@ class LoadComponent(
         }
     }
 
+    /**
+     * TODO: move to FetchSchedule.shouldFetch for consistency
+     * */
     private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
         val protocolStatus = page.protocolStatus
         if (protocolStatus.isRetry) {
@@ -455,7 +460,7 @@ class LoadComponent(
             statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)
         }
 
-        // if (now >= expireAt || now > lastTime + expires), it's expired
+        // if (now >= expireAt || now > prevFetchTime + expires), it's expired
         if (options.isExpired(prevFetchTime)) {
             return FetchReason.EXPIRED
         }
@@ -482,50 +487,12 @@ class LoadComponent(
         return FetchReason.DO_NOT_FETCH
     }
 
-    /**
-     * NOTE: not used in browser mode, redirect inside a browser instead
-     * */
-    private fun redirect(page: WebPage, options: LoadOptions): WebPage {
-        if (!isActive) {
-            page.protocolStatus = ProtocolStatus.STATUS_CANCELED
-            return page
-        }
-
-        if (page.protocolStatus.isCanceled) {
-            return page
-        }
-
-        var p = page
-        val reprUrl = p.reprUrl
-        if (reprUrl.equals(p.url, ignoreCase = true)) {
-            logger.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
-            return p
-        }
-
-        if (options.noRedirect) {
-            logger.warn("Redirect is prohibit, url: $reprUrl")
-            return p
-        }
-
-        // do not run into a rabbit hole, never redirects here
-        options.noRedirect = true
-        val redirectedPage = load(reprUrl, options)
-        options.noRedirect = false
-        if (options.hardRedirect) {
-            p = redirectedPage
-        } else {
-            // soft redirect
-            p.content = redirectedPage.content
-        }
-
-        return p
-    }
-
     private fun update(page: WebPage, options: LoadOptions) {
         if (page.isInternal) {
             return
         }
 
+        // canceled or loaded from database, do not update fetch schedule
         if (!page.isFetched || page.protocolStatus.isCanceled) {
             return
         }
@@ -572,6 +539,45 @@ class LoadComponent(
             }
         }
         tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
+    }
+
+    /**
+     * NOTE: not used in browser mode, redirect inside a browser instead
+     * */
+    private fun redirect(page: WebPage, options: LoadOptions): WebPage {
+        if (!isActive) {
+            page.protocolStatus = ProtocolStatus.STATUS_CANCELED
+            return page
+        }
+
+        if (page.protocolStatus.isCanceled) {
+            return page
+        }
+
+        var p = page
+        val reprUrl = p.reprUrl
+        if (reprUrl.equals(p.url, ignoreCase = true)) {
+            logger.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
+            return p
+        }
+
+        if (options.noRedirect) {
+            logger.warn("Redirect is prohibit, url: $reprUrl")
+            return p
+        }
+
+        // do not run into a rabbit hole, never redirects here
+        options.noRedirect = true
+        val redirectedPage = load(reprUrl, options)
+        options.noRedirect = false
+        if (options.hardRedirect) {
+            p = redirectedPage
+        } else {
+            // soft redirect
+            p.content = redirectedPage.content
+        }
+
+        return p
     }
 
     fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {

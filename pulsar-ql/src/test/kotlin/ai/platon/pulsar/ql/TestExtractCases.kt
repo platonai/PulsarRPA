@@ -163,6 +163,7 @@ WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
     }
 
     @Test
+    @Ignore("Temperory disabled")
     fun testLoadOutPagesForJd2() {
         val sql = """
 select

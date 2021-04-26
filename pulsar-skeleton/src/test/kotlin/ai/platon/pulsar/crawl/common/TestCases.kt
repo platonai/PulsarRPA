@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-class TestAnything {
+class TestCases {
     private val volatileConfig = VolatileConfig()
 
     @Test

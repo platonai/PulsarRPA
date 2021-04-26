@@ -148,12 +148,13 @@ class ScrapeServiceTests {
 
         val scrapeStatusRequest = ScrapeStatusRequest(uuid)
         var status = service.getStatus(scrapeStatusRequest)
-        while (status.statusCode == ResourceStatus.SC_CREATED) {
+        var i = 60
+        while (i-- > 0 && status.statusCode != ResourceStatus.SC_OK) {
             sleepSeconds(1)
             status = service.getStatus(scrapeStatusRequest)
         }
-        assertEquals(200, status.statusCode)
-
         println(pulsarObjectMapper().writeValueAsString(status))
+        assertTrue { i > 0 }
+        assertEquals(200, status.statusCode)
     }
 }

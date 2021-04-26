@@ -152,11 +152,23 @@ abstract class AbstractPulsarSession(
         if (enableCache) {
             val (url, options) = normUrl
             val now = Instant.now()
-            return pageCache.getDatum(url, options.expires, now)
-                ?: context.load(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+            if (now > options.expireAt) {
+                // expired due to expireAt, ignore the cached version
+                return fetchAndCache(normUrl, now)
+            }
+
+            return pageCache.getDatum(url, options.expires, now) ?: fetchAndCache(normUrl, now)
         }
 
         return context.load(normUrl)
+    }
+
+    private fun fetchAndCache(normUrl: NormUrl, now: Instant): WebPage {
+        return context.load(normUrl).also {
+            pageCache.put(normUrl.spec, ExpiringItem(it, now))
+            // TODO: check the logic: properly handle the relative document
+            // documentCache.remove(normUrl.spec)
+        }
     }
 
     @Throws(Exception::class)

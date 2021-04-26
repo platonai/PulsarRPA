@@ -21,12 +21,11 @@ class SeedBuilder(
         private val scoreFilters: ScoringFilters,
         private val conf: ImmutableConfig
 ) : Parameterized {
-    private val impreciseNow = Instant.now()
 
     constructor(conf: ImmutableConfig): this(ScoringFilters(conf), conf)
 
     override fun getParams(): Params {
-        return Params.of("injectTime", DateTimes.format(impreciseNow))
+        return Params.of("injectTime", DateTimes.format(Instant.now()))
     }
 
     fun create(urlArgs: Pair<String, String>): WebPage {
@@ -60,15 +59,17 @@ class SeedBuilder(
         if (page.isInternal) {
             return false
         }
+
         val options = parse(args, conf)
+        val now = Instant.now()
         page.distance = 0
         if (page.createTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            page.createTime = impreciseNow
+            page.createTime = now
         }
         page.markSeed()
         page.score = options.score.toFloat()
         scoreFilters.injectedScore(page)
-        page.fetchTime = impreciseNow
+        page.fetchTime = now
         page.fetchInterval = options.fetchInterval
         page.fetchPriority = options.fetchPriority
         page.marks.put(Mark.INJECT, AppConstants.YES_STRING)

@@ -39,13 +39,14 @@ import java.time.temporal.ChronoUnit
  * @author Andrzej Bialecki
  */
 abstract class AbstractFetchSchedule(
-        val conf: ImmutableConfig,
-        val messageWriter: MiscMessageWriter? = null
+    val conf: ImmutableConfig,
+    val messageWriter: MiscMessageWriter? = null,
 ) : FetchSchedule {
     protected var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
     protected val impreciseNow = Instant.now()
     protected var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
-    override val maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, ChronoUnit.CENTURIES.duration)
+    override val maxFetchInterval: Duration =
+        conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, ChronoUnit.DECADES.duration)
 
     override fun getParams(): Params {
         return Params.of(
@@ -65,7 +66,6 @@ abstract class AbstractFetchSchedule(
      * @param page
      */
     override fun initializeSchedule(page: WebPage) {
-        page.updateFetchTime(page.fetchTime, Instant.now())
         page.fetchInterval = defaultInterval
         page.fetchRetries = 0
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
@@ -76,27 +76,25 @@ abstract class AbstractFetchSchedule(
      * NOTE: this implementation resets the retry counter -
      * extending classes should call super.setFetchSchedule() to preserve this behavior.
 
-     * @param newPrevFetchTime The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
-     * @param currentFetchTime The current fetch time, it's almost now
+     * @param oldPrevFetchTime The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
+     * @param oldFetchTime The current fetch time, it's almost now
      */
-    override fun setFetchSchedule(
-        page: WebPage, newPrevFetchTime: Instant,
-        prevModifiedTime: Instant, currentFetchTime: Instant, modifiedTime: Instant, state: Int) {
-        val protocolStatus = page.protocolStatus
-        val options = page.options
-
-        if (protocolStatus.isSuccess) {
+    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+        if (page.protocolStatus.isSuccess) {
             page.fetchRetries = 0
         }
 
-        val fetchInterval = when {
-            protocolStatus.isSuccess -> options.expires
+        page.fetchInterval = when {
+            page.protocolStatus.isSuccess -> page.options.expires
             else -> Duration.ZERO
         }
 
-        page.updateFetchTime(newPrevFetchTime, currentFetchTime, fetchInterval)
-        page.modifiedTime = modifiedTime
-        page.prevModifiedTime = prevModifiedTime
+        // note: page.fetchTime might not be the same as the actual fetch time
+        val now = Instant.now()
+        page.updateFetchTime(now, now + page.fetchInterval)
+
+        page.modifiedTime = m.modifiedTime
+        page.prevModifiedTime = m.prevModifiedTime
     }
 
     /**
@@ -105,14 +103,21 @@ abstract class AbstractFetchSchedule(
      * day in the future and increases the retry counter.
      *
      * @param page             WebPage to retry
-     * @param newPrevFetchTime    previous fetch time
+     * @param prevFetchTime    previous fetch time
      * @param prevModifiedTime previous modified time
-     * @param currentFetchTime        current fetch time
+     * @param fetchTime        current fetch time
      */
-    override fun setPageRetrySchedule(page: WebPage, newPrevFetchTime: Instant, prevModifiedTime: Instant, currentFetchTime: Instant) {
+    override fun setPageRetrySchedule(
+        page: WebPage,
+        prevFetchTime: Instant,
+        prevModifiedTime: Instant,
+        fetchTime: Instant,
+    ) {
         page.fetchRetries++
         // retry immediately, this is the default behaviour
-        page.updateFetchTime(currentFetchTime, Instant.now())
+        val now = Instant.now()
+        page.fetchInterval = Duration.ofSeconds(0)
+        page.updateFetchTime(now, now)
 
         val crawlStatus = if (page.fetchRetries < fetchRetryMax) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
         page.setCrawlStatus(crawlStatus.toInt())
@@ -128,8 +133,11 @@ abstract class AbstractFetchSchedule(
      * NOTE: this may be a different instance than
      */
     override fun setPageGoneSchedule(
-        page: WebPage, newPrevFetchTime: Instant, prevModifiedTime: Instant, currentFetchTime: Instant) {
-        page.updateFetchTime(newPrevFetchTime, currentFetchTime, ChronoUnit.CENTURIES.duration)
+        page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
+    ) {
+        page.fetchInterval = ChronoUnit.DECADES.duration
+        val now = Instant.now()
+        page.updateFetchTime(now, now + page.fetchInterval)
     }
 
     /**
@@ -137,8 +145,8 @@ abstract class AbstractFetchSchedule(
      *
      * @return the date as a long.
      */
-    override fun calculateLastFetchTime(page: WebPage): Instant {
-        return page.fetchTime.minus(page.fetchInterval)
+    override fun estimatePrevFetchTime(page: WebPage): Instant {
+        return page.fetchTime - page.fetchInterval
     }
 
     /**
@@ -167,13 +175,14 @@ abstract class AbstractFetchSchedule(
         // pages with too long fetchInterval are adjusted so that they fit within
         // maximum fetchInterval (batch retention period).
         val fetchTime = page.fetchTime
-        if (now.plus(maxFetchInterval).isBefore(fetchTime)) {
-            if (page.fetchInterval > maxFetchInterval) {
-                page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
-            }
-            page.updateFetchTime(fetchTime, now)
-        }
-        return fetchTime.isBefore(now)
+//        if (now + maxFetchInterval < fetchTime) {
+//            if (page.fetchInterval > maxFetchInterval) {
+//                page.setFetchInterval(maxFetchInterval.seconds * 0.9f)
+//            }
+//            page.updateFetchTime(now, now)
+//        }
+
+        return fetchTime < now
     }
 
     /**
@@ -198,14 +207,15 @@ abstract class AbstractFetchSchedule(
         page.fetchRetries = 0
 
         val fetchInterval = if (asap) Duration.ZERO else page.fetchInterval
-        val nextFetchTime = Instant.now() + fetchInterval
-        page.updateFetchTime(prevFetchTime, nextFetchTime)
+        val now = Instant.now()
+        page.updateFetchTime(now, now + fetchInterval)
     }
 
-    protected fun updateRefetchTime(page: WebPage, interval: Duration, fetchTime: Instant, prevModifiedTime: Instant, modifiedTime: Instant) {
-        page.fetchInterval = interval
-        page.updateFetchTime(fetchTime, fetchTime.plus(interval))
-        page.prevModifiedTime = prevModifiedTime
-        page.modifiedTime = modifiedTime
+    protected fun updateRefetchTime(page: WebPage, fetchInterval: Duration, m: ModifyInfo) {
+        val now = Instant.now()
+        page.fetchInterval = fetchInterval
+        page.updateFetchTime(now, now + page.fetchInterval)
+        page.prevModifiedTime = m.prevModifiedTime
+        page.modifiedTime = m.modifiedTime
     }
 }

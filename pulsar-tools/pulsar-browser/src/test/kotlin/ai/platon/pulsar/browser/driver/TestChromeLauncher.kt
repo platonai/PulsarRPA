@@ -5,11 +5,14 @@ import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import ai.platon.pulsar.common.AppPaths
 import com.google.gson.Gson
+import org.junit.Ignore
 import org.junit.Test
 import java.time.LocalDateTime
 import kotlin.test.assertTrue
 
 class TestChromeLauncher {
+
+    @Ignore("Temporary disabled")
     @Test
     fun testLauncher() {
         val launchOptions = ChromeDevtoolsOptions()

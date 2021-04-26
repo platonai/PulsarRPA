@@ -1,12 +1,9 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.SParser
 import org.junit.Test
 import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
@@ -26,12 +23,21 @@ class TestSParser {
 
     @Test
     fun testParseInstant() {
-        val zoneId = ZoneId.systemDefault()
-        parser.set("2021-04-17")
-        assertEquals("2021-04-17", parser.getInstant().atZone(zoneId).toLocalDate().toString())
+        val zoneId = DateTimes.zoneId
 
-        parser.set("2021-04-17T16:00:00")
-        assertEquals("2021-04-17T16:00:00", parser.getInstant().atZone(zoneId).toLocalDate().toString())
+        var text = "2021-04-17"
+        parser.set(text)
+        assertEquals(text, parser.getInstant().atZone(zoneId).toLocalDate().toString())
+
+        text = "2021-04-17 16:10:01"
+        assertTrue { text.matches(DateTimes.SIMPLE_DATE_TIME_REGEX.toRegex()) }
+        parser.set(text)
+        assertEquals("2021-04-17T16:10:01", parser.getInstant().atZone(zoneId).toLocalDateTime().toString())
+
+        text = "2021-04-17T16:10:01"
+        assertTrue { text.matches(DateTimes.DATE_TIME_REGEX.toRegex()) }
+        parser.set(text)
+        assertEquals(text, parser.getInstant().atZone(zoneId).toLocalDateTime().toString())
     }
 
     @Test

@@ -14,14 +14,15 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 object LoadOptionDefaults {
+    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
     /**
      * The default expire time, some time we may need expire all pages by default, for example, in test mode
      * */
-    var expires = ChronoUnit.CENTURIES.duration
+    var expires = ChronoUnit.DECADES.duration
     /**
      * The default time to expire
      * */
-    var expireAt = Instant.now() + ChronoUnit.CENTURIES.duration
+    var expireAt = Instant.now() + ChronoUnit.DECADES.duration
     var lazyFlush = true
     var parse = false
     var storeContent = true
@@ -61,7 +62,7 @@ open class LoadOptions(
 
     @ApiPublic
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
-    var taskId = LocalDate.now().toString()
+    var taskId = ""
 
     /**
      * The task time accepts date time format as the following:
@@ -71,7 +72,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
             description = "The task time, we usually use a task time to indicate a batch of a task")
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.SECONDS)
+    var taskTime = LoadOptionDefaults.taskTime
 
     @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
@@ -91,7 +92,10 @@ open class LoadOptions(
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = LoadOptionDefaults.expires
 
-    /** Web page expire time */
+    /**
+     * The page is expired if the current time > expireAt
+     * TODO: a better name: expireBefore
+     * */
     @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
@@ -178,13 +182,13 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
-    var itemExpires = ChronoUnit.CENTURIES.duration
+    var itemExpires = ChronoUnit.DECADES.duration
 
     /** Web page expire time */
     @ApiPublic
     @Parameter(names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var itemExpireAt = Instant.EPOCH + ChronoUnit.CENTURIES.duration
+    var itemExpireAt = Instant.EPOCH + ChronoUnit.DECADES.duration
 
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
@@ -370,9 +374,9 @@ open class LoadOptions(
      * 1. the last fetch time is before [expireAt]
      * 2. (the last fetch time + [expires]) is passed
      * */
-    fun isExpired(lastFetchTime: Instant): Boolean {
+    fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
-        return expireAt >= lastFetchTime || now >= lastFetchTime + expires
+        return now > expireAt || now >= prevFetchTime + expires
     }
 
     open fun itemOptions2MajorOptions() {

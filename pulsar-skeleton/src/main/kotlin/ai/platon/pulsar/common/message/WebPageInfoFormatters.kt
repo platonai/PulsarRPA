@@ -1,14 +1,10 @@
 package ai.platon.pulsar.common.message
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.FetchReason
-import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
@@ -18,7 +14,6 @@ import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 class PageFormatter(val page: WebPage) {
     companion object {
@@ -87,8 +82,9 @@ class LoadedPageFormatter(
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     private val category get() = page.pageCategory.symbol()
-    private val prevFetchTime get() = Duration.between(page.prevFetchTime, Instant.now()).readable()
-    private val prevFetchTimeReport get() = "last fetched $prevFetchTime ago,"
+    private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
+    private val prevFetchTimeDuration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now()).readable()
+    private val prevFetchTimeReport get() = "last fetched $prevFetchTimeDuration ago,"
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"

@@ -76,7 +76,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
         // wait for callback
         sleepSeconds(3)
 
-        val response = restTemplate.getForObject("$baseUri/x/a/status?uuid={uuid}&authToken={authToken}",
+        val response = restTemplate.getForObject("$baseUri/x/a/status?uuid={uuid}",
             ScrapeResponse::class.java, uuid)
         println("Scrape task status: ")
         println(pulsarObjectMapper().writeValueAsString(response))

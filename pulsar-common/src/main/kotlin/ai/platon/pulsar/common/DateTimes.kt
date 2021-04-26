@@ -10,6 +10,8 @@ import java.time.temporal.TemporalAccessor
 import java.util.*
 
 object DateTimes {
+    private val logger = getLogger(DateTimes::class)
+
     val PATH_SAFE_FORMAT_1 = SimpleDateFormat("MMdd")
     val PATH_SAFE_FORMAT_2 = SimpleDateFormat("MMdd.HH")
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
@@ -21,6 +23,10 @@ object DateTimes {
     const val HOURS_OF_MONTH = HOURS_OF_DAY * 30
     const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
     val ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365))
+
+    const val DATE_REGEX = "\\d{4}-\\d{2}-\\d{2}"
+    const val DATE_TIME_REGEX = "${DATE_REGEX}T\\d{2}:.+"
+    const val SIMPLE_DATE_TIME_REGEX = "$DATE_REGEX\\s+\\d{2}:.+"
 
     /**
      * The default zone id, it will be configurable
@@ -175,30 +181,35 @@ object DateTimes {
      * */
     @JvmOverloads
     @JvmStatic
-    fun parseBestInstant(
-        text: String,
-        defaultValue: Instant = Instant.EPOCH,
-        zoneId: ZoneId = ZoneId.systemDefault()
-    ): Instant {
+    fun parseBestInstant(text: String, defaultValue: Instant = Instant.EPOCH): Instant {
         try {
-            val dateRegex = "\\d{4}-\\d{2}-\\d{2}"
-            val pattern = "yyyy-MM-dd[ HH[:mm[:ss]]]"
-
             return when {
-                text.matches("${dateRegex}T\\d{2}.+Z".toRegex()) -> {
+                text.matches("${DATE_REGEX}T\\d{2}.+Z".toRegex()) -> {
                     Instant.parse(text)
                 }
-                text.matches("$dateRegex\\s+\\d{2}:.+".toRegex()) -> {
-                    DateTimeFormatter.ofPattern(pattern).parse(text) { LocalDateTime.from(it) }
+                text.matches(SIMPLE_DATE_TIME_REGEX.toRegex()) -> {
+                    val pattern = "yyyy-MM-dd HH[:mm][:ss]"
+                    DateTimeFormatter.ofPattern(pattern)
+                        .parse(text) { LocalDateTime.from(it) }
                         .atZone(zoneId).toInstant()
                 }
-                text.matches(dateRegex.toRegex()) -> {
-                    DateTimeFormatter.ofPattern(pattern).parse(text) { LocalDate.from(it) }
+                text.matches(DATE_TIME_REGEX.toRegex()) -> {
+                    val pattern = "yyyy-MM-dd'T'HH[:mm][:ss]"
+                    DateTimeFormatter.ofPattern(pattern)
+                        .parse(text) { LocalDateTime.from(it) }
+                        .atZone(zoneId).toInstant()
+                }
+                text.matches(DATE_REGEX.toRegex()) -> {
+                    val pattern = "yyyy-MM-dd"
+                    DateTimeFormatter.ofPattern(pattern)
+                        .parse(text) { LocalDate.from(it) }
                         .atStartOfDay().atZone(zoneId).toInstant()
                 }
                 else -> defaultValue
             }
-        } catch (ignored: Throwable) {}
+        } catch (e: Throwable) {
+            logger.warn("Failed to parse $text | {}", e)
+        }
 
         return defaultValue
     }

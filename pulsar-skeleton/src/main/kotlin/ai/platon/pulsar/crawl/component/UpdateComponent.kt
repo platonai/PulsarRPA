@@ -22,12 +22,12 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
+import ai.platon.pulsar.crawl.schedule.ModifyInfo
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.crawl.signature.SignatureComparator
 import ai.platon.pulsar.persist.CrawlStatus
@@ -38,6 +38,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -152,49 +153,48 @@ class UpdateComponent(
         }
     }
 
-    data class ModifyInfo(
-        var prevModifiedTime: Instant,
-        var modifiedTime: Instant,
-        var modified: Int,
-    )
-
     fun updateFetchSchedule(page: WebPage) {
         if (page.marks.isInactive) {
             return
         }
 
-        val now = Instant.now()
-        val fetchTime = now
-        // TODO: in which case a the last fetch time is after now? does it indicate a bug?
-        val prevFetchTime = if (page.fetchTime.isAfter(now)) page.prevFetchTime else page.fetchTime
-
         val crawlStatus = page.crawlStatus
+        val m = handleModifiedTime(page, crawlStatus)
+
         when (crawlStatus.code.toByte()) {
             CrawlStatusCodes.FETCHED,
             CrawlStatusCodes.REDIR_TEMP,
             CrawlStatusCodes.REDIR_PERM,
             CrawlStatusCodes.NOTMODIFIED,
             -> {
-                val m = handleModifiedTime(page, crawlStatus)
-
-                fetchSchedule.setFetchSchedule(page,
-                    prevFetchTime, m.prevModifiedTime, fetchTime, m.modifiedTime, m.modified)
-
-                val fetchInterval = page.fetchInterval
-                if (fetchInterval > fetchSchedule.maxFetchInterval) {
-                    LOG.info("Force re-fetch page with interval {} | {}", fetchInterval, page.url)
-                    fetchSchedule.forceRefetch(page, prevFetchTime, false)
+                val now = Instant.now()
+                require(Duration.between(m.fetchTime, now).seconds < 1) {
+                    "The actual fetch time should be very close to now. Now: $now FetchTime: ${m.fetchTime}"
                 }
+
+                fetchSchedule.setFetchSchedule(page, m)
+
+                // do not enable the force fetch feature
+//                val enableForceFetch = false
+//                val fetchInterval = page.fetchInterval
+//                if (enableForceFetch && fetchInterval > fetchSchedule.maxFetchInterval) {
+//                    LOG.info("Force re-fetch page with interval {} | {}", fetchInterval, page.url)
+//                    fetchSchedule.forceRefetch(page, m.prevFetchTime, false)
+//                }
             }
             CrawlStatusCodes.RETRY -> {
-                fetchSchedule.setPageRetrySchedule(page, prevFetchTime, page.prevModifiedTime, fetchTime)
+                fetchSchedule.setPageRetrySchedule(page, m.prevFetchTime, m.prevModifiedTime, m.fetchTime)
             }
             CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(
-                page, prevFetchTime, page.prevModifiedTime, fetchTime)
+                page, m.prevFetchTime, m.prevModifiedTime, m.fetchTime)
         }
     }
 
     private fun handleModifiedTime(page: WebPage, crawlStatus: CrawlStatus): ModifyInfo {
+        // page.fetchTime is not the actual fetch time!
+        val prevFetchTime = page.fetchTime
+        val fetchTime = Instant.now()
+
         var prevModifiedTime = page.prevModifiedTime
         var modifiedTime = page.modifiedTime
         val newModifiedTime = page.sniffModifiedTime()
@@ -223,7 +223,7 @@ class UpdateComponent(
             handleBadModified(page)
         }
 
-        return ModifyInfo(prevModifiedTime, modifiedTime, modified)
+        return ModifyInfo(fetchTime, prevFetchTime, prevModifiedTime, modifiedTime, modified)
     }
 
     private fun handleBadModified(page: WebPage) {
