@@ -6,15 +6,14 @@ import kotlin.system.exitProcess
 fun main() {
     val authToken = "rhlwTRBk-1-de14124c7ace3d93e38a705bae30376c"
     val sql = """
-        select 
-            dom_base_uri(dom) as `url`,
-            str_substring_after(dom_base_uri(dom), '&rh=') as `nodeID`,
-            dom_first_text(dom, 'a span.a-price:first-child span.a-offscreen') as `price`,
-            dom_first_text(dom, 'a:has(span.a-price) span:containsOwn(/Item)') as `priceperitem`,
-            dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
-            dom_first_text(dom, 'h2 a') as `title`,
-            dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
-        from load_and_select('https://www.amazon.com/s?k="Boys%27+Novelty+Belt+Buckles"&rh=n:9057119011&page=1 -i 1s  -retry', 'div.s-main-slot.s-result-list.s-search-results > div:expr(img>0)');
+    select
+        dom_first_text(dom, '#productTitle') as `title`,
+        dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
+        dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
+        array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
+        dom_base_uri(dom) as `baseUri`
+    from
+        load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
     """.trimIndent()
 
     val host = "crawl0"

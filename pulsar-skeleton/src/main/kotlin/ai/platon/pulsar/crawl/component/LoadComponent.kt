@@ -460,7 +460,7 @@ class LoadComponent(
             statusTracker?.messageWriter?.debugIllegalLastFetchTime(page)
         }
 
-        // if (now >= expireAt || now > prevFetchTime + expires), it's expired
+        // if (expireAt in prevFetchTime..now || now > prevFetchTime + expires), it's expired
         if (options.isExpired(prevFetchTime)) {
             return FetchReason.EXPIRED
         }

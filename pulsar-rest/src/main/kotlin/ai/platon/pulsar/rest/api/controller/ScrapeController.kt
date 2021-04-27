@@ -24,7 +24,7 @@ class ScrapeController(
      * @param request The extract request
      * @return The uuid of the task
      * */
-    @PostMapping("e")
+    @GetMapping("e")
     fun execute(@RequestBody request: ScrapeRequest): ScrapeResponse {
         return scrapeService.executeQuery(request)
     }

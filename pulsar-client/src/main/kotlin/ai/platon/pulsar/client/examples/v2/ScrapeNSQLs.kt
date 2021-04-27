@@ -8,7 +8,7 @@ fun main() {
     val authToken = "rhlwTRBk-1-de14124c7ace3d93e38a705bae30376c"
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql/crawl"
     val sqls = mapOf(
-        "asin" to "x-asin.sql",
+        "asin" to "asin.x.sql",
         "sims-1" to "x-asin-sims-consolidated-1.sql",
         "sims-2" to "x-asin-sims-consolidated-2.sql",
         "sims-3" to "x-asin-sims-consolidated-3.sql",

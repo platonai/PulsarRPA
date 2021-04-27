@@ -1,6 +1,6 @@
 Pulsar README
 ===================
-**The Web is your own database.**
+** Network As A Database **
 
 Turn the Web into tables and charts using simple SQLs.
 
@@ -52,7 +52,7 @@ Here is a real world REST request to scrape every field in a product page from a
 ## Build from source
 
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn -DskipTests=true
+    cd pulsar && mvn
 
 ## Start pulsar server
 
@@ -60,10 +60,6 @@ Here is a real world REST request to scrape every field in a product page from a
 
 ## Issue a request to scrape
 
-    # Bash
-    bin/tools/scrape/query.sh
-
-    # PHP
-    
-
-Now you can execute any x-sql using the command line.
+    # CURL
+    curl -X GET --location "http://localhost:8182/x/e" \
+    -d "{\"sql\":\"select\\n    dom_first_text(dom, '#productTitle') as `title`,\\n    dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,\\n    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,\\n    array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,\\n    dom_base_uri(dom) as `baseUri`\\nfrom\\n    load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')\",\"callbackUrl\":null,\"priority\":\"HIGHER5\"}"

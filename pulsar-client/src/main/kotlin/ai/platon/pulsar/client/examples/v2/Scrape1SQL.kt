@@ -9,7 +9,7 @@ fun main() {
     val authToken = "rhlwTRBk-1-de14124c7ace3d93e38a705bae30376c"
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql/crawl"
     val sqls = mapOf(
-        "asin" to "x-asin.sql"
+        "asin" to "asin.x.sql"
     ).entries
         .map { it.key to "$resourcePrefix/${it.value}" }
         .associate { it.first to SQLTemplate.load(it.second).template }

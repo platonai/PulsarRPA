@@ -10,7 +10,7 @@ All X-SQLs can be find [here](sql/crawl).
       "url": "https://item.jd.com/10023068375912.html",
       "args": "-i 0s",
       "sqls": {
-        "asin": "{{x-asin.sql}}",
+        "asin": "{{asin.x.sql}}",
         "sims-1": "{{x-asin-sims-consolidated-1.sql}}",
         "sims-2": "{{x-asin-sims-consolidated-2.sql}}",
         "sims-3": "{{x-asin-sims-consolidated-3.sql}}",

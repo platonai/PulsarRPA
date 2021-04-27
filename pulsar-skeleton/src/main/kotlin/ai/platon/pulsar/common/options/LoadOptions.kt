@@ -371,12 +371,12 @@ open class LoadOptions(
     /**
      * Check if the page has been expired.
      * A page is expired if
-     * 1. the last fetch time is before [expireAt]
+     * 1. the last fetch time is before [expireAt] and now is after [expireAt]
      * 2. (the last fetch time + [expires]) is passed
      * */
     fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
-        return now > expireAt || now >= prevFetchTime + expires
+        return (expireAt in prevFetchTime..now) || now >= prevFetchTime + expires
     }
 
     open fun itemOptions2MajorOptions() {
