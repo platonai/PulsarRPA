@@ -3,6 +3,8 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
+import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.ql.SQLSession
 import org.h2.api.ErrorCode
 import org.h2.engine.*
 import org.h2.jdbc.JdbcConnection

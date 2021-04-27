@@ -9,7 +9,6 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.udas.GroupCollect
 import ai.platon.pulsar.ql.h2.udas.GroupFetch
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
-import ai.platon.pulsar.ql.h2.udfs.StringFunctions
 import com.google.common.reflect.ClassPath
 import org.h2.api.Aggregate
 import org.h2.engine.Constants

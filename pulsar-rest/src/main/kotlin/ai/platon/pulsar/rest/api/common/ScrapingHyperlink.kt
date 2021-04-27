@@ -12,7 +12,7 @@ import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.ql.AbstractSQLContext
+import ai.platon.pulsar.ql.context.AbstractSQLContext
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest

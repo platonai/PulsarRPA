@@ -1,7 +1,10 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.ql.h2.H2Db
+import ai.platon.pulsar.ql.context.SQLContexts
 import org.junit.After
 import org.junit.Before
 import org.slf4j.LoggerFactory
@@ -18,6 +21,17 @@ abstract class TestBase {
     companion object {
         init {
             SQLContexts.activate()
+
+            /**
+             * Load options are in webpage scope, so it should be initialized after PulsarContextInitializer
+             * */
+            LoadOptionDefaults.apply {
+                parse = true
+                retryFailed = true
+                nJitRetry = 3
+                test = 1
+                browser = BrowserType.MOCK_CHROME
+            }
         }
 
         val log = LoggerFactory.getLogger(TestBase::class.java)

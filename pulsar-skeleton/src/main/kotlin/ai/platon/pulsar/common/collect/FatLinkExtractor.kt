@@ -165,7 +165,7 @@ class FatLinkExtractor(
         }
 
         val args = "-label ${options.label}"
-        val normalizedFatLink = normalizer?.invoke(fatLinkSpec) ?: fatLinkSpec
+        val normalizedFatLink = normalizer.invoke(fatLinkSpec) ?: fatLinkSpec
         val fatLink = CrawlableFatLink(normalizedFatLink, href = fatLinkSpec, args = args, tailLinks = vividLinks)
         return PageFatLink(page, fatLink)
     }
@@ -179,14 +179,6 @@ class FatLinkExtractor(
         val selector = options.outLinkSelector
         val urlRegex = options.outLinkPattern.toRegex()
 
-//        var normalizer = { url: String -> url }
-//        if (options.outLinkPattern.contains("/dp/")) {
-//            normalizer = { url: String -> url }
-//        }
-
-        /**
-         * TODO: should normalize the out links
-         * */
         return HyperlinkExtractor(page, document, selector, normalizer).extract()
             .asSequence()
             .onEach { ++counters.unfilteredLinks; ++globalCounters.unfilteredLinks }
@@ -194,20 +186,31 @@ class FatLinkExtractor(
             .onEach { ++counters.regexMatchedLinks; ++globalCounters.regexMatchedLinks }
             .filter { it !in denyList }
             .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
+            .mapNotNull { normalizeOrNull(it) }
             .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
             .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
             .onEach { it.args = "-i 0s" }
             .toList()
     }
 
+    private fun normalizeOrNull(hyperlink: Hyperlink): Hyperlink? {
+        val normUrl = normalizer(hyperlink.url)
+        return if (normUrl != null) {
+            hyperlink.also { it.url = normUrl }
+        } else null
+    }
+
     private fun loadVividLinks(
         page: WebPage, options: LoadOptions, denyList: Collection<Hyperlink>
     ): List<StatefulHyperlink> {
         val now = Instant.now()
-        // TODO: add flag to indicate whether the vivid links are expired
-        return page.vividLinks.asSequence()
-            .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, referer = page.url) }
+        val urlRegex = options.outLinkPattern.toRegex()
+        return page.vividLinks
+            .asSequence()
+            .mapNotNull { normalizer(it.key.toString())?.let { u -> u to it.value.toString() } }
+            .map { StatefulHyperlink(it.first, it.second, 0, referer = page.url) }
             .filterNot { it in denyList }
+            .filter { it.url.matches(urlRegex) }
             .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
             .onEach { it.args = "-i 0s" }
             .toList()

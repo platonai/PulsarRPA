@@ -32,7 +32,7 @@ class TestHyperlinkExtractors: TestBase() {
     }
 
     @Test
-    fun testFatLinkExtractor() {
+    fun testFatLinkExtractorWithNormalizer() {
         val extractor = FatLinkExtractor(session).apply { normalizer.addFirst(AsinUrlNormalizer()) }
         val url = session.normalize(portalUrl)
         url.options.outLinkSelector = "a[href~=/dp/]"
@@ -45,7 +45,7 @@ class TestHyperlinkExtractors: TestBase() {
         val tailLinks = fatLink.tailLinks
         tailLinks.forEachIndexed { i, l -> println("$i. $l") }
         tailLinks.forEach {
-            val asin = AmazonUrls.findAsin(it.url) ?: ""
+            val asin = AmazonUrls.findAsin(it.url) ?: "not-asin"
             assertTrue { asin in it.url }
             assertEquals(fatLink.url, it.referer)
         }

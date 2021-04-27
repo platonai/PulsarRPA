@@ -13,6 +13,7 @@ import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Test
 import java.nio.file.Files
 import java.sql.ResultSet
@@ -133,6 +134,7 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue((rs.getObject(1) as ValueDom).element.toString().contains("Hello World"))
     }
 
+    @Ignore("Ignored temporary")
     @Test
     fun testNetworkSerialization2() {
         val conn = remoteDB.getConnection("testNetworkSerialization2")
@@ -172,13 +174,13 @@ class TestJavaObjectSerializer : TestBase() {
             LIMIT 30"""
         val rs = stat.executeQuery(sql)
 
-        println(ResultSetFormatter(rs).toString())
-
         println(sql)
-        println(SysProperties.serializeJavaObject)
-        println(JdbcUtils.serializer.javaClass.name)
+        println(ResultSetFormatter(rs).toString())
+        println("serializeJavaObject: " + SysProperties.serializeJavaObject)
+        println("serializer: " + JdbcUtils.serializer.javaClass.name)
     }
 
+    @Ignore("Ignored temporary")
     @Test
     fun testNetworkSerialization4() {
         val sql = """SELECT DOM_DOC_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome');"""

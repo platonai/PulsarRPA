@@ -1,4 +1,4 @@
-package ai.platon.pulsar.ql
+package ai.platon.pulsar.ql.context
 
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.common.Systems
@@ -7,6 +7,8 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
+import ai.platon.pulsar.ql.AbstractSQLSession
+import ai.platon.pulsar.ql.SessionDelegate
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
 import org.h2.engine.SessionInterface

@@ -48,7 +48,7 @@ class TestCases: TestBase() {
 
     @Test
     fun testExtractTable() {
-        val url = "https://www.amazon.com/Dash-Mini-Maker-Individual-Breakfast/dp/B01M9I779L"
+        val url = "https://www.amazon.com/dp/B01M9I779L"
         val sql = """
             select
                 dom_all_texts(dom, '#comparison_title, tr.comparison_table_image_row th a[href~=/dp/]') as `Product name`,

@@ -3,7 +3,7 @@ package ai.platon.pulsar.qa.amazon
 import ai.platon.pulsar.common.XSQLRunner
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.ql.withSQLContext
+import ai.platon.pulsar.ql.context.withSQLContext
 
 fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql"

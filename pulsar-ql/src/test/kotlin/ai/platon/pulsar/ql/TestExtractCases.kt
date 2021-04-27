@@ -55,7 +55,7 @@ class TestExtractCases : TestBase() {
     }
 
     @Test
-    @Ignore
+    @Ignore("Ignored temporary")
     fun testBackgroundLoading() {
         val session = pc.createSession()
 
@@ -81,6 +81,7 @@ class TestExtractCases : TestBase() {
 
     @Test
     fun testExtractSinglePageForTmall() {
+        val url = "https://detail.tmall.com/item.htm?id=577089875457"
         val sql = """
 select
     dom_first_text(dom, 'h1') as title,
@@ -91,7 +92,7 @@ select
     dom_first_text(dom, '.tm-ind-reviewCount .tm-count') as review_count,
     dom_base_uri(dom)
 from
-    dom_load_and_select('https://detail.tmall.com/item.htm?id=577089875457 -i 1d -sc 20', ':root');
+    dom_load_and_select('$url -i 1d -sc 20', ':root');
 """
         execute(sql)
     }
@@ -131,8 +132,9 @@ SELECT
   DOM_FIRST_TEXT(DOM, '.pro-title-main') AS Title,
   DOM_FIRST_TEXT(DOM, '.price-sell') AS Price,
   DOM_FIRST_TEXT(DOM, '.g-pro-param') AS Parameters
-FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 10)
 """
+
         execute(sql)
     }
 

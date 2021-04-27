@@ -1,9 +1,8 @@
 package ai.platon.pulsar.ql
 
-import org.junit.Ignore
 import org.junit.Test
 
-class TestManual: TestBase() {
+class TestManual : TestBase() {
     private val productIndexUrl = TestResource.productIndexUrl
     private val productDetailUrl = TestResource.productDetailUrl
 
@@ -254,7 +253,8 @@ FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
     @Test
     fun monitorProductColumnForMia() {
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
-        val titleExpr = "TOP>=287 && TOP<=307 && LEFT==472 && width==560 && height>=27 && height<=54 && char>=34 && char<=41"
+        val titleExpr =
+            "TOP>=287 && TOP<=307 && LEFT==472 && width==560 && height>=27 && height<=54 && char>=34 && char<=41"
 
         val sql = """
 SELECT

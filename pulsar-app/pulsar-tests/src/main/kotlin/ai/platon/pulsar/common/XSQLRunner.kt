@@ -3,8 +3,8 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLConverter
 import ai.platon.pulsar.common.sql.SQLInstance
-import ai.platon.pulsar.ql.SQLContext
-import ai.platon.pulsar.ql.SQLContexts
+import ai.platon.pulsar.ql.context.SQLContext
+import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet

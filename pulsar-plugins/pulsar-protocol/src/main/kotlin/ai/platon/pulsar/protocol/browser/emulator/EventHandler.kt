@@ -309,7 +309,7 @@ open class EventHandler(
                     integrity.name, readableLength,
                     proxyEntry.display, domain, count, link, task.url)
         } else {
-            log.warn("{}. Page is {}({}) | file://{}", task.page.id, integrity.name, readableLength, link)
+            log.warn("{}. Page is {}({}) | file://{} | {}", task.page.id, integrity.name, readableLength, link, task.url)
         }
     }
 }
