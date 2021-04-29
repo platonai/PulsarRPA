@@ -159,8 +159,6 @@ class FatLinkExtractor(
         // update vivid links
         if (document != null) {
             val hyperlinks = vividLinks.map { HyperlinkPersistable(it.url, it.text, it.order) }
-            // page.addHyperlinks is optional, it keeps all historical hyperlinks
-            // page.addHyperlinks(hyperlinks)
             page.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
         }
 

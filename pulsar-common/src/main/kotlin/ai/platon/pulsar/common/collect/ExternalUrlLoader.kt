@@ -35,11 +35,11 @@ interface ExternalUrlLoader {
     /**
      * Save the url to the external repository
      * */
-    fun save(url: UrlAware, group: Int = 0)
+    fun save(url: UrlAware, group: Int = 0, priority: Int = Priority13.NORMAL.value)
     /**
      * Save all the url to the external repository
      * */
-    fun saveAll(urls: Iterable<UrlAware>, group: Int = 0)
+    fun saveAll(urls: Iterable<UrlAware>, group: Int = 0, priority: Int = Priority13.NORMAL.value)
     /**
      * If there are more items in the source
      * */
@@ -56,12 +56,15 @@ interface ExternalUrlLoader {
      * Load items from the source to the sink
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>,
-                  maxSize: Int = 100, group: Int = 0, priority: Int = Priority13.NORMAL.value): Collection<UrlAware>
+                  maxSize: Int = LOAD_SIZE, group: Int = 0, priority: Int = Priority13.NORMAL.value): Collection<UrlAware>
     /**
      * Load items from the source to the sink
      * */
     fun <T> loadToNow(sink: MutableCollection<T>,
-                      maxSize: Int = LOAD_SIZE, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
+                      maxSize: Int = LOAD_SIZE,
+                      group: Int = 0,
+                      priority: Int = Priority13.NORMAL.value,
+                      transformer: (UrlAware) -> T): Collection<T>
     /**
      * Load items from the source to the sink
      * */
@@ -91,7 +94,7 @@ abstract class AbstractExternalUrlLoader(
 
     override fun countRemaining(group: Int, priority: Int) = 0
 
-    override fun saveAll(urls: Iterable<UrlAware>, group: Int) = urls.forEach { save(it, group) }
+    override fun saveAll(urls: Iterable<UrlAware>, group: Int, priority: Int) = urls.forEach { save(it, group, priority) }
 
     override fun loadToNow(sink: MutableCollection<UrlAware>, maxSize: Int, group: Int, priority: Int) =
             loadToNow(sink, maxSize, group, priority) { it }

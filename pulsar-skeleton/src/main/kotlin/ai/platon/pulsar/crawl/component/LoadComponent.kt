@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
-import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
@@ -222,14 +221,14 @@ class LoadComponent(
 
         logger.debug("Fetching {} urls with options {}", pendingUrls.size, options)
         val updatedPages = try {
-            globalCache.fetchingUrls.addAll(pendingUrls)
+            globalCache.fetchingCache.addAll(pendingUrls)
             if (options.preferParallel) {
                 fetchComponent.parallelFetchAll(pendingUrls, options)
             } else {
                 fetchComponent.fetchAll(pendingUrls, options)
             }
         } finally {
-            globalCache.fetchingUrls.removeAll(pendingUrls)
+            globalCache.fetchingCache.removeAll(pendingUrls)
         }.filter { it.isNotInternal }
 
         if (options.parse) {
@@ -321,7 +320,7 @@ class LoadComponent(
 
         val url = normUrl.spec
         val options = normUrl.options
-        if (globalCache.fetchingUrls.contains(url)) {
+        if (globalCache.fetchingCache.contains(url)) {
             logger.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
             return WebPage.NIL
         }
@@ -384,13 +383,13 @@ class LoadComponent(
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         // require(page.options == options)
         page.setVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE, page.prevFetchTime)
-        globalCache.fetchingUrls.add(page.url)
+        globalCache.fetchingCache.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
 
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         update(page, options)
-        globalCache.fetchingUrls.remove(page.url)
+        globalCache.fetchingCache.remove(page.url)
 
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
@@ -412,7 +411,7 @@ class LoadComponent(
         }
 
         when {
-            globalCache.fetchingUrls.contains(url) -> return null
+            globalCache.fetchingCache.contains(url) -> return null
             fetchMetrics?.isFailed(url) == true -> return null
             fetchMetrics?.isTimeout(url) == true -> {
             }

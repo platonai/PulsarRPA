@@ -31,7 +31,7 @@ class ConcurrentNonReentrantLoadingQueue(
                 historyHash.add(hashCode)
                 implementation.add(url)
             } else {
-                loader.save(url, group)
+                overflow(url)
                 true
             }
         }
@@ -62,7 +62,7 @@ class ConcurrentNEntrantLoadingQueue(
                 historyHash.add(hashCode)
                 implementation.add(url)
             } else {
-                loader.save(url, group)
+                overflow(url)
                 true
             }
         }

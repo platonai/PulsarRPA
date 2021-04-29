@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.readable
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.max
 
 /**
  * The data collector interface
@@ -59,7 +60,9 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
 
     override var lastCollectedTime = Instant.EPOCH
 
-    override val collectTime: Duration get() = Duration.between(firstCollectTime, lastCollectedTime)
+    override val collectTime: Duration get() = if (lastCollectedTime > firstCollectTime) {
+            Duration.between(firstCollectTime, lastCollectedTime)
+        } else Duration.ZERO
 
     override fun collectTo(element: E, sink: MutableList<E>): Int {
         return collectTo(sink.size - 1, element, sink)
@@ -78,15 +81,14 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
     }
 
     override fun toString(): String {
-        val elapsedTime = Duration.between(firstCollectTime, lastCollectedTime)
-        val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
+        val elapsedSeconds = collectTime.seconds.coerceAtLeast(1)
         return String.format("%s - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
             name,
             collectedCount,
             String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
             collectCount,
             String.format("%.2f", 1.0 * collectCount / elapsedSeconds),
-            elapsedTime.readable(),
+            collectTime.readable(),
             size, estimatedSize,
             firstCollectTime, lastCollectedTime
         )
@@ -121,8 +123,7 @@ abstract class AbstractPriorityDataCollector<T>(
     constructor(priority: Priority13) : this(priority.value)
 
     override fun toString(): String {
-        val elapsedTime = Duration.between(firstCollectTime, lastCollectedTime)
-        val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
+        val elapsedSeconds = collectTime.seconds.coerceAtLeast(1)
         val priorityName = Priority13.valueOfOrNull(priority)?.let { "$it, $priority" } ?: "$priority"
         return String.format("%s(%s) - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
             name, priorityName,
@@ -130,7 +131,7 @@ abstract class AbstractPriorityDataCollector<T>(
             String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
             collectCount,
             String.format("%.2f", 1.0 * collectCount / elapsedSeconds),
-            elapsedTime.readable(),
+            collectTime.readable(),
             size, estimatedSize,
             firstCollectTime, lastCollectedTime
         )

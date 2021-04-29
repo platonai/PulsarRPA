@@ -22,6 +22,31 @@ typealias PageCatch = ConcurrentExpiringLRUCache<WebPage>
  * */
 typealias DocumentCatch = ConcurrentExpiringLRUCache<FeaturedDocument>
 
+class FetchingCache {
+
+    private val fetchingUrls = ConcurrentSkipListSet<String>()
+
+    fun isFetching(url: String) = fetchingUrls.contains(url)
+
+    fun add(url: String) {
+        fetchingUrls.add(url)
+    }
+
+    fun addAll(urls: Iterable<String>) {
+        fetchingUrls.addAll(urls)
+    }
+
+    fun remove(url: String) {
+        fetchingUrls.remove(url)
+    }
+
+    fun removeAll(urls: Iterable<String>) {
+        fetchingUrls.removeAll(urls)
+    }
+
+    operator fun contains(url: String) = fetchingUrls.contains(url)
+}
+
 /**
  * The global cache
  * */
@@ -47,11 +72,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
      * */
     open val documentCache = DocumentCatch(documentCacheCapacity)
 
-    open val fetchingUrls = ConcurrentSkipListSet<String>()
-
-    fun isFetching(url: String) = fetchingUrls.contains(url)
-
-    fun isFetching(url: UrlAware) = isFetching(url.url)
+    open val fetchingCache = FetchingCache()
 
     /**
      * Put page and document to cache

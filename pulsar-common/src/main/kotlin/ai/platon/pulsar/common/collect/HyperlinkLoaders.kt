@@ -18,7 +18,7 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
 
     val fetchUrls = mutableListOf<Hyperlink>()
 
-    override fun save(url: UrlAware, group: Int) {
+    override fun save(url: UrlAware, group: Int, priority: Int) {
         val hyperlink = if (url is Hyperlink) url else Hyperlink(url)
         val json = gson.toJson(hyperlink.data())
         Files.writeString(path, "$group$delimiter$json\n", StandardOpenOption.APPEND)

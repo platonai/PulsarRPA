@@ -19,6 +19,8 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
     val estimatedExternalSize: Int
 
     fun shuffle()
+
+    fun overflow(url: UrlAware)
 }
 
 /**
@@ -49,7 +51,7 @@ abstract class AbstractLoadingQueue(
      * Query the underlying database, try to use estimatedExternalSize
      * */
     override val externalSize: Int
-        get() = loader.countRemaining()
+        get() = loader.countRemaining(group, priority)
 
     override val estimatedExternalSize: Int
         get() = expiringCache.computeIfAbsent(ESTIMATED_EXTERNAL_SIZE_KEY) { externalSize }
@@ -89,11 +91,18 @@ abstract class AbstractLoadingQueue(
     override fun add(url: UrlAware) = offer(url)
 
     @Synchronized
+    override fun addAll(urls: Collection<UrlAware>): Boolean {
+        // TODO: optimize using loader.saveAll()
+        urls.forEach { add(it) }
+        return true
+    }
+
+    @Synchronized
     override fun offer(url: UrlAware): Boolean {
         return if (!url.isPersistable || freeSlots > 0) {
             implementation.add(url)
         } else {
-            loader.save(url, group)
+            overflow(url)
             true
         }
     }
@@ -120,6 +129,10 @@ abstract class AbstractLoadingQueue(
     override fun poll(): UrlAware? {
         peek()
         return implementation.poll()
+    }
+
+    override fun overflow(url: UrlAware) {
+        loader.save(url, group, priority)
     }
 
     private fun tryRefresh(): AbstractLoadingQueue {

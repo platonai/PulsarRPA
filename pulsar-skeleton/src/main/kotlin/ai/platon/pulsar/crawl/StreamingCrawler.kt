@@ -418,17 +418,17 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry(url: UrlAware, page: WebPage?) {
-        if (globalCache == null || globalCache.isFetching(url)) {
+        if (globalCache == null || globalCache.fetchingCache.contains(url.url)) {
             return
         }
 
         val retries = 1L + (page?.fetchRetries ?: 0)
         val delay = Duration.ofMinutes(5L + 5 * retries)
-        val cache = globalCache.fetchCacheManager.delayCache
         // fetch immediately, do not check the database
         url.args += " -i 0s"
         if (retries <= 3) {
-            cache.add(DelayUrl(url, delay))
+            val delayCache = globalCache.fetchCacheManager.delayCache
+            delayCache.add(DelayUrl(url, delay))
             globalMetrics.retries.mark()
             if (page != null) {
                 log.info("{}", LoadedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
