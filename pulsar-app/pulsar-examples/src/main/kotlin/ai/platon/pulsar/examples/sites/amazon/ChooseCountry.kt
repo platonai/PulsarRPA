@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
         if (gui) {
             System.clearProperty(CapabilityTypes.BROWSER_LAUNCH_SUPERVISOR_PROCESS)
             unmodifiedConfig.unset(CapabilityTypes.BROWSER_LAUNCH_SUPERVISOR_PROCESS)
-            unmodifiedConfig.set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+            System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
         }
         System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "false")
         System.setProperty(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator")

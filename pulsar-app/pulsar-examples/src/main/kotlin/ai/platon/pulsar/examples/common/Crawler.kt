@@ -51,7 +51,7 @@ open class Crawler(
     fun load(url: String, args: String) = load(url, i.options(args))
 
     fun load(url: String, options: LoadOptions) {
-        val page = i.load(url)
+        val page = i.load(url, options)
         val doc = i.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()

@@ -467,6 +467,14 @@
                 <artifactId>pulsar-qa</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-qa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+            </dependency>
 
             <!-- Other dependency -->
             <dependency>

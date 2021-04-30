@@ -31,6 +31,23 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-ql</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-app-common-resources</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-qa</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
     </dependencies>
 
 </project>

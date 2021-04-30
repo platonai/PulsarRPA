@@ -19,29 +19,6 @@ class TestDataCollectors : TestBase() {
     private val lowerCacheSize = 10
 
     @Test
-    fun testLoadingFetchCache() {
-        val fetchCache = LoadingFetchCache("", urlLoader)
-        // auto loaded
-        assertTrue { fetchCache.size > 0 }
-        fetchCache.load()
-        assertTrue { fetchCache.size > 0 }
-    }
-
-    @Test
-    fun `when collect from collector with loading fetch cache then sink has items`() {
-        val source = LoadingFetchCache("", urlLoader)
-        val sink = mutableListOf<Hyperlink>()
-
-        assertTrue { source.size > 0 }
-        assertTrue { sink.isEmpty() }
-
-        val collector = FetchCacheCollector(source, source.priority)
-        collector.collectTo(sink)
-
-        assertTrue { sink.isNotEmpty() }
-    }
-
-    @Test
     fun `when add a item to queue then queue is not empty`() {
         val source = LoadingFetchCache("", TemporaryLocalFileUrlLoader())
         val sink = mutableListOf<Hyperlink>()

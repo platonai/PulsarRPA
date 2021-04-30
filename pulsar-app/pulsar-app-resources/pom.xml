@@ -15,6 +15,5 @@
 
     <modules>
         <module>pulsar-app-common-resources</module>
-        <module>pulsar-amazon-resources</module>
     </modules>
 </project>

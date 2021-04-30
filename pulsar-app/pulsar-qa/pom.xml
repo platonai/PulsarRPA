@@ -11,64 +11,75 @@
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-app</artifactId>
-        <version>1.6.0-SNAPSHOT</version>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>ai.platon.pulsar</groupId>
+    <artifactId>pulsar-app</artifactId>
+    <version>1.6.0-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>pulsar-qa</artifactId>
-    <name>Pulsar QA</name>
+  <artifactId>pulsar-qa</artifactId>
+  <name>Pulsar QA</name>
 
-    <dependencies>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-protocol</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-ql</artifactId>
-        </dependency>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-tests</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-amazon-resources</artifactId>
-            <version>1.6.0-SNAPSHOT</version>
-        </dependency>
+  <dependencies>
+    <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-protocol</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-ql</artifactId>
+    </dependency>
 
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
+    <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-tests</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>org.junit.jupiter</groupId>-->
-        <!--            <artifactId>junit-jupiter-engine</artifactId>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
-        <dependency>
-            <groupId>com.ninja-squad</groupId>
-            <artifactId>springmockk</artifactId>
-            <version>1.1.2</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-test-junit</artifactId>
+      <version>${kotlin.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!--        <dependency>-->
+    <!--            <groupId>org.junit.jupiter</groupId>-->
+    <!--            <artifactId>junit-jupiter-engine</artifactId>-->
+    <!--            <scope>test</scope>-->
+    <!--        </dependency>-->
+    <dependency>
+      <groupId>com.ninja-squad</groupId>
+      <artifactId>springmockk</artifactId>
+      <version>1.1.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
 </project>
