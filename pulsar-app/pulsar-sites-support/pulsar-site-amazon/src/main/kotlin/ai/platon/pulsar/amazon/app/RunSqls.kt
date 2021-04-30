@@ -1,9 +1,10 @@
-package ai.platon.pulsar.qa.amazon
+package ai.platon.pulsar.amazon.app
 
-import ai.platon.pulsar.common.XSQLRunner
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.ql.context.withSQLContext
+import ai.platon.pulsar.test.XSQLRunner
+import kotlin.system.exitProcess
 
 fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
@@ -20,7 +21,7 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     val sellerAsinUrl =
         "https://www.amazon.com/Wireless-Bluetooth-Ear-TWS-Headphones-Waterproof/dp/B07ZQCST89/ref=sr_1_1?dchild=1&m=A2QJQR8DPHL921&marketplaceID=ATVPDKIKX0DER&qid=1595908896&s=merchant-items&sr=1-1"
     val sellerBrandListUrl = "https://www.amazon.com/s?me=A2QJQR8DPHL921&marketplaceID=ATVPDKIKX0DER"
-    val keywordAsinList = "https://www.amazon.com/s?i=pets&rh=n%3A2619533011&page=4&qid=1608869551&ref=sr_pg_4"
+    val keywordAsinList = "https://www.amazon.com/s?k=Bike+Rim+Brake+Sets&rh=n%3A6389286011&page=31"
     val categoryListUrl =
         "https://www.amazon.com/b?node=16225007011&pf_rd_r=345GN7JFE6VHWVT896VY&pf_rd_p=e5b0c85f-569c-4c90-a58f-0c0a260e45a0"
     val productReviewUrl =
@@ -50,7 +51,9 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     ).map { it.first to "$resourcePrefix/${it.second}" }
 
     cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    val xsqlFilter = { xsql: String -> "x-similar-items.sql" in xsql }
-//    val xsqlFilter = { xsql: String -> true }
+    val xsqlFilter = { xsql: String -> "keyword-asin-extract.sql" in xsql }
+    // val xsqlFilter = { xsql: String -> true }
     XSQLRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
+
+    exitProcess(0)
 }

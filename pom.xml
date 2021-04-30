@@ -475,6 +475,11 @@
                 <classifier>tests</classifier>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Other dependency -->
             <dependency>

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.qa
 
-import ai.platon.pulsar.common.XSQLRunner
+import ai.platon.pulsar.test.XSQLRunner
 import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import java.sql.ResultSet

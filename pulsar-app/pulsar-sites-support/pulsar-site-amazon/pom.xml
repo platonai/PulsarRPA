@@ -33,6 +33,10 @@
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-tests</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql</artifactId>
         </dependency>
 
