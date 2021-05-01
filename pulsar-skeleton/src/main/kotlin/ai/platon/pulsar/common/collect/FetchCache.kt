@@ -1,12 +1,7 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.*
-import java.time.Duration
-import java.time.Instant
+import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -23,7 +18,7 @@ interface FetchCache {
 
 open class ConcurrentFetchCache(
     override val name: String = "",
-    conf: ImmutableConfig
+    conf: ImmutableConfig,
 ) : FetchCache {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
@@ -31,10 +26,22 @@ open class ConcurrentFetchCache(
 }
 
 class LoadingFetchCache(
+    /**
+     * The cache name, a loading fetch cache requires a unique name
+     * */
     override val name: String = "",
+    /**
+     * The external url loader
+     * */
     val urlLoader: ExternalUrlLoader,
-    val priority: Int = Priority13.NORMAL.value,
-    val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
+    /**
+     * The priority
+     * */
+    val priority: Int,
+    /**
+     * The cache capacity
+     * */
+    val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
 ) : FetchCache, Loadable<UrlAware> {
 
     companion object {
@@ -43,9 +50,11 @@ class LoadingFetchCache(
         const val G_REENTRANT = 3
     }
 
-    override val nonReentrantQueue = ConcurrentNonReentrantLoadingQueue(urlLoader, G_NON_REENTRANT, priority, capacity)
-    override val nReentrantQueue = ConcurrentNEntrantLoadingQueue(urlLoader, 3, G_N_ENTRANT, priority, capacity)
-    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, G_REENTRANT, priority, capacity)
+    override val nonReentrantQueue =
+        ConcurrentNonReentrantLoadingQueue(urlLoader, UrlGroup(name, G_NON_REENTRANT, priority), capacity)
+    override val nReentrantQueue =
+        ConcurrentNEntrantLoadingQueue(urlLoader, UrlGroup(name, G_N_ENTRANT, priority), 3, capacity)
+    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, UrlGroup(name, G_REENTRANT, priority), capacity)
     override val queues: Array<Queue<UrlAware>>
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     override val size get() = queues.sumOf { it.size }

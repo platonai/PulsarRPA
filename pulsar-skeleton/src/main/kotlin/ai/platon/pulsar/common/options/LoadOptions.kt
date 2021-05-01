@@ -75,6 +75,11 @@ open class LoadOptions(
     var taskTime = LoadOptionDefaults.taskTime
 
     @ApiPublic
+    @Parameter(names = ["-deadTime", "--dead-time"], converter = InstantConverter::class,
+        description = "The dead time, if now > deadTime, the task should be discarded as soon as possible")
+    var deadTime = Instant.now() + ChronoUnit.DECADES.duration
+
+    @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
@@ -377,6 +382,10 @@ open class LoadOptions(
     fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
         return (expireAt in prevFetchTime..now) || now >= prevFetchTime + expires
+    }
+
+    fun isDead(): Boolean {
+        return deadTime < Instant.now()
     }
 
     open fun itemOptions2MajorOptions() {

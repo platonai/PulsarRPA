@@ -125,6 +125,26 @@ object DateTimes {
         return format(LocalDateTime.now())
     }
 
+    fun startOfHour(): Instant {
+        return Instant.now().truncatedTo(ChronoUnit.HOURS)
+    }
+
+    fun endOfHour(): Instant {
+        return Instant.now().truncatedTo(ChronoUnit.HOURS).plus(Duration.ofHours(1))
+    }
+
+    fun startOfDay(): Instant {
+        return LocalDate.now().atStartOfDay().toInstant(zoneOffSet)
+    }
+
+    fun endOfDay(): Instant {
+        return LocalDate.now().atStartOfDay().toInstant(zoneOffSet).plus(Duration.ofHours(24))
+    }
+
+    fun timePointOfDay(hour: Int, minute: Int = 0, second: Int = 0): Instant {
+        return LocalDate.now().atTime(hour, minute, second).toInstant(zoneOffSet)
+    }
+
     fun elapsedTime(): Duration {
         return elapsedTime(startTime, Instant.now())
     }

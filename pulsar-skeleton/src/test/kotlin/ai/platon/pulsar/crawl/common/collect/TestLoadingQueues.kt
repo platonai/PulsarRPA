@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.common.collect
 import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingQueue
 import ai.platon.pulsar.common.collect.FetchCacheCollector
 import ai.platon.pulsar.common.collect.LoadingFetchCache
+import ai.platon.pulsar.common.collect.UrlGroup
 import ai.platon.pulsar.common.urls.Hyperlink
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -12,7 +13,7 @@ class TestLoadingQueues: TestBase() {
 
     @Test
     fun `When create a LoadingFetchCache then the first page is loaded`() {
-        val fetchCache = LoadingFetchCache("", urlLoader)
+        val fetchCache = LoadingFetchCache("", urlLoader, group.priority)
         // auto loaded
         assertTrue { fetchCache.size > 0 }
         fetchCache.load()
@@ -21,7 +22,7 @@ class TestLoadingQueues: TestBase() {
 
     @Test
     fun `When collect from collector with loading fetch cache then sink has items`() {
-        val source = LoadingFetchCache("", urlLoader)
+        val source = LoadingFetchCache("", urlLoader, group.priority)
         val sink = mutableListOf<Hyperlink>()
 
         assertTrue { source.size > 0 }
@@ -35,7 +36,7 @@ class TestLoadingQueues: TestBase() {
 
     @Test
     fun testConcurrentNEntrantLoadingQueue() {
-        val queue = ConcurrentNEntrantLoadingQueue(urlLoader)
+        val queue = ConcurrentNEntrantLoadingQueue(urlLoader, group)
         queue.load()
 
         assertTrue { queue.isNotEmpty() }

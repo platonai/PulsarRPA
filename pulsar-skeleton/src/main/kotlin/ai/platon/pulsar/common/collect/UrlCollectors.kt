@@ -284,8 +284,12 @@ open class FetchCacheCollector(
 
     constructor(fetchCache: FetchCache, priority: Priority13) : this(fetchCache, priority.value)
 
+    /**
+     * If the fetch cache is a LoadingFetchCache, the items can be both in memory or in external source,
+     * so even if all queues are empty, hasMore can return true
+     * */
     @Synchronized
-    override fun hasMore() = queues.any { it.isNotEmpty() }
+    override fun hasMore() = estimatedSize > 0
 
     @Synchronized
     override fun collectTo(sink: MutableList<Hyperlink>): Int {

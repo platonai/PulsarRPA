@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
@@ -28,8 +27,7 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
  * */
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
-        val group: Int = 0,
-        val priority: Int = Priority13.NORMAL.value,
+        val group: UrlGroup,
         val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 
@@ -51,7 +49,7 @@ abstract class AbstractLoadingQueue(
      * Query the underlying database, try to use estimatedExternalSize
      * */
     override val externalSize: Int
-        get() = loader.countRemaining(group, priority)
+        get() = loader.countRemaining(group)
 
     override val estimatedExternalSize: Int
         get() = expiringCache.computeIfAbsent(ESTIMATED_EXTERNAL_SIZE_KEY) { externalSize }
@@ -62,20 +60,17 @@ abstract class AbstractLoadingQueue(
     @get:Synchronized
     val isFull get() = freeSlots == 0
 
-    constructor(loader: ExternalUrlLoader, group: Int, priority: Priority13 = Priority13.NORMAL)
-            : this(loader, group, priority.value)
-
     @Synchronized
     override fun load() {
         if (freeSlots > 0) {
-            loader.loadTo(implementation, freeSlots, group, priority)
+            loader.loadTo(implementation, freeSlots, group)
         }
     }
 
     @Synchronized
     override fun loadNow(): Collection<UrlAware> {
         return if (freeSlots > 0) {
-            loader.loadToNow(implementation, freeSlots, group, priority)
+            loader.loadToNow(implementation, freeSlots, group)
         } else listOf()
     }
 
@@ -132,7 +127,7 @@ abstract class AbstractLoadingQueue(
     }
 
     override fun overflow(url: UrlAware) {
-        loader.save(url, group, priority)
+        loader.save(url, group)
     }
 
     private fun tryRefresh(): AbstractLoadingQueue {

@@ -79,6 +79,7 @@ open class StreamingCrawler<T : UrlAware>(
         private val instanceSequencer = AtomicInteger()
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
+        private val globalKilledTasks = AtomicInteger()
 
         private val globalMetrics = StreamingCrawlerMetrics()
 
@@ -96,6 +97,7 @@ open class StreamingCrawler<T : UrlAware>(
             mapOf(
                 "globalRunningInstances" to Gauge { globalRunningInstances.get() },
                 "globalRunningTasks" to Gauge { globalRunningTasks.get() },
+                "globalKilledTasks" to Gauge { globalKilledTasks.get() },
 
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
@@ -366,6 +368,11 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
         // apply the default options, arguments in the url has the highest priority
         val options = session.options("$defaultArgs ${url.args}")
+        if (options.isDead()) {
+            globalKilledTasks.incrementAndGet()
+            log.info("Task is killed | {}", url.configuredUrl)
+            return null
+        }
 
         return session.runCatching { loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }

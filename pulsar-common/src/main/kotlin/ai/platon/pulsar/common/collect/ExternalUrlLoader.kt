@@ -1,10 +1,23 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
-import kotlin.jvm.Throws
+
+data class UrlGroup(
+    /**
+     * The job id
+     * */
+    val jobId: String,
+    /**
+     * The queue group
+     * */
+    val group: Int,
+    /**
+     * The priority
+     * */
+    val priority: Int
+)
 
 /**
  * */
@@ -35,11 +48,11 @@ interface ExternalUrlLoader {
     /**
      * Save the url to the external repository
      * */
-    fun save(url: UrlAware, group: Int = 0, priority: Int = Priority13.NORMAL.value)
+    fun save(url: UrlAware, group: UrlGroup)
     /**
      * Save all the url to the external repository
      * */
-    fun saveAll(urls: Iterable<UrlAware>, group: Int = 0, priority: Int = Priority13.NORMAL.value)
+    fun saveAll(urls: Iterable<UrlAware>, group: UrlGroup)
     /**
      * If there are more items in the source
      * */
@@ -51,31 +64,23 @@ interface ExternalUrlLoader {
     /**
      * Count remaining size
      * */
-    fun countRemaining(group: Int, priority: Int): Int
+    fun countRemaining(group: UrlGroup): Int
     /**
      * Load items from the source to the sink
      * */
-    fun loadToNow(sink: MutableCollection<UrlAware>,
-                  maxSize: Int = LOAD_SIZE, group: Int = 0, priority: Int = Priority13.NORMAL.value): Collection<UrlAware>
+    fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup): Collection<UrlAware>
     /**
      * Load items from the source to the sink
      * */
-    fun <T> loadToNow(sink: MutableCollection<T>,
-                      maxSize: Int = LOAD_SIZE,
-                      group: Int = 0,
-                      priority: Int = Priority13.NORMAL.value,
-                      transformer: (UrlAware) -> T): Collection<T>
+    fun <T> loadToNow(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T): Collection<T>
     /**
      * Load items from the source to the sink
      * */
-    fun loadTo(sink: MutableCollection<UrlAware>,
-               maxSize: Int = LOAD_SIZE, group: Int = 0, priority: Int = Priority13.NORMAL.value)
+    fun loadTo(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup)
     /**
      * Load items from the source to the sink
      * */
-    fun <T> loadTo(sink: MutableCollection<T>,
-                   maxSize: Int = LOAD_SIZE, group: Int = 0, priority: Int = Priority13.NORMAL.value,
-                   transformer: (UrlAware) -> T)
+    fun <T> loadTo(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T)
 }
 
 abstract class AbstractExternalUrlLoader(
@@ -92,24 +97,22 @@ abstract class AbstractExternalUrlLoader(
 
     override fun countRemaining() = 0
 
-    override fun countRemaining(group: Int, priority: Int) = 0
+    override fun countRemaining(group: UrlGroup) = 0
 
-    override fun saveAll(urls: Iterable<UrlAware>, group: Int, priority: Int) = urls.forEach { save(it, group, priority) }
+    override fun saveAll(urls: Iterable<UrlAware>, group: UrlGroup) = urls.forEach { save(it, group) }
 
-    override fun loadToNow(sink: MutableCollection<UrlAware>, maxSize: Int, group: Int, priority: Int) =
-            loadToNow(sink, maxSize, group, priority) { it }
+    override fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup) =
+            loadToNow(sink, size, group) { it }
 
-    override fun loadTo(sink: MutableCollection<UrlAware>,
-                        maxSize: Int, group: Int, priority: Int) = loadTo(sink, maxSize, group, priority) { it }
+    override fun loadTo(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup) = loadTo(sink, size, group) { it }
 
-    override fun <T> loadTo(sink: MutableCollection<T>,
-                            maxSize: Int, group: Int, priority: Int, transformer: (UrlAware) -> T) {
+    override fun <T> loadTo(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T) {
         if (!isExpired) {
             return
         }
 
         lastLoadTime = Instant.now()
 
-        loadToNow(sink, maxSize, group, priority, transformer)
+        loadToNow(sink, size, group, transformer)
     }
 }

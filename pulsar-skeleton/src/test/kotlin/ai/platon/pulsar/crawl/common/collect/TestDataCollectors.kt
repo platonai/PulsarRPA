@@ -19,8 +19,8 @@ class TestDataCollectors : TestBase() {
     private val lowerCacheSize = 10
 
     @Test
-    fun `when add a item to queue then queue is not empty`() {
-        val source = LoadingFetchCache("", TemporaryLocalFileUrlLoader())
+    fun `When add a item to queue then queue is not empty`() {
+        val source = LoadingFetchCache("", TemporaryLocalFileUrlLoader(), 0)
         val sink = mutableListOf<Hyperlink>()
 
         source.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
@@ -33,10 +33,10 @@ class TestDataCollectors : TestBase() {
     }
 
     @Test
-    fun `when add an item to LoadingFetchCache then LoadingIterable has next`() {
-        val fetchCache = LoadingFetchCache("", TemporaryLocalFileUrlLoader())
+    fun `When add an item to LoadingFetchCache then LoadingIterable has next`() {
+        val fetchCache = LoadingFetchCache("", TemporaryLocalFileUrlLoader(), 0)
         fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
-        assertTrue { fetchCache.size == 1 }
+        assertEquals(1, fetchCache.size)
 
         val collectors: MutableList<PriorityDataCollector<Hyperlink>> = Collections.synchronizedList(LinkedList())
         collectors += FetchCacheCollector(fetchCache, fetchCache.priority)
@@ -97,7 +97,7 @@ class TestDataCollectors : TestBase() {
     }
 
     @Test
-    fun `when iterate through fetch iterable then items are correct`() {
+    fun `When iterate through fetch iterable then items are correct`() {
         val fetchIterable = MultiSourceHyperlinkIterable(fetchCacheManager, lowerCacheSize)
         val resourceURI = ResourceLoader.getResource("seeds/head100/best-sellers.txt")!!.toURI()
         val collector = LocalFileHyperlinkCollector(Paths.get(resourceURI), Priority13.NORMAL)

@@ -18,35 +18,25 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
 
     val fetchUrls = mutableListOf<Hyperlink>()
 
-    override fun save(url: UrlAware, group: Int, priority: Int) {
+    override fun save(url: UrlAware, group: UrlGroup) {
         val hyperlink = if (url is Hyperlink) url else Hyperlink(url)
         val json = gson.toJson(hyperlink.data())
-        Files.writeString(path, "$group$delimiter$json\n", StandardOpenOption.APPEND)
+        Files.writeString(path, "${group.group}$delimiter$json\n", StandardOpenOption.APPEND)
     }
 
-    override fun loadToNow(sink: MutableCollection<UrlAware>, maxSize: Int, group: Int, priority: Int): Collection<UrlAware> {
-        when {
-            maxSize < 0 -> throw IllegalArgumentException("maxSize should be >= 0")
-            maxSize == 0 -> return listOf()
-        }
-
-        val g = "$group"
+    override fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup): Collection<UrlAware> {
+        val g = "${group.group}"
         runCatching {
-            Files.readAllLines(path).asSequence().take(maxSize).mapNotNullTo(sink) { parse(it, g) }
+            Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
 
         return sink
     }
 
-    override fun <T> loadToNow(sink: MutableCollection<T>, maxSize: Int, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T> {
-        when {
-            maxSize < 0 -> throw IllegalArgumentException("maxSize should be >= 0")
-            maxSize == 0 -> return listOf()
-        }
-
-        val g = "$group"
+    override fun <T> loadToNow(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T): Collection<T> {
+        val g = "${group.group}"
         runCatching {
-            Files.readAllLines(path).asSequence().take(maxSize).mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
+            Files.readAllLines(path).mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
 
         return sink
