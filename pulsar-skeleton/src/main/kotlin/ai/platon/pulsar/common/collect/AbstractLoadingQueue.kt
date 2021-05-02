@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.util.*
@@ -112,17 +113,13 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun peek(): UrlAware? {
-        var url = implementation.peek()
-        while (url == null && loader.hasMore()) {
-            loadNow()
-            url = implementation.peek()
-        }
-        return url
+        tryRefresh()
+        return implementation.peek()
     }
 
     @Synchronized
     override fun poll(): UrlAware? {
-        peek()
+        tryRefresh()
         return implementation.poll()
     }
 

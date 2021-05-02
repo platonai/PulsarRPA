@@ -3,13 +3,12 @@ package ai.platon.pulsar.crawl.common.collect
 import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingQueue
 import ai.platon.pulsar.common.collect.FetchCacheCollector
 import ai.platon.pulsar.common.collect.LoadingFetchCache
-import ai.platon.pulsar.common.collect.UrlGroup
 import ai.platon.pulsar.common.urls.Hyperlink
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class TestLoadingQueues: TestBase() {
+class TestLoadingQueues : TestBase() {
 
     @Test
     fun `When create a LoadingFetchCache then the first page is loaded`() {

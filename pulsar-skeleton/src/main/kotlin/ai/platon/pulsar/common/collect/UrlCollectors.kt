@@ -299,6 +299,9 @@ open class FetchCacheCollector(
     }
 
     private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
+        if (queue is LoadingQueue && queue.estimatedExternalSize == 0) {
+            return 0
+        }
         return queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it)) }?.let { 1 } ?: 0
     }
 }

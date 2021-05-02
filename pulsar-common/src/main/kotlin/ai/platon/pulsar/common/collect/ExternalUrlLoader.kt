@@ -58,6 +58,10 @@ interface ExternalUrlLoader {
      * */
     fun hasMore(): Boolean
     /**
+     * If there are more items in the source
+     * */
+    fun hasMore(group: UrlGroup): Boolean
+    /**
      * Count remaining size
      * */
     fun countRemaining(): Int
@@ -93,7 +97,14 @@ abstract class AbstractExternalUrlLoader(
 
     override fun expire() { lastLoadTime = Instant.EPOCH }
     override fun reset() { lastLoadTime = Instant.EPOCH }
-    override fun hasMore(): Boolean = isExpired
+    /**
+     * If there are more items in the source
+     * */
+    override fun hasMore(): Boolean = isExpired && countRemaining() > 0
+    /**
+     * If there are more items in the source
+     * */
+    override fun hasMore(group: UrlGroup): Boolean = isExpired && countRemaining(group) > 0
 
     override fun countRemaining() = 0
 
