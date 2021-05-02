@@ -41,11 +41,14 @@ object DateTimes {
      * See also [Tz_database](https://en.wikipedia.org/wiki/Tz_database)
      * */
     var zoneOffSet = ZoneOffset.of("+08:00")
-
     /**
-     * Date time
+     * The time to start the program
      */
     val startTime = Instant.now()
+    /**
+     * Mind nothing after doomsday
+     * */
+    val doomsday = Instant.parse("2100-01-01T00:00:00Z")
 
     val midnight get() = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
     val startOfHour get() = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)

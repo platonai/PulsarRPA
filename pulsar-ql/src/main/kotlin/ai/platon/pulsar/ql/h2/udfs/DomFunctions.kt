@@ -439,13 +439,13 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun width(dom: ValueDom): Double {
-        return getFeature(dom, WIDTH)
+        return getFeature(dom, WIDTH).coerceAtLeast(1.0)
     }
 
     @UDFunction
     @JvmStatic
     fun height(dom: ValueDom): Double {
-        return getFeature(dom, HEIGHT)
+        return getFeature(dom, HEIGHT).coerceAtLeast(1.0)
     }
 
     @UDFunction(description = "Get the area of the css box of a DOM, area = width * height")

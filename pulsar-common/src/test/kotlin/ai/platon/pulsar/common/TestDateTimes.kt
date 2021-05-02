@@ -66,6 +66,16 @@ class TestDateTimes {
     }
 
     @Test
+    fun testDoomsday() {
+        val doomsday = DateTimes.doomsday
+        println(doomsday.epochSecond)
+        println(doomsday.epochSecond / 60)
+        assertTrue { doomsday.epochSecond > Int.MAX_VALUE }
+        assertTrue { doomsday.epochSecond < Long.MAX_VALUE }
+        assertTrue { doomsday.toEpochMilli() < Long.MAX_VALUE }
+    }
+
+    @Test
     fun testChronoFields() {
         // println(instant.getLong(ChronoField.MILLI_OF_SECOND))
         assertEquals(520, instant.getLong(ChronoField.MILLI_OF_SECOND))

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.SIB
@@ -16,6 +17,7 @@ import ai.platon.pulsar.ql.h2.Queries.toResultSet
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
 import ai.platon.pulsar.ql.annotation.H2Context
+import ai.platon.pulsar.ql.h2.Queries.toDOMResultSet
 import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
@@ -57,11 +59,12 @@ object DomFunctionTables {
             url: String, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<ValueDom>())
+            return toDOMResultSet(FeaturedDocument.NIL, listOf())
         }
 
-        val elements = session.loadDocument(url).select(cssQuery, offset, limit)
-        return toResultSet("DOM", elements.map { domValue(it) })
+        val document = session.loadDocument(url)
+        val elements = document.select(cssQuery, offset, limit)
+        return toDOMResultSet(document, elements.map { domValue(it) })
     }
 
     @JvmStatic

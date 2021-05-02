@@ -103,7 +103,7 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCat
     /**
      * The real time fetch cache
      * */
-    override val realTimeCache: FetchCache = ConcurrentFetchCache("realtime", conf)
+    override val realTimeCache: FetchCache = ConcurrentFetchCache("realtime")
 
     /**
      * The delayed fetch cache
@@ -112,7 +112,7 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCat
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority13.values().forEach { caches[it.value] = ConcurrentFetchCache(it.name, conf) }
+            Priority13.values().forEach { caches[it.value] = ConcurrentFetchCache(it.name) }
         }
     }
 }

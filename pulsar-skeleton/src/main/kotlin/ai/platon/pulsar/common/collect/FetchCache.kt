@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -17,8 +16,7 @@ interface FetchCache {
 }
 
 open class ConcurrentFetchCache(
-    override val name: String = "",
-    conf: ImmutableConfig,
+    override val name: String = ""
 ) : FetchCache {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
@@ -59,7 +57,7 @@ class LoadingFetchCache(
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     override val size get() = queues.sumOf { it.size }
     override val estimatedSize: Int
-        get() = queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.size + it.estimatedExternalSize }
+        get() = size + queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.estimatedExternalSize }
 
     override fun load() {
         queues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load() }

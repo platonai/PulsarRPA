@@ -289,7 +289,7 @@ open class FetchCacheCollector(
      * so even if all queues are empty, hasMore can return true
      * */
     @Synchronized
-    override fun hasMore() = estimatedSize > 0
+    override fun hasMore() = size > 0 || fetchCache.estimatedSize > 0
 
     @Synchronized
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
@@ -299,7 +299,7 @@ open class FetchCacheCollector(
     }
 
     private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
-        if (queue is LoadingQueue && queue.estimatedExternalSize == 0) {
+        if (queue is LoadingQueue && queue.size == 0 && queue.estimatedExternalSize == 0) {
             return 0
         }
         return queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it)) }?.let { 1 } ?: 0

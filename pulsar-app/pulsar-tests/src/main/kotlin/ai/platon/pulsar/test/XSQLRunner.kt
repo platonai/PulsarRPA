@@ -14,7 +14,7 @@ class XSQLRunner(
 ) {
     private val log = LoggerFactory.getLogger(XSQLRunner::class.java)
 
-    val loadArgs = "-retry -nJitRetry 3"
+    val loadArgs = "-i 0s -retry -nJitRetry 3"
     val extractor = VerboseSQLExtractor(cx)
     val session = extractor.session
 

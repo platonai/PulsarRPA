@@ -49,6 +49,7 @@ abstract class AbstractLoadingQueue(
     /**
      * Query the underlying database, try to use estimatedExternalSize
      * */
+    @get:Synchronized
     override val externalSize: Int
         get() = loader.countRemaining(group)
 
@@ -123,6 +124,7 @@ abstract class AbstractLoadingQueue(
         return implementation.poll()
     }
 
+    @Synchronized
     override fun overflow(url: UrlAware) {
         loader.save(url, group)
     }

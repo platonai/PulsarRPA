@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -8,7 +9,6 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
@@ -22,7 +22,7 @@ object LoadOptionDefaults {
     /**
      * The default time to expire
      * */
-    var expireAt = Instant.now() + ChronoUnit.DECADES.duration
+    var expireAt = DateTimes.doomsday
     var lazyFlush = true
     var parse = false
     var storeContent = true
@@ -77,7 +77,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-deadTime", "--dead-time"], converter = InstantConverter::class,
         description = "The dead time, if now > deadTime, the task should be discarded as soon as possible")
-    var deadTime = Instant.now() + ChronoUnit.DECADES.duration
+    var deadTime = DateTimes.doomsday
 
     @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
@@ -193,7 +193,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var itemExpireAt = Instant.EPOCH + ChronoUnit.DECADES.duration
+    var itemExpireAt = DateTimes.doomsday
 
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],

@@ -136,6 +136,10 @@ class MockWebDriver(
     private fun searchExport(url: String): Path? {
         val fileId = AppPaths.fileId(url)
         val searchPath = AppPaths.WEB_CACHE_DIR.resolve("original")
+        if (!Files.exists(searchPath)) {
+            return null
+        }
+
         val matcher = { path: Path, attr: BasicFileAttributes ->
             attr.isRegularFile && path.toAbsolutePath().toString().let { fileId in it && "OK" in it }
         }
