@@ -4,7 +4,7 @@ bin=$(dirname "$0")
 bin=$(cd "$bin">/dev/null || exit; pwd)
 
 cd pulsar-third/gora-shaded-mongodb
-mvn
+mvn install
 
 cd - || exit
 mvn -DskipTests=true

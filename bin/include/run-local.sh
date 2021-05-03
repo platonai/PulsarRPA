@@ -3,7 +3,7 @@
 # local mode, add class paths
 if [[ $PULSAR_RUNTIME_MODE == "DEVELOPMENT" ]]; then
   # development mode
-  __dev_mode_enable_module "$MODULE" "$JAR"
+  __dev_mode_enable_module "$MODULE" "$JAR1"
 elif [[ $PULSAR_RUNTIME_MODE == "ASSEMBLY" ]]; then
   for f in "$PULSAR_HOME"/lib/*.jar; do
     CLASSPATH=${CLASSPATH}:$f;

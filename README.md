@@ -42,37 +42,31 @@ Scrape pages from a portal:
         load_out_pages('https://www.amazon.com/Best-Sellers/zgbs', 'a[href~=/dp/]')
 
 # Build & Run
-## Check & install dependencies
-
-    bin/tools/install-depends.sh
 
 ## Build from source
 
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn
+    cd pulsar && bin/build.sh
 
-## Start pulsar server
+## Start pulsar server if not started
 
     bin/pulsar
 
-or if you are using an IDE, run main() in
-
-    ai.platon.pulsar.app.master.PulsarMaster
+or if you are using an IDE, run main() in [PulsarMaster](pulsar-app\pulsar-master\src\main\kotlin\ai\platon\pulsar\app\master\PulsarMaster.kt)
 
 ## Issue a request to scrape
 
 CURL
 
-    curl -X POST --location "http://localhost:8182/x/e" \
-    -H "Content-Type: text/plain" \
+    curl -X POST --location "http://localhost:8182/x/e" -H "Content-Type: text/plain"     
     -d "select
-            dom_first_text(dom, '#productTitle') as `title`,
-            dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
-            dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
-            array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
-            dom_base_uri(dom) as `baseUri`
-        from
-            load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
+            dom_first_text(dom, '#productTitle') as title,
+            dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
+            dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as price,
+            array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as categories,
+            dom_base_uri(dom) as baseUri
+            from
+        load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
 
 PHP
 
