@@ -47,9 +47,10 @@ import kotlin.test.assertTrue
 class TestGoraStorageInMemory {
 
     val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
+    val crawlId = "test_" + RandomStringUtils.randomAlphabetic(4)
 
     private val conf = VolatileConfig().apply {
-        set(CapabilityTypes.STORAGE_CRAWL_ID, "test_" + RandomStringUtils.randomAlphabetic(4))
+        set(CapabilityTypes.STORAGE_CRAWL_ID, crawlId)
         set(CapabilityTypes.STORAGE_DATA_STORE_CLASS, MEM_STORE_CLASS)
     }
 
@@ -63,7 +64,12 @@ class TestGoraStorageInMemory {
         assertEquals(MEM_STORE_CLASS, AutoDetectStorageProvider.detectDataStoreClassName(conf))
         webDb = WebDb(conf)
 //        assertTrue(store.javaClass.name) { store is MemStore }
-        assertTrue { store.schemaName.startsWith("test_") }
+        if (store is MemStore) {
+            assertEquals("MemStore", store.schemaName)
+        } else {
+            assertTrue(store.schemaName) { store.schemaName.startsWith("test_") }
+        }
+        assertEquals(crawlId, conf.get(CapabilityTypes.STORAGE_CRAWL_ID))
         webDb.truncate(force = true)
     }
 
@@ -72,7 +78,7 @@ class TestGoraStorageInMemory {
         webDb.delete(exampleUrl)
         webDb.flush()
         webDb.close()
-        LOG.debug("In shell: \nget '{}', '{}'", store.schemaName, Urls.reverseUrlOrEmpty(exampleUrl))
+        LOG.debug("get '{}', '{}'", store.schemaName, Urls.reverseUrlOrEmpty(exampleUrl))
     }
 
     /**
