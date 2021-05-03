@@ -68,9 +68,8 @@ class ScrapeServiceTests {
     }
 
     @Test
-    fun `When scrape jd using load_and_select then the result returns synchronously`() {
-        val url = "https://www.jd.com/"
-        val redirectedUrl = "https://global.jd.com/"
+    fun `When scraping using load_and_select then the result returns synchronously`() {
+        val url = "https://www.amazon.com/"
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 0s', ':root')"
         val request = ScrapeRequest(sql)
 
@@ -80,7 +79,7 @@ class ScrapeServiceTests {
 
         assertTrue { records.isNotEmpty() }
         val actualUrl = records[0]["uri"].toString()
-        assertTrue { actualUrl == url || actualUrl == redirectedUrl }
+        assertTrue { actualUrl == url }
     }
 
     @Test
@@ -98,41 +97,6 @@ class ScrapeServiceTests {
         assertNotNull(records)
 
         assertTrue { records.isNotEmpty() }
-    }
-
-    @Test
-    fun `When extract result abstract then it is retrieved`() {
-        val url = "https://www.amazon.com/s?rh=n:3396311&rd=1&fs=true"
-
-        val text = session.loadDocument("$url -i 1s").selectFirst("h1").cleanText
-        assertTrue(text.isNotBlank())
-    }
-
-    @Test
-    fun `When extract pagination then it is retrieved`() {
-        val url = "https://www.amazon.com/s?rh=n:3396311&rd=1&fs=true"
-
-        val sql = "select\n" +
-                "    dom_base_uri(dom) as `url`,\n" +
-                "    dom_first_text(dom, 'h1 div span:containsOwn(results for), h1 div span:containsOwn(results)') as `results`,\n" +
-                "    array_join_to_string(dom_all_texts(dom, 'ul.a-pagination > li, div#pagn > span'), '|') as `pagination`\n" +
-                "from load_and_select('$url -i 1s', 'body');"
-
-        val request = ScrapeRequest(sql)
-
-        val response = service.executeQuery(request)
-        println(pulsarObjectMapper().writeValueAsString(response))
-        val records = response.resultSet
-        assertNotNull(records)
-
-        assertTrue { records.isNotEmpty() }
-        println(records)
-        val record = records[0]
-        assertEquals(url, record["url"].toString())
-        // TODO: failed if the language is Chinese
-        // assertTrue { record["results"].toString().contains("results") }
-        val pagination = record["pagination"].toString()
-        assertTrue { "Next" in pagination || "下一页" in pagination }
     }
 
     @Test

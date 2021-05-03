@@ -1,0 +1,57 @@
+POST http://localhost:8182/x/e
+Content-Type: text/plain
+
+    select
+        dom_first_text(dom, '#productTitle') as `title`,
+        dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
+        dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
+        array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
+        dom_base_uri(dom) as `baseUri`
+    from
+        load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
+
+<> 2021-05-03T153722.200.json
+
+###
+
+POST http://localhost:8182/x/e
+Content-Type: text/plain
+
+    select
+        dom_base_uri(dom) as `url`,
+        str_substring_after(dom_base_uri(dom), '&rh=') as `nodeID`,
+        dom_first_text(dom, 'a span.a-price:first-child span.a-offscreen') as `price`,
+        dom_first_text(dom, 'a:has(span.a-price) span:containsOwn(/Item)') as `priceperitem`,
+        dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
+        dom_first_text(dom, 'h2 a') as `title`,
+        dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
+    from load_and_select('https://www.amazon.com/s?k="Boys%27+Novelty+Belt+Buckles"&rh=n:9057119011&page=1 -i 1s  -retry', 'div.s-main-slot.s-result-list.s-search-results > div[data-asin]');
+
+<> 2021-05-03T151948.200.json
+
+###
+
+POST http://localhost:8182/x/e
+
+    select
+        dom_base_uri(dom) as `url`,
+        str_substring_after(dom_base_uri(dom), '&rh=') as `nodeID`,
+        dom_first_text(dom, 'a span.a-price:first-child span.a-offscreen') as `price`,
+        dom_first_text(dom, 'a:has(span.a-price) span:containsOwn(/Item)') as `priceperitem`,
+        dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
+        dom_first_text(dom, 'h2 a') as `title`,
+        dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
+    from load_and_select('https://www.amazon.com/s?k="Boys%27+Novelty+Belt+Buckles"&rh=n:9057119011&page=1 -i 1s  -retry', 'div.s-main-slot.s-result-list.s-search-results > div[data-asin]');
+
+<> 2021-05-03T151804.415.json
+
+###
+
+POST http://localhost:8182/x/e
+
+{"authToken":"rhlwTRBk-1-de14124c7ace3d93e38a705bae30376c","sql":"select\n    dom_first_text(dom, '#productTitle') as `title`,\n    dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,\n    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,\n    array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,\n    dom_base_uri(dom) as `baseUri`\nfrom\n    load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')","callbackUrl":null,"priority":"HIGHER5"}
+
+<> 2021-05-03T151359.415.json
+
+###
+

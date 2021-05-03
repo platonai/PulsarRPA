@@ -1,0 +1,17 @@
+{
+  "uuid": "3ea3bbb7-fed9-446d-8062-be4b61d16546",
+  "statusCode": 200,
+  "pageStatusCode": 200,
+  "pageContentBytes": 1607636,
+  "resultSet": [
+    {
+      "title": "Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)",
+      "listprice": "",
+      "price": "$12.99",
+      "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
+      "baseuri": "https://www.amazon.com/dp/B00BTX5926"
+    }
+  ],
+  "status": "OK",
+  "pageStatus": "OK"
+}

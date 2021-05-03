@@ -41,9 +41,6 @@ Scrape pages from a portal:
     from
         load_out_pages('https://www.amazon.com/Best-Sellers/zgbs', 'a[href~=/dp/]')
 
-Here is a real world REST request to scrape every field in a product page from amazon.com:
-[Scrape amazon.com](pulsar-client/src/main/resources/requests/amazon-product.json)
-
 # Build & Run
 ## Check & install dependencies
 
@@ -58,8 +55,20 @@ Here is a real world REST request to scrape every field in a product page from a
 
     bin/pulsar
 
+or if you are using an IDE, run main() in
+
+    ai.platon.pulsar.common.master.PulsarMaster
+
 ## Issue a request to scrape
 
     # CURL
-    curl -X GET --location "http://localhost:8182/x/e" \
-    -d "{\"sql\":\"select\\n    dom_first_text(dom, '#productTitle') as `title`,\\n    dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,\\n    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,\\n    array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,\\n    dom_base_uri(dom) as `baseUri`\\nfrom\\n    load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')\",\"callbackUrl\":null,\"priority\":\"HIGHER5\"}"
+    curl -X POST --location "http://localhost:8182/x/e" \
+    -H "Content-Type: text/plain" \
+    -d "select
+            dom_first_text(dom, '#productTitle') as `title`,
+            dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
+            dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
+            array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
+            dom_base_uri(dom) as `baseUri`
+        from
+            load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"

@@ -13,6 +13,7 @@ import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.TimeUnit
 
 @Service
 class ScrapeService(
@@ -30,7 +31,7 @@ class ScrapeService(
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
         val hyperlink = createScrapeHyperlink(request)
         fetchCaches.highestCache.reentrantQueue.add(hyperlink)
-        return hyperlink.get()
+        return hyperlink.get(1, TimeUnit.MINUTES)
     }
 
     /**

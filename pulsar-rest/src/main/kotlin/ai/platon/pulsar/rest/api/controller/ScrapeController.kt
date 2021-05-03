@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest
 @CrossOrigin
 @RequestMapping(
     "x",
-    consumes = [MediaType.APPLICATION_JSON_VALUE],
+    consumes = [MediaType.TEXT_PLAIN_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class ScrapeController(
@@ -24,9 +24,9 @@ class ScrapeController(
      * @param request The extract request
      * @return The uuid of the task
      * */
-    @GetMapping("e")
-    fun execute(@RequestBody request: ScrapeRequest): ScrapeResponse {
-        return scrapeService.executeQuery(request)
+    @PostMapping("e")
+    fun execute(@RequestBody sql: String): ScrapeResponse {
+        return scrapeService.executeQuery(ScrapeRequest(sql))
     }
 
     /**
@@ -34,8 +34,8 @@ class ScrapeController(
      * @return The uuid of the task
      * */
     @PostMapping("s")
-    fun submitJob(@RequestBody request: ScrapeRequest): String {
-        return scrapeService.submitJob(request)
+    fun submitJob(@RequestBody sql: String): String {
+        return scrapeService.submitJob(ScrapeRequest(sql))
     }
 
     /**

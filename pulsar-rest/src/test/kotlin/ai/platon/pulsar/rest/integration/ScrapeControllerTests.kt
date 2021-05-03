@@ -17,28 +17,42 @@ class ScrapeControllerTests : IntegrationTestBase() {
         "amazon" to "https://www.amazon.com/s?k=\"Boys%27+Novelty+Belt+Buckles\"&rh=n:9057119011&page=1 -i 1s  -retry",
         "jd" to "https://list.jd.com/list.html?cat=9987,653,655/"
     )
+
     val sqlTemplates = mapOf(
         "amazon" to """
-        dom_base_uri(dom) as `url`,
+        select 
+            dom_base_uri(dom) as `url`,
             str_substring_after(dom_base_uri(dom), '&rh=') as `nodeID`,
             dom_first_text(dom, 'a span.a-price:first-child span.a-offscreen') as `price`,
             dom_first_text(dom, 'a:has(span.a-price) span:containsOwn(/Item)') as `priceperitem`,
             dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
             dom_first_text(dom, 'h2 a') as `title`,
             dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
-        from load_and_select((@url, 'div.s-main-slot.s-result-list.s-search-results > div:expr(img>0)');
+        from load_and_select(@url, 'div.s-main-slot.s-result-list.s-search-results > div:expr(img>0)');
     """.trimIndent(),
         "jd" to "select dom_base_uri(dom) as url from load_and_select(@url, ':root')"
     ).entries.associate { it.key to SQLTemplate(it.value) }
 
     @Test
-    fun `When extract using x-sql then the result can be received asynchronously`() {
+    fun `When extract with x-sql then the result returns`() {
+        val site = "amazon"
+        val url = urls[site]!!
+        val sql = sqlTemplates[site]!!.createInstance(url)
+
+        println(">>>\n$sql\n<<<")
+        val response = restTemplate.postForObject("$baseUri/x/e", sql, ScrapeResponse::class.java)
+        assertNotNull(response)
+        assertTrue { response.uuid.isNullOrBlank() }
+        println(pulsarObjectMapper().writeValueAsString(response))
+    }
+
+    @Test
+    fun `When extract with x-sql then the result can be received asynchronously`() {
         val site = "jd"
         val url = urls[site]!!
         val sql = sqlTemplates[site]!!.createInstance(url)
 
-        val request = ScrapeRequest(sql)
-        val uuid = restTemplate.postForObject("$baseUri/x/e", request, String::class.java)
+        val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
         assertNotNull(uuid)
 
         await(site, uuid, url)
