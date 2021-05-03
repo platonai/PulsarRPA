@@ -72,3 +72,22 @@ or if you are using an IDE, run main() in
             dom_base_uri(dom) as `baseUri`
         from
             load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
+
+kotlin:
+
+    val sql = """..."""
+    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+        .header("Content-Type", "text/plain")
+        .POST(BodyPublishers.ofString(sql)).build()
+    val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
+
+    # the response likes the following
+    # {"uuid":"cc611841-1f2b-4b6b-bcdd-ce822d97a2ad","statusCode":200,"pageStatusCode":200,"pageContentBytes":1607636,"resultSet":[{"title":"Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)","listprice":"","price":"$12.99","categories":"Toys & Games|Arts & Crafts|Craft Kits|Jewelry","baseuri":"https://www.amazon.com/dp/B00BTX5926"}],"pageStatus":"OK","status":"OK"}
+
+java:
+    
+    String sql = "...";
+    HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+        .header("Content-Type", "text/plain")
+        .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
+    String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();

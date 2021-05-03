@@ -1,6 +1,6 @@
 package ai.platon.pulsar.client.examples.v1
 
-import ai.platon.pulsar.client.v1.Scraper
+import ai.platon.pulsar.client.v1.AsyncScraper
 import kotlin.system.exitProcess
 
 fun main() {
@@ -17,7 +17,7 @@ fun main() {
     """.trimIndent()
 
     val host = "crawl0"
-    val scraper = Scraper(host, authToken)
+    val scraper = AsyncScraper(host, authToken)
     val uuid = scraper.scrape(sql)
     println(uuid)
     scraper.await(uuid)

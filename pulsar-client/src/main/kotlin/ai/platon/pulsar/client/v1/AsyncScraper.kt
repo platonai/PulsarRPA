@@ -32,7 +32,7 @@ data class ScrapeResponse(
     var resultSet: List<Map<String, Any?>>? = null,
 )
 
-class Scraper(val host: String, val authToken: String) {
+class AsyncScraper(val host: String, val authToken: String) {
     private val client = HttpClient.newHttpClient()
     private val baseUri = "http://$host:8182/api/x/a"
     private val scrapeService = "$baseUri/q"
@@ -40,8 +40,6 @@ class Scraper(val host: String, val authToken: String) {
 
     fun scrape(sql: String): String {
         val requestEntity: Any = ScrapeRequest(authToken, sql, priority = "HIGHER5")
-        println(jacksonObjectMapper().writeValueAsString(requestEntity))
-
         val request = post(scrapeService, requestEntity)
         return client.send(request, BodyHandlers.ofString()).body()
     }
