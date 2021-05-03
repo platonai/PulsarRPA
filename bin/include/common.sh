@@ -3,6 +3,8 @@
 function __dev_mode_enable_module() {
   M=$1
   shift
+  JAR1=$1
+  shift
 
   cd "$PULSAR_HOME/$M" || exit
   outputFile="/tmp/$M.classpath"
@@ -11,10 +13,10 @@ function __dev_mode_enable_module() {
 
   MODULE_CLASSPATH=$(cat "$outputFile")
   CLASSPATH=${CLASSPATH}:"$MODULE_CLASSPATH"
-  CLASSPATH=${CLASSPATH}:"$PULSAR_HOME/$M/target/$M-$VERSION".jar;
+  CLASSPATH=${CLASSPATH}:"$PULSAR_HOME/$M/target/$JAR1";
 
   # additional resources
-  if [ "$M" == "pulsar-app" ]; then
+  if [ "$M" == "pulsar-app/pulsar-master" ]; then
     CLASSPATH=${CLASSPATH}:"$PULSAR_HOME/$M"/src/main/resources;
   fi
 }

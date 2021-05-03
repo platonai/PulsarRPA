@@ -111,12 +111,15 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-app/pulsar-master
+  JAR1="pulsar-master-$VERSION.jar"
   CLASS=ai.platon.pulsar.app.master.PulsarMasterKt
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-app/pulsar-master
+  JAR1="pulsar-master-$VERSION.jar"
   CLASS=ai.platon.pulsar.app.h2.H2ShellKt
 elif [[ "$COMMAND" = "example" ]] ; then
   MODULE=pulsar-examples
+  JAR1="pulsar-examples-$VERSION.jar"
   PROC=$1
   if [[ -z "$PROC" ]]; then
     PROC=ManualKt
