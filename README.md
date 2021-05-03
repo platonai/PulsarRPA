@@ -57,7 +57,7 @@ Scrape pages from a portal:
 
 or if you are using an IDE, run main() in
 
-    ai.platon.pulsar.common.master.PulsarMaster
+    ai.platon.pulsar.app.master.PulsarMaster
 
 ## Issue a request to scrape
 

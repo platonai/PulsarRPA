@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.crawler
+package ai.platon.pulsar.app.crawler
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.LinkExtractors

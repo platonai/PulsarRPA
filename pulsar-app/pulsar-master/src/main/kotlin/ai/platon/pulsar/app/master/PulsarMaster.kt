@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.master
+package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
