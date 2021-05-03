@@ -27,11 +27,6 @@
             <artifactId>pulsar-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-amazon-resources</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit</artifactId>
             <version>${kotlin.version}</version>

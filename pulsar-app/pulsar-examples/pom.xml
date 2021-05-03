@@ -34,11 +34,6 @@
       <groupId>ai.platon.pulsar</groupId>
       <artifactId>pulsar-beans</artifactId>
     </dependency>
-    <dependency>
-      <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-amazon-resources</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
