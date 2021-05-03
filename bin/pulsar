@@ -134,6 +134,6 @@ else
 fi
 
  # shellcheck disable=SC1090
- . "$bin"/include/pulsar-common.sh
+ . "$bin"/include/common.sh
  # shellcheck disable=SC1090
  . "$bin"/include/run-local.sh
