@@ -183,6 +183,10 @@ class TestGoraStorage {
      */
     @Test
     fun testUpdateNestedComplexArray() {
+        if (store is MemStore) {
+            return
+        }
+
         createExamplePage()
 
         val key = reverseUrlOrEmpty(exampleUrl)
@@ -206,6 +210,10 @@ class TestGoraStorage {
 
     @Test
     fun testUpdateNestedArray2() {
+        if (store is MemStore) {
+            return
+        }
+
         createExamplePage()
         var page = webDb.get(exampleUrl)
         page.links = ArrayList()
@@ -223,6 +231,10 @@ class TestGoraStorage {
 
     @Test
     fun testUpdateNestedMap() {
+        if (store is MemStore) {
+            return
+        }
+
         createExamplePage()
         var page = webDb.get(exampleUrl)
         page.inlinks.clear()
