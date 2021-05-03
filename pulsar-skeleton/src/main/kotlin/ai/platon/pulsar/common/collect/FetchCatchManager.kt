@@ -87,6 +87,8 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatch
         ensureInitialized()
         caches.values.forEach { it.removeDeceased() }
         unorderedCaches.forEach { it.removeDeceased() }
+        val now = Instant.now()
+        delayCache.removeIf { it.url.deadTime > now }
     }
 
     private fun ensureInitialized(): AbstractFetchCatchManager {

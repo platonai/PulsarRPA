@@ -436,7 +436,7 @@ open class StreamingCrawler<T : UrlAware>(
         val delay = Duration.ofMinutes(5L + 5 * retries)
         // fetch immediately, do not check the database
         url.args += " -i 0s"
-        if (retries <= 3) {
+        if (retries <= 5) {
             val delayCache = globalCache.fetchCacheManager.delayCache
             delayCache.add(DelayUrl(url, delay))
             globalMetrics.retries.mark()
