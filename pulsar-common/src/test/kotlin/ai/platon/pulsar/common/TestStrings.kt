@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.options.findOption
 import org.apache.commons.lang3.StringUtils
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -42,32 +43,5 @@ class TestStrings {
         val s2 = StringUtils.abbreviate(s, 50)
         assertEquals(50, s2.length)
         assertTrue(s2) { s2.endsWith("a...") }
-    }
-
-    @Test
-    fun testParseSimpleOption() {
-        val label = "best-sellers"
-        val argsList = listOf(
-            "-label $label",
-            "-label $label -parse",
-            "-persist -label $label",
-            "-persist -label $label -label $label",
-            "-persist -label $label -parse",
-            "-persist -label $label -label $label     -parse",
-            "-expires 1s -label $label",
-            "-expires 1s -label $label -parse",
-            "-expires 1s -label $label       -label $label  -parse"
-        )
-
-        argsList.forEach { args ->
-            val result = "-label\\s+([\\-_a-zA-Z0-9]+)(\\s)?".toRegex().find(args)
-            assertNotNull(result)
-            assertEquals(3, result.groups.size)
-            assertEquals(label, result.groupValues[1])
-        }
-
-        argsList.forEach { args ->
-            assertEquals(label, parseSimpleOption(args, "-label"), args)
-        }
     }
 }

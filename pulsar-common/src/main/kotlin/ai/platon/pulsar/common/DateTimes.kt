@@ -46,7 +46,7 @@ object DateTimes {
      */
     val startTime = Instant.now()
     /**
-     * Mind nothing after doomsday
+     * We foresee that 2100 will be the end of the world, care about nothing after the doom
      * */
     val doomsday = Instant.parse("2100-01-01T00:00:00Z")
 
@@ -205,8 +205,19 @@ object DateTimes {
     @JvmOverloads
     @JvmStatic
     fun parseBestInstant(text: String, defaultValue: Instant = Instant.EPOCH): Instant {
+        return parseBestInstantOrNull(text) ?: defaultValue
+    }
+
+    /**
+     * Accept the following format:
+     * 1. yyyy-MM-dd[ HH[:mm[:ss]]]
+     * 2. ISO_INSTANT, or yyyy-MM-ddTHH:mm:ssZ
+     * */
+    @JvmStatic
+    fun parseBestInstantOrNull(text: String): Instant? {
         try {
             return when {
+                text.isBlank() -> null
                 text.matches("${DATE_REGEX}T\\d{2}.+Z".toRegex()) -> {
                     Instant.parse(text)
                 }
@@ -228,13 +239,13 @@ object DateTimes {
                         .parse(text) { LocalDate.from(it) }
                         .atStartOfDay().atZone(zoneId).toInstant()
                 }
-                else -> defaultValue
+                else -> null
             }
         } catch (e: Throwable) {
             logger.warn("Failed to parse $text | {}", e)
         }
 
-        return defaultValue
+        return null
     }
 
     @JvmStatic

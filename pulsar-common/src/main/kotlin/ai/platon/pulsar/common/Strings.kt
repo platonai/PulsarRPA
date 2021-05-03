@@ -31,25 +31,3 @@ fun prependReadableClassName(obj: Any, ident: String, name: String, separator: S
     val prefix = readableClassName(obj)
     return "$prefix$separator$ident$separator$name".replace("\\.+".toRegex(), separator)
 }
-
-fun parseSimpleOption(args: String?, optionName: String): String? {
-    val s = args ?: return null
-    return "$optionName\\s+([\\-_a-zA-Z0-9]+)\\s?".toRegex().find(s)?.groupValues?.get(1)
-}
-
-fun arity0ToArity1(args: String, search: String): String {
-    var args0 = args
-    var pos: Int = args0.indexOf(search)
-    if (pos != -1) {
-        pos += search.length
-        if (pos == args0.length) {
-            args0 = args0.replace(search, "$search true")
-        } else {
-            val s: String = args0.substring(pos).trim { it <= ' ' }
-            if (s[0] == '-') {
-                args0 = args0.replace(search, "$search true")
-            }
-        }
-    }
-    return args0
-}

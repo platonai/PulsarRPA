@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.arity0ToArity1
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException

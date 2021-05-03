@@ -64,6 +64,8 @@ interface PulsarContext: AutoCloseable {
 
     fun exists(url: String): Boolean
 
+    fun fetchState(page: WebPage, options: LoadOptions): Int
+
     fun scan(urlPrefix: String): Iterator<WebPage>
 
     fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage>

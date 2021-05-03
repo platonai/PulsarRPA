@@ -11,9 +11,10 @@ select
     dom_first_text(dom, 'a span.a-price[data-a-strike] span.a-offscreen') as `listprice`,
     dom_first_text(dom, 'h2 a') as `title`,
     dom_first_href(dom, 'h2 a') as `asin_url`,
-    str_substring_between(dom_first_href(dom, 'h2 a'), '/dp/', '/ref=') as `asin`,
+    amazon_find_asin(dom_first_href(dom, 'h2 a')) as `asin`,
     dom_first_text(dom, 'div span[class]:containsOwn(by) ~ span[class~=a-color-secondary]') as `brand`,
     dom_first_text(dom, 'div a:containsOwn(new offers), div a span:containsOwn(new offers)') as `follow_seller_num`,
+    dom_first_text(doc, 'div[data-uuid] h1') as `abstract`,
 
     dom_first_attr(dom, 'span[data-component-type=s-product-image] a img', 'src') as `pic`,
     dom_first_float(dom, 'div.a-section:expr(a>0) span[aria-label~=stars] i span', 0.0) as score,
@@ -29,9 +30,10 @@ select
     dom_first_text(dom, 'div.a-section span[aria-label~=soon] span:last-child') as `getassoonas`,
     dom_first_text(dom, 'div.a-section span:containsOwn(Shipping)') as `shipping`,
     dom_first_text(dom, 'div.a-section span:containsOwn(Arrives)') as `arrives`,
-    dom_first_text(dom_owner_body(dom), 'ul.a-pagination li.a-selected') as `adposition_page`,
-    (dom_top(dom) - dom_top(dom_select_first(dom_owner_body(dom), 'div.s-main-slot.s-result-list.s-search-results'))) / dom_height(dom) as `adposition_page_row`,
+    dom_first_text(doc, 'ul.a-pagination li.a-selected') as `adposition_page`,
+    dom_first_text(doc, 'div.s-main-slot span:containsOwn(Try checking your spelling)') as `warning`,
+    (dom_top(dom) - dom_top(dom_select_first(doc, 'div.s-main-slot.s-result-list.s-search-results'))) / dom_height(dom) as `adposition_page_row`,
     dom_element_sibling_index(dom) as `position_in_list`,
     dom_width(dom_select_first(dom, 'a img[srcset]')) as `pic_width`,
     dom_height(dom_select_first(dom, 'a img[srcset]')) as `pic_height`
-from load_and_select(@url, 'div.s-main-slot.s-result-list.s-search-results > div:expr(img>0)');
+from load_and_select(@url, 'div.s-main-slot.s-result-list.s-search-results div[data-asin]');

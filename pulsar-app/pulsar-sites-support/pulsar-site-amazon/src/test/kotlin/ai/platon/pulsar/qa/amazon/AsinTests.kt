@@ -1,10 +1,10 @@
 package ai.platon.pulsar.qa.amazon
 
-import ai.platon.pulsar.qa.CheckEntry
-import ai.platon.pulsar.qa.QABase
-import ai.platon.pulsar.qa.assertAllRecordsNotBlank
-import ai.platon.pulsar.qa.assertAnyRecordsNotBlank
+import ai.platon.pulsar.common.sql.SQLInstance
+import ai.platon.pulsar.qa.*
+import ai.platon.pulsar.test.XSQLRunner
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class AsinTests : QABase() {
     private val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
@@ -15,6 +15,12 @@ class AsinTests : QABase() {
     fun `When extract asin then success`() {
         val fields = listOf("iscoupon", "isac", "scoresbyfeature")
         assertAllRecordsNotBlank(CheckEntry(defaultUrl, defaultSqlResource, fields))
+    }
+
+    @Test
+    fun `When extract a missing asin then isgone flag is set`() {
+        val url = "https://www.amazon.com/dp/B092D3R75R"
+        assertFieldContains(url, defaultSqlResource, "tags", "Sorry")
     }
 
     @Test

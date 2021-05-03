@@ -3,7 +3,7 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
 select
-    dom_attr(dom_select_first(dom, '#PulsarMetaInformation'), 'normalizedUrl') as `url`,
+    dom_uri(dom) as `url`,
     dom_base_uri(dom) as `baseUri`,
     dom_first_text(dom, '#productTitle') as `title`,
     str_substring_after(dom_first_href(dom, '#wayfinding-breadcrumbs_container ul li:last-child a'), '&node=') as `category`,
@@ -34,7 +34,8 @@ select
         'isaddcart', str_left(dom_first_text(dom, '#addToCart_feature_div span:contains(Add to Cart), #submit.add-to-cart-ubb-announce'), 8),
         'isbuy', str_left(dom_first_text(dom, '#buyNow span:contains(Buy now)'), 8),
         'isa', array_length(dom_all_imgs(dom, '#prodDetails img[src], #productDescription img[src]')),
-        'iscpfb', str_left(dom_first_text(dom, '#climatePledgeFriendlyBadge'), 8)
+        'iscpfb', str_left(dom_first_text(dom, '#climatePledgeFriendlyBadge'), 8),
+        'isgone', str_left(dom_first_attr(dom, '#g a img[src~=error]', 'alt'), 8)
     )) as tags,
 
     cast(dom_all_texts(dom, 'a#sellerProfileTriggerId[href~=seller], #tabular-buybox tr:has(td:contains(Sold by)) td a[href~=seller], #usedbuyBox div:contains(Sold by) a[href~=seller], #merchant-info a[href~=seller], #buybox-tabular a[href~=seller]') as varchar) as `soldby`,

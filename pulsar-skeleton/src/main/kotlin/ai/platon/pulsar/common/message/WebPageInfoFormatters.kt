@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.common.FetchReason
+import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
@@ -118,8 +118,8 @@ class LoadedPageFormatter(
     }
 
     private fun buildFetchReason(): String {
-        val code = (page.variables[VAR_FETCH_REASON] as? Int) ?: FetchReason.DO_NOT_FETCH
-        return FetchReason.toSymbol(code).takeIf { it.isNotBlank() }?.let { "for $it" } ?: ""
+        val code = (page.variables[VAR_FETCH_REASON] as? Int) ?: FetchState.DO_NOT_FETCH
+        return FetchState.toSymbol(code).takeIf { it.isNotBlank() }?.let { "for $it" } ?: ""
     }
 
     private fun buildContentBytes(): String {

@@ -119,6 +119,8 @@ abstract class AbstractPulsarSession(
 
     override fun exists(url: String): Boolean = ensureActive { context.exists(url) }
 
+    override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
+
     /**
      * Load a url with specified options
      *

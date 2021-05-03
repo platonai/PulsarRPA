@@ -1,8 +1,9 @@
 package ai.platon.pulsar.common.urls
 
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.parseSimpleOption
+import ai.platon.pulsar.common.options.findOption
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -46,6 +47,10 @@ interface UrlAware {
      * The url label, it should be in args
      * */
     val label: String
+    /**
+     * The url label, it should be in args
+     * */
+    val deadTime: Instant
 }
 
 interface ComparableUrlAware: UrlAware, Comparable<UrlAware>
@@ -77,7 +82,13 @@ abstract class AbstractUrl(
      * */
     override val isPersistable: Boolean = true
 
-    override val label: String get() = parseSimpleOption(args, "-label") ?: ""
+    override val label: String get() = findOption(args, listOf("-l", "-label", "--label")) ?: ""
+
+    override val deadTime: Instant
+        get() {
+            val deadTime = findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
+            return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
+        }
 
     /**
      * A abstract url can be compare to one of the following types:

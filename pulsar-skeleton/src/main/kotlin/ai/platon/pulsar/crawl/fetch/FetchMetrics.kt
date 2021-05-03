@@ -206,35 +206,35 @@ class FetchMetrics(
             log.info(formatStatus())
         }
 
-        val fetchStatus = urlStatistics.computeIfAbsent(host) { UrlStat(it) }
+        val urlStats = urlStatistics.computeIfAbsent(host) { UrlStat(it) }
 
-        ++fetchStatus.urls
-        ++fetchStatus.pageViews
+        ++urlStats.urls
+        ++urlStats.pageViews
 
         // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
         val pageCategory = page.pageCategory
         when {
-            pageCategory.isIndex -> ++fetchStatus.indexUrls
-            pageCategory.isDetail -> ++fetchStatus.detailUrls
-            pageCategory.isMedia -> ++fetchStatus.mediaUrls
-            pageCategory.isSearch -> ++fetchStatus.searchUrls
-            pageCategory.isBBS -> ++fetchStatus.bbsUrls
-            pageCategory.isTieBa -> ++fetchStatus.tiebaUrls
-            pageCategory.isBlog -> ++fetchStatus.blogUrls
-            pageCategory.isUnknown -> ++fetchStatus.unknownUrls
+            pageCategory.isIndex -> ++urlStats.indexUrls
+            pageCategory.isDetail -> ++urlStats.detailUrls
+            pageCategory.isMedia -> ++urlStats.mediaUrls
+            pageCategory.isSearch -> ++urlStats.searchUrls
+            pageCategory.isBBS -> ++urlStats.bbsUrls
+            pageCategory.isTieBa -> ++urlStats.tiebaUrls
+            pageCategory.isBlog -> ++urlStats.blogUrls
+            pageCategory.isUnknown -> ++urlStats.unknownUrls
         }
 
         val depth = page.distance
         if (depth == 1) {
-            ++fetchStatus.urlsFromSeed
+            ++urlStats.urlsFromSeed
         }
 
         if (url.length > maxUrlLength) {
-            ++fetchStatus.urlsTooLong
+            ++urlStats.urlsTooLong
             messageWriter.debugLongUrls(url)
         }
 
-        urlStatistics[host] = fetchStatus
+        urlStatistics[host] = urlStats
     }
 
     fun trackTimeout(url: String) {

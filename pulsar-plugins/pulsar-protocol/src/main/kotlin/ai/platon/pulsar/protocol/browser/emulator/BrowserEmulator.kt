@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.JsEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -74,6 +75,11 @@ open class BrowserEmulator(
 
         if (task.nRetries > fetchMaxRetry) {
             return FetchResult.crawlRetry(task).also { log.info("Too many task retries, emit crawl retry | {}", task.url) }
+        }
+
+        if (task.page.options.isDead()) {
+            log.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
+            return FetchResult.canceled(task)
         }
 
         var exception: Exception? = null

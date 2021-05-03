@@ -2,6 +2,7 @@ package ai.platon.pulsar.qa.amazon.ranking
 
 import ai.platon.pulsar.qa.*
 import ai.platon.pulsar.qa.assertAnyRecordsNotBlank
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class BestSellersTests : QABase() {
@@ -27,5 +28,12 @@ class BestSellersTests : QABase() {
 
         fields = listOf("price")
         assertMostRecordsNotBlank(CheckEntry(defaultUrl, defaultSqlResource, fields))
+    }
+
+    @Ignore("New mechanism is required to check missing page")
+    @Test
+    fun `When page is gone then the asin is Sorry`() {
+        val url = "https://www.amazon.com/gp/bestsellers/226127772011"
+        assertFieldContains(url, defaultSqlResource, "asin", "Sorry")
     }
 }

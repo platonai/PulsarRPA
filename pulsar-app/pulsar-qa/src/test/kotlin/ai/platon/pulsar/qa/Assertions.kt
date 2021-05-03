@@ -15,6 +15,34 @@ data class CheckEntry(
 )
 
 /*******************************
+ * Assert field contains
+ * *****************************/
+
+fun assertFieldContains(url: String, sqlResource: String, field: String, substring: String, message: String? = null) {
+    val sql = SQLInstance.load(url, sqlResource)
+    val rs = XSQLRunner().execute(sql)
+    assertFieldContains(url, rs, field, substring, message)
+}
+
+fun assertFieldContains(url: String, sql: SQLInstance, field: String, substring: String, message: String? = null) {
+    val rs = XSQLRunner().execute(sql)
+    assertFieldContains(url, rs, field, substring, message)
+}
+
+fun assertFieldContains(url: String, rs: ResultSet, field: String, substring: String, message: String? = null) {
+    rs.beforeFirst()
+    val value = if (rs.next()) {
+        rs.getString(field)
+    } else {
+        "(empty result set)"
+    }
+
+    var msg = message?.let { "\n$message" } ?: ""
+    msg = "Field <$field> must contains <$substring> actual <$value> $msg\n$url"
+    assertTrue(msg) { substring in value }
+}
+
+/*******************************
  * Assert any records not blank
  * *****************************/
 

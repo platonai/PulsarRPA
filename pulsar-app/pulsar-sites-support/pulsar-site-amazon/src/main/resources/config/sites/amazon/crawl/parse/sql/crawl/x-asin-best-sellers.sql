@@ -3,7 +3,7 @@
 
 select
     dom_base_uri(dom) as url,
-    str_substring_between(dom_first_href(dom, 'span.zg-item a'), '/dp/', '/ref=') as `asin`,
+    amazon_find_asin(dom_first_href(dom, 'span.zg-item a')) as `asin`,
     dom_first_href(dom, 'a[href~=/dp/]') as `asin_url`,
     str_substring_between(dom_base_uri(dom), 'zgbs/', '/') as `categoryinurl`,
     array_join_to_string(dom_all_texts(dom_owner_body(dom), 'ul#zg_browseRoot li.zg_browseUp'), ' > ') as `categorylevel`,

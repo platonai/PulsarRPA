@@ -6,10 +6,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.DelayQueue
-import java.util.concurrent.Delayed
-import java.util.concurrent.TimeUnit
+import java.util.*
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class DelayUrl(
@@ -40,6 +38,7 @@ interface FetchCatchManager {
      * The priority fetch caches
      * */
     val caches: MutableMap<Int, FetchCache>
+    val unorderedCaches: MutableList<FetchCache>
     val totalItems: Int
 
     val lowestCache: FetchCache
@@ -99,6 +98,8 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCat
      * The priority fetch caches
      * */
     override val caches = ConcurrentSkipListMap<Int, FetchCache>()
+
+    override val unorderedCaches: MutableList<FetchCache> = Collections.synchronizedList(mutableListOf())
 
     /**
      * The real time fetch cache

@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.common
 
 import java.util.*
 
-object FetchReason {
+object FetchState {
     const val UNKNOWN = -1
     const val DO_NOT_FETCH = 0
     const val NEW_PAGE = 1

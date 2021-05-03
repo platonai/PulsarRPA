@@ -187,7 +187,7 @@ object Queries {
     /**
      * Get a result set, the result set contains just one column DOM
      */
-    fun toDOMResultSet(document: FeaturedDocument, collection: Iterable<ValueDom>): ResultSet {
+    fun toDOMResultSet(document: FeaturedDocument, elements: Collection<ValueDom>): ResultSet {
         val rs = ResultSets.newSimpleResultSet()
         val colType = ValueDom.type
         val sqlType = DataType.convertTypeToSQLType(colType)
@@ -195,7 +195,7 @@ object Queries {
         rs.addColumn("DOC", sqlType, 0, 0)
 
         val docDOM = ValueDom.get(document)
-        collection.forEach { rs.addRow(it, docDOM) }
+        elements.forEach { rs.addRow(it, docDOM) }
 
         return rs
     }

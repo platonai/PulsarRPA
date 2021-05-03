@@ -370,7 +370,6 @@ open class StreamingCrawler<T : UrlAware>(
         val options = session.options("$defaultArgs ${url.args}")
         if (options.isDead()) {
             globalKilledTasks.incrementAndGet()
-            log.info("Task is killed | {}", url.configuredUrl)
             return null
         }
 

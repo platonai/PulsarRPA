@@ -22,8 +22,7 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
         "https://www.amazon.com/Wireless-Bluetooth-Ear-TWS-Headphones-Waterproof/dp/B07ZQCST89/ref=sr_1_1?dchild=1&m=A2QJQR8DPHL921&marketplaceID=ATVPDKIKX0DER&qid=1595908896&s=merchant-items&sr=1-1"
     val sellerBrandListUrl = "https://www.amazon.com/s?me=A2QJQR8DPHL921&marketplaceID=ATVPDKIKX0DER"
     val keywordAsinList = "https://www.amazon.com/s?k=Bike+Rim+Brake+Sets&rh=n%3A6389286011&page=31"
-    val categoryListUrl =
-        "https://www.amazon.com/b?node=16225007011&pf_rd_r=345GN7JFE6VHWVT896VY&pf_rd_p=e5b0c85f-569c-4c90-a58f-0c0a260e45a0"
+    val categoryListUrl = "https://www.amazon.com/b?node=16225007011"
     val productReviewUrl =
         "https://www.amazon.com/Dash-Mini-Maker-Individual-Breakfast/product-reviews/B01M9I779L/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews"
     val mostWishedFor = "https://www.amazon.com/gp/most-wished-for/boost/ref=zg_mw_nav_0/141-8986881-4437304"
@@ -37,11 +36,11 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
         productUrl to "crawl/x-similar-items.sql",
         productReviewUrl to "crawl/x-asin-reviews.sql",
         mostWishedFor to "crawl/x-asin-most-wished-for.sql",
+        asinBestUrl to "crawl/x-asin-best-sellers.sql",
 
         productAlsoReview to "asin-ad-also-view-extract.sql",
         productUrl to "asin-ad-similiar-extract.sql",
         productUrl to "asin-ad-sponsored-extract.sql",
-        asinBestUrl to "asin-best-extract.sql",
         sellerAsinListUrl to "seller-asin-extract.sql",
         sellerBrandListUrl to "seller-brand-extract.sql",
         offerListingUrl to "asin-follow-extract.sql",
@@ -51,8 +50,10 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
     ).map { it.first to "$resourcePrefix/${it.second}" }
 
     cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    val xsqlFilter = { xsql: String -> "keyword-asin-extract.sql" in xsql }
+    val xsqlFilter = { xsql: String -> "x-asin-best-sellers.sql" in xsql }
     // val xsqlFilter = { xsql: String -> true }
+
+    System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
     XSQLRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
 
     exitProcess(0)

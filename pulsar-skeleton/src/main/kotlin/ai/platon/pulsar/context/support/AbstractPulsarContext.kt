@@ -240,6 +240,8 @@ abstract class AbstractPulsarContext(
 
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
 
+    override fun fetchState(page: WebPage, options: LoadOptions) = loadComponent.fetchState(page, options)
+
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }

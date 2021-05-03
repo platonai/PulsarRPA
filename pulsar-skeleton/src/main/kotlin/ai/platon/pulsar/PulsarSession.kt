@@ -78,6 +78,8 @@ interface PulsarSession : AutoCloseable {
     fun getOrNull(url: String): WebPage?
     fun exists(url: String): Boolean
 
+    fun fetchState(page: WebPage, options: LoadOptions): Int
+
     /**
      * Load a url with specified options
      *
