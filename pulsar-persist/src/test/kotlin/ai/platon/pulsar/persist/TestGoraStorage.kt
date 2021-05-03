@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
+import org.apache.gora.memory.store.MemStore
 import org.apache.gora.mongodb.store.MongoStore
 import org.apache.gora.persistency.impl.DirtyCollectionWrapper
 import org.apache.gora.persistency.impl.DirtyListWrapper
@@ -58,7 +59,9 @@ class TestGoraStorage {
 
     @Test
     fun testWebDb() {
-        val store = MongoStore<String, GWebPage>()
+        if (store is MemStore) {
+            return
+        }
 
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
         var page = WebPage.newInternalPage(url)
@@ -95,6 +98,10 @@ class TestGoraStorage {
 
     @Test
     fun testModifyNestedSimpleArray() {
+        if (store is MemStore) {
+            return
+        }
+
         createExamplePage()
         val key = reverseUrlOrEmpty(exampleUrl)
         var page = store[key]
@@ -140,6 +147,10 @@ class TestGoraStorage {
      */
     @Test
     fun testClearNestedSimpleArray() {
+        if (store is MemStore) {
+            return
+        }
+
         createExamplePage()
         val key = reverseUrlOrEmpty(exampleUrl)
         var page = store[key]
