@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.urls.UrlAware
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -13,11 +14,20 @@ interface FetchCache {
         get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     val size get() = queues.sumOf { it.size }
     val estimatedSize get() = queues.sumOf { it.size }
+
+    fun removeDeceased()
 }
 
-open class ConcurrentFetchCache(
+abstract class AbstractFetchCache(
     override val name: String = ""
 ) : FetchCache {
+    override fun removeDeceased() {
+        val now = Instant.now()
+        queues.forEach { it.removeIf { it.deadTime > now } }
+    }
+}
+
+open class ConcurrentFetchCache(name: String = "") : AbstractFetchCache(name) {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
@@ -27,7 +37,7 @@ class LoadingFetchCache(
     /**
      * The cache name, a loading fetch cache requires a unique name
      * */
-    override val name: String = "",
+    name: String = "",
     /**
      * The external url loader
      * */
@@ -40,7 +50,7 @@ class LoadingFetchCache(
      * The cache capacity
      * */
     val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
-) : FetchCache, Loadable<UrlAware> {
+) : AbstractFetchCache(name), Loadable<UrlAware> {
 
     companion object {
         const val G_NON_REENTRANT = 1

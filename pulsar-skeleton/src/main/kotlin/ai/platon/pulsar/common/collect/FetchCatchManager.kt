@@ -59,6 +59,7 @@ interface FetchCatchManager {
     val delayCache: DelayQueue<DelayUrl>
 
     fun initialize()
+    fun removeDeceased()
 }
 
 /**
@@ -81,6 +82,12 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatch
     override val higher4Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER4.value]!!
     override val higher5Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER5.value]!!
     override val highestCache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHEST.value]!!
+
+    override fun removeDeceased() {
+        ensureInitialized()
+        caches.values.forEach { it.removeDeceased() }
+        unorderedCaches.forEach { it.removeDeceased() }
+    }
 
     private fun ensureInitialized(): AbstractFetchCatchManager {
         if (initialized.compareAndSet(false, true)) {
