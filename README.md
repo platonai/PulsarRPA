@@ -19,7 +19,7 @@ For more information check out [platon.ai](http://platon.ai)
 
 ## X-SQL
 
-Scrape a product page:
+Scrape a single page:
 
     select
         dom_first_text(dom, '#productTitle') as `title`,
@@ -61,7 +61,8 @@ or if you are using an IDE, run main() in
 
 ## Issue a request to scrape
 
-    # CURL
+CURL
+
     curl -X POST --location "http://localhost:8182/x/e" \
     -H "Content-Type: text/plain" \
     -d "select
@@ -73,6 +74,14 @@ or if you are using an IDE, run main() in
         from
             load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
 
+PHP
+
+    $sql = `...`;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "http://localhost:8182/x/e");
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: text/plain"));
+    $output = curl_exec($ch);
+
 kotlin:
 
     val sql = """..."""
@@ -81,13 +90,30 @@ kotlin:
         .POST(BodyPublishers.ofString(sql)).build()
     val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
 
-    # the response likes the following
-    # {"uuid":"cc611841-1f2b-4b6b-bcdd-ce822d97a2ad","statusCode":200,"pageStatusCode":200,"pageContentBytes":1607636,"resultSet":[{"title":"Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)","listprice":"","price":"$12.99","categories":"Toys & Games|Arts & Crafts|Craft Kits|Jewelry","baseuri":"https://www.amazon.com/dp/B00BTX5926"}],"pageStatus":"OK","status":"OK"}
-
 java:
-    
+
     String sql = "...";
     HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
         .header("Content-Type", "text/plain")
         .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
     String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
+
+The responses are as the following:
+
+    {
+        "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
+        "statusCode": 200,
+        "pageStatusCode": 200,
+        "pageContentBytes": 1607636,
+        "resultSet": [
+            {
+                "title": "Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)",
+                "listprice": "",
+                "price": "$12.99",
+                "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
+                "baseuri": "https://www.amazon.com/dp/B00BTX5926"
+            }
+        ],
+        "pageStatus": "OK",
+        "status": "OK"
+    }
