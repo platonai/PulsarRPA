@@ -307,7 +307,7 @@ open class FetchCacheCollector(
 }
 
 open class DelayCacheCollector(
-    val queue: DelayQueue<DelayUrl>,
+    val queue: Queue<DelayUrl>,
     priority: Int = Priority13.HIGHER.value
 ) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
@@ -319,7 +319,7 @@ open class DelayCacheCollector(
     override val estimatedSize: Int
         get() = queue.size
 
-    constructor(queue: DelayQueue<DelayUrl>, priority: Priority13) : this(queue, priority.value)
+    constructor(queue: Queue<DelayUrl>, priority: Priority13) : this(queue, priority.value)
 
     @Synchronized
     override fun hasMore() = queue.isNotEmpty()

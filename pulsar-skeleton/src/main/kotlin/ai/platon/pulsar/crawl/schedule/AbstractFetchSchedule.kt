@@ -76,8 +76,7 @@ abstract class AbstractFetchSchedule(
      * NOTE: this implementation resets the retry counter -
      * extending classes should call super.setFetchSchedule() to preserve this behavior.
 
-     * @param oldPrevFetchTime The new prev fetch time, (new prev fetch time) = (page.fetchTime before update)
-     * @param oldFetchTime The current fetch time, it's almost now
+     * @param m The modification info
      */
     override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
         if (page.protocolStatus.isSuccess) {
@@ -119,7 +118,7 @@ abstract class AbstractFetchSchedule(
         page.fetchInterval = Duration.ofSeconds(0)
         page.updateFetchTime(now, now)
 
-        val crawlStatus = if (page.fetchRetries < fetchRetryMax) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
+        val crawlStatus = if (page.fetchRetries <= fetchRetryMax) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
         page.setCrawlStatus(crawlStatus.toInt())
     }
 

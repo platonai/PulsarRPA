@@ -7,7 +7,10 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.DelayQueue
+import java.util.concurrent.Delayed
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class DelayUrl(
@@ -39,6 +42,8 @@ interface FetchCatchManager {
      * */
     val caches: MutableMap<Int, FetchCache>
     val unorderedCaches: MutableList<FetchCache>
+    val realTimeCache: FetchCache
+    val delayCache: Queue<DelayUrl>
     val totalItems: Int
 
     val lowestCache: FetchCache
@@ -54,9 +59,6 @@ interface FetchCatchManager {
     val higher4Cache: FetchCache
     val higher5Cache: FetchCache
     val highestCache: FetchCache
-
-    val realTimeCache: FetchCache
-    val delayCache: DelayQueue<DelayUrl>
 
     fun initialize()
     fun removeDeceased()
@@ -88,7 +90,7 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatch
         caches.values.forEach { it.removeDeceased() }
         unorderedCaches.forEach { it.removeDeceased() }
         val now = Instant.now()
-        delayCache.removeIf { it.url.deadTime > now }
+        delayCache.removeIf { it.url.deadTime < now }
     }
 
     private fun ensureInitialized(): AbstractFetchCatchManager {

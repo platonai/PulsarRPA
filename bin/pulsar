@@ -16,6 +16,13 @@
 # limitations under the License.
 #
 
+# find out chrome version
+CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"
+if [[ "$CHROME_VERSION" == "" ]]; then
+  echo "Google Chrome is not found in your system, you can run bin/install-depends.sh to do it automatically"
+  exit
+fi
+
 function printUsage() {
   echo "Usage: pulsar [options...] <COMMAND> [<args>]"
   echo "COMMAND is one of:"

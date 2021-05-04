@@ -23,7 +23,7 @@ abstract class AbstractFetchCache(
 ) : FetchCache {
     override fun removeDeceased() {
         val now = Instant.now()
-        queues.forEach { it.removeIf { it.deadTime > now } }
+        queues.forEach { it.removeIf { it.deadTime < now } }
     }
 }
 

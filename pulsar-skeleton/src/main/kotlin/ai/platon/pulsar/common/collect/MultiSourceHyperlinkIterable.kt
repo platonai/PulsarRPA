@@ -4,8 +4,8 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.urls.Hyperlink
 
 class MultiSourceHyperlinkIterable(
-        val fetchCacheManager: FetchCatchManager,
-        val lowerCacheSize: Int = 100
+    val fetchCacheManager: FetchCatchManager,
+    val lowerCacheSize: Int = 100,
 ) : Iterable<Hyperlink> {
     private val realTimeCollector = FetchCacheCollector(fetchCacheManager.realTimeCache, Priority13.HIGHEST)
         .apply { name = "FetchCacheCollector@RealTime" }
@@ -13,8 +13,10 @@ class MultiSourceHyperlinkIterable(
         .apply { name = "DelayCacheCollector@Delay" }
     private val multiSourceCollector = MultiSourceDataCollector<Hyperlink>()
 
-    val loadingIterable = ConcurrentLoadingIterable(multiSourceCollector, realTimeCollector, delayCollector, lowerCacheSize)
+    val loadingIterable =
+        ConcurrentLoadingIterable(multiSourceCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
+
     // TODO: add realTimeCollector and delayCollector
     val collectors get() = multiSourceCollector.collectors
 

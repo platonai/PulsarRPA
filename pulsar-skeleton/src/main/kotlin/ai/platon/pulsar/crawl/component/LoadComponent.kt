@@ -445,6 +445,10 @@ class LoadComponent(
             return FetchState.RETRY
         }
 
+        if (protocolStatus.isGone && options.retryFailed) {
+            return FetchState.RETRY
+        }
+
         // Failed to fetch the page last time, it might be caused by page is gone
         // in such case, do not fetch it even it it's expired, unless the -retryFailed flag is set
         if (protocolStatus.isFailed && !options.retryFailed) {
