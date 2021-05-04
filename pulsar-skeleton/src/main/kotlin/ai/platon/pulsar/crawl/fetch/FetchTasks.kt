@@ -327,6 +327,9 @@ class FetchTaskBatch(
         ++numTasksFailed
     }
 
+    /**
+     * TODO: just in time retry is not a good design, a retry should be delayed
+     * */
     fun onRetry(task: FetchTask, result: FetchResult) {
         onFailure(task, result)
 

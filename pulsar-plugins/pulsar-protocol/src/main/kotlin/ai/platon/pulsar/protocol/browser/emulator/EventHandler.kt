@@ -11,9 +11,9 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.nodes.node.ext.ExportPaths
+import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -51,6 +51,7 @@ open class EventHandler(
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
     protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
     protected val bannedPages by lazy { registry.meter(this, "bannedPages") }
+    protected val notFoundPages by lazy { registry.meter(this, "notFoundPages") }
     protected val smallPages by lazy { registry.meter(this, "smallPages") }
     protected val smallPageRate get() = 100 * smallPages.count / numNavigates.get()
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
@@ -233,6 +234,7 @@ open class EventHandler(
         return when {
             // should cancel all running tasks and reset the privacy context and then re-fetch them
             htmlIntegrity.isBanned -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
+            htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
             task.nRetries > fetchMaxRetry -> ProtocolStatus.retry(RetryScope.CRAWL)
                     .also { log.info("Retry task ${task.id} in the next crawl round") }

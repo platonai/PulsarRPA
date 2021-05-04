@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import java.nio.charset.Charset
-import java.time.Instant
 import java.util.regex.Pattern
 
 const val DEFAULT_SUPPORTED_CHARSETS = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
@@ -16,11 +15,19 @@ val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\
 enum class HtmlIntegrity {
     OK,
     EMPTY_0B,  // no character at all
-    EMPTY_39B, // <html><head></head><body></body></html> and blanks, must be caused by bad proxies
+    EMPTY_39B, // <html><head></head><body></body></html> and blanks, must be caused by a bad proxy
     BLANK_BODY, // ...<body>\s*</body>...
     NO_ANCHOR,
     NO_JS_OK_FLAG,
+    /**
+     * the page displays captcha or something similar
+     * */
     ROBOT_CHECK,
+    /**
+     * the page displays "404 Not Found" or something similar,
+     * the the server should issue a 404 error code, but not guaranteed
+     * */
+    NOT_FOUND,
     TOO_SMALL,
     TOO_SMALL_IN_HISTORY,
     TOO_SMALL_IN_BATCH,
@@ -33,6 +40,7 @@ enum class HtmlIntegrity {
     val isNotEmpty: Boolean get() = !isEmpty
     val isEmptyBody: Boolean get() = this == BLANK_BODY
     val isBanned: Boolean get() = this == ROBOT_CHECK
+    val isNotFound: Boolean get() = this == NOT_FOUND
     val isSmall: Boolean get() = this == TOO_SMALL || this == TOO_SMALL_IN_HISTORY || this == TOO_SMALL_IN_BATCH
     val isOther get() = this == OTHER
 

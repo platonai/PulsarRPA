@@ -59,7 +59,11 @@ public interface ProtocolStatusCodes {
      */
     int UNAUTHORIZED = ResourceStatus.SC_UNAUTHORIZED;
     /**
-     * Resource was not found.
+     * 404 Not Found
+     * The server can not find the requested resource. In the browser, this means the URL is not recognized.
+     * In an API, this can also mean that the endpoint is valid but the resource itself does not exist.
+     * Servers may also send this response instead of 403 to hide the existence of a resource from an unauthorized client.
+     * This response code is probably the most famous one due to its frequent occurrence on the web.
      */
     int NOT_FOUND = ResourceStatus.SC_NOT_FOUND;
     /**
@@ -67,7 +71,11 @@ public interface ProtocolStatusCodes {
      */
     int REQUEST_TIMEOUT = ResourceStatus.SC_REQUEST_TIMEOUT;
     /**
-     * Resource is gone.
+     * 410 Gone:
+     * This response is sent when the requested content has been permanently deleted from server,
+     * with no forwarding address. Clients are expected to remove their caches and links to the resource.
+     * The HTTP specification intends this status code to be used for "limited-time, promotional services".
+     * APIs should not feel compelled to indicate resources that have been deleted with this status code.
      */
     int GONE = ResourceStatus.SC_GONE;
 

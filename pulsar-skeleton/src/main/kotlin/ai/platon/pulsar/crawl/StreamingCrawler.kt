@@ -349,9 +349,13 @@ open class StreamingCrawler<T : UrlAware>(
         return url
     }
 
+    /**
+     * TODO: keep consistent with protocolStatus.isRetry and crawlStatus.isRetry
+     * */
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         when {
             page == null -> handleRetry(url, page)
+            page.protocolStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isGone -> log.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
         }
@@ -428,20 +432,20 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-//        if (url.url in globalCache.fetchingCache) {
-//            return
-//        }
+        if (url.url in globalCache.fetchingCache) {
+            return
+        }
 
         val retries = 1L + (page?.fetchRetries ?: 0)
-        val delay = Duration.ofMinutes(5L + 5 * retries)
-        // fetch immediately, do not check the database
+        val delay = Duration.ofMinutes(1L + 2 * retries)
         url.args += " -i 0s"
         if (retries <= 5) {
             val delayCache = globalCache.fetchCacheManager.delayCache
             delayCache.add(DelayUrl(url, delay))
             globalMetrics.retries.mark()
             if (page != null) {
-                log.info("{}", LoadedPageFormatter(page, prefix = "Retrying ${retries}th $delay"))
+                val prefix = "Trying ${retries}th ${delay.readable()} later"
+                log.info("{}", LoadedPageFormatter(page, prefix = prefix))
             }
         } else {
             // should not go here, because the page should be marked as GONE

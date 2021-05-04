@@ -4,28 +4,27 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.FetchCatchManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
+import com.google.common.primitives.Ints
+import org.apache.commons.collections4.queue.SynchronizedQueue
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.DelayQueue
-import java.util.concurrent.Delayed
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class DelayUrl(
     val url: UrlAware,
-    val delay: Duration
+    val delay: Duration,
 ) : Delayed {
-    val startTime = Instant.now() + delay
+    val startTime = System.currentTimeMillis() + delay.toMillis()
 
     override fun compareTo(other: Delayed): Int {
-        return Duration.between(startTime, (other as DelayUrl).startTime).toMillis().toInt()
+        return Ints.saturatedCast(startTime - (other as DelayUrl).startTime)
     }
 
     override fun getDelay(unit: TimeUnit): Long {
-        val delay = Duration.between(startTime, Instant.now())
-        return unit.convert(delay.toMillis(), TimeUnit.MILLISECONDS)
+        val diff = startTime - System.currentTimeMillis()
+        return unit.convert(diff, TimeUnit.MILLISECONDS)
     }
 }
 
@@ -120,7 +119,7 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCat
     /**
      * The delayed fetch cache
      * */
-    override val delayCache = DelayQueue<DelayUrl>()
+    override val delayCache: Queue<DelayUrl> = SynchronizedQueue.synchronizedQueue(DelayQueue())
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
@@ -132,7 +131,7 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCat
 class LoadingFetchCatchManager(
     val urlLoader: ExternalUrlLoader,
     val capacity: Int = 10_000,
-    conf: ImmutableConfig
+    conf: ImmutableConfig,
 ) : ConcurrentFetchCatchManager(conf) {
     /**
      * The real time fetch cache

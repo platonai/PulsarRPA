@@ -16,7 +16,7 @@ object FetchState {
     val codes = HashMap<Int, String>()
     val symbols = HashMap<Int, String>()
 
-    val refreshCodes = listOf(NEW_PAGE, EXPIRED, SCHEDULED, SMALL_CONTENT, RETRY, MISS_FIELD)
+    val refreshCodes = listOf(NEW_PAGE, EXPIRED, SCHEDULED, SMALL_CONTENT, MISS_FIELD, RETRY)
 
     fun toString(code: Int): String {
         return codes.getOrDefault(code, "unknown")

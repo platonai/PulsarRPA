@@ -24,15 +24,10 @@ import java.util.stream.Collectors;
  * @version $Id: $Id
  */
 public class ProtocolStatus implements ProtocolStatusCodes {
-    /** Constant <code>ARG_HTTP_CODE="httpCode"</code> */
     public static final String ARG_HTTP_CODE = "httpCode";
-    /** Constant <code>ARG_REDIRECT_TO_URL="redirectTo"</code> */
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
-    /** Constant <code>ARG_URL="url"</code> */
     public static final String ARG_URL = "url";
-    /** Constant <code>ARG_RETRY_SCOPE="rsp"</code> */
     public static final String ARG_RETRY_SCOPE = "rsp";
-    /** Constant <code>ARG_RETRY_REASON="rrs"</code> */
     public static final String ARG_RETRY_REASON = "rrs";
 
     /**
@@ -209,6 +204,14 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMinorCode() == CANCELED;
     }
 
+    /**
+     * the page displays "404 Not Found" or something similar,
+     * the the server should issue a 404 error code, but not guaranteed
+     * */
+    public boolean isNotFound() {
+        return getMinorCode() == NOT_FOUND;
+    }
+
     public boolean isGone() {
         return getMinorCode() == GONE;
     }
@@ -296,12 +299,13 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     @Override
     public String toString() {
-        String str = getName() + " (" + getMajorCode() + "/" + getMinorCode() + ")";
+        String minorName = minorCodes.getOrDefault(getMinorCode(), "unknown");
+        String str = minorName + "(" + getMinorCode() + ")";
         if (!getArgs().isEmpty()) {
             String args = getArgs().entrySet().stream()
                     .map(e -> e.getKey().toString() + ": " + e.getValue().toString())
                     .collect(Collectors.joining(", "));
-            str += ", args=[" + args + "]";
+            str += " " + args;
         }
         return str;
    }

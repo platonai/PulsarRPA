@@ -187,6 +187,7 @@ class TaskScheduler(
             handleResult(fetchTask, CrawlStatus.STATUS_FETCHED)
 
             if (protocolStatus.isRetry(RetryScope.JOB)) {
+                // NOTE: retries should be delayed
                 tasksMonitor.produce(fetchTask)
             }
         } catch (e: Throwable) {

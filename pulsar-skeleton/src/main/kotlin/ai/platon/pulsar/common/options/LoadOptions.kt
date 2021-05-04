@@ -252,6 +252,16 @@ open class LoadOptions(
     var cacheContent = LoadOptionDefaults.cacheContent
 
     @ApiPublic
+    @Parameter(names = ["-refresh", "--refresh"],
+        description = "Refresh the fetch state of page, set fetchRetries to be 0." +
+                "Note: refresh flag do not mean to fetch the page immediately, just reset fetchRetries.")
+    var refresh = false
+
+    /**
+     * Force retry fetching the page if it's failed last time, or it's marked as gone
+     * TODO: a better name
+     * */
+    @ApiPublic
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
             description = "Retry fetching the page if it's failed last time")
     var retryFailed = LoadOptionDefaults.retryFailed

@@ -14,6 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
         val driverControl: WebDriverControl,
+        /**
+         * The event handler to handle page content
+         * TODO: use a pipeline
+         * */
         val eventHandler: EventHandler,
         val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {

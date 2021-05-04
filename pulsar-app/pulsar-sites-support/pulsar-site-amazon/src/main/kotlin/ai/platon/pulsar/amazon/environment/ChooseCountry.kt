@@ -47,7 +47,7 @@ class ChooseCountry(
 
     val options = session.options(loadArguments).apply {
         expires = Duration.ZERO
-        retryFailed = true
+        refresh = true
     }
 
     fun choose() {

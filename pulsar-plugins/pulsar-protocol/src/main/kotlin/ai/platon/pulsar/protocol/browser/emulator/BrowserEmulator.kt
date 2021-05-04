@@ -89,7 +89,7 @@ open class BrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: NavigateTaskCancellationException) {
             exception = e
-            log.info("{}. Retry canceled task {}/{} in privacy scope later", task.page.id, task.id, task.batchId)
+            log.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))

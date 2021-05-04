@@ -85,8 +85,8 @@ class LoadedPageFormatter(
     private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
     private val prevFetchTimeDuration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now()).readable()
     private val prevFetchTimeReport get() = "last fetched $prevFetchTimeDuration ago,"
-    private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
-    private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
+    private val fieldCount get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
+    private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
     private val fetchCount get() =
         if (page.protocolStatus.isRetry) {
@@ -94,12 +94,13 @@ class LoadedPageFormatter(
         } else {
             String.format("%d", page.fetchCount)
         }
-    private val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
-    private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
+    private val fieldCountFmt get() = if (m.numFields == 0) "%s" else " | nf:%-10s"
+    private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %13s in %s, $prevFetchTimeReport" +
-            " $jsFmt fc:$fetchCount | $fieldFmt$failure$proxyFmt" +
+    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %13s in %s," +
+            " $prevFetchTimeReport fc:$fetchCount $failure" +
+            " | $jsFmt $fieldCountFmt$proxyFmt" +
             " | %s$formattedLabel%s"
 
     override fun toString(): String {
@@ -110,7 +111,7 @@ class LoadedPageFormatter(
                 buildContentBytes(),
                 DateTimes.readableDuration(responseTime),
                 jsSate,
-                if (m.numFields == 0) "" else numFields,
+                if (m.numFields == 0) "" else fieldCount,
                 proxy?:"",
                 page.variables["privacyContext"]?:"",
                 buildLocation()

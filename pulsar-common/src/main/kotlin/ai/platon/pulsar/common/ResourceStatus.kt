@@ -2,6 +2,8 @@ package ai.platon.pulsar.common
 
 /**
  * Keep consistent with standard http status
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+ *
  * */
 object ResourceStatus {
     private val REASON_PHRASES = arrayOf(
