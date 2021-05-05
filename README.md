@@ -4,15 +4,13 @@ Pulsar README
 
 Turn the Web into tables and charts using simple SQLs.
 
-## Other language
-[Chinese](README.zh.md)
-
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
 - X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, BI on Web
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
 - Big data: large scale, various storage: HBase/MongoDB
+- Complete amazon web data model
 
 For more information check out [platon.ai](http://platon.ai)
 
@@ -28,17 +26,6 @@ Scrape a single page:
         dom_base_uri(dom) as `baseUri`
     from
         load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
-
-Scrape pages from a portal:
-
-    select
-        dom_first_text(dom, '#productTitle') as `title`,
-        dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
-        dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
-        array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
-        dom_base_uri(dom) as `baseUri`
-    from
-        load_out_pages('https://www.amazon.com/Best-Sellers/zgbs', 'a[href~=/dp/]')
 
 # Build & Run
 
@@ -67,30 +54,6 @@ CURL
             from
         load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
 
-PHP
-
-    $sql = `...`;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost:8182/x/e");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-type: text/plain"));
-    $output = curl_exec($ch);
-
-kotlin:
-
-    val sql = """..."""
-    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
-        .header("Content-Type", "text/plain")
-        .POST(BodyPublishers.ofString(sql)).build()
-    val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
-
-java:
-
-    String sql = "...";
-    HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
-        .header("Content-Type", "text/plain")
-        .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
-    String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
-
 The responses are as the following:
 
     {
@@ -110,3 +73,41 @@ The responses are as the following:
         "pageStatus": "OK",
         "status": "OK"
     }
+
+Here are X-SQLs for [Full Amazon Data Model](pulsar-app/pulsar-sites-support/pulsar-site-amazon/src/main/resources/config/sites/amazon/crawl/parse/sql).
+
+## Other languages
+
+[PHP](pulsar-client/src/main/php/Scraper.php)
+
+    $url = "http://localhost:8182/x/e";
+    $sql = "select
+                dom_first_text(dom, '#productTitle') as title,
+                dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
+                dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as price,
+                array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as categories,
+                dom_base_uri(dom) as baseUri
+            from
+                load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')";
+    
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $sql);
+    $output = curl_exec($ch);
+    curl_close($ch);
+
+[kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt):
+
+    val sql = """..."""
+    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+        .header("Content-Type", "text/plain")
+        .POST(BodyPublishers.ofString(sql)).build()
+    val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
+
+[java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java):
+
+    String sql = "...";
+    HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+        .header("Content-Type", "text/plain")
+        .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
+    String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
