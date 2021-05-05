@@ -1,4 +1,4 @@
-package ai.platon.pulsar.client.examples.demo;
+package ai.platon.pulsar.client;
 
 import java.io.IOException;
 import java.net.URI;
@@ -6,7 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class Scraper {
+public class JavaScraper {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         String sql = "select\n" +
