@@ -27,6 +27,11 @@ Scrape a single page:
     from
         load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
 
+The result set is as the following:
+
+    TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
+    Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926
+
 # Build & Run
 
 ## Build from source
@@ -54,7 +59,7 @@ CURL
             from
         load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
 
-The responses are as the following:
+The response is as the following:
 
     {
         "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
@@ -87,7 +92,7 @@ Here are X-SQLs for [Full Amazon Data Model](pulsar-app/pulsar-sites-support/pul
     $output = curl_exec($ch);
     curl_close($ch);
 
-[kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt):
+[Kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt):
 
     val sql = """..."""
     val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
@@ -95,7 +100,7 @@ Here are X-SQLs for [Full Amazon Data Model](pulsar-app/pulsar-sites-support/pul
         .POST(BodyPublishers.ofString(sql)).build()
     val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
 
-[java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java):
+[Java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java):
 
     String sql = "...";
     HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
