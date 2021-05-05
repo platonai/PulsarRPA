@@ -1,6 +1,9 @@
 <?php
 
-$url = "http://localhost:8182/x/e";
+$host = "crawl0";
+$authToken = "ask the administrator for an auth token";
+
+$url = "http://$host:8182/api/x/a/e?authToken=$authToken";
 $sql = `select
             dom_first_text(dom, '#productTitle') as title,
             dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
