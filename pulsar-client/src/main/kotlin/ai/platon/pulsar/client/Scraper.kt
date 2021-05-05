@@ -1,4 +1,4 @@
-package ai.platon.pulsar.client.examples.demo
+package ai.platon.pulsar.client
 
 import java.net.URI
 import java.net.http.HttpClient
