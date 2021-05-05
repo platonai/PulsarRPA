@@ -10,9 +10,8 @@ Turn the Web into tables and charts using simple SQLs.
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, BI on Web.
+- X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, BI on Web
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
-- BI Integration: turn large websites into tables and charts using just one simple SQL
 - Big data: large scale, various storage: HBase/MongoDB
 
 For more information check out [platon.ai](http://platon.ai)
@@ -102,7 +101,7 @@ The responses are as the following:
         "resultSet": [
             {
                 "title": "Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)",
-                "listprice": "",
+                "listprice": "$19.99",
                 "price": "$12.99",
                 "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
                 "baseuri": "https://www.amazon.com/dp/B00BTX5926"
