@@ -25,6 +25,10 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     }
 
     override fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup): Collection<UrlAware> {
+        if (!Files.exists(path)) {
+            return listOf()
+        }
+
         val g = "${group.group}"
         runCatching {
             Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
@@ -34,6 +38,10 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     }
 
     override fun <T> loadToNow(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T): Collection<T> {
+        if (!Files.exists(path)) {
+            return listOf()
+        }
+
         val g = "${group.group}"
         runCatching {
             Files.readAllLines(path).mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }

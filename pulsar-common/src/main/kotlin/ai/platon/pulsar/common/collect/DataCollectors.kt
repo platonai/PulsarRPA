@@ -60,7 +60,7 @@ open class MultiSourceDataCollector<E>(
         // groupBy: the returned map preserves the entry iteration order of the keys produced from the original collection.
         // so the order is guaranteed
         val now = Instant.now()
-        val groupedCollectors = collectors.filter { it.deadTime < now }.sortedBy { it.priority }.groupBy { it.priority }
+        val groupedCollectors = collectors.filter { now.isBefore(it.deadTime) }.sortedBy { it.priority }.groupBy { it.priority }
         while (collected == 0 && hasMore()) {
             groupedCollectors.forEach { (_, collectors) ->
                 // collectors with the same priority have the same chance to choose

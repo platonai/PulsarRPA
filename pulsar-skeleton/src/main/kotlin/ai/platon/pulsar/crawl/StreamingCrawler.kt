@@ -277,9 +277,8 @@ open class StreamingCrawler<T : UrlAware>(
             handleContextLeaks()
         }
 
-        while (wrongDistrict.hourlyCounter.count > 60) {
-            // do something? or our collectors should support language/country/district?
-            criticalWarning = CriticalWarning.WRONG_DISTRICT
+        if (wrongDistrict.hourlyCounter.count > 60) {
+            handleWrongDistrict()
         }
 
         if (proxyOutOfService > 0) {
@@ -556,6 +555,17 @@ open class StreamingCrawler<T : UrlAware>(
             } else {
                 proxyOutOfService = 0
             }
+        }
+    }
+
+    private suspend fun handleWrongDistrict() {
+        var k = 0
+        while (wrongDistrict.hourlyCounter.count > 60) {
+            criticalWarning = CriticalWarning.WRONG_DISTRICT
+            if (k++ % 20 == 0) {
+                log.warn("{}", criticalWarning?.message)
+            }
+            delay(1000)
         }
     }
 
