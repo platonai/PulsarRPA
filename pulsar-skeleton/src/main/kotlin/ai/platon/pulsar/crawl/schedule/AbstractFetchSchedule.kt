@@ -44,7 +44,6 @@ abstract class AbstractFetchSchedule(
 ) : FetchSchedule {
     protected var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
     protected val impreciseNow = Instant.now()
-    protected var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     override val maxFetchInterval: Duration =
         conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, ChronoUnit.DECADES.duration)
 
@@ -52,7 +51,6 @@ abstract class AbstractFetchSchedule(
         return Params.of(
             "defaultInterval", defaultInterval,
             "maxInterval", maxFetchInterval,
-            "fetchRetryMax", fetchRetryMax,
             "maxFetchInterval", maxFetchInterval,
         )
     }
@@ -118,7 +116,7 @@ abstract class AbstractFetchSchedule(
         page.fetchInterval = Duration.ofSeconds(0)
         page.updateFetchTime(now, now)
 
-        val crawlStatus = if (page.fetchRetries <= fetchRetryMax) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
+        val crawlStatus = if (page.fetchRetries <= page.maxRetries) CrawlStatusCodes.UNFETCHED else CrawlStatusCodes.GONE
         page.setCrawlStatus(crawlStatus.toInt())
     }
 

@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.FatLink
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -58,7 +59,8 @@ open class MultiSourceDataCollector<E>(
         var collected = 0
         // groupBy: the returned map preserves the entry iteration order of the keys produced from the original collection.
         // so the order is guaranteed
-        val groupedCollectors = collectors.sortedBy { it.priority }.groupBy { it.priority }
+        val now = Instant.now()
+        val groupedCollectors = collectors.filter { it.deadTime < now }.sortedBy { it.priority }.groupBy { it.priority }
         while (collected == 0 && hasMore()) {
             groupedCollectors.forEach { (_, collectors) ->
                 // collectors with the same priority have the same chance to choose

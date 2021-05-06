@@ -71,6 +71,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(PROTO_NOT_FOUND, "ProtoNotFound");
         minorCodes.put(UNAUTHORIZED, "AccessDenied");
         minorCodes.put(NOT_FOUND, "NotFound");
+        minorCodes.put(PRECONDITION_FAILED, "PreconditionFailed");
         minorCodes.put(REQUEST_TIMEOUT, "RequestTimeout");
         minorCodes.put(GONE, "Gone");
 

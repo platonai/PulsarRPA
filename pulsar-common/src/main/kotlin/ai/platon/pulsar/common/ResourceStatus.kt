@@ -2,9 +2,14 @@ package ai.platon.pulsar.common
 
 /**
  * Keep consistent with standard http status
- * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
  *
- * */
+ * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
+ * @link {https://developer.mozilla.org/en-US/docs/Web/HTTP/Status}
+ * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
+ *
+ * @author vincent
+ * @version $Id: $Id
+*/
 object ResourceStatus {
     private val REASON_PHRASES = arrayOf(
             arrayOfNulls(0),

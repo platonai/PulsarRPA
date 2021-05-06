@@ -28,6 +28,9 @@ enum class HtmlIntegrity {
      * the the server should issue a 404 error code, but not guaranteed
      * */
     NOT_FOUND,
+    WRONG_COUNTRY,
+    WRONG_DISTRICT,
+    WRONG_LANG,
     TOO_SMALL,
     TOO_SMALL_IN_HISTORY,
     TOO_SMALL_IN_BATCH,

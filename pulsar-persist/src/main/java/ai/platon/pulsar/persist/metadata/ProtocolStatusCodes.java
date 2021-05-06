@@ -19,9 +19,9 @@ package ai.platon.pulsar.persist.metadata;
 import ai.platon.pulsar.common.ResourceStatus;
 
 /**
- * <p>ProtocolStatusCodes interface.</p>
  *
  * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
+ * @link {https://developer.mozilla.org/en-US/docs/Web/HTTP/Status}
  * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
  * @author vincent
  * @version $Id: $Id
@@ -67,6 +67,10 @@ public interface ProtocolStatusCodes {
      */
     int NOT_FOUND = ResourceStatus.SC_NOT_FOUND;
     /**
+     * The client has indicated preconditions in its headers which the server does not meet.
+     * */
+    int PRECONDITION_FAILED = ResourceStatus.SC_PRECONDITION_FAILED;
+    /**
      * Find the target host timed out.
      */
     int REQUEST_TIMEOUT = ResourceStatus.SC_REQUEST_TIMEOUT;
@@ -88,7 +92,7 @@ public interface ProtocolStatusCodes {
      */
     int UNKNOWN_HOST = 1460;
     /**
-     * Access denied by robots.txt rules.
+     * Access denied by robots.txt rules. Or display a robot check page.
      */
     int ROBOTS_DENIED = 1461;
     /**

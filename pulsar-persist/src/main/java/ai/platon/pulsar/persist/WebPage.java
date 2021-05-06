@@ -17,6 +17,7 @@
 package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.*;
+import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.urls.Urls;
 import ai.platon.pulsar.persist.gora.generated.*;
@@ -547,6 +548,10 @@ final public class WebPage implements Comparable<WebPage> {
 
     public void setCachedContentEnabled(boolean cachedContentEnabled) {
         this.cachedContentEnabled = cachedContentEnabled;
+    }
+
+    public int getMaxRetries() {
+        return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3);
     }
 
     @NotNull

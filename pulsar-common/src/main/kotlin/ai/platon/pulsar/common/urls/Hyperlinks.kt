@@ -51,6 +51,18 @@ interface UrlAware {
      * The url label, it should be in args
      * */
     val deadTime: Instant
+    /**
+     * Required website language
+     * */
+    val lang: String
+    /**
+     * Required website country
+     * */
+    val country: String
+    /**
+     * Required website district
+     * */
+    val district: String
 }
 
 interface ComparableUrlAware: UrlAware, Comparable<UrlAware>
@@ -83,6 +95,18 @@ abstract class AbstractUrl(
     override val isPersistable: Boolean = true
 
     override val label: String get() = findOption(args, listOf("-l", "-label", "--label")) ?: ""
+    /**
+     * Required website language
+     * */
+    override var lang: String = "*"
+    /**
+     * Required website country
+     * */
+    override var country: String = "*"
+    /**
+     * Required website district
+     * */
+    override var district: String = "*"
 
     override val deadTime: Instant
         get() {

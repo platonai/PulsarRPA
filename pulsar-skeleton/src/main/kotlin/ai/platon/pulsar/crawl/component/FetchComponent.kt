@@ -20,6 +20,7 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
@@ -50,8 +51,6 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
             it.conf = options.conf
             it.args = options.toString()
             it.isCachedContentEnabled = options.cacheContent
-
-            // it.fetchInterval = options.expires
 
             it.variables[VAR_LOAD_OPTIONS] = options
         }

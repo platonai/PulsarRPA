@@ -79,7 +79,7 @@ The response is as the following:
         "status": "OK"
     }
 
-Here are X-SQLs for [Full Amazon Data Model](pulsar-app/pulsar-sites-support/pulsar-site-amazon/src/main/resources/config/sites/amazon/crawl/parse/sql).
+Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-support/pulsar-site-amazon/src/main/resources/config/sites/amazon/crawl/parse/sql).
 
 ## Other languages
 

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.readable
 import java.time.Duration
@@ -10,8 +11,22 @@ import kotlin.math.max
  * The data collector interface
  * */
 interface DataCollector<T> {
+    /**
+     * The collector name
+     * */
     var name: String
-
+    /**
+     * Required website language
+     * */
+    val lang: String
+    /**
+     * Required website country
+     * */
+    val country: String
+    /**
+     * Required website district
+     * */
+    val district: String
     /**
      * The collector cache capacity. At most [capacity] items can be collected to the cache from the source
      * */
@@ -23,6 +38,8 @@ interface DataCollector<T> {
     val firstCollectTime: Instant
     val lastCollectedTime: Instant
     val collectTime: Duration
+    val deadTime: Instant
+
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableList<T>): Int
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
@@ -41,7 +58,22 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
     }
 
     override val capacity: Int = DEFAULT_CAPACITY
+    /**
+     * The collector name
+     * */
     override var name: String = "DC"
+    /**
+     * Required website language
+     * */
+    override var lang: String = "*"
+    /**
+     * Required website country
+     * */
+    override var country: String = "*"
+    /**
+     * Required website district
+     * */
+    override var district: String = "*"
 
     override val size: Int get() = 0
     override val estimatedSize: Int = 0
@@ -59,6 +91,8 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
     override var firstCollectTime = Instant.EPOCH
 
     override var lastCollectedTime = Instant.EPOCH
+
+    override var deadTime: Instant = DateTimes.doomsday
 
     override val collectTime: Duration get() = if (lastCollectedTime > firstCollectTime) {
             Duration.between(firstCollectTime, lastCollectedTime)

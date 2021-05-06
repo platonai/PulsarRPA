@@ -10,6 +10,8 @@ import java.nio.charset.Charset
 object AmazonUrls {
     val charset = Charset.defaultCharset()
 
+    val indexPageUrlContains = arrayOf("/zgbs/", "/most-wished-for/", "/new-releases/", "/movers-and-shakers/")
+
     fun isAmazon(url: String): Boolean {
         return url.contains(".amazon.")
     }
@@ -18,8 +20,7 @@ object AmazonUrls {
      * Site specific, should be moved to a better place
      * */
     fun isAmazonIndexPage(url: String): Boolean {
-        val indexPagePatterns = arrayOf("/zgbs/", "/most-wished-for/", "/new-releases/", "/movers-and-shakers/")
-        return isAmazon(url) && (indexPagePatterns.any { url.contains(it) })
+        return isAmazon(url) && (indexPageUrlContains.any { url.contains(it) })
     }
 
     /**
@@ -27,6 +28,10 @@ object AmazonUrls {
      * */
     fun isAmazonItemPage(url: String): Boolean {
         return isAmazon(url) && url.contains("/dp/")
+    }
+
+    fun isAmazonReviewPage(url: String): Boolean {
+        return isAmazon(url) && url.contains("/product-reviews/")
     }
 
     fun findAsin(url: String): String? {

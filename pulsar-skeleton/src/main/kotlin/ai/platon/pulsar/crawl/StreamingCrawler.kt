@@ -52,28 +52,37 @@ class StreamingCrawlerMetrics {
     val timeouts = registry.meter(this, "timeouts")
 }
 
+enum class CriticalWarning(val message: String) {
+    OUT_OF_MEMORY("OUT OF MEMORY"),
+    OUT_OF_DISK_STORAGE("OUT OF DISK STORAGE"),
+    NO_PROXY("NO PROXY AVAILABLE"),
+    FAST_CONTEXT_LEAK("CONTEXT LEAK TOO FAST"),
+    HIGH_CONCURRENCY("HIGH CONCURRENCY"),
+    WRONG_DISTRICT("WRONG DISTRICT! ALL RESIDENT TASKS ARE PAUSED"),
+}
+
 open class StreamingCrawler<T : UrlAware>(
-    /**
-     * The url sequence
-     * */
-    val urls: Sequence<T>,
-    /**
-     * The default load options
-     * */
-    val defaultOptions: LoadOptions,
-    /**
-     * The default pulsar session to use
-     * */
-    session: PulsarSession = PulsarContexts.createSession(),
-    /**
-     * A optional global cache which will hold the retry tasks
-     * */
-    val globalCache: GlobalCache? = null,
-    /**
-     * The crawl event handler
-     * */
-    val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
-    autoClose: Boolean = true
+        /**
+         * The url sequence
+         * */
+        val urls: Sequence<T>,
+        /**
+         * The default load options
+         * */
+        val defaultOptions: LoadOptions,
+        /**
+         * The default pulsar session to use
+         * */
+        session: PulsarSession = PulsarContexts.createSession(),
+        /**
+         * A optional global cache which will hold the retry tasks
+         * */
+        val globalCache: GlobalCache? = null,
+        /**
+         * The crawl event handler
+         * */
+        val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
+        autoClose: Boolean = true
 ) : AbstractCrawler(session, autoClose) {
     companion object {
         private val instanceSequencer = AtomicInteger()
@@ -90,18 +99,26 @@ open class StreamingCrawler<T : UrlAware>(
         private val remainingMemory get() = availableMemory - requiredMemory
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
+        private var criticalWarning: CriticalWarning? = null
         private var lastUrl = ""
+        private var lastHtmlIntegrity = ""
+        private var lastFetchError = ""
         private val isIllegalApplicationState = AtomicBoolean()
+
+        private var wrongDistrict = AppMetrics.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
 
         init {
             mapOf(
-                "globalRunningInstances" to Gauge { globalRunningInstances.get() },
-                "globalRunningTasks" to Gauge { globalRunningTasks.get() },
-                "globalKilledTasks" to Gauge { globalKilledTasks.get() },
+                    "globalRunningInstances" to Gauge { globalRunningInstances.get() },
+                    "globalRunningTasks" to Gauge { globalRunningTasks.get() },
+                    "globalKilledTasks" to Gauge { globalKilledTasks.get() },
 
-                "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
-                "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                "lastUrl" to Gauge { lastUrl }
+                    "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
+                    "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
+                    "   !!! WARNING !!! " to Gauge { criticalWarning?.message },
+                    "lastUrl" to Gauge { lastUrl },
+                    "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
+                    "lastFetchError" to Gauge { lastFetchError },
             ).let { AppMetrics.reg.registerAll(this, it) }
         }
     }
@@ -132,7 +149,7 @@ open class StreamingCrawler<T : UrlAware>(
     val id = instanceSequencer.incrementAndGet()
 
     private val gauges = mapOf(
-        "idleTime" to Gauge { idleTime.readable() }
+            "idleTime" to Gauge { idleTime.readable() }
     )
 
     init {
@@ -141,8 +158,8 @@ open class StreamingCrawler<T : UrlAware>(
         val cache = globalCache
         if (cache != null) {
             val cacheGauges = mapOf(
-                "pageCacheSize" to Gauge { cache.pageCache.size },
-                "documentCacheSize" to Gauge { cache.documentCache.size }
+                    "pageCacheSize" to Gauge { cache.pageCache.size },
+                    "documentCacheSize" to Gauge { cache.documentCache.size }
             )
             AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
         }
@@ -187,6 +204,7 @@ open class StreamingCrawler<T : UrlAware>(
                 // The largest disk must have at least 10GiB remaining space
                 if (AppMetrics.freeSpace.maxOfOrNull { ByteUnit.convert(it, "G") } ?: 0.0 < 10.0) {
                     log.error("Disk space is full!")
+                    criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@startCrawlLoop
                 }
 
@@ -225,9 +243,9 @@ open class StreamingCrawler<T : UrlAware>(
         globalRunningInstances.decrementAndGet()
 
         log.info(
-            "All done. Total {} tasks are processed in session {} in {}",
-            globalMetrics.tasks.counter.count, session,
-            DateTimes.elapsedTime(startTime).readable()
+                "All done. Total {} tasks are processed in session {} in {}",
+                globalMetrics.tasks.counter.count, session,
+                DateTimes.elapsedTime(startTime).readable()
         )
     }
 
@@ -237,11 +255,10 @@ open class StreamingCrawler<T : UrlAware>(
 
         while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
-                log.info(
-                    "{}. It takes long time to run {} tasks | {} -> {}",
-                    j, globalRunningTasks, lastActiveTime, idleTime.readable()
-                )
+                log.info("{}. It takes long time to run {} tasks | {} -> {}",
+                        j, globalRunningTasks, lastActiveTime, idleTime.readable())
             }
+            criticalWarning = CriticalWarning.HIGH_CONCURRENCY
             delay(1000)
         }
 
@@ -250,15 +267,23 @@ open class StreamingCrawler<T : UrlAware>(
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
             }
+            criticalWarning = CriticalWarning.OUT_OF_MEMORY
             delay(1000)
         }
 
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
         if (contextLeaksRate >= 5 / 60f) {
+            criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
             handleContextLeaks()
         }
 
+        while (wrongDistrict.hourlyCounter.count > 60) {
+            // do something? or our collectors should support language/country/district?
+            criticalWarning = CriticalWarning.WRONG_DISTRICT
+        }
+
         if (proxyOutOfService > 0) {
+            criticalWarning = CriticalWarning.NO_PROXY
             handleProxyOutOfService()
         }
 
@@ -272,6 +297,8 @@ open class StreamingCrawler<T : UrlAware>(
             flowState = FlowState.BREAK
             return flowState
         }
+
+        criticalWarning = null
 
         val context = Dispatchers.Default + CoroutineName("w")
         // must increase before launch because we have to control the number of running tasks
@@ -309,11 +336,7 @@ open class StreamingCrawler<T : UrlAware>(
         try {
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
             if (page != null && page.protocolStatus.isSuccess) {
-                lastUrl = page.configuredUrl
-                if (page.isContentUpdated) {
-                    globalMetrics.fetchSuccesses.mark()
-                }
-                globalMetrics.successes.mark()
+                collectStatIfSuccessfullyLoaded(page)
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
@@ -331,6 +354,23 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         return page
+    }
+
+    private fun collectStatIfSuccessfullyLoaded(page: WebPage) {
+        if (!page.protocolStatus.isSuccess) {
+            return
+        }
+
+        lastUrl = page.configuredUrl
+        lastHtmlIntegrity = page.htmlIntegrity.toString()
+        if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
+            wrongDistrict.mark()
+        }
+        lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
+        if (page.isContentUpdated) {
+            globalMetrics.fetchSuccesses.mark()
+        }
+        globalMetrics.successes.mark()
     }
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
@@ -378,8 +418,8 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         return session.runCatching { loadDeferred(url, options) }
-            .onFailure { flowState = handleException(url, it) }
-            .getOrNull()
+                .onFailure { flowState = handleException(url, it) }
+                .getOrNull()
     }
 
     @Throws(Exception::class)
@@ -437,34 +477,31 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         val retries = 1L + (page?.fetchRetries ?: 0)
-        val delay = Duration.ofMinutes(1L + 2 * retries)
-        url.args += " -i 0s"
-        if (retries <= 5) {
-            val delayCache = globalCache.fetchCacheManager.delayCache
-            delayCache.add(DelayUrl(url, delay))
-            globalMetrics.retries.mark()
-            if (page != null) {
-                val prefix = "Trying ${retries}th ${delay.readable()} later"
-                log.info("{}", LoadedPageFormatter(page, prefix = prefix))
-            }
-        } else {
+        if (page != null && retries > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()
-            if (page != null) {
-                log.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
-            } else {
-                log.info("Page is gone (unexpected) | {}", url)
-            }
+            log.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
+            return
+        }
+
+        val delay = Duration.ofMinutes(1L + 2 * retries)
+        url.args += " -i 0s"
+        val delayCache = globalCache.fetchCacheManager.delayCache
+        delayCache.add(DelayUrl(url, delay))
+        globalMetrics.retries.mark()
+        if (page != null) {
+            val prefix = "Trying ${retries}th ${delay.readable()} later"
+            log.info("{}", LoadedPageFormatter(page, prefix = prefix))
         }
     }
 
     private fun handleMemoryShortage(j: Int) {
         log.info(
-            "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
-            globalRunningTasks,
-            Strings.readableBytes(availableMemory),
-            Strings.readableBytes(requiredMemory),
-            Strings.readableBytes(abs(remainingMemory))
+                "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
+                globalRunningTasks,
+                Strings.readableBytes(availableMemory),
+                Strings.readableBytes(requiredMemory),
+                Strings.readableBytes(abs(remainingMemory))
         )
         session.context.clearCaches()
         System.gc()
