@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
@@ -451,15 +450,15 @@ class LoadComponent(
         // TODO: crawl status is better to decide the fetch reason
         val crawlStatus = page.crawlStatus
         val protocolStatus = page.protocolStatus
-        var retryFailed = options.retryFailed
+        var ignoreFailure = options.ignoreFailure || options.retryFailed
         if (options.refresh) {
             page.fetchRetries = 0
-            retryFailed = true
+            ignoreFailure = true
         }
 
         if (protocolStatus.isRetry) {
             return FetchState.RETRY
-        } else if (protocolStatus.isFailed && !retryFailed) {
+        } else if (protocolStatus.isFailed && !ignoreFailure) {
             // Failed to fetch the page last time, it might be caused by page is gone
             // in such case, do not fetch it even it it's expired, unless the retryFailed flag is set
             return FetchState.DO_NOT_FETCH

@@ -98,9 +98,9 @@ class TestLoadOptions {
 
     @Test
     fun testBooleanOptions() {
-        var options = LoadOptions.parse("-incognito -expires 1s -retry -storeContent false", conf)
+        var options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure -storeContent false", conf)
         assertTrue(options.incognito)
-        assertTrue(options.retryFailed)
+        assertTrue(options.ignoreFailure)
         assertFalse(options.parse)
         assertFalse(options.storeContent)
 
@@ -130,7 +130,7 @@ class TestLoadOptions {
         println("options: $options")
 
         assertTrue(options.incognito)
-        assertTrue(options.retryFailed)
+        assertTrue(options.ignoreFailure)
         assertFalse(options.parse)
         assertFalse(options.storeContent)
 

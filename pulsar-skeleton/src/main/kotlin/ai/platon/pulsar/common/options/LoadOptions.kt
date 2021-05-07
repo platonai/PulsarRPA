@@ -30,7 +30,7 @@ object LoadOptionDefaults {
     /**
      * Retry or not if a page is gone
      * */
-    var retryFailed = false
+    var ignoreFailure = false
     /**
      * The are several cases to enable jit retry
      * For example, in test environment
@@ -259,12 +259,21 @@ open class LoadOptions(
 
     /**
      * Force retry fetching the page if it's failed last time, or it's marked as gone
-     * TODO: a better name
+     * This option is deprecated and be replaced by ignoreFailure which is more descriptive
      * */
+    @Deprecated("Replaced by ignoreFailure, will be removed in further versions")
     @ApiPublic
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
-            description = "Retry fetching the page if it's failed last time")
-    var retryFailed = LoadOptionDefaults.retryFailed
+            description = "Retry fetching the page even if it's failed last time")
+    var retryFailed = LoadOptionDefaults.ignoreFailure
+
+    /**
+     * Force retry fetching the page if it's failed last time, or it's marked as gone
+     * */
+    @ApiPublic
+    @Parameter(names = ["-ignF", "-ignoreFailure", "--ignore-failure"],
+            description = "Retry fetching the page even if it's failed last time")
+    var ignoreFailure = LoadOptionDefaults.ignoreFailure
 
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
             description = "Retry at most n times if RETRY(1601) code return when fetching a page")
