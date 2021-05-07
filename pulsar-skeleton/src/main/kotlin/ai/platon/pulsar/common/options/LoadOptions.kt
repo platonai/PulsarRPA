@@ -253,8 +253,8 @@ open class LoadOptions(
 
     @ApiPublic
     @Parameter(names = ["-refresh", "--refresh"],
-        description = "Refresh the fetch state of page, set fetchRetries to be 0." +
-                "Note: refresh flag do not mean to fetch the page immediately, just reset fetchRetries.")
+        description = "Refresh the fetch state of page, clear fetch retry counter" +
+                " -fresh = -ignoreFailure -i 0s and set page.fetchRetries = 0")
     var refresh = false
 
     /**

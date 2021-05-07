@@ -454,6 +454,7 @@ class LoadComponent(
         if (options.refresh) {
             page.fetchRetries = 0
             ignoreFailure = true
+            options.expires = Duration.ZERO
         }
 
         if (protocolStatus.isRetry) {
