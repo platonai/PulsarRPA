@@ -115,7 +115,7 @@ open class StreamingCrawler<T : UrlAware>(
 
                     "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                     "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                    "   !!! WARNING !!! " to Gauge { criticalWarning?.message },
+                    "  000Warning" to Gauge { criticalWarning?.message?.let { "!!! WARNING !!! $it" }?:"" },
                     "lastUrl" to Gauge { lastUrl },
                     "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
                     "lastFetchError" to Gauge { lastFetchError },

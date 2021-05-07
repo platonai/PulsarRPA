@@ -20,6 +20,7 @@ hs_err_pid*
 
 # IntelliJ project files
 .idea
+.idea/*
 *.iml
 out
 gen### Eclipse template
