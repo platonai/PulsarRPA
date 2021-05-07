@@ -98,7 +98,7 @@ class TestLoadOptions {
 
     @Test
     fun testBooleanOptions() {
-        var options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure -storeContent false", conf)
+        var options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure -retryFailed -storeContent false", conf)
         assertTrue(options.incognito)
         assertTrue(options.ignoreFailure)
         assertFalse(options.parse)
@@ -112,6 +112,7 @@ class TestLoadOptions {
         assertTrue { "incognito" in modifiedOptionsKeys }
         assertTrue { "expires" in modifiedOptionsKeys }
         assertTrue { "retryFailed" in modifiedOptionsKeys }
+        assertTrue { "ignoreFailure" in modifiedOptionsKeys }
         assertFalse { "parse" in modifiedOptionsKeys }
         assertTrue { "storeContent" in modifiedOptionsKeys }
 
