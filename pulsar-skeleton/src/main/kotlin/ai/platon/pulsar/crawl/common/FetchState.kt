@@ -12,11 +12,12 @@ object FetchState {
     const val SCHEDULED = 2
     const val TEMP_MOVED = 300
     const val RETRY = 301
+    const val REFRESH = 302
 
     val codes = HashMap<Int, String>()
     val symbols = HashMap<Int, String>()
 
-    val refreshCodes = listOf(NEW_PAGE, EXPIRED, SCHEDULED, SMALL_CONTENT, MISS_FIELD, RETRY)
+    val refreshCodes = listOf(NEW_PAGE, EXPIRED, SCHEDULED, SMALL_CONTENT, MISS_FIELD, RETRY, REFRESH)
 
     fun toString(code: Int): String {
         return codes.getOrDefault(code, "unknown")
@@ -35,6 +36,7 @@ object FetchState {
         codes[MISS_FIELD] = "miss_field"
         codes[TEMP_MOVED] = "temp_moved"
         codes[RETRY] = "retry"
+        codes[REFRESH] = "refresh"
 
         symbols[UNKNOWN] = "U"
         symbols[DO_NOT_FETCH] = ""
@@ -44,5 +46,6 @@ object FetchState {
         symbols[MISS_FIELD] = "MF"
         symbols[TEMP_MOVED] = "TM"
         symbols[RETRY] = "R"
+        symbols[REFRESH] = "RF"
     }
 }

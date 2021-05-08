@@ -450,13 +450,12 @@ class LoadComponent(
         // TODO: crawl status is better to decide the fetch reason
         val crawlStatus = page.crawlStatus
         val protocolStatus = page.protocolStatus
-        var ignoreFailure = options.ignoreFailure || options.retryFailed
         if (options.refresh) {
             page.fetchRetries = 0
-            ignoreFailure = true
-            options.expires = Duration.ZERO
+            return FetchState.REFRESH
         }
 
+        val ignoreFailure = options.ignoreFailure || options.retryFailed
         if (protocolStatus.isRetry) {
             return FetchState.RETRY
         } else if (protocolStatus.isFailed && !ignoreFailure) {

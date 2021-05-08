@@ -37,7 +37,7 @@ open class QueueCollector(
         beforeCollect()
 
         val count = queue.poll()
-            ?.let { Hyperlinks.toHyperlink(it).also { it.args += " $loadArgs" } }
+            ?.let { Hyperlinks.toHyperlink(it).also { if (loadArgs != null) it.args += " $loadArgs" } }
             ?.takeIf { sink.add(it) }
             ?.let { 1 } ?: 0
 

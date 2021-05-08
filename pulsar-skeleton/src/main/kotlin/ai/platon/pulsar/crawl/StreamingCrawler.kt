@@ -57,7 +57,6 @@ enum class CriticalWarning(val message: String) {
     OUT_OF_DISK_STORAGE("OUT OF DISK STORAGE"),
     NO_PROXY("NO PROXY AVAILABLE"),
     FAST_CONTEXT_LEAK("CONTEXT LEAK TOO FAST"),
-    HIGH_CONCURRENCY("HIGH CONCURRENCY"),
     WRONG_DISTRICT("WRONG DISTRICT! ALL RESIDENT TASKS ARE PAUSED"),
 }
 
@@ -115,7 +114,7 @@ open class StreamingCrawler<T : UrlAware>(
 
                     "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                     "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                    "  000Warning" to Gauge { criticalWarning?.message?.let { "!!! WARNING !!! $it" }?:"" },
+                    "000WARNING" to Gauge { criticalWarning?.message?.let { "!!! WARNING !!! $it" }?:"" },
                     "lastUrl" to Gauge { lastUrl },
                     "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
                     "lastFetchError" to Gauge { lastFetchError },
@@ -123,7 +122,7 @@ open class StreamingCrawler<T : UrlAware>(
         }
     }
 
-    private val log = LoggerFactory.getLogger(StreamingCrawler::class.java)
+    private val logger = LoggerFactory.getLogger(StreamingCrawler::class.java)
     private val conf = session.sessionConfig
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
@@ -184,7 +183,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        log.info("Starting streaming crawler ... | {}", defaultOptions)
+        logger.info("Starting streaming crawler ... | {}", defaultOptions)
 
         globalRunningInstances.incrementAndGet()
 
@@ -203,7 +202,7 @@ open class StreamingCrawler<T : UrlAware>(
 
                 // The largest disk must have at least 10GiB remaining space
                 if (AppMetrics.freeSpace.maxOfOrNull { ByteUnit.convert(it, "G") } ?: 0.0 < 10.0) {
-                    log.error("Disk space is full!")
+                    logger.error("Disk space is full!")
                     criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@startCrawlLoop
                 }
@@ -242,8 +241,7 @@ open class StreamingCrawler<T : UrlAware>(
 
         globalRunningInstances.decrementAndGet()
 
-        log.info(
-                "All done. Total {} tasks are processed in session {} in {}",
+        logger.info("All done. Total {} tasks are processed in session {} in {}",
                 globalMetrics.tasks.counter.count, session,
                 DateTimes.elapsedTime(startTime).readable()
         )
@@ -255,10 +253,9 @@ open class StreamingCrawler<T : UrlAware>(
 
         while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
-                log.info("{}. It takes long time to run {} tasks | {} -> {}",
-                        j, globalRunningTasks, lastActiveTime, idleTime.readable())
+                logger.info("$j. Long time to run $globalRunningTasks tasks" +
+                        " | $lastActiveTime -> {}", idleTime.readable())
             }
-            criticalWarning = CriticalWarning.HIGH_CONCURRENCY
             delay(1000)
         }
 
@@ -287,7 +284,7 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         if (FileCommand.check("finish-job")) {
-            log.info("Find finish-job command, quit streaming crawler ...")
+            logger.info("Find finish-job command, quit streaming crawler ...")
             flowState = FlowState.BREAK
             return flowState
         }
@@ -339,16 +336,16 @@ open class StreamingCrawler<T : UrlAware>(
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
-            log.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, taskTimeout, url)
+            logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, taskTimeout, url)
         } catch (e: Throwable) {
             if (e.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("Streaming crawler coroutine was cancelled, quit ...", e)
+                    logger.warn("Streaming crawler coroutine was cancelled, quit ...", e)
                 }
                 flowState = FlowState.BREAK
             } else {
-                log.warn("Unexpected exception", e)
+                logger.warn("Unexpected exception", e)
             }
         }
 
@@ -396,7 +393,7 @@ open class StreamingCrawler<T : UrlAware>(
             page == null -> handleRetry(url, page)
             page.protocolStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isGone -> log.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
+            page.crawlStatus.isGone -> logger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
         }
 
         if (page != null) {
@@ -431,32 +428,32 @@ open class StreamingCrawler<T : UrlAware>(
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("\n!!!Illegal application context, quit ... | {}", e.message)
+                    logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }
             is IllegalStateException -> {
-                log.warn("Illegal state", e)
+                logger.warn("Illegal state", e)
             }
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
-                log.warn("{}. {}", proxyOutOfService, e.message)
+                logger.warn("{}. {}", proxyOutOfService, e.message)
             }
             is ProxyVendorUntrustedException -> {
-                log.warn("Proxy is untrusted | {}", e.message)
+                logger.warn("Proxy is untrusted | {}", e.message)
                 return FlowState.BREAK
             }
             is ProxyException -> {
-                log.warn("Unexpected proxy exception | {}", Strings.simplifyException(e))
+                logger.warn("Unexpected proxy exception | {}", Strings.simplifyException(e))
             }
             is TimeoutCancellationException -> {
-                log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
+                logger.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
             }
             is CancellationException -> {
                 // Comes after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("Streaming crawler job was canceled, quit ...", e)
+                    logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
             }
@@ -479,24 +476,22 @@ open class StreamingCrawler<T : UrlAware>(
         if (page != null && retries > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()
-            log.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
+            logger.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
             return
         }
 
         val delay = Duration.ofMinutes(1L + 2 * retries)
-        url.args += " -i 0s"
         val delayCache = globalCache.fetchCacheManager.delayCache
         delayCache.add(DelayUrl(url, delay))
         globalMetrics.retries.mark()
         if (page != null) {
             val prefix = "Trying ${retries}th ${delay.readable()} later"
-            log.info("{}", LoadedPageFormatter(page, prefix = prefix))
+            logger.info("{}", LoadedPageFormatter(page, prefix = prefix))
         }
     }
 
     private fun handleMemoryShortage(j: Int) {
-        log.info(
-                "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
+        logger.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
                 globalRunningTasks,
                 Strings.readableBytes(availableMemory),
                 Strings.readableBytes(requiredMemory),
@@ -517,9 +512,7 @@ open class StreamingCrawler<T : UrlAware>(
         val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
-            if (k % 60 == 0) {
-                log.warn("Context leaks too fast: $contextLeaksRate leaks/seconds")
-            }
+            logger.takeIf { k % 60 == 0 }?.warn("Context leaks too fast: $contextLeaksRate leaks/seconds")
             delay(1000)
 
             // trigger the meter updating
@@ -544,7 +537,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun handleProxyOutOfService0() {
         if (++proxyOutOfService % 180 == 0) {
-            log.warn("Proxy account insufficient balance, check it again ...")
+            logger.warn("Proxy account insufficient balance, check it again ...")
             val p = proxyPool
             if (p != null) {
                 p.runCatching { take() }.onFailure {
@@ -562,9 +555,7 @@ open class StreamingCrawler<T : UrlAware>(
         var k = 0
         while (wrongDistrict.hourlyCounter.count > 60) {
             criticalWarning = CriticalWarning.WRONG_DISTRICT
-            if (k++ % 20 == 0) {
-                log.warn("{}", criticalWarning?.message)
-            }
+            logger.takeIf { k++ % 20 == 0 }?.warn("{}", criticalWarning?.message ?: "")
             delay(1000)
         }
     }
@@ -582,7 +573,7 @@ open class StreamingCrawler<T : UrlAware>(
             Files.write(finishScriptPath, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
             Files.setPosixFilePermissions(finishScriptPath, PosixFilePermissions.fromString("rwxrw-r--"))
         } catch (e: IOException) {
-            log.error(e.toString())
+            logger.error(e.toString())
         }
     }
 }
