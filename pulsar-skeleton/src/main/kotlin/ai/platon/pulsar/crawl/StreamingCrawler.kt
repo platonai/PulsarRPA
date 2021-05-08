@@ -225,7 +225,6 @@ open class StreamingCrawler<T : UrlAware>(
                     globalLoadingUrls.add(url.url)
                     runWithStatusCheck(1 + j, url, scope)
                 } finally {
-                    globalMetrics.finishes.mark()
                     globalLoadingUrls.remove(url.url)
                 }
 
@@ -249,7 +248,6 @@ open class StreamingCrawler<T : UrlAware>(
 
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
-        globalMetrics.tasks.mark()
 
         while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
@@ -300,11 +298,17 @@ open class StreamingCrawler<T : UrlAware>(
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
-            runUrlTask(url)
-            // webpages and documents are very large, we need remove them from the cache as soon as possible
-            globalCache?.removePDCache(url.url)
-            lastActiveTime = Instant.now()
-            globalRunningTasks.decrementAndGet()
+            try {
+                globalMetrics.tasks.mark()
+                runUrlTask(url)
+            } finally {
+                // webpages and documents are very large, we need remove them from the cache as soon as possible
+                globalCache?.removePDCache(url.url)
+
+                lastActiveTime = Instant.now()
+                globalRunningTasks.decrementAndGet()
+                globalMetrics.finishes.mark()
+            }
         }
 
         return flowState
@@ -331,8 +335,8 @@ open class StreamingCrawler<T : UrlAware>(
         var page: WebPage? = null
         try {
             page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
-            if (page != null && page.protocolStatus.isSuccess) {
-                collectStatIfSuccessfullyLoaded(page)
+            if (page != null) {
+                collectStatAfterLoad(page)
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
@@ -352,7 +356,8 @@ open class StreamingCrawler<T : UrlAware>(
         return page
     }
 
-    private fun collectStatIfSuccessfullyLoaded(page: WebPage) {
+    private fun collectStatAfterLoad(page: WebPage) {
+        lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
         if (!page.protocolStatus.isSuccess) {
             return
         }
@@ -362,8 +367,7 @@ open class StreamingCrawler<T : UrlAware>(
         if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
             wrongDistrict.mark()
         }
-        lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
-        if (page.isContentUpdated) {
+        if (page.isFetched) {
             globalMetrics.fetchSuccesses.mark()
         }
         globalMetrics.successes.mark()

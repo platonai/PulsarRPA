@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
@@ -35,7 +36,7 @@ open class BrowserPrivacyContext(
 
     @Throws(NoProxyException::class, ProxyVendorUntrustedException::class)
     override suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
-        initialize()
+        initialize(task)
 
         return checkAbnormalResult(task) ?:
             proxyContext?.run(task, browseFun) ?:
@@ -87,12 +88,13 @@ open class BrowserPrivacyContext(
 
     @Throws(ProxyException::class)
     @Synchronized
-    private fun initialize() {
+    private fun initialize(task: FetchTask) {
         if (proxyEntry == null && proxyPoolManager != null && proxyPoolManager.isEnabled) {
             val pc = ProxyContext.create(id, driverContext, proxyPoolManager, conf)
             proxyEntry = pc.proxyEntry
             browserInstanceId.proxyServer = proxyEntry?.hostPort
             proxyContext = pc
         }
+        task.page.variables[VAR_PRIVACY_CONTEXT_NAME] = display
     }
 }

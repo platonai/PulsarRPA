@@ -1,8 +1,10 @@
 package ai.platon.pulsar.ql.h2
 
+import org.h2.jdbc.JdbcSQLException
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
+import kotlin.jvm.Throws
 import kotlin.math.abs
 
 /**
@@ -17,6 +19,7 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
      * @param name the database name
      * @return the connection
      */
+    @Throws(JdbcSQLException::class)
     fun getRandomConnection() = getConnection(generateTempDbName())
 
     /**
@@ -26,6 +29,7 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
      * @param name the database name
      * @return the connection
      */
+    @Throws(JdbcSQLException::class)
     fun getConnection(name: String) = getConnection0(buildURL(name, true), conf.user, conf.password)
 
     private fun generateTempDbName(): String {

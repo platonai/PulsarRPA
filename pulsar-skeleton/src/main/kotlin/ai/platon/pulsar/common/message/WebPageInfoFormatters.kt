@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.message
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
@@ -72,7 +73,7 @@ class LoadedPageFormatter(
         get() {
             val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
             return if (ni + na + nnm + nst + h != 0) {
-                String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
+                String.format("i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
             } else ""
         }
 
@@ -80,16 +81,16 @@ class LoadedPageFormatter(
     private val prefix0 get() = if (page.isFetched) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
-    private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
+    private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
     private val category get() = page.pageCategory.symbol()
     private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
     private val prevFetchTimeDuration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now()).readable()
-    private val prevFetchTimeReport get() = "last fetched $prevFetchTimeDuration ago,"
+    private val prevFetchTimeReport get() = " last fetched $prevFetchTimeDuration ago,"
     private val fieldCount get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
-    private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
+    private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
     private val fetchCount get() =
-        if (page.protocolStatus.isRetry) {
+        if (page.fetchRetries > 0) {
             String.format("%d/%d", page.fetchRetries, page.fetchCount)
         } else {
             String.format("%d", page.fetchCount)
@@ -97,11 +98,11 @@ class LoadedPageFormatter(
     private val fieldCountFmt get() = if (m.numFields == 0) "%s" else " | nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
+    private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
     private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %13s in %s," +
-            " $prevFetchTimeReport fc:$fetchCount $failure" +
-            " | $jsFmt $fieldCountFmt$proxyFmt" +
-            " | %s$formattedLabel%s"
+            "$prevFetchTimeReport fc:$fetchCount$failure" +
+            "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
 
     override fun toString(): String {
         return String.format(fmt,
@@ -113,7 +114,6 @@ class LoadedPageFormatter(
                 jsSate,
                 if (m.numFields == 0) "" else fieldCount,
                 proxy?:"",
-                page.variables["privacyContext"]?:"",
                 buildLocation()
         )
     }
