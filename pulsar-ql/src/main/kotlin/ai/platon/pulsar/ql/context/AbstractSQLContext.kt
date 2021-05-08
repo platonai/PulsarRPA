@@ -4,6 +4,7 @@ import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
@@ -37,6 +38,11 @@ abstract class AbstractSQLContext constructor(
     var status: Status = Status.NOT_READY
 
     abstract val randomConnection: Connection
+
+    val randomConnectionOrNull: Connection? = kotlin.runCatching { randomConnection }
+        .onFailure { log.warn(it.simplify()) }
+        .getOrNull()
+
     val connectionPool = ArrayBlockingQueue<Connection>(1000)
     private val resultSetType = ResultSet.TYPE_SCROLL_SENSITIVE
     private val resultSetConcurrency = ResultSet.CONCUR_READ_ONLY

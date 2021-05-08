@@ -362,6 +362,7 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
+        wrongDistrict.reset()
         lastUrl = page.configuredUrl
         lastHtmlIntegrity = page.htmlIntegrity.toString()
         if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
