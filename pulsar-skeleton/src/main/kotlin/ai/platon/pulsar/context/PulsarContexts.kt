@@ -32,6 +32,9 @@ object PulsarContexts {
     }
 
     @Synchronized
+    fun activate(contextLocation: String) = activate(ClassPathXmlPulsarContext(contextLocation))
+
+    @Synchronized
     fun activate(applicationContext: ApplicationContext) =
         activate(BasicPulsarContext(applicationContext as AbstractApplicationContext))
 

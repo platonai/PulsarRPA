@@ -1,6 +1,6 @@
 package ai.platon.pulsar.boilerpipe.sax;
 
-import ai.platon.pulsar.boilerpipe.utils.Scent;
+import ai.platon.pulsar.boilerpipe.utils.BoiConstants;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -39,7 +39,7 @@ public class HTMLDownloader {
     CloseableHttpClient client = HttpClients.createDefault();
     try {
       HttpGet httpget = new HttpGet(url.toString());
-        httpget.setHeader("User-Agent", Scent.DEFAULT_USER_AGENT);
+        httpget.setHeader("User-Agent", BoiConstants.DEFAULT_USER_AGENT);
 
       // System.out.println("Executing request " + httpget.getRequestLine());
 

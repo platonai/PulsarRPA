@@ -14,7 +14,7 @@ class XSQLRunner(
 ) {
     private val log = LoggerFactory.getLogger(XSQLRunner::class.java)
 
-    val loadArgs = "-i 0s -retry -nJitRetry 3"
+    val loadArgs = "-i 1d -ignF -nJitRetry 3"
     val extractor = VerboseSQLExtractor(cx)
     val session = extractor.session
 
@@ -45,18 +45,16 @@ class XSQLRunner(
         val count = ResultSetUtils.count(rs)
         log.info("Extracted $count records")
 
+        rs.beforeFirst()
         return rs
     }
 
-    fun executeAll(sqls: List<Pair<String, String>>) {
+    fun executeAll(sqls: Iterable<SQLInstance>) {
         var i = 0
-        sqls.forEach { (url, resource) ->
-            val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
-            val sqlInstance = SQLInstance.load(url, resource, name = name)
-
+        sqls.forEach { sqlInstance ->
             when {
                 sqlInstance.template.template.isBlank() -> {
-                    log.warn("Failed to load SQL template <{}>", resource)
+                    log.warn("Failed to load SQL template <{}>", sqlInstance)
                 }
                 sqlInstance.template.template.contains("create table", ignoreCase = true) -> {
                     log.info(SQLConverter.createSQL2extractSQL(sqlInstance.template.template))
@@ -66,5 +64,14 @@ class XSQLRunner(
                 }
             }
         }
+    }
+
+    fun executeAll(sqls: List<Pair<String, String>>) {
+        var i = 0
+        val sqlInstances = sqls.map { (url, resource) ->
+            val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
+            SQLInstance.load(url, resource, name = name)
+        }
+        executeAll(sqlInstances)
     }
 }

@@ -17,21 +17,21 @@ import java.util.stream.Stream;
  * Created by vincent on 16-10-27.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-public class Scent {
+public class BoiConstants {
     public static final int MIN_DATE_TIME_STR_LENGTH = 15;
     public static final int MAX_META_STR_LENGTH = 200;
 
-    public static final String DOC_FIELD_PUBLISH_TIME = "publish_time";
-    public static final String DOC_FIELD_MODIFIED_TIME = "modified_time";
-    public static final String DOC_FIELD_ARTICLE_TILE = "article_title";
-    public static final String DOC_FIELD_PAGE_TITLE = "page_title";
-    public static final String DOC_FIELD_CONTENT_TITLE = "article_title";
-    public static final String DOC_FIELD_PAGE_CATEGORY = "page_category";
-    public static final String DOC_FIELD_LINKS_COUNT = "links_count";
-    public static final String DOC_FIELD_HTML_CONTENT = "html_content";
-    public static final String DOC_FIELD_TEXT_CONTENT = "text_content";
-    public static final String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
-    public static final String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
+    public static final String DOC_FIELD_PUBLISH_TIME = "auto_publish_time";
+    public static final String DOC_FIELD_MODIFIED_TIME = "auto_modified_time";
+    public static final String DOC_FIELD_ARTICLE_TILE = "auto_article_title";
+    public static final String DOC_FIELD_PAGE_TITLE = "auto_page_title";
+    public static final String DOC_FIELD_CONTENT_TITLE = "auto_article_title";
+    public static final String DOC_FIELD_PAGE_CATEGORY = "auto_page_category";
+    public static final String DOC_FIELD_LINKS_COUNT = "auto_links_count";
+    public static final String DOC_FIELD_HTML_CONTENT = "auto_html_content";
+    public static final String DOC_FIELD_TEXT_CONTENT = "auto_text_content";
+    public static final String DOC_FIELD_TEXT_CONTENT_LENGTH = "auto_text_content_length";
+    public static final String DOC_FIELD_HTML_CONTENT_LENGTH = "auto_html_content_length";
 
     public static final String DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows; U; Win 9x 4.90; SG; rv:1.9.2.4) Gecko/20101104 Netscape/9.1.0285";
 

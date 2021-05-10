@@ -2,11 +2,16 @@ package ai.platon.pulsar.amazon.app
 
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.sql.SQLInstance
+import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
 import ai.platon.pulsar.test.XSQLRunner
 import kotlin.system.exitProcess
 
 fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
+    cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+    System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
 
     val productUrl = "https://www.amazon.com/dp/B082P8J28M"
@@ -47,14 +52,11 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
         categoryListUrl to "category-asin-extract.sql",
         keywordAsinList to "keyword-asin-extract.sql",
         keywordAsinList to "keyword-side-category-tree-1.sql"
-    ).map { it.first to "$resourcePrefix/${it.second}" }
+    )
+        .map { SQLInstance(it.first, SQLTemplate(it.second)) }
+        .filter { "x-asin-best-sellers.sql" in it.sql }
 
-    cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    val xsqlFilter = { xsql: String -> "x-asin-best-sellers.sql" in xsql }
-    // val xsqlFilter = { xsql: String -> true }
-
-    System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    XSQLRunner(cx).executeAll(sqls.filter { xsqlFilter(it.second) })
+    XSQLRunner(cx).executeAll(sqls)
 
     exitProcess(0)
 }

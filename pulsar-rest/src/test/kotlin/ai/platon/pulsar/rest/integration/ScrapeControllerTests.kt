@@ -3,7 +3,6 @@ package ai.platon.pulsar.rest.integration
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
-import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.apache.http.HttpStatus
 import org.junit.Test
@@ -37,7 +36,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
     fun `When extract with x-sql then the result returns`() {
         val site = "amazon"
         val url = urls[site]!!
-        val sql = sqlTemplates[site]!!.createInstance(url)
+        val sql = sqlTemplates[site]!!.createSQL(url)
 
         println(">>>\n$sql\n<<<")
         val response = restTemplate.postForObject("$baseUri/x/e", sql, ScrapeResponse::class.java)
@@ -50,7 +49,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
     fun `When extract with x-sql then the result can be received asynchronously`() {
         val site = "jd"
         val url = urls[site]!!
-        val sql = sqlTemplates[site]!!.createInstance(url)
+        val sql = sqlTemplates[site]!!.createSQL(url)
 
         val uuid = restTemplate.postForObject("$baseUri/x/s", sql, String::class.java)
         assertNotNull(uuid)

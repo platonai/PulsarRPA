@@ -1,10 +1,10 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.ql.h2.addColumn
-import org.apache.http.client.utils.URLEncodedUtils
 import org.h2.value.ValueString
 import org.junit.Test
 import java.sql.Types
@@ -56,7 +56,7 @@ class TestResultSetUtils {
         ).map { it.trimIndent() }
 
         urls.forEach { url ->
-            sqlTemplates.map { template -> SQLTemplate.createInstance(template, url) }.forEach { sql ->
+            sqlTemplates.map { template -> SQLTemplate(template).createSQL(url) }.forEach { sql ->
                 val actualUrl = ResultSetUtils.extractUrlFromFromClause(sql)
                 assertEquals(url, actualUrl, sql)
             }

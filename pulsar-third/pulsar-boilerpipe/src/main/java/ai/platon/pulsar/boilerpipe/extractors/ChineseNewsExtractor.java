@@ -13,7 +13,7 @@ import com.google.common.collect.ListMultimap;
 import java.time.ZoneId;
 import java.util.Set;
 
-import static ai.platon.pulsar.boilerpipe.utils.Scent.*;
+import static ai.platon.pulsar.boilerpipe.utils.BoiConstants.*;
 
 /**
  * A full-text extractor which is tuned towards news articles. In this scenario it achieves higher

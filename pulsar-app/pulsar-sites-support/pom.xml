@@ -25,5 +25,6 @@
 
     <modules>
         <module>pulsar-site-amazon</module>
+        <module>pulsar-site-cn-gov</module>
     </modules>
 </project>

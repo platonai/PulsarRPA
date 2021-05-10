@@ -7,9 +7,16 @@ class SQLInstance(
     val template: SQLTemplate,
     val name: String = template.name,
 ) {
-    val sql = template.createInstance(url)
+    val sql = createSQL()
 
     override fun toString() = sql
+
+    private fun createSQL(): String {
+        val sanitizedUrl = SQLUtils.sanitizeUrl(url)
+        return template.template.replace("{{url}}", sanitizedUrl)
+            .replace("@url", "'$sanitizedUrl'")
+            .replace("{{snippet: url}}", "'$sanitizedUrl'")
+    }
 
     companion object {
         private val generatedName: String = RandomStringUtils.randomAlphabetic(4)

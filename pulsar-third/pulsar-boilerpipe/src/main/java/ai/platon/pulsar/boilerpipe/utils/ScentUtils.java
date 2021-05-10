@@ -38,7 +38,7 @@ public class ScentUtils {
 
         // The value is a name, but the value does not like a name
         if (checkFieldIsAPersonName(key)) {
-          if (Arrays.stream(Scent.BAD_PHRASE_IN_NAME).anyMatch(value::contains)) {
+          if (Arrays.stream(BoiConstants.BAD_PHRASE_IN_NAME).anyMatch(value::contains)) {
             value = null;
           }
         }
@@ -47,7 +47,7 @@ public class ScentUtils {
           continue;
         }
 
-        Integer maxLength = Scent.MAX_FIELD_LENGTH_MAP.get(key);
+        Integer maxLength = BoiConstants.MAX_FIELD_LENGTH_MAP.get(key);
         if (maxLength == null) {
           results.put(key, value);
         } else if (value.length() <= maxLength) {
@@ -60,7 +60,7 @@ public class ScentUtils {
   }
 
   private static String filterExtractedValue(String key, String value) {
-    for (String bounder : Scent.REGEX_FIELD_BOUNDERS) {
+    for (String bounder : BoiConstants.REGEX_FIELD_BOUNDERS) {
       if (value.endsWith(bounder)) {
         value = StringUtils.substringBefore(value, bounder);
         break;

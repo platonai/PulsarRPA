@@ -24,7 +24,7 @@ class ChooseCountryJsEventHandler: AbstractJsEventHandler() {
 
     override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
         // New York City
-        val zipcode = listOf("10001", "10001", "10002", "10002", "10003", "10004", "10005", "10006").shuffled().first()
+        val zipcode = listOf("10001", "10001", "10002", "10002").shuffled().first()
         val resource = "sites/amazon/js/choose-district.js"
         val expressions = ResourceLoader.readString(resource)
             .replace("10001", zipcode)

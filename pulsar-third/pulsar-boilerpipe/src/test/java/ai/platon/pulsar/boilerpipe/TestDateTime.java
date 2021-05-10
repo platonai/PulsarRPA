@@ -2,7 +2,7 @@ package ai.platon.pulsar.boilerpipe;
 
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
-import ai.platon.pulsar.boilerpipe.utils.Scent;
+import ai.platon.pulsar.boilerpipe.utils.BoiConstants;
 import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
 import ai.platon.pulsar.common.DateTimeDetector;
 import com.google.common.collect.Lists;
@@ -160,7 +160,7 @@ public class TestDateTime {
         };
 
         for (String text : texts) {
-            Map<String, String> results = ScentUtils.extract(text, Scent.REGEX_FIELD_RULES);
+            Map<String, String> results = ScentUtils.extract(text, BoiConstants.REGEX_FIELD_RULES);
             String message = text + " - " + results.toString();
             System.out.println(message);
         }

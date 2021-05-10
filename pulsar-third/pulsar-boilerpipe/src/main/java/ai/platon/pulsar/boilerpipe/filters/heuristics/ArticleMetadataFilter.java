@@ -5,7 +5,7 @@ import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
-import ai.platon.pulsar.boilerpipe.utils.Scent;
+import ai.platon.pulsar.boilerpipe.utils.BoiConstants;
 import ai.platon.pulsar.common.DateTimeDetector;
 
 import java.time.Duration;
@@ -41,7 +41,7 @@ public class ArticleMetadataFilter implements TextBlockFilter {
         boolean foundLongText = false;
         for (TextBlock tb : doc.getTextBlocks()) {
             final String text = tb.getText();
-            if (text.length() > Scent.MAX_META_STR_LENGTH) {
+            if (text.length() > BoiConstants.MAX_META_STR_LENGTH) {
                 foundLongText = true;
             }
 
@@ -54,7 +54,7 @@ public class ArticleMetadataFilter implements TextBlockFilter {
 
             // sniff publish time
             // TODO : need more features
-            if (!foundLongText && text.length() > Scent.MIN_DATE_TIME_STR_LENGTH && publishTime == null) {
+            if (!foundLongText && text.length() > BoiConstants.MIN_DATE_TIME_STR_LENGTH && publishTime == null) {
                 if (sniffedTime.isAfter(doc.getPublishTime())) {
                     publishTime = sniffedTime;
 
@@ -68,7 +68,7 @@ public class ArticleMetadataFilter implements TextBlockFilter {
             }
 
             if (tb.getNumWords() < 10) {
-                for (Pattern p : Scent.PATTERNS_SHORT) {
+                for (Pattern p : BoiConstants.PATTERNS_SHORT) {
                     if (p.matcher(text).find()) {
                         changed = true;
                         tb.setIsContent(true);

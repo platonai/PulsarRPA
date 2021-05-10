@@ -35,7 +35,7 @@ class TestSQLTemplate {
 
     @Test
     fun testCreateInstance() {
-        val sqlTemplates = templates.entries.associate { it.key to SQLTemplate(it.value).createInstance(url) }
+        val sqlTemplates = templates.entries.associate { it.key to SQLTemplate(it.value).createSQL(url) }
         sqlTemplates.forEach { (name, template) ->
             assertEquals(expectedSQL, template, name)
         }
