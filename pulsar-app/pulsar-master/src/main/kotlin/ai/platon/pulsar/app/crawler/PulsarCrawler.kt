@@ -1,11 +1,11 @@
 package ai.platon.pulsar.app.crawler
 
-import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.crawl.StreamingCrawlStarter
 import ai.platon.pulsar.crawl.common.GlobalCache
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -18,6 +18,9 @@ class PulsarCrawler(
 ) {
     private val fetchCache get() = globalCache.fetchCacheManager.normalCache
 
+    @Autowired
+    lateinit var unmodifiedConfig: ImmutableConfig
+
     @Bean
     fun generate() {
         val resource = "config/sites/amazon/crawl/inject/seeds/category/best-sellers/leaf-categories.txt"
@@ -28,9 +31,8 @@ class PulsarCrawler(
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
-    fun fetch(): StreamingCrawlLoop {
-        val session: PulsarSession = PulsarContexts.createSession()
-        return StreamingCrawlLoop(session, globalCache)
+    fun fetch(): StreamingCrawlStarter {
+        return StreamingCrawlStarter(globalCache, unmodifiedConfig)
     }
 }
 

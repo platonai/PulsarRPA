@@ -1,12 +1,9 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.context.PulsarContexts
 import org.junit.Test
-import kotlin.test.assertEquals
 
 class TestMetadataFunctions : TestBase() {
     private val urlGroups = TestResource.urlGroups
-    private val session = PulsarContexts.createSession()
 
     @Test
     fun testGet() {

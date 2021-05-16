@@ -3,10 +3,10 @@ package ai.platon.pulsar.rest
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.crawl.StreamingCrawlStarter
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.dom.nodes.node.ext.cleanText
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
@@ -39,16 +39,19 @@ class ScrapeServiceTests {
     @Autowired
     private lateinit var globalCache: GlobalCache
 
-    private val crawlLoop by lazy { StreamingCrawlLoop(session, globalCache) }
+    @Autowired
+    lateinit var unmodifiedConfig: ImmutableConfig
+
+    private val crawlStarter by lazy { StreamingCrawlStarter(globalCache, unmodifiedConfig) }
 
     @Before
     fun setup() {
-        crawlLoop.start()
+        crawlStarter.start()
     }
 
     @After
     fun tearDown() {
-        crawlLoop.stop()
+        crawlStarter.stop()
     }
 
     /**

@@ -105,8 +105,8 @@ object Queries {
     fun loadOutPages(
         session: PulsarSession,
         portalUrl: String, restrictCss: String,
-        offset: Int, limit: Int,
-        normalize: Boolean, ignoreQuery: Boolean
+        offset: Int = 1, limit: Int = Int.MAX_VALUE,
+        normalize: Boolean = false, ignoreQuery: Boolean = false
     ): Collection<WebPage> {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 

@@ -3,8 +3,9 @@ package ai.platon.pulsar.rest.integration
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.crawl.StreamingCrawlStarter
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.junit.After
 import org.junit.Before
@@ -37,7 +38,10 @@ class IntegrationTestBase {
     @Autowired
     private lateinit var globalCache: GlobalCache
 
-    private val crawlLoop by lazy { StreamingCrawlLoop(session, globalCache) }
+    @Autowired
+    lateinit var unmodifiedConfig: ImmutableConfig
+
+    private val crawlStarter by lazy { StreamingCrawlStarter(globalCache, unmodifiedConfig) }
 
     val baseUri get() = String.format("http://%s:%d", "localhost", port)
 
@@ -49,13 +53,13 @@ class IntegrationTestBase {
     @Before
     fun startLoop() {
         getLogger(this).info("Starting loop ...")
-        crawlLoop.start()
+        crawlStarter.start()
     }
 
     @After
     fun stopLoop() {
         getLogger(this).info("Stop loop ...")
-        crawlLoop.stop()
+        crawlStarter.stop()
     }
 
     @Test

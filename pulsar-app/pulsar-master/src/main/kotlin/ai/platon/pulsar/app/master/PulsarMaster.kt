@@ -5,12 +5,14 @@ import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.crawl.StreamingCrawlStarter
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.h2.tools.Server
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -22,12 +24,14 @@ import java.sql.SQLException
 
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
-@ComponentScan("ai.platon.pulsar.rest.api", "ai.platon.pulsar.common.h2")
+@ComponentScan("ai.platon.pulsar.rest.api")
 class PulsarMaster(
     val globalCache: GlobalCache
 ) {
     private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
     private val fetchCache get() = globalCache.fetchCacheManager.normalCache
+    @Autowired
+    lateinit var unmodifiedConfig: ImmutableConfig
 
     @Bean
     fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
@@ -63,9 +67,8 @@ class PulsarMaster(
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
-    fun fetch(): StreamingCrawlLoop {
-        val session: PulsarSession = PulsarContexts.createSession()
-        return StreamingCrawlLoop(session, globalCache)
+    fun fetch(): StreamingCrawlStarter {
+        return StreamingCrawlStarter(globalCache, unmodifiedConfig)
     }
 }
 

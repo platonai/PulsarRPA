@@ -3,31 +3,33 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.collect.DataCollector
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
 import java.util.*
 
-interface CrawlLoop: StartStopRunnable {
-    var crawlOptions: LoadOptions
+interface CrawlStarter: StartStopRunnable {
+    val unmodifiedConfig: ImmutableConfig
+    val defaultOptions: LoadOptions
     val fetchIterable: Iterable<Hyperlink>
     val collectors: Queue<out DataCollector<Hyperlink>>
     val crawler: Crawler
 }
 
-abstract class AbstractCrawlLoop(
+abstract class AbstractCrawlStarter(
         val globalCache: GlobalCache,
-        override var crawlOptions: LoadOptions
-) : CrawlLoop {
+        override val unmodifiedConfig: ImmutableConfig
+) : CrawlStarter {
     /**
      * Data collector lower capacity
      * */
-    var dcLowerCapacity = 100
+    override var defaultOptions: LoadOptions = LoadOptions.create(unmodifiedConfig.toVolatileConfig())
     /**
      * The fetch iterable from which all fetch tasks are taken
      * */
     override val fetchIterable by lazy {
-        MultiSourceHyperlinkIterable(globalCache.fetchCacheManager, dcLowerCapacity)
+        MultiSourceHyperlinkIterable(globalCache.fetchCacheManager)
     }
     /**
      * The shortcut for all collectors

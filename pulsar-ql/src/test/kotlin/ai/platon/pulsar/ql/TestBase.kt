@@ -40,6 +40,8 @@ abstract class TestBase {
         val startTime = Instant.now()
     }
 
+    val session = SQLContexts.activate().createSession()
+
     lateinit var connection: Connection
 
     @Before
