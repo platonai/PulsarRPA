@@ -116,10 +116,13 @@ class BatchFetchComponent(
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         fetchMetrics?.markTaskStart(Iterables.size(urls))
         return urls.map { FetchEntry(it, options).page }
-                .let { protocol.getResponses(it, options.conf?:immutableConfig.toVolatileConfig()) }
+                .let { protocol.getResponses(it, options.conf) }
                 .map { getProtocolOutput(protocol, it, it.page) }
     }
 
+    /**
+     * TODO: add to fetch queue instead of invoke new threads
+     * */
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
         fetchMetrics?.markTaskStart(size)

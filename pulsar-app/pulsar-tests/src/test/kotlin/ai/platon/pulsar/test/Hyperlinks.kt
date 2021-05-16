@@ -28,7 +28,6 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
                 println("............onBeforeParse " + page.id)
                 println("$this " + page.loadEventHandler)
                 assertSame(thisHandler, page.loadEventHandler)
-                assertTrue(page.isCachedContentEnabled)
                 page.variables[VAR_IS_SCRAPE] = true
             }
         }
@@ -68,10 +67,9 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
 
             if (page.protocolStatus.isSuccess) {
                 assertTrue(page.isLoaded || page.isContentUpdated)
-                assertTrue(page.isCachedContentEnabled)
                 assertNull(page.persistContent)
                 if (page.isContentUpdated) {
-                    assertNotNull(page.cachedContent) { "if the page is fetched, the content must be cached" }
+                    assertNotNull(page.tmpContent) { "if the page is fetched, the content must be cached" }
                 }
             }
             assertTrue(page.hasVar(VAR_IS_SCRAPE))

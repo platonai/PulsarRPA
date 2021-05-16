@@ -37,7 +37,6 @@ class ScrapingLoadEventHandler(
         }
         onBeforeParsePipeline.addLast { page ->
             require(page.loadEventHandler === this)
-            require(page.isCachedContentEnabled)
             page.variables[VAR_IS_SCRAPE] = true
         }
         onBeforeHtmlParsePipeline.addLast { page ->

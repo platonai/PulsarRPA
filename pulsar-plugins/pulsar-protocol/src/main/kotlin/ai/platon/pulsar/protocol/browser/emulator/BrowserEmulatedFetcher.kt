@@ -99,12 +99,21 @@ open class BrowserEmulatedFetcher(
 
     fun fetchAll(urls: Iterable<String>, conf: VolatileConfig) = fetchAll(nextBatchId, urls, conf)
 
+    /**
+     * TODO: do not support parallel fetching, parallel fetching should be supported at higher level
+     * */
     fun parallelFetchAll(urls: Iterable<String>, conf: VolatileConfig) =
         parallelFetchAllPages0(nextBatchId, urls.map { WebPage.newWebPage(it, conf) }, conf)
 
+    /**
+     * TODO: do not support parallel fetching, parallel fetching should be supported at higher level
+     * */
     fun parallelFetchAll(batchId: Int, urls: Iterable<String>, conf: VolatileConfig) =
         parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, conf) }, conf)
 
+    /**
+     * TODO: do not support parallel fetching, parallel fetching should be supported at higher level
+     * */
     fun parallelFetchAllPages(pages: Iterable<WebPage>, conf: VolatileConfig) =
         parallelFetchAllPages0(nextBatchId, pages, conf)
 

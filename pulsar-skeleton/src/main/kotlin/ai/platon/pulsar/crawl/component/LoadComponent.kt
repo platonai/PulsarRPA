@@ -155,10 +155,10 @@ class LoadComponent(
     }
 
     fun loadWithRetry(normUrl: NormUrl): WebPage {
-        var page = doLoad(normUrl)
+        var page = load0(normUrl)
         var n = normUrl.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
-            page = doLoad(normUrl)
+            page = load0(normUrl)
         }
         return page
     }
@@ -281,22 +281,15 @@ class LoadComponent(
         return loadAll(normUrls, options)
     }
 
-    private fun doLoad(normUrl: NormUrl): WebPage {
+    private fun load0(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
-
-        require(page.isNotNil)
-        assertSame(page.conf, normUrl.options.conf) { "Volatile config should be the same" }
 
         beforeLoad(page, normUrl.options)
 
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
-                require(page.isNotInternal) { "Internal page ${page.url}" }
-
                 fetchComponent.fetchContent(page)
-                // require(page.args == normUrl.options.toString())
-                // require(page.volatileConfig == normUrl.options.volatileConfig)
             } finally {
                 afterFetch(page, normUrl.options)
             }

@@ -122,7 +122,6 @@ open class HyperlinkCollector(
     @Throws(Exception::class)
     protected fun collectToUnsafe(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
         ++parsedSeedCount
-        seed.options.cacheContent = true
         val p = session.load(seed).takeIf { it.protocolStatus.isSuccess } ?: return 0
 
         val pageFatLink = fatLinkExtractor.createFatLink(seed, p, sink) ?: return 0

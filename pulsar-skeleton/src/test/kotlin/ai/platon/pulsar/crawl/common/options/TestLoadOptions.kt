@@ -78,7 +78,6 @@ class TestLoadOptions {
 
     private fun assertMergedOptions(options: LoadOptions, message: String) {
         assertTrue(message) { options.storeContent }
-        assertTrue(message) { options.cacheContent }
         assertTrue(message) { options.incognito }
         assertTrue(message) { options.parse }
         assertEquals(Duration.ofDays(1), options.expires, message)

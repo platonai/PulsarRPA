@@ -79,8 +79,8 @@ open class GlobalCache(val conf: ImmutableConfig) {
      * */
     fun putPDCache(page: WebPage, document: FeaturedDocument) {
         val url = page.url
-        pageCache.computeIfAbsent(url) { page }
-        documentCache.computeIfAbsent(url) { document }
+        pageCache.putDatum(url, page)
+        documentCache.putDatum(url, document)
     }
 
     /**

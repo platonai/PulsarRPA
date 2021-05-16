@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.common.DocumentCatch
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
@@ -40,6 +41,7 @@ interface PulsarSession : AutoCloseable {
     val display: String
     val pageCache: PageCatch
     val documentCache: DocumentCatch
+    val globalCache: GlobalCache
 
     /**
      * Close objects when sessions closes

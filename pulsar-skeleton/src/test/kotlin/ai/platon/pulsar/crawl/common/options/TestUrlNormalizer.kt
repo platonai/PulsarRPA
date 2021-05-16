@@ -33,7 +33,6 @@ class TestUrlNormalizer {
         assertTrue(options11.parse)
         assertTrue(options11.incognito)
         assertFalse(options11.storeContent)
-        assertFalse(options11.cacheContent)
 
         if (args22 != null) {
             options11 = LoadOptions.parse("$options11 $args22", conf)
@@ -50,7 +49,6 @@ class TestUrlNormalizer {
 
     private fun assertMergedOptions(options: LoadOptions, message: String) {
         assertTrue(message) { options.storeContent }
-        assertTrue(message) { options.cacheContent }
         assertTrue(message) { options.incognito }
         assertTrue(message) { options.parse }
         assertEquals(Duration.ofDays(1), options.expires, message)

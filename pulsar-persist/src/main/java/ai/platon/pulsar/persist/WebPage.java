@@ -39,12 +39,12 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS;
 import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
@@ -123,11 +123,6 @@ final public class WebPage implements Comparable<WebPage> {
     private boolean isFetched = false;
 
     /**
-     * If we should keep the content in memory even if it's cleared for persistence
-     */
-    private boolean cachedContentEnabled = false;
-
-    /**
      * If this page is fetched and updated
      */
     private volatile boolean isContentUpdated = false;
@@ -135,7 +130,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The cached content
      */
-    private volatile ByteBuffer cachedContent = null;
+    private volatile ByteBuffer tmpContent = null;
 
     private WebPage(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
@@ -542,14 +537,6 @@ final public class WebPage implements Comparable<WebPage> {
         return isContentUpdated;
     }
 
-    public boolean isCachedContentEnabled() {
-        return cachedContentEnabled;
-    }
-
-    public void setCachedContentEnabled(boolean cachedContentEnabled) {
-        this.cachedContentEnabled = cachedContentEnabled;
-    }
-
     public int getMaxRetries() {
         return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3);
     }
@@ -591,6 +578,7 @@ final public class WebPage implements Comparable<WebPage> {
      * <p>set load arguments.</p>
      */
     public void setArgs(@NotNull String args) {
+        variables.remove(VAR_LOAD_OPTIONS);
         page.setOptions(args);
     }
 
@@ -1146,8 +1134,8 @@ final public class WebPage implements Comparable<WebPage> {
      */
     @Nullable
     public ByteBuffer getContent() {
-        if (cachedContent != null) {
-            return cachedContent;
+        if (tmpContent != null) {
+            return tmpContent;
         }
         return page.getContent();
     }
@@ -1156,15 +1144,15 @@ final public class WebPage implements Comparable<WebPage> {
      * Get the cached content
      */
     @Nullable
-    public ByteBuffer getCachedContent() {
-        return cachedContent;
+    public ByteBuffer getTmpContent() {
+        return tmpContent;
     }
 
     /**
      * Set the cached content, keep the page content unmodified
      */
-    public void setCachedContent(ByteBuffer cachedContent) {
-        this.cachedContent = cachedContent;
+    public void setTmpContent(ByteBuffer tmpContent) {
+        this.tmpContent = tmpContent;
     }
 
     /**
@@ -1268,11 +1256,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public void clearPersistContent() {
-        if (isCachedContentEnabled()) {
-            // set cached content so other thread still can use it
-            cachedContent = page.getContent();
-        }
-
+        tmpContent = page.getContent();
         page.setContent(null);
         setPersistContentLength(0);
     }

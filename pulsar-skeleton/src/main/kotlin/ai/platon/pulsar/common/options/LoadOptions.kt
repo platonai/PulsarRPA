@@ -26,7 +26,6 @@ object LoadOptionDefaults {
     var lazyFlush = true
     var parse = false
     var storeContent = true
-    var cacheContent = true
     /**
      * Retry or not if a page is gone
      * */
@@ -246,10 +245,6 @@ open class LoadOptions(
     @Parameter(names = ["-storeContent", "--store-content"], arity = 1,
             description = "Persist page content into data store")
     var storeContent = LoadOptionDefaults.storeContent
-
-    @Parameter(names = ["-cacheContent", "--cache-content"], arity = 1,
-            description = "Cache the page content so it is still available after it be cleared for persistent")
-    var cacheContent = LoadOptionDefaults.cacheContent
 
     @ApiPublic
     @Parameter(names = ["-refresh", "--refresh"],

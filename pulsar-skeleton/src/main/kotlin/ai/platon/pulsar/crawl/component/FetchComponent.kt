@@ -50,7 +50,6 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
             it.fetchMode = options.fetchMode
             it.conf = options.conf
             it.args = options.toString()
-            it.isCachedContentEnabled = options.cacheContent
 
             it.variables[VAR_LOAD_OPTIONS] = options
         }
@@ -81,7 +80,7 @@ open class FetchComponent(
      * @param url The url of web page to fetch
      * @return The fetch result
      */
-    fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+    fun fetch(url: String) = abnormalPage ?: fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
      * Fetch a url
@@ -90,7 +89,7 @@ open class FetchComponent(
      * @param options The options
      * @return The fetch result
      */
-    fun fetch(url: String, options: LoadOptions) = fetchContent0(FetchEntry(url, options))
+    fun fetch(url: String, options: LoadOptions) = abnormalPage ?: fetchContent0(FetchEntry(url, options))
 
     /**
      * Fetch a page
@@ -98,7 +97,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    fun fetchContent(page: WebPage) = fetchContent0(FetchEntry(page, page.options))
+    fun fetchContent(page: WebPage) = abnormalPage ?: fetchContent0(FetchEntry(page, page.options))
 
     /**
      * Fetch a page
@@ -106,7 +105,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    fun fetchContent(fetchEntry: FetchEntry) = fetchContent0(fetchEntry)
+    fun fetchContent(fetchEntry: FetchEntry) = abnormalPage ?: fetchContent0(fetchEntry)
 
     /**
      * Fetch a page

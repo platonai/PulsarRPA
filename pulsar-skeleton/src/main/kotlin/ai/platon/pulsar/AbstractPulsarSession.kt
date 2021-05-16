@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -73,6 +72,7 @@ abstract class AbstractPulsarSession(
     private var enableCache = true
     override val pageCache get() = context.globalCache.pageCache
     override val documentCache get() = context.globalCache.documentCache
+    override val globalCache get() = context.globalCache
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
     /**
@@ -150,27 +150,11 @@ abstract class AbstractPulsarSession(
     @Throws(Exception::class)
     override fun load(normUrl: NormUrl): WebPage {
         ensureActive()
-
-        if (enableCache) {
-            val (url, options) = normUrl
-            val now = Instant.now()
-            if (now > options.expireAt) {
-                // expired due to expireAt, ignore the cached version
-                return fetchAndCache(normUrl, now)
-            }
-
-            return pageCache.getDatum(url, options.expires, now) ?: fetchAndCache(normUrl, now)
+        if (!enableCache) {
+            return context.load(normUrl)
         }
 
-        return context.load(normUrl)
-    }
-
-    private fun fetchAndCache(normUrl: NormUrl, now: Instant): WebPage {
-        return context.load(normUrl).also {
-            pageCache.put(normUrl.spec, ExpiringItem(it, now))
-            // TODO: check the logic: properly handle the relative document
-            // documentCache.remove(normUrl.spec)
-        }
+        return getCachedPageOrNull(normUrl) ?: loadAndCache(normUrl)
     }
 
     @Throws(Exception::class)
@@ -186,14 +170,39 @@ abstract class AbstractPulsarSession(
 
     @Throws(Exception::class)
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        if (enableCache) {
-            val (url, options) = normUrl
-            val now = Instant.now()
-            return pageCache.getDatum(url, options.expires, now)
-                ?: context.loadDeferred(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+        ensureActive()
+        if (!enableCache) {
+            return context.loadDeferred(normUrl)
         }
 
-        return context.loadDeferred(normUrl)
+        return getCachedPageOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
+    }
+
+    private fun loadAndCache(normUrl: NormUrl): WebPage {
+        return context.load(normUrl).also {
+            pageCache.putDatum(it.url, it)
+        }
+    }
+
+    private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
+        return context.loadDeferred(normUrl).also {
+            pageCache.putDatum(it.url, it)
+        }
+    }
+
+    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
+        val (url, options) = normUrl
+        val now = Instant.now()
+
+        val page = pageCache.getDatum(url, options.expires, now)
+        if (page != null && !options.isExpired(page.prevFetchTime)) {
+            page.isFetched = false
+            page.conf = normUrl.options.conf
+            page.args = normUrl.args
+            return page
+        }
+
+        return null
     }
 
     /**
@@ -223,16 +232,8 @@ abstract class AbstractPulsarSession(
      * @return The web pages
      */
     override fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): Collection<WebPage> {
-        ensureActive()
         options.preferParallel = true
-        val normUrls = normalize(urls, options, areItems)
-        val opt = normUrls.firstOrNull()?.options ?: return listOf()
-
-        return if (enableCache) {
-            loadAllWithCache(normUrls, opt)
-        } else {
-            context.loadAll(normUrls, opt)
-        }
+        return loadAll(urls, options, areItems)
     }
 
     /**

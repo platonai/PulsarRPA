@@ -95,7 +95,6 @@ class FatLinkExtractor(
 //        }
 //        seed.options.volatileConfig?.putBean(handler.name, handler)
 
-        seed.options.cacheContent = true
         val page = session.load(seed)
         if (!page.protocolStatus.isSuccess) {
             ++counters.badSeeds
