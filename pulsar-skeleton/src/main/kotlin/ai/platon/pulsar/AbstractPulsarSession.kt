@@ -179,12 +179,14 @@ abstract class AbstractPulsarSession(
     }
 
     private fun loadAndCache(normUrl: NormUrl): WebPage {
+        ensureActive()
         return context.load(normUrl).also {
             pageCache.putDatum(it.url, it)
         }
     }
 
     private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
+        ensureActive()
         return context.loadDeferred(normUrl).also {
             pageCache.putDatum(it.url, it)
         }
@@ -192,8 +194,12 @@ abstract class AbstractPulsarSession(
 
     private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
         val (url, options) = normUrl
-        val now = Instant.now()
+        if (options.refresh) {
+            // refresh the page, do not take cached version
+            return null
+        }
 
+        val now = Instant.now()
         val page = pageCache.getDatum(url, options.expires, now)
         if (page != null && !options.isExpired(page.prevFetchTime)) {
             page.isFetched = false

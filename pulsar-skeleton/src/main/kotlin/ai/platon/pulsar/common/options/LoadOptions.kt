@@ -249,7 +249,7 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-refresh", "--refresh"],
         description = "Refresh the fetch state of page, clear fetch retry counter" +
-                " -fresh = -ignoreFailure -i 0s and set page.fetchRetries = 0")
+                " -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0")
     var refresh = false
 
     /**
@@ -395,7 +395,12 @@ open class LoadOptions(
      * */
     fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
-        return (expireAt in prevFetchTime..now) || now >= prevFetchTime + expires
+        return when  {
+            refresh -> true
+            expireAt in prevFetchTime..now -> true
+            now >= prevFetchTime + expires -> true
+            else -> false
+        }
     }
 
     fun isDead(): Boolean {

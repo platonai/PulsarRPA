@@ -445,6 +445,9 @@ class LoadComponent(
         val protocolStatus = page.protocolStatus
         if (options.refresh) {
             page.fetchRetries = 0
+
+            options.ignoreFailure = true
+            options.expires = Duration.ZERO
             return FetchState.REFRESH
         }
 
