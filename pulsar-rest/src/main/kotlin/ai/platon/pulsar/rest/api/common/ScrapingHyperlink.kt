@@ -102,7 +102,10 @@ open class ScrapingHyperlink(
 
     open fun extract(page: WebPage, document: FeaturedDocument) {
         try {
-            extract0(page, document)
+            response.pageContentBytes = page.contentLength.toInt()
+            response.pageStatusCode = page.protocolStatus.minorCode
+
+            doExtract(page, document)
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
         }
@@ -115,14 +118,15 @@ open class ScrapingHyperlink(
         }
 
         try {
-            response.pageContentBytes = page.contentLength.toInt()
-            response.pageStatusCode = page.protocolStatus.minorCode
+            if (response.statusCode == ResourceStatus.SC_PROCESSING) {
+                response.statusCode = ResourceStatus.SC_OK
+            }
         } finally {
             isDone.countDown()
         }
     }
 
-    protected open fun extract0(page: WebPage, document: FeaturedDocument): ResultSet {
+    protected open fun doExtract(page: WebPage, document: FeaturedDocument): ResultSet {
         if (!page.protocolStatus.isSuccess || page.contentLength == 0L || page.content == null) {
             response.statusCode = ResourceStatus.SC_NO_CONTENT
             return ResultSets.newSimpleResultSet()
@@ -138,16 +142,12 @@ open class ScrapingHyperlink(
         var rs: ResultSet = ResultSets.newSimpleResultSet()
 
         try {
-            val sql = APISQLUtils.sanitize(request.sql)
-
             response.statusCode = ResourceStatus.SC_PROCESSING
 
-            rs = executeQuery(sql)
+            rs = executeQuery(sql.sql)
             val resultSet = mutableListOf<Map<String, Any?>>()
             ResultSetUtils.getEntitiesFromResultSetTo(rs, resultSet)
             response.resultSet = resultSet
-
-            response.statusCode = ResourceStatus.SC_OK
         } catch (e: JdbcSQLException) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
             logger.warn("Failed to execute sql #${response.uuid}{}", Strings.simplifyException(e))

@@ -203,8 +203,14 @@ abstract class AbstractPulsarSession(
         val page = pageCache.getDatum(url, options.expires, now)
         if (page != null && !options.isExpired(page.prevFetchTime)) {
             page.isFetched = false
-            page.conf = normUrl.options.conf
-            page.args = normUrl.args
+            // TODO: properly handle page conf, a page might work in different context which have different conf
+            // TODO: properly handle ListenableHyperlink
+            // here is a complex logic for a ScrapingHyperlink: the page have an event handlers, and the page can
+            // also be loaded inside an event handler. We must handle such situation very carefully
+
+            // page.conf = normUrl.options.conf
+            // page.args = normUrl.args
+
             return page
         }
 

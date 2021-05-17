@@ -363,6 +363,8 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
+        assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+
         try {
             page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
         } catch (e: Throwable) {
@@ -371,6 +373,8 @@ class LoadComponent(
     }
 
     private fun afterLoad(page: WebPage, options: LoadOptions) {
+        assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+
         if (options.parse) {
             parse(page, options)
         }

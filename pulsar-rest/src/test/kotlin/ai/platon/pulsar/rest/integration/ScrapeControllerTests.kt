@@ -1,7 +1,9 @@
 package ai.platon.pulsar.rest.integration
 
+import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.apache.http.HttpStatus
@@ -13,8 +15,8 @@ import kotlin.test.assertTrue
 class ScrapeControllerTests : IntegrationTestBase() {
 
     val urls = mapOf(
-        "amazon" to "https://www.amazon.com/s?k=\"Boys%27+Novelty+Belt+Buckles\"&rh=n:9057119011&page=1 -i 1s  -retry",
-        "jd" to "https://list.jd.com/list.html?cat=9987,653,655/"
+        "amazon" to "https://www.amazon.com/s?k=\"Boys%27+Novelty+Belt+Buckles\"&rh=n:9057119011&page=1 -i 1s -ignoreFailure",
+        "jd" to "https://list.jd.com/list.html?cat=9987,653,655/ -i 1s"
     )
 
     val sqlTemplates = mapOf(
@@ -41,8 +43,9 @@ class ScrapeControllerTests : IntegrationTestBase() {
         println(">>>\n$sql\n<<<")
         val response = restTemplate.postForObject("$baseUri/x/e", sql, ScrapeResponse::class.java)
         assertNotNull(response)
-        assertTrue { response.uuid.isNullOrBlank() }
         println(pulsarObjectMapper().writeValueAsString(response))
+        assertTrue { response.uuid?.isNotBlank() == true }
+        assertNotNull(response.resultSet)
     }
 
     @Test
@@ -67,7 +70,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
             val response = restTemplate.getForObject("$baseUri/x/status?uuid={uuid}",
                 ScrapeResponse::class.java, uuid)
 
-            if (response.statusCode == HttpStatus.SC_OK) {
+            if (response.statusCode == ResourceStatus.SC_OK) {
                 println("response: ")
                 println(pulsarObjectMapper().writeValueAsString(response))
                 assertTrue { response.pageContentBytes > 0 }
@@ -81,7 +84,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
                 assertTrue { records.isNotEmpty() }
 
                 if (site == "jd") {
-                    assertEquals(url, records[0]["url"])
+                    assertEquals(Urls.splitUrlArgs(url).first, records[0]["url"])
                 }
             }
         }

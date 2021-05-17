@@ -14,6 +14,7 @@ import ai.platon.pulsar.rest.api.service.ScrapeService
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,7 +72,7 @@ class ScrapeServiceTests {
     }
 
     @Test
-    fun `When scraping using load_and_select then the result returns synchronously`() {
+    fun `When scraping with load_and_select then the result returns synchronously`() {
         val url = "https://www.amazon.com/"
         val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 0s', ':root')"
         val request = ScrapeRequest(sql)
@@ -85,6 +86,7 @@ class ScrapeServiceTests {
         assertTrue { actualUrl == url }
     }
 
+    @Ignore("Disabled temporary, amazon_suggestions have to use a real browser with js support, not a mock browser")
     @Test
     fun `When call amazon_suggestions then the suggestions are retrieved`() {
         val url = "https://www.amazon.com/"
