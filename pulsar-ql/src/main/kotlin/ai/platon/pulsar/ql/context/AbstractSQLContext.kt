@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.sql.SQLUtils
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
@@ -22,6 +23,7 @@ import java.text.MessageFormat
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.jvm.Throws
 
 /**
  * The abstract SQL context, every X-SQL staff should be within the SQL context
@@ -81,6 +83,7 @@ abstract class AbstractSQLContext constructor(
         }
     }
 
+    @Throws(Exception::class)
     override fun executeQuery(sql: String): ResultSet {
         val conn = connectionPool.poll() ?: randomConnection
 
@@ -89,6 +92,27 @@ abstract class AbstractSQLContext constructor(
         }.getOrElse { t ->
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
             throw t
+        }
+    }
+
+    override fun run(block: (Connection) -> Unit) {
+        val conn = connectionPool.poll() ?: randomConnection
+        try {
+            block(conn)
+        } catch (t: Throwable) {
+            log.warn(t.stringify())
+        } finally {
+            conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
+        }
+    }
+
+    @Throws(Exception::class)
+    override fun runQuery(block: (Connection) -> ResultSet): ResultSet {
+        val conn = connectionPool.poll() ?: randomConnection
+        try {
+            return block(conn)
+        } finally {
+            conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
     }
 

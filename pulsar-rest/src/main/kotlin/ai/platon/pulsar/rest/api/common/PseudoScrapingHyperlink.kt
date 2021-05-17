@@ -12,7 +12,7 @@ import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class PseudoSinkScrapeSQL(uuid: String) : ScrapingSQL("$EXAMPLE_URL/$uuid", "", "")
+class PseudoSinkScrapeSQL(uuid: String) : NormXSQL("$EXAMPLE_URL/$uuid", "", "")
 
 class PseudoSinkAwareCrawlEventHandler(hyperlink: PseudoSinkAwareHyperlink) : AbstractCrawlEventHandler() {
     override var onAfterLoad: (UrlAware, WebPage) -> Unit = { url, page ->
@@ -31,7 +31,7 @@ open class PseudoSinkAwareHyperlink(
     uuid: String = UUID.randomUUID().toString(),
 ) : ScrapingHyperlink(request, PseudoSinkScrapeSQL(uuid), session, globalCache, uuid), PseudoUrl {
     private val logger = LoggerFactory.getLogger(PseudoSinkAwareHyperlink::class.java)
-    override var args: String? = "${scrapeSQL.args} -taskId $uuid"
+    override var args: String? = "-taskId $uuid ${sql.args}"
     override var crawlEventHandler: CrawlEventHandler? = PseudoSinkAwareCrawlEventHandler(this)
 
     override fun commit(page: WebPage) {

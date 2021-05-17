@@ -55,11 +55,11 @@ class ScrapingLoadEventHandler(
 
 open class ScrapingHyperlink(
     val request: ScrapeRequest,
-    val scrapeSQL: ScrapingSQL,
+    val sql: NormXSQL,
     val session: PulsarSession,
     val globalCache: GlobalCache,
     val uuid: String = UUID.randomUUID().toString()
-) : ListenableHyperlink(scrapeSQL.url), Future<ScrapeResponse> {
+) : ListenableHyperlink(sql.url), Future<ScrapeResponse> {
 
     private val logger = getLogger(ScrapingHyperlink::class)
 
@@ -71,7 +71,7 @@ open class ScrapingHyperlink(
     protected val isCancelled = AtomicBoolean()
     protected val isDone = CountDownLatch(1)
 
-    override var args: String? = "${scrapeSQL.args} -parse"
+    override var args: String? = "-parse ${sql.args}"
     override var loadEventHandler: LoadEventPipelineHandler = ScrapingLoadEventHandler(this, response)
 
     override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
@@ -143,7 +143,6 @@ open class ScrapingHyperlink(
             response.statusCode = ResourceStatus.SC_PROCESSING
 
             rs = executeQuery(sql)
-
             val resultSet = mutableListOf<Map<String, Any?>>()
             ResultSetUtils.getEntitiesFromResultSetTo(rs, resultSet)
             response.resultSet = resultSet

@@ -2,7 +2,7 @@ package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.common.urls.Urls
 
-open class ScrapingSQL(
+open class NormXSQL(
     val url: String,
     val args: String,
     val sql: String

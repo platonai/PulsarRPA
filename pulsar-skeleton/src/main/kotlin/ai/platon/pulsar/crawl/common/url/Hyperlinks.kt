@@ -42,8 +42,4 @@ open class ListenableHyperlink(
     open var loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler()
     open var jsEventHandler: JsEventHandler? = DefaultJsEventHandler()
     open var crawlEventHandler: CrawlEventHandler? = DefaultCrawlEventHandler()
-
-    companion object {
-        val randomPseudoUrl get() = PSEUDO_URL_BASE + "/" + RandomStringUtils.randomAlphanumeric(8)
-    }
 }

@@ -432,12 +432,6 @@ class LoadComponent(
     /**
      * TODO: FetchSchedule.shouldFetch, crawlStatus and FetchReason should keep consistent
      *
-     * 1. 1601 Retry -> 系统正在重试，最大重试次数为 3
-     * 2. 410 Gone -> 系统重试失败，应用层继续判断是否需要强制重新采集。在出现 410 Gone 后，
-     *    0. 加 -i 0s 告诉系统网页已经过期
-     *    1. 如果不加其他参数，应用层每发送一次请求，强制重新采集一次，retry 计数 +1
-     *    2. 如果需要激活内部重试，加参数 -fresh, -fresh 清除 retry 计数并忽略错误
-     *    3. 如果 pageStatusCode 为 1601 和 410 之外的其他错误，需要加 -retryFailed 强制重新采集
      * */
     private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
         // TODO: crawl status is better to decide the fetch reason
@@ -445,9 +439,6 @@ class LoadComponent(
         val protocolStatus = page.protocolStatus
         if (options.refresh) {
             page.fetchRetries = 0
-
-            options.ignoreFailure = true
-            options.expires = Duration.ZERO
             return FetchState.REFRESH
         }
 

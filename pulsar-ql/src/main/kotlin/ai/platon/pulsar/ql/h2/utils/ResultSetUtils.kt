@@ -1,22 +1,21 @@
 package ai.platon.pulsar.ql.h2.utils
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
 import com.google.gson.GsonBuilder
-import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
-import org.nibor.autolink.LinkExtractor
-import org.nibor.autolink.LinkType
 import org.slf4j.LoggerFactory
 import java.sql.*
 import java.util.*
 import kotlin.collections.ArrayList
 
+/**
+ * Only for small result sets
+ * */
 object ResultSetUtils {
     private val logger = getLogger(this)
     val sqlLog = LoggerFactory.getLogger(ResultSetUtils.javaClass.packageName + ".log")

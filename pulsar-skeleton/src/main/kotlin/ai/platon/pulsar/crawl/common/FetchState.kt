@@ -40,7 +40,7 @@ object FetchState {
 
         symbols[DO_NOT_FETCH] = ""
         symbols[NEW_PAGE] = "N"
-        symbols[REFRESH] = "R"
+        symbols[REFRESH] = "RR"
         symbols[EXPIRED] = "EX"
         symbols[RETRY] = "RT"
         symbols[SMALL_CONTENT] = "SC"

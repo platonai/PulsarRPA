@@ -408,9 +408,8 @@ abstract class AbstractPulsarSession(
         val pages = ArrayList<WebPage>()
         val pendingUrls = ArrayList<NormUrl>()
 
-        val now = Instant.now()
         for (url in urls) {
-            val page = pageCache.getDatum(url.spec, options.expires, now)
+            val page = getCachedPageOrNull(url)
             if (page != null) {
                 pages.add(page)
             } else {
@@ -427,7 +426,8 @@ abstract class AbstractPulsarSession(
         pages.addAll(freshPages)
 
         // Notice: we do not cache batch loaded pages, batch loaded pages are not used frequently
-        // do not do this: sessionCachePutAll(freshPages);
+        // *DO NOT* do this:
+        // freshPages.forEach { pageCache.putDatum(it.url, it) }
 
         return pages
     }

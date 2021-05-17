@@ -56,8 +56,8 @@ class ScrapeService(
     private fun createScrapeHyperlink(request: ScrapeRequest): ScrapingHyperlink {
         val sql = request.sql
         return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
-            val scrapeSQL = ScrapeAPIUtils.normalizeScrapeSQL(sql)
-            ScrapingHyperlink(request, scrapeSQL, session, globalCache)
+            val xSQL = ScrapeAPIUtils.normalize(sql)
+            ScrapingHyperlink(request, xSQL, session, globalCache)
         } else {
             PseudoSinkAwareHyperlink(request, session, globalCache)
         }

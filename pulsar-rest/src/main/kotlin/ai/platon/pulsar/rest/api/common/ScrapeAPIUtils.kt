@@ -14,7 +14,7 @@ object ScrapeAPIUtils {
     private val allowedScrapeUDFs = arrayOf("loadandselect", "loadoutpages")
 
     @Throws(IllegalArgumentException::class)
-    fun normalizeScrapeSQL(rawSql: String?): ScrapingSQL {
+    fun normalize(rawSql: String?): NormXSQL {
         if (rawSql == null) {
             throw throw IllegalArgumentException("SQL is required")
         }
@@ -23,7 +23,7 @@ object ScrapeAPIUtils {
         val (url, args) = Urls.splitUrlArgs(configuredUrl)
         val sql = eraseExpireOptions(rawSql)
 
-        return ScrapingSQL(url, args, sql)
+        return NormXSQL(url, args, sql)
     }
 
     @Throws(IllegalArgumentException::class)
