@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingQueue
 import ai.platon.pulsar.common.collect.FetchCacheCollector
 import ai.platon.pulsar.common.collect.LoadingFetchCache
 import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.UrlAware
 import org.junit.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -22,7 +23,7 @@ class TestLoadingQueues : TestBase() {
     @Test
     fun `When collect from collector with loading fetch cache then sink has items`() {
         val source = LoadingFetchCache("", urlLoader, group.priority)
-        val sink = mutableListOf<Hyperlink>()
+        val sink = mutableListOf<UrlAware>()
 
         assertTrue { source.size > 0 }
         assertTrue { sink.isEmpty() }

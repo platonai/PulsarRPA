@@ -35,6 +35,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Collectors
 
@@ -178,11 +179,17 @@ class LoadComponent(
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val queue = globalCache.fetchCacheManager.highestCache.nReentrantQueue
-        val links = normUrls.map { CompletableHyperlink(it.spec, args = it.args, href = it.hrefSpec).apply { maxRetry = 0 } }
+        val links = normUrls
+            .asSequence()
+            .map { CompletableHyperlink(it.spec, args = it.args, href = it.hrefSpec) }
+            .onEach { it.maxRetry = 0 }
+            .onEach { it.completeOnTimeout(WebPage.NIL, 2, TimeUnit.MINUTES) }
+            .toList()
         queue.addAll(links)
         logger.debug("Waiting for {} completable hyperlinks", links.size)
-        // logger.debug(crawlStarter?.report)
-        CompletableFuture.allOf(*links.toTypedArray()).join()
+        // timeout process?
+        val future = CompletableFuture.allOf(*links.toTypedArray())
+        future.join()
         return links.mapNotNull { it.get() }
     }
 

@@ -49,7 +49,7 @@ open class QueueCollector(
  * 2. all urls are restricted by urlPattern
  * 3. all urls have to not be fetched before or expired against the last version
  * */
-open class UrlAwareCollector(
+open class HyperlinkCollector(
     /**
      * The pulsar session to use
      * */
@@ -63,7 +63,7 @@ open class UrlAwareCollector(
      * */
     priority: Priority13 = Priority13.NORMAL
 ) : AbstractPriorityDataCollector<UrlAware>(priority), CrawlableFatLinkCollector {
-    private val log = LoggerFactory.getLogger(UrlAwareCollector::class.java)
+    private val log = LoggerFactory.getLogger(HyperlinkCollector::class.java)
 
     var urlNormalizer: UrlNormalizerPipeline = UrlNormalizerPipeline()
 
@@ -156,12 +156,12 @@ open class UrlAwareCollector(
     }
 }
 
-open class CircularUrlAwareCollector(
+open class CircularHyperlinkCollector(
     session: PulsarSession,
     seeds: Queue<NormUrl>,
     priority: Priority13 = Priority13.HIGHER
-) : UrlAwareCollector(session, seeds, priority) {
-    private val log = LoggerFactory.getLogger(CircularUrlAwareCollector::class.java)
+) : HyperlinkCollector(session, seeds, priority) {
+    private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
     protected val iterator = Iterators.cycle(seeds)
 
     override var name = "CircularHC"
@@ -201,12 +201,12 @@ open class CircularUrlAwareCollector(
     }
 }
 
-open class PeriodicalUrlAwareCollector(
+open class PeriodicalHyperlinkCollector(
     session: PulsarSession,
     val seed: NormUrl,
     priority: Priority13 = Priority13.HIGHER
-) : CircularUrlAwareCollector(session, seed, priority) {
-    private val log = LoggerFactory.getLogger(PeriodicalUrlAwareCollector::class.java)
+) : CircularHyperlinkCollector(session, seed, priority) {
+    private val log = LoggerFactory.getLogger(PeriodicalHyperlinkCollector::class.java)
     private var position = 0
     private var lastFinishTime = Instant.EPOCH
     private val expires get() = seed.options.expires
@@ -252,14 +252,14 @@ open class PeriodicalUrlAwareCollector(
     companion object {
         fun fromConfig(
             resource: String, session: PulsarSession, priority: Priority13 = Priority13.NORMAL
-        ): Sequence<PeriodicalUrlAwareCollector> {
+        ): Sequence<PeriodicalHyperlinkCollector> {
             return ResourceLoader.readAllLines(resource)
                 .asSequence()
                 .filterNot { it.startsWith("#") }
                 .filterNot { it.isBlank() }
                 .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
                 .filter { Urls.isValidUrl(it.spec) }
-                .map { PeriodicalUrlAwareCollector(session, it, priority) }
+                .map { PeriodicalHyperlinkCollector(session, it, priority) }
         }
     }
 }

@@ -326,10 +326,6 @@ open class StreamingCrawler<T : UrlAware>(
         } else {
             val normalizedUrl = beforeUrlLoad(url)
             if (normalizedUrl != null) {
-
-                println(normalizedUrl.configuredUrl)
-                println(normalizedUrl::class)
-
                 val page = loadUrl(normalizedUrl)
                 afterUrlLoad(normalizedUrl, page)
             }
