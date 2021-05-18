@@ -1,7 +1,6 @@
 package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.common.config.AppConstants.EXAMPLE_URL
 import ai.platon.pulsar.common.urls.PseudoUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.AbstractCrawlEventHandler
@@ -11,8 +10,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import org.slf4j.LoggerFactory
 import java.util.*
-
-class PseudoXSQL(uuid: String, sql: String) : NormXSQL("$EXAMPLE_URL/$uuid", "", sql)
 
 class PseudoSinkAwareCrawlEventHandler(hyperlink: PseudoSinkAwareHyperlink) : AbstractCrawlEventHandler() {
     override var onAfterLoad: (UrlAware, WebPage) -> Unit = { url, page ->

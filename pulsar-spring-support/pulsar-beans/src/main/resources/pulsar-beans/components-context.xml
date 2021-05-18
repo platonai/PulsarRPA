@@ -63,6 +63,7 @@
         <constructor-arg ref="updateComponent"/>
         <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="appStatusTracker"/>
+        <constructor-arg ref="crawlStarter"/>
         <constructor-arg ref="conf"/>
     </bean>
 

@@ -1,14 +1,13 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class UrlCollectorCreator(
     val fetchCacheManager: FetchCatchManager,
-    val collectors: ConcurrentLinkedQueue<PriorityDataCollector<Hyperlink>>,
+    val collectors: ConcurrentLinkedQueue<PriorityDataCollector<UrlAware>>,
     val urlLoader: ExternalUrlLoader
 ) {
     private val logger = getLogger(this)
@@ -42,7 +41,7 @@ class UrlCollectorCreator(
         return collector
     }
 
-    private fun reportCollector(collector: DataCollector<Hyperlink>) {
+    private fun reportCollector(collector: DataCollector<UrlAware>) {
         val dcLog = getLogger(DataCollector::class)
         logger.info("Running asin task <{}> with {}/{} items", collector.name, collector.size, collector.estimatedSize)
         logger.info("{}", collector)

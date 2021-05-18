@@ -119,7 +119,7 @@ object Queries {
         }
 
         val itemOptions = normUrl.options.createItemOptions()
-        return session.loadAll(links, itemOptions)
+        return session.loadAll(links, itemOptions, true)
     }
 
     /**

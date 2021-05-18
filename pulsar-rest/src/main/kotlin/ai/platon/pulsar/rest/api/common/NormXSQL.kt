@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api.common
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.Urls
 
 open class NormXSQL(
@@ -9,3 +10,5 @@ open class NormXSQL(
 ) {
     val configuredUrl get() = Urls.mergeUrlArgs(url, args)
 }
+
+class PseudoXSQL(uuid: String, sql: String) : NormXSQL("${AppConstants.EXAMPLE_URL}/$uuid", "", sql)

@@ -6,12 +6,8 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.urls.CrawlableFatLink
-import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.StatefulHyperlink
-import ai.platon.pulsar.common.urls.preprocess.UrlNormalizer
+import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
@@ -73,7 +69,7 @@ class FatLinkExtractor(
 
     fun createFatLink(seed: NormUrl): PageFatLink? = createFatLink(seed, listOf())
 
-    fun createFatLink(seed: NormUrl, page: WebPage, denyList: Collection<Hyperlink>): PageFatLink? {
+    fun createFatLink(seed: NormUrl, page: WebPage, denyList: Collection<UrlAware>): PageFatLink? {
         ++counters.loadedSeeds
         ++globalCounters.loadedSeeds
 
@@ -85,7 +81,7 @@ class FatLinkExtractor(
         return createFatLink(seed, page, document, denyList)
     }
 
-    fun createFatLink(seed: NormUrl, denyList: Collection<Hyperlink>): PageFatLink? {
+    fun createFatLink(seed: NormUrl, denyList: Collection<UrlAware>): PageFatLink? {
         // TODO: we can use an event handler to extract links
 //        val handler = object: HtmlDocumentHandler() {
 //            override val name = CapabilityTypes.FETCH_AFTER_EXTRACT_HANDLER
@@ -120,7 +116,7 @@ class FatLinkExtractor(
      * vivid link, the vivid link can be parsed and saved recently
      * */
     fun createFatLink(
-        seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<Hyperlink>
+        seed: NormUrl, page: WebPage, document: FeaturedDocument? = null, denyList: Collection<UrlAware>
     ): PageFatLink? {
         val fatLinkSpec = seed.spec
         val options = seed.options
@@ -168,7 +164,7 @@ class FatLinkExtractor(
     }
 
     private fun parseVividLinks(
-        seed: NormUrl, page: WebPage, document: FeaturedDocument, denyList: Collection<Hyperlink>
+        seed: NormUrl, page: WebPage, document: FeaturedDocument, denyList: Collection<UrlAware>
     ): List<StatefulHyperlink> {
         val now = Instant.now()
         val fatLinkSpec = seed.spec
@@ -198,7 +194,7 @@ class FatLinkExtractor(
     }
 
     private fun loadVividLinks(
-        page: WebPage, options: LoadOptions, denyList: Collection<Hyperlink>
+        page: WebPage, options: LoadOptions, denyList: Collection<UrlAware>
     ): List<StatefulHyperlink> {
         val now = Instant.now()
         val urlRegex = options.outLinkPattern.toRegex()

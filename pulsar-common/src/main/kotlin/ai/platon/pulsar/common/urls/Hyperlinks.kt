@@ -63,6 +63,10 @@ interface UrlAware {
      * Required website district
      * */
     val district: String
+    /**
+     * The maximum retry times
+     * */
+    val maxRetry: Int
 }
 
 interface ComparableUrlAware: UrlAware, Comparable<UrlAware>
@@ -107,6 +111,10 @@ abstract class AbstractUrl(
      * Required website district
      * */
     override var district: String = "*"
+    /**
+     * The maximum retry times
+     * */
+    override var maxRetry: Int = 3
 
     override val deadTime: Instant
         get() {

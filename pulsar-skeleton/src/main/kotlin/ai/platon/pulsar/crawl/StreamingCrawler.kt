@@ -18,6 +18,7 @@ import ai.platon.pulsar.common.urls.PseudoUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.url.CompletableHyperlink
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
@@ -325,6 +326,10 @@ open class StreamingCrawler<T : UrlAware>(
         } else {
             val normalizedUrl = beforeUrlLoad(url)
             if (normalizedUrl != null) {
+
+                println(normalizedUrl.configuredUrl)
+                println(normalizedUrl::class)
+
                 val page = loadUrl(normalizedUrl)
                 afterUrlLoad(normalizedUrl, page)
             }
@@ -394,6 +399,10 @@ open class StreamingCrawler<T : UrlAware>(
      * TODO: keep consistent with protocolStatus.isRetry and crawlStatus.isRetry
      * */
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
+        if (url is CompletableHyperlink) {
+            url.crawlEventHandler?.onAfterLoad?.invoke(url, page ?: WebPage.NIL)
+        }
+
         when {
             page == null -> handleRetry(url, page)
             page.protocolStatus.isRetry -> handleRetry(url, page)

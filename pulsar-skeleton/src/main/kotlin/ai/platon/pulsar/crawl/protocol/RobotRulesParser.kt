@@ -35,7 +35,7 @@ abstract class RobotRulesParser : Configurable {
     private fun setup() { // Grab the agent names we advertise to robots files.
         val ua = conf["http.agent.name", ""].trim { it <= ' ' }
         if (ua.isEmpty()) {
-            LOG.warn("Agent name not configured!")
+            // LOG.warn("Agent name not configured!")
         }
 
         agentNames = ua

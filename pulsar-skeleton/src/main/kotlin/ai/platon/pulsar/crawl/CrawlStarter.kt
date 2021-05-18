@@ -5,16 +5,18 @@ import ai.platon.pulsar.common.collect.DataCollector
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.common.GlobalCache
 import java.util.*
 
 interface CrawlStarter: StartStopRunnable {
     val unmodifiedConfig: ImmutableConfig
     val defaultOptions: LoadOptions
-    val fetchIterable: Iterable<Hyperlink>
-    val collectors: Queue<out DataCollector<Hyperlink>>
+    val fetchIterable: Iterable<UrlAware>
+    val collectors: Queue<out DataCollector<UrlAware>>
     val crawler: Crawler
+    val abstract: String
+    val report: String
 }
 
 abstract class AbstractCrawlStarter(

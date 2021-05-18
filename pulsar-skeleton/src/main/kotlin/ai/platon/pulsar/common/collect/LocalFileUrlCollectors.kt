@@ -1,11 +1,12 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.Hyperlinks
+import ai.platon.pulsar.common.urls.UrlAware
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
@@ -24,7 +25,7 @@ open class LocalFileHyperlinkCollector(
          * The priority
          * */
         priority: Int = Priority13.NORMAL.value,
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
+): AbstractPriorityDataCollector<UrlAware>(priority) {
 
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
     private val urlLoader = LocalFileUrlLoader(path)
@@ -52,7 +53,7 @@ open class LocalFileHyperlinkCollector(
 
     override fun hasMore() = hyperlinks.isNotEmpty()
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
         val count = cache.removeFirstOrNull()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
@@ -85,7 +86,7 @@ open class CircularLocalFileHyperlinkCollector(
 
     protected val iterator = Iterators.cycle(hyperlinks)
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
         var count = 0
@@ -148,7 +149,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
 
     override fun hasMore() = (!isFinished || isExpired) && iterator.hasNext()
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
         ++counters.collects
 

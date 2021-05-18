@@ -25,33 +25,22 @@
         </encoder>
     </appender>
 
-    <logger name="ai.platon.pulsar" level="INFO" />
-    <logger name="ai.platon.pulsar.common" level="WARN" />
-    <logger name="ai.platon.pulsar.context" level="WARN" />
-    <logger name="ai.platon.pulsar.ql" level="WARN" />
+    <logger name="ai.platon.pulsar" level="DEBUG" />
+    <logger name="ai.platon.pulsar.common" level="INFO" />
+    <logger name="ai.platon.pulsar.context" level="INFO" />
+    <logger name="ai.platon.pulsar.ql" level="INFO" />
     <logger name="ai.platon.pulsar.ql.h2" level="INFO" />
     <logger name="ai.platon.pulsar.net" level="INFO" />
     <logger name="ai.platon.pulsar.net.browser" level="INFO" />
-    <logger name="ai.platon.pulsar.crawl" level="INFO" />
-    <logger name="ai.platon.pulsar.crawl.component" level="INFO" />
+    <logger name="ai.platon.pulsar.crawl" level="DEBUG" />
+    <logger name="ai.platon.pulsar.crawl.component" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.protocol" level="INFO" />
     <logger name="ai.platon.pulsar.browser.driver" level="INFO" />
-
     <logger name="ai.platon.pulsar.parse.html" level="DEBUG" />
 
-    <logger name="com.ning.http.client" level="DEBUG"/>
+    <logger name="org.springframework" level="INFO" />
 
-    <logger name="org.apache.gora" level="ERROR" />
-    <logger name="org.apache.hadoop.mapreduce.Job" level="INFO" />
-    <logger name="org.apache.hadoop.conf.Configuration" level="INFO" />
-    <logger name="org.apache.zookeeper" level="ERROR" />
-    <logger name="org.apache.solr" level="INFO" />
-    <logger name="com.j256.ormlite" level="WARN" />
-    <logger name="org.apache.hadoop" level="WARN" />
-    <logger name="org.springframework" level="WARN" />
-    <logger name="io.netty.channel.AbstractChannelHandlerContext" level="ERROR"/>
-
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="DRFA"/>
         <appender-ref ref="cmdstdout"/>
     </root>

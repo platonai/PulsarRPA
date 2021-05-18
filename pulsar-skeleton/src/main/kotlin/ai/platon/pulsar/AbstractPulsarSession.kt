@@ -227,12 +227,11 @@ abstract class AbstractPulsarSession(
     override fun loadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): Collection<WebPage> {
         ensureActive()
         val normUrls = normalize(urls, options, areItems)
-        val opts = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
-            loadAllWithCache(normUrls, opts)
+            loadAllWithCache(normUrls, options)
         } else {
-            context.loadAll(normUrls, opts)
+            context.loadAll(normUrls, options)
         }
     }
 

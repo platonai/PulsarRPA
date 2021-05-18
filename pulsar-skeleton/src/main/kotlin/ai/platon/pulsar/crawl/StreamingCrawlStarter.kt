@@ -1,11 +1,12 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.FetchCache
+import ai.platon.pulsar.common.collect.PriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.collect.PriorityDataCollectorsFormatter
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -26,7 +27,7 @@ open class StreamingCrawlStarter(
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
-    override lateinit var crawler: StreamingCrawler<Hyperlink>
+    override lateinit var crawler: StreamingCrawler<UrlAware>
 
     val cacheManager get() = globalCache.fetchCacheManager
     val realTimeCache get() = cacheManager.realTimeCache
@@ -34,6 +35,20 @@ open class StreamingCrawlStarter(
     val normalCacheSize get() = cacheManager.caches.entries.sumBy { it.value.size }
     val normalCacheEstimatedSize get() = cacheManager.caches.entries.sumBy { it.value.estimatedSize }
     val totalCacheSize get() = fetchIterable.cacheSize + realTimeCache.size + normalCacheSize
+
+    val allCollectors: List<PriorityDataCollector<UrlAware>> get() {
+        val loadingIterable = fetchIterable.loadingIterable
+        val allCollectors = listOfNotNull(loadingIterable.realTimeCollector, loadingIterable.delayCollector)
+            .filterIsInstance<PriorityDataCollector<UrlAware>>()
+            .toMutableList()
+        this.collectors.toCollection(allCollectors)
+        allCollectors.sortBy { it.priority }
+        return allCollectors
+    }
+
+    override val abstract: String get() = PriorityDataCollectorsFormatter(allCollectors).abstract()
+
+    override val report: String get() = PriorityDataCollectorsFormatter(allCollectors).toString()
 
     private val gauges = mapOf(
         "fetchIterableCacheSize" to Gauge { fetchIterable.cacheSize },
@@ -65,10 +80,6 @@ open class StreamingCrawlStarter(
             fetchIterable.addDefaultCollectors()
         }
 
-        val report = collectors.sortedBy { it.priority }.joinToString("\n") { c ->
-            val priorityName = Priority13.values().firstOrNull { it.value == c.priority }?.name ?: ""
-            String.format("%10d %s %s", c.priority, c.name, priorityName)
-        }
         log.debug("Registered hyperlink collectors: \n$report")
 
         /**

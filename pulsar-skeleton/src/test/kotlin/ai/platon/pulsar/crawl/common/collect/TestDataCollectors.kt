@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.collect.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
+import ai.platon.pulsar.common.urls.UrlAware
 import org.apache.commons.collections4.map.MultiValueMap
 import org.junit.Test
 import java.nio.file.Paths
@@ -21,7 +22,7 @@ class TestDataCollectors : TestBase() {
     @Test
     fun `When add a item to queue then queue is not empty`() {
         val source = LoadingFetchCache("", TemporaryLocalFileUrlLoader(), 0)
-        val sink = mutableListOf<Hyperlink>()
+        val sink = mutableListOf<UrlAware>()
 
         source.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { source.size == 1 }
@@ -38,7 +39,7 @@ class TestDataCollectors : TestBase() {
         fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertEquals(1, fetchCache.size)
 
-        val collectors: MutableList<PriorityDataCollector<Hyperlink>> = Collections.synchronizedList(LinkedList())
+        val collectors: MutableList<PriorityDataCollector<UrlAware>> = Collections.synchronizedList(LinkedList())
         collectors += FetchCacheCollector(fetchCache, fetchCache.priority)
         val fetchQueueIterable = ConcurrentLoadingIterable(MultiSourceDataCollector(collectors), null, null, 10)
 
@@ -50,7 +51,7 @@ class TestDataCollectors : TestBase() {
     @Test
     fun testDataCollectorSorting() {
         // Object information is erased
-        val collectors = mutableListOf<AbstractPriorityDataCollector<Hyperlink>>()
+        val collectors = mutableListOf<AbstractPriorityDataCollector<UrlAware>>()
         fetchCacheManager.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }
@@ -73,7 +74,7 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun testDataCollectorSorting2() {
-        val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<Hyperlink>>()
+        val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<UrlAware>>()
 
         globalCache.fetchCacheManager.caches.forEach { (priority, fetchCache) ->
             collectors[priority] = FetchCacheCollector(fetchCache, priority)

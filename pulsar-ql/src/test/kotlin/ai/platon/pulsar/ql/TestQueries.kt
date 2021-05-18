@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
  * Created by vincent on 17-7-29.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class TestQueries : TestBase() {
+class TestQueries: TestBase() {
 
     @Test
     fun testLoadOutPages() {

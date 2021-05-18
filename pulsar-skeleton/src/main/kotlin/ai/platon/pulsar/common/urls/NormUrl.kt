@@ -39,6 +39,8 @@ open class NormUrl constructor(
     operator fun component1() = spec
     operator fun component2() = options
 
+    fun toHyperlink() = Hyperlink(spec, args = args, href = hrefSpec)
+
     override fun hashCode(): Int {
         return configuredUrl.hashCode()
     }

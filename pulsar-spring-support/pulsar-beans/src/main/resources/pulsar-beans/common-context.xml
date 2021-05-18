@@ -50,4 +50,11 @@
         <constructor-arg ref="conf"/>
     </bean>
 
+    <bean id="crawlStarter" class="ai.platon.pulsar.crawl.StreamingCrawlStarter"
+          init-method="start"
+          destroy-method="stop">
+        <constructor-arg ref="globalCache"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
 </beans>

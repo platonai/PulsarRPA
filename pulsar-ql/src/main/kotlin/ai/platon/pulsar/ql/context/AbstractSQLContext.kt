@@ -4,10 +4,9 @@ import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.simplify
-import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
@@ -23,7 +22,6 @@ import java.text.MessageFormat
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.jvm.Throws
 
 /**
  * The abstract SQL context, every X-SQL staff should be within the SQL context
@@ -41,8 +39,8 @@ abstract class AbstractSQLContext constructor(
 
     abstract val randomConnection: Connection
 
-    val randomConnectionOrNull: Connection? = kotlin.runCatching { randomConnection }
-        .onFailure { log.warn(it.simplify()) }
+    val randomConnectionOrNull: Connection? get() = kotlin.runCatching { randomConnection }
+        .onFailure { log.warn(it.stringify()) }
         .getOrNull()
 
     val connectionPool = ArrayBlockingQueue<Connection>(1000)

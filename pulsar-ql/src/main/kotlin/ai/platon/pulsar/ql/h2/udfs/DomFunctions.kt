@@ -9,10 +9,10 @@ import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.parsers.TreeParser1
 import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
@@ -160,6 +160,14 @@ object DomFunctions {
             ?: baseUri(dom)
     }
 
+    /**
+     * uri = WebPage.url which is the permanent internal address, it might not still available to access the target.
+     * And location = WebPage.location or baseUri = WebPage.baseUrl is the last working address, it might redirect to url,
+     * or it might have additional random parameters.
+     * WebPage.location may be different from url, it's generally normalized.
+     *
+     * @return a {@link java.lang.String} object.
+     */
     @UDFunction
     @JvmStatic
     fun baseUri(dom: ValueDom) = dom.element.baseUri()
@@ -168,6 +176,14 @@ object DomFunctions {
     @JvmStatic
     fun absUrl(dom: ValueDom, attributeKey: String) = dom.element.absUrl(attributeKey)
 
+    /**
+     * WebPage.url is the permanent internal address, it might not still available to access the target.
+     * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
+     * or it might have additional random parameters.
+     * WebPage.location may be different from url, it's generally normalized.
+     *
+     * @return a {@link java.lang.String} object.
+     */
     @UDFunction
     @JvmStatic
     fun location(dom: ValueDom) = dom.element.location

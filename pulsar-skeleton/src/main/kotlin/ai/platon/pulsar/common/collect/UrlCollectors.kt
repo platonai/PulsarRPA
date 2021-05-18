@@ -3,7 +3,6 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.*
-import ai.platon.pulsar.common.urls.preprocess.UrlNormalizer
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.persist.WebDb
 import com.google.common.collect.Iterators
@@ -12,12 +11,11 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.DelayQueue
 
 open class QueueCollector(
     val queue: Queue<UrlAware> = ConcurrentLinkedQueue(),
     priority: Int = Priority13.NORMAL.value
-) : AbstractPriorityDataCollector<Hyperlink>(priority) {
+) : AbstractPriorityDataCollector<UrlAware>(priority) {
 
     override var name = "QueueC"
 
@@ -33,11 +31,11 @@ open class QueueCollector(
 
     override fun hasMore() = queue.isNotEmpty()
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
         val count = queue.poll()
-            ?.let { Hyperlinks.toHyperlink(it).also { if (loadArgs != null) it.args += " $loadArgs" } }
+            ?.let { it.also { if (loadArgs != null) it.args += " $loadArgs" } }
             ?.takeIf { sink.add(it) }
             ?.let { 1 } ?: 0
 
@@ -51,7 +49,7 @@ open class QueueCollector(
  * 2. all urls are restricted by urlPattern
  * 3. all urls have to not be fetched before or expired against the last version
  * */
-open class HyperlinkCollector(
+open class UrlAwareCollector(
     /**
      * The pulsar session to use
      * */
@@ -64,8 +62,8 @@ open class HyperlinkCollector(
      * The priority of this collector
      * */
     priority: Priority13 = Priority13.NORMAL
-) : AbstractPriorityDataCollector<Hyperlink>(priority), CrawlableFatLinkCollector {
-    private val log = LoggerFactory.getLogger(HyperlinkCollector::class.java)
+) : AbstractPriorityDataCollector<UrlAware>(priority), CrawlableFatLinkCollector {
+    private val log = LoggerFactory.getLogger(UrlAwareCollector::class.java)
 
     var urlNormalizer: UrlNormalizerPipeline = UrlNormalizerPipeline()
 
@@ -95,7 +93,7 @@ open class HyperlinkCollector(
 
     override fun hasMore() = seeds.isNotEmpty()
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
@@ -106,7 +104,7 @@ open class HyperlinkCollector(
     }
 
     @Throws(Exception::class)
-    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
+    private fun collectTo0(sink: MutableCollection<UrlAware>): Int {
         val seed = seeds.poll() ?: return 0
 
         val knownFatLink = fatLinks[seed.spec]
@@ -120,7 +118,7 @@ open class HyperlinkCollector(
     }
 
     @Throws(Exception::class)
-    protected fun collectToUnsafe(seed: NormUrl, sink: MutableCollection<Hyperlink>): Int {
+    protected fun collectToUnsafe(seed: NormUrl, sink: MutableCollection<UrlAware>): Int {
         ++parsedSeedCount
         val p = session.load(seed).takeIf { it.protocolStatus.isSuccess } ?: return 0
 
@@ -129,7 +127,7 @@ open class HyperlinkCollector(
         return collectToUnsafe(seed, pageFatLink, sink)
     }
 
-    private fun collectToUnsafe(seed: NormUrl, pageFatLink: PageFatLink, sink: MutableCollection<Hyperlink>): Int {
+    private fun collectToUnsafe(seed: NormUrl, pageFatLink: PageFatLink, sink: MutableCollection<UrlAware>): Int {
         val (page, fatLink) = pageFatLink
 
         page.prevCrawlTime1 = Instant.now()
@@ -158,12 +156,12 @@ open class HyperlinkCollector(
     }
 }
 
-open class CircularHyperlinkCollector(
+open class CircularUrlAwareCollector(
     session: PulsarSession,
     seeds: Queue<NormUrl>,
     priority: Priority13 = Priority13.HIGHER
-) : HyperlinkCollector(session, seeds, priority) {
-    private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
+) : UrlAwareCollector(session, seeds, priority) {
+    private val log = LoggerFactory.getLogger(CircularUrlAwareCollector::class.java)
     protected val iterator = Iterators.cycle(seeds)
 
     override var name = "CircularHC"
@@ -180,7 +178,7 @@ open class CircularHyperlinkCollector(
         priority: Priority13 = Priority13.HIGHER
     ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
@@ -190,7 +188,7 @@ open class CircularHyperlinkCollector(
         return afterCollect(count)
     }
 
-    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
+    private fun collectTo0(sink: MutableCollection<UrlAware>): Int {
         var count = 0
 
         val seed = synchronized(iterator) {
@@ -203,12 +201,12 @@ open class CircularHyperlinkCollector(
     }
 }
 
-open class PeriodicalHyperlinkCollector(
+open class PeriodicalUrlAwareCollector(
     session: PulsarSession,
     val seed: NormUrl,
     priority: Priority13 = Priority13.HIGHER
-) : CircularHyperlinkCollector(session, seed, priority) {
-    private val log = LoggerFactory.getLogger(PeriodicalHyperlinkCollector::class.java)
+) : CircularUrlAwareCollector(session, seed, priority) {
+    private val log = LoggerFactory.getLogger(PeriodicalUrlAwareCollector::class.java)
     private var position = 0
     private var lastFinishTime = Instant.EPOCH
     private val expires get() = seed.options.expires
@@ -224,7 +222,7 @@ open class PeriodicalHyperlinkCollector(
 
     override fun hasMore() = synchronized(iterator) { isExpired && iterator.hasNext() }
 
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
         val count = kotlin.runCatching { collectTo0(sink) }
@@ -234,7 +232,7 @@ open class PeriodicalHyperlinkCollector(
         return afterCollect(count)
     }
 
-    private fun collectTo0(sink: MutableCollection<Hyperlink>): Int {
+    private fun collectTo0(sink: MutableCollection<UrlAware>): Int {
         val seed = synchronized(iterator) {
             if (iterator.hasNext()) {
                 ++position
@@ -254,14 +252,14 @@ open class PeriodicalHyperlinkCollector(
     companion object {
         fun fromConfig(
             resource: String, session: PulsarSession, priority: Priority13 = Priority13.NORMAL
-        ): Sequence<PeriodicalHyperlinkCollector> {
+        ): Sequence<PeriodicalUrlAwareCollector> {
             return ResourceLoader.readAllLines(resource)
                 .asSequence()
                 .filterNot { it.startsWith("#") }
                 .filterNot { it.isBlank() }
                 .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
                 .filter { Urls.isValidUrl(it.spec) }
-                .map { PeriodicalHyperlinkCollector(session, it, priority) }
+                .map { PeriodicalUrlAwareCollector(session, it, priority) }
         }
     }
 }
@@ -269,7 +267,7 @@ open class PeriodicalHyperlinkCollector(
 open class FetchCacheCollector(
     private val fetchCache: FetchCache,
     priority: Int = Priority13.HIGHER.value,
-) : AbstractPriorityDataCollector<Hyperlink>(priority) {
+) : AbstractPriorityDataCollector<UrlAware>(priority) {
 
     private val queues get() = fetchCache.queues
 
@@ -291,24 +289,24 @@ open class FetchCacheCollector(
     override fun hasMore() = size > 0 || fetchCache.estimatedSize > 0
 
     @Synchronized
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
         val count = queues.sumOf { consume(it, sink) }
         return afterCollect(count)
     }
 
-    private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
+    private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<UrlAware>): Int {
         if (queue is LoadingQueue && queue.size == 0 && queue.estimatedExternalSize == 0) {
             return 0
         }
-        return queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it)) }?.let { 1 } ?: 0
+        return queue.poll()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
     }
 }
 
 open class DelayCacheCollector(
     val queue: Queue<DelayUrl>,
     priority: Int = Priority13.HIGHER.value
-) : AbstractPriorityDataCollector<Hyperlink>(priority) {
+) : AbstractPriorityDataCollector<UrlAware>(priority) {
 
     override var name = "DelayCacheC"
 
@@ -324,10 +322,10 @@ open class DelayCacheCollector(
     override fun hasMore() = queue.isNotEmpty()
 
     @Synchronized
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
-        val count = queue.poll()?.takeIf { sink.add(Hyperlinks.toHyperlink(it.url)) }?.let { 1 } ?: 0
+        val count = queue.poll()?.takeIf { sink.add(it.url) }?.let { 1 } ?: 0
 
         return afterCollect(count)
     }

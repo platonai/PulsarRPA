@@ -1,23 +1,25 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.LoadedPageFormatter
-import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.AppStatusTracker
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.message.LoadedPageFormatter
+import ai.platon.pulsar.common.message.LoadedPagesFormatter
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
+import ai.platon.pulsar.crawl.CrawlStarter
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.url.CompletableHyperlink
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
@@ -32,6 +34,7 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Collectors
 
@@ -49,6 +52,7 @@ class LoadComponent(
     val parseComponent: ParseComponent? = null,
     val updateComponent: UpdateComponent,
     val statusTracker: AppStatusTracker? = null,
+    val crawlStarter: CrawlStarter? = null,
     val immutableConfig: ImmutableConfig,
 ) : AutoCloseable {
     companion object {
@@ -80,7 +84,7 @@ class LoadComponent(
         fetchComponent: BatchFetchComponent,
         updateComponent: UpdateComponent,
         immutableConfig: ImmutableConfig,
-    ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, immutableConfig)
+    ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, null, immutableConfig)
 
     fun fetchState(page: WebPage, options: LoadOptions): Int {
         val protocolStatus = page.protocolStatus
@@ -172,6 +176,16 @@ class LoadComponent(
         return page
     }
 
+    fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        val queue = globalCache.fetchCacheManager.highestCache.nReentrantQueue
+        val links = normUrls.map { CompletableHyperlink(it.spec, args = it.args, href = it.hrefSpec).apply { maxRetry = 0 } }
+        queue.addAll(links)
+        logger.debug("Waiting for {} completable hyperlinks", links.size)
+        // logger.debug(crawlStarter?.report)
+        CompletableFuture.allOf(*links.toTypedArray()).join()
+        return links.mapNotNull { it.get() }
+    }
+
     /**
      * Load a batch of urls with the specified options.
      *
@@ -186,7 +200,7 @@ class LoadComponent(
      * @param options The options
      * @return Pages for all urls.
      */
-    fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+    fun loadAllLegacy(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         if (!isActive) {
             return listOf()
         }
@@ -283,12 +297,12 @@ class LoadComponent(
 
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
-
         beforeLoad(page, normUrl.options)
 
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
+
                 fetchComponent.fetchContent(page)
             } finally {
                 afterFetch(page, normUrl.options)
@@ -363,7 +377,7 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
-        assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+        // assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
             page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
@@ -373,7 +387,7 @@ class LoadComponent(
     }
 
     private fun afterLoad(page: WebPage, options: LoadOptions) {
-        assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+        // assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         if (options.parse) {
             parse(page, options)
