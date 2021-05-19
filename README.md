@@ -107,3 +107,5 @@ Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-sup
         .header("Content-Type", "text/plain")
         .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
     String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
+
+Here is the [java driver](https://github.com/platonai/pulsar-java-driver) and demos.
