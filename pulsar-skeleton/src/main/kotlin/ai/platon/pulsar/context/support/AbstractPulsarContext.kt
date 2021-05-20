@@ -13,7 +13,7 @@ import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.crawl.CrawlStarter
+import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -96,7 +96,7 @@ abstract class AbstractPulsarContext(
     /**
      * The main loop
      * */
-    override val crawlStarter: CrawlStarter get() = getBean()
+    override val crawlLoop: CrawlLoop get() = getBean()
 
     /**
      * The start time

@@ -1,14 +1,12 @@
 package ai.platon.pulsar.app.master
 
-import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.pulsar.PulsarContextInitializer
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.h2.tools.Server
 import org.slf4j.LoggerFactory
@@ -67,8 +65,8 @@ class PulsarMaster(
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
-    fun fetch(): StreamingCrawlStarter {
-        return StreamingCrawlStarter(globalCache, unmodifiedConfig)
+    fun fetch(): StreamingCrawlLoop {
+        return StreamingCrawlLoop(globalCache, unmodifiedConfig)
     }
 }
 

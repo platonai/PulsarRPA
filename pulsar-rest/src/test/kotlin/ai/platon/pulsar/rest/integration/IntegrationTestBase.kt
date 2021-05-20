@@ -5,7 +5,7 @@ import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitiali
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.junit.After
 import org.junit.Before
@@ -41,7 +41,7 @@ class IntegrationTestBase {
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
 
-    private val crawlStarter by lazy { StreamingCrawlStarter(globalCache, unmodifiedConfig) }
+    private val crawlStarter by lazy { StreamingCrawlLoop(globalCache, unmodifiedConfig) }
 
     val baseUri get() = String.format("http://%s:%d", "localhost", port)
 

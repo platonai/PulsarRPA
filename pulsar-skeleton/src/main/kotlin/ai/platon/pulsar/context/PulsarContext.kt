@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.CrawlStarter
+import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -28,7 +28,7 @@ interface PulsarContext: AutoCloseable {
 
     val unmodifiedConfig: ImmutableConfig
 
-    val crawlStarter: CrawlStarter
+    val crawlLoop: CrawlLoop
 
     fun createSession(): PulsarSession
 

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -55,7 +55,7 @@ class StaticPulsarContext(
     /**
      * The main loop
      * */
-    override val crawlStarter get() = getBeanOrNull() ?: StreamingCrawlStarter(globalCache, unmodifiedConfig)
+    override val crawlLoop get() = getBeanOrNull() ?: StreamingCrawlLoop(globalCache, unmodifiedConfig)
 
     init {
         applicationContext.refresh()

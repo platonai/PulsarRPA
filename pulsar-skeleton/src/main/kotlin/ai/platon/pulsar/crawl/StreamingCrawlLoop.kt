@@ -12,14 +12,14 @@ import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 
-open class StreamingCrawlStarter(
+open class StreamingCrawlLoop(
     /**
      * The global cache
      * */
     globalCache: GlobalCache,
     unmodifiedConfig: ImmutableConfig
-) : AbstractCrawlStarter(globalCache, unmodifiedConfig) {
-    private val log = LoggerFactory.getLogger(StreamingCrawlStarter::class.java)
+) : AbstractCrawlLoop(globalCache, unmodifiedConfig) {
+    private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private val createDefaultCollectors
         get() = unmodifiedConfig.getBoolean(CREATE_DEFAULT_DATA_COLLECTORS, true)

@@ -3,7 +3,7 @@ package ai.platon.pulsar.app.crawler
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -31,8 +31,8 @@ class PulsarCrawler(
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
-    fun fetch(): StreamingCrawlStarter {
-        return StreamingCrawlStarter(globalCache, unmodifiedConfig)
+    fun fetch(): StreamingCrawlLoop {
+        return StreamingCrawlLoop(globalCache, unmodifiedConfig)
     }
 }
 

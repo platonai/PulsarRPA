@@ -16,7 +16,7 @@ import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
-import ai.platon.pulsar.crawl.CrawlStarter
+import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.url.CompletableHyperlink
@@ -53,7 +53,7 @@ class LoadComponent(
     val parseComponent: ParseComponent? = null,
     val updateComponent: UpdateComponent,
     val statusTracker: AppStatusTracker? = null,
-    val crawlStarter: CrawlStarter? = null,
+    val crawlLoop: CrawlLoop? = null,
     val immutableConfig: ImmutableConfig,
 ) : AutoCloseable {
     companion object {

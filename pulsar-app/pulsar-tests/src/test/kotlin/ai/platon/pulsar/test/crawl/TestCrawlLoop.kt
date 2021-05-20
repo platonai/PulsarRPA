@@ -1,6 +1,6 @@
 package ai.platon.pulsar.test.crawl
 
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.test.MockListenableHyperlink
 import ai.platon.pulsar.test.TestBase
 import org.junit.After
@@ -8,9 +8,9 @@ import org.junit.Before
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class TestCrawlStarter: TestBase() {
+class TestCrawlLoop: TestBase() {
 
-    private val crawlStarter get() = StreamingCrawlStarter(globalCache, session.unmodifiedConfig)
+    private val crawlStarter get() = StreamingCrawlLoop(globalCache, session.unmodifiedConfig)
     private val fetchQueue get() = globalCache.fetchCacheManager.normalCache.nReentrantQueue
 
     @Before

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -89,7 +89,7 @@ class StaticH2SQLContext(
     /**
      * The main loop
      * */
-    override val crawlStarter get() = getBeanOrNull() ?: StreamingCrawlStarter(globalCache, unmodifiedConfig)
+    override val crawlLoop get() = getBeanOrNull() ?: StreamingCrawlLoop(globalCache, unmodifiedConfig)
 
     init {
         applicationContext.refresh()

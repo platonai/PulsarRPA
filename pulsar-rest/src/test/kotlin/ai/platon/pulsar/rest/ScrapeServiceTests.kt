@@ -5,7 +5,7 @@ import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitiali
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.crawl.StreamingCrawlStarter
+import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
@@ -43,7 +43,7 @@ class ScrapeServiceTests {
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
 
-    private val crawlStarter by lazy { StreamingCrawlStarter(globalCache, unmodifiedConfig) }
+    private val crawlStarter by lazy { StreamingCrawlLoop(globalCache, unmodifiedConfig) }
 
     @Before
     fun setup() {

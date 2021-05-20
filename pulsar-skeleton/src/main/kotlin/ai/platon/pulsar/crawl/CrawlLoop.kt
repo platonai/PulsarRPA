@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.common.GlobalCache
 import java.util.*
 
-interface CrawlStarter: StartStopRunnable {
+interface CrawlLoop: StartStopRunnable {
     val unmodifiedConfig: ImmutableConfig
     val defaultOptions: LoadOptions
     val fetchIterable: Iterable<UrlAware>
@@ -20,10 +20,10 @@ interface CrawlStarter: StartStopRunnable {
     val report: String
 }
 
-abstract class AbstractCrawlStarter(
+abstract class AbstractCrawlLoop(
         val globalCache: GlobalCache,
         override val unmodifiedConfig: ImmutableConfig
-) : CrawlStarter {
+) : CrawlLoop {
     /**
      * Data collector lower capacity
      * */
