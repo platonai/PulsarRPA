@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.urls.UrlAware
+import java.util.*
 
 class MultiSourceHyperlinkIterable(
     val fetchCacheManager: FetchCatchManager,
@@ -17,8 +18,7 @@ class MultiSourceHyperlinkIterable(
         ConcurrentLoadingIterable(multiSourceCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    // TODO: add realTimeCollector and delayCollector
-    val collectors get() = multiSourceCollector.collectors
+    val collectors: Queue<PriorityDataCollector<UrlAware>> get() = multiSourceCollector.collectors
 
     /**
      * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately
@@ -28,6 +28,7 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
+        // TODO: use a single collector to collect all caches in FetchCatchManager
         fetchCacheManager.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }

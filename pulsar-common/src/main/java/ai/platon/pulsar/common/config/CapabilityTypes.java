@@ -544,6 +544,10 @@ public interface CapabilityTypes {
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
     /**
+     * Create default data collectors or not
+     * */
+    String CREATE_DEFAULT_DATA_COLLECTORS = "crawl.create.default.data.collectors";
+    /**
      * The size of global page cache
      * */
     String GLOBAL_PAGE_CACHE_SIZE = "global.page.cache.size";

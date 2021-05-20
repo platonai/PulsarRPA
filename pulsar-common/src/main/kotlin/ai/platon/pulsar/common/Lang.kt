@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import com.google.common.base.Predicates
-import java.lang.IllegalArgumentException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.memberProperties
@@ -99,6 +98,11 @@ enum class Priority21(val value: Int) {
 interface StartStopRunnable {
     fun start()
     fun stop()
+
+    fun restart() {
+        stop()
+        start()
+    }
 }
 
 class StartStopRunner(val runnable: StartStopRunnable) {

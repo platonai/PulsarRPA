@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.collect.FetchCache
 import ai.platon.pulsar.common.collect.PriorityDataCollector
+import ai.platon.pulsar.common.config.CapabilityTypes.CREATE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
@@ -20,6 +21,8 @@ open class StreamingCrawlStarter(
 ) : AbstractCrawlStarter(globalCache, unmodifiedConfig) {
     private val log = LoggerFactory.getLogger(StreamingCrawlStarter::class.java)
 
+    private val createDefaultCollectors
+        get() = unmodifiedConfig.getBoolean(CREATE_DEFAULT_DATA_COLLECTORS, true)
     @Volatile
     private var running = false
     private var crawlJob: Job? = null
@@ -76,7 +79,7 @@ open class StreamingCrawlStarter(
         }
         running = true
 
-        if (collectors.isEmpty()) {
+        if (createDefaultCollectors && collectors.isEmpty()) {
             fetchIterable.addDefaultCollectors()
         }
 

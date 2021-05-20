@@ -1,0 +1,21 @@
+    1 |     0 |   0 |  20 | Root                                                                             | https://www.amazon.com/gp/movers-and-shakers
+    2 |     1 |   1 |   0 | Root > Appliances                                                                | https://www.amazon.com/gp/movers-and-shakers/appliances
+    3 |     1 |   1 |   0 | Root > Arts, Crafts & Sewing                                                     | https://www.amazon.com/gp/movers-and-shakers/arts-crafts
+    4 |     1 |   1 |   0 | Root > Automotive                                                                | https://www.amazon.com/gp/movers-and-shakers/automotive
+    5 |     1 |   1 |   0 | Root > Baby                                                                      | https://www.amazon.com/gp/movers-and-shakers/baby-products
+    6 |     1 |   1 |   0 | Root > Beauty & Personal Care                                                    | https://www.amazon.com/gp/movers-and-shakers/beauty
+    8 |     1 |   1 |   0 | Root > Clothing, Shoes & Jewelry                                                 | https://www.amazon.com/gp/movers-and-shakers/fashion
+    7 |     1 |   1 |   0 | Root > Electronics                                                               | https://www.amazon.com/gp/movers-and-shakers/electronics
+    9 |     1 |   1 |   0 | Root > Grocery & Gourmet Food                                                    | https://www.amazon.com/gp/movers-and-shakers/grocery
+   10 |     1 |   1 |   0 | Root > Handmade Products                                                         | https://www.amazon.com/gp/movers-and-shakers/handmade
+   13 |     1 |   1 |   0 | Root > Health & Household                                                        | https://www.amazon.com/gp/movers-and-shakers/hpc
+   12 |     1 |   1 |   0 | Root > Home & Kitchen                                                            | https://www.amazon.com/gp/movers-and-shakers/home-garden
+   14 |     1 |   1 |   0 | Root > Kitchen & Dining                                                          | https://www.amazon.com/gp/movers-and-shakers/kitchen
+   16 |     1 |   1 |   0 | Root > Musical Instruments                                                       | https://www.amazon.com/gp/movers-and-shakers/musical-instruments
+   17 |     1 |   1 |   0 | Root > Office Products                                                           | https://www.amazon.com/gp/movers-and-shakers/office-products
+   15 |     1 |   1 |   0 | Root > Patio, Lawn & Garden                                                      | https://www.amazon.com/gp/movers-and-shakers/lawn-garden
+   18 |     1 |   1 |   0 | Root > Pet Supplies                                                              | https://www.amazon.com/gp/movers-and-shakers/pet-supplies
+   19 |     1 |   1 |   0 | Root > Sports & Outdoors                                                         | https://www.amazon.com/gp/movers-and-shakers/sporting-goods
+   11 |     1 |   1 |   0 | Root > Tools & Home Improvement                                                  | https://www.amazon.com/gp/movers-and-shakers/hi
+   20 |     1 |   1 |   0 | Root > Toys & Games                                                              | https://www.amazon.com/gp/movers-and-shakers/toys-and-games
+   21 |     1 |   1 |   0 | Root > Video Games                                                               | https://www.amazon.com/gp/movers-and-shakers/videogames
