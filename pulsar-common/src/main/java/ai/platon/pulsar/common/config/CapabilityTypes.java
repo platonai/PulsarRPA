@@ -546,7 +546,7 @@ public interface CapabilityTypes {
     /**
      * Create default data collectors or not
      * */
-    String CREATE_DEFAULT_DATA_COLLECTORS = "crawl.create.default.data.collectors";
+    String ENABLE_DEFAULT_DATA_COLLECTORS = "crawl.create.default.data.collectors";
     /**
      * The size of global page cache
      * */

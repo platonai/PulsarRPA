@@ -1,14 +1,12 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.collect.FetchCache
 import ai.platon.pulsar.common.collect.PriorityDataCollector
-import ai.platon.pulsar.common.config.CapabilityTypes.CREATE_DEFAULT_DATA_COLLECTORS
+import ai.platon.pulsar.common.config.CapabilityTypes.ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.collect.PriorityDataCollectorsFormatter
-import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 
@@ -21,8 +19,8 @@ open class StreamingCrawlLoop(
 ) : AbstractCrawlLoop(globalCache, unmodifiedConfig) {
     private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
-    private val createDefaultCollectors
-        get() = unmodifiedConfig.getBoolean(CREATE_DEFAULT_DATA_COLLECTORS, true)
+    private val enableDefaultCollectors
+        get() = unmodifiedConfig.getBoolean(ENABLE_DEFAULT_DATA_COLLECTORS, true)
     @Volatile
     private var running = false
     private var crawlJob: Job? = null
@@ -53,33 +51,15 @@ open class StreamingCrawlLoop(
 
     override val report: String get() = PriorityDataCollectorsFormatter(allCollectors).toString()
 
-    private val gauges = mapOf(
-        "fetchIterableCacheSize" to Gauge { fetchIterable.cacheSize },
-        "realTimeCacheSize" to Gauge { realTimeCache.size },
-        "delayCacheSize" to Gauge { delayCache.size },
-        "normalCacheSize" to Gauge { normalCacheSize },
-        "normalCacheEstimatedSize" to Gauge { normalCacheEstimatedSize },
-        "normalCacheReport" to Gauge { getNormalCacheReport() },
-        "totalCacheSize" to Gauge { totalCacheSize },
-        "numCollectors" to Gauge { collectors.size }
-    )
-
-    init {
-        // There might be several StreamingCrawlerStarter instances
-        // AppMetrics.reg.registerAll(this, gauges)
-    }
-
     @Synchronized
     override fun start() {
-        // TODO: check preconditions
-        
         if (running) {
             log.warn("Crawl loop is already running")
             return
         }
         running = true
 
-        if (createDefaultCollectors && collectors.isEmpty()) {
+        if (enableDefaultCollectors && collectors.isEmpty()) {
             fetchIterable.addDefaultCollectors()
         }
 
@@ -114,16 +94,5 @@ open class StreamingCrawlLoop(
 
             log.info("Streaming crawler is stopped")
         }
-    }
-
-    private fun getNormalCacheReport(): String {
-        val sizeReport: (FetchCache) -> String = {
-            it.queues.joinToString { it.size.toString() }
-        }
-
-        return cacheManager.caches.values
-            .map { it.name to it }
-            .filter { it.second.size != 0 }
-            .joinToString(", ") { "${it.first}: " + sizeReport(it.second) }
     }
 }
