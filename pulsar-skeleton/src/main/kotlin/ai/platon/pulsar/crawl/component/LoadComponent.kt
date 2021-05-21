@@ -25,6 +25,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
+import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
@@ -62,6 +63,16 @@ class LoadComponent(
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
+
+    private val nonMetadataFields = listOf(
+        GWebPage.Field.CONTENT,
+        GWebPage.Field.PAGE_TEXT,
+        GWebPage.Field.PAGE_MODEL
+    )
+    val metadataFields = GWebPage.Field.values()
+        .filterNot { it in nonMetadataFields }
+        .map { it.getName() }
+        .toTypedArray()
 
     private val fetchMetrics get() = fetchComponent.fetchMetrics
     private val closed = AtomicBoolean()
@@ -224,7 +235,7 @@ class LoadComponent(
         for (normUrl in filteredUrls) {
             val url = normUrl.spec
             val opt = normUrl.options
-            var page = webDb.get(url, opt.shortenKey)
+            var page = webDb.get(url, opt.shortenKey, fields = metadataFields)
             val reason = fetchState(page, opt)
             tracer?.trace("Fetch reason: {} | {} {}", FetchState.toString(reason), url, opt)
             val status = page.protocolStatus
@@ -314,6 +325,10 @@ class LoadComponent(
             } finally {
                 afterFetch(page, normUrl.options)
             }
+        } else {
+            // load the content of the page
+            val page0 = webDb.getOrNull(page.url, fields = arrayOf(GWebPage.Field.CONTENT.name))
+            page0?.let { page.content = page0.content }
         }
 
         afterLoad(page, normUrl.options)
@@ -322,17 +337,23 @@ class LoadComponent(
     }
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
+        // load the metadata of the page if it's fetched before
         val page = createLoadEntry(normUrl)
 
         beforeLoad(page, normUrl.options)
 
         if (page.variables.remove(VAR_REFRESH) != null) {
+            // fetch the content and update metadata
             try {
                 beforeFetch(page, normUrl.options)
                 fetchComponent.fetchContentDeferred(page)
             } finally {
                 afterFetch(page, normUrl.options)
             }
+        } else {
+            // load the content of the page from database
+            val page0 = webDb.getOrNull(page.url, fields = arrayOf(GWebPage.Field.CONTENT.name))
+            page0?.let { page.content = page0.content }
         }
 
         afterLoad(page, normUrl.options)
@@ -352,13 +373,8 @@ class LoadComponent(
             return WebPage.NIL
         }
 
-        // less than 1 seconds means do not check the database
-        // NOTE: if we do not check the database, necessary information is lost
-//        val page0 = if (options.expires.seconds > 1) {
-//            webDb.get(url, options.ignoreQuery)
-//        } else WebPage.NIL
-
-        val page0 = webDb.get(url)
+        // get metadata only
+        val page0 = webDb.get(url, fields = metadataFields)
 
         val reason = fetchState(page0, options)
         val fetchEntry = if (page0.isNil) {

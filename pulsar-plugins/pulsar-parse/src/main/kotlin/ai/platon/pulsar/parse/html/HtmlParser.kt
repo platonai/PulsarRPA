@@ -83,7 +83,6 @@ class HtmlParser(
             beforeHtmlParse(page)
 
             val parseContext = parseHTMLDocument(page)
-
             parseFilters.filter(parseContext)
 
             parseContext.document?.let { afterHtmlParse(page, it) }

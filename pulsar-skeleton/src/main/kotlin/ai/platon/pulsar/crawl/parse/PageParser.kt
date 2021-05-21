@@ -18,11 +18,13 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -60,7 +62,7 @@ class PageParser(
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
-     * Parser timeout set to 30 sec by default. Set -1 (or any negative int) to deactivate
+     * Parser timeout set to 60 sec by default. Set -1 (or any negative int) to deactivate
      */
     private val maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
     val linkFilter = LinkFilter(crawlFilters, conf)
@@ -206,7 +208,6 @@ class PageParser(
                 break
             }
         }
-
         return parseResult
     }
 
