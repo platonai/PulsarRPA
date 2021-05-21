@@ -49,15 +49,15 @@ or if you are using an IDE, run main() in [PulsarMaster](pulsar-app\pulsar-maste
 
 CURL
 
-    curl -X POST --location "http://localhost:8182/x/e" -H "Content-Type: text/plain"     
-    -d "select
+    curl -X POST --location "http://localhost:8182/x/e" -H "Content-Type: text/plain" -d "
+        select
             dom_first_text(dom, '#productTitle') as title,
             dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
             dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as price,
             array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as categories,
             dom_base_uri(dom) as baseUri
             from
-        load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')"
+        load_and_select('https://www.amazon.com/dp/B00BTX5926 -expires 10s', ':root')"
 
 The response is as the following:
 
