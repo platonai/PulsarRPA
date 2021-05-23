@@ -49,7 +49,7 @@ or if you are using an IDE, run main() in [PulsarMaster](pulsar-app\pulsar-maste
 
 CURL
 
-    curl -X POST --location "http://localhost:8182/x/e" -H "Content-Type: text/plain" -d "
+    curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
         select
             dom_first_text(dom, '#productTitle') as title,
             dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
@@ -86,7 +86,7 @@ Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-sup
 [PHP](pulsar-client/src/main/php/Scraper.php)
 
     $sql = "...";
-    $ch = curl_init("http://localhost:8182/x/e");
+    $ch = curl_init("http://localhost:8182/api/x/e");
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
     curl_setopt($ch, CURLOPT_POSTFIELDS, $sql);
     $output = curl_exec($ch);
@@ -95,7 +95,7 @@ Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-sup
 [Kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt):
 
     val sql = """..."""
-    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
         .header("Content-Type", "text/plain")
         .POST(BodyPublishers.ofString(sql)).build()
     val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
@@ -103,7 +103,7 @@ Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-sup
 [Java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java):
 
     String sql = "...";
-    HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+    HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
         .header("Content-Type", "text/plain")
         .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
     String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
