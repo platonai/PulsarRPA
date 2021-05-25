@@ -113,6 +113,12 @@ final public class WebPage implements Comparable<WebPage> {
     private final Variables variables = new Variables();
 
     /**
+     * If this page is fetched from internet
+     */
+    private boolean isCached = false;
+
+
+    /**
      * If this page is loaded from database or is created and fetched from the web
      */
     private boolean isLoaded = false;
@@ -499,12 +505,8 @@ final public class WebPage implements Comparable<WebPage> {
      * @param name a {@link java.lang.String} object.
      * @return a boolean.
      */
-    public boolean getAndRemoveVar(@NotNull String name) {
-        boolean exist = variables.contains(name);
-        if (exist) {
-            variables.remove(name);
-        }
-        return exist;
+    public Object removeVar(@NotNull String name) {
+        return variables.remove(name);
     }
 
     /**
@@ -515,6 +517,14 @@ final public class WebPage implements Comparable<WebPage> {
      */
     public void setVar(@NotNull String name, @NotNull Object value) {
         variables.set(name, value);
+    }
+
+    public boolean isCached() {
+        return isCached;
+    }
+
+    public void setCached(boolean cached) {
+        isCached = cached;
     }
 
     public boolean isLoaded() {

@@ -18,10 +18,6 @@ class LazyFetcher(val pulsarContext: AbstractPulsarContext): ScheduledMonitor() 
     private val backgroundTaskBatchSize = config.getUint(FETCH_CONCURRENCY, 20)
     private var lazyTaskRound = 0
 
-    init {
-        backgroundSession.disableCache()
-    }
-
     override fun watch() {
         loadLazyTasks()
         fetchSeeds()

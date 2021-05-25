@@ -9,6 +9,6 @@ fun main() {
     val portalUrl = "https://www.baidu.com/"
 
     withContext {
-        Crawler(it).load(portalUrl, "-i 1s")
+        Crawler(it).load(portalUrl, "-i 1d")
     }
 }

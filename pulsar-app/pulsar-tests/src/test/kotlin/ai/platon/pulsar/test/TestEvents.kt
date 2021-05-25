@@ -1,7 +1,8 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.LoadEventPipelineHandler
+import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.crawl.component.FetchComponent
 import org.junit.Before
 import org.junit.Test
@@ -32,10 +33,11 @@ class TestEvents : TestBase() {
         assertNotNull(metrics)
 
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-        val hyperlink = ListenableHyperlink(url, args = "-i 0s")
+        val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
 
         val firedEvents = mutableListOf<String>()
-        hyperlink.loadEventHandler.apply {
+        val eventHandler = hyperlink.crawlEventHandler as LoadEventPipelineHandler
+        eventHandler.apply {
             onBeforeLoadPipeline.addLast { url ->
                 firedEvents.add("onBeforeLoad")
                 assertEquals(0, metrics.tasks.count)

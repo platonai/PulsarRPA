@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.*
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch
@@ -13,7 +13,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
+open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(url) {
 
     class MockLoadEventHandler(hyperlink: MockListenableHyperlink) : DefaultLoadEventHandler() {
         private val thisHandler = this
@@ -60,8 +60,26 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
         }
     }
 
-    class MockCrawlEventHandler(hyperlink: MockListenableHyperlink) : AbstractCrawlEventHandler() {
-        override var onAfterLoad: (UrlAware, WebPage) -> Unit = { url, page ->
+    class MockCrawlEventHandler(hyperlink: MockListenableHyperlink) {
+        var onAfterLoad: (UrlAware, WebPage) -> Unit = { url, page ->
+        }
+    }
+
+    override var args: String? = "-cacheContent true -storeContent false -parse"
+    override var loadEventHandler: LoadEventPipelineHandler = MockLoadEventHandler(this)
+
+    init {
+        registerEventHandler()
+    }
+
+    var page: WebPage? = null
+
+    private val isDone = CountDownLatch(1)
+    fun isDone() = isDone.count == 0L
+    fun await() = isDone.await()
+
+    private fun registerEventHandler() {
+        crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
             println("............SinkAwareCrawlEventHandler onAfterLoad " + page.id)
             page.variables.variables.forEach { (t, u) -> println("$t $u") }
 
@@ -75,14 +93,4 @@ open class MockListenableHyperlink(url: String) : ListenableHyperlink(url) {
             assertTrue(page.hasVar(VAR_IS_SCRAPE))
         }
     }
-
-    override var args: String? = "-cacheContent true -storeContent false -parse"
-    override var loadEventHandler: LoadEventPipelineHandler = MockLoadEventHandler(this)
-    override var crawlEventHandler: CrawlEventHandler? = MockCrawlEventHandler(this)
-
-    var page: WebPage? = null
-
-    private val isDone = CountDownLatch(1)
-    fun isDone() = isDone.count == 0L
-    fun await() = isDone.await()
 }

@@ -4,9 +4,9 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import ai.platon.pulsar.rest.api.common.PseudoSinkAwareHyperlink
+import ai.platon.pulsar.rest.api.common.DegenerateScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
-import ai.platon.pulsar.rest.api.common.ScrapingHyperlink
+import ai.platon.pulsar.rest.api.common.ScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
@@ -22,7 +22,7 @@ class ScrapeService(
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
-    private val fetchCaches get() = globalCache.fetchCacheManager
+    private val fetchCaches get() = globalCache.fetchCaches
 
     /**
      * Execute a scrape task and wait until the execution is done,
@@ -31,7 +31,7 @@ class ScrapeService(
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
         val hyperlink = createScrapeHyperlink(request)
         fetchCaches.highestCache.reentrantQueue.add(hyperlink)
-        return hyperlink.get(1, TimeUnit.MINUTES)
+        return hyperlink.get(2, TimeUnit.MINUTES)
     }
 
     /**
@@ -53,13 +53,13 @@ class ScrapeService(
         }
     }
 
-    private fun createScrapeHyperlink(request: ScrapeRequest): ScrapingHyperlink {
+    private fun createScrapeHyperlink(request: ScrapeRequest): ScrapeHyperlink {
         val sql = request.sql
         return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
             val xSQL = ScrapeAPIUtils.normalize(sql)
-            ScrapingHyperlink(request, xSQL, session, globalCache)
+            ScrapeHyperlink(request, xSQL, session, globalCache)
         } else {
-            PseudoSinkAwareHyperlink(request, session, globalCache)
+            DegenerateScrapeHyperlink(request, session, globalCache)
         }
     }
 }

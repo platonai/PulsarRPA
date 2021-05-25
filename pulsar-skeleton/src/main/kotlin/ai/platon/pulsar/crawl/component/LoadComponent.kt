@@ -8,27 +8,19 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.message.LoadedPageFormatter
-import ai.platon.pulsar.common.message.LoadedPagesFormatter
-import ai.platon.pulsar.common.options.LinkOptions
-import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.url.CompletableHyperlink
-import ai.platon.pulsar.persist.PageCounters.Self
-import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDomStat
-import ai.platon.pulsar.persist.model.WebPageFormatter
-import org.apache.avro.util.Utf8
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.URL
@@ -38,7 +30,6 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.stream.Collectors
 
 /**
  * Created by vincent on 17-7-15.
@@ -63,6 +54,9 @@ class LoadComponent(
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
+
+    val pageCache get() = globalCache.pageCache
+    val documentCache get() = globalCache.documentCache
 
     private val nonMetadataFields = listOf(
         GWebPage.Field.CONTENT,
@@ -189,10 +183,10 @@ class LoadComponent(
     }
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        val queue = globalCache.fetchCacheManager.highestCache.nReentrantQueue
+        val queue = globalCache.fetchCaches.highestCache.nReentrantQueue
         val links = normUrls
             .asSequence()
-            .map { CompletableHyperlink(it.spec, args = it.args, href = it.hrefSpec) }
+            .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
             .onEach { it.completeOnTimeout(WebPage.NIL, 2, TimeUnit.MINUTES) }
             .toList()
@@ -202,95 +196,6 @@ class LoadComponent(
         val future = CompletableFuture.allOf(*links.toTypedArray())
         future.join()
         return links.mapNotNull { it.get() }
-    }
-
-    /**
-     * Load a batch of urls with the specified options.
-     *
-     * If the option indicates prefer parallel, urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is
-     * returned
-     *
-     * @param normUrls    The urls to load
-     * @param options The options
-     * @return Pages for all urls.
-     */
-    fun loadAllLegacy(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        if (!isActive) {
-            return listOf()
-        }
-
-        val startTime = Instant.now()
-
-        val filteredUrls = normUrls.mapNotNullTo(HashSet()) { filterUrlToNull(it) }
-        if (filteredUrls.isEmpty()) {
-            return listOf()
-        }
-
-        val knownPages: MutableSet<WebPage> = mutableSetOf()
-        val pendingUrls: MutableSet<String> = mutableSetOf()
-        for (normUrl in filteredUrls) {
-            val url = normUrl.spec
-            val opt = normUrl.options
-            var page = webDb.get(url, opt.shortenKey, fields = metadataFields)
-            val reason = fetchState(page, opt)
-            tracer?.trace("Fetch reason: {} | {} {}", FetchState.toString(reason), url, opt)
-            val status = page.protocolStatus
-
-            when (reason) {
-                FetchState.TEMP_MOVED -> {
-                    // TODO: batch redirect
-                    page = redirect(page, opt)
-                    if (status.isSuccess) {
-                        knownPages.add(page)
-                    }
-                }
-                FetchState.DO_NOT_FETCH -> {
-                    if (status.isSuccess) {
-                        knownPages.add(page)
-                    } else {
-                        logger.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
-                    }
-                }
-                in FetchState.refreshCodes -> pendingUrls.add(url)
-                else -> logger.error("Unknown fetch reason {} | {} {}", reason, url, opt)
-            }
-        }
-
-        if (pendingUrls.isEmpty()) {
-            return knownPages
-        }
-
-        logger.debug("Fetching {} urls with options {}", pendingUrls.size, options)
-        val updatedPages = try {
-            globalCache.fetchingCache.addAll(pendingUrls)
-            if (options.preferParallel) {
-                fetchComponent.parallelFetchAll(pendingUrls, options)
-            } else {
-                fetchComponent.fetchAll(pendingUrls, options)
-            }
-        } finally {
-            globalCache.fetchingCache.removeAll(pendingUrls)
-        }.filter { it.isNotInternal }
-
-        if (options.parse) {
-            updatedPages.parallelStream().forEach { update(it, options) }
-        } else {
-            updatedPages.forEach { update(it, options) }
-        }
-
-        knownPages.addAll(updatedPages)
-
-        val verbose = logger.isDebugEnabled
-        lastPageReport = LoadedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose).toString()
-        if (logger.isInfoEnabled) {
-            logger.info(lastPageReport)
-        }
-
-        return knownPages
     }
 
     /**
@@ -314,63 +219,68 @@ class LoadComponent(
     }
 
     private fun load0(normUrl: NormUrl): WebPage {
-        val page = createLoadEntry(normUrl)
-        beforeLoad(page, normUrl.options)
+        val page = createWebPageShell(normUrl)
 
-        if (page.variables.remove(VAR_REFRESH) != null) {
-            try {
-                beforeFetch(page, normUrl.options)
+        beforeLoad(normUrl, page)
 
-                fetchComponent.fetchContent(page)
-            } finally {
-                afterFetch(page, normUrl.options)
-            }
-        } else {
-            // load the content of the page
-            val page0 = webDb.getOrNull(page.url, fields = arrayOf(GWebPage.Field.CONTENT.name))
-            page0?.let { page.content = page0.content }
-        }
+        fetchContentIfNecessary(normUrl, page)
 
-        afterLoad(page, normUrl.options)
+        afterLoad(page, normUrl)
 
         return page
     }
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
-        // load the metadata of the page if it's fetched before
-        val page = createLoadEntry(normUrl)
+        val page = createWebPageShell(normUrl)
 
-        beforeLoad(page, normUrl.options)
+        beforeLoad(normUrl, page)
 
-        if (page.variables.remove(VAR_REFRESH) != null) {
-            // fetch the content and update metadata
-            try {
-                beforeFetch(page, normUrl.options)
-                fetchComponent.fetchContentDeferred(page)
-            } finally {
-                afterFetch(page, normUrl.options)
-            }
-        } else {
-            // load the content of the page from database
-            val page0 = webDb.getOrNull(page.url, fields = arrayOf(GWebPage.Field.CONTENT.name))
-            page0?.let { page.content = page0.content }
-        }
+        fetchContentIfNecessaryDeferred(normUrl, page)
 
-        afterLoad(page, normUrl.options)
+        afterLoad(page, normUrl)
 
         return page
     }
 
-    private fun createLoadEntry(normUrl: NormUrl): WebPage {
-        if (normUrl.spec == AppConstants.NIL_PAGE_URL) {
-            return WebPage.NIL
+    private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
+        if (page.removeVar(VAR_REFRESH) != null) {
+            fetchContent(page, normUrl)
+            if (page.protocolStatus.isSuccess) {
+                documentCache.remove(page.url)
+            }
+            pageCache.putDatum(page.url, page)
         }
+    }
 
+    private suspend fun fetchContentIfNecessaryDeferred(normUrl: NormUrl, page: WebPage) {
+        if (page.removeVar(VAR_REFRESH) != null) {
+            fetchContentDeferred(page, normUrl)
+            if (page.protocolStatus.isSuccess) {
+                documentCache.remove(page.url)
+            }
+            pageCache.putDatum(page.url, page)
+        }
+    }
+
+    private fun createWebPageShell(normUrl: NormUrl): WebPage {
+        // load the metadata of the page from the database, this is very fast for a crawler
+        val page = createWebPageShell0(normUrl)
+        val cachedPage = getCachedPageOrNull(normUrl)
+        if (cachedPage != null) {
+            page.isCached = true
+            page.content = cachedPage.content
+            page.removeVar(VAR_REFRESH)
+            assert(!page.isFetched)
+        }
+        return page
+    }
+
+    private fun createWebPageShell0(normUrl: NormUrl): WebPage {
         val url = normUrl.spec
         val options = normUrl.options
         if (globalCache.fetchingCache.contains(url)) {
             logger.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
-            return WebPage.NIL
+            // return WebPage.NIL
         }
 
         // get metadata only
@@ -385,22 +295,19 @@ class LoadComponent(
 
         val page = fetchEntry.page
 
-        tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchState.toString(reason), page.url, options)
-        if (reason == FetchState.TEMP_MOVED) {
-            return redirect(page, options)
-        }
-
+        page.variables[VAR_FETCH_REASON] = reason
         val refresh = reason in FetchState.refreshCodes
         if (refresh) {
             page.variables[VAR_REFRESH] = reason
-            page.variables[VAR_FETCH_REASON] = reason
         }
 
         return page
     }
 
-    private fun beforeLoad(page: WebPage, options: LoadOptions) {
-        // assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+    private fun beforeLoad(normUrl: NormUrl, page: WebPage) {
+        val options = normUrl.options
+
+        shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
             page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
@@ -409,22 +316,74 @@ class LoadComponent(
         }
     }
 
-    private fun afterLoad(page: WebPage, options: LoadOptions) {
-        // assertSame(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+    private fun afterLoad(page: WebPage, normUrl: NormUrl) {
+        val options = normUrl.options
 
+        ensurePageContent(page, normUrl)
+
+        shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+
+        // we might use the cached page's content in parse phrase
         if (options.parse) {
-            parse(page, options)
-        }
-
-        if (options.persist) {
-            persist(page, options)
+            parse(page, normUrl.options)
         }
 
         try {
+            // we might use the cached page's content in after load handler
             page.loadEventHandler?.onAfterLoad?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
         }
+
+        // persist if it's not loaded from the cache so it's not updated
+        // we might persist only when it's fetched
+        if (!page.isCached && options.persist) {
+            persist(page, options)
+        }
+    }
+
+    private fun ensurePageContent(page: WebPage, normUrl: NormUrl) {
+        if (page.persistContent == null) {
+            shouldBe(false, page.isFetched) { "Page should not be fetched | ${page.configuredUrl}" }
+            // load the content of the page
+            // TODO: what if the page's status is failed?
+            val contentPage = webDb.getOrNull(page.url, GWebPage.Field.CONTENT)
+            if (contentPage != null) {
+                page.content = contentPage.persistContent
+            }
+        }
+
+        pageCache.putDatum(page.url, page)
+
+        if (logger.isInfoEnabled) {
+            val verbose = logger.isDebugEnabled
+            val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
+            logger.info(report)
+        }
+    }
+
+    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
+        val (url, options) = normUrl
+        if (options.refresh) {
+            // refresh the page, do not take cached version
+            return null
+        }
+
+        val now = Instant.now()
+        val cachedPage = pageCache.getDatum(url, options.expires, now)
+        if (cachedPage != null && !options.isExpired(cachedPage.prevFetchTime)) {
+            // TODO: properly handle page conf, a page might work in different context which have different conf
+            // TODO: properly handle ListenableHyperlink
+            // here is a complex logic for a ScrapingHyperlink: the page have an event handlers, and the page can
+            // also be loaded inside an event handler. We must handle such situation very carefully
+
+            // page.conf = normUrl.options.conf
+            // page.args = normUrl.args
+
+            return cachedPage
+        }
+
+        return null
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
@@ -434,40 +393,29 @@ class LoadComponent(
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
 
+    private fun fetchContent(page: WebPage, normUrl: NormUrl) {
+        try {
+            beforeFetch(page, normUrl.options)
+            fetchComponent.fetchContent(page)
+        } finally {
+            afterFetch(page, normUrl.options)
+        }
+    }
+
+    private suspend fun fetchContentDeferred(page: WebPage, normUrl: NormUrl) {
+        try {
+            beforeFetch(page, normUrl.options)
+            fetchComponent.fetchContentDeferred(page)
+        } finally {
+            afterFetch(page, normUrl.options)
+        }
+    }
+
     private fun afterFetch(page: WebPage, options: LoadOptions) {
+        // the metadata of the page is loaded from database but the content is not cached,
+        // so load the content again
         update(page, options)
         globalCache.fetchingCache.remove(page.url)
-
-        if (logger.isInfoEnabled) {
-            val verbose = logger.isDebugEnabled
-            val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
-            logger.info(report)
-        }
-    }
-
-    private fun filterUrlToNull(url: NormUrl): NormUrl? {
-        return url.takeIf { filterUrlToNull(url.spec) != null }
-    }
-
-    private fun filterUrlToNull(url: String): String? {
-        if (url.length <= AppConstants.SHORTEST_VALID_URL_LENGTH
-            || url.contains(AppConstants.NIL_PAGE_URL)
-            || url.contains(AppConstants.EXAMPLE_URL)
-        ) {
-            return null
-        }
-
-        when {
-            globalCache.fetchingCache.contains(url) -> return null
-            fetchMetrics?.isFailed(url) == true -> return null
-            fetchMetrics?.isTimeout(url) == true -> {
-            }
-            // Might use UrlFilter/UrlNormalizer
-        }
-
-        // Might use UrlFilter/UrlNormalizer
-
-        return Urls.getURLOrNull(url)?.toString()
     }
 
     /**
@@ -509,6 +457,10 @@ class LoadComponent(
         val days = duration.toDays()
         if (duration.toMillis() > 0 && days < 3) {
             return FetchState.SCHEDULED
+        }
+
+        if (page.persistContentLength == 0L) {
+            return FetchState.NO_CONTENT
         }
 
         if (page.persistContentLength < options.requireSize) {
@@ -558,6 +510,11 @@ class LoadComponent(
             page.clearPersistContent()
         }
 
+        if (!page.isFetched) {
+            page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
+            assert(!page.unbox().isContentDirty)
+        }
+
         webDb.put(page)
         ++numWrite
 
@@ -581,173 +538,6 @@ class LoadComponent(
         tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
     }
 
-    /**
-     * NOTE: not used in browser mode, redirect inside a browser instead
-     * */
-    private fun redirect(page: WebPage, options: LoadOptions): WebPage {
-        if (!isActive) {
-            page.protocolStatus = ProtocolStatus.STATUS_CANCELED
-            return page
-        }
-
-        if (page.protocolStatus.isCanceled) {
-            return page
-        }
-
-        var p = page
-        val reprUrl = p.reprUrl
-        if (reprUrl.equals(p.url, ignoreCase = true)) {
-            logger.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
-            return p
-        }
-
-        if (options.noRedirect) {
-            logger.warn("Redirect is prohibit, url: $reprUrl")
-            return p
-        }
-
-        // do not run into a rabbit hole, never redirects here
-        options.noRedirect = true
-        val redirectedPage = load(reprUrl, options)
-        options.noRedirect = false
-        if (options.hardRedirect) {
-            p = redirectedPage
-        } else {
-            // soft redirect
-            p.content = redirectedPage.content
-        }
-
-        return p
-    }
-
-    fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {
-        if (start < 0) throw IllegalArgumentException("Argument start must be greater than 0")
-        if (limit < 0) throw IllegalArgumentException("Argument limit must be greater than 0")
-
-        val pages = links.asSequence().drop(start).take(limit).map { load(it, options) }
-            .filter { it.protocolStatus.isSuccess }.toList()
-        if (!options.lazyFlush) {
-            flush()
-        }
-        return pages
-    }
-
-    /**
-     * We load everything from the internet, our storage is just a cache
-     * @param portalUrl The portal url we are scraping out pages from
-     * @param loadArgs The load args of portal page
-     * @param linkArgs The link args of portal page
-     * @param start zero based start link to load
-     * @param limit The limit of links to load
-     * @param loadArgs2 The args of item pages
-     * @param query The query on item pages
-     * @param logLevel The log level
-     * @return The scrape result
-     */
-    fun scrapeOutPages(
-        portalUrl: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
-        query: String, logLevel: Int,
-    ): Map<String, Any> {
-        val conf = immutableConfig.toVolatileConfig()
-        return scrapeOutPages(portalUrl, LoadOptions.parse(loadArgs, conf), parse(linkArgs),
-            start, limit, LoadOptions.parse(loadArgs2, conf), query, logLevel)
-    }
-
-    /**
-     * We load everything from the internet, our storage is just a cache
-     * @param portalUrl The portal url we are scraping out pages from
-     * @param loadArgs The load args of portal page
-     * @param linkArgs The link args of portal page
-     * @param start zero based start link to load
-     * @param limit The limit of links to load
-     * @param loadArgs2 The args of item pages
-     * @param query The query on item pages
-     * @param logLevel The log level
-     * @return The scrape result
-     */
-    fun scrapeOutPages(
-        portalUrl: String, options: LoadOptions,
-        linkOptions: LinkOptions,
-        start: Int, limit: Int, loadOptions2: LoadOptions,
-        query: String,
-        logLevel: Int,
-    ): Map<String, Any> {
-        if (!isActive) {
-            return mapOf()
-        }
-
-        if (start < 0) throw IllegalArgumentException("Argument start must be greater than 0")
-        if (limit < 0) throw IllegalArgumentException("Argument limit must be greater than 0")
-
-        val persist = options.persist
-        options.persist = false
-        val persist2 = loadOptions2.persist
-        loadOptions2.persist = false
-        val page = load(portalUrl, options)
-        var filteredLinks: List<GHypeLink> = emptyList()
-        var outPages: List<WebPage> = emptyList()
-        var outDocs = emptyList<Map<String, Any?>>()
-        val counters = intArrayOf(0, 0, 0)
-        if (page.protocolStatus.isSuccess) {
-            filteredLinks = page.liveLinks.values.asSequence()
-                .filter { l -> l.url.toString() != portalUrl }
-                .filter { l -> !page.deadLinks.contains(Utf8(l.url.toString())) }
-                .filter { linkOptions.asGHypeLinkPredicate().test(it) }
-                .toList()
-            loadOptions2.query = query
-            outPages = loadOutPages(filteredLinks, start, limit, loadOptions2)
-            outPages.map { it.pageCounters }.forEach {
-                counters[0] += it.get(Self.missingFields)
-                counters[1] += if (counters[0] > 0) 1 else 0
-                counters[2] += it.get(Self.brokenSubEntity)
-            }
-
-            updateComponent.updateByOutgoingPages(page, outPages)
-
-            if (persist) {
-                webDb.put(page)
-            }
-
-            if (persist2) {
-                outPages.forEach { webDb.put(it) }
-            }
-
-            // log.debug(page.getPageCounters().asStringMap().toString());
-            outDocs = outPages.map {
-                WebPageFormatter(it).withLinks(loadOptions2.withLinks).withText(loadOptions2.withText)
-                    .withEntities(loadOptions2.withModel).toMap()
-            }
-        }
-
-        // Metadata
-        val response: MutableMap<String, Any> = LinkedHashMap()
-        response["totalCount"] = filteredLinks.size
-        response["count"] = outPages.size
-        // Counters
-        val refCounter: MutableMap<String, Int> = LinkedHashMap()
-        refCounter["missingFields"] = counters[0]
-        refCounter["brokenEntity"] = counters[1]
-        refCounter["brokenSubEntity"] = counters[2]
-        response["refCounter"] = refCounter
-        // Main document
-        response["doc"] = WebPageFormatter(page)
-            .withLinks(options.withLinks)
-            .withText(options.withText)
-            .withEntities(options.withModel)
-            .toMap()
-        // Outgoing document
-        response["docs"] = outDocs
-        if (logLevel > 0) {
-            options.persist = persist
-            loadOptions2.persist = persist2
-            response["debug"] = buildDebugInfo(logLevel, linkOptions, options, loadOptions2)
-        }
-        if (!options.lazyFlush) {
-            flush()
-        }
-        return response
-    }
-
     fun flush() = webDb.flush()
 
     override fun close() {
@@ -758,21 +548,9 @@ class LoadComponent(
         require(a === b) { lazyMessage() }
     }
 
-    /**
-     * Not stable
-     */
-    private fun buildDebugInfo(
-        logLevel: Int, linkOptions: LinkOptions, options: LoadOptions, loadOptions2: LoadOptions,
-    ): Map<String, String> {
-        val debugInfo: MutableMap<String, String> = HashMap()
-        val counter = intArrayOf(0)
-        val linkReport = linkOptions.getReport().stream()
-            .map { r: String -> (++counter[0]).toString() + ".\t" + r }.collect(Collectors.joining("\n"))
-        debugInfo["logLevel"] = logLevel.toString()
-        debugInfo["options"] = options.toString()
-        debugInfo["loadOptions2"] = loadOptions2.toString()
-        debugInfo["linkOptions"] = linkOptions.toString()
-        debugInfo["linkReport"] = linkReport
-        return debugInfo
+    private fun shouldBe(expected: Any?, actual: Any?, lazyMessage: () -> String) {
+        if (actual != expected) {
+            logger.warn(lazyMessage())
+        }
     }
 }

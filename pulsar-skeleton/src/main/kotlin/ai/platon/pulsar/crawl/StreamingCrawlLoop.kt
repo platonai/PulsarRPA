@@ -30,11 +30,11 @@ open class StreamingCrawlLoop(
 
     override lateinit var crawler: StreamingCrawler<UrlAware>
 
-    val cacheManager get() = globalCache.fetchCacheManager
-    val realTimeCache get() = cacheManager.realTimeCache
-    val delayCache get() = cacheManager.delayCache
-    val normalCacheSize get() = cacheManager.caches.entries.sumBy { it.value.size }
-    val normalCacheEstimatedSize get() = cacheManager.caches.entries.sumBy { it.value.estimatedSize }
+    val fetchCaches get() = globalCache.fetchCaches
+    val realTimeCache get() = fetchCaches.realTimeCache
+    val delayCache get() = fetchCaches.delayCache
+    val normalCacheSize get() = fetchCaches.caches.entries.sumBy { it.value.size }
+    val normalCacheEstimatedSize get() = fetchCaches.caches.entries.sumBy { it.value.estimatedSize }
     val totalCacheSize get() = fetchIterable.cacheSize + realTimeCache.size + normalCacheSize
 
     val allCollectors: List<PriorityDataCollector<UrlAware>> get() {
@@ -72,11 +72,9 @@ open class StreamingCrawlLoop(
 
         val urls = fetchIterable.asSequence()
         crawler = StreamingCrawler(urls, defaultOptions, session, globalCache, crawlEventHandler)
-        crawler.proxyPool = session.context.getBean()
+        crawler.proxyPool = session.context.getBeanOrNull()
 
-        GlobalScope.launch {
-            crawlJob = launch { crawler.run() }
-        }
+        crawlJob = GlobalScope.launch { crawler.run() }
     }
 
     @Synchronized

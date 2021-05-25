@@ -95,3 +95,4 @@ repo/
 derby.log
 *.mv.db
 *.trace.db
+/.idea/httpRequests/

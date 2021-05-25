@@ -27,7 +27,7 @@ class PulsarMaster(
     val globalCache: GlobalCache
 ) {
     private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
-    private val fetchCache get() = globalCache.fetchCacheManager.normalCache
+    private val fetchCache get() = globalCache.fetchCaches.normalCache
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
 

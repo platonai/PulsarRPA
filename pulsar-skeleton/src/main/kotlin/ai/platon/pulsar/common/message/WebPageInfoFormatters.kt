@@ -78,7 +78,13 @@ class LoadedPageFormatter(
         }
 
     private val fetchReason get() = buildFetchReason()
-    private val prefix0 get() = if (page.isFetched) "Fetched" else "Loaded"
+
+    private val prefix0 get() = when {
+        page.isFetched -> "Fetched"
+        page.isCached -> "Cached"
+        page.isLoaded -> "Loaded"
+        else -> "Unknown"
+    }
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
@@ -100,7 +106,7 @@ class LoadedPageFormatter(
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
-    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %13s in %s," +
+    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %s in %s," +
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
 
@@ -124,15 +130,21 @@ class LoadedPageFormatter(
     }
 
     private fun buildContentBytes(): String {
-        return if (page.lastContentBytes == 0L || page.lastContentBytes == page.contentLength) {
-            readableBytes(page.contentLength)
+        var contentBytes = if (page.lastContentBytes == 0L || page.lastContentBytes == page.contentLength) {
+            readableBytes(page.contentLength).trim()
         } else {
             readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentBytes).trim()
         }
+
+        if (page.content == null) {
+            contentBytes = "0 <- $contentBytes"
+        }
+
+        return contentBytes
     }
 
     private fun readableBytes(bytes: Long): String {
-        return Strings.readableBytes(bytes, 7, false)
+        return if (bytes == 0L) "0" else Strings.readableBytes(bytes, 7, false)
     }
 
     private fun buildLocation(): String {

@@ -7,6 +7,7 @@ import ai.platon.pulsar.context.support.StaticPulsarContext
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.model.WebPageFormatter
+import ai.platon.pulsar.ql.context.StaticH2SQLContext
 import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
@@ -17,8 +18,6 @@ class TestExtractCases : TestBase() {
     private val newsIndexUrl = TestResource.newsIndexUrl
     private val newsDetailUrl = TestResource.newsDetailUrl
     private val urlGroups = TestResource.urlGroups
-
-    private val pc = PulsarContexts.activate(StaticPulsarContext())
 
     @Test
     fun testSavePages() {
@@ -49,7 +48,7 @@ class TestExtractCases : TestBase() {
 
     @Test
     fun testAccumulateVividLinks() {
-        val session = pc.createSession()
+        val session = context.createSession()
         session.load("$productIndexUrl -i 1d")
         println(WebPageFormatter(session.get(productIndexUrl)))
     }
@@ -57,7 +56,7 @@ class TestExtractCases : TestBase() {
     @Test
     @Ignore("Ignored temporary")
     fun testBackgroundLoading() {
-        val session = pc.createSession()
+        val session = context.createSession()
 
         val page = session.get(productIndexUrl)
         page.vividLinks.keys.map { it.toString() }
@@ -100,19 +99,20 @@ from
     @Test
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
-        // val url = urlGroups["meilishuo"]!![0]
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30")
+        // execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires 1s') WHERE SIBLING > 20")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
         // val expr = "*:expr(width>=210 && width<=230 && height>=380 && height<=420 && sibling>30 ) a[href~=detail]"
-        val expr = "a[href~=detail]"
+        val expr = ".goods_item a[href~=/detail/]"
         val sql = """
 SELECT
   DOM_BASE_URI(DOM) AS Uri,
-  DOM_FIRST_TEXT(DOM, 'h1:expr(_char>10 && _img == 0)') AS Title,
-  DOM_FIRST_TEXT(DOM, '.price') AS Price,
+  DOM_FIRST_TEXT(DOM, 'h1.goods-title .title') AS Title,
+  DOM_FIRST_TEXT(DOM, '#J_OriginPrice') AS ListPrice,
+  DOM_FIRST_TEXT(DOM, '#J_NowPrice') AS Price,
   DOM_FIRST_TEXT(DOM, '#J_ParameterTable') AS Parameters
-FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url -i 7d -ii 360d -ignF', '$expr', 1, 20)
+WHERE LENGTH(DOM_BASE_URI(DOM)) < 50
 """
         execute(sql)
     }

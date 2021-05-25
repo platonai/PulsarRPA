@@ -69,9 +69,6 @@ abstract class AbstractPulsarSession(
     val isActive get() = !closed.get() && context.isActive
 
     private val variables = ConcurrentHashMap<String, Any>()
-    private var enableCache = true
-    override val pageCache get() = context.globalCache.pageCache
-    override val documentCache get() = context.globalCache.documentCache
     override val globalCache get() = context.globalCache
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
@@ -79,8 +76,6 @@ abstract class AbstractPulsarSession(
      * Close objects when sessions closes
      * */
     override fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
-
-    override fun disableCache() = run { enableCache = false }
 
     /**
      * Create a new options, with a new volatile config
@@ -150,11 +145,7 @@ abstract class AbstractPulsarSession(
     @Throws(Exception::class)
     override fun load(normUrl: NormUrl): WebPage {
         ensureActive()
-        if (!enableCache) {
-            return context.load(normUrl)
-        }
-
-        return getCachedPageOrNull(normUrl) ?: loadAndCache(normUrl)
+        return context.load(normUrl)
     }
 
     @Throws(Exception::class)
@@ -171,50 +162,7 @@ abstract class AbstractPulsarSession(
     @Throws(Exception::class)
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
         ensureActive()
-        if (!enableCache) {
-            return context.loadDeferred(normUrl)
-        }
-
-        return getCachedPageOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
-    }
-
-    private fun loadAndCache(normUrl: NormUrl): WebPage {
-        ensureActive()
-        return context.load(normUrl).also {
-            pageCache.putDatum(it.url, it)
-        }
-    }
-
-    private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
-        ensureActive()
-        return context.loadDeferred(normUrl).also {
-            pageCache.putDatum(it.url, it)
-        }
-    }
-
-    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
-        val (url, options) = normUrl
-        if (options.refresh) {
-            // refresh the page, do not take cached version
-            return null
-        }
-
-        val now = Instant.now()
-        val page = pageCache.getDatum(url, options.expires, now)
-        if (page != null && !options.isExpired(page.prevFetchTime)) {
-            page.isFetched = false
-            // TODO: properly handle page conf, a page might work in different context which have different conf
-            // TODO: properly handle ListenableHyperlink
-            // here is a complex logic for a ScrapingHyperlink: the page have an event handlers, and the page can
-            // also be loaded inside an event handler. We must handle such situation very carefully
-
-            // page.conf = normUrl.options.conf
-            // page.args = normUrl.args
-
-            return page
-        }
-
-        return null
+        return context.load(normUrl)
     }
 
     /**
@@ -227,12 +175,7 @@ abstract class AbstractPulsarSession(
     override fun loadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): Collection<WebPage> {
         ensureActive()
         val normUrls = normalize(urls, options, areItems)
-
-        return if (enableCache) {
-            loadAllWithCache(normUrls, options)
-        } else {
-            context.loadAll(normUrls, options)
-        }
+        return context.loadAll(normUrls, options)
     }
 
     /**
@@ -350,17 +293,6 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
-    override fun cache(page: WebPage): WebPage = page.also { pageCache.putDatum(it.url, it) }
-    override fun disableCache(page: WebPage): WebPage? = pageCache.remove(page.url)?.datum
-
-    override fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { documentCache.putDatum(it.baseUri, it) }
-    override fun disableCache(doc: FeaturedDocument): FeaturedDocument? = documentCache.remove(doc.baseUri)?.datum
-
-    override fun disableCache(url: String): WebPage? {
-        documentCache.remove(url)
-        return pageCache.remove(url)?.datum
-    }
-
     override fun getVariable(name: String): Any? = let { variables[name] }
 
     override fun setVariable(name: String, value: Any) = run { variables[name] = value }
@@ -407,36 +339,6 @@ abstract class AbstractPulsarSession(
         }
     }
 
-    private fun loadAllWithCache(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        ensureActive()
-
-        val pages = ArrayList<WebPage>()
-        val pendingUrls = ArrayList<NormUrl>()
-
-        for (url in urls) {
-            val page = getCachedPageOrNull(url)
-            if (page != null) {
-                pages.add(page)
-            } else {
-                pendingUrls.add(url)
-            }
-        }
-
-        val freshPages = if (options.preferParallel) {
-            context.parallelLoadAll(pendingUrls, options)
-        } else {
-            context.loadAll(pendingUrls, options)
-        }
-
-        pages.addAll(freshPages)
-
-        // Notice: we do not cache batch loaded pages, batch loaded pages are not used frequently
-        // *DO NOT* do this:
-        // freshPages.forEach { pageCache.putDatum(it.url, it) }
-
-        return pages
-    }
-
     private fun parse0(page: WebPage, noCache: Boolean = false): FeaturedDocument {
         ensureActive()
 
@@ -444,11 +346,13 @@ abstract class AbstractPulsarSession(
             return FeaturedDocument.NIL
         }
 
-        if (noCache || !enableCache) {
+        if (noCache) {
             return context.parse(page)
         }
 
-        return documentCache.computeIfAbsent(page.url) { context.parse(page) }
+        val document = context.parse(page)
+        globalCache.documentCache.putDatum(page.url, document)
+        return document
     }
 
     private fun parseLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {

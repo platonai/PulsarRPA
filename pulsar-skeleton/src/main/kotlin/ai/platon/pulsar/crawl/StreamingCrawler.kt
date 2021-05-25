@@ -14,11 +14,10 @@ import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
-import ai.platon.pulsar.common.urls.PseudoUrl
+import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.url.CompletableHyperlink
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
@@ -62,27 +61,27 @@ enum class CriticalWarning(val message: String) {
 }
 
 open class StreamingCrawler<T : UrlAware>(
-        /**
+    /**
          * The url sequence
          * */
         val urls: Sequence<T>,
-        /**
+    /**
          * The default load options
          * */
         val defaultOptions: LoadOptions,
-        /**
+    /**
          * The default pulsar session to use
          * */
         session: PulsarSession = PulsarContexts.createSession(),
-        /**
+    /**
          * A optional global cache which will hold the retry tasks
          * */
         val globalCache: GlobalCache? = null,
-        /**
+    /**
          * The crawl event handler
          * */
         val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
-        autoClose: Boolean = true
+    autoClose: Boolean = true
 ) : AbstractCrawler(session, autoClose) {
     companion object {
         private val instanceSequencer = AtomicInteger()
@@ -213,15 +212,6 @@ open class StreamingCrawler<T : UrlAware>(
                     return@forEachIndexed
                 }
 
-                /**
-                 * TODO: proper handling the result, especially the client ask for a result
-                 * */
-                if (url.url in globalLoadingUrls) {
-                    globalMetrics.drops.mark()
-                    globalMetrics.processing.mark()
-                    return@forEachIndexed
-                }
-
                 val state = try {
                     globalLoadingUrls.add(url.url)
                     runWithStatusCheck(1 + j, url, scope)
@@ -303,9 +293,6 @@ open class StreamingCrawler<T : UrlAware>(
                 globalMetrics.tasks.mark()
                 runUrlTask(url)
             } finally {
-                // webpages and documents are very large, we need remove them from the cache as soon as possible
-                globalCache?.removePDCache(url.url)
-
                 lastActiveTime = Instant.now()
                 globalRunningTasks.decrementAndGet()
                 globalMetrics.finishes.mark()
@@ -316,13 +303,11 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private suspend fun runUrlTask(url: UrlAware) {
-        if (url is ListenableHyperlink && url is PseudoUrl) {
+        if (url is ListenableHyperlink && url is DegenerateUrl) {
             val eventHandler = url.crawlEventHandler
-            if (eventHandler != null) {
-                eventHandler.onBeforeLoad(url)
-                eventHandler.onLoad(url)
-                eventHandler.onAfterLoad(url, WebPage.NIL)
-            }
+            eventHandler.onBeforeLoad(url)
+            eventHandler.onLoad(url)
+            eventHandler.onAfterLoad(url, WebPage.NIL)
         } else {
             val normalizedUrl = beforeUrlLoad(url)
             if (normalizedUrl != null) {
@@ -385,7 +370,7 @@ open class StreamingCrawler<T : UrlAware>(
         crawlEventHandler.onBeforeLoad(url)
 
         if (url is ListenableHyperlink) {
-            url.crawlEventHandler?.onBeforeLoad?.invoke(url)
+            url.crawlEventHandler.onBeforeLoad(url)
         }
 
         return url
@@ -395,8 +380,8 @@ open class StreamingCrawler<T : UrlAware>(
      * TODO: keep consistent with protocolStatus.isRetry and crawlStatus.isRetry
      * */
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
-        if (url is CompletableHyperlink) {
-            url.crawlEventHandler?.onAfterLoad?.invoke(url, page ?: WebPage.NIL)
+        if (url is ListenableHyperlink) {
+            url.crawlEventHandler.onAfterLoad(url, page ?: WebPage.NIL)
         }
 
         when {
@@ -409,7 +394,7 @@ open class StreamingCrawler<T : UrlAware>(
         if (page != null) {
             crawlEventHandler.onAfterLoad(url, page)
             if (url is ListenableHyperlink) {
-                url.crawlEventHandler?.onAfterLoad?.invoke(url, page)
+                url.crawlEventHandler.onAfterLoad(url, page)
             }
         }
     }
@@ -491,7 +476,7 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         val delay = Duration.ofMinutes(1L + 2 * retries)
-        val delayCache = globalCache.fetchCacheManager.delayCache
+        val delayCache = globalCache.fetchCaches.delayCache
         delayCache.add(DelayUrl(url, delay))
         globalMetrics.retries.mark()
         if (page != null) {

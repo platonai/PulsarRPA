@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class TestCrawlLoop: TestBase() {
 
     private val crawlStarter get() = StreamingCrawlLoop(globalCache, session.unmodifiedConfig)
-    private val fetchQueue get() = globalCache.fetchCacheManager.normalCache.nReentrantQueue
+    private val fetchQueue get() = globalCache.fetchCaches.normalCache.nReentrantQueue
 
     @Before
     fun setup() {

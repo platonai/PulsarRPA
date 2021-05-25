@@ -26,6 +26,18 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     }
     val schemaName: String get() = store.schemaName
 
+    fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
+        return getOrNull(originalUrl, field.toString())
+    }
+
+    fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): WebPage? {
+        return getOrNull(originalUrl, false, fields.map { it.toString() }.toTypedArray())
+    }
+
+    fun getOrNull(originalUrl: String, field: String): WebPage? {
+        return getOrNull(originalUrl, false, arrayOf(field))
+    }
+
     /**
      * Returns the WebPage corresponding to the given url.
      *
@@ -33,11 +45,9 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      *
-     * TODO: handle ignoreQuery the higher level
      */
-    @JvmOverloads
-    fun getOrNull(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
-        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
+    fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
+        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
 
@@ -56,15 +66,20 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @param originalUrl the original address of the page
      * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
      */
-    @JvmOverloads
-    fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
-        val page = getOrNull(originalUrl, ignoreQuery, fields)
-        return page ?: WebPage.NIL
+    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPage.NIL
+
+    fun get(originalUrl: String, fields: Iterable<GWebPage.Field>) =
+        getOrNull(originalUrl, fields) ?: WebPage.NIL
+
+    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: WebPage.NIL
+
+    fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
+        return getOrNull(originalUrl, norm, fields) ?: WebPage.NIL
     }
 
-    fun exists(originalUrl: String, ignoreQuery: Boolean = false): Boolean {
+    fun exists(originalUrl: String, norm: Boolean = false): Boolean {
         val requiredField = GWebPage.Field.CREATE_TIME.toString()
-        return getOrNull(originalUrl, ignoreQuery, arrayOf(requiredField)) != null
+        return getOrNull(originalUrl, norm, arrayOf(requiredField)) != null
     }
 
     @JvmOverloads
@@ -99,8 +114,8 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     fun putAll(pages: Iterable<WebPage>) = pages.forEach { put(it, false) }
 
     @JvmOverloads
-    fun delete(originalUrl: String, ignoreQuery: Boolean = false): Boolean {
-        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
+    fun delete(originalUrl: String, norm: Boolean = false): Boolean {
+        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
 
         return if (key.isNotEmpty()) {
             store.delete(key)

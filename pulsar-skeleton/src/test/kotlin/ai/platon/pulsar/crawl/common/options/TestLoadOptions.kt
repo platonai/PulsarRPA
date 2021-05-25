@@ -4,8 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import com.beust.jcommander.Parameter
+import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -228,7 +227,7 @@ class TestLoadOptions {
     @Test
     fun testNormalizeHyperlinkOptions() {
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-        val hyperlink = ListenableHyperlink(url, args = "-i 0s")
+        val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
 
         val normUrl = i.normalize(hyperlink)
         assertEquals(0, normUrl.options.expires.seconds)

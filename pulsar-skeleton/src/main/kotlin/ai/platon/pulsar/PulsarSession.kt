@@ -39,15 +39,12 @@ interface PulsarSession : AutoCloseable {
      * */
     val sessionBeanFactory: BeanFactory
     val display: String
-    val pageCache: PageCatch
-    val documentCache: DocumentCatch
     val globalCache: GlobalCache
 
     /**
      * Close objects when sessions closes
      * */
     fun registerClosable(closable: AutoCloseable): Boolean
-    fun disableCache()
 
     /**
      * Create a new options, with a new volatile config
@@ -197,11 +194,6 @@ interface PulsarSession : AutoCloseable {
         args: String, restrictCss: String, fieldsCss: Map<String, String>
     ): List<Map<String, String?>>
 
-    fun cache(page: WebPage): WebPage
-    fun disableCache(page: WebPage): WebPage?
-    fun cache(doc: FeaturedDocument): FeaturedDocument
-    fun disableCache(doc: FeaturedDocument): FeaturedDocument?
-    fun disableCache(url: String): WebPage?
     fun getVariable(name: String): Any?
     fun setVariable(name: String, value: Any)
     fun putSessionBean(obj: Any)

@@ -11,4 +11,4 @@ open class NormXSQL(
     val configuredUrl get() = Urls.mergeUrlArgs(url, args)
 }
 
-class PseudoXSQL(uuid: String, sql: String) : NormXSQL("${AppConstants.EXAMPLE_URL}/$uuid", "", sql)
+class DegenerateXSQL(uuid: String, sql: String) : NormXSQL("${AppConstants.EXAMPLE_URL}/$uuid", "", sql)

@@ -152,10 +152,6 @@ public class Variables {
      * @return a {@link java.lang.Object} object.
      */
     public Object remove(String name) {
-        Object value = variables.get(name);
-        if (value != null) {
-            variables.remove(name);
-        }
-        return value;
+        return variables.remove(name);
     }
 }

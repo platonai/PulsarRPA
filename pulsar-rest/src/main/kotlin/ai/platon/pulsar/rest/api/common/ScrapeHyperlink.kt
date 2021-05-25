@@ -9,7 +9,8 @@ import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.DefaultLoadEventHandler
 import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.AbstractSQLContext
@@ -20,6 +21,7 @@ import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.h2.jdbc.JdbcSQLException
 import java.sql.Connection
 import java.sql.ResultSet
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Future
@@ -27,8 +29,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.measureTimeMillis
 
-class ScrapingLoadEventHandler(
-    val hyperlink: ScrapingHyperlink,
+class ScrapeLoadEventHandler(
+    val hyperlink: ScrapeHyperlink,
     val response: ScrapeResponse,
 ) : DefaultLoadEventHandler() {
     init {
@@ -46,57 +48,31 @@ class ScrapingLoadEventHandler(
             require(page.hasVar(VAR_IS_SCRAPE))
             hyperlink.extract(page, document)
         }
-        onAfterParsePipeline.addLast { page ->
+        onAfterLoadPipeline.addLast { page ->
             require(page.loadEventHandler === this)
-            hyperlink.commit(page)
+            hyperlink.complete(page)
         }
     }
 }
 
-open class ScrapingHyperlink(
+open class ScrapeHyperlink(
     val request: ScrapeRequest,
     val sql: NormXSQL,
     val session: PulsarSession,
     val globalCache: GlobalCache,
     val uuid: String = UUID.randomUUID().toString()
-) : ListenableHyperlink(sql.url), Future<ScrapeResponse> {
+) : CompletableListenableHyperlink<ScrapeResponse>(sql.url) {
 
-    private val logger = getLogger(ScrapingHyperlink::class)
+    private val logger = getLogger(ScrapeHyperlink::class)
 
     private val sqlContext get() = session.context as AbstractSQLContext
     private val connectionPool get() = sqlContext.connectionPool
     private val randomConnection get() = sqlContext.randomConnection
 
-    val response = ScrapeResponse(uuid)
-    protected val isCancelled = AtomicBoolean()
-    protected val isDone = CountDownLatch(1)
+    val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var loadEventHandler: LoadEventPipelineHandler = ScrapingLoadEventHandler(this, response)
-
-    override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
-        isCancelled.set(true)
-        isDone.countDown()
-        return true
-    }
-
-    override fun isCancelled(): Boolean {
-        return isCancelled.get()
-    }
-
-    override fun isDone(): Boolean {
-        return isDone.count == 0L
-    }
-
-    override fun get(): ScrapeResponse {
-        isDone.await()
-        return response
-    }
-
-    override fun get(timeout: Long, unit: TimeUnit): ScrapeResponse {
-        isDone.await(timeout, unit)
-        return response
-    }
+    override val loadEventHandler: LoadEventPipelineHandler = ScrapeLoadEventHandler(this, response)
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
 
@@ -111,19 +87,11 @@ open class ScrapingHyperlink(
         }
     }
 
-    open fun commit(page: WebPage) {
-        if (isCancelled.get()) {
-            isDone.countDown()
-            return
-        }
+    open fun complete(page: WebPage) {
+        response.isDone = true
+        response.finishTime = Instant.now()
 
-        try {
-            if (response.statusCode == ResourceStatus.SC_PROCESSING) {
-                response.statusCode = ResourceStatus.SC_OK
-            }
-        } finally {
-            isDone.countDown()
-        }
+        complete(response)
     }
 
     protected open fun doExtract(page: WebPage, document: FeaturedDocument): ResultSet {
@@ -132,17 +100,14 @@ open class ScrapingHyperlink(
             return ResultSets.newSimpleResultSet()
         }
 
-        globalCache.putPDCache(page, document)
-        val rs = executeQuery(request, response)
-        globalCache.removePDCache(page.url)
-        return rs
+        return executeQuery(request, response)
     }
 
     protected open fun executeQuery(request: ScrapeRequest, response: ScrapeResponse): ResultSet {
         var rs: ResultSet = ResultSets.newSimpleResultSet()
 
         try {
-            response.statusCode = ResourceStatus.SC_PROCESSING
+            response.statusCode = ResourceStatus.SC_OK
 
             rs = executeQuery(sql.sql)
             val resultSet = mutableListOf<Map<String, Any?>>()

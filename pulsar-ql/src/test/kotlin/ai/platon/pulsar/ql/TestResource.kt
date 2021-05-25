@@ -127,7 +127,7 @@ object TestResource {
             "http://item.jd.com/1304915.html"
         )
         urlGroups["mogujie"] = arrayOf(
-            "http://list.mogujie.com/book/jiadian/10059513",
+            "https://list.mogu.com/book/bags",
             "http://list.mogujie.com/book/skirt",
             "http://shop.mogujie.com/detail/1kcnxeu",
             "http://shop.mogujie.com/detail/1lrjy2c"

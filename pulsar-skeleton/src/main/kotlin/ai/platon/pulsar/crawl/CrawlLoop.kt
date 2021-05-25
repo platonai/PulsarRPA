@@ -32,7 +32,7 @@ abstract class AbstractCrawlLoop(
      * The fetch iterable from which all fetch tasks are taken
      * */
     override val fetchIterable by lazy {
-        MultiSourceHyperlinkIterable(globalCache.fetchCacheManager)
+        MultiSourceHyperlinkIterable(globalCache.fetchCaches)
     }
     /**
      * The shortcut for all collectors

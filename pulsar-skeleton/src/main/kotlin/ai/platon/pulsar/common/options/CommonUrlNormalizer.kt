@@ -5,18 +5,23 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
 import ai.platon.pulsar.crawl.LoadEventHandler
+import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
     companion object {
         fun registerEventHandlers(url: ListenableHyperlink, options: LoadOptions) {
-            url.loadEventHandler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))
-
-            options.conf.apply {
-                name = options.label
-                putBean(url.loadEventHandler)
+            val handler = url.loadEventHandler
+            if (handler is LoadEventPipelineHandler) {
+                handler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))
             }
+
+            options.conf.name = options.label
+
+            // register the handler
+            options.conf.putBean(handler)
         }
     }
 

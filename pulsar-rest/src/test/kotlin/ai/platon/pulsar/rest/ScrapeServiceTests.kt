@@ -1,24 +1,19 @@
 package ai.platon.pulsar.rest
 
-import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
-import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
-import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import ai.platon.pulsar.rest.api.service.ScrapeService
 import org.apache.commons.lang3.RandomStringUtils
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.ImportResource
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import kotlin.test.assertEquals
@@ -35,31 +30,13 @@ class ScrapeServiceTests {
     private lateinit var service: ScrapeService
 
     @Autowired
-    private lateinit var session: PulsarSession
-
-    @Autowired
-    private lateinit var globalCache: GlobalCache
-
-    @Autowired
-    lateinit var unmodifiedConfig: ImmutableConfig
-
-    private val crawlStarter by lazy { StreamingCrawlLoop(globalCache, unmodifiedConfig) }
-
-    @Before
-    fun setup() {
-        crawlStarter.start()
-    }
-
-    @After
-    fun tearDown() {
-        crawlStarter.stop()
-    }
+    private lateinit var crawlLoop: CrawlLoop
 
     /**
      * Execute a normal sql
      * */
     @Test
-    fun `Sum of 1+1 is 2`() {
+    fun `When perform 1+1 then the result is 2`() {
         val sql = "select 1+1 as sum"
         val request = ScrapeRequest(sql)
 
@@ -74,7 +51,7 @@ class ScrapeServiceTests {
     @Test
     fun `When scraping with load_and_select then the result returns synchronously`() {
         val url = "https://www.amazon.com/"
-        val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 0s', ':root')"
+        val sql = "select dom_base_uri(dom) as uri from load_and_select('$url -i 10s', ':root')"
         val request = ScrapeRequest(sql)
 
         val response = service.executeQuery(request)
@@ -117,8 +94,9 @@ class ScrapeServiceTests {
 
         val scrapeStatusRequest = ScrapeStatusRequest(uuid)
         var status = service.getStatus(scrapeStatusRequest)
-        var i = 60
-        while (i-- > 0 && status.statusCode != ResourceStatus.SC_OK) {
+        var i = 120
+
+        while (i-- > 0 && !status.isDone) {
             sleepSeconds(1)
             status = service.getStatus(scrapeStatusRequest)
         }

@@ -9,7 +9,7 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 
-interface PseudoUrl
+interface DegenerateUrl
 
 /**
  * The UrlAware interface.
@@ -19,62 +19,74 @@ interface UrlAware {
      * The url, it can be configured or not
      * */
     var url: String
+
     /**
      * The url args
      * */
     var args: String?
+
     /**
      * The referer(or referrer)
      * */
     var referer: String?
+
     /**
      * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
     var href: String?
+
     /**
      * The configured url, always be "$url $args"
      * */
     val configuredUrl: String
+
     /**
      * If this is a Nil url who's url is AppConstants.NIL_PAGE_URL
      * */
     val isNil: Boolean
+
     /**
      * If this link is persistable
      * */
     val isPersistable: Boolean
+
     /**
      * The url label, it should be in args
      * */
     val label: String
+
     /**
      * The url label, it should be in args
      * */
     val deadTime: Instant
+
     /**
      * Required website language
      * */
     val lang: String
+
     /**
      * Required website country
      * */
     val country: String
+
     /**
      * Required website district
      * */
     val district: String
+
     /**
      * The maximum retry times
      * */
     val maxRetry: Int
 }
 
-interface ComparableUrlAware: UrlAware, Comparable<UrlAware>
+interface ComparableUrlAware : UrlAware, Comparable<UrlAware>
 
 /**
  * The StatefulUrl interface. A StatefulUrl is an UrlAware and has status.
  * */
-interface StatefulUrl: ComparableUrlAware {
+interface StatefulUrl : ComparableUrlAware {
     var authToken: String?
     var remoteAddr: String?
     var status: Int
@@ -83,11 +95,11 @@ interface StatefulUrl: ComparableUrlAware {
 }
 
 abstract class AbstractUrl(
-        override var url: String,
-        override var args: String? = null,
-        override var referer: String? = null,
-        override var href: String? = null
-): UrlAware, ComparableUrlAware {
+    override var url: String,
+    override var args: String? = null,
+    override var referer: String? = null,
+    override var href: String? = null
+) : UrlAware, ComparableUrlAware {
 
     override val configuredUrl get() = if (args != null) "$url $args" else url
 
@@ -99,18 +111,22 @@ abstract class AbstractUrl(
     override val isPersistable: Boolean = true
 
     override val label: String get() = findOption(args, listOf("-l", "-label", "--label")) ?: ""
+
     /**
      * Required website language
      * */
     override var lang: String = "*"
+
     /**
      * Required website country
      * */
     override var country: String = "*"
+
     /**
      * Required website district
      * */
     override var district: String = "*"
+
     /**
      * The maximum retry times
      * */
@@ -153,51 +169,51 @@ abstract class AbstractUrl(
 }
 
 abstract class AbstractStatefulUrl(
-        url: String,
-        args: String? = null,
-        referer: String? = null
-): AbstractUrl(url, args, referer), StatefulUrl {
+    url: String,
+    args: String? = null,
+    referer: String? = null
+) : AbstractUrl(url, args, referer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
 }
 
 open class PlainUrl(
-        url: String,
-        args: String? = null,
-        referer: String? = null
-): AbstractUrl(url, args, referer)
+    url: String,
+    args: String? = null,
+    referer: String? = null
+) : AbstractUrl(url, args, referer)
 
 data class HyperlinkDatum(
-        val url: String,
-        /**
-         * A hyperlink should have a text, so the default value is an empty string
-         * */
-        val text: String = "",
-        /**
-         * The link order, e.g., in the referer page
-         * */
-        val order: Int = 0,
-        /**
-         * A hyperlink might have a referer, so the default value is null
-         * */
-        val referer: String? = null,
-        /**
-         * A programmer might give a argument to a hyperlink, so the default value is null
-         * */
-        val args: String? = null,
-        /**
-         * The hypertext reference, It defines the address of the document, which this time is linked from
-         * */
-        var href: String? = null,
-        /**
-         * If this link is persistable
-         * */
-        val isPersistable: Boolean = false,
-        /**
-         * The depth
-         * */
-        val depth: Int = 0
+    val url: String,
+    /**
+     * A hyperlink should have a text, so the default value is an empty string
+     * */
+    val text: String = "",
+    /**
+     * The link order, e.g., in the referer page
+     * */
+    val order: Int = 0,
+    /**
+     * A hyperlink might have a referer, so the default value is null
+     * */
+    val referer: String? = null,
+    /**
+     * A programmer might give a argument to a hyperlink, so the default value is null
+     * */
+    val args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    var href: String? = null,
+    /**
+     * If this link is persistable
+     * */
+    val isPersistable: Boolean = false,
+    /**
+     * The depth
+     * */
+    val depth: Int = 0
 )
 
 /**
@@ -211,98 +227,98 @@ data class HyperlinkDatum(
  * clickable text in an HTML hyperlink
  * */
 open class Hyperlink(
-        /**
-         * The url of this hyperlink
-         * */
-        url: String,
-        /**
-         * The anchor text of this hyperlink
-         * */
-        var text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        var order: Int = 0,
-        /**
-         * The url of the referer page
-         * */
-        referer: String? = null,
-        /**
-         * The url arguments
-         * */
-        args: String? = null,
-        /**
-         * The hypertext reference, It defines the address of the document, which this time is linked from
-         * */
-        href: String? = null
-): AbstractUrl(url, args, referer, href) {
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    var text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    var order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    href: String? = null
+) : AbstractUrl(url, args, referer, href) {
     var depth: Int = 0
 
-    constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args, href = url.href)
-    constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
-    constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
+    constructor(url: UrlAware) : this(url.url, "", 0, url.referer, url.args, href = url.href)
+    constructor(url: Hyperlink) : this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
+    constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
 
     fun data() = HyperlinkDatum(url, text, order, referer = referer, args = args, href = href, true, 0)
 }
 
 open class LabeledHyperlink(
-        /**
-         * The url of this hyperlink
-         * */
-        override val label: String,
-        /**
-         * The url of this hyperlink
-         * */
-        url: String,
-        /**
-         * The anchor text of this hyperlink
-         * */
-        text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        order: Int = 0,
-        /**
-         * The url of the referer page
-         * */
-        referer: String? = null,
-        /**
-         * The url arguments
-         * */
-        args: String? = null,
-        /**
-         * The hypertext reference, It defines the address of the document, which this time is linked from
-         * */
-        href: String? = null
-): Hyperlink(url, text, order, referer, args, href)
+    /**
+     * The url of this hyperlink
+     * */
+    override val label: String,
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    href: String? = null
+) : Hyperlink(url, text, order, referer, args, href)
 
 open class StatefulHyperlink(
-        /**
-         * The url of this hyperlink
-         * */
-        url: String,
-        /**
-         * The anchor text of this hyperlink
-         * */
-        text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        order: Int = 0,
-        /**
-         * The url of the referer page
-         * */
-        referer: String? = null,
-        /**
-         * The url arguments
-         * */
-        args: String? = null,
-        /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
-         * */
-        href: String? = null
-): Hyperlink(url, text, order, referer, args, href), StatefulUrl {
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * A click url is a url variant, it's the raw url in the html without normalization,
+     * for example, an url with a timestamp query parameter added
+     * */
+    href: String? = null
+) : Hyperlink(url, text, order, referer, args, href), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -320,35 +336,35 @@ val StatefulHyperlink.isFinished get() = !isCreated && !isAccepted && !isProcess
  * or a "multi-tailed link") is a hyperlink which leads to multiple endpoints; the link is a multivalued function.
  * */
 open class FatLink(
-        /**
-         * The url of this hyperlink
-         * */
-        url: String,
-        /**
-         * The anchor text of this hyperlink
-         * */
-        text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        order: Int = 0,
-        /**
-         * The url of the referer page
-         * */
-        referer: String? = null,
-        /**
-         * The url arguments
-         * */
-        args: String? = null,
-        /**
-         * The hypertext reference, It defines the address of the document, which this time is linked from
-         * */
-        href: String? = null,
-        /**
-         * The tail links
-         * */
-        var tailLinks: List<StatefulHyperlink>
-): Hyperlink(url, text, order, referer, args, href) {
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    href: String? = null,
+    /**
+     * The tail links
+     * */
+    var tailLinks: List<StatefulHyperlink>
+) : Hyperlink(url, text, order, referer, args, href) {
     val size get() = tailLinks.size
     val isEmpty get() = size == 0
     val isNotEmpty get() = !isEmpty
@@ -357,35 +373,35 @@ open class FatLink(
 }
 
 open class StatefulFatLink(
-        /**
-         * The url of this hyperlink
-         * */
-        url: String,
-        /**
-         * The anchor text of this hyperlink
-         * */
-        text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        order: Int = 0,
-        /**
-         * The url of the referer page
-         * */
-        referer: String? = null,
-        /**
-         * The url arguments
-         * */
-        args: String? = null,
-        /**
-         * The hypertext reference, It defines the address of the document, which this time is linked from
-         * */
-        href: String? = null,
-        /**
-         * The tail links
-         * */
-        tailLinks: List<StatefulHyperlink>
-): FatLink(url, text, order, referer, args, href, tailLinks), StatefulUrl {
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    href: String? = null,
+    /**
+     * The tail links
+     * */
+    tailLinks: List<StatefulHyperlink>
+) : FatLink(url, text, order, referer, args, href, tailLinks), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -396,35 +412,35 @@ open class StatefulFatLink(
 }
 
 open class CrawlableFatLink(
-        /**
-         * The url of this hyperlink
-         * */
-        url: String,
-        /**
-         * The anchor text of this hyperlink
-         * */
-        text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        order: Int = 0,
-        /**
-         * The url of the referer page
-         * */
-        referer: String? = null,
-        /**
-         * The url arguments
-         * */
-        args: String? = null,
-        /**
-         * The hypertext reference, It defines the address of the document, which this time is linked from
-         * */
-        href: String? = null,
-        /**
-         * The tail links
-         * */
-        tailLinks: List<StatefulHyperlink> = listOf()
-): StatefulFatLink(url, text, order, referer, args, href, tailLinks) {
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    href: String? = null,
+    /**
+     * The tail links
+     * */
+    tailLinks: List<StatefulHyperlink> = listOf()
+) : StatefulFatLink(url, text, order, referer, args, href, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 
@@ -445,8 +461,10 @@ open class CrawlableFatLink(
         aborted = false
 
         if (log.isDebugEnabled) {
-            log.debug("Try to finish stateful hyperlink, ({}) \n{} \n{}",
-                    if (url in tailLinks) "found" else "not found", url, this)
+            log.debug(
+                "Try to finish stateful hyperlink, ({}) \n{} \n{}",
+                if (url in tailLinks) "found" else "not found", url, this
+            )
         }
 
         if (tailLinks.none { url.url == it.url }) {

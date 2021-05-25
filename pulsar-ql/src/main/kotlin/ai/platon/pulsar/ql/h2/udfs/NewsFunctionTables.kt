@@ -5,6 +5,7 @@ import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.BoiConstants.*
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.dom.nodes.node.ext.location
 import ai.platon.pulsar.ql.ResultSets
@@ -48,7 +49,7 @@ object NewsFunctionTables {
         val session = H2SessionFactory.getSession(conn)
         val document = session.loadDocument(url)
 
-        return extract(ValueDom.get(document))
+        return extract(conn, ValueDom.get(document))
     }
 
     /**
@@ -116,13 +117,23 @@ object NewsFunctionTables {
 
     @UDFunction
     @JvmStatic
-    fun extract(dom: ValueDom): ResultSet {
-        return extractAll(ValueArray.get(arrayOf(dom)))
+    fun extract(
+        @H2Context conn: JdbcConnection, dom: ValueDom): ResultSet {
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return createResultSet()
+        }
+
+        return extractAll(conn, ValueArray.get(arrayOf(dom)))
     }
 
     @UDFunction
     @JvmStatic
-    fun extractAll(domArray: ValueArray): ResultSet {
+    fun extractAll(
+        @H2Context conn: JdbcConnection, domArray: ValueArray): ResultSet {
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return createResultSet()
+        }
+
         domArray.list.forEach { require(it is ValueDom) }
         return extractAllInternal(domArray.list.asSequence().mapNotNull { it as? ValueDom })
     }
@@ -154,8 +165,16 @@ object NewsFunctionTables {
     private fun extractAllInternal(doms: Sequence<ValueDom>): ResultSet {
         val extractor = ChineseNewsExtractor()
         val documents = doms
-            .map { BoilerpipeResult(SAXInput().parse(it.element.location, it.element.outerHtml()), it) }
-            .onEach { extractor.process(it.textDocument) }
+            .mapNotNull {
+                try {
+                    val textDocument = SAXInput().parse(it.element.location, it.element.outerHtml())
+                    extractor.process(textDocument)
+                    BoilerpipeResult(textDocument, it)
+                } catch (e: ProcessingException) {
+                    logger.warn(e.stringify())
+                    null
+                }
+            }
         return buildResultSet(documents.asIterable())
     }
 

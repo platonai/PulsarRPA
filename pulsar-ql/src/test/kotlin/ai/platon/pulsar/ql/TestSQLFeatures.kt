@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.ql.context.AbstractSQLContext
 import org.junit.Test
 
 /**
@@ -78,6 +79,8 @@ class TestSQLFeatures : TestBase() {
                 " ) t;" +
                 " SELECT a, b FROM table(a INT=(7, 8, 9), b VARCHAR=('John', 'Lucy', 'Vince')) WHERE b LIKE '%u%'" +
                 ""
+
+        val connection = (context as AbstractSQLContext).randomConnection
         val state = connection.createStatement()
         val rs = state.executeQuery(sql)
 

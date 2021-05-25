@@ -16,7 +16,7 @@ import org.springframework.context.annotation.ImportResource
 class PulsarCrawler(
     val globalCache: GlobalCache
 ) {
-    private val fetchCache get() = globalCache.fetchCacheManager.normalCache
+    private val fetchCache get() = globalCache.fetchCaches.normalCache
 
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig

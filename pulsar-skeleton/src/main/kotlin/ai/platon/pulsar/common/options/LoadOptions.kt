@@ -98,12 +98,19 @@ open class LoadOptions(
 
     /**
      * The page is expired if the current time > expireAt
-     * TODO: a better name: expireBefore
      * */
     @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expireAt = LoadOptionDefaults.expireAt
+
+    /**
+     * The page is expired if the current time > expireAt
+     * */
+    @ApiPublic
+    @Parameter(names = ["-fi", "fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
+        description = "If a page is expired, it should be fetched from the internet again")
+    var fetchInterval = ChronoUnit.DECADES.duration
 
     /** Arrange links */
     @ApiPublic

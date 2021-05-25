@@ -55,7 +55,7 @@ class StaticPulsarContext(
     /**
      * The main loop
      * */
-    override val crawlLoop get() = getBeanOrNull() ?: StreamingCrawlLoop(globalCache, unmodifiedConfig)
+    override val crawlLoop = getBeanOrNull() ?: StreamingCrawlLoop(globalCache, unmodifiedConfig)
 
     init {
         applicationContext.refresh()

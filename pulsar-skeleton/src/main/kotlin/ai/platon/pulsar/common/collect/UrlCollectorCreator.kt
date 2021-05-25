@@ -6,21 +6,21 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class UrlCollectorCreator(
-    val fetchCacheManager: FetchCatchManager,
+    val fetchCaches: FetchCatchManager,
     val collectors: ConcurrentLinkedQueue<PriorityDataCollector<UrlAware>>,
     val urlLoader: ExternalUrlLoader
 ) {
     private val logger = getLogger(this)
 
     fun addDefaultCollectors() {
-        fetchCacheManager.caches.forEach { (priority, fetchCache) ->
+        fetchCaches.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }
     }
 
     fun addFetchCacheCollector(name: String, priority: Int, queue: Queue<UrlAware>): FetchCacheCollector {
         val fetchCache = LoadingFetchCache(name, urlLoader, priority)
-        fetchCacheManager.unorderedCaches.add(fetchCache)
+        fetchCaches.unorderedCaches.add(fetchCache)
         val collector = FetchCacheCollector(fetchCache, priority)
 
         reportCollector(collector)

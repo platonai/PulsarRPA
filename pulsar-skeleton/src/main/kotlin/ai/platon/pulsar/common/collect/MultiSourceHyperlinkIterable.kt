@@ -5,12 +5,12 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 
 class MultiSourceHyperlinkIterable(
-    val fetchCacheManager: FetchCatchManager,
+    val fetchCaches: FetchCatchManager,
     val lowerCacheSize: Int = 100,
 ) : Iterable<UrlAware> {
-    private val realTimeCollector = FetchCacheCollector(fetchCacheManager.realTimeCache, Priority13.HIGHEST)
+    private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache, Priority13.HIGHEST)
         .apply { name = "FetchCacheCollector@RealTime" }
-    private val delayCollector = DelayCacheCollector(fetchCacheManager.delayCache, Priority13.HIGHER5)
+    private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCacheCollector@Delay" }
     private val multiSourceCollector = MultiSourceDataCollector<UrlAware>()
 
@@ -29,7 +29,7 @@ class MultiSourceHyperlinkIterable(
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
         // TODO: use a single collector to collect all caches in FetchCatchManager
-        fetchCacheManager.caches.forEach { (priority, fetchCache) ->
+        fetchCaches.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }
         return this

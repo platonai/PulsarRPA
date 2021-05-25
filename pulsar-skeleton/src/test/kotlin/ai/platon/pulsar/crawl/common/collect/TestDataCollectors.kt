@@ -52,16 +52,16 @@ class TestDataCollectors : TestBase() {
     fun testDataCollectorSorting() {
         // Object information is erased
         val collectors = mutableListOf<AbstractPriorityDataCollector<UrlAware>>()
-        fetchCacheManager.caches.forEach { (priority, fetchCache) ->
+        fetchCaches.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }
-        assertEquals(fetchCacheManager.caches.size, collectors.size)
+        assertEquals(fetchCaches.caches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
 //        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         println("Adding another normal collector ...")
         val priority = Priority13.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
+        val normalCollector = FetchCacheCollector(fetchCaches.normalCache, priority)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
 //        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
@@ -76,16 +76,16 @@ class TestDataCollectors : TestBase() {
     fun testDataCollectorSorting2() {
         val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<UrlAware>>()
 
-        globalCache.fetchCacheManager.caches.forEach { (priority, fetchCache) ->
+        globalCache.fetchCaches.caches.forEach { (priority, fetchCache) ->
             collectors[priority] = FetchCacheCollector(fetchCache, priority)
         }
-        assertEquals(fetchCacheManager.caches.size, collectors.keys.size)
+        assertEquals(fetchCaches.caches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
 
         println("Adding 2nd normal collector ...")
         val priority = Priority13.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
+        val normalCollector = FetchCacheCollector(fetchCaches.normalCache, priority)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
@@ -99,13 +99,13 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun `When iterate through fetch iterable then items are correct`() {
-        val fetchIterable = MultiSourceHyperlinkIterable(fetchCacheManager, lowerCacheSize)
+        val fetchIterable = MultiSourceHyperlinkIterable(fetchCaches, lowerCacheSize)
         val resourceURI = ResourceLoader.getResource("seeds/head100/best-sellers.txt")!!.toURI()
         val collector = LocalFileHyperlinkCollector(Paths.get(resourceURI), Priority13.NORMAL)
         fetchIterable.addDefaultCollectors()
         fetchIterable.addDataCollector(collector)
 
-        val cache = fetchIterable.fetchCacheManager.lower2Cache
+        val cache = fetchIterable.fetchCaches.lower2Cache
         LinkExtractors.fromResource("seeds/head100/most-wished-for.txt")
             .mapTo(cache.nonReentrantQueue) { Hyperlink(it) }
 
