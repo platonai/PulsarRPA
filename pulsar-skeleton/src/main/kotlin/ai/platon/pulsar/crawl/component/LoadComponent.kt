@@ -184,11 +184,13 @@ class LoadComponent(
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val queue = globalCache.fetchCaches.highestCache.nReentrantQueue
+        val estimatedWaitTime = 120L
         val links = normUrls
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
-            .onEach { it.completeOnTimeout(WebPage.NIL, 2, TimeUnit.MINUTES) }
+            .onEach { it.crawlEventHandler.onAfterLoadPipeline.addFirst { url, page -> (url as CompletableListenableHyperlink<WebPage>).complete(page) } }
+            .onEach { it.completeOnTimeout(WebPage.NIL, estimatedWaitTime, TimeUnit.SECONDS) }
             .toList()
         queue.addAll(links)
         logger.debug("Waiting for {} completable hyperlinks", links.size)

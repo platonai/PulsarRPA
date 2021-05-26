@@ -110,7 +110,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
     fun loadOutPages() {
         val url = seeds[17]?:return
 
-        var args = "-ic -i 1s -ii 1s"
+        var args = "-ic -i 1d -ii 1000d"
         // val outlink = ".goods_list_mod a"
         val outlink = when {
             "mia" in url -> "a[href~=item]"
