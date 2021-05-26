@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.collect.FetchCatchManager.Companion.REAL_TIME_PRIORITY
+import ai.platon.pulsar.common.collect.FetchCacheManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import com.google.common.primitives.Ints
@@ -31,7 +31,7 @@ open class DelayUrl(
 /**
  * The fetch catch manager
  * */
-interface FetchCatchManager {
+interface FetchCacheManager {
     companion object {
         val REAL_TIME_PRIORITY = Priority13.HIGHEST.value * 2
     }
@@ -66,7 +66,7 @@ interface FetchCatchManager {
 /**
  * The abstract fetch catch manager
  * */
-abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatchManager {
+abstract class AbstractFetchCacheManager(val conf: ImmutableConfig) : FetchCacheManager {
     protected val initialized = AtomicBoolean()
     override val totalItems get() = ensureInitialized().caches.values.sumOf { it.size }
 
@@ -92,7 +92,7 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatch
         delayCache.removeIf { it.url.deadTime < now }
     }
 
-    private fun ensureInitialized(): AbstractFetchCatchManager {
+    private fun ensureInitialized(): AbstractFetchCacheManager {
         if (initialized.compareAndSet(false, true)) {
             initialize()
         }
@@ -103,7 +103,7 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig) : FetchCatch
 /**
  * The global cache
  * */
-open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCatchManager(conf) {
+open class ConcurrentFetchCacheManager(conf: ImmutableConfig) : AbstractFetchCacheManager(conf) {
     /**
      * The priority fetch caches
      * */
@@ -128,11 +128,11 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig) : AbstractFetchCat
     }
 }
 
-class LoadingFetchCatchManager(
+class LoadingFetchCacheManager(
     val urlLoader: ExternalUrlLoader,
     val capacity: Int = 10_000,
     conf: ImmutableConfig,
-) : ConcurrentFetchCatchManager(conf) {
+) : ConcurrentFetchCacheManager(conf) {
     /**
      * The real time fetch cache
      * */

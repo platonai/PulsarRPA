@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.collect.ConcurrentFetchCatchManager
-import ai.platon.pulsar.common.collect.FetchCatchManager
+import ai.platon.pulsar.common.collect.ConcurrentFetchCacheManager
+import ai.platon.pulsar.common.collect.FetchCacheManager
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.CACHE_CAPACITY
 import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_DOCUMENT_CACHE_SIZE
@@ -62,7 +62,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * The fetch cache manager, hold on queues of fetch items
      * */
-    open val fetchCaches: FetchCatchManager = ConcurrentFetchCatchManager(conf).apply { initialize() }
+    open val fetchCaches: FetchCacheManager = ConcurrentFetchCacheManager(conf).apply { initialize() }
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */

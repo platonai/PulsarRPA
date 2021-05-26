@@ -6,7 +6,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class UrlCollectorCreator(
-    val fetchCaches: FetchCatchManager,
+    val fetchCaches: FetchCacheManager,
     val collectors: ConcurrentLinkedQueue<PriorityDataCollector<UrlAware>>,
     val urlLoader: ExternalUrlLoader
 ) {

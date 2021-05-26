@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 
 class MultiSourceHyperlinkIterable(
-    val fetchCaches: FetchCatchManager,
+    val fetchCaches: FetchCacheManager,
     val lowerCacheSize: Int = 100,
 ) : Iterable<UrlAware> {
     private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache, Priority13.HIGHEST)
@@ -28,7 +28,7 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        // TODO: use a single collector to collect all caches in FetchCatchManager
+        // TODO: use a single collector to collect all caches in FetchCacheManager
         fetchCaches.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }
