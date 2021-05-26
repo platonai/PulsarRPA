@@ -61,8 +61,9 @@ open class GlobalCache(val conf: ImmutableConfig) {
     private val documentCacheCapacity = conf.getUint(GLOBAL_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY)
     /**
      * The fetch cache manager, hold on queues of fetch items
+     * TODO: fetchCaches should not be changed
      * */
-    open val fetchCaches: FetchCacheManager = ConcurrentFetchCacheManager(conf).apply { initialize() }
+    open var fetchCaches: FetchCacheManager = ConcurrentFetchCacheManager(conf).apply { initialize() }
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */
