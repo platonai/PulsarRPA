@@ -384,18 +384,18 @@ open class StreamingCrawler<T : UrlAware>(
             url.crawlEventHandler.onAfterLoad(url, page ?: WebPage.NIL)
         }
 
-        when {
-            page == null -> handleRetry(url, page)
-            page.protocolStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isGone -> logger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
-        }
-
         if (page != null) {
             crawlEventHandler.onAfterLoad(url, page)
             if (url is ListenableHyperlink) {
                 url.crawlEventHandler.onAfterLoad(url, page)
             }
+        }
+
+        when {
+            page == null -> handleRetry(url, page)
+            page.protocolStatus.isRetry -> handleRetry(url, page)
+            page.crawlStatus.isRetry -> handleRetry(url, page)
+            page.crawlStatus.isGone -> logger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
         }
     }
 
