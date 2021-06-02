@@ -10,7 +10,6 @@ import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
@@ -190,7 +189,11 @@ class LoadComponent(
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
-            .onEach { it.crawlEventHandler.onAfterLoadPipeline.addFirst { url, page -> (url as CompletableListenableHyperlink<WebPage>).complete(page) } }
+            .onEach {
+                it.crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
+                    (url as? CompletableListenableHyperlink<WebPage>)?.complete(page)
+                }
+            }
             .onEach { it.completeOnTimeout(WebPage.NIL, estimatedWaitTime, TimeUnit.SECONDS) }
             .toList()
         queue.addAll(links)
@@ -423,12 +426,12 @@ class LoadComponent(
 
     /**
      * TODO: FetchSchedule.shouldFetch, crawlStatus and FetchReason should keep consistent
-     *
      * */
     private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
         // TODO: crawl status is better to decide the fetch reason
         val crawlStatus = page.crawlStatus
         val protocolStatus = page.protocolStatus
+
         if (options.refresh) {
             page.fetchRetries = 0
             return FetchState.REFRESH
