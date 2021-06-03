@@ -44,8 +44,9 @@ class StreamingCrawlerMetrics {
     val gone = registry.multiMetric(this, "gone")
     val tasks = registry.multiMetric(this, "tasks")
     val successes = registry.multiMetric(this, "successes")
-    val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
     val finishes = registry.multiMetric(this, "finishes")
+
+    val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
 
     val drops = registry.meter(this, "drops")
     val processing = registry.meter(this, "processing")
@@ -291,11 +292,17 @@ open class StreamingCrawler<T : UrlAware>(
         scope.launch(context) {
             try {
                 globalMetrics.tasks.mark()
+                if (AmazonDiagnosis.isAmazon(url.url)) {
+                    AmazonMetrics.tasks.mark(url.url)
+                }
                 runUrlTask(url)
             } finally {
                 lastActiveTime = Instant.now()
                 globalRunningTasks.decrementAndGet()
                 globalMetrics.finishes.mark()
+                if (AmazonDiagnosis.isAmazon(url.url)) {
+                    AmazonMetrics.finishes.mark(url.url)
+                }
             }
         }
 
@@ -354,10 +361,17 @@ open class StreamingCrawler<T : UrlAware>(
         if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
             wrongDistrict.mark()
         }
+
         if (page.isFetched) {
             globalMetrics.fetchSuccesses.mark()
+            if (AmazonDiagnosis.isAmazon(page.url)) {
+                AmazonMetrics.fetchSuccesses.mark(page.url)
+            }
         }
         globalMetrics.successes.mark()
+        if (AmazonDiagnosis.isAmazon(page.url)) {
+            AmazonMetrics.successes.mark(page.url)
+        }
     }
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
