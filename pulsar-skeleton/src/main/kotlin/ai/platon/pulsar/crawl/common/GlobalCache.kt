@@ -44,6 +44,8 @@ class FetchingCache {
         fetchingUrls.removeAll(urls)
     }
 
+    fun clear() = fetchingUrls.clear()
+
     operator fun contains(url: String) = fetchingUrls.contains(url)
 }
 
@@ -74,6 +76,13 @@ open class GlobalCache(val conf: ImmutableConfig) {
     open val documentCache = DocumentCatch(documentCacheCapacity)
 
     open val fetchingCache = FetchingCache()
+
+    fun resetCaches() {
+        fetchingCache.clear()
+        pageCache.clear()
+        documentCache.clear()
+        fetchCaches = ConcurrentFetchCacheManager(conf).apply { initialize() }
+    }
 
     /**
      * Put page and document to cache

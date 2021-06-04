@@ -235,6 +235,8 @@ object ResultSetUtils {
      * > select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
      * > from load_and_select('https://jd.com/', ':root body');
      *
+     * TODO: use a simple SQL parser
+     *
      * @param sql The sql to extract an url from
      * @return The url extracted from the sql, null if no such url
      * */
@@ -242,7 +244,8 @@ object ResultSetUtils {
         val len = sql.length
         var i = 0
         var j = 0
-        i = sql.indexOf("from", ignoreCase = true)
+        // find the last 'from'
+        i = sql.lastIndexOf("from", ignoreCase = true)
         if (i <= 0) {
             return null
         }
