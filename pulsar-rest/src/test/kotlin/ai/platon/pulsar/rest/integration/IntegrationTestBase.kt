@@ -41,26 +41,12 @@ class IntegrationTestBase {
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
 
-    private val crawlStarter by lazy { StreamingCrawlLoop(globalCache, unmodifiedConfig) }
-
     val baseUri get() = String.format("http://%s:%d", "localhost", port)
 
     val productUrls = arrayOf(
         "https://item.jd.com/26630473959.html",
         "https://www.amazon.com/dp/B009FUF6DM"
     )
-
-    @Before
-    fun startLoop() {
-        getLogger(this).info("Starting loop ...")
-        crawlStarter.start()
-    }
-
-    @After
-    fun stopLoop() {
-        getLogger(this).info("Stop loop ...")
-        crawlStarter.stop()
-    }
 
     @Test
     fun `Ensure crawl loop is running`() {
