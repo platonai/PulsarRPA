@@ -1,6 +1,7 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.BeanFactory
+import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -77,7 +78,7 @@ interface PulsarSession : AutoCloseable {
     fun getOrNull(url: String): WebPage?
     fun exists(url: String): Boolean
 
-    fun fetchState(page: WebPage, options: LoadOptions): Int
+    fun fetchState(page: WebPage, options: LoadOptions): CheckState
 
     /**
      * Load a url with specified options

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
@@ -9,6 +10,10 @@ import java.net.URISyntaxException
 import java.net.URL
 
 object Urls {
+
+    fun isInternal(url: String) = url.startsWith(INTERNAL_URL_PREFIX)
+
+    fun isNotInternal(url: String) = !isInternal(url)
 
     @JvmStatic
     fun getURLOrNull(url: String?): URL? {

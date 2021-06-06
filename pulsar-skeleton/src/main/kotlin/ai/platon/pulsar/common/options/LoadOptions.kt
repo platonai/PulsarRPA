@@ -82,6 +82,10 @@ open class LoadOptions(
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
+    @ApiPublic
+    @Parameter(names = ["-readonly"], description = "The task does not change the status of the web page")
+    var readonly = false
+
     /**
      * Web page expiry time
      * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,

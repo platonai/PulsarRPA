@@ -19,7 +19,7 @@ enum class FlowState {
 data class CheckState(
     val code: Int = 0,
     val message: String = "",
-    val scope: String = "unspecified"
+    val scope: String = ""
 ) {
     val isOK get() = code == 0 || code == 200
     val isNotOK get() = code != 0

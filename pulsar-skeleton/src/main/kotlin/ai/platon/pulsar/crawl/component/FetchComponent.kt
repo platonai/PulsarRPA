@@ -20,11 +20,11 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.persist.ext.options
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.persist.PageDatum
@@ -39,19 +39,34 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
 
-class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = null) {
+class FetchEntry(val page: WebPage, val options: LoadOptions) {
 
     constructor(url: String, options: LoadOptions, href: String? = null) :
-            this(WebPage.newWebPage(url, options.conf, href), options)
+            this(createPageShell(url, options, href), options)
 
-    init {
-        page.also {
-            it.href = href
-            it.fetchMode = options.fetchMode
-            it.conf = options.conf
-            it.args = options.toString()
+    companion object {
 
-            it.variables[VAR_LOAD_OPTIONS] = options
+        fun createPageShell(normUrl: NormUrl): WebPage {
+            return createPageShell(normUrl.spec, normUrl.options, normUrl.hrefSpec)
+        }
+
+        fun createPageShell(url: String, options: LoadOptions, href: String? = null): WebPage {
+            val page = WebPage.newWebPage(url, options.conf, href)
+
+            initWebPage(page, options, href)
+
+            return page
+        }
+
+        fun initWebPage(page: WebPage, options: LoadOptions, href: String? = null) {
+            page.also {
+                it.href = href
+                it.fetchMode = options.fetchMode
+                it.conf = options.conf
+                it.args = options.toString()
+
+                it.variables[VAR_LOAD_OPTIONS] = options
+            }
         }
     }
 }
@@ -183,6 +198,8 @@ open class FetchComponent(
             logger.warn("No content | {}", page.configuredUrl)
         }
 
+        page.isFetched = true
+
         page.headers.putAll(output.headers.asMultimap())
         val protocolStatus = output.protocolStatus
 
@@ -216,7 +233,7 @@ open class FetchComponent(
             else -> CrawlStatus.STATUS_RETRY.also { logger.warn("Unknown protocol status $protocolStatus") }
         }
 
-        val updatedPage = when (crawlStatus) {
+        when (crawlStatus) {
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
             CrawlStatus.STATUS_REDIR_PERM,
@@ -230,9 +247,7 @@ open class FetchComponent(
             fetchMetrics?.trackFailedUrl(url)
         }
 
-        updatedPage.isFetched = true
-
-        return updatedPage
+        return page
     }
 
     private fun handleMoved(page: WebPage, protocolStatus: ProtocolStatus): CrawlStatus {

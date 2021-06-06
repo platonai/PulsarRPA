@@ -2,6 +2,7 @@ package ai.platon.pulsar.context
 
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -67,7 +68,7 @@ interface PulsarContext: AutoCloseable {
 
     fun exists(url: String): Boolean
 
-    fun fetchState(page: WebPage, options: LoadOptions): Int
+    fun fetchState(page: WebPage, options: LoadOptions): CheckState
 
     fun scan(urlPrefix: String): Iterator<WebPage>
 

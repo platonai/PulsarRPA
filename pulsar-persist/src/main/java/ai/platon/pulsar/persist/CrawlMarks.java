@@ -76,7 +76,7 @@ public class CrawlMarks {
     /**
      * <p>put.</p>
      *
-     * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
+     * @param mark  a {@link ai.platon.pulsar.persist.metadata.Mark} object.
      * @param value a {@link java.lang.String} object.
      */
     public void put(Mark mark, String value) {
@@ -86,7 +86,7 @@ public class CrawlMarks {
     /**
      * <p>put.</p>
      *
-     * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
+     * @param mark  a {@link ai.platon.pulsar.persist.metadata.Mark} object.
      * @param value a {@link org.apache.avro.util.Utf8} object.
      */
     public void put(Mark mark, Utf8 value) {
@@ -96,7 +96,7 @@ public class CrawlMarks {
     /**
      * <p>putIfNotNull.</p>
      *
-     * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
+     * @param mark  a {@link ai.platon.pulsar.persist.metadata.Mark} object.
      * @param value a {@link org.apache.avro.util.Utf8} object.
      */
     public void putIfNotNull(Mark mark, Utf8 value) {
@@ -105,42 +105,29 @@ public class CrawlMarks {
         }
     }
 
-    /**
-     * <p>remove.</p>
-     *
-     * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
-     */
     public void remove(Mark mark) {
         if (contains(mark)) {
             marks.put(wrapKey(mark), null);
         }
     }
 
-    /**
-     * <p>removeAll.</p>
-     *
-     * @param marks a {@link java.lang.Iterable} object.
-     */
     public void removeAll(Iterable<Mark> marks) {
         marks.forEach(this::remove);
     }
 
-    /**
-     * <p>clear.</p>
-     */
-    public void clear() { marks.clear(); }
+    public void clear() {
+        marks.clear();
+    }
 
-    /**
-     * <p>asStringMap.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
     public Map<String, String> asStringMap() {
         return marks.entrySet().stream()
+                .filter(e -> e.getValue() != null)
                 .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString(), (e, e2) -> e));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return marks.entrySet().stream()

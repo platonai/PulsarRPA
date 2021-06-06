@@ -48,7 +48,7 @@ import static ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS;
 import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
- * The core data structure across the whole program execution
+ * Every WebPage is a seperate execution context
  *
  * <p>
  * Notice: Use a build-in java string or a Utf8 to serialize strings?
@@ -100,7 +100,7 @@ final public class WebPage implements Comparable<WebPage> {
      * Underlying persistent object
      */
     @NotNull
-    final private GWebPage page;
+    private GWebPage page;
     /**
      * Web page scope configuration
      */
@@ -464,6 +464,14 @@ final public class WebPage implements Comparable<WebPage> {
     @NotNull
     public GWebPage unbox() {
         return page;
+    }
+
+    public void unsafeSetGPage(@NotNull GWebPage page) {
+        this.page = page;
+    }
+
+    public void unsafeCloneGPage(WebPage page) {
+        unsafeSetGPage(GWebPage.newBuilder(page.unbox()).build());
     }
 
     /**

@@ -189,7 +189,7 @@ public class PulsarParams extends Params {
     public static final String VAR_PAGE_EXISTENCE = "page_existence";
     public static final String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
     public static final String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
-    public static final String VAR_FETCH_REASON = "fetch_reason";
+    public static final String VAR_FETCH_STATE = "fetch_state";
     public static final String VAR_PREV_FETCH_TIME_BEFORE_UPDATE = "prev_fetch_time_before_update";
     public static final String VAR_PRIVACY_CONTEXT_NAME = "privacy_context_name";
 

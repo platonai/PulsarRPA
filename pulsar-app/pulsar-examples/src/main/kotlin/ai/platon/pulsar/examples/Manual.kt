@@ -67,4 +67,6 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
     }
 }
 
-fun main() = Manual().runAll()
+fun main() {
+    Manual().scrapeOutPages()
+}

@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.message
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
-import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
+import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.common.FetchState
@@ -125,7 +125,7 @@ class LoadedPageFormatter(
     }
 
     private fun buildFetchReason(): String {
-        val code = (page.variables[VAR_FETCH_REASON] as? Int) ?: FetchState.DO_NOT_FETCH
+        val code = (page.variables[VAR_FETCH_STATE] as? Int) ?: FetchState.DO_NOT_FETCH
         return FetchState.toSymbol(code).takeIf { it.isNotBlank() }?.let { "for $it" } ?: ""
     }
 

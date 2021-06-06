@@ -1,7 +1,8 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.AppStatusTracker
-import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_REASON
+import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
@@ -11,6 +12,7 @@ import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
@@ -92,16 +94,16 @@ class LoadComponent(
         immutableConfig: ImmutableConfig,
     ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, null, immutableConfig)
 
-    fun fetchState(page: WebPage, options: LoadOptions): Int {
+    fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
 
         return when {
-            closed.get() -> FetchState.DO_NOT_FETCH
-            page.isNil -> FetchState.NEW_PAGE
-            page.isInternal -> FetchState.DO_NOT_FETCH
-            protocolStatus.isNotFetched -> FetchState.NEW_PAGE
-            protocolStatus.isTempMoved -> FetchState.TEMP_MOVED
-            else -> getFetchReasonForExistPage(page, options)
+            closed.get() -> CheckState(FetchState.DO_NOT_FETCH, "closed")
+            page.isNil -> CheckState(FetchState.NEW_PAGE, "nil")
+            page.isInternal -> CheckState(FetchState.DO_NOT_FETCH, "internal")
+            protocolStatus.isNotFetched -> CheckState(FetchState.NEW_PAGE, "not fetched")
+            protocolStatus.isTempMoved -> CheckState(FetchState.TEMP_MOVED, "temp moved")
+            else -> getFetchStateForExistPage(page, options)
         }
     }
 
@@ -223,7 +225,7 @@ class LoadComponent(
     }
 
     private fun load0(normUrl: NormUrl): WebPage {
-        val page = createWebPageShell(normUrl)
+        val page = createPageShell(normUrl)
 
         beforeLoad(normUrl, page)
 
@@ -235,7 +237,7 @@ class LoadComponent(
     }
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
-        val page = createWebPageShell(normUrl)
+        val page = createPageShell(normUrl)
 
         beforeLoad(normUrl, page)
 
@@ -249,63 +251,79 @@ class LoadComponent(
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
             fetchContent(page, normUrl)
-            if (page.protocolStatus.isSuccess) {
-                documentCache.remove(page.url)
-            }
-            pageCache.putDatum(page.url, page)
         }
     }
 
     private suspend fun fetchContentIfNecessaryDeferred(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
             fetchContentDeferred(page, normUrl)
-            if (page.protocolStatus.isSuccess) {
-                documentCache.remove(page.url)
-            }
-            pageCache.putDatum(page.url, page)
         }
     }
 
-    private fun createWebPageShell(normUrl: NormUrl): WebPage {
-        // load the metadata of the page from the database, this is very fast for a crawler
-        val page = createWebPageShell0(normUrl)
+    /**
+     * Create a page shell, the page shell is the process unit for most tasks
+     * */
+    private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
+        var page = FetchEntry.createPageShell(normUrl)
+
         if (cachedPage != null) {
             page.isCached = true
-            page.content = cachedPage.content
-            page.removeVar(VAR_REFRESH)
+            // the cached page can be or not be persisted, but not guaranteed
+            // if a page is loaded from cache, the content remains unchanged and should not persist to database
+            page.unsafeCloneGPage(cachedPage)
+            // TODO: check all fields dirty or not?
+            page.clearPersistContent()
+            page.tmpContent = cachedPage.content
+            // TODO: test the dirty flag
+            // do not persist this copy
+            page.unbox().clearDirty()
             assert(!page.isFetched)
+            assert(page.isNotInternal)
+        } else {
+            // get the metadata of the page from the database, this is very fast for a crawler
+            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
+            if (loadedPage != null) {
+                temporaryFixUnexpectedInternalPage(loadedPage)
+                require(loadedPage.marks.unbox().isEmpty()) { loadedPage.marks.asStringMap().toString() }
+                // override the old variables: args, href, etc
+                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
+                page = loadedPage
+            }
+
+            initFetchState(normUrl, page, loadedPage)
         }
+
+//        logger.info("{}. fetch state: {} {} {}",
+//            page.id, page.getVar(VAR_FETCH_STATE), page.protocolStatus, page.isInternal)
+
         return page
     }
 
-    private fun createWebPageShell0(normUrl: NormUrl): WebPage {
-        val url = normUrl.spec
+    // a temporary fix, will remove this later
+    private fun temporaryFixUnexpectedInternalPage(page: WebPage) {
+        if (Urls.isNotInternal(page.url)) {
+            page.marks.clear()
+        }
+    }
+
+    private fun initFetchState(normUrl: NormUrl, page: WebPage, loadedPage: WebPage?): CheckState {
         val options = normUrl.options
-        if (globalCache.fetchingCache.contains(url)) {
-            logger.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
-            // return WebPage.NIL
+
+        val state = when {
+            loadedPage == null -> CheckState(FetchState.NEW_PAGE, "nil 1")
+            loadedPage.isNil -> CheckState(FetchState.NEW_PAGE, "nil 2")
+            loadedPage.isInternal -> CheckState(FetchState.DO_NOT_FETCH, "internal 1")
+            else -> fetchState(page, options)
         }
 
-        // get metadata only
-        val page0 = webDb.get(url, fields = metadataFields)
-
-        val reason = fetchState(page0, options)
-        val fetchEntry = if (page0.isNil) {
-            FetchEntry(url, options, normUrl.hrefSpec)
-        } else {
-            FetchEntry(page0, options, normUrl.hrefSpec)
-        }
-
-        val page = fetchEntry.page
-
-        page.variables[VAR_FETCH_REASON] = reason
-        val refresh = reason in FetchState.refreshCodes
+        page.variables[VAR_FETCH_STATE] = state
+        val refresh = state.code in FetchState.refreshCodes
         if (refresh) {
-            page.variables[VAR_REFRESH] = reason
+            page.variables[VAR_REFRESH] = state
         }
 
-        return page
+        return state
     }
 
     private fun beforeLoad(normUrl: NormUrl, page: WebPage) {
@@ -323,9 +341,16 @@ class LoadComponent(
     private fun afterLoad(page: WebPage, normUrl: NormUrl) {
         val options = normUrl.options
 
-        ensurePageContent(page, normUrl)
+        // handle page content
+        processPageContent(page, normUrl)
 
-        shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+        // handle cache
+        if (!options.readonly) {
+            if (page.protocolStatus.isSuccess) {
+                documentCache.remove(page.url)
+            }
+            pageCache.putDatum(page.url, page)
+        }
 
         // we might use the cached page's content in parse phrase
         if (options.parse) {
@@ -341,25 +366,31 @@ class LoadComponent(
 
         // persist if it's not loaded from the cache so it's not updated
         // we might persist only when it's fetched
-        if (!page.isCached && options.persist) {
+        // TODO: do not persist content if it's not changed, we can add a contentPage inside a WebPage
+        // TODO: do not we persist if it's loaded from cache or no fields change
+        if (!options.readonly && options.persist) {
             persist(page, options)
         }
     }
 
-    private fun ensurePageContent(page: WebPage, normUrl: NormUrl) {
-        if (page.persistContent == null) {
+    private fun processPageContent(page: WebPage, normUrl: NormUrl) {
+        val options = normUrl.options
+
+        if (page.protocolStatus.isSuccess && page.content == null) {
             shouldBe(false, page.isFetched) { "Page should not be fetched | ${page.configuredUrl}" }
             // load the content of the page
             // TODO: what if the page's status is failed?
             val contentPage = webDb.getOrNull(page.url, GWebPage.Field.CONTENT)
             if (contentPage != null) {
-                page.content = contentPage.persistContent
+                page.content = contentPage.content
+                // TODO: test the dirty flag
+                page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             }
         }
 
-        pageCache.putDatum(page.url, page)
+        shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
-        if (logger.isInfoEnabled) {
+        if (!page.isCached && logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
             val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
             logger.info(report)
@@ -425,23 +456,23 @@ class LoadComponent(
     /**
      * TODO: FetchSchedule.shouldFetch, crawlStatus and FetchReason should keep consistent
      * */
-    private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
+    private fun getFetchStateForExistPage(page: WebPage, options: LoadOptions): CheckState {
         // TODO: crawl status is better to decide the fetch reason
         val crawlStatus = page.crawlStatus
         val protocolStatus = page.protocolStatus
 
         if (options.refresh) {
             page.fetchRetries = 0
-            return FetchState.REFRESH
+            return CheckState(FetchState.REFRESH, "refresh")
         }
 
         val ignoreFailure = options.ignoreFailure || options.retryFailed
         if (protocolStatus.isRetry) {
-            return FetchState.RETRY
+            return CheckState(FetchState.RETRY, "retry")
         } else if (protocolStatus.isFailed && !ignoreFailure) {
             // Failed to fetch the page last time, it might be caused by page is gone
             // in such case, do not fetch it even it it's expired, unless the retryFailed flag is set
-            return FetchState.DO_NOT_FETCH
+            return CheckState(FetchState.DO_NOT_FETCH, "failed")
         }
 
         val now = Instant.now()
@@ -454,33 +485,33 @@ class LoadComponent(
 
         // if (expireAt in prevFetchTime..now || now > prevFetchTime + expires), it's expired
         if (options.isExpired(prevFetchTime)) {
-            return FetchState.EXPIRED
+            return CheckState(FetchState.EXPIRED, "expired 1")
         }
 
         val duration = Duration.between(page.fetchTime, now)
         val days = duration.toDays()
         if (duration.toMillis() > 0 && days < 3) {
-            return FetchState.SCHEDULED
+            return CheckState(FetchState.SCHEDULED, "scheduled")
         }
 
         if (page.persistContentLength == 0L) {
-            return FetchState.NO_CONTENT
+            return CheckState(FetchState.NO_CONTENT, "no content")
         }
 
         if (page.persistContentLength < options.requireSize) {
-            return FetchState.SMALL_CONTENT
+            return CheckState(FetchState.SMALL_CONTENT, "small content")
         }
 
         val domStats = page.activeDomStats
         val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
         if (ni < options.requireImages) {
-            return FetchState.MISS_FIELD
+            return CheckState(FetchState.MISS_FIELD, "miss image")
         }
         if (na < options.requireAnchors) {
-            return FetchState.MISS_FIELD
+            return CheckState(FetchState.MISS_FIELD, "miss anchor")
         }
 
-        return FetchState.DO_NOT_FETCH
+        return CheckState(FetchState.DO_NOT_FETCH, "unknown")
     }
 
     private fun update(page: WebPage, options: LoadOptions) {
@@ -494,6 +525,8 @@ class LoadComponent(
         }
 
         updateComponent.updateFetchSchedule(page)
+
+        require(page.isFetched)
     }
 
     private fun parse(page: WebPage, options: LoadOptions) {
@@ -514,7 +547,8 @@ class LoadComponent(
             page.clearPersistContent()
         }
 
-        if (!page.isFetched) {
+        // the content is loaded from cache, the content remains unchanged, do not persist it
+        if (page.isCached) {
             page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             assert(!page.unbox().isContentDirty)
         }
@@ -524,7 +558,9 @@ class LoadComponent(
 
         collectPersistMetrics(page)
 
-        if (!options.lazyFlush || numWrite % 20 == 0) {
+        if (numWrite < 200) {
+            flush()
+        } else if (!options.lazyFlush || numWrite % 20 == 0) {
             flush()
         }
     }
