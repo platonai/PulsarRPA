@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl
 
+import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
 import ai.platon.pulsar.common.collect.PriorityDataCollector
 import ai.platon.pulsar.common.config.CapabilityTypes.ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -14,9 +15,9 @@ open class StreamingCrawlLoop(
     /**
      * The global cache
      * */
-    globalCache: GlobalCache,
+    val globalCache: GlobalCache,
     unmodifiedConfig: ImmutableConfig
-) : AbstractCrawlLoop(globalCache, unmodifiedConfig) {
+) : AbstractCrawlLoop(unmodifiedConfig) {
     private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private val enableDefaultCollectors
@@ -28,28 +29,8 @@ open class StreamingCrawlLoop(
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
+    override lateinit var fetchIterable: MultiSourceHyperlinkIterable
     override lateinit var crawler: StreamingCrawler<UrlAware>
-
-    val fetchCaches get() = globalCache.fetchCaches
-    val realTimeCache get() = fetchCaches.realTimeCache
-    val delayCache get() = fetchCaches.delayCache
-    val normalCacheSize get() = fetchCaches.caches.entries.sumBy { it.value.size }
-    val normalCacheEstimatedSize get() = fetchCaches.caches.entries.sumBy { it.value.estimatedSize }
-    val totalCacheSize get() = fetchIterable.cacheSize + realTimeCache.size + normalCacheSize
-
-    val allCollectors: List<PriorityDataCollector<UrlAware>> get() {
-        val loadingIterable = fetchIterable.loadingIterable
-        val allCollectors = listOfNotNull(loadingIterable.realTimeCollector, loadingIterable.delayCollector)
-            .filterIsInstance<PriorityDataCollector<UrlAware>>()
-            .toMutableList()
-        this.collectors.toCollection(allCollectors)
-        allCollectors.sortBy { it.priority }
-        return allCollectors
-    }
-
-    override val abstract: String get() = PriorityDataCollectorsFormatter(allCollectors).abstract()
-
-    override val report: String get() = PriorityDataCollectorsFormatter(allCollectors).toString()
 
     @Synchronized
     override fun start() {
@@ -59,6 +40,7 @@ open class StreamingCrawlLoop(
         }
         running = true
 
+        this.fetchIterable = MultiSourceHyperlinkIterable(globalCache.fetchCaches)
         if (enableDefaultCollectors && collectors.isEmpty()) {
             fetchIterable.addDefaultCollectors()
         }
