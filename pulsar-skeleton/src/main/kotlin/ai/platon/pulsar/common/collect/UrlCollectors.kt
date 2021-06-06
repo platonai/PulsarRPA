@@ -286,7 +286,18 @@ open class FetchCacheCollector(
      * so even if all queues are empty, hasMore can return true
      * */
     @Synchronized
-    override fun hasMore() = size > 0 || fetchCache.estimatedSize > 0
+    override fun hasMore(): Boolean {
+        if (size > 0 || estimatedSize > 0) {
+            return true
+        }
+
+        if (fetchCache is Loadable<*>) {
+            // load has a delay
+            fetchCache.load()
+        }
+
+        return size > 0
+    }
 
     @Synchronized
     override fun collectTo(sink: MutableList<UrlAware>): Int {
