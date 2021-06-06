@@ -21,13 +21,6 @@ class AmazonMetrics(val ident: String) {
     val snRelease = multiMetric("snRelease")
     val mas = multiMetric("mas")
     val smas = multiMetric("smas")
-
-    val asin = multiMetric("asin")
-
-    val pReview = multiMetric("pReview")
-    val sReview = multiMetric("sReview")
-    val review = multiMetric("review")
-    val pages = multiMetric("pages")
 }
 
 class AmazonDiagnosis(val ident: String) {

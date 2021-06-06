@@ -63,25 +63,25 @@ enum class CriticalWarning(val message: String) {
 
 open class StreamingCrawler<T : UrlAware>(
     /**
-         * The url sequence
-         * */
-        val urls: Sequence<T>,
+     * The url sequence
+     * */
+    val urls: Sequence<T>,
     /**
-         * The default load options
-         * */
-        val defaultOptions: LoadOptions,
+     * The default load options
+     * */
+    val defaultOptions: LoadOptions,
     /**
-         * The default pulsar session to use
-         * */
-        session: PulsarSession = PulsarContexts.createSession(),
+     * The default pulsar session to use
+     * */
+    session: PulsarSession = PulsarContexts.createSession(),
     /**
-         * A optional global cache which will hold the retry tasks
-         * */
-        val globalCache: GlobalCache? = null,
+     * A optional global cache which will hold the retry tasks
+     * */
+    val globalCache: GlobalCache? = null,
     /**
-         * The crawl event handler
-         * */
-        val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
+     * The crawl event handler
+     * */
+    val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
     autoClose: Boolean = true
 ) : AbstractCrawler(session, autoClose) {
     companion object {
@@ -109,16 +109,16 @@ open class StreamingCrawler<T : UrlAware>(
 
         init {
             mapOf(
-                    "globalRunningInstances" to Gauge { globalRunningInstances.get() },
-                    "globalRunningTasks" to Gauge { globalRunningTasks.get() },
-                    "globalKilledTasks" to Gauge { globalKilledTasks.get() },
+                "globalRunningInstances" to Gauge { globalRunningInstances.get() },
+                "globalRunningTasks" to Gauge { globalRunningTasks.get() },
+                "globalKilledTasks" to Gauge { globalKilledTasks.get() },
 
-                    "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
-                    "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                    "000WARNING" to Gauge { criticalWarning?.message?.let { "!!! WARNING !!! $it" }?:"" },
-                    "lastUrl" to Gauge { lastUrl },
-                    "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
-                    "lastFetchError" to Gauge { lastFetchError },
+                "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
+                "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
+                "000WARNING" to Gauge { criticalWarning?.message?.let { "!!! WARNING !!! $it" } ?: "" },
+                "lastUrl" to Gauge { lastUrl },
+                "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
+                "lastFetchError" to Gauge { lastFetchError },
             ).let { AppMetrics.reg.registerAll(this, it) }
         }
     }
@@ -149,7 +149,7 @@ open class StreamingCrawler<T : UrlAware>(
     val id = instanceSequencer.incrementAndGet()
 
     private val gauges = mapOf(
-            "idleTime" to Gauge { idleTime.readable() }
+        "idleTime" to Gauge { idleTime.readable() }
     )
 
     init {
@@ -158,8 +158,8 @@ open class StreamingCrawler<T : UrlAware>(
         val cache = globalCache
         if (cache != null) {
             val cacheGauges = mapOf(
-                    "pageCacheSize" to Gauge { cache.pageCache.size },
-                    "documentCacheSize" to Gauge { cache.documentCache.size }
+                "pageCacheSize" to Gauge { cache.pageCache.size },
+                "documentCacheSize" to Gauge { cache.documentCache.size }
             )
             AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
         }
@@ -232,9 +232,10 @@ open class StreamingCrawler<T : UrlAware>(
 
         globalRunningInstances.decrementAndGet()
 
-        logger.info("All done. Total {} tasks are processed in session {} in {}",
-                globalMetrics.tasks.counter.count, session,
-                DateTimes.elapsedTime(startTime).readable()
+        logger.info(
+            "All done. Total {} tasks are processed in session {} in {}",
+            globalMetrics.tasks.counter.count, session,
+            DateTimes.elapsedTime(startTime).readable()
         )
     }
 
@@ -243,8 +244,10 @@ open class StreamingCrawler<T : UrlAware>(
 
         while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
-                logger.info("$j. Long time to run $globalRunningTasks tasks" +
-                        " | $lastActiveTime -> {}", idleTime.readable())
+                logger.info(
+                    "$j. Long time to run $globalRunningTasks tasks" +
+                            " | $lastActiveTime -> {}", idleTime.readable()
+                )
             }
             delay(1000)
         }
@@ -423,8 +426,8 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         return session.runCatching { loadDeferred(url, options) }
-                .onFailure { flowState = handleException(url, it) }
-                .getOrNull()
+            .onFailure { flowState = handleException(url, it) }
+            .getOrNull()
     }
 
     @Throws(Exception::class)
@@ -502,11 +505,12 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleMemoryShortage(j: Int) {
-        logger.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
-                globalRunningTasks,
-                Strings.readableBytes(availableMemory),
-                Strings.readableBytes(requiredMemory),
-                Strings.readableBytes(abs(remainingMemory))
+        logger.info(
+            "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
+            globalRunningTasks,
+            Strings.readableBytes(availableMemory),
+            Strings.readableBytes(requiredMemory),
+            Strings.readableBytes(abs(remainingMemory))
         )
         session.context.clearCaches()
         System.gc()
