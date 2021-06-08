@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.persist.WebDb
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -271,6 +272,8 @@ open class FetchCacheCollector(
 
     private val queues get() = fetchCache.queues
 
+    var loadDelay: Duration = Duration.ofMinutes(1)
+
     override var name: String = "FetchCacheC"
 
     override val size: Int
@@ -292,8 +295,7 @@ open class FetchCacheCollector(
         }
 
         if (fetchCache is Loadable<*>) {
-            // load has a delay
-            fetchCache.load()
+            fetchCache.load(loadDelay)
         }
 
         return size > 0

@@ -284,8 +284,6 @@ class LoadComponent(
             // get the metadata of the page from the database, this is very fast for a crawler
             val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
             if (loadedPage != null) {
-                temporaryFixUnexpectedInternalPage(loadedPage)
-                require(loadedPage.marks.unbox().isEmpty()) { loadedPage.marks.asStringMap().toString() }
                 // override the old variables: args, href, etc
                 FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
                 page = loadedPage
@@ -294,17 +292,7 @@ class LoadComponent(
             initFetchState(normUrl, page, loadedPage)
         }
 
-//        logger.info("{}. fetch state: {} {} {}",
-//            page.id, page.getVar(VAR_FETCH_STATE), page.protocolStatus, page.isInternal)
-
         return page
-    }
-
-    // a temporary fix, will remove this later
-    private fun temporaryFixUnexpectedInternalPage(page: WebPage) {
-        if (Urls.isNotInternal(page.url)) {
-            page.marks.clear()
-        }
     }
 
     private fun initFetchState(normUrl: NormUrl, page: WebPage, loadedPage: WebPage?): CheckState {
@@ -342,14 +330,20 @@ class LoadComponent(
         val options = normUrl.options
 
         // handle page content
-        processPageContent(page, normUrl)
+        if (!page.isCached) {
+            processPageContent(page, normUrl)
+        }
 
         // handle cache
         if (!options.readonly) {
-            if (page.protocolStatus.isSuccess) {
+            if (page.isFetched && page.protocolStatus.isSuccess) {
                 documentCache.remove(page.url)
             }
             pageCache.putDatum(page.url, page)
+        }
+
+        if (!page.isCached) {
+            report(page)
         }
 
         // we might use the cached page's content in parse phrase
@@ -368,18 +362,23 @@ class LoadComponent(
         // we might persist only when it's fetched
         // TODO: do not persist content if it's not changed, we can add a contentPage inside a WebPage
         // TODO: do not we persist if it's loaded from cache or no fields change
-        if (!options.readonly && options.persist) {
+        if (!page.isCached && !options.readonly && options.persist) {
             persist(page, options)
         }
     }
 
+    /**
+     * Because the content is large, a general webpage is up to 2M, so we do not load it from the database unless have to
+     *
+     * if the page is fetched, the content is set by the fetch component, so we do not load it from the database
+     * if the protocol status is not success, the content is useless and not loaded
+     * */
     private fun processPageContent(page: WebPage, normUrl: NormUrl) {
         val options = normUrl.options
 
         if (page.protocolStatus.isSuccess && page.content == null) {
             shouldBe(false, page.isFetched) { "Page should not be fetched | ${page.configuredUrl}" }
             // load the content of the page
-            // TODO: what if the page's status is failed?
             val contentPage = webDb.getOrNull(page.url, GWebPage.Field.CONTENT)
             if (contentPage != null) {
                 page.content = contentPage.content
@@ -389,8 +388,10 @@ class LoadComponent(
         }
 
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
+    }
 
-        if (!page.isCached && logger.isInfoEnabled) {
+    private fun report(page: WebPage) {
+        if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
             val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
             logger.info(report)

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.urls.UrlAware
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -71,6 +72,10 @@ class LoadingFetchCache(
 
     override fun load() {
         queues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load() }
+    }
+
+    override fun load(delay: Duration) {
+        queues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load(delay) }
     }
 
     override fun loadNow(): Collection<UrlAware> {

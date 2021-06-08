@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 interface LoadingQueue<T>: Queue<T>, Loadable<T> {
@@ -29,16 +29,25 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
         val group: UrlGroup,
-        val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
+        val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
+        /**
+         * The delay time to load after another load
+         * */
+        var loadDelay: Duration = Duration.ofMinutes(1)
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 
     companion object {
         private const val ESTIMATED_EXTERNAL_SIZE_KEY = "EES"
     }
 
-    private val expiringCache = ConcurrentExpiringLRUCache<Int>(1, Duration.ofMinutes(1))
+    private val expiringCache = ConcurrentExpiringLRUCache<Int>(1, loadDelay)
 
     protected val implementation = LinkedList<UrlAware>()
+
+    @Volatile
+    protected var lastLoadTime = Instant.EPOCH
+
+    val isExpired get() = isExpired(loadDelay)
 
     /**
      * The cache size
@@ -62,10 +71,23 @@ abstract class AbstractLoadingQueue(
     @get:Synchronized
     val isFull get() = freeSlots == 0
 
+    fun isExpired(delay: Duration): Boolean {
+        return lastLoadTime + delay < Instant.now()
+    }
+
     @Synchronized
     override fun load() {
-        if (freeSlots > 0) {
-            loader.loadTo(implementation, freeSlots, group)
+        if (isExpired && freeSlots > 0) {
+            lastLoadTime = Instant.now()
+            loader.loadToNow(implementation, freeSlots, group)
+        }
+    }
+
+    @Synchronized
+    override fun load(delay: Duration) {
+        if (freeSlots > 0 && isExpired(delay)) {
+            lastLoadTime = Instant.now()
+            loader.loadToNow(implementation, freeSlots, group)
         }
     }
 

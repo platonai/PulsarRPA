@@ -88,7 +88,7 @@ interface ExternalUrlLoader {
 }
 
 abstract class AbstractExternalUrlLoader(
-        override var loadDelay: Duration = Duration.ofSeconds(10)
+    override var loadDelay: Duration = Duration.ofSeconds(30)
 ): ExternalUrlLoader {
 
     @Volatile
