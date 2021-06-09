@@ -272,7 +272,7 @@ open class FetchCacheCollector(
 
     private val queues get() = fetchCache.queues
 
-    var loadDelay: Duration = Duration.ofMinutes(1)
+    var loadDelay: Duration = Duration.ofMinutes(5)
 
     override var name: String = "FetchCacheC"
 
@@ -290,11 +290,13 @@ open class FetchCacheCollector(
      * */
     @Synchronized
     override fun hasMore(): Boolean {
-        if (size > 0 || estimatedSize > 0) {
+        if (size > 0) {
             return true
         }
 
-        if (fetchCache is Loadable<*>) {
+        // size is 0, estimatedSize > 0, there are items in the database
+        // estimatedSize is updated every 2 minutes
+        if (estimatedSize > 0 && fetchCache is Loadable<*>) {
             fetchCache.load(loadDelay)
         }
 

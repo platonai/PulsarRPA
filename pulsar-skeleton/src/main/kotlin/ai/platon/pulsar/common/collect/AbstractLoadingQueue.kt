@@ -33,7 +33,7 @@ abstract class AbstractLoadingQueue(
         /**
          * The delay time to load after another load
          * */
-        var loadDelay: Duration = Duration.ofMinutes(1)
+        var loadDelay: Duration = Duration.ofSeconds(120)
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 
     companion object {
@@ -56,7 +56,7 @@ abstract class AbstractLoadingQueue(
     override val size: Int get() = tryRefresh().implementation.size
 
     /**
-     * Query the underlying database, try to use estimatedExternalSize
+     * Query the underlying database, this operation might be slow, try to use estimatedExternalSize
      * */
     @get:Synchronized
     override val externalSize: Int

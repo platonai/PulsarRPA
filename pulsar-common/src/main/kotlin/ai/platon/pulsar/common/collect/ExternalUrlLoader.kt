@@ -123,7 +123,6 @@ abstract class AbstractExternalUrlLoader(
         }
 
         lastLoadTime = Instant.now()
-
         loadToNow(sink, size, group, transformer)
     }
 }
