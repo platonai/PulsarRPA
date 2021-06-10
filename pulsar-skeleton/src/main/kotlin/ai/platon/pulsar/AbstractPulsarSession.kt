@@ -69,6 +69,9 @@ abstract class AbstractPulsarSession(
     val isActive get() = !closed.get() && context.isActive
 
     private val variables = ConcurrentHashMap<String, Any>()
+    private var enableCache = true
+    override val pageCache get() = context.globalCache.pageCache
+    override val documentCache get() = context.globalCache.documentCache
     override val globalCache get() = context.globalCache
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
@@ -76,6 +79,8 @@ abstract class AbstractPulsarSession(
      * Close objects when sessions closes
      * */
     override fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
+
+    override fun disableCache() = run { enableCache = false }
 
     /**
      * Create a new options, with a new volatile config
@@ -145,7 +150,11 @@ abstract class AbstractPulsarSession(
     @Throws(Exception::class)
     override fun load(normUrl: NormUrl): WebPage {
         ensureActive()
-        return context.load(normUrl)
+        if (!enableCache) {
+            return context.load(normUrl)
+        }
+
+        return getCachedPageOrNull(normUrl) ?: loadAndCache(normUrl)
     }
 
     @Throws(Exception::class)
@@ -162,7 +171,50 @@ abstract class AbstractPulsarSession(
     @Throws(Exception::class)
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
         ensureActive()
-        return context.load(normUrl)
+        if (!enableCache) {
+            return context.loadDeferred(normUrl)
+        }
+
+        return getCachedPageOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
+    }
+
+    private fun loadAndCache(normUrl: NormUrl): WebPage {
+        ensureActive()
+        return context.load(normUrl).also {
+            pageCache.putDatum(it.url, it)
+        }
+    }
+
+    private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
+        ensureActive()
+        return context.loadDeferred(normUrl).also {
+            pageCache.putDatum(it.url, it)
+        }
+    }
+
+    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
+        val (url, options) = normUrl
+        if (options.refresh) {
+            // refresh the page, do not take cached version
+            return null
+        }
+
+        val now = Instant.now()
+        val page = pageCache.getDatum(url, options.expires, now)
+        if (page != null && !options.isExpired(page.prevFetchTime)) {
+            page.isFetched = false
+            // TODO: properly handle page conf, a page might work in different context which have different conf
+            // TODO: properly handle ListenableHyperlink
+            // here is a complex logic for a ScrapingHyperlink: the page have an event handlers, and the page can
+            // also be loaded inside an event handler. We must handle such situation very carefully
+
+            // page.conf = normUrl.options.conf
+            // page.args = normUrl.args
+
+            return page
+        }
+
+        return null
     }
 
     /**
