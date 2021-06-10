@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext
+import ai.platon.pulsar.crawl.component.FetchEntry
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.firstTextOrNull
@@ -20,10 +21,10 @@ import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Created by vincent on 18-1-17.
@@ -50,6 +51,9 @@ abstract class AbstractPulsarSession(
         const val ID_END = ID_START + ID_CAPACITY - 1
 
         private val idGen = AtomicInteger()
+
+        val pageCacheHits = AtomicLong()
+
         fun generateNextId() = ID_START + idGen.incrementAndGet()
     }
 
@@ -154,7 +158,7 @@ abstract class AbstractPulsarSession(
             return context.load(normUrl)
         }
 
-        return getCachedPageOrNull(normUrl) ?: loadAndCache(normUrl)
+        return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCache(normUrl)
     }
 
     @Throws(Exception::class)
@@ -175,7 +179,7 @@ abstract class AbstractPulsarSession(
             return context.loadDeferred(normUrl)
         }
 
-        return getCachedPageOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
+        return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
     }
 
     private fun loadAndCache(normUrl: NormUrl): WebPage {
@@ -192,6 +196,23 @@ abstract class AbstractPulsarSession(
         }
     }
 
+    private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
+        val cachedPage = getCachedPageOrNull(normUrl)
+        val page = FetchEntry.createPageShell(normUrl)
+
+        if (cachedPage != null) {
+            page.isCached = true
+            // the cached page can be or not be persisted, but not guaranteed
+            // if a page is loaded from cache, the content remains unchanged and should not persist to database
+            page.unsafeSetGPage(cachedPage.unbox())
+            page.tmpContent = cachedPage.tmpContent
+
+            return page
+        }
+
+        return null
+    }
+
     private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
         val (url, options) = normUrl
         if (options.refresh) {
@@ -202,15 +223,7 @@ abstract class AbstractPulsarSession(
         val now = Instant.now()
         val page = pageCache.getDatum(url, options.expires, now)
         if (page != null && !options.isExpired(page.prevFetchTime)) {
-            page.isFetched = false
-            // TODO: properly handle page conf, a page might work in different context which have different conf
-            // TODO: properly handle ListenableHyperlink
-            // here is a complex logic for a ScrapingHyperlink: the page have an event handlers, and the page can
-            // also be loaded inside an event handler. We must handle such situation very carefully
-
-            // page.conf = normUrl.options.conf
-            // page.args = normUrl.args
-
+            pageCacheHits.incrementAndGet()
             return page
         }
 

@@ -5,6 +5,8 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.function.Predicate
 
 interface LoadingQueue<T>: Queue<T>, Loadable<T> {
     companion object {
@@ -42,7 +44,7 @@ abstract class AbstractLoadingQueue(
 
     private val expiringCache = ConcurrentExpiringLRUCache<Int>(1, loadDelay)
 
-    protected val implementation = LinkedList<UrlAware>()
+    protected val implementation = ConcurrentLinkedQueue<UrlAware>()
 
     @Volatile
     protected var lastLoadTime = Instant.EPOCH
@@ -53,7 +55,8 @@ abstract class AbstractLoadingQueue(
      * The cache size
      * */
     @get:Synchronized
-    override val size: Int get() = tryRefresh().implementation.size
+    override val size: Int
+        get() = tryRefresh().implementation.size
 
     /**
      * Query the underlying database, this operation might be slow, try to use estimatedExternalSize
@@ -66,10 +69,12 @@ abstract class AbstractLoadingQueue(
         get() = expiringCache.computeIfAbsent(ESTIMATED_EXTERNAL_SIZE_KEY) { externalSize }
 
     @get:Synchronized
-    val freeSlots get() = capacity - implementation.size
+    val freeSlots
+        get() = capacity - implementation.size
 
     @get:Synchronized
-    val isFull get() = freeSlots == 0
+    val isFull
+        get() = freeSlots == 0
 
     fun isExpired(delay: Duration): Boolean {
         return lastLoadTime + delay < Instant.now()
@@ -127,7 +132,7 @@ abstract class AbstractLoadingQueue(
     }
 
     @Synchronized
-    fun removeIf(filter: (UrlAware) -> Boolean): Boolean {
+    override fun removeIf(filter: Predicate<in UrlAware>): Boolean {
         return implementation.removeIf(filter)
     }
 
