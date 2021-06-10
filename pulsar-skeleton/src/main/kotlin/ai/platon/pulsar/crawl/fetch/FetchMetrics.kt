@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -40,10 +41,13 @@ class FetchMetrics(
             mapOf(
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
                 "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
+                "loadCompPageCacheHits" to Gauge { LoadComponent.pageCacheHits },
+                "loadCompDbGets" to Gauge { LoadComponent.dbGetCount },
+
                 "dbGets" to Gauge { WebDb.dbGetCount },
-                "dbGetSpeed" to Gauge { Strings.readableBytes(WebDb.dbGetSpeed) },
+                "dbGets/s" to Gauge { WebDb.dbGetPerSec },
                 "dbPuts" to Gauge { WebDb.dbPutCount },
-                "dbPutSpeed" to Gauge { Strings.readableBytes(WebDb.dbPutSpeed) },
+                "dbPuts/s" to Gauge { WebDb.dbPutPerSec },
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }

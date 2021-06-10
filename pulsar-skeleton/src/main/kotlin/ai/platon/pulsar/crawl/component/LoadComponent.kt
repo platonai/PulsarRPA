@@ -12,7 +12,6 @@ import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
@@ -32,6 +31,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Created by vincent on 17-7-15.
@@ -52,6 +52,8 @@ class LoadComponent(
 ) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
+        val pageCacheHits = AtomicLong()
+        val dbGetCount = AtomicLong()
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -268,6 +270,7 @@ class LoadComponent(
         var page = FetchEntry.createPageShell(normUrl)
 
         if (cachedPage != null) {
+            pageCacheHits.incrementAndGet()
             page.isCached = true
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
@@ -284,6 +287,7 @@ class LoadComponent(
             // get the metadata of the page from the database, this is very fast for a crawler
 //            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
             val loadedPage = webDb.getOrNull(normUrl.spec)
+            dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
                 FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
