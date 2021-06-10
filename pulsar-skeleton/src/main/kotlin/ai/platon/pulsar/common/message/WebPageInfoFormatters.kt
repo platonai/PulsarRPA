@@ -125,7 +125,8 @@ class LoadedPageFormatter(
     }
 
     private fun buildFetchReason(): String {
-        val code = (page.variables[VAR_FETCH_STATE] as? Int) ?: FetchState.DO_NOT_FETCH
+        val state = page.variables[VAR_FETCH_STATE] as? CheckState
+        val code = state?.code ?: FetchState.DO_NOT_FETCH
         return FetchState.toSymbol(code).takeIf { it.isNotBlank() }?.let { "for $it" } ?: ""
     }
 
