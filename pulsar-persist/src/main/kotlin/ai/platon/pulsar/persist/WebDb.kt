@@ -20,13 +20,13 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     companion object {
         val dbGetCount = AtomicLong()
         val accumulateGetNanos = AtomicLong()
-        val dbGetPerSec get() = dbGetCount.get() / TimeUnit.SECONDS
-            .convert(accumulateGetNanos.get(),  TimeUnit.NANOSECONDS).coerceAtLeast(1)
+        val dbGetAveNanos get() = TimeUnit.NANOSECONDS.convert(accumulateGetNanos.get(),  TimeUnit.NANOSECONDS)
+            .coerceAtLeast(1) / dbGetCount.get()
 
         val dbPutCount = AtomicLong()
         val accumulatePutNanos = AtomicLong()
-        val dbPutPerSec get() = dbPutCount.get() / TimeUnit.SECONDS
-            .convert(accumulatePutNanos.get(),  TimeUnit.NANOSECONDS).coerceAtLeast(1)
+        val dbPutAveNanos get() = TimeUnit.NANOSECONDS.convert(accumulatePutNanos.get(),  TimeUnit.NANOSECONDS)
+            .coerceAtLeast(1) / dbPutCount.get()
     }
 
     private val log = LoggerFactory.getLogger(WebDb::class.java)

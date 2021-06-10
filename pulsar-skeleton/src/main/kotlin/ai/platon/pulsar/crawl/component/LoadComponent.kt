@@ -1,10 +1,8 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.AppStatusTracker
-import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
@@ -54,6 +52,7 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
+        val dbGetPerSec get() = 1.0 * dbGetCount.get() / DateTimes.elapsedTime().seconds.coerceAtLeast(1)
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)

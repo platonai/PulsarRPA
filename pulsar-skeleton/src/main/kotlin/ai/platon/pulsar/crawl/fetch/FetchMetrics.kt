@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.Runtimes
@@ -41,13 +42,17 @@ class FetchMetrics(
             mapOf(
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
                 "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
+
+                "pulsarSessionPageCacheHits" to Gauge { AbstractPulsarSession.pageCacheHits },
+
                 "loadCompPageCacheHits" to Gauge { LoadComponent.pageCacheHits },
                 "loadCompDbGets" to Gauge { LoadComponent.dbGetCount },
+                "loadCompDbGets/s" to Gauge { LoadComponent.dbGetPerSec },
 
                 "dbGets" to Gauge { WebDb.dbGetCount },
-                "dbGets/s" to Gauge { WebDb.dbGetPerSec },
+                "dbGetAveNanos" to Gauge { WebDb.dbGetAveNanos },
                 "dbPuts" to Gauge { WebDb.dbPutCount },
-                "dbPuts/s" to Gauge { WebDb.dbPutPerSec },
+                "dbPutAveNanos" to Gauge { WebDb.dbPutAveNanos },
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }
