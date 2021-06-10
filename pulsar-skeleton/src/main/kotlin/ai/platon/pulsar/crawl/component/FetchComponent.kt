@@ -90,7 +90,7 @@ open class FetchComponent(
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     /**
-     * Fetch a url
+     * Fetch an url
      *
      * @param url The url of web page to fetch
      * @return The fetch result
@@ -98,7 +98,7 @@ open class FetchComponent(
     fun fetch(url: String) = abnormalPage ?: fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
-     * Fetch a url
+     * Fetch an url
      *
      * @param url The url of web page to fetch
      * @param options The options

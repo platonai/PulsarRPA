@@ -282,7 +282,8 @@ class LoadComponent(
             assert(page.isNotInternal)
         } else {
             // get the metadata of the page from the database, this is very fast for a crawler
-            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
+//            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
+            val loadedPage = webDb.getOrNull(normUrl.spec)
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
                 FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
@@ -331,7 +332,7 @@ class LoadComponent(
 
         // handle page content
         if (!page.isCached) {
-            processPageContent(page, normUrl)
+            // processPageContent(page, normUrl)
         }
 
         // handle cache

@@ -12,9 +12,22 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 class WebDb(val conf: ImmutableConfig): AutoCloseable {
+    companion object {
+        val dbGetCount = AtomicLong()
+        val accumulateGetNanos = AtomicLong()
+        val dbGetSpeed get() = dbGetCount.get() / TimeUnit.SECONDS
+            .convert(accumulateGetNanos.get(),  TimeUnit.NANOSECONDS).coerceAtLeast(1)
+
+        val dbPutCount = AtomicLong()
+        val accumulatePutNanos = AtomicLong()
+        val dbPutSpeed get() = dbPutCount.get() / TimeUnit.SECONDS
+            .convert(accumulatePutNanos.get(),  TimeUnit.NANOSECONDS).coerceAtLeast(1)
+    }
 
     private val log = LoggerFactory.getLogger(WebDb::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
@@ -51,7 +64,11 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
         tracer?.trace("Getting $key")
 
+        val startTime = System.nanoTime()
         val page = fields?.let { store.get(key, it) } ?: store.get(key)
+        dbGetCount.incrementAndGet()
+        accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
+
         if (page != null) {
             tracer?.trace("Got $key")
             return WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
@@ -107,7 +124,11 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
         tracer?.trace("Putting $key")
 
+        val startTime = System.nanoTime()
         store.put(key, page.unbox())
+        dbPutCount.incrementAndGet()
+        accumulatePutNanos.addAndGet(System.nanoTime() - startTime)
+
         return true
     }
 

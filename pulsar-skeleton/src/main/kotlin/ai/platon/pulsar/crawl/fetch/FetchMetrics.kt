@@ -1,7 +1,9 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
+import ai.platon.pulsar.common.Runtimes
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -9,7 +11,9 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import com.google.common.collect.ConcurrentHashMultiset
@@ -35,7 +39,11 @@ class FetchMetrics(
         init {
             mapOf(
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
-                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
+                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
+                "dbGets" to Gauge { WebDb.dbGetCount },
+                "dbGetSpeed" to Gauge { Strings.readableBytes(WebDb.dbGetSpeed) },
+                "dbPuts" to Gauge { WebDb.dbPutCount },
+                "dbPutSpeed" to Gauge { Strings.readableBytes(WebDb.dbPutSpeed) },
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }
