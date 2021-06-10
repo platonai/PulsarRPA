@@ -500,7 +500,8 @@ class LoadComponent(
         }
 
         if (page.persistContentLength == 0L) {
-            return CheckState(FetchState.NO_CONTENT, "no content")
+            // do not enable this feature by default
+            // return CheckState(FetchState.NO_CONTENT, "no content")
         }
 
         if (page.persistContentLength < options.requireSize) {
