@@ -319,27 +319,6 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Load a batch of urls with the specified options.
-     *
-     * Urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param urls    The urls to load
-     * @param options The options
-     * @return Pages for all urls.
-     */
-    override fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.parallelLoadAll(normalize(urls, options), options) else listOf()
-    }
-
-    override fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.parallelLoadAll(urls, options) else listOf()
-    }
-
-    /**
      * Parse the WebPage using Jsoup
      */
     override fun parse(page: WebPage) = JsoupParser(page, unmodifiedConfig).parse()

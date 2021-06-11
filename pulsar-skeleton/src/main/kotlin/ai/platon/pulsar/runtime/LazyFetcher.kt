@@ -65,6 +65,6 @@ class LazyFetcher(val pulsarContext: AbstractPulsarContext): ScheduledMonitor() 
     private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
         ++lazyTaskRound
         log.debug("Running {}th round for lazy tasks", lazyTaskRound)
-        backgroundSession.parallelLoadAll(urls, loadOptions)
+        backgroundSession.loadAll(urls, loadOptions)
     }
 }

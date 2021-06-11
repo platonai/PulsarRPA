@@ -198,31 +198,25 @@ class LoadComponent(
                 }
             }
             .onEach { it.completeOnTimeout(WebPage.NIL, estimatedWaitTime, TimeUnit.SECONDS) }
-            .toList()
+            .toMutableList()
         queue.addAll(links)
         logger.debug("Waiting for {} completable hyperlinks", links.size)
         // timeout process?
+//        val future = CompletableFuture.allOf(*links.toTypedArray())
+//        future.join()
+        // a day at most
+//        val waitingTasks = globalCache.fetchCaches.delayCache.size + globalCache.fetchCaches.realTimeCache.size
+//        val speed = 1L
+//        var timeout = waitingTasks * speed + links.size * speed * 1.2
+//        while (timeout-- > 0 && links.isNotEmpty()) {
+//            sleepSeconds(1)
+//            links.removeIf { it.isDone }
+//        }
+
         val future = CompletableFuture.allOf(*links.toTypedArray())
         future.join()
-        return links.mapNotNull { it.get() }.filter { it.isNotInternal }
-    }
 
-    /**
-     * Load a batch of urls with the specified options.
-     *
-     * Urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param normUrls    The urls to load
-     * @param options The options
-     * @return Pages for all urls.
-     */
-    fun parallelLoadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        options.preferParallel = true
-        return loadAll(normUrls, options)
+        return links.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
     private fun load0(normUrl: NormUrl): WebPage {

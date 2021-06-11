@@ -244,18 +244,6 @@ abstract class AbstractPulsarSession(
     }
 
     /**
-     * Load all urls with specified options, this causes a parallel fetching whenever applicable
-     *
-     * @param urls    The urls to load
-     * @param options The load options
-     * @return The web pages
-     */
-    override fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): Collection<WebPage> {
-        options.preferParallel = true
-        return loadAll(urls, options, areItems)
-    }
-
-    /**
      * Load all out pages in a portal page
      *
      * @param portalUrl    The portal url from where to load pages

@@ -74,7 +74,7 @@ class WebDriverContext(
             }
 
             if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
-                log.info("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
+                // log.info("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
             }
         }
     }
