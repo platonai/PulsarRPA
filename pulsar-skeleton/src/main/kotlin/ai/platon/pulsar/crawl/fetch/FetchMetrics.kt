@@ -50,9 +50,9 @@ class FetchMetrics(
                 "loadCompDbGets/s" to Gauge { LoadComponent.dbGetPerSec },
 
                 "dbGets" to Gauge { WebDb.dbGetCount },
-                "dbGetAveNanos" to Gauge { WebDb.dbGetAveNanos },
+                "dbGetAveMillis" to Gauge { WebDb.dbGetAveMillis },
                 "dbPuts" to Gauge { WebDb.dbPutCount },
-                "dbPutAveNanos" to Gauge { WebDb.dbPutAveNanos },
+                "dbPutAveMillis" to Gauge { WebDb.dbPutAveMillis },
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }

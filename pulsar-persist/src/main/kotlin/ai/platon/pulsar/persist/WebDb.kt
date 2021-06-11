@@ -20,12 +20,12 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     companion object {
         val dbGetCount = AtomicLong()
         val accumulateGetNanos = AtomicLong()
-        val dbGetAveNanos get() = TimeUnit.NANOSECONDS.convert(accumulateGetNanos.get(),  TimeUnit.NANOSECONDS)
+        val dbGetAveMillis get() = TimeUnit.MILLISECONDS.convert(accumulateGetNanos.get(),  TimeUnit.NANOSECONDS)
             .coerceAtLeast(1) / dbGetCount.get()
 
         val dbPutCount = AtomicLong()
         val accumulatePutNanos = AtomicLong()
-        val dbPutAveNanos get() = TimeUnit.NANOSECONDS.convert(accumulatePutNanos.get(),  TimeUnit.NANOSECONDS)
+        val dbPutAveMillis get() = TimeUnit.MILLISECONDS.convert(accumulatePutNanos.get(),  TimeUnit.NANOSECONDS)
             .coerceAtLeast(1) / dbPutCount.get()
     }
 
