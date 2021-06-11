@@ -425,7 +425,7 @@ open class StreamingCrawler<T : UrlAware>(
             return null
         }
 
-        return session.runCatching { loadDeferred(url, options) }
+        return session.runCatching { loadDeferred(url.url, options) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()
     }
