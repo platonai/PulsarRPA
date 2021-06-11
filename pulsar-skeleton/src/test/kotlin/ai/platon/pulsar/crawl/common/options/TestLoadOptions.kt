@@ -1,6 +1,8 @@
 package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
@@ -13,6 +15,12 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class TestLoadOptions {
+
+    companion object {
+        init {
+            LoadOptionDefaults.storeContent = false
+        }
+    }
 
     var i = PulsarContexts.createSession()
     val conf = i.sessionConfig
@@ -37,6 +45,17 @@ class TestLoadOptions {
         val options2 = LoadOptions.parse(args, conf)
         val options3 = LoadOptions.merge(options, options2)
         assertOptions(options3)
+    }
+
+    @Test
+    fun testArityOptions() {
+        val options = LoadOptions.create(VolatileConfig.UNSAFE).apply {
+            storeContent = true
+            parse = true
+        }
+        val args = options.toString()
+        println(args)
+        assertTrue { args.contains("-storeContent") }
     }
 
     @Test
