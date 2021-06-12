@@ -58,7 +58,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         finalOptions.apply(finalOptions.conf)
 
         val href = url.href?.takeIf { Urls.isValidUrl(it) }
-        return NormUrl(normalizedUrl, finalOptions, href)
+        return NormUrl(normalizedUrl, finalOptions, href, url)
     }
 
     private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
