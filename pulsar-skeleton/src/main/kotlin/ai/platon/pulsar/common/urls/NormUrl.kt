@@ -19,12 +19,13 @@ import java.net.URL
 open class NormUrl constructor(
     val url: URL,
     val options: LoadOptions,
-    var href: URL? = null
+    var href: URL? = null,
+    var detail: UrlAware? = null
 ): Comparable<NormUrl> {
 
     @Throws(MalformedURLException::class)
-    constructor(spec: String, options: LoadOptions, hrefSpec: String? = null):
-            this(URL(spec), options, hrefSpec?.let { URL(hrefSpec) })
+    constructor(spec: String, options: LoadOptions, hrefSpec: String? = null, detail: UrlAware? = null):
+            this(URL(spec), options, hrefSpec?.let { URL(hrefSpec) }, detail)
 
     val spec = url.toString()
     val hrefSpec = href?.toString()
@@ -38,8 +39,6 @@ open class NormUrl constructor(
 
     operator fun component1() = spec
     operator fun component2() = options
-
-    fun toHyperlink() = Hyperlink(spec, args = args, href = hrefSpec)
 
     override fun hashCode(): Int {
         return configuredUrl.hashCode()

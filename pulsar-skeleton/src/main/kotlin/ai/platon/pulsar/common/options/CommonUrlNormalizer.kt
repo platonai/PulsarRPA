@@ -7,7 +7,6 @@ import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
@@ -33,10 +32,10 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val (spec, args0) = Urls.splitUrlArgs(url.url)
-        val args1 = url.args
+        val args1 = url.args ?: ""
         val args2 = options.toString()
         // the later on overwriting the ones before
-        val args = "$args2 $args1 $args0"
+        val args = "$args2 $args1 $args0".trim()
 
         val finalOptions = initOptions(LoadOptions.parse(args, options.conf), toItemOption)
         if (url is ListenableHyperlink) {
@@ -59,7 +58,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         finalOptions.apply(finalOptions.conf)
 
         val href = url.href?.takeIf { Urls.isValidUrl(it) }
-        return NormUrl(normalizedUrl, finalOptions, href)
+        return NormUrl(normalizedUrl, finalOptions, href, url)
     }
 
     private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {

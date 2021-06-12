@@ -142,9 +142,12 @@ open class PulsarOptions(
          * */
         @JvmOverloads
         fun normalize(args: String, seps: String = ","): String {
-            val args1 = StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length))
+            var args1 = StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length))
             // in old version, -cacheContent has arity 0, but current version is 1, we need a convert
-            return arity0ToArity1(args1, "-cacheContent")
+            args1 = arity0ToArity1(args1, "-cacheContent")
+            args1 = arity0ToArity1(args1, "-storeContent")
+
+            return args1
         }
 
         fun normalize(argv: Array<String>) {
