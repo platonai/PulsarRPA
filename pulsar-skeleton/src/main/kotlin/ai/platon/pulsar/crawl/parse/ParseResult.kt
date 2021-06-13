@@ -18,6 +18,7 @@ package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.urls.LabeledHyperlink
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -32,6 +33,7 @@ class ParseResult(
 ) : ParseStatus(majorCode, minorCode, message) {
     val hypeLinks = mutableSetOf<HyperlinkPersistable>()
     var domStatistics: DomStatistics? = null
+    var document: FeaturedDocument? = null
     var parsers = mutableListOf<KClass<out Parser>>()
     var flowStatus = FlowState.CONTINUE
 

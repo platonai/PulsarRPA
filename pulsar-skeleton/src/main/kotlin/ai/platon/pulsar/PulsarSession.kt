@@ -125,26 +125,13 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadDeferred(normUrl: NormUrl): WebPage
 
     /**
-     * Load all urls with specified options, this may cause a parallel fetching if required
-     *
-     * @param urls    The urls to load
-     * @param options The load options for all urls
-     * @return The web pages
-     */
-    fun loadAll(
-        urls: Iterable<String>,
-        options: LoadOptions = options(),
-        areItems: Boolean = false
-    ): Collection<WebPage>
-
-    /**
      * Load all urls with specified options, this causes a parallel fetching whenever applicable
      *
      * @param urls    The urls to load
      * @param options The load options
      * @return The web pages
      */
-    fun parallelLoadAll(
+    fun loadAll(
         urls: Iterable<String>,
         options: LoadOptions = options(),
         areItems: Boolean = false

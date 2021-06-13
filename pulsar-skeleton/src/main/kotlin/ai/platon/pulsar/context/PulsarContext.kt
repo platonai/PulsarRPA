@@ -122,28 +122,9 @@ interface PulsarContext: AutoCloseable {
     fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage>
 
     /**
-     * Load a batch of urls with the specified options.
-     *
-     * Urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param urls    The urls to load
-     * @param options The options
-     * @return Pages for all urls.
-     */
-    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage>
-
-    fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage>
-
-    /**
      * Parse the WebPage using Jsoup
      */
-    fun parse(page: WebPage): FeaturedDocument
-
-    fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument
+    fun parse(page: WebPage): FeaturedDocument?
 
     fun persist(page: WebPage)
 

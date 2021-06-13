@@ -5,7 +5,6 @@ import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -20,7 +19,7 @@ import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
-import ai.platon.pulsar.crawl.parse.html.JsoupParser
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -319,32 +318,12 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Load a batch of urls with the specified options.
-     *
-     * Urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param urls    The urls to load
-     * @param options The options
-     * @return Pages for all urls.
+     * Parse the WebPage using parseComponent
      */
-    override fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.parallelLoadAll(normalize(urls, options), options) else listOf()
+    override fun parse(page: WebPage): FeaturedDocument? {
+        val parser = loadComponent.parseComponent ?: return null
+        return parser.parse(page, noLinkFilter = true).document
     }
-
-    override fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.parallelLoadAll(urls, options) else listOf()
-    }
-
-    /**
-     * Parse the WebPage using Jsoup
-     */
-    override fun parse(page: WebPage) = JsoupParser(page, unmodifiedConfig).parse()
-
-    override fun parse(page: WebPage, mutableConfig: MutableConfig) = JsoupParser(page, mutableConfig).parse()
 
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)

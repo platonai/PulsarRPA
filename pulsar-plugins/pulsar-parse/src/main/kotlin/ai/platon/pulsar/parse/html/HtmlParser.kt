@@ -20,34 +20,28 @@ package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_ID
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
+import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import org.jsoup.Jsoup
 import org.jsoup.helper.W3CDom
-import org.jsoup.nodes.Document
 import org.slf4j.LoggerFactory
 import org.w3c.dom.DocumentFragment
-import org.xml.sax.InputSource
-import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Html parser
@@ -56,6 +50,11 @@ class HtmlParser(
     private val parseFilters: ParseFilters,
     private val conf: ImmutableConfig,
 ) : Parser {
+    companion object {
+        val numHtmlParses = AtomicInteger()
+        val numHtmlParsed = AtomicInteger()
+    }
+
     private val log = LoggerFactory.getLogger(HtmlParser::class.java)
     private val tracer = log.takeIf { it.isDebugEnabled }
     private val defaultCharEncoding = conf.get(CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8")
@@ -85,7 +84,10 @@ class HtmlParser(
             val parseContext = parseHTMLDocument(page)
             parseFilters.filter(parseContext)
 
-            parseContext.document?.let { afterHtmlParse(page, it) }
+            val document = parseContext.document
+            if (document != null) {
+                afterHtmlParse(page, document)
+            }
 
             parseContext.parseResult
         } catch (e: MalformedURLException) {
@@ -99,6 +101,8 @@ class HtmlParser(
      *
      * */
     private fun beforeHtmlParse(page: WebPage) {
+        numHtmlParses.incrementAndGet()
+
         try {
             page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
         } catch (e: Throwable) {
@@ -115,6 +119,8 @@ class HtmlParser(
         } catch (e: Throwable) {
             log.warn("Failed to invoke afterHtmlParse | ${page.configuredUrl}", e)
         }
+
+        numHtmlParsed.incrementAndGet()
     }
 
     @Throws(Exception::class)
@@ -134,14 +140,16 @@ class HtmlParser(
             primerParser.detectEncoding(page)
         }
 
-        val (document, documentFragment) = parseJsoup(baseUrl, page.contentAsSaxInputSource)
-        val metaTags = parseMetaTags(baseURL, documentFragment, page)
+        val jsoupParser = JsoupParser(page, conf)
+        jsoupParser.parse()
+        val document = jsoupParser.document
+        val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
+
+        val metaTags = parseMetaTags(baseURL, fragment, page)
         val parseResult = initParseResult(metaTags)
+        parseResult.document = document
 
-        val parseContext = ParseContext(page, parseResult, FeaturedDocument(document))
-        parseContext.document?.let { setMetaInfos(page, it) }
-
-        return parseContext
+        return ParseContext(page, parseResult, document)
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
@@ -153,20 +161,6 @@ class HtmlParser(
             metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
         return metaTags
-    }
-
-    private fun setMetaInfos(page: WebPage, document: FeaturedDocument) {
-        val metadata = document.document.selectFirstOrNull("#${PULSAR_META_INFORMATION_ID}") ?: return
-
-        // The normalizedUrl
-        page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
-        page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
-
-        val options = page.options
-        metadata.attr("normalizedUrl", page.url)
-        metadata.attr("label", options.label)
-        metadata.attr("taskId", options.taskId)
-        metadata.attr("taskTime", options.taskTime.toString())
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
@@ -182,12 +176,5 @@ class HtmlParser(
         }
 
         return parseResult
-    }
-
-    @Throws(IOException::class)
-    private fun parseJsoup(baseUri: String, input: InputSource): Pair<Document, DocumentFragment> {
-        val doc = Jsoup.parse(input.byteStream, input.encoding, baseUri)
-        val documentFragment = W3CDom().fromJsoup(doc).createDocumentFragment()
-        return doc to documentFragment
     }
 }

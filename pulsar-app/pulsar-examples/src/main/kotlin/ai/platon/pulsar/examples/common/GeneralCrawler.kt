@@ -216,7 +216,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
         println(WebPageFormatter(portal))
         println(portal.simpleVividLinks)
         val links = portal.simpleLiveLinks.filter { it.contains("detail") }
-        val pages = i.parallelLoadAll(links, i.options("-ps"))
+        val pages = i.loadAll(links, i.options("-ps"))
         pages.forEach { println("${it.url} ${it.pageTitle}") }
     }
 
@@ -225,7 +225,7 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
 
         val portal = i.load("$url $loadOptions")
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = i.parallelLoadAll(links, i.options("--parse"))
+        val pages = i.loadAll(links, i.options("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 

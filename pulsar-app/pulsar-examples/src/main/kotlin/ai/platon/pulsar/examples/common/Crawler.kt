@@ -110,7 +110,7 @@ open class Crawler(
     fun loadAllNews(portalUrl: String, options: LoadOptions) {
         val portal = i.load(portalUrl, options)
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = i.parallelLoadAll(links, i.options("--parse"))
+        val pages = i.loadAll(links, i.options("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 

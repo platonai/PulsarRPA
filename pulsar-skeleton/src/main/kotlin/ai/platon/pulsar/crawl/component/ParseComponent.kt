@@ -21,6 +21,7 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -29,6 +30,7 @@ import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -39,23 +41,33 @@ import java.util.concurrent.ConcurrentHashMap
 class ParseComponent(
         val crawlFilters: CrawlFilters,
         val pageParser: PageParser,
+        val globalCache: GlobalCache,
         val conf: ImmutableConfig
 ) {
+    companion object {
+        val numParses = AtomicInteger()
+        val numParsed = AtomicInteger()
+    }
+
     private val logger = LoggerFactory.getLogger(ParseComponent::class.java)
     private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
-    constructor(conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), conf)
+    constructor(globalCache: GlobalCache, conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), globalCache, conf)
 
-    fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = false): ParseResult {
+    fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = true): ParseResult {
         return parse(page, "", reparseLinks, noLinkFilter)
     }
 
     fun parse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean): ParseResult {
         beforeParse(page, query, reparseLinks, noLinkFilter)
-        return pageParser.parse(page).also { afterParse(page) }
+        val result = pageParser.parse(page)
+        afterParse(page, result)
+        return result
     }
 
     private fun beforeParse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean) {
+        numParses.incrementAndGet()
+
         if (reparseLinks) {
             page.variables[Name.FORCE_FOLLOW] = AppConstants.YES_STRING
             page.variables[Name.REPARSE_LINKS] = AppConstants.YES_STRING
@@ -68,12 +80,19 @@ class ParseComponent(
         traceInfo?.clear()
     }
 
-    private fun afterParse(page: WebPage) {
+    private fun afterParse(page: WebPage, result: ParseResult) {
         page.variables.remove(Name.REPARSE_LINKS)
         page.variables.remove(Name.FORCE_FOLLOW)
         page.variables.remove(Name.PARSE_LINK_FILTER_DEBUG_LEVEL)
         page.variables.remove(Name.PARSE_NO_LINK_FILTER)
         page.query = null
+
+        val document = result.document
+        if (document != null) {
+            globalCache.documentCache.putDatum(page.url, document)
+        }
+
+        numParsed.incrementAndGet()
     }
 
     fun getTraceInfo(): Map<String, Any> {

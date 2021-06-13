@@ -1,7 +1,5 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.DateTimeDetector
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.annotation.UDFGroup

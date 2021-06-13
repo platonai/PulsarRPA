@@ -70,7 +70,7 @@ open class VerboseCrawler(
     fun loadAllNews(portalUrl: String, options: LoadOptions) {
         val portal = session.load(portalUrl, options)
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = session.parallelLoadAll(links, session.options("--parse"))
+        val pages = session.loadAll(links, session.options("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 

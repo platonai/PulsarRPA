@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
@@ -52,7 +53,6 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
-        val dbGetPerSec get() = 1.0 * dbGetCount.get() / DateTimes.elapsedTime().seconds.coerceAtLeast(1)
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -207,24 +207,6 @@ class LoadComponent(
         return links.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
-    /**
-     * Load a batch of urls with the specified options.
-     *
-     * Urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param normUrls    The urls to load
-     * @param options The options
-     * @return Pages for all urls.
-     */
-    fun parallelLoadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        options.preferParallel = true
-        return loadAll(normUrls, options)
-    }
-
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
 
@@ -276,7 +258,10 @@ class LoadComponent(
             page.unsafeCloneGPage(cachedPage)
             // TODO: check all fields dirty or not?
             page.clearPersistContent()
+
+            page.args = normUrl.args
             page.tmpContent = cachedPage.content
+
             // TODO: test the dirty flag
             // do not persist this copy
             page.unbox().clearDirty()
@@ -369,6 +354,19 @@ class LoadComponent(
         if (!page.isCached && !options.readonly && options.persist) {
             persist(page, options)
         }
+    }
+
+    private fun parse(page: WebPage, options: LoadOptions): ParseResult? {
+        if (parseComponent == null) {
+            logger.info("Parser is null")
+            return null
+        }
+
+        val parser = parseComponent?.takeIf { options.parse } ?: return null
+        val parseResult = parser.parse(page, options.query, options.reparseLinks, options.noFilter)
+        tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
+
+        return parseResult
     }
 
     /**
@@ -533,17 +531,6 @@ class LoadComponent(
         updateComponent.updateFetchSchedule(page)
 
         require(page.isFetched)
-    }
-
-    private fun parse(page: WebPage, options: LoadOptions) {
-        val parser = parseComponent?.takeIf { options.parse }
-        if (parser == null) {
-            logger.info("Parser is null")
-            return
-        }
-
-        val parseResult = parser.parse(page, options.query, options.reparseLinks, options.noFilter)
-        tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
     }
 
     private fun persist(page: WebPage, options: LoadOptions) {

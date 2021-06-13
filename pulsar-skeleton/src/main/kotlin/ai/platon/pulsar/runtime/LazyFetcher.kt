@@ -3,7 +3,6 @@ package ai.platon.pulsar.runtime
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -65,6 +64,6 @@ class LazyFetcher(val pulsarContext: AbstractPulsarContext): ScheduledMonitor() 
     private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
         ++lazyTaskRound
         log.debug("Running {}th round for lazy tasks", lazyTaskRound)
-        backgroundSession.parallelLoadAll(urls, loadOptions)
+        backgroundSession.loadAll(urls, loadOptions)
     }
 }
