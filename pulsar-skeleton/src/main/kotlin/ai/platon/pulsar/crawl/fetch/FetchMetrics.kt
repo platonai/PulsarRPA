@@ -1,10 +1,8 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.AbstractPulsarSession
-import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.Runtimes
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -12,9 +10,10 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.crawl.component.ParseComponent
+import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -30,9 +29,9 @@ import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FetchMetrics(
-        private val messageWriter: MiscMessageWriter,
-        conf: ImmutableConfig
-): Parameterized, AutoCloseable {
+    private val messageWriter: MiscMessageWriter,
+    conf: ImmutableConfig
+) : Parameterized, AutoCloseable {
 
     companion object {
         var runningChromeProcesses = 0
@@ -44,15 +43,26 @@ class FetchMetrics(
                 "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
 
                 "pulsarSessionPageCacheHits" to Gauge { AbstractPulsarSession.pageCacheHits },
+                "pulsarSessionPageCacheHits/s" to Gauge { 1.0 * AbstractPulsarSession.pageCacheHits.get() / DateTimes.elapsedSeconds() },
+                "pulsarSessionDocumentCacheHits" to Gauge { AbstractPulsarSession.documentCacheHits },
+                "pulsarSessionDocumentCacheHits/s" to Gauge { 1.0 * AbstractPulsarSession.documentCacheHits.get() / DateTimes.elapsedSeconds() },
+
+                "parses" to Gauge { ParseComponent.numParses.get() },
+                "parses/s" to Gauge { 1.0 * ParseComponent.numParses.get() / DateTimes.elapsedSeconds() },
+                "jsoupParses" to Gauge { JsoupParser.numJsoupParses.get() },
+                "jsoupParses/s" to Gauge { 1.0 * JsoupParser.numJsoupParses.get() / DateTimes.elapsedSeconds() },
 
                 "loadCompPageCacheHits" to Gauge { LoadComponent.pageCacheHits },
+                "loadCompPageCacheHits/s" to Gauge { 1.0 * LoadComponent.pageCacheHits.get() / DateTimes.elapsedSeconds() },
                 "loadCompDbGets" to Gauge { LoadComponent.dbGetCount },
-                "loadCompDbGets/s" to Gauge { LoadComponent.dbGetPerSec },
+                "loadCompDbGets/s" to Gauge { 1.0 * LoadComponent.dbGetCount.get() / DateTimes.elapsedSeconds() },
 
                 "dbGets" to Gauge { WebDb.dbGetCount },
-                "dbGetAveMillis" to Gauge { WebDb.dbGetAveMillis },
+                "dbGets/s" to Gauge { 1.0 * WebDb.dbGetCount.get() / DateTimes.elapsedSeconds() },
+                "dbGetAveNanos" to Gauge { WebDb.dbGetAveNanos },
                 "dbPuts" to Gauge { WebDb.dbPutCount },
-                "dbPutAveMillis" to Gauge { WebDb.dbPutAveMillis },
+                "dbPuts/s" to Gauge { 1.0 * WebDb.dbPutCount.get() / DateTimes.elapsedSeconds() },
+                "dbPutAveNanos" to Gauge { WebDb.dbPutAveNanos },
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }
@@ -62,6 +72,7 @@ class FetchMetrics(
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()
     private val processor = systemInfo.hardware.processor
+
     /**
      * The limitation of url length
      */
@@ -74,10 +85,12 @@ class FetchMetrics(
      * Tracking statistics for each host
      */
     val urlStatistics = ConcurrentHashMap<String, UrlStat>()
+
     /**
      * Tracking unreachable hosts
      */
     val unreachableHosts = ConcurrentSkipListSet<String>()
+
     /**
      * Tracking hosts who is failed to fetch tasks.
      * A host is considered to be a unreachable host if there are too many failure
@@ -98,6 +111,7 @@ class FetchMetrics(
     val tasks = registry.meter(this, "tasks")
     val successTasks = registry.meter(this, "successTasks")
     val finishedTasks = registry.meter(this, "finishedTasks")
+
     val persists = registry.multiMetric(this, "persists")
     val contentPersists = registry.multiMetric(this, "contentPersists")
     val meterContentMBytes = registry.multiMetric(this, "contentBytes")
@@ -111,12 +125,15 @@ class FetchMetrics(
     val pageSmallTexts = registry.histogram(this, "pageSmallTexts")
     val pageHeights = registry.histogram(this, "pageHeights")
 
-    val realTimeNetworkIFsRecvBytes get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
+    val realTimeNetworkIFsRecvBytes
+        get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
             .toLong().coerceAtLeast(0)
+
     /**
      * The total all bytes received by the hardware at the application startup
      * */
     val initNetworkIFsRecvBytes by lazy { realTimeNetworkIFsRecvBytes }
+
     /**
      * The total all bytes received by the hardware last read from system
      * */
@@ -147,12 +164,12 @@ class FetchMetrics(
 
     override fun getParams(): Params {
         return Params.of(
-                "unreachableHosts", unreachableHosts.size,
-                "maxUrlLength", maxUrlLength,
-                "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
-                "timeoutUrls", timeoutUrls.size,
-                "failedUrls", failedUrls.size,
-                "deadUrls", deadUrls.size
+            "unreachableHosts", unreachableHosts.size,
+            "maxUrlLength", maxUrlLength,
+            "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
+            "timeoutUrls", timeoutUrls.size,
+            "failedUrls", failedUrls.size,
+            "deadUrls", deadUrls.size
         )
     }
 
@@ -306,18 +323,20 @@ class FetchMetrics(
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
-        return String.format("Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p" +
-                " | net recv: %s, %s/s, %s/p | total net recv: %s",
-                count,
-                elapsedTime.readable(),
-                successTasks.meanRate,
-                Strings.readableBytes(bytes),
-                Strings.readableBytes(bytes / seconds),
-                Strings.readableBytes(bytes / count),
-                Strings.readableBytes(networkIFsRecvBytes),
-                Strings.readableBytes(networkIFsRecvBytesPerSecond),
-                Strings.readableBytes(networkIFsRecvBytesPerPage),
-                Strings.readableBytes(totalNetworkIFsRecvBytes))
+        return String.format(
+            "Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p" +
+                    " | net recv: %s, %s/s, %s/p | total net recv: %s",
+            count,
+            elapsedTime.readable(),
+            successTasks.meanRate,
+            Strings.readableBytes(bytes),
+            Strings.readableBytes(bytes / seconds),
+            Strings.readableBytes(bytes / count),
+            Strings.readableBytes(networkIFsRecvBytes),
+            Strings.readableBytes(networkIFsRecvBytesPerSecond),
+            Strings.readableBytes(networkIFsRecvBytesPerPage),
+            Strings.readableBytes(totalNetworkIFsRecvBytes)
+        )
     }
 
     override fun close() {
@@ -346,7 +365,7 @@ class FetchMetrics(
         lastSystemInfoRefreshTime = currentTimeMillis
 
         totalNetworkIFsRecvBytes = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
-                .coerceAtLeast(totalNetworkIFsRecvBytes)
+            .coerceAtLeast(totalNetworkIFsRecvBytes)
         meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024 / 1024)
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")
@@ -358,20 +377,22 @@ class FetchMetrics(
         report.append('\n')
 
         urlStatistics.values.sorted()
-                .map { (hostName, urls, indexUrls, detailUrls, searchUrls, mediaUrls,
-                               bbsUrls, blogUrls, tiebaUrls, _, urlsTooLong) ->
-                    String.format("%40s -> %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s",
-                            hostName,
-                            "total : $urls",
-                            "index : $indexUrls",
-                            "detail : $detailUrls",
-                            "search : $searchUrls",
-                            "media : $mediaUrls",
-                            "bbs : $bbsUrls",
-                            "tieba : $tiebaUrls",
-                            "blog : $blogUrls",
-                            "long : $urlsTooLong")
-                }.joinTo(report, "\n") { it }
+            .map { (hostName, urls, indexUrls, detailUrls, searchUrls, mediaUrls,
+                       bbsUrls, blogUrls, tiebaUrls, _, urlsTooLong) ->
+                String.format(
+                    "%40s -> %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s",
+                    hostName,
+                    "total : $urls",
+                    "index : $indexUrls",
+                    "detail : $detailUrls",
+                    "search : $searchUrls",
+                    "media : $mediaUrls",
+                    "bbs : $bbsUrls",
+                    "tieba : $tiebaUrls",
+                    "blog : $blogUrls",
+                    "long : $urlsTooLong"
+                )
+            }.joinTo(report, "\n") { it }
 
         log.info(report.toString())
     }

@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.options.deprecated.EntityOptions
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.FilterResult
 import ai.platon.pulsar.crawl.parse.ParseResult
-import ai.platon.pulsar.crawl.parse.html.JsoupParser
+import ai.platon.pulsar.crawl.parse.html.JsoupExtractor
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.forEachElement
@@ -43,9 +43,9 @@ class PathExtractor(
      */
     override fun doFilter(parseContext: ParseContext): FilterResult {
         val page = parseContext.page
-        val parser = JsoupParser(page, conf)
+        val extractor = JsoupExtractor(page, conf)
 
-        val document = parseContext.document?: parser.parse()
+        val document = parseContext.document?: extractor.parse()
         parseContext.document = document
 
         val query = page.query?: page.args
@@ -54,7 +54,7 @@ class PathExtractor(
             return FilterResult.success(ParseStatus.SUCCESS_EXT)
         }
 
-        val fieldCollections = parser.extractAll(options)
+        val fieldCollections = extractor.extractAll(options)
         if (fieldCollections.isEmpty()) {
             return FilterResult.success()
         }

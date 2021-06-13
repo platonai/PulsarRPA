@@ -53,6 +53,7 @@ abstract class AbstractPulsarSession(
         private val idGen = AtomicInteger()
 
         val pageCacheHits = AtomicLong()
+        val documentCacheHits = AtomicLong()
 
         fun generateNextId() = ID_START + idGen.incrementAndGet()
     }
@@ -201,11 +202,13 @@ abstract class AbstractPulsarSession(
         val page = FetchEntry.createPageShell(normUrl)
 
         if (cachedPage != null) {
-            page.isCached = true
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
             page.unsafeSetGPage(cachedPage.unbox())
+
+            page.isCached = true
             page.tmpContent = cachedPage.tmpContent
+            page.args = normUrl.args
 
             return page
         }
@@ -395,17 +398,23 @@ abstract class AbstractPulsarSession(
     private fun parse0(page: WebPage, noCache: Boolean = false): FeaturedDocument {
         ensureActive()
 
+        val nil = FeaturedDocument.NIL
+
         if (page.isNil) {
-            return FeaturedDocument.NIL
+            return nil
         }
 
         if (noCache) {
-            return context.parse(page)
+            return context.parse(page) ?: nil
         }
 
-        val document = context.parse(page)
-        globalCache.documentCache.putDatum(page.url, document)
-        return document
+        val document = globalCache.documentCache.getDatum(page.url)
+        if (document != null) {
+            documentCacheHits.incrementAndGet()
+            return document
+        }
+
+        return context.parse(page) ?: nil
     }
 
     private fun parseLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {

@@ -339,6 +339,14 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
+    fun documentVariables(dom: ValueDom): ValueDom {
+        if (dom.isNil) return ValueDom.NIL
+        val meta = dom.element.ownerBody.selectFirstOrNull("#PulsarMetaInformation") ?: return ValueDom.NIL
+        return ValueDom.get(meta)
+    }
+
+    @UDFunction
+    @JvmStatic
     fun parent(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
         return ValueDom.get(dom.element.parent())

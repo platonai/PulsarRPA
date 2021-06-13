@@ -117,7 +117,6 @@ final public class WebPage implements Comparable<WebPage> {
      */
     private boolean isCached = false;
 
-
     /**
      * If this page is loaded from database or is created and fetched from the web
      */
@@ -137,6 +136,11 @@ final public class WebPage implements Comparable<WebPage> {
      * The cached content
      */
     private volatile ByteBuffer tmpContent = null;
+
+    /**
+     * If this page is fetched from internet
+     */
+    private String args = null;
 
     private WebPage(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
@@ -581,22 +585,30 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * All options are saved here, including crawl options, link options, entity options and so on
+     * The load arguments is variant task by task, so the local version is the first choice,
+     * while the persisted version is used for historical check only
      */
     @NotNull
     public String getArgs() {
-        if (page.getOptions() == null) {
+        if (this.args != null) {
+            return args;
+        }
+
+        CharSequence opts = page.getOptions();
+        if (opts == null) {
             return "";
         }
 
-        return page.getOptions().toString().trim();
+        args = opts.toString().trim();
+        return args;
     }
 
     /**
-     * <p>set load arguments.</p>
-     */
+     * Set the local args variable and the persist version, and also clear the load options.
+     * */
     public void setArgs(@NotNull String args) {
         variables.remove(VAR_LOAD_OPTIONS);
+        this.args = args;
         page.setOptions(args);
     }
 

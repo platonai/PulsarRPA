@@ -3,7 +3,6 @@ package ai.platon.pulsar.runtime
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.persist.metadata.FetchMode

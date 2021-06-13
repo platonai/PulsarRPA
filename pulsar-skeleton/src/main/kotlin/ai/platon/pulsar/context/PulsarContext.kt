@@ -124,9 +124,7 @@ interface PulsarContext: AutoCloseable {
     /**
      * Parse the WebPage using Jsoup
      */
-    fun parse(page: WebPage): FeaturedDocument
-
-    fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument
+    fun parse(page: WebPage): FeaturedDocument?
 
     fun persist(page: WebPage)
 

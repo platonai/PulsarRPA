@@ -47,10 +47,8 @@ class TestPulsarOptions {
     fun testProgramOpts() {
         Stream.of(args1, args2).forEach { args ->
             val options = CrawlOptions.parse(args, conf)
-            println("====")
             println(args)
             println(options.toString())
-            println("====")
 
             assertEquals(args, Duration.ofSeconds(1), options.fetchInterval)
             assertEquals(args, 2000, options.fetchPriority.toLong())

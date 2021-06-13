@@ -157,6 +157,13 @@ object DateTimes {
     }
 
     /**
+     * The imprecise elapsed time in seconds, at least 1 second
+     * */
+    fun elapsedSeconds(): Long {
+        return elapsedTime().seconds.coerceAtLeast(1)
+    }
+
+    /**
      * Calculate the elapsed time between two times specified in milliseconds.
      */
     @JvmOverloads

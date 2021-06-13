@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
@@ -52,7 +53,6 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
-        val dbGetPerSec get() = 1.0 * dbGetCount.get() / DateTimes.elapsedTime().seconds.coerceAtLeast(1)
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -198,24 +198,12 @@ class LoadComponent(
                 }
             }
             .onEach { it.completeOnTimeout(WebPage.NIL, estimatedWaitTime, TimeUnit.SECONDS) }
-            .toMutableList()
+            .toList()
         queue.addAll(links)
         logger.debug("Waiting for {} completable hyperlinks", links.size)
         // timeout process?
-//        val future = CompletableFuture.allOf(*links.toTypedArray())
-//        future.join()
-        // a day at most
-//        val waitingTasks = globalCache.fetchCaches.delayCache.size + globalCache.fetchCaches.realTimeCache.size
-//        val speed = 1L
-//        var timeout = waitingTasks * speed + links.size * speed * 1.2
-//        while (timeout-- > 0 && links.isNotEmpty()) {
-//            sleepSeconds(1)
-//            links.removeIf { it.isDone }
-//        }
-
         val future = CompletableFuture.allOf(*links.toTypedArray())
         future.join()
-
         return links.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
@@ -270,7 +258,10 @@ class LoadComponent(
             page.unsafeCloneGPage(cachedPage)
             // TODO: check all fields dirty or not?
             page.clearPersistContent()
+
+            page.args = normUrl.args
             page.tmpContent = cachedPage.content
+
             // TODO: test the dirty flag
             // do not persist this copy
             page.unbox().clearDirty()
@@ -363,6 +354,19 @@ class LoadComponent(
         if (!page.isCached && !options.readonly && options.persist) {
             persist(page, options)
         }
+    }
+
+    private fun parse(page: WebPage, options: LoadOptions): ParseResult? {
+        if (parseComponent == null) {
+            logger.info("Parser is null")
+            return null
+        }
+
+        val parser = parseComponent?.takeIf { options.parse } ?: return null
+        val parseResult = parser.parse(page, options.query, options.reparseLinks, options.noFilter)
+        tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
+
+        return parseResult
     }
 
     /**
@@ -527,17 +531,6 @@ class LoadComponent(
         updateComponent.updateFetchSchedule(page)
 
         require(page.isFetched)
-    }
-
-    private fun parse(page: WebPage, options: LoadOptions) {
-        val parser = parseComponent?.takeIf { options.parse }
-        if (parser == null) {
-            logger.info("Parser is null")
-            return
-        }
-
-        val parseResult = parser.parse(page, options.query, options.reparseLinks, options.noFilter)
-        tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
     }
 
     private fun persist(page: WebPage, options: LoadOptions) {

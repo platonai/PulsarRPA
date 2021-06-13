@@ -5,7 +5,6 @@ import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -20,7 +19,7 @@ import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
-import ai.platon.pulsar.crawl.parse.html.JsoupParser
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -319,11 +318,12 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Parse the WebPage using Jsoup
+     * Parse the WebPage using parseComponent
      */
-    override fun parse(page: WebPage) = JsoupParser(page, unmodifiedConfig).parse()
-
-    override fun parse(page: WebPage, mutableConfig: MutableConfig) = JsoupParser(page, mutableConfig).parse()
+    override fun parse(page: WebPage): FeaturedDocument? {
+        val parser = loadComponent.parseComponent ?: return null
+        return parser.parse(page, noLinkFilter = true).document
+    }
 
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
