@@ -60,11 +60,6 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
         }
     }
 
-    class MockCrawlEventHandler(hyperlink: MockListenableHyperlink) {
-        var onAfterLoad: (UrlAware, WebPage) -> Unit = { url, page ->
-        }
-    }
-
     override var args: String? = "-cacheContent true -storeContent false -parse"
     override var loadEventHandler: LoadEventPipelineHandler = MockLoadEventHandler(this)
 
@@ -80,6 +75,10 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
 
     private fun registerEventHandler() {
         crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
+            if (page == null) {
+                return@addFirst
+            }
+
             println("............SinkAwareCrawlEventHandler onAfterLoad " + page.id)
             page.variables.variables.forEach { (t, u) -> println("$t $u") }
 

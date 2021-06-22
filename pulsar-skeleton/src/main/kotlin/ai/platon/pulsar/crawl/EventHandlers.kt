@@ -38,8 +38,8 @@ abstract class WebPageHandler: (WebPage) -> Unit, AbstractHandler() {
     abstract override operator fun invoke(page: WebPage)
 }
 
-abstract class UrlAwareWebPageHandler: (UrlAware, WebPage) -> Unit, AbstractHandler() {
-    abstract override operator fun invoke(url: UrlAware, page: WebPage)
+abstract class UrlAwareWebPageHandler: (UrlAware, WebPage?) -> Unit, AbstractHandler() {
+    abstract override operator fun invoke(url: UrlAware, page: WebPage?)
 }
 
 abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Unit, AbstractHandler() {
@@ -249,29 +249,29 @@ class WebPageHandlerPipeline: WebPageHandler() {
 }
 
 class UrlAwareWebPageHandlerPipeline: UrlAwareWebPageHandler() {
-    private val registeredHandlers = mutableListOf<(UrlAware, WebPage) -> Unit>()
+    private val registeredHandlers = mutableListOf<(UrlAware, WebPage?) -> Unit>()
 
-    fun addFirst(handler: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+    fun addFirst(handler: (UrlAware, WebPage?) -> Unit): UrlAwareWebPageHandlerPipeline {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addFirst(vararg handlers: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+    fun addFirst(vararg handlers: (UrlAware, WebPage?) -> Unit): UrlAwareWebPageHandlerPipeline {
         handlers.forEach { addFirst(it) }
         return this
     }
 
-    fun addLast(handler: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+    fun addLast(handler: (UrlAware, WebPage?) -> Unit): UrlAwareWebPageHandlerPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: (UrlAware, WebPage) -> Unit): UrlAwareWebPageHandlerPipeline {
+    fun addLast(vararg handlers: (UrlAware, WebPage?) -> Unit): UrlAwareWebPageHandlerPipeline {
         handlers.toCollection(registeredHandlers)
         return this
     }
 
-    override operator fun invoke(url: UrlAware, page: WebPage) {
+    override operator fun invoke(url: UrlAware, page: WebPage?) {
         registeredHandlers.forEach { it(url, page) }
     }
 }
@@ -473,7 +473,7 @@ interface CrawlEventHandler {
     val onNormalize: (UrlAware) -> UrlAware?
     val onBeforeLoad: (UrlAware) -> Unit
     val onLoad: (UrlAware) -> Unit
-    val onAfterLoad: (UrlAware, WebPage) -> Unit
+    val onAfterLoad: (UrlAware, WebPage?) -> Unit
 }
 
 abstract class AbstractCrawlEventHandler(
@@ -481,7 +481,7 @@ abstract class AbstractCrawlEventHandler(
     override val onNormalize: (UrlAware) -> UrlAware? = { it },
     override val onBeforeLoad: (UrlAware) -> Unit = {},
     override val onLoad: (UrlAware) -> Unit = {},
-    override val onAfterLoad: (UrlAware, WebPage) -> Unit = { _, _ -> }
+    override val onAfterLoad: (UrlAware, WebPage?) -> Unit = { _, _ -> }
 ): CrawlEventHandler
 
 interface CrawlEventPipelineHandler: CrawlEventHandler {
