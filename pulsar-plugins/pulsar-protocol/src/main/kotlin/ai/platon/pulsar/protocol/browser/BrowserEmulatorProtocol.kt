@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.protocol.Response
@@ -33,23 +32,17 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
     // TODO: better initialization
     private val browserEmulator by lazy {
         pulsarContext.runCatching { getBean<BrowserEmulatedFetcher>() }.getOrNull()
-                ?:DefaultBrowserEmulatedFetcher(pulsarContext.unmodifiedConfig)
-    }
-
-    override val supportParallel: Boolean = true
-
-    override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
-        return browserEmulator.parallelFetchAllPages(pages, volatileConfig)
+            ?: DefaultBrowserEmulatedFetcher(pulsarContext.unmodifiedConfig)
     }
 
     override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
-        return super.getResponse(page, followRedirects)?:browserEmulator.fetchContent(page)
+        return super.getResponse(page, followRedirects) ?: browserEmulator.fetchContent(page)
     }
 
     override suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
-        return super.getResponse(page, followRedirects)?:browserEmulator.fetchContentDeferred(page)
+        return super.getResponse(page, followRedirects) ?: browserEmulator.fetchContentDeferred(page)
     }
 
     override fun reset() {

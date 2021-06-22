@@ -398,14 +398,11 @@ open class StreamingCrawler<T : UrlAware>(
      * */
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         if (url is ListenableHyperlink) {
-            url.crawlEventHandler.onAfterLoad(url, page ?: WebPage.NIL)
+            url.crawlEventHandler.onAfterLoad(url, page)
         }
 
         if (page != null) {
             crawlEventHandler.onAfterLoad(url, page)
-            if (url is ListenableHyperlink) {
-                url.crawlEventHandler.onAfterLoad(url, page)
-            }
         }
 
         when {

@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext
+import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.component.FetchEntry
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
@@ -198,6 +199,15 @@ abstract class AbstractPulsarSession(
     }
 
     private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
+        // if the loading is not a read only loading, it might modify the page status, or have event handlers
+        if (!normUrl.options.readonly) {
+            return null
+        }
+
+        if (normUrl.options.conf.getBean(LoadEventHandler::class.java) != null) {
+            return null
+        }
+
         val cachedPage = getCachedPageOrNull(normUrl)
         val page = FetchEntry.createPageShell(normUrl)
 

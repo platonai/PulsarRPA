@@ -50,11 +50,17 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.StreamingCrawlLoop"
-          init-method="start"
-          destroy-method="stop">
+    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.StreamingCrawlLoop">
         <constructor-arg ref="globalCache"/>
         <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="crawlLoops" class="ai.platon.pulsar.crawl.CrawlLoops" init-method="start" destroy-method="stop">
+        <constructor-arg name="loops">
+            <list>
+                <ref bean="crawlLoop" />
+            </list>
+        </constructor-arg>
     </bean>
 
 </beans>

@@ -255,8 +255,8 @@ class LoadComponent(
             page.isCached = true
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
+            // TODO: clone the underlying data or not?
             page.unsafeCloneGPage(cachedPage)
-            // TODO: check all fields dirty or not?
             page.clearPersistContent()
 
             page.args = normUrl.args
@@ -269,6 +269,7 @@ class LoadComponent(
             assert(page.isNotInternal)
         } else {
             // get the metadata of the page from the database, this is very fast for a crawler
+            // TODO: two step loading or one step loading?
 //            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
             val loadedPage = webDb.getOrNull(normUrl.spec)
             dbGetCount.incrementAndGet()

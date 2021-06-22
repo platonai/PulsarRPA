@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
@@ -17,9 +17,9 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-open class PrivacyContextException(message: String): Exception(message)
+open class PrivacyContextException(message: String) : Exception(message)
 
-class FatalPrivacyContextException(message: String): PrivacyContextException(message)
+class FatalPrivacyContextException(message: String) : PrivacyContextException(message)
 
 class PrivacyContextMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
@@ -39,7 +39,7 @@ abstract class PrivacyContext(
      * */
     val id: PrivacyContextId,
     val conf: ImmutableConfig
-): AutoCloseable {
+) : AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
         val IDENT_PREFIX = "cx."
