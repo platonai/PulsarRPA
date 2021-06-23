@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.fetch.FetchMetrics
+import ai.platon.pulsar.crawl.fetch.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
@@ -18,12 +18,12 @@ import java.util.*
 import java.util.concurrent.*
 
 class BatchFetchComponent(
-        val webDb: WebDb,
-        fetchMetrics: FetchMetrics? = null,
-        val lazyFetchTaskManager: LazyFetchTaskManager? = null,
-        protocolFactory: ProtocolFactory,
-        immutableConfig: ImmutableConfig
-) : FetchComponent(fetchMetrics, protocolFactory, immutableConfig) {
+    val webDb: WebDb,
+    coreMetrics: CoreMetrics? = null,
+    val lazyFetchTaskManager: LazyFetchTaskManager? = null,
+    protocolFactory: ProtocolFactory,
+    immutableConfig: ImmutableConfig
+) : FetchComponent(coreMetrics, protocolFactory, immutableConfig) {
     private final val logger = LoggerFactory.getLogger(BatchFetchComponent::class.java)
 
     constructor(webDb: WebDb, immutableConfig: ImmutableConfig)
@@ -77,7 +77,7 @@ class BatchFetchComponent(
             if (protocol != null) {
                 pages.addAll(parallelFetchAll0(gUrls, protocol, options))
             } else {
-                fetchMetrics?.trackFailedUrls(gUrls)
+                coreMetrics?.trackFailedUrls(gUrls)
             }
         }
         return pages
@@ -114,7 +114,7 @@ class BatchFetchComponent(
     }
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
-        fetchMetrics?.markTaskStart(Iterables.size(urls))
+        coreMetrics?.markTaskStart(Iterables.size(urls))
         return urls.map { FetchEntry(it, options).page }
                 .let { protocol.getResponses(it, options.conf) }
                 .map { getProtocolOutput(protocol, it, it.page) }
@@ -125,7 +125,7 @@ class BatchFetchComponent(
      * */
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
-        fetchMetrics?.markTaskStart(size)
+        coreMetrics?.markTaskStart(size)
         return urls.map { fetchTaskExecutor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
     }
 

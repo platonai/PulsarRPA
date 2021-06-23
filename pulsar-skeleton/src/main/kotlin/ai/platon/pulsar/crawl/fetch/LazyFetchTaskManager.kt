@@ -15,9 +15,9 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
 class LazyFetchTaskManager(
-        private val webDb: WebDb,
-        private val fetchMetrics: FetchMetrics,
-        conf: ImmutableConfig
+    private val webDb: WebDb,
+    private val coreMetrics: CoreMetrics,
+    conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
     companion object {
@@ -34,9 +34,9 @@ class LazyFetchTaskManager(
     val startTime = Instant.now()
     val elapsedTime get() = Duration.between(startTime, Instant.now())
 
-    private val timeoutUrls = fetchMetrics.timeoutUrls
-    private val failedUrls = fetchMetrics.failedUrls
-    private val deadUrls = fetchMetrics.deadUrls
+    private val timeoutUrls = coreMetrics.timeoutUrls
+    private val failedUrls = coreMetrics.failedUrls
+    private val deadUrls = coreMetrics.deadUrls
 
     private val closed = AtomicBoolean()
 

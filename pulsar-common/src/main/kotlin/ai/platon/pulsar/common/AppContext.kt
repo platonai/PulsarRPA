@@ -2,6 +2,7 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
 import java.net.InetAddress
+import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 
@@ -33,6 +34,7 @@ object AppContext {
     val USER_DIR = SystemUtils.USER_DIR
 
     // The identity of this running instance
+    val APP_VERSION = sniffVersion()
     val APP_NAME = System.getProperty("app.name", "pulsar")
     val APP_IDENT = System.getProperty("app.id.str", USER)
     val APP_TMP_PROPERTY = System.getProperty("app.tmp.dir")
@@ -53,4 +55,13 @@ object AppContext {
     }
 
     fun terminate() = state.set(State.TERMINATED)
+
+    private fun sniffVersion(): String {
+        var version = System.getProperty("app.version")
+        if (version == null) {
+            version = Paths.get(USER_DIR).resolve("VERSION").takeIf { Files.exists(it) }
+                ?.let { Files.readAllLines(it).firstOrNull() }
+        }
+        return version ?: "unknown"
+    }
 }

@@ -38,58 +38,58 @@ while [ -h "$this" ]; do
 done
 
 # The root dir of this program
-if [ "$PULSAR_HOME" = "" ]; then
+if [ "$APP_HOME" = "" ]; then
   # Convert relative path to absolute path
   bin=$(dirname "$this")/..
   script=$(basename "$this")
   this="$bin/$script"
   bin=$(cd "$bin">/dev/null || exit; pwd)
 
-  PULSAR_HOME=$(dirname "$bin")
-  PULSAR_HOME=$(cd "$PULSAR_HOME">/dev/null || exit; pwd)
-  export PULSAR_HOME=$PULSAR_HOME
+  APP_HOME=$(dirname "$bin")
+  APP_HOME=$(cd "$APP_HOME">/dev/null || exit; pwd)
+  export APP_HOME=$APP_HOME
 fi
 
-if [ "$PULSAR_RUNTIME_MODE" = ""  ]; then
-  if [ -f "$PULSAR_HOME/pom.xml" ]; then
-    export PULSAR_RUNTIME_MODE="DEVELOPMENT"
+if [ "$APP_RUNTIME_MODE" = ""  ]; then
+  if [ -f "$APP_HOME/pom.xml" ]; then
+    export APP_RUNTIME_MODE="DEVELOPMENT"
   else
-    export PULSAR_RUNTIME_MODE="ASSEMBLY"
+    export APP_RUNTIME_MODE="ASSEMBLY"
   fi
 fi
 
 # The log dir
-if [ "$PULSAR_LOG_DIR" = "" ]; then
-  export PULSAR_LOG_DIR="$PULSAR_HOME/logs"
+if [ "$APP_LOG_DIR" = "" ]; then
+  export APP_LOG_DIR="$APP_HOME/logs"
 fi
-mkdir -p "$PULSAR_LOG_DIR"
+mkdir -p "$APP_LOG_DIR"
 
 # The ident string
-if [ "$PULSAR_IDENT_STRING" = "" ]; then
-  export PULSAR_IDENT_STRING="$USER"
+if [ "$APP_IDENT_STRING" = "" ]; then
+  export APP_IDENT_STRING="$USER"
 fi
 
 # The program tmp dir
-if [ "$PULSAR_TMP_DIR" = "" ]; then
-  export PULSAR_TMP_DIR="/tmp/pulsar-$PULSAR_IDENT_STRING"
+if [ "$APP_TMP_DIR" = "" ]; then
+  export APP_TMP_DIR="/tmp/pulsar-$APP_IDENT_STRING"
 fi
-mkdir -p "$PULSAR_TMP_DIR"
+mkdir -p "$APP_TMP_DIR"
 
 # The directory to keep process PIDs
-if [ "$PULSAR_PID_DIR" = "" ]; then
-  export PULSAR_PID_DIR="$PULSAR_TMP_DIR"
+if [ "$APP_PID_DIR" = "" ]; then
+  export APP_PID_DIR="$APP_TMP_DIR"
 fi
 
-if [[ "$PULSAR_NICENESS" = "" ]]; then
-    export PULSAR_NICENESS=0
+if [[ "$APP_NICENESS" = "" ]]; then
+    export APP_NICENESS=0
 fi
 
 # Source the pulsar-env.sh.  Will have JAVA_HOME defined
-if [ -z "$PULSAR_ENV_INIT" ]; then
-  [ -f "${PULSAR_CONF_DIR}/pulsar-env.sh" ] && . "${PULSAR_CONF_DIR}/pulsar-env.sh"
+if [ -z "$APP_ENV_INIT" ]; then
+  [ -f "${APP_CONF_DIR}/pulsar-env.sh" ] && . "${APP_CONF_DIR}/pulsar-env.sh"
   [ -f "$HOME/.pulsar/pulsar-env.sh" ] && . $HOME/.pulsar/pulsar-env.sh
 
-  export PULSAR_ENV_INIT="true"
+  export APP_ENV_INIT="true"
 fi
 
 # Now having JAVA_HOME defined is required

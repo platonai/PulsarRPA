@@ -20,7 +20,7 @@ class TestEvents : TestBase() {
 
     @Before
     fun setup() {
-        val metrics = fetchComponent.fetchMetrics
+        val metrics = fetchComponent.coreMetrics
         assertNotNull(metrics)
         metrics.tasks.mark(-metrics.tasks.count)
         metrics.successTasks.mark(-metrics.successTasks.count)
@@ -29,7 +29,7 @@ class TestEvents : TestBase() {
 
     @Test
     fun `When a page is fetched then events are fired and metrics are recorded`() {
-        val metrics = fetchComponent.fetchMetrics
+        val metrics = fetchComponent.coreMetrics
         assertNotNull(metrics)
 
         val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"

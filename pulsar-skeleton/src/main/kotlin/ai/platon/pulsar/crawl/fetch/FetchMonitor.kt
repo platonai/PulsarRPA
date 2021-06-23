@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -52,7 +51,7 @@ class FetchMonitor(
     private val id = instanceSequencer.incrementAndGet()
 
     private val startTime = Instant.now()
-    private val fetchMetrics = fetchComponent.fetchMetrics
+    private val fetchMetrics = fetchComponent.coreMetrics
 
     private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val fetchConcurrency = numPrivacyContexts * conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)

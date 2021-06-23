@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 
 interface CrawlLoop: StartStopRunnable {
+    val name: String
     val unmodifiedConfig: ImmutableConfig
     val defaultOptions: LoadOptions
     val fetchIterable: Iterable<UrlAware>
@@ -20,6 +21,7 @@ interface CrawlLoop: StartStopRunnable {
 }
 
 abstract class AbstractCrawlLoop(
+    override val name: String = "DefaultCrawlLoop",
     override val unmodifiedConfig: ImmutableConfig
 ) : CrawlLoop {
     /**

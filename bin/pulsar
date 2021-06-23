@@ -105,7 +105,7 @@ fi
 
 # CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
 
-VERSION=$(cat VERSION)
+VERSION="$(cat "$APP_HOME"/VERSION)"
 export VERSION
 
 # Choose runnable

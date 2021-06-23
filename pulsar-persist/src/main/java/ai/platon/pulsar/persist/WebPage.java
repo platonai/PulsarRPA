@@ -618,10 +618,11 @@ final public class WebPage implements Comparable<WebPage> {
     @NotNull
     public String getConfiguredUrl() {
         String configuredUrl = url;
-        if (page.getOptions() != null) {
-            configuredUrl += " " + page.getOptions().toString();
+        String realArgs = getArgs();
+        if (!realArgs.isBlank()) {
+            configuredUrl += " " + realArgs;
         }
-        return configuredUrl;
+        return configuredUrl.trim();
     }
 
     /**

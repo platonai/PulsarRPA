@@ -71,7 +71,7 @@ class LoadComponent(
         .map { it.getName() }
         .toTypedArray()
 
-    private val fetchMetrics get() = fetchComponent.fetchMetrics
+    private val fetchMetrics get() = fetchComponent.coreMetrics
     private val closed = AtomicBoolean()
 
     /**

@@ -16,7 +16,7 @@ class TestRequiredComponents: TestBase() {
 
     @Test
     fun `When AmazonCrawler started then FetchMetrics is working`() {
-        assertNotNull(fetchComponent.fetchMetrics)
+        assertNotNull(fetchComponent.coreMetrics)
         assertNotNull(loadComponent.parseComponent)
         assertNotNull(loadComponent.statusTracker)
     }

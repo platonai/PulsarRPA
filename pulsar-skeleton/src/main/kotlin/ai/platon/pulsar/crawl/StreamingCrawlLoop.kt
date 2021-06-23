@@ -16,8 +16,15 @@ open class StreamingCrawlLoop(
      * The global cache
      * */
     val globalCache: GlobalCache,
-    unmodifiedConfig: ImmutableConfig
-) : AbstractCrawlLoop(unmodifiedConfig) {
+    /**
+     * The unmodified configuration load from file
+     * */
+    unmodifiedConfig: ImmutableConfig,
+    /**
+     * The loop name
+     * */
+    name: String = "DefaultStreamingCrawlLoop"
+) : AbstractCrawlLoop(name, unmodifiedConfig) {
     private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private val enableDefaultCollectors

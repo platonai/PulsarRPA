@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.fetch.FetchMetrics
+import ai.platon.pulsar.crawl.fetch.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -19,11 +19,11 @@ import org.slf4j.LoggerFactory
  * The privacy context, the context is closed if privacy is leaked
  * */
 open class BrowserPrivacyContext(
-        val proxyPoolManager: ProxyPoolManager? = null,
-        val driverPoolManager: WebDriverPoolManager,
-        val fetchMetrics: FetchMetrics? = null,
-        conf: ImmutableConfig,
-        id: PrivacyContextId
+    val proxyPoolManager: ProxyPoolManager? = null,
+    val driverPoolManager: WebDriverPoolManager,
+    val coreMetrics: CoreMetrics? = null,
+    conf: ImmutableConfig,
+    id: PrivacyContextId
 ): PrivacyContext(id, conf) {
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
     private val browserInstanceId = BrowserInstanceId.resolve(id.dataDir)
@@ -50,8 +50,8 @@ open class BrowserPrivacyContext(
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
                 meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.readableBytes(fetchMetrics?.totalNetworkIFsRecvBytes?:0),
-                Strings.readableBytes(fetchMetrics?.networkIFsRecvBytesPerSecond?:0),
+                Strings.readableBytes(coreMetrics?.totalNetworkIFsRecvBytes?:0),
+                Strings.readableBytes(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
                 meterTasks.count, meterFinishes.count,
                 proxyContext?.proxyEntry
         )

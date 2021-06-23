@@ -152,6 +152,7 @@ class ProxyContext(
 
     companion object {
         val numProxyAbsence = AtomicInteger()
+        var proxyAbsenceCountTime = Instant.now()
         val numRunningTasks = AtomicInteger()
         var maxAllowedProxyAbsence = 200
 
@@ -186,7 +187,15 @@ class ProxyContext(
 
         fun checkProxyAbsence() {
             if (numProxyAbsence.get() > maxAllowedProxyAbsence) {
-                throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
+                // clear the proxy absence counter every day
+                val proxyProviderRefreshTime = Duration.ofDays(1)
+                val now = Instant.now()
+                if (Duration.between(proxyAbsenceCountTime, now) > proxyProviderRefreshTime) {
+                    numProxyAbsence.set(0)
+                    proxyAbsenceCountTime = now
+                } else {
+                    throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
+                }
             }
         }
     }

@@ -26,7 +26,7 @@ import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.FetchMetrics
+import ai.platon.pulsar.crawl.fetch.CoreMetrics
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
@@ -78,7 +78,7 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
  */
 @Component
 open class FetchComponent(
-    val fetchMetrics: FetchMetrics? = null,
+    val coreMetrics: CoreMetrics? = null,
     val protocolFactory: ProtocolFactory,
     val immutableConfig: ImmutableConfig,
 ) : AutoCloseable {
@@ -143,7 +143,7 @@ open class FetchComponent(
         return try {
             beforeFetch(page)
 
-            fetchMetrics?.markTaskStart()
+            coreMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
@@ -164,7 +164,7 @@ open class FetchComponent(
         return try {
             beforeFetch(page)
 
-            fetchMetrics?.markTaskStart()
+            coreMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
@@ -210,25 +210,25 @@ open class FetchComponent(
 
             ProtocolStatus.MOVED_PERMANENTLY,
             ProtocolStatus.MOVED_TEMPORARILY,
-            -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
+            -> handleMoved(page, protocolStatus).also { coreMetrics?.trackMoved(url) }
 
             ProtocolStatus.UNAUTHORIZED,
             ProtocolStatus.ROBOTS_DENIED,
             ProtocolStatus.UNKNOWN_HOST,
             ProtocolStatus.GONE,
             ProtocolStatus.NOT_FOUND,
-            -> CrawlStatus.STATUS_GONE.also { fetchMetrics?.trackHostUnreachable(url) }
+            -> CrawlStatus.STATUS_GONE.also { coreMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.EXCEPTION,
             ProtocolStatus.RETRY,
             ProtocolStatus.BLOCKED,
-            -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackHostUnreachable(url) }
+            -> CrawlStatus.STATUS_RETRY.also { coreMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.REQUEST_TIMEOUT,
             ProtocolStatus.THREAD_TIMEOUT,
             ProtocolStatus.WEB_DRIVER_TIMEOUT,
             ProtocolStatus.SCRIPT_TIMEOUT,
-            -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackTimeout(url) }
+            -> CrawlStatus.STATUS_RETRY.also { coreMetrics?.trackTimeout(url) }
 
             else -> CrawlStatus.STATUS_RETRY.also { logger.warn("Unknown protocol status $protocolStatus") }
         }
@@ -242,9 +242,9 @@ open class FetchComponent(
         }
 
         if (crawlStatus.isFetched) {
-            fetchMetrics?.trackSuccess(page)
+            coreMetrics?.trackSuccess(page)
         } else if (crawlStatus.isFailed) {
-            fetchMetrics?.trackFailedUrl(url)
+            coreMetrics?.trackFailedUrl(url)
         }
 
         return page

@@ -49,7 +49,7 @@ open class DegenerateScrapeHyperlink(
             } catch (t: Throwable) {
                 getLogger(this).warn("Unexpected exception", t)
             } finally {
-                complete(page)
+                complete(page ?: WebPage.NIL)
             }
         }
     }

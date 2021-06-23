@@ -28,9 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger
  * Tasks Monitor
  */
 class TaskMonitor(
-        private val fetchMetrics: FetchMetrics,
-        private val metrics: MiscMessageWriter,
-        conf: ImmutableConfig
+    private val coreMetrics: CoreMetrics,
+    private val metrics: MiscMessageWriter,
+    conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     private val log = LoggerFactory.getLogger(TaskMonitor::class.java)
 
@@ -150,13 +150,13 @@ class TaskMonitor(
     }
 
     private fun isConsumable(pool: TaskPool): Boolean {
-        return pool.isActive && pool.hasReadyTasks() && fetchMetrics.isReachable(pool.host)
+        return pool.isActive && pool.hasReadyTasks() && coreMetrics.isReachable(pool.host)
     }
 
     /** Maintain pool life time, return true if the life time status is changed, false otherwise  */
     private fun maintain(pool: TaskPool): TaskPool {
         val lastStatus = pool.status
-        if (fetchMetrics.isUnreachable(pool.host)) {
+        if (coreMetrics.isUnreachable(pool.host)) {
             retire(pool)
             log.info("Retire pool with unreachable host | {}", pool.id)
         } else if (feederCompleted.get() && !pool.hasTasks()) {
@@ -216,7 +216,7 @@ class TaskMonitor(
     private fun doProduce(task: JobFetchTask) {
         val url = task.urlString
         val host = URLUtil.getHostName(url)?:return
-        if (fetchMetrics.isUnreachable(host)) {
+        if (coreMetrics.isUnreachable(host)) {
             log.warn("Ignore unreachable url | {}", url)
             return
         }
@@ -289,7 +289,7 @@ class TaskMonitor(
      */
     @Synchronized
     internal fun tune(force: Boolean) {
-        taskPools.filter { fetchMetrics.isUnreachable(it.host) }.onEach { retire(it) }.takeIf { it.isNotEmpty() }?.let { pool ->
+        taskPools.filter { coreMetrics.isUnreachable(it.host) }.onEach { retire(it) }.takeIf { it.isNotEmpty() }?.let { pool ->
             pool.joinToString (", ", "Unavailable pools: ") { it.id.toString() }.let { log.info(it) }
         }
         calculateTaskCounter()

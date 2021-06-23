@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 
-class FetchMetrics(
+class CoreMetrics(
     private val messageWriter: MiscMessageWriter,
     conf: ImmutableConfig
 ) : Parameterized, AutoCloseable {
@@ -39,6 +39,7 @@ class FetchMetrics(
 
         init {
             mapOf(
+                "version" to Gauge { AppContext.APP_VERSION },
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
                 "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
 
@@ -59,15 +60,15 @@ class FetchMetrics(
 
                 "dbGets" to Gauge { WebDb.dbGetCount },
                 "dbGets/s" to Gauge { 1.0 * WebDb.dbGetCount.get() / DateTimes.elapsedSeconds() },
-                "dbGetAveNanos" to Gauge { WebDb.dbGetAveNanos },
+                "dbGetAveMillis" to Gauge { WebDb.dbGetAveMillis },
                 "dbPuts" to Gauge { WebDb.dbPutCount },
                 "dbPuts/s" to Gauge { 1.0 * WebDb.dbPutCount.get() / DateTimes.elapsedSeconds() },
-                "dbPutAveNanos" to Gauge { WebDb.dbPutAveNanos },
+                "dbPutAveMillis" to Gauge { WebDb.dbPutAveMillis },
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
     }
 
-    private val log = LoggerFactory.getLogger(FetchMetrics::class.java)!!
+    private val log = LoggerFactory.getLogger(CoreMetrics::class.java)!!
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()

@@ -5,7 +5,7 @@ bin=$(cd "$bin">/dev/null || exit; pwd)
 
  . "$bin"/include/config.sh
 
-VERSION="v$(cat "$PULSAR_HOME"/VERSION)"
+VERSION="v$(cat "$APP_HOME"/VERSION)"
 
 if [ $# -gt 0 ] && [ "$1" == "-v" ]; then
   # dynamically pull more interesting stuff from latest git commit

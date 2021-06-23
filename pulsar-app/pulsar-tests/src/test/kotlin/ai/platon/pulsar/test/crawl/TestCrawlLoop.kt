@@ -14,7 +14,7 @@ class TestCrawlLoop : TestBase() {
     @Before
     fun setup() {
         // active CrawlLoop bean
-        PulsarContexts.activate().crawlLoop.start()
+        PulsarContexts.activate().crawlLoops.start()
     }
 
     @Test

@@ -25,7 +25,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchMetrics" class="ai.platon.pulsar.crawl.fetch.FetchMetrics" destroy-method="close">
+    <bean id="fetchMetrics" class="ai.platon.pulsar.crawl.fetch.CoreMetrics" destroy-method="close">
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -53,6 +53,7 @@
     <bean id="crawlLoop" class="ai.platon.pulsar.crawl.StreamingCrawlLoop">
         <constructor-arg ref="globalCache"/>
         <constructor-arg ref="conf"/>
+        <constructor-arg value="DefaultCrawlLoop"/>
     </bean>
 
     <bean id="crawlLoops" class="ai.platon.pulsar.crawl.CrawlLoops" init-method="start" destroy-method="stop">

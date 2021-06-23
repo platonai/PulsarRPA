@@ -50,9 +50,9 @@ object PulsarContexts {
 
 fun withContext(block: (context: PulsarContext) -> Unit) {
     PulsarContexts.activate(StaticPulsarContext()).use {
-        it.crawlLoop.start()
+        it.crawlLoops.start()
         block(it)
-        it.crawlLoop.stop()
+        it.crawlLoops.stop()
     }
 }
 

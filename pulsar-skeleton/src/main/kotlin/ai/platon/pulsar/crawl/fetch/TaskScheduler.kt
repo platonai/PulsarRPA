@@ -27,12 +27,12 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 class TaskScheduler(
-        val tasksMonitor: TaskMonitor,
-        val pageParser: PageParser,
-        val jitIndexer: JITIndexer,
-        val fetchMetrics: FetchMetrics,
-        val messageWriter: MiscMessageWriter,
-        val immutableConfig: ImmutableConfig
+    val tasksMonitor: TaskMonitor,
+    val pageParser: PageParser,
+    val jitIndexer: JITIndexer,
+    val coreMetrics: CoreMetrics,
+    val messageWriter: MiscMessageWriter,
+    val immutableConfig: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     data class Status(
             var pagesThroughputRate: Double,
@@ -132,7 +132,7 @@ class TaskScheduler(
             return listOf()
         }
 
-        val fifteenMinutePageSizeRate = fetchMetrics.meterContentBytes.fifteenMinuteRate
+        val fifteenMinutePageSizeRate = coreMetrics.meterContentBytes.fifteenMinuteRate
         if (tasksMonitor.numPendingTasks.get() * fifteenMinutePageSizeRate * 8.0 > 30 * this.bandwidth) {
             log.warn("Bandwidth exhausted, slows down the scheduling")
             return listOf()
