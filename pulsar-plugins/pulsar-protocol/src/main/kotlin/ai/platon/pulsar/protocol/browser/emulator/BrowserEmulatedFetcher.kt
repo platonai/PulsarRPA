@@ -26,7 +26,7 @@ open class BrowserEmulatedFetcher(
         private val browserEmulator: BrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
+    private val logger = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
     private val closed = AtomicBoolean()
     private val illegalState = AtomicBoolean()
@@ -56,7 +56,7 @@ open class BrowserEmulatedFetcher(
         }
 
         if (page.isInternal) {
-            log.warn("Unexpected internal page | {}", page.url)
+            logger.warn("Unexpected internal page | {}", page.url)
             return ForwardingResponse.canceled(page)
         }
 
@@ -74,7 +74,7 @@ open class BrowserEmulatedFetcher(
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
+                    logger.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
                 }
                 throw e
             }

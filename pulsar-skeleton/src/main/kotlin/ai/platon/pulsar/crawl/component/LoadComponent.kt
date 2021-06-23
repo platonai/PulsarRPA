@@ -56,6 +56,7 @@ class LoadComponent(
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
+    private val taskLogger = LoggerFactory.getLogger(LoadComponent::class.java.name + ".Task")
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     val pageCache get() = globalCache.pageCache
@@ -397,7 +398,7 @@ class LoadComponent(
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
             val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
-            logger.info(report)
+            taskLogger.info(report)
         }
     }
 

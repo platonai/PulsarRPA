@@ -33,12 +33,13 @@ open class BrowserEmulator(
         eventHandler: EventHandler,
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
-    private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
+    private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
+    private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
 
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
     init {
-        params.withLogger(log).info(true)
+        params.withLogger(logger).info(true)
     }
 
     /**
@@ -74,11 +75,11 @@ open class BrowserEmulator(
         task.page.lastBrowser = driver.browserType
 
         if (task.nRetries > fetchMaxRetry) {
-            return FetchResult.crawlRetry(task).also { log.info("Too many task retries, emit crawl retry | {}", task.url) }
+            return FetchResult.crawlRetry(task).also { logger.info("Too many task retries, emit crawl retry | {}", task.url) }
         }
 
         if (task.page.options.isDead()) {
-            log.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
+            taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
             return FetchResult.canceled(task)
         }
 
@@ -89,25 +90,25 @@ open class BrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: NavigateTaskCancellationException) {
             exception = e
-            log.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
+            taskLogger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
+            logger.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
-                log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
+                logger.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
             } else {
-                log.warn("Unexpected WebDriver exception", e)
+                logger.warn("Unexpected WebDriver exception", e)
             }
 
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
-            log.takeIf { isActive }?.warn("Web driver is disconnected", e)
+            logger.takeIf { isActive }?.warn("Web driver is disconnected", e)
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
@@ -131,7 +132,7 @@ open class BrowserEmulator(
             navigateTask.pageSource = driver.pageSource
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
-            log.warn(e.message)
+            logger.warn(e.message)
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
@@ -150,7 +151,7 @@ open class BrowserEmulator(
         meterNavigates.mark()
         numDeferredNavigates.mark()
 
-        log.trace("{}. Navigating | {}", task.page.id, task.url)
+        taskLogger.trace("{}. Navigating | {}", task.page.id, task.url)
 
         checkState(driver)
         checkState(task)
@@ -243,22 +244,22 @@ open class BrowserEmulator(
         } finally {
             if (message == null) {
                 if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
-                    log.warn("Unexpected script result (null) | {}", interactTask.url)
+                    logger.warn("Unexpected script result (null) | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK
                 }
             } else if (message == "timeout") {
-                log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
+                logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
                 val browserError = eventHandler.handleChromeErrorPage(message)
                 status = browserError.status
                 result.activeDomMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK
             } else {
-                if (log.isTraceEnabled) {
+                if (taskLogger.isTraceEnabled) {
                     val page = interactTask.fetchTask.page
                     val truncatedMessage = message.toString().substringBefore("urls")
-                    log.trace("{}. DOM is ready after {} evaluation | {}", page.id, i, truncatedMessage)
+                    taskLogger.trace("{}. DOM is ready after {} evaluation | {}", page.id, i, truncatedMessage)
                 }
             }
         }
@@ -288,9 +289,9 @@ open class BrowserEmulator(
 
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
-            if (log.isDebugEnabled) {
+            if (taskLogger.isDebugEnabled) {
                 val page = interactTask.fetchTask.page
-                log.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
+                taskLogger.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
             }
         }
     }
@@ -298,13 +299,13 @@ open class BrowserEmulator(
     private suspend fun evaluate(interactTask: InteractTask,
         expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
-            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
+            taskLogger.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
             val value = evaluate(interactTask, it)
             if (value is String) {
                 val s = Strings.stripNonPrintableChar(value)
-                log.takeIf { verbose }?.info("Result >>>$s<<<")
+                taskLogger.takeIf { verbose }?.info("Result >>>$s<<<")
             } else if (value is Int || value is Long) {
-                log.takeIf { verbose }?.info("Result >>>$value<<<")
+                taskLogger.takeIf { verbose }?.info("Result >>>$value<<<")
             }
             delay(delayMillis)
         }

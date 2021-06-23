@@ -123,7 +123,8 @@ open class StreamingCrawler<T : UrlAware>(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(StreamingCrawler::class.java)
+    private val logger = getLogger(StreamingCrawler::class)
+    private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
     private val conf = session.sessionConfig
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
@@ -409,7 +410,7 @@ open class StreamingCrawler<T : UrlAware>(
             page == null -> handleRetry(url, page)
             page.protocolStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isGone -> logger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
+            page.crawlStatus.isGone -> taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
         }
     }
 
@@ -485,7 +486,7 @@ open class StreamingCrawler<T : UrlAware>(
         if (page != null && retries > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()
-            logger.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
+            taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
             return
         }
 
@@ -497,7 +498,7 @@ open class StreamingCrawler<T : UrlAware>(
         globalMetrics.retries.mark()
         if (page != null) {
             val prefix = "Trying ${retries}th ${delay.readable()} later"
-            logger.info("{}", LoadedPageFormatter(page, prefix = prefix))
+            taskLogger.info("{}", LoadedPageFormatter(page, prefix = prefix))
         }
     }
 

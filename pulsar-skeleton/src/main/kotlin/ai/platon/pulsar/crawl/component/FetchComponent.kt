@@ -82,7 +82,7 @@ open class FetchComponent(
     val protocolFactory: ProtocolFactory,
     val immutableConfig: ImmutableConfig,
 ) : AutoCloseable {
-    private final val logger = LoggerFactory.getLogger(FetchComponent::class.java)
+    private val logger = LoggerFactory.getLogger(FetchComponent::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
