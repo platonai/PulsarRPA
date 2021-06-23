@@ -34,7 +34,7 @@
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
-        <constructor-arg ref="fetchMetrics"/>
+        <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="lazyFetchTaskManager"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -76,7 +76,7 @@
     </bean>
 
     <bean id="taskMonitor" class="ai.platon.pulsar.crawl.fetch.TaskMonitor" destroy-method="close">
-        <constructor-arg ref="fetchMetrics"/>
+        <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -85,7 +85,7 @@
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="jitIndexer"/>
         <constructor-arg ref="taskMonitor"/>
-        <constructor-arg ref="fetchMetrics"/>
+        <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>

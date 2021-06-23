@@ -71,7 +71,7 @@ class LoadComponent(
         .map { it.getName() }
         .toTypedArray()
 
-    private val fetchMetrics get() = fetchComponent.coreMetrics
+    private val coreMetrics get() = fetchComponent.coreMetrics
     private val closed = AtomicBoolean()
 
     /**
@@ -560,7 +560,7 @@ class LoadComponent(
     }
 
     private fun collectPersistMetrics(page: WebPage) {
-        val metrics = fetchMetrics
+        val metrics = coreMetrics
         if (metrics != null) {
             metrics.persists.mark()
             val bytes = page.content?.array()?.size ?: 0

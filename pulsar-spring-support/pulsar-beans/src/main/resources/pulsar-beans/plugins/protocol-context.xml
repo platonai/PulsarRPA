@@ -29,7 +29,7 @@
     <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager" destroy-method="close">
         <constructor-arg ref="proxyPoolManager"/>
         <constructor-arg ref="driverPoolManager"/>
-        <constructor-arg ref="fetchMetrics"/>
+        <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="conf"/>
     </bean>
 

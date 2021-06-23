@@ -15,7 +15,7 @@ class TestRequiredComponents: TestBase() {
     lateinit var fetchComponent: FetchComponent
 
     @Test
-    fun `When AmazonCrawler started then FetchMetrics is working`() {
+    fun `When AmazonCrawler started then coreMetrics is working`() {
         assertNotNull(fetchComponent.coreMetrics)
         assertNotNull(loadComponent.parseComponent)
         assertNotNull(loadComponent.statusTracker)

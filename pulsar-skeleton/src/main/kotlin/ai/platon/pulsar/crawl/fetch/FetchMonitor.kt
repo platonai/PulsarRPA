@@ -51,7 +51,7 @@ class FetchMonitor(
     private val id = instanceSequencer.incrementAndGet()
 
     private val startTime = Instant.now()
-    private val fetchMetrics = fetchComponent.coreMetrics
+    private val coreMetrics = fetchComponent.coreMetrics
 
     private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val fetchConcurrency = numPrivacyContexts * conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
@@ -297,8 +297,8 @@ class FetchMonitor(
             /**
              * Check throughput(fetch speed)
              * */
-            if (fetchMetrics != null && now > throughputCheckTime
-                    && fetchMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
+            if (coreMetrics != null && now > throughputCheckTime
+                    && coreMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
                 lowThroughputCount++
                 checkFetchThroughput()
                 throughputCheckTime += throughputCheckInterval
