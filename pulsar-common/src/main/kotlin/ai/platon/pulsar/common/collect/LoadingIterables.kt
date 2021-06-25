@@ -23,8 +23,12 @@ open class ConcurrentLoadingIterable<E>(
     /**
      * add an item to the very beginning of the fetch queue
      * */
-    fun addHead(e: E) {
+    fun addFirst(e: E) {
         cache.add(0, e)
+    }
+
+    fun addLast(e: E) {
+        cache.add(e)
     }
 
     fun shuffle() {

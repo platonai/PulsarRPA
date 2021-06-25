@@ -73,7 +73,7 @@ open class BrowserEmulatedFetcher(
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
-                    AppContext.tryTerminate()
+                    AppContext.beginTerminate()
                     logger.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
                 }
                 throw e

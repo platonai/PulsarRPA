@@ -5,6 +5,7 @@ import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -383,11 +384,17 @@ abstract class AbstractPulsarContext(
     }
 
     private fun doClose() {
-        log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
-
-        kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
+        AppContext.terminate()
 
         if (closed.compareAndSet(false, true)) {
+            log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
+
+            kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
+
+            // NOTE: close is already registered as a destroy method
+            crawlLoops.stop()
+            crawlLoops.loops.clear()
+
             sessions.values.forEach {
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
@@ -395,6 +402,9 @@ abstract class AbstractPulsarContext(
             closableObjects.forEach {
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
+
+            // NOTE: close is already registered as a destroy method
+            kotlin.runCatching { getBeanOrNull(AppMetrics::class)?.close() }.onFailure { log.warn(it.message) }
         }
     }
 }

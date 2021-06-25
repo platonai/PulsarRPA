@@ -48,7 +48,7 @@ object AppContext {
 
     fun start() = state.set(State.RUNNING)
 
-    fun tryTerminate() {
+    fun beginTerminate() {
         if (state.get() != State.TERMINATED) {
             state.set(State.TERMINATING)
         }

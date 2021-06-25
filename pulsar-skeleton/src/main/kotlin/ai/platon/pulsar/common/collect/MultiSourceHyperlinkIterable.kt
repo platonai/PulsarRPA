@@ -41,7 +41,9 @@ class MultiSourceHyperlinkIterable(
     /**
      * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately
      * */
-    fun addHead(url: UrlAware) = loadingIterable.addHead(url)
+    fun addFirst(url: UrlAware) = loadingIterable.addFirst(url)
+
+    fun addLast(url: UrlAware) = loadingIterable.addLast(url)
 
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 

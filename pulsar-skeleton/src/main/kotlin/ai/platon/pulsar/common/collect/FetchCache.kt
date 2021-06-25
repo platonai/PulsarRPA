@@ -60,10 +60,10 @@ class LoadingFetchCache(
     }
 
     override val nonReentrantQueue =
-        ConcurrentNonReentrantLoadingQueue(urlLoader, UrlGroup(name, G_NON_REENTRANT, priority), capacity)
+        ConcurrentNonReentrantLoadingQueue(urlLoader, UrlGroup(name, G_NON_REENTRANT, priority, capacity), capacity)
     override val nReentrantQueue =
-        ConcurrentNEntrantLoadingQueue(urlLoader, UrlGroup(name, G_N_ENTRANT, priority), 3, capacity)
-    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, UrlGroup(name, G_REENTRANT, priority), capacity)
+        ConcurrentNEntrantLoadingQueue(urlLoader, UrlGroup(name, G_N_ENTRANT, priority, capacity), 3, capacity)
+    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, UrlGroup(name, G_REENTRANT, priority, capacity), capacity)
     override val queues: List<Queue<UrlAware>>
         get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     override val size get() = queues.sumOf { it.size }

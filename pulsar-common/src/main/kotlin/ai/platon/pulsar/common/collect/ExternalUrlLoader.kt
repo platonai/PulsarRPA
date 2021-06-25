@@ -16,19 +16,16 @@ data class UrlGroup(
     /**
      * The priority
      * */
-    val priority: Int
+    val priority: Int,
+    /**
+     * The priority
+     * */
+    val pageSize: Int,
 )
 
 /**
  * */
 interface ExternalUrlLoader {
-    companion object {
-        /**
-         * Url queues are small because every url uses about 1s to fetch, so do not load too many items each time
-         * */
-        const val LOAD_SIZE = 100
-    }
-
     /**
      * The delay time to load after another load
      * */

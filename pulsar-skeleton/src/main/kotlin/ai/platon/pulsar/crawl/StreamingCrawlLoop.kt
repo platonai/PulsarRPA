@@ -52,7 +52,7 @@ open class StreamingCrawlLoop(
             fetchIterable.addDefaultCollectors()
         }
 
-        log.debug("Registered hyperlink collectors: \n$report")
+        log.debug("Registered {} hyperlink collectors", fetchIterable.allCollectors.size)
 
         /**
          * The pulsar session

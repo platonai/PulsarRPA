@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
@@ -23,6 +22,8 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
     fun shuffle()
 
     fun overflow(url: UrlAware)
+
+    fun overflow(url: List<UrlAware>)
 }
 
 /**
@@ -35,28 +36,35 @@ abstract class AbstractLoadingQueue(
         /**
          * The delay time to load after another load
          * */
-        var loadDelay: Duration = Duration.ofSeconds(120)
+        var loadDelay: Duration = Duration.ofSeconds(60)
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
-
-    companion object {
-        private const val ESTIMATED_EXTERNAL_SIZE_KEY = "EES"
-    }
-
-    private val expiringCache = ConcurrentExpiringLRUCache<Int>(1, loadDelay)
 
     protected val implementation = ConcurrentLinkedQueue<UrlAware>()
 
     @Volatile
+    private var _estimatedExternalSize: Int = -1
+
+    @Volatile
     protected var lastLoadTime = Instant.EPOCH
 
+    var loadCount: Int = 0
+        protected set
+
+    var saveCount: Int = 0
+        protected set
+
     val isExpired get() = isExpired(loadDelay)
+
+    fun expire() {
+        lastLoadTime = Instant.EPOCH
+    }
 
     /**
      * The cache size
      * */
     @get:Synchronized
     override val size: Int
-        get() = tryRefresh().implementation.size
+        get() = implementation.size
 
     /**
      * Query the underlying database, this operation might be slow, try to use estimatedExternalSize
@@ -65,8 +73,9 @@ abstract class AbstractLoadingQueue(
     override val externalSize: Int
         get() = loader.countRemaining(group)
 
+    @get:Synchronized
     override val estimatedExternalSize: Int
-        get() = expiringCache.computeIfAbsent(ESTIMATED_EXTERNAL_SIZE_KEY) { externalSize }
+        get() = _estimatedExternalSize.coerceAtLeast(0)
 
     @get:Synchronized
     val freeSlots
@@ -82,24 +91,28 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun load() {
-        if (isExpired && freeSlots > 0) {
-            lastLoadTime = Instant.now()
-            loader.loadToNow(implementation, freeSlots, group)
+        if (isEmpty() && estimatedExternalSize > 0) {
+            loadNow()
+        } else if (freeSlots > 0 && isExpired) {
+            loadNow()
         }
     }
 
     @Synchronized
     override fun load(delay: Duration) {
         if (freeSlots > 0 && isExpired(delay)) {
-            lastLoadTime = Instant.now()
-            loader.loadToNow(implementation, freeSlots, group)
+            loadNow()
         }
     }
 
     @Synchronized
     override fun loadNow(): Collection<UrlAware> {
         return if (freeSlots > 0) {
-            loader.loadToNow(implementation, freeSlots, group)
+            lastLoadTime = Instant.now()
+            loader.loadToNow(implementation, freeSlots, group).also {
+                _estimatedExternalSize = externalSize
+                ++loadCount
+            }
         } else listOf()
     }
 
@@ -116,8 +129,12 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun addAll(urls: Collection<UrlAware>): Boolean {
-        // TODO: optimize using loader.saveAll()
-        urls.forEach { add(it) }
+        if (urls.size > freeSlots) {
+            super.addAll(urls.take(freeSlots))
+            overflow(urls.drop(freeSlots))
+        } else {
+            super.addAll(urls)
+        }
         return true
     }
 
@@ -137,29 +154,47 @@ abstract class AbstractLoadingQueue(
     }
 
     @Synchronized
-    override fun iterator(): MutableIterator<UrlAware> = tryRefresh().implementation.iterator()
+    override fun iterator(): MutableIterator<UrlAware> = refreshIfNecessary().implementation.iterator()
 
     @Synchronized
     override fun peek(): UrlAware? {
-        tryRefresh()
+        refreshIfNecessary()
         return implementation.peek()
     }
 
     @Synchronized
     override fun poll(): UrlAware? {
-        tryRefresh()
+        refreshIfNecessary()
         return implementation.poll()
     }
 
     @Synchronized
     override fun overflow(url: UrlAware) {
         loader.save(url, group)
+        estimate()
+        ++saveCount
     }
 
-    private fun tryRefresh(): AbstractLoadingQueue {
-        if (freeSlots > 0) {
+    @Synchronized
+    override fun overflow(url: List<UrlAware>) {
+        loader.saveAll(url, group)
+        estimate()
+        ++saveCount
+    }
+
+    private fun estimate() {
+        _estimatedExternalSize = externalSize
+    }
+
+    private fun refreshIfNecessary(): AbstractLoadingQueue {
+        if (_estimatedExternalSize < 0) {
+            estimate()
+        }
+
+        if (implementation.isEmpty()) {
             load()
         }
+
         return this
     }
 }

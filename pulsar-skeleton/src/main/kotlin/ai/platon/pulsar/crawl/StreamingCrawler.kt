@@ -25,7 +25,6 @@ import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -341,7 +340,7 @@ open class StreamingCrawler<T : UrlAware>(
         } catch (e: Throwable) {
             if (e.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.tryTerminate()
+                    AppContext.beginTerminate()
                     logger.warn("Streaming crawler coroutine was cancelled, quit ...", e)
                 }
                 flowState = FlowState.BREAK
@@ -410,7 +409,10 @@ open class StreamingCrawler<T : UrlAware>(
             page == null -> handleRetry(url, page)
             page.protocolStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isGone -> taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
+            page.crawlStatus.isGone -> {
+                globalMetrics.gone.mark()
+                taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
+            }
         }
     }
 
@@ -437,7 +439,7 @@ open class StreamingCrawler<T : UrlAware>(
         when (e) {
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.tryTerminate()
+                    AppContext.beginTerminate()
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
@@ -462,7 +464,7 @@ open class StreamingCrawler<T : UrlAware>(
             is CancellationException -> {
                 // Comes after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.tryTerminate()
+                    AppContext.beginTerminate()
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
@@ -525,7 +527,9 @@ open class StreamingCrawler<T : UrlAware>(
         val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
-            logger.takeIf { k % 60 == 0 }?.warn("Context leaks too fast: $contextLeaksRate leaks/seconds")
+            logger.takeIf { k % 60 == 0 }
+                ?.warn("Context leaks too fast: {} leaks/seconds, memory: {}",
+                    contextLeaksRate, Strings.readableBytes(availableMemory))
             delay(1000)
 
             // trigger the meter updating

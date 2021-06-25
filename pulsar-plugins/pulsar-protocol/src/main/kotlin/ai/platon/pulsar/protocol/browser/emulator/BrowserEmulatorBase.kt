@@ -52,7 +52,7 @@ abstract class BrowserEmulatorBase(
     @Throws(IllegalApplicationContextStateException::class)
     protected fun checkState() {
         if (!isActive) {
-            AppContext.tryTerminate()
+            AppContext.beginTerminate()
             throw IllegalApplicationContextStateException("Emulator is closed")
         }
     }
