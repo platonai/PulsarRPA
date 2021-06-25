@@ -50,7 +50,7 @@ abstract class AbstractLoadingQueue(
     var loadCount: Int = 0
         protected set
 
-    var saveCount: Int = 0
+    var savedCount: Int = 0
         protected set
 
     val isExpired get() = isExpired(loadDelay)
@@ -135,8 +135,10 @@ abstract class AbstractLoadingQueue(
     @Synchronized
     override fun addAll(urls: Collection<UrlAware>): Boolean {
         if (urls.size > freeSlots) {
-            super.addAll(urls.take(freeSlots))
-            overflow(urls.drop(freeSlots))
+            val n = freeSlots
+            // TODO: can be optimized
+            super.addAll(urls.take(n))
+            overflow(urls.drop(n))
         } else {
             super.addAll(urls)
         }
@@ -176,15 +178,15 @@ abstract class AbstractLoadingQueue(
     @Synchronized
     override fun overflow(url: UrlAware) {
         loader.save(url, group)
+        ++savedCount
         estimate()
-        ++saveCount
     }
 
     @Synchronized
-    override fun overflow(url: List<UrlAware>) {
-        loader.saveAll(url, group)
+    override fun overflow(urls: List<UrlAware>) {
+        loader.saveAll(urls, group)
+        savedCount += urls.size
         estimate()
-        ++saveCount
     }
 
     private fun estimate() {
