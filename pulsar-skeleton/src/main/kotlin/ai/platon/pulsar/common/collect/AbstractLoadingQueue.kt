@@ -90,6 +90,11 @@ abstract class AbstractLoadingQueue(
     }
 
     @Synchronized
+    override fun clear() {
+        implementation.clear()
+    }
+
+    @Synchronized
     override fun load() {
         if (isEmpty() && estimatedExternalSize > 0) {
             loadNow()
