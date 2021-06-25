@@ -10,7 +10,7 @@ import org.junit.Before
 
 open class TestBase {
     protected val conf = ImmutableConfig()
-    protected val group = UrlGroup("", 0, 0)
+    protected val group = UrlGroup("", 0, 0, 10000)
     protected val queueSize = 100
     protected lateinit var urlLoader: TemporaryLocalFileUrlLoader
 

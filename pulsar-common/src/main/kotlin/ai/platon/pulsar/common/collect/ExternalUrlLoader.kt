@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 
-data class UrlGroup(
+data class UrlGroup constructor(
     /**
      * The job id
      * */
@@ -18,12 +18,33 @@ data class UrlGroup(
      * */
     val priority: Int,
     /**
-     * The priority
+     * The page size
      * */
     val pageSize: Int,
+    /**
+     * The loaded count
+     * */
+    var loadedCount: Int = 0,
+    /**
+     * The remaining count
+     * */
+    var remainingCount: Int = 0,
 )
 
+class UrlGroupComparator {
+    companion object : Comparator<UrlGroup> {
+        override fun compare(o1: UrlGroup, o2: UrlGroup): Int {
+            return toString(o1).compareTo(toString(o2))
+        }
+
+        private fun toString(g: UrlGroup): String {
+            return g.jobId + "." + g.group + "." + g.priority
+        }
+    }
+}
+
 /**
+ *
  * */
 interface ExternalUrlLoader {
     /**
