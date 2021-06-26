@@ -413,7 +413,7 @@ open class StreamingCrawler<T : UrlAware>(
             page == null -> handleRetry(url, page)
             page.protocolStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isGone -> logger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
+            page.crawlStatus.isGone -> taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
         }
     }
 
