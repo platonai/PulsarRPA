@@ -266,7 +266,7 @@ open class PeriodicalHyperlinkCollector(
 }
 
 open class FetchCacheCollector(
-    private val fetchCache: FetchCache,
+    val fetchCache: FetchCache,
     priority: Int = Priority13.HIGHER.value,
 ) : AbstractPriorityDataCollector<UrlAware>(priority) {
 

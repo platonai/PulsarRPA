@@ -36,7 +36,8 @@ abstract class AbstractLoadingQueue(
         /**
          * The delay time to load after another load
          * */
-        var loadDelay: Duration = Duration.ofSeconds(60)
+        var loadDelay: Duration = Duration.ofSeconds(60),
+        val transformer: (UrlAware) -> UrlAware
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 
     protected val implementation = ConcurrentLinkedQueue<UrlAware>()
@@ -94,6 +95,10 @@ abstract class AbstractLoadingQueue(
         implementation.clear()
     }
 
+    fun externalClear() {
+        loader.deleteAll(group)
+    }
+
     @Synchronized
     override fun load() {
         if (isEmpty() && estimatedExternalSize > 0) {
@@ -114,7 +119,7 @@ abstract class AbstractLoadingQueue(
     override fun loadNow(): Collection<UrlAware> {
         return if (freeSlots > 0) {
             lastLoadTime = Instant.now()
-            loader.loadToNow(implementation, freeSlots, group).also {
+            loader.loadToNow(implementation, freeSlots, group, transformer).also {
                 _estimatedExternalSize = externalSize
                 ++loadCount
             }

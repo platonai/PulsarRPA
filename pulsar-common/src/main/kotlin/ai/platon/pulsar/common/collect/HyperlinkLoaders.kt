@@ -50,6 +50,10 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
         return sink
     }
 
+    override fun deleteAll(group: UrlGroup): Long {
+        return 0
+    }
+
     private fun parse(line: String, group: String): Hyperlink? {
         val parts = line.split(delimiter)
         return if (parts.size == 2 && parts[0] == group) {

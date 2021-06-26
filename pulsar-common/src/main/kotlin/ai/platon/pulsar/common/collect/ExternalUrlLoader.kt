@@ -28,7 +28,7 @@ data class UrlGroup constructor(
     /**
      * The remaining count
      * */
-    var remainingCount: Int = 0,
+    var remainingCount: Int = 0
 )
 
 class UrlGroupComparator {
@@ -103,6 +103,8 @@ interface ExternalUrlLoader {
      * Load items from the source to the sink
      * */
     fun <T> loadTo(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T)
+
+    fun deleteAll(group: UrlGroup): Long
 }
 
 abstract class AbstractExternalUrlLoader(

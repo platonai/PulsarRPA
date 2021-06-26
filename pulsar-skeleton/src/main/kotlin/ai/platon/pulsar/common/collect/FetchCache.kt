@@ -51,6 +51,10 @@ class LoadingFetchCache(
      * The cache capacity
      * */
     val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
+    /**
+     * The transformer
+     * */
+    val transformer: (UrlAware) -> UrlAware = { it }
 ) : AbstractFetchCache(name), Loadable<UrlAware> {
 
     companion object {
@@ -60,10 +64,10 @@ class LoadingFetchCache(
     }
 
     override val nonReentrantQueue =
-        ConcurrentNonReentrantLoadingQueue(urlLoader, UrlGroup(name, G_NON_REENTRANT, priority, capacity), capacity)
+        ConcurrentNonReentrantLoadingQueue(urlLoader, UrlGroup(name, G_NON_REENTRANT, priority, capacity), capacity, transformer)
     override val nReentrantQueue =
-        ConcurrentNEntrantLoadingQueue(urlLoader, UrlGroup(name, G_N_ENTRANT, priority, capacity), 3, capacity)
-    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, UrlGroup(name, G_REENTRANT, priority, capacity), capacity)
+        ConcurrentNEntrantLoadingQueue(urlLoader, UrlGroup(name, G_N_ENTRANT, priority, capacity), 3, capacity, transformer)
+    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, UrlGroup(name, G_REENTRANT, priority, capacity), capacity, transformer)
     override val queues: List<Queue<UrlAware>>
         get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     override val size get() = queues.sumOf { it.size }
