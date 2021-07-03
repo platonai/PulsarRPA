@@ -60,4 +60,9 @@ class MultiSourceHyperlinkIterable(
         regularCollectors += collector
         return this
     }
+
+    fun addDataCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
+        regularCollectors += collectors
+        return this
+    }
 }
