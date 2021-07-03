@@ -7,14 +7,14 @@ class ConcurrentLoadingQueue(
     loader: ExternalUrlLoader,
     group: UrlGroup,
     capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
-    transformer: (UrlAware) -> UrlAware
+    transformer: (UrlAware) -> UrlAware = { it }
 ) : AbstractLoadingQueue(loader, group, capacity, transformer = transformer)
 
 class ConcurrentNonReentrantLoadingQueue(
     loader: ExternalUrlLoader,
     group: UrlGroup,
     capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
-    transformer: (UrlAware) -> UrlAware
+    transformer: (UrlAware) -> UrlAware = { it }
 ) : AbstractLoadingQueue(loader, group, capacity, transformer = transformer) {
     private val historyHash = HashSet<Int>()
 
@@ -44,7 +44,7 @@ class ConcurrentNEntrantLoadingQueue(
     group: UrlGroup,
     val n: Int = 3,
     capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
-    transformer: (UrlAware) -> UrlAware
+    transformer: (UrlAware) -> UrlAware = { it }
 ) : AbstractLoadingQueue(loader, group, capacity, transformer = transformer) {
 
     private val historyHash = HashMultiset.create<Int>()
