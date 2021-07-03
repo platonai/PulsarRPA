@@ -1,13 +1,11 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
-import ai.platon.pulsar.common.collect.PriorityDataCollector
 import ai.platon.pulsar.common.config.CapabilityTypes.ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.collect.PriorityDataCollectorsFormatter
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 
@@ -23,7 +21,7 @@ open class StreamingCrawlLoop(
     /**
      * The loop name
      * */
-    name: String = "DefaultStreamingCrawlLoop"
+    name: String = "StreamingCrawlLoop"
 ) : AbstractCrawlLoop(name, unmodifiedConfig) {
     private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
@@ -52,7 +50,7 @@ open class StreamingCrawlLoop(
             fetchIterable.addDefaultCollectors()
         }
 
-        log.debug("Registered {} hyperlink collectors", fetchIterable.allCollectors.size)
+        log.debug("Registered {} hyperlink collectors", fetchIterable.collectors.size)
 
         /**
          * The pulsar session
@@ -73,7 +71,7 @@ open class StreamingCrawlLoop(
         }
         running = false
 
-        collectors.clear()
+        fetchIterable.clear()
         crawler.quit()
         runBlocking {
             crawlJob?.cancelAndJoin()

@@ -103,7 +103,7 @@ class TestDataCollectors : TestBase() {
         val resourceURI = ResourceLoader.getResource("seeds/head100/best-sellers.txt")!!.toURI()
         val collector = LocalFileHyperlinkCollector(Paths.get(resourceURI), Priority13.NORMAL)
         fetchIterable.addDefaultCollectors()
-        fetchIterable.addDataCollector(collector)
+        fetchIterable.addCollector(collector)
 
         val cache = fetchIterable.fetchCaches.lower2Cache
         LinkExtractors.fromResource("seeds/head100/most-wished-for.txt")

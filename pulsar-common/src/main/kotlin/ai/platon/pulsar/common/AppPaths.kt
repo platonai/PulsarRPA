@@ -48,7 +48,9 @@ object AppPaths {
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR
     @RequiredDirectory
-    val CACHE_DIR = TMP_DIR.resolve("cache")
+    val PROC_TMP_DIR = AppContext.PROC_TMP_DIR
+    @RequiredDirectory
+    val CACHE_DIR = PROC_TMP_DIR.resolve("cache")
     @RequiredDirectory
     val WEB_CACHE_DIR = CACHE_DIR.resolve("web")
     @RequiredDirectory
@@ -56,20 +58,20 @@ object AppPaths {
     @RequiredDirectory
     val FILE_CACHE_DIR = CACHE_DIR.resolve("files")
     @RequiredDirectory
-    val TMP_CONF_DIR = TMP_DIR.resolve("conf")
+    val TMP_CONF_DIR = PROC_TMP_DIR.resolve("conf")
     @RequiredDirectory
-    val REPORT_DIR = TMP_DIR.resolve( "report")
+    val REPORT_DIR = PROC_TMP_DIR.resolve( "report")
     @RequiredDirectory
-    val PROC_DIR = TMP_DIR.resolve( "proc")
+    val PROC_DIR = PROC_TMP_DIR.resolve( "proc")
     @RequiredDirectory
     val METRICS_DIR = REPORT_DIR.resolve( "metrics")
     @RequiredDirectory
-    val SCRIPT_DIR = TMP_DIR.resolve( "scripts")
+    val SCRIPT_DIR = PROC_TMP_DIR.resolve( "scripts")
     @RequiredDirectory
-    val TEST_DIR = TMP_DIR.resolve( "test")
+    val TEST_DIR = PROC_TMP_DIR.resolve( "test")
 
     @RequiredDirectory
-    val CONTEXT_TMP_DIR = TMP_DIR.resolve( "context")
+    val CONTEXT_TMP_DIR = PROC_TMP_DIR.resolve( "context")
     @RequiredDirectory
     val BROWSER_TMP_DIR = CONTEXT_TMP_DIR.resolve( "browser")
     @RequiredFile
@@ -120,6 +122,7 @@ object AppPaths {
     val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
 
     private val tmpDirStr get() = TMP_DIR.toString()
+    private val procTmpDirStr get() = PROC_TMP_DIR.toString()
     private val homeDirStr get() = DATA_DIR.toString()
 
     init {
@@ -140,6 +143,8 @@ object AppPaths {
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
 
     fun getTmp(first: String, vararg more: String): Path = Paths.get(tmpDirStr, first.removePrefix(tmpDirStr), *more)
+
+    fun getProcTmp(first: String, vararg more: String): Path = Paths.get(procTmpDirStr, first.removePrefix(procTmpDirStr), *more)
 
     fun random(prefix: String = "", suffix: String = ""): String = "$prefix${UUID.randomUUID()}$suffix"
 

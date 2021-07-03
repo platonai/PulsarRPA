@@ -38,8 +38,12 @@ object AppContext {
     val APP_NAME = System.getProperty("app.name", "pulsar")
     val APP_IDENT = System.getProperty("app.id.str", USER)
     val APP_TMP_PROPERTY = System.getProperty("app.tmp.dir")
-    val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR)
-        .resolve("$APP_NAME-$APP_IDENT")
+    val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve(APP_NAME)
+    val PROC_TMP_DIR = if (APP_TMP_PROPERTY != null) {
+        Paths.get(APP_TMP_PROPERTY)
+    } else {
+        Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
+    }
     val APP_DATA_DIR = Paths.get(USER_HOME).resolve(".$APP_NAME")
 
     val state = AtomicReference(State.NEW)

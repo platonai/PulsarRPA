@@ -17,6 +17,7 @@ interface FetchCache {
     val estimatedSize get() = queues.sumOf { it.size }
 
     fun removeDeceased()
+    fun clear()
 }
 
 abstract class AbstractFetchCache(
@@ -25,6 +26,10 @@ abstract class AbstractFetchCache(
     override fun removeDeceased() {
         val now = Instant.now()
         queues.forEach { it.removeIf { it.deadTime < now } }
+    }
+
+    override fun clear() {
+        queues.forEach { it.clear() }
     }
 }
 

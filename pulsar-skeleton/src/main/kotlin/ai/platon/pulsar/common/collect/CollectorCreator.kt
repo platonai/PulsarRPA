@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class UrlCollectorCreator(
+class CollectorCreator(
     val fetchCaches: FetchCacheManager,
     val collectors: ConcurrentLinkedQueue<PriorityDataCollector<UrlAware>>,
     val urlLoader: ExternalUrlLoader
@@ -18,7 +18,7 @@ class UrlCollectorCreator(
         }
     }
 
-    fun addFetchCacheCollector(name: String, priority: Int, queue: Queue<UrlAware>): FetchCacheCollector {
+    fun addFetchCacheCollector(name: String, priority: Int): FetchCacheCollector {
         val fetchCache = LoadingFetchCache(name, urlLoader, priority)
         fetchCaches.unorderedCaches.add(fetchCache)
         val collector = FetchCacheCollector(fetchCache, priority)
@@ -41,10 +41,19 @@ class UrlCollectorCreator(
         return collector
     }
 
-    private fun reportCollector(collector: DataCollector<UrlAware>) {
+    fun reportCollector(collector: DataCollector<out UrlAware>, message: String = "") {
+        val msg = if (message.isBlank()) "" else " | $message"
+
         val dcLog = getLogger(DataCollector::class)
-        logger.info("Running asin task <{}> with {}/{} items", collector.name, collector.size, collector.estimatedSize)
+        dcLog?.info(
+            "Running task <{}> with {}/{} items{}",
+            collector.name, collector.size, collector.estimatedSize, msg
+        )
+
+        logger.info(
+            "Running task <{}> with {}/{} items{}",
+            collector.name, collector.size, collector.estimatedSize, msg
+        )
         logger.info("{}", collector)
-        dcLog.info("Running asin task <{}> with {}/{} items", collector.name, collector.size, collector.estimatedSize)
     }
 }

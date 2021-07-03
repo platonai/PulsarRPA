@@ -14,14 +14,14 @@ interface CrawlLoop: StartStopRunnable {
     val unmodifiedConfig: ImmutableConfig
     val defaultOptions: LoadOptions
     val fetchIterable: Iterable<UrlAware>
-    val collectors: Queue<out DataCollector<UrlAware>>
+    val collectors: List<DataCollector<UrlAware>>
     val crawler: Crawler
     val abstract: String
     val report: String
 }
 
 abstract class AbstractCrawlLoop(
-    override val name: String = "DefaultCrawlLoop",
+    override val name: String,
     override val unmodifiedConfig: ImmutableConfig
 ) : CrawlLoop {
     /**
@@ -36,7 +36,7 @@ abstract class AbstractCrawlLoop(
     /**
      * The shortcut for all collectors
      * */
-    override val collectors: Queue<PriorityDataCollector<UrlAware>> get() = fetchIterable.regularCollectors
+    override val collectors: List<DataCollector<UrlAware>> get() = fetchIterable.collectors
 
     abstract override val crawler: AbstractCrawler
 

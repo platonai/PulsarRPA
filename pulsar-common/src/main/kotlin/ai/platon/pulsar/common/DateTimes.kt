@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAccessor
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 object DateTimes {
     private val logger = getLogger(DateTimes::class)
@@ -19,19 +20,26 @@ object DateTimes {
 
     // inaccurate date time
     const val MILLIS_OF_SECOND = 1000L
+    const val SECONDS_OF_MINUTE = 60L
+    const val MINUTES_OF_HOUR = 60L
+    const val SECONDS_OF_HOUR = SECONDS_OF_MINUTE * MINUTES_OF_HOUR
     const val HOURS_OF_DAY = 24L
     const val HOURS_OF_MONTH = HOURS_OF_DAY * 30
     const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
-    val ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365))
+
+    val ONE_YEAR_LATER: Instant = Instant.now() + Duration.ofDays(365)
 
     const val DATE_REGEX = "\\d{4}-\\d{2}-\\d{2}"
     const val DATE_TIME_REGEX = "${DATE_REGEX}T\\d{2}:.+"
     const val SIMPLE_DATE_TIME_REGEX = "$DATE_REGEX\\s+\\d{2}:.+"
 
+    const val PULSAR_ZONE_ID = "pulsar.zone.id"
+    const val PULSAR_ZONE_OFFSET = "pulsar.zone.offset"
+
     /**
-     * The default zone id, it will be configurable
+     * The default zone id
      * */
-    var zoneId = ZoneId.of("Asia/Shanghai")
+    var zoneId = ZoneId.of(System.getProperty(PULSAR_ZONE_ID, "Asia/Shanghai"))
     /**
      * The default zone offset, it must be consistent with zoneId
      *
@@ -40,15 +48,15 @@ object DateTimes {
      * So you can only find the ZoneOffset for a ZoneId on a particular Instant.
      * See also [Tz_database](https://en.wikipedia.org/wiki/Tz_database)
      * */
-    var zoneOffSet = ZoneOffset.of("+08:00")
+    var zoneOffset = ZoneOffset.of(System.getProperty(PULSAR_ZONE_OFFSET, "+08:00"))
     /**
      * The time to start the program
      */
     val startTime = Instant.now()
     /**
-     * We foresee that 2100 will be the end of the world, care about nothing after the doom
+     * We foresee that 2200 will be the end of the world, care about nothing after the doom
      * */
-    val doomsday = Instant.parse("2100-01-01T00:00:00Z")
+    val doomsday = Instant.parse("2200-01-01T00:00:00Z")
 
     val midnight get() = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
     val startOfHour get() = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
@@ -137,15 +145,15 @@ object DateTimes {
     }
 
     fun startOfDay(): Instant {
-        return LocalDate.now().atStartOfDay().toInstant(zoneOffSet)
+        return LocalDate.now().atStartOfDay().toInstant(zoneOffset)
     }
 
     fun endOfDay(): Instant {
-        return LocalDate.now().atStartOfDay().toInstant(zoneOffSet).plus(Duration.ofHours(24))
+        return LocalDate.now().atStartOfDay().toInstant(zoneOffset).plus(Duration.ofHours(24))
     }
 
     fun timePointOfDay(hour: Int, minute: Int = 0, second: Int = 0): Instant {
-        return LocalDate.now().atTime(hour, minute, second).toInstant(zoneOffSet)
+        return LocalDate.now().atTime(hour, minute, second).toInstant(zoneOffset)
     }
 
     fun elapsedTime(): Duration {

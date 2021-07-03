@@ -129,7 +129,7 @@ class FetchMonitor(
             this.options = FetchOptions(jobConf)
 
             this.jobName = jobConf.get(PARAM_JOB_NAME, "UNNAMED JOB")
-            this.finishScript = AppPaths.TMP_DIR.resolve("scripts").resolve("finish_$jobName.sh")
+            this.finishScript = AppPaths.SCRIPT_DIR.resolve("finish_$jobName.sh")
 
             generateFinishCommand()
         }

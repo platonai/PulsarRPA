@@ -155,8 +155,8 @@ class TestDateTimes {
 
         val zoneId = DateTimes.zoneId
         assertEquals("Asia/Shanghai", DateTimes.zoneId.id)
-        assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffSet)
-        println(DateTimes.zoneOffSet)
+        assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffset)
+        println(DateTimes.zoneOffset)
     }
 
     @Test

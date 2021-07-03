@@ -19,9 +19,9 @@ class MultiSourceHyperlinkIterable(
         ConcurrentLoadingIterable(regularCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    val regularCollectors: Queue<PriorityDataCollector<UrlAware>> get() = regularCollector.collectors
+    val regularCollectors: Collection<PriorityDataCollector<UrlAware>> get() = regularCollector.collectors
 
-    val allCollectors: List<PriorityDataCollector<UrlAware>> get() {
+    val collectors: List<PriorityDataCollector<UrlAware>> get() {
         val list = mutableListOf<PriorityDataCollector<UrlAware>>()
         list += realTimeCollector
         list += delayCollector
@@ -30,13 +30,9 @@ class MultiSourceHyperlinkIterable(
         return list
     }
 
-    val abstract: String get() = PriorityDataCollectorsFormatter(allCollectors).abstract()
+    val abstract: String get() = PriorityDataCollectorsFormatter(collectors).abstract()
 
-    val report: String get() = PriorityDataCollectorsFormatter(allCollectors).toString()
-
-//    val normalCacheSize get() = fetchCaches.caches.entries.sumBy { it.value.size }
-//    val normalCacheEstimatedSize get() = fetchCaches.caches.entries.sumBy { it.value.estimatedSize }
-//    val totalCacheSize get() = cacheSize + fetchCaches.realTimeCache.size + normalCacheSize
+    val report: String get() = PriorityDataCollectorsFormatter(collectors).toString()
 
     /**
      * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately
@@ -48,21 +44,28 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        regularCollectors.removeIf { it is FetchCacheCollector }
+        regularCollector.collectors.removeIf { it is FetchCacheCollector }
         fetchCaches.caches.forEach { (priority, fetchCache) ->
-            regularCollectors += FetchCacheCollector(fetchCache, priority)
-                .apply { name = "FetchCacheC@" + hashCode() }
+            val collector = FetchCacheCollector(fetchCache, priority)
+            collector.name = "FetchCacheC@" + hashCode()
+            addCollector(collector)
         }
         return this
     }
 
-    fun addDataCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
-        regularCollectors += collector
+    fun addCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
+        regularCollector.collectors += collector
         return this
     }
 
-    fun addDataCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
-        regularCollectors += collectors
+    fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
+        regularCollector.collectors += collectors
         return this
+    }
+
+    fun clear() {
+        realTimeCollector.fetchCache.clear()
+        delayCollector.queue.clear()
+        regularCollector.collectors.clear()
     }
 }
