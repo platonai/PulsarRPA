@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.common.collect.PriorityDataCollectorsFormatter
 import java.util.*
@@ -9,10 +10,11 @@ class MultiSourceHyperlinkIterable(
     val fetchCaches: FetchCacheManager,
     val lowerCacheSize: Int = 100,
 ) : Iterable<UrlAware> {
+    private val logger = getLogger(this)
     private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache, Priority13.HIGHEST)
-        .apply { name = "FetchCacheC@RealTime" }
+        .apply { name = "FCC@RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
-        .apply { name = "DelayCacheC@Delay" }
+        .apply { name = "DelayCC@Delay" }
     private val regularCollector = MultiSourceDataCollector<UrlAware>()
 
     val loadingIterable =
@@ -47,7 +49,7 @@ class MultiSourceHyperlinkIterable(
         regularCollector.collectors.removeIf { it is FetchCacheCollector }
         fetchCaches.caches.forEach { (priority, fetchCache) ->
             val collector = FetchCacheCollector(fetchCache, priority)
-            collector.name = "FetchCacheC@" + hashCode()
+            collector.name = "FCC@" + hashCode()
             addCollector(collector)
         }
         return this
@@ -61,6 +63,26 @@ class MultiSourceHyperlinkIterable(
     fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
         regularCollector.collectors += collectors
         return this
+    }
+
+    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
+        return regularCollector.collectors.filter { it.name == name }
+    }
+
+    fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
+        return regularCollector.collectors.filter { it.name in names }
+    }
+
+    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
+        return regularCollector.collectors.filter { it.name.matches(regex) }
+    }
+
+    fun remove(collector: PriorityDataCollector<UrlAware>): Boolean {
+        return regularCollector.collectors.remove(collector)
+    }
+
+    fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>): Boolean {
+        return regularCollector.collectors.removeAll(collectors)
     }
 
     fun clear() {

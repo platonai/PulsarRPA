@@ -136,6 +136,14 @@ object DateTimes {
         return format(LocalDateTime.now())
     }
 
+    fun toLocalDate(instant: Instant): LocalDate {
+        return instant.atZone(zoneId).toLocalDate()
+    }
+
+    fun toLocalDateTime(instant: Instant): LocalDateTime {
+        return instant.atZone(zoneId).toLocalDateTime()
+    }
+
     fun startOfHour(): Instant {
         return Instant.now().truncatedTo(ChronoUnit.HOURS)
     }
