@@ -28,7 +28,7 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
     fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
         val fetchCache = LoadingFetchCache(name, urlLoader, priority)
         fetchCaches.unorderedCaches.add(fetchCache)
-        val collector = FetchCacheCollector(fetchCache, priority)
+        val collector = FetchCacheCollector(fetchCache, priority).also { it.name = name }
 
         report(collector)
         fetchIterable.addCollector(collector)
@@ -41,9 +41,7 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
         priority: Int,
         queue: Queue<UrlAware> = ConcurrentLinkedQueue()
     ): QueueCollector {
-        val collector = QueueCollector(queue, priority).also {
-            it.name = name
-        }
+        val collector = QueueCollector(queue, priority).also { it.name = name }
 
         report(collector)
         fetchIterable.addCollector(collector)

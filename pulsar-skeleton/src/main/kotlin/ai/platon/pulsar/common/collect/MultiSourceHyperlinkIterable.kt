@@ -4,13 +4,14 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.common.collect.PriorityDataCollectorsFormatter
-import java.util.*
 
 class MultiSourceHyperlinkIterable(
     val fetchCaches: FetchCacheManager,
     val lowerCacheSize: Int = 100,
+    val enableDefaults: Boolean = false
 ) : Iterable<UrlAware> {
     private val logger = getLogger(this)
+
     private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache, Priority13.HIGHEST)
         .apply { name = "FCC@RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
@@ -21,15 +22,21 @@ class MultiSourceHyperlinkIterable(
         ConcurrentLoadingIterable(regularCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    val regularCollectors: Collection<PriorityDataCollector<UrlAware>> get() = regularCollector.collectors
+    val openCollectors: Collection<PriorityDataCollector<UrlAware>> get() = regularCollector.collectors
 
     val collectors: List<PriorityDataCollector<UrlAware>> get() {
         val list = mutableListOf<PriorityDataCollector<UrlAware>>()
         list += realTimeCollector
         list += delayCollector
-        list += this.regularCollectors
+        list += this.openCollectors
         list.sortBy { it.priority }
         return list
+    }
+
+    init {
+        if (enableDefaults && openCollectors.isEmpty()) {
+            addDefaultCollectors()
+        }
     }
 
     val abstract: String get() = PriorityDataCollectorsFormatter(collectors).abstract()

@@ -18,7 +18,7 @@ import kotlin.collections.ArrayList
  * */
 object ResultSetUtils {
     private val logger = getLogger(this)
-    val sqlLog = LoggerFactory.getLogger(ResultSetUtils.javaClass.packageName + ".log")
+    val sqlLog = getLogger(ResultSetUtils::class.java.packageName, ".Jdbc")
 
     private val a = AppConstants.SHORTEST_VALID_URL_LENGTH
     private const val b = 2048

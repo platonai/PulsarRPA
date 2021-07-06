@@ -23,10 +23,11 @@ open class StreamingCrawlLoop(
      * */
     name: String = "StreamingCrawlLoop"
 ) : AbstractCrawlLoop(name, unmodifiedConfig) {
-    private val log = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
+    private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private val enableDefaultCollectors
         get() = unmodifiedConfig.getBoolean(ENABLE_DEFAULT_DATA_COLLECTORS, true)
+
     @Volatile
     private var running = false
     private var crawlJob: Job? = null
@@ -34,23 +35,19 @@ open class StreamingCrawlLoop(
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
-    override lateinit var fetchIterable: MultiSourceHyperlinkIterable
+    override val fetchIterable = MultiSourceHyperlinkIterable(globalCache.fetchCaches, enableDefaults = enableDefaultCollectors)
     override lateinit var crawler: StreamingCrawler<UrlAware>
+        protected set
 
     @Synchronized
     override fun start() {
         if (running) {
-            log.warn("Crawl loop is already running")
+            logger.warn("Crawl loop is already running")
             return
         }
         running = true
 
-        this.fetchIterable = MultiSourceHyperlinkIterable(globalCache.fetchCaches)
-        if (enableDefaultCollectors && collectors.isEmpty()) {
-            fetchIterable.addDefaultCollectors()
-        }
-
-        log.debug("Registered {} hyperlink collectors", fetchIterable.collectors.size)
+        logger.debug("Registered {} hyperlink collectors", fetchIterable.collectors.size)
 
         /**
          * The pulsar session
@@ -77,7 +74,7 @@ open class StreamingCrawlLoop(
             crawlJob?.cancelAndJoin()
             crawlJob = null
 
-            log.info("Streaming crawler is stopped")
+            logger.info("Streaming crawler is stopped")
         }
     }
 }

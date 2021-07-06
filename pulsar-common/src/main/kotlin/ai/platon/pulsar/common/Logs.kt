@@ -14,6 +14,7 @@ fun getLogger(any: Any): Logger = getLogger(any, "")
 fun getLogger(any: Any, postfix: String): Logger = when (any) {
     is KClass<*> -> LoggerFactory.getLogger(any.java.name + postfix)
     is Class<*> -> LoggerFactory.getLogger(any.name + postfix)
+    is String -> LoggerFactory.getLogger(any + postfix)
     else -> LoggerFactory.getLogger(any::class.java.name + postfix)
 }
 
