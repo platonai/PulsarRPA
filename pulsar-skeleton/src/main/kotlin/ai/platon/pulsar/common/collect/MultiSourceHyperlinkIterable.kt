@@ -16,13 +16,14 @@ class MultiSourceHyperlinkIterable(
         .apply { name = "FCC@RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCC@Delay" }
-    private val regularCollector = MultiSourceDataCollector<UrlAware>()
+    private val multiSourceDataCollector = MultiSourceDataCollector<UrlAware>()
 
     val loadingIterable =
-        ConcurrentLoadingIterable(regularCollector, realTimeCollector, delayCollector, lowerCacheSize)
+        ConcurrentLoadingIterable(multiSourceDataCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    val openCollectors: Collection<PriorityDataCollector<UrlAware>> get() = regularCollector.collectors
+    val openCollectors: Collection<PriorityDataCollector<UrlAware>>
+        get() = multiSourceDataCollector.collectors
 
     val collectors: List<PriorityDataCollector<UrlAware>> get() {
         val list = mutableListOf<PriorityDataCollector<UrlAware>>()
@@ -53,7 +54,7 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        regularCollector.collectors.removeIf { it is FetchCacheCollector }
+        multiSourceDataCollector.collectors.removeIf { it is FetchCacheCollector }
         fetchCaches.caches.forEach { (priority, fetchCache) ->
             val collector = FetchCacheCollector(fetchCache, priority)
             collector.name = "FCC@" + hashCode()
@@ -63,38 +64,38 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun addCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
-        regularCollector.collectors += collector
+        multiSourceDataCollector.collectors += collector
         return this
     }
 
     fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
-        regularCollector.collectors += collectors
+        multiSourceDataCollector.collectors += collectors
         return this
     }
 
     fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
-        return regularCollector.collectors.filter { it.name == name }
+        return multiSourceDataCollector.collectors.filter { it.name == name }
     }
 
     fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
-        return regularCollector.collectors.filter { it.name in names }
+        return multiSourceDataCollector.collectors.filter { it.name in names }
     }
 
     fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
-        return regularCollector.collectors.filter { it.name.matches(regex) }
+        return multiSourceDataCollector.collectors.filter { it.name.matches(regex) }
     }
 
     fun remove(collector: PriorityDataCollector<UrlAware>): Boolean {
-        return regularCollector.collectors.remove(collector)
+        return multiSourceDataCollector.collectors.remove(collector)
     }
 
     fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>): Boolean {
-        return regularCollector.collectors.removeAll(collectors)
+        return multiSourceDataCollector.collectors.removeAll(collectors)
     }
 
     fun clear() {
         realTimeCollector.fetchCache.clear()
         delayCollector.queue.clear()
-        regularCollector.collectors.clear()
+        multiSourceDataCollector.collectors.clear()
     }
 }

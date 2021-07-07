@@ -25,7 +25,7 @@ open class StreamingCrawlLoop(
 ) : AbstractCrawlLoop(name, unmodifiedConfig) {
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
-    private val enableDefaultCollectors
+    val enableDefaultCollectors
         get() = unmodifiedConfig.getBoolean(ENABLE_DEFAULT_DATA_COLLECTORS, true)
 
     @Volatile
@@ -36,6 +36,7 @@ open class StreamingCrawlLoop(
     var crawlEventHandler = DefaultCrawlEventHandler()
 
     override val fetchIterable = MultiSourceHyperlinkIterable(globalCache.fetchCaches, enableDefaults = enableDefaultCollectors)
+
     override lateinit var crawler: StreamingCrawler<UrlAware>
         protected set
 
@@ -68,7 +69,7 @@ open class StreamingCrawlLoop(
         }
         running = false
 
-        fetchIterable.clear()
+        // fetchIterable.clear()
         crawler.quit()
         runBlocking {
             crawlJob?.cancelAndJoin()
