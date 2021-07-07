@@ -274,7 +274,7 @@ open class FetchCacheCollector(
 
     var loadDelay: Duration = Duration.ofMinutes(5)
 
-    override var name: String = "FetchCacheC"
+    override var name: String = "FCC"
 
     override val size: Int
         get() = fetchCache.size
