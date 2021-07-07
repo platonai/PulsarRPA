@@ -27,6 +27,7 @@
         <module>pulsar-boilerpipe</module>
         <module>pulsar-jsoup</module>
         <module>pulsar-chrome-devtools</module>
+        <module>pulsar-distributed-lock</module>
 
         <!-- Including gora-shaded-mongodb breaks Intellij Idea's path searching,
         it failed to find class MongoStore -->
