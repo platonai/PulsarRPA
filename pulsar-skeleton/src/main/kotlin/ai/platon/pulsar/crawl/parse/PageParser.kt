@@ -192,8 +192,13 @@ class PageParser(
         val parsers = parserFactory.getParsers(page.contentType, page.url)
 
         for (parser in parsers) {
+            // optimize for html content
+            // To parse non-html content, the parser might run into a endless loop,
+            // run it in a separate coroutine to protect the process
+            val timeout = if ("HtmlParser" in parser::class.java.name) Duration.ZERO else maxParseTime
+
             val millis = measureTimeMillis {
-                parseResult = takeIf { maxParseTime.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
+                parseResult = takeIf { timeout.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
             }
             parseResult.parsers.add(parser::class)
 
