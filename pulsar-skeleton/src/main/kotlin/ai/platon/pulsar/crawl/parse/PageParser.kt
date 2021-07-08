@@ -193,6 +193,8 @@ class PageParser(
 
         for (parser in parsers) {
             // optimize for html content
+            // To parse non-html content, the parser might run into a endless loop,
+            // run it in a separate coroutine to protect the process
             val timeout = if ("HtmlParser" in parser::class.java.name) Duration.ZERO else maxParseTime
 
             val millis = measureTimeMillis {
