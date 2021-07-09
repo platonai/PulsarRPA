@@ -52,7 +52,7 @@ class TestClass(
 }
 
 
-class TestAnything {
+class TestCases {
 
     val urls = arrayOf(
             "http://a.example.com/cn/news/201810/a/b/file1.htm",
@@ -101,10 +101,35 @@ class TestAnything {
         assertTrue { bucketIndexes[4.0] == 1 }
     }
 
+    @Ignore("Not actually a test")
     @Test
-    fun testA() {
-        println(1e6)
-        println(1_000_000)
+    fun testGeneratePopularDurations() {
+        IntRange(1, 60).forEach { i ->
+            println("val sec$i = Duration.ofSeconds($i)")
+        }
+
+        println("")
+        IntRange(1, 60).forEach { i ->
+            println("val min$i = Duration.ofMinutes($i)")
+        }
+
+        println("")
+        IntRange(1, 60).forEach { i ->
+            println("val hour$i = Duration.ofHours($i)")
+        }
+
+        println("")
+        IntRange(1, 20).forEach { i ->
+            println("val day$i = Duration.ofDays($i)")
+        }
+        IntRange(21, 200).filter { it % 5 == 0 }.forEach { i ->
+            println("val day$i = Duration.ofDays($i)")
+        }
+
+        println("")
+        IntRange(1, 10).forEach { i ->
+            println("val year$i = Duration.ofDays($i * 365)")
+        }
     }
 
     @Test

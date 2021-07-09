@@ -19,7 +19,8 @@ class ConcurrentLRUCache<K, V> {
 
     val size get() = cache.size
 
-    constructor(capacity: Int) : this(0, capacity) {}
+    constructor(capacity: Int) : this(0, capacity)
+
     /**
      * Construct a least recently used cache
      *
@@ -55,9 +56,9 @@ class ConcurrentLRUCache<K, V> {
         synchronized(cache) { return cache[ttlKey] }
     }
 
-    fun put(key: K, v: V) {
+    fun put(key: K, value: V): V? {
         val ttlKey = getTTLKey(key)
-        synchronized(cache) { cache.put(ttlKey, v) }
+        return synchronized(cache) { cache.put(ttlKey, value) }
     }
 
     fun remove(key: K): V? {
