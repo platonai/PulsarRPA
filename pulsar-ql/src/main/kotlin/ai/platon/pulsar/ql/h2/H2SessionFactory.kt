@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
 import ai.platon.pulsar.ql.context.SQLContexts
@@ -103,6 +104,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun shutdown() {
+        getLogger(this).info("Shutting down the SQL context")
         sqlContext.close()
         PulsarContexts.shutdown()
     }
@@ -112,6 +114,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
      * */
     @Synchronized
     fun shutdownNow() {
+        getLogger(this).info("Shutting down the SQL context")
         sqlContext.close()
         PulsarContexts.shutdown()
     }

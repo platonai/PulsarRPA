@@ -22,11 +22,12 @@ import java.sql.Types
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class TestJavaObjectSerializer : TestBase() {
+class TestJavaObjectSerializer: TestBase() {
 
     companion object {
 
-        val remoteDB = H2Db(H2DbConfig(baseDir = Files.createTempDirectory("pulsar-test"), networked = true))
+        val conf = H2DbConfig(baseDir = Files.createTempDirectory("pulsar-test"), networked = true)
+        val remoteDB = H2Db(conf)
         var server: Server? = null
 
         @JvmStatic
@@ -35,7 +36,7 @@ class TestJavaObjectSerializer : TestBase() {
             try {
                 initializeDatabase()
             } catch (e: Throwable) {
-                log.info(Strings.stringifyException(e))
+                logger.info(Strings.stringifyException(e))
             }
         }
 
@@ -51,7 +52,7 @@ class TestJavaObjectSerializer : TestBase() {
          * a TCP server if the test uses remote connections.
          */
         private fun initializeDatabase() {
-            log.info("Initializing database")
+            logger.info("Initializing database")
 
             val config = remoteDB.conf
             val args = if (config.ssl)
@@ -64,7 +65,7 @@ class TestJavaObjectSerializer : TestBase() {
             server = Server.createTcpServer(*args.toTypedArray())
             try {
                 server?.start()
-                server?.let { log.info("H2 Server status: {}", it.status) }
+                server?.let { logger.info("H2 Server status: {}", it.status) }
             } catch (e: SQLException) {
                 e.printStackTrace()
             }
@@ -72,13 +73,14 @@ class TestJavaObjectSerializer : TestBase() {
 
         /**
          * Clean test environment
+         * TODO: database destroy causes the SQLContext closing, which is required by other DB connections
          */
         private fun destroyDatabase() {
-            server?.stop()
-            server?.let { log.info("[Destroy database] H2 Server status: {}", it.status) }
-            FileUtils.deleteRecursive(remoteDB.conf.baseDir.toString(), true)
-
-            log.info("Database destroyed")
+//            server?.stop()
+//            server?.let { logger.info("[Destroy database] H2 Server status: {}", it.status) }
+//            FileUtils.deleteRecursive(remoteDB.conf.baseDir.toString(), true)
+//
+//            logger.info("Database destroyed")
         }
     }
 

@@ -7,6 +7,8 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -15,12 +17,6 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class TestLoadOptions {
-
-    companion object {
-        init {
-            LoadOptionDefaults.storeContent = false
-        }
-    }
 
     var i = PulsarContexts.createSession()
     val conf = i.sessionConfig
@@ -34,6 +30,17 @@ class TestLoadOptions {
             " -preferParallel true" +
             " -itemScrollCount 20 -itemScrollInterval 1s" +
             ""
+
+    @Before
+    fun setup() {
+        LoadOptionDefaults.storeContent = true
+    }
+
+    @After
+    fun tearDown() {
+        // reset default options
+        LoadOptionDefaults.storeContent = false
+    }
 
     @Test
     fun testOptions() {
@@ -54,8 +61,11 @@ class TestLoadOptions {
             parse = true
         }
         val args = options.toString()
-        println(args)
-        assertTrue { args.contains("-storeContent") }
+
+        assertEquals(true, LoadOptionDefaults.storeContent)
+        assertFalse { "-storeContent" in options.modifiedParams.asMap().keys }
+        assertTrue { args.contains("-parse") }
+        assertEquals("-parse", args)
     }
 
     @Test
@@ -131,10 +141,13 @@ class TestLoadOptions {
         assertTrue { "retryFailed" in modifiedOptionsKeys }
         assertTrue { "ignoreFailure" in modifiedOptionsKeys }
         assertFalse { "parse" in modifiedOptionsKeys }
+
+        assertEquals(true, LoadOptionDefaults.storeContent)
         assertTrue { "storeContent" in modifiedOptionsKeys }
 
         val modifiedParams = options.modifiedParams
         println(modifiedParams)
+        assertEquals(false, options.isDefault("storeContent"))
         assertEquals(false, modifiedParams["-storeContent"])
         assertEquals(true, modifiedParams["-retryFailed"])
         assertEquals(true, modifiedParams["-incognito"])

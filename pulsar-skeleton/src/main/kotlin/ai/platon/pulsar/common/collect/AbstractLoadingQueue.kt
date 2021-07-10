@@ -65,7 +65,7 @@ abstract class AbstractLoadingQueue(
      * */
     @get:Synchronized
     override val size: Int
-        get() = implementation.size
+        get() = refreshIfNecessary().implementation.size
 
     /**
      * Query the underlying database, this operation might be slow, try to use estimatedExternalSize
@@ -101,7 +101,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun load() {
-        if (isEmpty() && estimatedExternalSize > 0) {
+        if (implementation.isEmpty() && estimatedExternalSize > 0) {
             loadNow()
         } else if (freeSlots > 0 && isExpired) {
             loadNow()

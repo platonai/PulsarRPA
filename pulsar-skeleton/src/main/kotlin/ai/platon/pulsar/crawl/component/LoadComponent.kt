@@ -53,6 +53,8 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
+        // TODO: configurable
+        var maxBatchWaitTime = 90L
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -188,7 +190,6 @@ class LoadComponent(
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val queue = globalCache.fetchCaches.highestCache.nReentrantQueue
-        val estimatedWaitTime = 120L
         val links = normUrls
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
@@ -198,13 +199,14 @@ class LoadComponent(
                     (url as? CompletableListenableHyperlink<WebPage>)?.complete(page)
                 }
             }
-            .onEach { it.completeOnTimeout(WebPage.NIL, estimatedWaitTime, TimeUnit.SECONDS) }
+            .onEach { it.completeOnTimeout(WebPage.NIL, maxBatchWaitTime, TimeUnit.SECONDS) }
             .toList()
         queue.addAll(links)
         logger.debug("Waiting for {} completable hyperlinks", links.size)
         // timeout process?
         val future = CompletableFuture.allOf(*links.toTypedArray())
         future.join()
+
         return links.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 

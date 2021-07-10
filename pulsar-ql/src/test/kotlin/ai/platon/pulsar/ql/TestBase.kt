@@ -3,6 +3,7 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.ql.context.DefaultClassPathXmlSQLContext
 import ai.platon.pulsar.ql.h2.H2Db
@@ -37,7 +38,7 @@ abstract class TestBase {
             }
         }
 
-        val log = LoggerFactory.getLogger(TestBase::class.java)
+        val logger = LoggerFactory.getLogger(TestBase::class.java)
 
         val history = mutableListOf<String>()
         val startTime = Instant.now()
@@ -45,6 +46,16 @@ abstract class TestBase {
 
     val context = SQLContexts.activate(DefaultClassPathXmlSQLContext())
     val session = context.createSession()
+
+    @Before
+    fun setup() {
+        LoadComponent.maxBatchWaitTime = 30
+    }
+
+    @After
+    fun tearDown() {
+        LoadComponent.maxBatchWaitTime = 90
+    }
 
     fun execute(sql: String, printResult: Boolean = true) {
         context.run { connection ->

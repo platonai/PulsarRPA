@@ -7,12 +7,12 @@ Turn the Web into tables and charts using simple SQLs.
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, BI on Web
+- X-SQL: extend SQL to manage the web data: Web crawling, scraping, Web content mining, Web BI
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
-- Big data: large scale, various storage: HBase/MongoDB
+- Big data: large scale, various backend storage support: HBase/MongoDB
 - Complete amazon web data model
 
-For more information check out [platon.ai](http://platon.ai)
+For more information check [platon.ai](http://platon.ai)
 
 ## X-SQL
 
@@ -108,4 +108,4 @@ Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-sup
         .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
     String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
 
-Here is the [java driver](https://github.com/platonai/pulsar-java-driver) and demos.
+Here are the [java driver](https://github.com/platonai/pulsar-java-driver) and demos.
