@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>ai.platon.pulsar</groupId>
+    <artifactId>pulsar-distributed-lock</artifactId>
+    <version>1.6.3-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>pulsar-distributed-lock-mongo</artifactId>
+
+  <name>Pulsar Distributed Lock Mongo</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-distributed-lock-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-mongodb</artifactId>
+      <version>${spring-boot.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo</artifactId>
+      <scope>test</scope>
+      <version>${embedded-mongo.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <properties>
+    <embedded-mongo.version>2.2.0</embedded-mongo.version>
+  </properties>
+</project>

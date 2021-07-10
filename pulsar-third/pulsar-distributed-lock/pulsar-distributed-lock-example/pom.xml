@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>ai.platon.pulsar</groupId>
+    <artifactId>pulsar-distributed-lock</artifactId>
+    <version>1.6.3-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>pulsar-distributed-lock-example</artifactId>
+
+  <name>Pulsar Distributed Lock Example</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-distributed-lock-mongo</artifactId>
+    </dependency>
+  </dependencies>
+</project>

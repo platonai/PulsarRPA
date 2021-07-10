@@ -1,0 +1,7 @@
+= Example application
+
+This application will create a REST endpoint `/hello/{name}` which will call a JDBC locked service.
+The locks are kept in a H2 in-memory database.
+
+Each time a lock is created in the database, a trigger will be fired and create a new log entry.
+This is purely to show that locks are correctly inserted into the database.
