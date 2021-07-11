@@ -103,12 +103,12 @@ open class BrowserControl(
             val sb = StringBuilder()
             sb.append(";\n")
             // set predefined variables shared between javascript and jvm program
-            sb.appendln("let META_INFORMATION_ID = \"${AppConstants.PULSAR_META_INFORMATION_ID}\";")
-            sb.appendln("let SCRIPT_SECTION_ID = \"${AppConstants.PULSAR_SCRIPT_SECTION_ID}\";")
-            sb.appendln("let ATTR_HIDDEN = \"${AppConstants.PULSAR_ATTR_HIDDEN}\";")
-            sb.appendln("let ATTR_OVERFLOW_HIDDEN = \"${AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN}\";")
-            sb.appendln("let ATTR_OVERFLOW_VISIBLE = \"${AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE}\";")
-            sb.appendln("let PULSAR_CONFIGS = $configs;")
+            sb.appendLine("let META_INFORMATION_ID = \"${AppConstants.PULSAR_META_INFORMATION_ID}\";")
+            sb.appendLine("let SCRIPT_SECTION_ID = \"${AppConstants.PULSAR_SCRIPT_SECTION_ID}\";")
+            sb.appendLine("let ATTR_HIDDEN = \"${AppConstants.PULSAR_ATTR_HIDDEN}\";")
+            sb.appendLine("let ATTR_OVERFLOW_HIDDEN = \"${AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN}\";")
+            sb.appendLine("let ATTR_OVERFLOW_VISIBLE = \"${AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE}\";")
+            sb.appendLine("let PULSAR_CONFIGS = $configs;")
             scripts.values.joinTo(sb, ";\n")
             libJs = sb.toString()
         }

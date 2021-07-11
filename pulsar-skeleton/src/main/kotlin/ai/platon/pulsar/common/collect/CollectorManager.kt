@@ -25,6 +25,10 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
         fetchIterable.addCollectors(collectors)
     }
 
+    fun addFetchCacheCollector(priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
+        return addFetchCacheCollector("", priority, urlLoader).also { it.name = "FCC@" + it.id }
+    }
+
     fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
         val fetchCache = LoadingFetchCache(name, urlLoader, priority)
         fetchCaches.unorderedCaches.add(fetchCache)

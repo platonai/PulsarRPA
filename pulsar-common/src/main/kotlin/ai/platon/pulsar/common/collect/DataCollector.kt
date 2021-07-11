@@ -5,16 +5,22 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.readable
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
 /**
  * The data collector interface
  * */
 interface DataCollector<T> {
+    val id: Int
     /**
      * The collector name
      * */
     var name: String
+    /**
+     * The collector name
+     * */
+    val labels: Set<String>
     /**
      * Required website language
      * */
@@ -55,13 +61,26 @@ interface PriorityDataCollector<T> : DataCollector<T>, Comparable<PriorityDataCo
 abstract class AbstractDataCollector<E> : DataCollector<E> {
     companion object {
         const val DEFAULT_CAPACITY = 1000
+
+        private val idGen = AtomicInteger()
     }
 
+    /**
+     * The capacity
+     * */
     override val capacity: Int = DEFAULT_CAPACITY
+    /**
+     * The collector id
+     * */
+    override val id: Int = idGen.incrementAndGet()
     /**
      * The collector name
      * */
     override var name: String = "DC"
+    /**
+     * The task labels
+     * */
+    override val labels = mutableSetOf<String>()
     /**
      * Required website language
      * */
@@ -116,7 +135,7 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
 
     override fun toString(): String {
         val elapsedSeconds = collectTime.seconds.coerceAtLeast(1)
-        return String.format("%s - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
+        return String.format("%s - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s %s",
             name,
             collectedCount,
             String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
@@ -124,7 +143,8 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
             String.format("%.2f", 1.0 * collectCount / elapsedSeconds),
             collectTime.readable(),
             size, estimatedSize,
-            firstCollectTime, lastCollectedTime
+            firstCollectTime, lastCollectedTime,
+            labels.joinToString()
         )
     }
 
@@ -159,7 +179,7 @@ abstract class AbstractPriorityDataCollector<T>(
     override fun toString(): String {
         val elapsedSeconds = collectTime.seconds.coerceAtLeast(1)
         val priorityName = Priority13.valueOfOrNull(priority)?.let { "$it, $priority" } ?: "$priority"
-        return String.format("%s(%s) - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
+        return String.format("%s(%s) - collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s %s",
             name, priorityName,
             collectedCount,
             String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
@@ -167,7 +187,8 @@ abstract class AbstractPriorityDataCollector<T>(
             String.format("%.2f", 1.0 * collectCount / elapsedSeconds),
             collectTime.readable(),
             size, estimatedSize,
-            firstCollectTime, lastCollectedTime
+            firstCollectTime, lastCollectedTime,
+            labels.joinToString()
         )
     }
 }

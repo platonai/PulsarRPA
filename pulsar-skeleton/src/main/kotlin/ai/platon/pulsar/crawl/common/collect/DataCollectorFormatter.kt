@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.PriorityDataCollector
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.ResultSets
+import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
 import java.time.Duration
 import java.time.Instant
@@ -15,18 +16,22 @@ abstract class PriorityDataCollectorFormatterBase<T> {
         return ResultSets.newSimpleResultSet(
             "name", "priority", "pName",
             "collected", "cd/s", "collect", "c/s", "time",
-            "size", "estSize", "firstCollect", "lastCollect"
+            "size", "estSize", "firstCollect", "lastCollect", "labels"
         )
     }
 
     fun addRow(c: PriorityDataCollector<T>, rs: SimpleResultSet) {
-        val dtFormatter = "MM-dd HH:mm:ss"
+        val dtFormatter = "dd HH:mm:ss"
         val firstCollectTime = c.firstCollectTime.atZone(DateTimes.zoneId).toLocalDateTime()
         val lastCollectedTime = c.lastCollectedTime.atZone(DateTimes.zoneId).toLocalDateTime()
         val elapsedTime = if (c.lastCollectedTime > c.firstCollectTime)
             Duration.between(c.firstCollectTime, c.lastCollectedTime) else Duration.ZERO
         val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
         val priorityName = Priority13.valueOfOrNull(c.priority)?.name ?: ""
+        var labels = c.labels.map { StringUtils.abbreviateMiddle(it, "*", 4) }.joinToString()
+        if (labels.length > 16) {
+            labels = StringUtils.abbreviateMiddle(labels, "..", 16)
+        }
 
         rs.addRow(
             c.name, c.priority, priorityName,
@@ -37,7 +42,8 @@ abstract class PriorityDataCollectorFormatterBase<T> {
             elapsedTime.readable(),
             c.size, c.estimatedSize,
             DateTimes.format(firstCollectTime, dtFormatter),
-            DateTimes.format(lastCollectedTime, dtFormatter)
+            DateTimes.format(lastCollectedTime, dtFormatter),
+            labels
         )
     }
 }
@@ -66,7 +72,8 @@ class PriorityDataCollectorsFormatter<T>(
         val elapsedTime = DateTimes.elapsedTime()
         val elapsedSeconds = elapsedTime.seconds
 
-        return String.format("Total collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
+        return String.format(
+            "Total collected %s/%s/%s/%s in %s, remaining %s/%s, collect time: %s -> %s",
             collectedCount,
             String.format("%.2f", 1.0 * collectedCount / elapsedSeconds),
             collectCount,

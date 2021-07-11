@@ -20,7 +20,7 @@ internal data class Box(val width: Int, val height: Int) {
 
 class TestExtendedCss {
 
-    private val resourceName = "/webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html"
+    private val resourceName = "webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html"
     private val baseUri = "jar:/$resourceName"
     private val stream = javaClass.getResourceAsStream(resourceName)
     private val doc: FeaturedDocument = Documents.parse(stream, "UTF-8", baseUri)
