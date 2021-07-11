@@ -1,6 +1,6 @@
 <?php
 
-$url = "http://localhost:8182/x/e";
+$url = "http://localhost:8182/api/x/e";
 $sql = "select
             dom_first_text(dom, '#productTitle') as title,
             dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,

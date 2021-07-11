@@ -19,7 +19,7 @@ fun main() {
             load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
     """
 
-    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/x/e"))
+    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
         .header("Content-Type", "text/plain")
         .POST(BodyPublishers.ofString(sql)).build()
     val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
