@@ -37,6 +37,9 @@ abstract class AbstractParseFilter(
 
     override val children = mutableListOf<ParseFilter>()
 
+    override fun initialize() {
+    }
+
     override fun isRelevant(parseContext: ParseContext): CheckState {
         val status = parseContext.page.protocolStatus
         return if (status.isSuccess) {

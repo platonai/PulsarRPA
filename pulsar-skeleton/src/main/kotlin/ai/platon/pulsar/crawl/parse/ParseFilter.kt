@@ -41,6 +41,8 @@ interface ParseFilter : Parameterized, AutoCloseable {
 
     fun addLast(child: ParseFilter)
 
+    fun initialize()
+
     fun isRelevant(parseContext: ParseContext): CheckState
 
     fun onBeforeFilter(parseContext: ParseContext)
