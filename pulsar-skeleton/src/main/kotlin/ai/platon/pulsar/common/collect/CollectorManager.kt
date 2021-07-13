@@ -26,11 +26,26 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
     }
 
     fun addFetchCacheCollector(priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
-        return addFetchCacheCollector("", priority, urlLoader).also { it.name = "FCC@" + it.id }
+        return addFetchCacheCollector("", priority, urlLoader).also { it.name = "LFC@" + it.id }
     }
 
     fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
         val fetchCache = LoadingFetchCache(name, urlLoader, priority)
+        fetchCaches.unorderedCaches.add(fetchCache)
+        val collector = FetchCacheCollector(fetchCache, priority).also { it.name = name }
+
+        report(collector)
+        fetchIterable.addCollector(collector)
+
+        return collector
+    }
+
+    fun addFetchCacheCollector(priority: Int): FetchCacheCollector {
+        return addFetchCacheCollector("", priority).also { it.name = "CFC@" + it.id }
+    }
+
+    fun addFetchCacheCollector(name: String, priority: Int): FetchCacheCollector {
+        val fetchCache = ConcurrentFetchCache(name)
         fetchCaches.unorderedCaches.add(fetchCache)
         val collector = FetchCacheCollector(fetchCache, priority).also { it.name = name }
 
@@ -72,8 +87,10 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
         collectors.filterIsInstance<FetchCacheCollector>().map { it.fetchCache }
             .let { fetchCaches.unorderedCaches.removeAll(it) }
 
-        dcLogger.info("Removed collectors:")
-        collectors.forEachIndexed { i, c -> dcLogger.info("$i.\t$c") }
+        if (collectors.isNotEmpty()) {
+            dcLogger.info("Removed collectors:")
+            collectors.forEachIndexed { i, c -> dcLogger.info("$i.\t$c") }
+        }
     }
 
     fun report(collector: DataCollector<out UrlAware>, message: String = "") {

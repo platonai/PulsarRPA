@@ -12,7 +12,7 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
         /**
          * An url queue should be small since every url uses about 1s to fetch
          * */
-        const val DEFAULT_CAPACITY = 100
+        const val DEFAULT_CAPACITY = 200
     }
 
     val externalSize: Int
@@ -32,7 +32,6 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T> {
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
         val group: UrlGroup,
-        val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
         /**
          * The delay time to load after another load
          * */
@@ -40,10 +39,12 @@ abstract class AbstractLoadingQueue(
         val transformer: (UrlAware) -> UrlAware
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 
-    protected val implementation = ConcurrentLinkedQueue<UrlAware>()
+    protected val urlCache = ConcurrentLinkedQueue<UrlAware>()
+
+    private val capacity = group.pageSize
 
     @Volatile
-    private var _estimatedExternalSize: Int = -1
+    private var lastEstimatedExternalSize: Int = -1
 
     @Volatile
     protected var lastLoadTime = Instant.EPOCH
@@ -56,6 +57,8 @@ abstract class AbstractLoadingQueue(
 
     val isExpired get() = isExpired(loadDelay)
 
+    val cache: Collection<UrlAware> = urlCache
+
     fun expire() {
         lastLoadTime = Instant.EPOCH
     }
@@ -65,7 +68,7 @@ abstract class AbstractLoadingQueue(
      * */
     @get:Synchronized
     override val size: Int
-        get() = refreshIfNecessary().implementation.size
+        get() = urlCache.size
 
     /**
      * Query the underlying database, this operation might be slow, try to use estimatedExternalSize
@@ -76,11 +79,11 @@ abstract class AbstractLoadingQueue(
 
     @get:Synchronized
     override val estimatedExternalSize: Int
-        get() = _estimatedExternalSize.coerceAtLeast(0)
+        get() = estimateIfNotInitialized().lastEstimatedExternalSize.coerceAtLeast(0)
 
     @get:Synchronized
     val freeSlots
-        get() = capacity - implementation.size
+        get() = capacity - urlCache.size
 
     @get:Synchronized
     val isFull
@@ -92,7 +95,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun clear() {
-        implementation.clear()
+        urlCache.clear()
     }
 
     fun externalClear() {
@@ -101,7 +104,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun load() {
-        if (implementation.isEmpty() && estimatedExternalSize > 0) {
+        if (urlCache.isEmpty() && estimatedExternalSize > 0) {
             loadNow()
         } else if (freeSlots > 0 && isExpired) {
             loadNow()
@@ -119,8 +122,8 @@ abstract class AbstractLoadingQueue(
     override fun loadNow(): Collection<UrlAware> {
         return if (freeSlots > 0) {
             lastLoadTime = Instant.now()
-            loader.loadToNow(implementation, freeSlots, group, transformer).also {
-                _estimatedExternalSize = externalSize
+            loader.loadToNow(urlCache, freeSlots, group, transformer).also {
+                lastEstimatedExternalSize = externalSize
                 ++loadCount
             }
         } else listOf()
@@ -128,10 +131,10 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun shuffle() {
-        val l = implementation.toMutableList()
-        implementation.clear()
+        val l = urlCache.toMutableList()
+        urlCache.clear()
         l.shuffle()
-        implementation.addAll(l)
+        urlCache.addAll(l)
     }
 
     @Synchronized
@@ -153,7 +156,7 @@ abstract class AbstractLoadingQueue(
     @Synchronized
     override fun offer(url: UrlAware): Boolean {
         return if (!url.isPersistable || freeSlots > 0) {
-            implementation.add(url)
+            urlCache.add(url)
         } else {
             overflow(url)
             true
@@ -162,22 +165,22 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun removeIf(filter: Predicate<in UrlAware>): Boolean {
-        return implementation.removeIf(filter)
+        return urlCache.removeIf(filter)
     }
 
     @Synchronized
-    override fun iterator(): MutableIterator<UrlAware> = refreshIfNecessary().implementation.iterator()
+    override fun iterator(): MutableIterator<UrlAware> = refreshIfNecessary().urlCache.iterator()
 
     @Synchronized
     override fun peek(): UrlAware? {
         refreshIfNecessary()
-        return implementation.peek()
+        return urlCache.peek()
     }
 
     @Synchronized
     override fun poll(): UrlAware? {
         refreshIfNecessary()
-        return implementation.poll()
+        return urlCache.poll()
     }
 
     @Synchronized
@@ -194,16 +197,22 @@ abstract class AbstractLoadingQueue(
         estimate()
     }
 
-    private fun estimate() {
-        _estimatedExternalSize = externalSize
+    private fun estimateIfNotInitialized(): AbstractLoadingQueue {
+        if (lastEstimatedExternalSize < 0) {
+            estimate()
+        }
+        return this
+    }
+
+    private fun estimate(): AbstractLoadingQueue {
+        lastEstimatedExternalSize = externalSize
+        return this
     }
 
     private fun refreshIfNecessary(): AbstractLoadingQueue {
-        if (_estimatedExternalSize < 0) {
-            estimate()
-        }
+        estimateIfNotInitialized()
 
-        if (implementation.isEmpty()) {
+        if (urlCache.isEmpty()) {
             load()
         }
 

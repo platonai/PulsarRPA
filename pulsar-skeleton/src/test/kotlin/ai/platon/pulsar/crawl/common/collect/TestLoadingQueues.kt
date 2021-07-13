@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.LoadingFetchCache
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -14,8 +15,8 @@ class TestLoadingQueues : TestBase() {
     @Test
     fun `When create a LoadingFetchCache then the first page is loaded`() {
         val fetchCache = LoadingFetchCache("", urlLoader, group.priority)
-        // auto loaded
-        assertTrue { fetchCache.size > 0 }
+        // not loaded
+        assertEquals(0, fetchCache.size)
         fetchCache.load()
         assertTrue { fetchCache.size > 0 }
     }
@@ -25,10 +26,11 @@ class TestLoadingQueues : TestBase() {
         val source = LoadingFetchCache("", urlLoader, group.priority)
         val sink = mutableListOf<UrlAware>()
 
-        assertTrue { source.size > 0 }
+        assertEquals(0, source.size)
         assertTrue { sink.isEmpty() }
 
         val collector = FetchCacheCollector(source, source.priority)
+        source.loadNow()
         collector.collectTo(sink)
 
         assertTrue { sink.isNotEmpty() }

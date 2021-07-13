@@ -6,16 +6,14 @@ import com.google.common.collect.HashMultiset
 class ConcurrentLoadingQueue(
     loader: ExternalUrlLoader,
     group: UrlGroup,
-    capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
     transformer: (UrlAware) -> UrlAware = { it }
-) : AbstractLoadingQueue(loader, group, capacity, transformer = transformer)
+) : AbstractLoadingQueue(loader, group, transformer = transformer)
 
 class ConcurrentNonReentrantLoadingQueue(
     loader: ExternalUrlLoader,
     group: UrlGroup,
-    capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
     transformer: (UrlAware) -> UrlAware = { it }
-) : AbstractLoadingQueue(loader, group, capacity, transformer = transformer) {
+) : AbstractLoadingQueue(loader, group, transformer = transformer) {
     private val historyHash = HashSet<Int>()
 
     @Synchronized
@@ -28,7 +26,7 @@ class ConcurrentNonReentrantLoadingQueue(
         if (!historyHash.contains(hashCode)) {
             return if (!url.isPersistable || freeSlots > 0) {
                 historyHash.add(hashCode)
-                implementation.add(url)
+                urlCache.add(url)
             } else {
                 overflow(url)
                 true
@@ -43,9 +41,8 @@ class ConcurrentNEntrantLoadingQueue(
     loader: ExternalUrlLoader,
     group: UrlGroup,
     val n: Int = 3,
-    capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
     transformer: (UrlAware) -> UrlAware = { it }
-) : AbstractLoadingQueue(loader, group, capacity, transformer = transformer) {
+) : AbstractLoadingQueue(loader, group, transformer = transformer) {
 
     private val historyHash = HashMultiset.create<Int>()
 
@@ -59,7 +56,7 @@ class ConcurrentNEntrantLoadingQueue(
         if (historyHash.count(hashCode) <= n) {
             return if (!url.isPersistable || freeSlots > 0) {
                 historyHash.add(hashCode)
-                implementation.add(url)
+                urlCache.add(url)
             } else {
                 overflow(url)
                 true
