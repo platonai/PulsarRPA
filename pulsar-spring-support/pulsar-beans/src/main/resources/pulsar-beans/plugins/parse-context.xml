@@ -42,7 +42,8 @@
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters" destroy-method="close">
+    <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters"
+          init-method="initialize" destroy-method="close">
         <constructor-arg>
             <list>
 <!--                <ref bean="jsParseFilter" />-->

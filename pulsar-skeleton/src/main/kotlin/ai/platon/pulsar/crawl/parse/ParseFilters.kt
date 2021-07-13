@@ -34,6 +34,10 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     val parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
     private val closed = AtomicBoolean()
 
+    fun initialize() {
+        parseFilters.forEach { it.initialize() }
+    }
+
     fun clear() = parseFilters.clear()
 
     fun remove(clazz: KClass<*>) {
@@ -69,6 +73,12 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
         }
     }
 
+    fun report(sb: StringBuilder = StringBuilder()) {
+        parseFilters.forEach {
+            report(it, 0, sb)
+        }
+    }
+
     override fun toString(): String {
         return parseFilters.joinToString { it.javaClass.simpleName }
     }
@@ -76,6 +86,14 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn("Failed to close ParseFilter", it.message) } }
+        }
+    }
+
+    private fun report(filter: ParseFilter, depth: Int, sb: StringBuilder) {
+        val padding = if (depth > 0) "  ".repeat(depth) else ""
+        sb.appendLine("${padding}$filter")
+        filter.children.forEach {
+            report(it, depth + 1, sb)
         }
     }
 }
