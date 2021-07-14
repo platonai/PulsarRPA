@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
@@ -39,6 +41,7 @@ abstract class AbstractLoadingQueue(
         var estimateDelay: Duration = Duration.ofSeconds(5),
         val transformer: (UrlAware) -> UrlAware
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
+    private val logger = getLogger(AbstractLoadingQueue::class)
 
     protected val urlCache = ConcurrentLinkedQueue<UrlAware>()
 
@@ -80,7 +83,15 @@ abstract class AbstractLoadingQueue(
      * */
     @get:Synchronized
     override val externalSize: Int
-        get() = loader.countRemaining(group)
+        get() {
+            try {
+                return loader.countRemaining(group)
+            } catch (e: Exception) {
+                logger.warn("Failed to count", e)
+            }
+
+            return 0
+        }
 
     @get:Synchronized
     override val estimatedExternalSize: Int
@@ -131,13 +142,18 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun loadNow(): Collection<UrlAware> {
-        return if (freeSlots > 0) {
-            lastLoadTime = Instant.now()
+        if (freeSlots <= 0) return listOf()
+
+        lastLoadTime = Instant.now()
+        return try {
             loader.loadToNow(urlCache, freeSlots, group, transformer).also {
                 ++loadCount
                 estimateNow()
             }
-        } else listOf()
+        } catch (e: Exception) {
+            logger.warn("Failed to load", e)
+            listOf()
+        }
     }
 
     @Synchronized
@@ -203,9 +219,13 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun overflow(urls: List<UrlAware>) {
-        loader.saveAll(urls, group)
-        savedCount += urls.size
-        estimateNow()
+        try {
+            loader.saveAll(urls, group)
+            savedCount += urls.size
+            estimateNow()
+        } catch (e: Exception) {
+            logger.warn("Failed to save urls", e)
+        }
     }
 
     private fun estimateIfExpired(): AbstractLoadingQueue {

@@ -108,7 +108,7 @@ interface ExternalUrlLoader {
 }
 
 abstract class AbstractExternalUrlLoader(
-    override var loadDelay: Duration = Duration.ofSeconds(30)
+    override var loadDelay: Duration = Duration.ofSeconds(5)
 ): ExternalUrlLoader {
 
     @Volatile
@@ -116,6 +116,7 @@ abstract class AbstractExternalUrlLoader(
     override val isExpired get() = lastLoadTime + loadDelay < Instant.now()
 
     override fun expire() { lastLoadTime = Instant.EPOCH }
+
     override fun reset() { lastLoadTime = Instant.EPOCH }
     /**
      * If there are more items in the source
