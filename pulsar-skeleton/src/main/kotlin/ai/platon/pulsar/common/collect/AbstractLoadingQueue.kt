@@ -50,8 +50,13 @@ abstract class AbstractLoadingQueue(
     @Volatile
     protected var lastLoadTime = Instant.EPOCH
 
+    protected val isIdle
+        get() = lastLoadTime.epochSecond > 0 && Duration.between(lastLoadTime, Instant.now()).seconds > 60
+
     @Volatile
     protected var lastEstimateTime = Instant.EPOCH
+
+    protected val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
 
     var loadCount: Int = 0
         protected set
@@ -103,6 +108,7 @@ abstract class AbstractLoadingQueue(
         urlCache.clear()
     }
 
+    @Synchronized
     fun externalClear() {
         loader.deleteAll(group)
     }
@@ -203,7 +209,7 @@ abstract class AbstractLoadingQueue(
     }
 
     private fun estimateIfExpired(): AbstractLoadingQueue {
-        if (lastEstimateTime + estimateDelay < Instant.now()) {
+        if (lastEstimateTime + realEstimateDelay < Instant.now()) {
             estimateNow()
         }
         return this
