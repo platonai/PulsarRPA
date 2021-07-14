@@ -35,7 +35,8 @@ open class StreamingCrawlLoop(
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
-    override val fetchIterable = MultiSourceHyperlinkIterable(globalCache.fetchCaches, enableDefaults = enableDefaultCollectors)
+    override val fetchIterable =
+        MultiSourceHyperlinkIterable(globalCache.fetchCaches, enableDefaults = enableDefaultCollectors)
 
     override lateinit var crawler: StreamingCrawler<UrlAware>
         protected set

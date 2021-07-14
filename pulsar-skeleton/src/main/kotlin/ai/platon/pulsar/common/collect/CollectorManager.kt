@@ -41,7 +41,7 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
     }
 
     fun addFetchCacheCollector(priority: Int): FetchCacheCollector {
-        return addFetchCacheCollector("", priority).also { it.name = "CFC@" + it.id }
+        return addFetchCacheCollector("", priority).also { it.name = "FC@" + it.id }
     }
 
     fun addFetchCacheCollector(name: String, priority: Int): FetchCacheCollector {
@@ -49,8 +49,8 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
         fetchCaches.unorderedCaches.add(fetchCache)
         val collector = FetchCacheCollector(fetchCache, priority).also { it.name = name }
 
-        report(collector)
         fetchIterable.addCollector(collector)
+        report(collector)
 
         return collector
     }
@@ -62,8 +62,8 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
     ): QueueCollector {
         val collector = QueueCollector(queue, priority).also { it.name = name }
 
-        report(collector)
         fetchIterable.addCollector(collector)
+        report(collector)
 
         return collector
     }
@@ -88,24 +88,16 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
             .let { fetchCaches.unorderedCaches.removeAll(it) }
 
         if (collectors.isNotEmpty()) {
-            dcLogger.info("Removed collectors:")
-            collectors.forEachIndexed { i, c -> dcLogger.info("$i.\t$c") }
+            dcLogger.info("Removed collectors: " + collectors.joinToString { it.name })
+            collectors.forEachIndexed { i, c -> dcLogger.info("${i + 1}.\t$c") }
+            dcLogger.info("")
         }
     }
 
     fun report(collector: DataCollector<out UrlAware>, message: String = "") {
         val msg = if (message.isBlank()) "" else " | $message"
 
-        val dcLog = getLogger(DataCollector::class)
-        dcLog?.info(
-            "Running task <{}> with {}/{} items{}",
-            collector.name, collector.size, collector.estimatedSize, msg
-        )
-
-        dcLogger.info(
-            "Running task <{}> with {}/{} items{}",
-            collector.name, collector.size, collector.estimatedSize, msg
-        )
+        dcLogger.info("Task <{}> has {}/{} items{}", collector.name, collector.size, collector.estimatedSize, msg)
         dcLogger.info("{}", collector)
     }
 }

@@ -57,7 +57,7 @@ class MultiSourceHyperlinkIterable(
         multiSourceDataCollector.collectors.removeIf { it is FetchCacheCollector }
         fetchCaches.caches.forEach { (priority, fetchCache) ->
             val collector = FetchCacheCollector(fetchCache, priority)
-            collector.name = "FCC@" + collector.id
+            collector.name = "FC@" + collector.id
             addCollector(collector)
         }
         return this

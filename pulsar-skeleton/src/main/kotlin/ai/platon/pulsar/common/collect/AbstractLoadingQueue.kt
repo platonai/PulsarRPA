@@ -36,6 +36,7 @@ abstract class AbstractLoadingQueue(
          * The delay time to load after another load
          * */
         var loadDelay: Duration = Duration.ofSeconds(60),
+        var estimateDelay: Duration = Duration.ofSeconds(5),
         val transformer: (UrlAware) -> UrlAware
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
 
@@ -49,6 +50,9 @@ abstract class AbstractLoadingQueue(
     @Volatile
     protected var lastLoadTime = Instant.EPOCH
 
+    @Volatile
+    protected var lastEstimateTime = Instant.EPOCH
+
     var loadCount: Int = 0
         protected set
 
@@ -58,10 +62,6 @@ abstract class AbstractLoadingQueue(
     val isExpired get() = isExpired(loadDelay)
 
     val cache: Collection<UrlAware> = urlCache
-
-    fun expire() {
-        lastLoadTime = Instant.EPOCH
-    }
 
     /**
      * The cache size
@@ -79,7 +79,7 @@ abstract class AbstractLoadingQueue(
 
     @get:Synchronized
     override val estimatedExternalSize: Int
-        get() = estimateIfNotInitialized().lastEstimatedExternalSize.coerceAtLeast(0)
+        get() = estimateIfExpired().lastEstimatedExternalSize.coerceAtLeast(0)
 
     @get:Synchronized
     val freeSlots
@@ -91,6 +91,11 @@ abstract class AbstractLoadingQueue(
 
     fun isExpired(delay: Duration): Boolean {
         return lastLoadTime + delay < Instant.now()
+    }
+
+    fun expire() {
+        lastLoadTime = Instant.EPOCH
+        lastEstimateTime = Instant.EPOCH
     }
 
     @Synchronized
@@ -123,7 +128,6 @@ abstract class AbstractLoadingQueue(
         return if (freeSlots > 0) {
             lastLoadTime = Instant.now()
             loader.loadToNow(urlCache, freeSlots, group, transformer).also {
-                lastEstimatedExternalSize = externalSize
                 ++loadCount
             }
         } else listOf()
@@ -197,20 +201,20 @@ abstract class AbstractLoadingQueue(
         estimate()
     }
 
-    private fun estimateIfNotInitialized(): AbstractLoadingQueue {
-        if (lastEstimatedExternalSize < 0) {
+    private fun estimateIfExpired(): AbstractLoadingQueue {
+        if (lastEstimateTime + estimateDelay < Instant.now()) {
             estimate()
         }
         return this
     }
 
-    private fun estimate(): AbstractLoadingQueue {
+    private fun estimate() {
         lastEstimatedExternalSize = externalSize
-        return this
+        lastEstimateTime = Instant.now()
     }
 
     private fun refreshIfNecessary(): AbstractLoadingQueue {
-        estimateIfNotInitialized()
+        estimateIfExpired()
 
         if (urlCache.isEmpty()) {
             load()
