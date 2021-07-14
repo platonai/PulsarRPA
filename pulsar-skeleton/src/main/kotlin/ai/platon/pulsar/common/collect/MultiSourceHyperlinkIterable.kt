@@ -25,14 +25,15 @@ class MultiSourceHyperlinkIterable(
     val openCollectors: Collection<PriorityDataCollector<UrlAware>>
         get() = multiSourceDataCollector.collectors
 
-    val collectors: List<PriorityDataCollector<UrlAware>> get() {
-        val list = mutableListOf<PriorityDataCollector<UrlAware>>()
-        list += realTimeCollector
-        list += delayCollector
-        list += this.openCollectors
-        list.sortBy { it.priority }
-        return list
-    }
+    val collectors: List<PriorityDataCollector<UrlAware>>
+        get() {
+            val list = mutableListOf<PriorityDataCollector<UrlAware>>()
+            list += realTimeCollector
+            list += delayCollector
+            list += this.openCollectors
+            list.sortBy { it.priority }
+            return list
+        }
 
     init {
         if (enableDefaults && openCollectors.isEmpty()) {

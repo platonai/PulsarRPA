@@ -35,7 +35,7 @@ abstract class AbstractLoadingQueue(
         /**
          * The delay time to load after another load
          * */
-        var loadDelay: Duration = Duration.ofSeconds(60),
+        var loadDelay: Duration = Duration.ofSeconds(5),
         var estimateDelay: Duration = Duration.ofSeconds(5),
         val transformer: (UrlAware) -> UrlAware
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
