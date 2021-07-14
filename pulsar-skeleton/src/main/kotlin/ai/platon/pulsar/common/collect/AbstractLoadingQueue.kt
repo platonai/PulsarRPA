@@ -129,6 +129,7 @@ abstract class AbstractLoadingQueue(
             lastLoadTime = Instant.now()
             loader.loadToNow(urlCache, freeSlots, group, transformer).also {
                 ++loadCount
+                estimateNow()
             }
         } else listOf()
     }
@@ -191,24 +192,24 @@ abstract class AbstractLoadingQueue(
     override fun overflow(url: UrlAware) {
         loader.save(url, group)
         ++savedCount
-        estimate()
+        estimateNow()
     }
 
     @Synchronized
     override fun overflow(urls: List<UrlAware>) {
         loader.saveAll(urls, group)
         savedCount += urls.size
-        estimate()
+        estimateNow()
     }
 
     private fun estimateIfExpired(): AbstractLoadingQueue {
         if (lastEstimateTime + estimateDelay < Instant.now()) {
-            estimate()
+            estimateNow()
         }
         return this
     }
 
-    private fun estimate() {
+    private fun estimateNow() {
         lastEstimatedExternalSize = externalSize
         lastEstimateTime = Instant.now()
     }
