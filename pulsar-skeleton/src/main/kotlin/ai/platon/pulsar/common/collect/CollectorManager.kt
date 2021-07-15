@@ -82,6 +82,10 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
         removeAll(collectors)
     }
 
+    fun removeAllLike(name: String) {
+        return removeAll(".*$name.*".toRegex())
+    }
+
     fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>) {
         fetchIterable.removeAll(collectors)
         collectors.filterIsInstance<FetchCacheCollector>().map { it.fetchCache }

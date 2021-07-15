@@ -86,6 +86,10 @@ class MultiSourceHyperlinkIterable(
         return multiSourceDataCollector.collectors.filter { it.name.matches(regex) }
     }
 
+    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> {
+        return getCollectors(".*$name.*".toRegex())
+    }
+
     fun remove(collector: PriorityDataCollector<UrlAware>): Boolean {
         return multiSourceDataCollector.collectors.remove(collector)
     }

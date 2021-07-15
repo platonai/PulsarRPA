@@ -230,16 +230,7 @@ class CoreMetrics(
             pageHeights.update(h)
         }
 
-        val i = finishedTasks.count
-
-        val period = when {
-            i < 100 -> 20
-            i < 10000 -> 30
-            else -> 60 + 30 * (i % 3 - 1) // generate: 30, 60, 90, 30, 60, 90, ...
-        }
-        if (log.isInfoEnabled && tasks.count > 0L && i % period == 0L) {
-            log.info(formatStatus())
-        }
+        reportStatus()
 
         val urlStats = urlStatistics.computeIfAbsent(host) { UrlStat(it) }
 
@@ -371,6 +362,19 @@ class CoreMetrics(
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")
         usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
+    }
+
+    private fun reportStatus() {
+        val i = finishedTasks.count
+        val a = successTasksPerSecond.coerceAtLeast(1) * 60
+        val period = when {
+            i < 100 -> a / 2
+            i < 10000 -> a
+            else -> a * 2 + 60 * (i % 3 - 1) // generate: 60, 120, 180, 60, 120, 180, ...
+        }
+        if (log.isInfoEnabled && tasks.count > 0L && i % period == 0L) {
+            log.info(formatStatus())
+        }
     }
 
     private fun logAvailableHosts() {
