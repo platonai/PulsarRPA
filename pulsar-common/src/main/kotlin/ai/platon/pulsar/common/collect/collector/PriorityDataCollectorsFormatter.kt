@@ -1,7 +1,6 @@
-package ai.platon.pulsar.common.collector
+package ai.platon.pulsar.common.collect.collector
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.collect.PriorityDataCollector
 import ai.platon.pulsar.common.readable
 import java.time.Instant
 

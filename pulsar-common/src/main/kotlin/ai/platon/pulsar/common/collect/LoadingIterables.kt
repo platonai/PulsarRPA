@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.collect.collector.DataCollector
 import java.util.*
 import kotlin.NoSuchElementException
 

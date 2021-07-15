@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions

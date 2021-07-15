@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collect.collector
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Priority13
@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.readable
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.max
 
 /**
  * The data collector interface

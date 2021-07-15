@@ -1,7 +1,9 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.collector.FetchCacheCollector
+import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
+import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
+import ai.platon.pulsar.common.collect.collector.PriorityDataCollectorsFormatter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 
@@ -42,10 +44,10 @@ class MultiSourceHyperlinkIterable(
     }
 
     val abstract: String
-        get() = ai.platon.pulsar.common.collector.PriorityDataCollectorsFormatter(collectors).abstract()
+        get() = PriorityDataCollectorsFormatter(collectors).abstract()
 
     val report: String
-        get() = ai.platon.pulsar.common.collector.PriorityDataCollectorsFormatter(collectors).toString()
+        get() = PriorityDataCollectorsFormatter(collectors).toString()
 
     /**
      * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately
@@ -55,6 +57,14 @@ class MultiSourceHyperlinkIterable(
     fun addLast(url: UrlAware) = loadingIterable.addLast(url)
 
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
+
+    fun estimatedOrder(priority: Int): Int {
+        val priorCount = collectors.filter { it.priority > priority }.sumBy { it.estimatedSize }
+        val competitorCollectors = collectors.filter { it.priority == priority }
+        val competitorCount = competitorCollectors.sumBy { it.estimatedSize }
+
+        return priorCount + competitorCount / competitorCollectors.size
+    }
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
         multiSourceDataCollector.collectors.removeIf { it is FetchCacheCollector }

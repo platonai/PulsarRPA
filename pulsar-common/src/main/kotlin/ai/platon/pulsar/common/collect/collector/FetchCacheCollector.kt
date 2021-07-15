@@ -1,7 +1,7 @@
-package ai.platon.pulsar.common.collector
+package ai.platon.pulsar.common.collect.collector
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
+import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.collect.FetchCache
 import ai.platon.pulsar.common.collect.Loadable
 import ai.platon.pulsar.common.collect.queue.LoadingQueue

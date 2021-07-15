@@ -1,6 +1,8 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
+import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.FatLink

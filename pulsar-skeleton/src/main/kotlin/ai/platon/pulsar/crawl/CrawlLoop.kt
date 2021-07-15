@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.StartStopRunnable
-import ai.platon.pulsar.common.collect.DataCollector
+import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions

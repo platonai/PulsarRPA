@@ -4,6 +4,7 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.measure.ByteUnit
@@ -94,7 +95,7 @@ open class StreamingCrawler<T : UrlAware>(
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
 
         private val availableMemory get() = AppMetrics.availableMemory
-        private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
+        private val requiredMemory = BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY // 500 MiB
         private val remainingMemory get() = availableMemory - requiredMemory
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
