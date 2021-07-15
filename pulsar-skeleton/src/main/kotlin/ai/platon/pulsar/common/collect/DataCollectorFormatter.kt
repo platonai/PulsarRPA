@@ -1,8 +1,7 @@
-package ai.platon.pulsar.crawl.common.collect
+package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.collect.PriorityDataCollector
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.ResultSets

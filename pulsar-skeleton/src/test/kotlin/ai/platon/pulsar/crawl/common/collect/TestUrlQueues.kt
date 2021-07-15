@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common.collect
 
-import ai.platon.pulsar.common.collect.ConcurrentNEntrantQueue
-import ai.platon.pulsar.common.collect.ConcurrentNonReentrantQueue
+import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantQueue
+import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantQueue
 import ai.platon.pulsar.common.urls.ComparableUrlAware
 import ai.platon.pulsar.common.urls.Hyperlink
 import org.junit.Test

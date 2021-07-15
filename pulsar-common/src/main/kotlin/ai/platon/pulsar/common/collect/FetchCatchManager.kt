@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collect.ExternalUrlLoader
 import ai.platon.pulsar.common.collect.FetchCacheManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
@@ -9,7 +10,10 @@ import org.apache.commons.collections4.queue.SynchronizedQueue
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.DelayQueue
+import java.util.concurrent.Delayed
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class DelayUrl(

@@ -4,6 +4,9 @@ import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.collect.*
+import ai.platon.pulsar.common.collect.LoadingFetchCache
+import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
+import ai.platon.pulsar.common.collector.FetchCacheCollector
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl

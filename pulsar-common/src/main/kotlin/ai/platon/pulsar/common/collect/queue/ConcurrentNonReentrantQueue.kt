@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collect.queue
 
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet

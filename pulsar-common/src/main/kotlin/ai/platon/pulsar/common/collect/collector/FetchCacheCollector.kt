@@ -1,6 +1,10 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collector
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
+import ai.platon.pulsar.common.collect.FetchCache
+import ai.platon.pulsar.common.collect.Loadable
+import ai.platon.pulsar.common.collect.queue.LoadingQueue
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 

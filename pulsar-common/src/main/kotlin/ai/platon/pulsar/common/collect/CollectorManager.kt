@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.collector.FetchCacheCollector
+import ai.platon.pulsar.common.collector.QueueCollector
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*

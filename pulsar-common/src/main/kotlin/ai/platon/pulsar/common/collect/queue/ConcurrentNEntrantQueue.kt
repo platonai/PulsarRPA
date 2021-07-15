@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collect.queue
 
 import com.google.common.collect.ConcurrentHashMultiset
 import java.util.*

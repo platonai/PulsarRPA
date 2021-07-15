@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collector.FetchCacheCollector
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.common.collect.PriorityDataCollectorsFormatter
 
 class MultiSourceHyperlinkIterable(
     val fetchCaches: FetchCacheManager,
@@ -41,9 +41,11 @@ class MultiSourceHyperlinkIterable(
         }
     }
 
-    val abstract: String get() = PriorityDataCollectorsFormatter(collectors).abstract()
+    val abstract: String
+        get() = ai.platon.pulsar.common.collector.PriorityDataCollectorsFormatter(collectors).abstract()
 
-    val report: String get() = PriorityDataCollectorsFormatter(collectors).toString()
+    val report: String
+        get() = ai.platon.pulsar.common.collector.PriorityDataCollectorsFormatter(collectors).toString()
 
     /**
      * Add a hyperlink to the very beginning of the fetch queue, so it will be served immediately

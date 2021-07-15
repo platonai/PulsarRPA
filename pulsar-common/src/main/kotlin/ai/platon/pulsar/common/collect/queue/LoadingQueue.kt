@@ -1,9 +1,10 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collect.queue
 
+import ai.platon.pulsar.common.collect.Loadable
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 
-interface LoadingQueue<T>: Queue<T>, Loadable<T> {
+interface LoadingQueue<T> : Queue<T>, Loadable<T> {
     companion object {
         /**
          * An url queue should be small since every url uses about 1s to fetch

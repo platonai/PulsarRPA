@@ -1,9 +1,9 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collect.queue
 
+import ai.platon.pulsar.common.collect.ExternalUrlLoader
+import ai.platon.pulsar.common.collect.UrlGroup
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
-import java.time.Duration
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Predicate
@@ -12,46 +12,21 @@ import java.util.function.Predicate
  * An url queue should be small since every url uses about 1s to fetch
  * */
 abstract class AbstractLoadingQueue(
-        val loader: ExternalUrlLoader,
-        val group: UrlGroup,
-        /**
-         * The delay time to load after another load
-         * */
-        var loadDelay: Duration = Duration.ofSeconds(5),
-        var estimateDelay: Duration = Duration.ofSeconds(5),
-        val transformer: (UrlAware) -> UrlAware
-): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
+    val loader: ExternalUrlLoader,
+    val group: UrlGroup,
+    val transformer: (UrlAware) -> UrlAware
+) : AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     private val logger = getLogger(AbstractLoadingQueue::class)
 
     protected val urlCache = ConcurrentLinkedQueue<UrlAware>()
 
     private val capacity = group.pageSize
 
-    @Volatile
-    protected open var lastEstimatedExternalSize: Int = -1
-
-    @Volatile
-    protected open var lastLoadTime = Instant.EPOCH
-
-    @Volatile
-    protected open var lastEstimateTime = Instant.EPOCH
-
-    @Volatile
-    protected open var lastBusyTime = Instant.now()
-
-    protected open val isIdle
-        get() = Duration.between(lastBusyTime, Instant.now()).seconds > 60
-
-    // always access the underlying layer with a delay to reduce possible IO reads
-    protected open val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
-
     var loadCount: Int = 0
         protected set
 
     var savedCount: Int = 0
         protected set
-
-    open val isExpired get() = isExpired(loadDelay)
 
     val cache: Collection<UrlAware> = urlCache
 
@@ -79,7 +54,7 @@ abstract class AbstractLoadingQueue(
 
     @get:Synchronized
     override val estimatedExternalSize: Int
-        get() = estimateIfExpired().lastEstimatedExternalSize.coerceAtLeast(0)
+        get() = externalSize
 
     @get:Synchronized
     val freeSlots
@@ -88,15 +63,6 @@ abstract class AbstractLoadingQueue(
     @get:Synchronized
     val isFull
         get() = freeSlots == 0
-
-    open fun isExpired(delay: Duration): Boolean {
-        return lastLoadTime + delay < Instant.now()
-    }
-
-    open fun expire() {
-        lastLoadTime = Instant.EPOCH
-        lastEstimateTime = Instant.EPOCH
-    }
 
     @Synchronized
     override fun clear() {
@@ -110,16 +76,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun load() {
-        if (urlCache.isEmpty() && estimatedExternalSize > 0) {
-            loadNow()
-        } else if (freeSlots > 0 && isExpired) {
-            loadNow()
-        }
-    }
-
-    @Synchronized
-    override fun load(delay: Duration) {
-        if (freeSlots > 0 && isExpired(delay)) {
+        if (freeSlots > 0) {
             loadNow()
         }
     }
@@ -128,22 +85,13 @@ abstract class AbstractLoadingQueue(
     override fun loadNow(): Collection<UrlAware> {
         if (freeSlots <= 0) return listOf()
 
-        lastLoadTime = Instant.now()
-
-        val urls = try {
+        return try {
             ++loadCount
             loader.loadToNow(urlCache, freeSlots, group, transformer)
         } catch (e: Exception) {
             logger.warn("Failed to load", e)
             listOf()
         }
-
-        if (urls.isNotEmpty()) {
-            lastBusyTime = Instant.now()
-            estimateNow()
-        }
-
-        return urls
     }
 
     @Synchronized
@@ -204,7 +152,6 @@ abstract class AbstractLoadingQueue(
     override fun overflow(url: UrlAware) {
         loader.save(url, group)
         ++savedCount
-        estimateNow()
     }
 
     @Synchronized
@@ -212,27 +159,12 @@ abstract class AbstractLoadingQueue(
         try {
             loader.saveAll(urls, group)
             savedCount += urls.size
-            estimateNow()
         } catch (e: Exception) {
             logger.warn("Failed to save urls", e)
         }
     }
 
-    private fun estimateIfExpired(): AbstractLoadingQueue {
-        if (lastEstimateTime + realEstimateDelay < Instant.now()) {
-            estimateNow()
-        }
-        return this
-    }
-
-    private fun estimateNow() {
-        lastEstimatedExternalSize = externalSize
-        lastEstimateTime = Instant.now()
-    }
-
     private fun refreshIfNecessary(): AbstractLoadingQueue {
-        estimateIfExpired()
-
         if (urlCache.isEmpty()) {
             load()
         }

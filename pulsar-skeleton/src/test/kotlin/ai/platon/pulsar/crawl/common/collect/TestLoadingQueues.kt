@@ -1,8 +1,8 @@
 package ai.platon.pulsar.crawl.common.collect
 
-import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingQueue
-import ai.platon.pulsar.common.collect.FetchCacheCollector
 import ai.platon.pulsar.common.collect.LoadingFetchCache
+import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantLoadingQueue
+import ai.platon.pulsar.common.collector.FetchCacheCollector
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
 import org.junit.Test

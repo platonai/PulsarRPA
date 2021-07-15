@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 

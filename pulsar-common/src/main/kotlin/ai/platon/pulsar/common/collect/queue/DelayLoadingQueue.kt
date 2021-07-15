@@ -1,5 +1,7 @@
-package ai.platon.pulsar.common.collect
+package ai.platon.pulsar.common.collect.queue
 
+import ai.platon.pulsar.common.collect.ExternalUrlLoader
+import ai.platon.pulsar.common.collect.UrlGroup
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
@@ -7,49 +9,48 @@ import java.time.Instant
 
 /**
  * An url queue should be small since every url uses about 1s to fetch
- * TODO: move the delay feature to DelayLoadingQueue
  * */
-abstract class DelayLoadingQueue(
+open class DelayLoadingQueue(
     loader: ExternalUrlLoader,
     group: UrlGroup,
     /**
      * The delay time to load after another load
      * */
-    loadDelay: Duration = Duration.ofSeconds(5),
-    estimateDelay: Duration = Duration.ofSeconds(5),
+    var loadDelay: Duration = Duration.ofSeconds(5),
+    var estimateDelay: Duration = Duration.ofSeconds(5),
     transformer: (UrlAware) -> UrlAware
-) : AbstractLoadingQueue(loader, group, loadDelay, estimateDelay, transformer) {
+) : AbstractLoadingQueue(loader, group, transformer) {
     private val logger = getLogger(DelayLoadingQueue::class)
 
     @Volatile
-    override var lastEstimatedExternalSize: Int = -1
+    protected var lastEstimatedExternalSize: Int = -1
 
     @Volatile
-    override var lastLoadTime = Instant.EPOCH
+    protected var lastLoadTime = Instant.EPOCH
 
     @Volatile
-    override var lastEstimateTime = Instant.EPOCH
+    protected var lastEstimateTime = Instant.EPOCH
 
     @Volatile
-    override var lastBusyTime = Instant.now()
+    protected var lastBusyTime = Instant.now()
 
-    override val isIdle
+    protected val isIdle
         get() = Duration.between(lastBusyTime, Instant.now()).seconds > 60
 
     // always access the underlying layer with a delay to reduce possible IO reads
-    override val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
+    val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
 
-    override val isExpired get() = isExpired(loadDelay)
+    val isExpired get() = isExpired(loadDelay)
 
     @get:Synchronized
     override val estimatedExternalSize: Int
         get() = estimateIfExpired().lastEstimatedExternalSize.coerceAtLeast(0)
 
-    override fun isExpired(delay: Duration): Boolean {
+    fun isExpired(delay: Duration): Boolean {
         return lastLoadTime + delay < Instant.now()
     }
 
-    override fun expire() {
+    fun expire() {
         lastLoadTime = Instant.EPOCH
         lastEstimateTime = Instant.EPOCH
     }
@@ -64,7 +65,7 @@ abstract class DelayLoadingQueue(
     }
 
     @Synchronized
-    override fun load(delay: Duration) {
+    fun load(delay: Duration) {
         if (freeSlots > 0 && isExpired(delay)) {
             loadNow()
         }
