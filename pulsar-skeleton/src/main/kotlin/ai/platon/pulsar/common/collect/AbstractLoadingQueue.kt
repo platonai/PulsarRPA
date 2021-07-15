@@ -1,32 +1,12 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.Predicate
-
-interface LoadingQueue<T>: Queue<T>, Loadable<T> {
-    companion object {
-        /**
-         * An url queue should be small since every url uses about 1s to fetch
-         * */
-        const val DEFAULT_CAPACITY = 200
-    }
-
-    val externalSize: Int
-
-    val estimatedExternalSize: Int
-
-    fun shuffle()
-
-    fun overflow(url: UrlAware)
-
-    fun overflow(url: List<UrlAware>)
-}
 
 /**
  * An url queue should be small since every url uses about 1s to fetch
@@ -48,18 +28,22 @@ abstract class AbstractLoadingQueue(
     private val capacity = group.pageSize
 
     @Volatile
-    private var lastEstimatedExternalSize: Int = -1
+    protected open var lastEstimatedExternalSize: Int = -1
 
     @Volatile
-    protected var lastLoadTime = Instant.EPOCH
-
-    protected val isIdle
-        get() = lastLoadTime.epochSecond > 0 && Duration.between(lastLoadTime, Instant.now()).seconds > 60
+    protected open var lastLoadTime = Instant.EPOCH
 
     @Volatile
-    protected var lastEstimateTime = Instant.EPOCH
+    protected open var lastEstimateTime = Instant.EPOCH
 
-    protected val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
+    @Volatile
+    protected open var lastBusyTime = Instant.now()
+
+    protected open val isIdle
+        get() = Duration.between(lastBusyTime, Instant.now()).seconds > 60
+
+    // always access the underlying layer with a delay to reduce possible IO reads
+    protected open val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
 
     var loadCount: Int = 0
         protected set
@@ -67,7 +51,7 @@ abstract class AbstractLoadingQueue(
     var savedCount: Int = 0
         protected set
 
-    val isExpired get() = isExpired(loadDelay)
+    open val isExpired get() = isExpired(loadDelay)
 
     val cache: Collection<UrlAware> = urlCache
 
@@ -105,11 +89,11 @@ abstract class AbstractLoadingQueue(
     val isFull
         get() = freeSlots == 0
 
-    fun isExpired(delay: Duration): Boolean {
+    open fun isExpired(delay: Duration): Boolean {
         return lastLoadTime + delay < Instant.now()
     }
 
-    fun expire() {
+    open fun expire() {
         lastLoadTime = Instant.EPOCH
         lastEstimateTime = Instant.EPOCH
     }
@@ -145,15 +129,21 @@ abstract class AbstractLoadingQueue(
         if (freeSlots <= 0) return listOf()
 
         lastLoadTime = Instant.now()
-        return try {
-            loader.loadToNow(urlCache, freeSlots, group, transformer).also {
-                ++loadCount
-                estimateNow()
-            }
+
+        val urls = try {
+            ++loadCount
+            loader.loadToNow(urlCache, freeSlots, group, transformer)
         } catch (e: Exception) {
             logger.warn("Failed to load", e)
             listOf()
         }
+
+        if (urls.isNotEmpty()) {
+            lastBusyTime = Instant.now()
+            estimateNow()
+        }
+
+        return urls
     }
 
     @Synchronized

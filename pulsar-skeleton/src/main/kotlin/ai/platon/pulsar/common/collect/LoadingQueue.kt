@@ -1,0 +1,23 @@
+package ai.platon.pulsar.common.collect
+
+import ai.platon.pulsar.common.urls.UrlAware
+import java.util.*
+
+interface LoadingQueue<T>: Queue<T>, Loadable<T> {
+    companion object {
+        /**
+         * An url queue should be small since every url uses about 1s to fetch
+         * */
+        const val DEFAULT_CAPACITY = 200
+    }
+
+    val externalSize: Int
+
+    val estimatedExternalSize: Int
+
+    fun shuffle()
+
+    fun overflow(url: UrlAware)
+
+    fun overflow(url: List<UrlAware>)
+}
