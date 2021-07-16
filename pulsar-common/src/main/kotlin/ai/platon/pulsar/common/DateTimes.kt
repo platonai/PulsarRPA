@@ -8,7 +8,32 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAccessor
 import java.util.*
-import java.util.concurrent.TimeUnit
+
+data class TimedValue<T>(val value: T, val duration: Duration)
+
+inline fun <T> measureTimedValue(block: () -> T): TimedValue<T> {
+    val startTime = Instant.now()
+    val value = block()
+    val elapsedTime = Duration.between(startTime, Instant.now())
+    return TimedValue(value, elapsedTime)
+}
+
+inline fun <T> measureTime(block: () -> Unit): Duration {
+    val startTime = Instant.now()
+    block()
+    return Duration.between(startTime, Instant.now())
+}
+
+fun ChronoUnit.shortName(): String = when (this) {
+    ChronoUnit.NANOS -> "ns"
+    ChronoUnit.MICROS -> "us"
+    ChronoUnit.MILLIS -> "ms"
+    ChronoUnit.SECONDS -> "s"
+    ChronoUnit.MINUTES -> "m"
+    ChronoUnit.HOURS -> "h"
+    ChronoUnit.DAYS -> "d"
+    else -> this.name
+}
 
 object DateTimes {
     private val logger = getLogger(DateTimes::class)
@@ -40,6 +65,7 @@ object DateTimes {
      * The default zone id
      * */
     var zoneId = ZoneId.of(System.getProperty(PULSAR_ZONE_ID, "Asia/Shanghai"))
+
     /**
      * The default zone offset, it must be consistent with zoneId
      *
@@ -49,10 +75,12 @@ object DateTimes {
      * See also [Tz_database](https://en.wikipedia.org/wiki/Tz_database)
      * */
     var zoneOffset = ZoneOffset.of(System.getProperty(PULSAR_ZONE_OFFSET, "+08:00"))
+
     /**
      * The time to start the program
      */
     val startTime = Instant.now()
+
     /**
      * We foresee that 2200 will be the end of the world, care about nothing after the doom
      * */
