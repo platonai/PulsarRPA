@@ -96,6 +96,7 @@ abstract class AbstractLoadingQueue(
     open fun expire() {
         lastLoadTime = Instant.EPOCH
         lastEstimateTime = Instant.EPOCH
+        lastBusyTime = Instant.now()
     }
 
     @Synchronized

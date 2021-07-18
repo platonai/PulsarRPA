@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
+import ai.platon.pulsar.ql.types.ValueDom
 import com.google.gson.GsonBuilder
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
@@ -202,8 +203,12 @@ object ResultSetUtils {
         val columnCount: Int = metaData.columnCount
         val record = mutableMapOf<String, Any?>()
         for (i in 1..columnCount) {
-            val columnName = metaData.getColumnName(i).toLowerCase()
-            record[columnName] = resultSet.getObject(i)
+            val columnName = metaData.getColumnName(i)
+            val columnType = metaData.getColumnType(i)
+            // remove ValueDom from the result
+            if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
+                record[columnName.toLowerCase()] = resultSet.getObject(i)
+            }
         }
         return record
     }

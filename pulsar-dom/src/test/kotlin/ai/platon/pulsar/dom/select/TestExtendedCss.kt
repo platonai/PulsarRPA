@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.FeaturedDocument.Companion.SELECTOR_IN_BOX_DEVIATION
@@ -22,7 +23,7 @@ class TestExtendedCss {
 
     private val resourceName = "webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html"
     private val baseUri = "jar:/$resourceName"
-    private val stream = javaClass.getResourceAsStream(resourceName)
+    private val stream = ResourceLoader.getResourceAsStream(resourceName)!!
     private val doc: FeaturedDocument = Documents.parse(stream, "UTF-8", baseUri)
     private val box = Box(447, 447)
     private val box2 = Box(463, 439)

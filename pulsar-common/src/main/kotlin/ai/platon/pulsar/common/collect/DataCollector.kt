@@ -38,6 +38,7 @@ interface DataCollector<T> {
      * */
     val capacity: Int
     val size: Int
+    val externalSize: Int
     val estimatedSize: Int
     val collectCount: Int
     val collectedCount: Int
@@ -95,6 +96,7 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
     override var district: String = "*"
 
     override val size: Int get() = 0
+    override val externalSize: Int = 0
     override val estimatedSize: Int = 0
 
     /**
