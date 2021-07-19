@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 
@@ -22,7 +22,7 @@ interface WebDriver {
     val pageSource: String
 
     fun navigateTo(url: String)
-    fun setTimeouts(driverConfig: BrowserControl)
+    fun setTimeouts(driverConfig: BrowserSettings)
     fun evaluate(expression: String): Any?
     fun bringToFront()
     fun stopLoading()

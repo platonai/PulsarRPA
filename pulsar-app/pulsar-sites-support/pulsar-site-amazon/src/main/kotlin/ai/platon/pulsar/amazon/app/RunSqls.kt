@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
-import ai.platon.pulsar.test.XSQLRunner
+import ai.platon.pulsar.test.VerboseSQLRunner
 import kotlin.system.exitProcess
 
 fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
@@ -56,7 +56,7 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
         .map { SQLInstance(it.first, SQLTemplate(it.second)) }
         .filter { "x-asin-best-sellers.sql" in it.sql }
 
-    XSQLRunner(cx).executeAll(sqls)
+    VerboseSQLRunner(cx).executeAll(sqls)
 
     exitProcess(0)
 }

@@ -1,10 +1,7 @@
 package ai.platon.pulsar.qa.amazon
 
-import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.qa.*
-import ai.platon.pulsar.test.XSQLRunner
 import kotlin.test.Test
-import kotlin.test.assertTrue
 
 class AsinTests : QABase() {
     private val resourcePrefix = "config/sites/amazon/crawl/parse/sql"

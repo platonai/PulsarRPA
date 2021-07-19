@@ -2,15 +2,15 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
-import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
 
-class DefaultWebDriverControl(conf: ImmutableConfig): WebDriverControl(conf)
+class DefaultWebDriverSettings(conf: ImmutableConfig): WebDriverSettings(conf)
 
 class DefaultWebDriverFactory(conf: ImmutableConfig)
-    : WebDriverFactory(DefaultWebDriverControl(conf), BrowserInstanceManager(), conf)
+    : WebDriverFactory(DefaultWebDriverSettings(conf), BrowserInstanceManager(), conf)
 
 class DefaultWebDriverPoolManager(conf: ImmutableConfig)
     : WebDriverPoolManager(DefaultWebDriverFactory(conf), conf, suppressMetrics = true)

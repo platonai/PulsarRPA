@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.reverseUrlOrNull
+import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -263,7 +264,8 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             flush()
-            store.close()
+//            store.close()
+            GoraStorage.close()
         }
     }
 

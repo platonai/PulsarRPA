@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.browser.driver.EmulateSettings
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
@@ -175,19 +176,19 @@ open class LoadOptions(
 
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
-    var scrollCount = 3
+    var scrollCount = EmulateSettings.DEFAULT.scrollCount
 
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
-    var scrollInterval = Duration.ofMillis(500)
+    var scrollInterval = EmulateSettings.DEFAULT.scrollInterval
 
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
-    var scriptTimeout = Duration.ofSeconds(90)
+    var scriptTimeout = EmulateSettings.DEFAULT.scriptTimeout
 
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to finish from the first http request start")
-    var pageLoadTimeout = Duration.ofMinutes(3)
+    var pageLoadTimeout = EmulateSettings.DEFAULT.pageLoadTimeout
 
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
@@ -336,6 +337,13 @@ open class LoadOptions(
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
+    @Parameter(
+        names = ["-netCond", "--net-cond"],
+        converter = ConditionConverter::class,
+        description = "The network condition level"
+    )
+    var netCondition = Condition.GOOD
+
     @Parameter(names = ["-test", "--test"], description = "The test level, 0 to disable, we will talk more in test mode")
     var test = LoadOptionDefaults.test
 
@@ -432,11 +440,20 @@ open class LoadOptions(
     }
 
     fun apply(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+        val emulateSettings = when (netCondition) {
+            Condition.WORSE -> EmulateSettings.worseNetSettings
+            Condition.WORST -> EmulateSettings.worstNetSettings
+            else -> EmulateSettings.goodNetSettings
+        }.copy()
+
+        if (!isDefault("scrollCount")) emulateSettings.scrollCount = scrollCount
+        if (!isDefault("scrollInterval")) emulateSettings.scrollInterval = scrollInterval
+        if (!isDefault("scriptTimeout")) emulateSettings.scriptTimeout = scriptTimeout
+        if (!isDefault("pageLoadTimeout")) emulateSettings.pageLoadTimeout = pageLoadTimeout
+
+        emulateSettings.apply(conf)
+
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
-        setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 

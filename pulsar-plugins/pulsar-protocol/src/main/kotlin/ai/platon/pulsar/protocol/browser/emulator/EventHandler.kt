@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.driver.EmulateSettings
 import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -38,7 +39,8 @@ open class EventHandler(
         private val messageWriter: MiscMessageWriter? = null,
         private val immutableConfig: ImmutableConfig
 ) {
-    protected val log = LoggerFactory.getLogger(EventHandler::class.java)!!
+    protected val logger = LoggerFactory.getLogger(EventHandler::class.java)!!
+    protected val tracer = logger.takeIf { it.isTraceEnabled }
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     protected val takeScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
@@ -57,14 +59,15 @@ open class EventHandler(
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
-    fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
-        if (log.isTraceEnabled) {
-            log.trace("Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
+    fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserSettings) {
+        if (logger.isTraceEnabled) {
+            val emulateSettings = EmulateSettings(task.volatileConfig)
+            logger.trace("Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
                     task.batchTaskId, task.batchSize, task.id,
                     Thread.currentThread().id,
                     if (task.nRetries <= 1) "" else "(${task.nRetries})",
                     task.page.configuredUrl,
-                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
+                emulateSettings.pageLoadTimeout, emulateSettings.scriptTimeout, emulateSettings.scrollInterval
             )
         }
     }
@@ -146,7 +149,8 @@ open class EventHandler(
     }
 
     open fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
-        val p1 = pageSource.indexOf("<body")
+        val p0 = pageSource.indexOf("</head>")
+        val p1 = pageSource.indexOf("<body", p0)
         if (p1 <= 0) return HtmlIntegrity.OTHER
         val p2 = pageSource.indexOf(">", p1)
         if (p2 < p1) return HtmlIntegrity.OTHER
@@ -157,6 +161,7 @@ open class EventHandler(
         if (jsInvadingEnabled) {
             // TODO: optimize using region match
             val bodyTag = pageSource.substring(p1, p2)
+            tracer?.trace("Body tag: $bodyTag")
             // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
             val r = bodyTag.contains("data-error=\"0\"")
             if (!r) {
@@ -168,17 +173,18 @@ open class EventHandler(
     }
 
     open fun handleBrowseTimeout(task: NavigateTask) {
-        if (log.isInfoEnabled) {
+        if (logger.isInfoEnabled) {
             val elapsed = Duration.between(task.startTime, Instant.now())
             val length = task.pageSource.length
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
-            val driverConfig = task.driverConfig
-            log.info("Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
-                    task.pageDatum.protocolStatus.minorName,
-                    elapsed,
-                    Strings.readableBytes(length),
-                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
-                    link)
+            val emulateSettings = EmulateSettings(task.task.volatileConfig)
+            logger.info(
+                "Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
+                task.pageDatum.protocolStatus.minorName,
+                elapsed,
+                Strings.readableBytes(length),
+                emulateSettings.pageLoadTimeout, emulateSettings.scriptTimeout, emulateSettings.scrollInterval,
+                link)
         }
     }
 
@@ -237,7 +243,7 @@ open class EventHandler(
             htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
             task.nRetries > fetchMaxRetry -> ProtocolStatus.retry(RetryScope.CRAWL)
-                    .also { log.info("Retry task ${task.id} in the next crawl round") }
+                    .also { logger.info("Retry task ${task.id} in the next crawl round") }
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
             htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also {
                 smallPages.mark()
@@ -257,7 +263,7 @@ open class EventHandler(
         }
 
         val test = page.options.test
-        val shouldExport = log.isDebugEnabled || test > 0 || (log.isInfoEnabled && !status.isSuccess)
+        val shouldExport = logger.isDebugEnabled || test > 0 || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             val path = AppFiles.export(status, pageSource, page)
 
@@ -268,7 +274,7 @@ open class EventHandler(
                 Files.deleteIfExists(link)
                 Files.createSymbolicLink(link, path)
             } catch (e: IOException) {
-                log.warn(e.toString())
+                logger.warn(e.toString())
             }
         }
     }
@@ -290,11 +296,11 @@ open class EventHandler(
             val path = ExportPaths.get("screenshot", filename)
             AppFiles.saveTo(bytes, path, true)
             page.metadata[Name.SCREENSHOT_EXPORT_PATH] = path.toString()
-            log.info("{}. Screenshot is exported ({}) | {}", page.id, readableLength, path)
+            logger.info("{}. Screenshot is exported ({}) | {}", page.id, readableLength, path)
         } catch (e: ScreenshotException) {
-            log.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
+            logger.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
         } catch (e: Exception) {
-            log.warn(Strings.stringifyException(e))
+            logger.warn(Strings.stringifyException(e))
         }
     }
 
@@ -306,12 +312,12 @@ open class EventHandler(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("{}. Page is {}({}) with {} in {}({}) | file://{}",
+            logger.warn("{}. Page is {}({}) with {} in {}({}) | file://{}",
                     task.page.id,
                     integrity.name, readableLength,
                     proxyEntry.display, domain, count, link, task.url)
         } else {
-            log.warn("{}. Page is {}({}) | file://{} | {}", task.page.id, integrity.name, readableLength, link, task.url)
+            logger.warn("{}. Page is {}({}) | file://{} | {}", task.page.id, integrity.name, readableLength, link, task.url)
         }
     }
 }

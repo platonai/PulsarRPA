@@ -121,7 +121,7 @@ object Urls {
 
     @JvmStatic
     fun splitUrlArgs(configuredUrl: String): Pair<String, String> {
-        var url = configuredUrl.trim()
+        var url = configuredUrl.trim().replace("[\\r\\n\\t]".toRegex(), "");
         val pos = url.indexOfFirst { it.isWhitespace() }
 
         var args = ""
@@ -130,11 +130,11 @@ object Urls {
             url = url.substring(0, pos)
         }
 
-        return url to args
+        return url.trim() to args.trim()
     }
 
     fun mergeUrlArgs(url: String, args: String? = null): String {
-        return if (args.isNullOrBlank()) url else "$url $args"
+        return if (args.isNullOrBlank()) url.trim() else "${url.trim()} ${args.trim()}"
     }
 
     @JvmStatic

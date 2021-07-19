@@ -26,6 +26,7 @@ import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
 import java.sql.Connection
+import kotlin.system.exitProcess
 
 open class H2SQLContext(
     applicationContext: AbstractApplicationContext

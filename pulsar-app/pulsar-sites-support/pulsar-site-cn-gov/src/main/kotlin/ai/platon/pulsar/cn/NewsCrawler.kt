@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATIO
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.test.XSQLRunner
+import ai.platon.pulsar.test.VerboseSQLRunner
 import kotlin.system.exitProcess
 
 class NewsCrawler(
@@ -13,7 +13,7 @@ class NewsCrawler(
     val navigationCss: String,
     val context: SQLContext = SQLContexts.activate(PULSAR_CONTEXT_CONFIG_LOCATION)
 ) {
-    val sqlRunner = XSQLRunner(context)
+    val sqlRunner = VerboseSQLRunner(context)
 
     fun extractLinks(): List<String> {
         val sql = """

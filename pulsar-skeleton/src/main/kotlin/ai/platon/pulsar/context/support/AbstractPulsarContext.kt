@@ -387,8 +387,6 @@ abstract class AbstractPulsarContext(
         if (closed.compareAndSet(false, true)) {
             log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
-            kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
-
             sessions.values.forEach {
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
@@ -397,8 +395,7 @@ abstract class AbstractPulsarContext(
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
 
-            // NOTE: close is already registered as a destroy method
-            kotlin.runCatching { getBeanOrNull(AppMetrics::class)?.close() }.onFailure { log.warn(it.message) }
+            applicationContext.close()
         }
 
         AppContext.terminate()

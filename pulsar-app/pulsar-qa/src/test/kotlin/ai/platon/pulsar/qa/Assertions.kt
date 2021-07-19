@@ -1,6 +1,6 @@
 package ai.platon.pulsar.qa
 
-import ai.platon.pulsar.test.XSQLRunner
+import ai.platon.pulsar.test.VerboseSQLRunner
 import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import java.sql.ResultSet
@@ -20,12 +20,12 @@ data class CheckEntry(
 
 fun assertFieldContains(url: String, sqlResource: String, field: String, substring: String, message: String? = null) {
     val sql = SQLInstance.load(url, sqlResource)
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertFieldContains(url, rs, field, substring, message)
 }
 
 fun assertFieldContains(url: String, sql: SQLInstance, field: String, substring: String, message: String? = null) {
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertFieldContains(url, rs, field, substring, message)
 }
 
@@ -53,7 +53,7 @@ fun assertAnyRecordsNotBlank(url: String, rs: ResultSet, fields: Iterable<String
 }
 
 fun assertAnyRecordsNotBlank(sql: SQLInstance, fields: Iterable<String>, message: String? = null) {
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertAnyRecordsNotBlank(sql.url, rs, fields, message)
 }
 
@@ -72,7 +72,7 @@ fun assertAnyRecordsNotBlank(url: String, rs: ResultSet, field: String, message:
 }
 
 fun assertAnyRecordsNotBlank(sql: SQLInstance, field: String, message: String? = null) {
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertAnyRecordsNotBlank(sql.url, rs, field, message)
 }
 
@@ -87,7 +87,7 @@ fun assertMostRecordsNotBlank(url: String, rs: ResultSet, fields: Iterable<Strin
 }
 
 fun assertMostRecordsNotBlank(sql: SQLInstance, fields: Iterable<String>, message: String? = null) {
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertMostRecordsNotBlank(sql.url, rs, fields, message)
 }
 
@@ -107,7 +107,7 @@ fun assertMostRecordsNotBlank(url: String, rs: ResultSet, field: String, message
 }
 
 fun assertMostRecordsNotBlank(sql: SQLInstance, field: String, message: String? = null) {
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertMostRecordsNotBlank(sql.url, rs, field, message)
 }
 
@@ -120,7 +120,7 @@ fun assertAllRecordsNotBlank(sql: SQLInstance, field: String, message: String? =
 }
 
 fun assertAllRecordsNotBlank(sql: SQLInstance, fields: Iterable<String>, message: String? = null) {
-    val rs = XSQLRunner().execute(sql)
+    val rs = VerboseSQLRunner().execute(sql)
     assertAllRecordsNotBlank(sql.url, rs, fields, message)
 }
 

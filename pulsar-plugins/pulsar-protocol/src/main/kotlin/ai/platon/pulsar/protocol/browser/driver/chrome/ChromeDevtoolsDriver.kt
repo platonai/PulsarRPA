@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.chrome
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
@@ -14,7 +14,7 @@ import ai.platon.pulsar.protocol.browser.conf.blockingUrls
 import ai.platon.pulsar.protocol.browser.conf.mustPassUrlPatterns
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
-import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +42,7 @@ internal data class DeviceMetrics(
 class ChromeDevtoolsDriver(
     private val launcherConfig: LauncherConfig,
     private val launchOptions: ChromeDevtoolsOptions,
-    private val browserControl: WebDriverControl,
+    private val browserControl: WebDriverSettings,
     private val browserInstanceManager: BrowserInstanceManager,
 ) : RemoteWebDriver() {
     private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
@@ -51,10 +51,6 @@ class ChromeDevtoolsDriver(
     val proxyServer get() = launchOptions.proxyServer
 
     val userAgent get() = browserControl.randomUserAgent()
-    val pageLoadTimeout get() = browserControl.pageLoadTimeout
-    val scriptTimeout get() = browserControl.scriptTimeout
-    val scrollDownCount get() = browserControl.scrollDownCount
-    val scrollInterval get() = browserControl.scrollInterval
 
     // TODO: load blocking rules from config files
     val enableUrlBlocking get() = browserControl.enableUrlBlocking
@@ -84,8 +80,8 @@ class ChromeDevtoolsDriver(
     val viewport = Viewport().apply {
         x = 0.0
         y = 0.0
-        width = BrowserControl.viewPort.getWidth()
-        height = BrowserControl.viewPort.getHeight()
+        width = BrowserSettings.viewPort.getWidth()
+        height = BrowserSettings.viewPort.getHeight()
         scale = 1.0
     }
 

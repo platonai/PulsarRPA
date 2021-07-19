@@ -13,7 +13,7 @@ import java.net.URL
 open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
 ) {
-    val log = LoggerFactory.getLogger(VerboseCrawler::class.java)
+    val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
 
     constructor(context: PulsarContext) : this(context.createSession())
 
@@ -39,7 +39,7 @@ open class VerboseCrawler(
             .also { println(it) }
 
         val path = session.export(doc)
-        log.info("Export to: file://{}", path)
+        logger.info("Export to: file://{}", path)
     }
 
     fun loadOutPages(portalUrl: String, args: String): Collection<WebPage> {
@@ -49,19 +49,19 @@ open class VerboseCrawler(
     fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
         val page = session.load(portalUrl, options)
         if (!page.protocolStatus.isSuccess) {
-            log.warn("Failed to load page | {}", portalUrl)
+            logger.warn("Failed to load page | {}", portalUrl)
         }
 
         val document = session.parse(page)
         document.absoluteLinks()
         document.stripScripts()
         val path = session.export(document)
-        log.info("Portal page is exported to: file://$path")
+        logger.info("Portal page is exported to: file://$path")
 
         val links = document.select(options.outLinkSelector) { it.attr("abs:href") }
             .mapTo(mutableSetOf()) { session.normalize(it, options) }
             .take(options.topLinks).map { it.spec }
-        log.info("Total {} items to load", links.size)
+        logger.info("Total {} items to load", links.size)
 
         val itemOptions = options.createItemOptions(session.sessionConfig).apply { parse = true }
         return session.loadAll(links, itemOptions)

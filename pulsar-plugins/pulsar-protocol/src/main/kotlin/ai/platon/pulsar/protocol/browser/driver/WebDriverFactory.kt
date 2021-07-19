@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 open class WebDriverFactory(
-        val driverControl: WebDriverControl,
-        val browserInstanceManager: BrowserInstanceManager,
-        val immutableConfig: ImmutableConfig
+    val driverControl: WebDriverSettings,
+    val browserInstanceManager: BrowserInstanceManager,
+    val immutableConfig: ImmutableConfig
 ) {
     private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
     private val defaultWebDriverClass = immutableConfig.getClass(
