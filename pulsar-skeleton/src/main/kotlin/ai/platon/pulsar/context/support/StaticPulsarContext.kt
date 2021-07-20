@@ -4,10 +4,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.component.BatchFetchComponent
-import ai.platon.pulsar.crawl.component.InjectComponent
-import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.UpdateComponent
+import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import org.springframework.context.support.StaticApplicationContext
@@ -45,13 +42,18 @@ class StaticPulsarContext(
      * */
     override val fetchComponent = getBeanOrNull() ?: BatchFetchComponent(webDb, unmodifiedConfig)
     /**
+     * The parse component
+     * */
+    override val parseComponent: ParseComponent = getBeanOrNull() ?: ParseComponent(globalCache, unmodifiedConfig)
+    /**
      * The update component
      * */
     override val updateComponent = getBeanOrNull() ?: UpdateComponent(webDb, unmodifiedConfig)
     /**
      * The load component
      * */
-    override val loadComponent = getBeanOrNull() ?: LoadComponent(webDb, globalCache, fetchComponent, updateComponent, unmodifiedConfig)
+    override val loadComponent = getBeanOrNull() ?: LoadComponent(
+        webDb, globalCache, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
 
     /**
      * The main loop

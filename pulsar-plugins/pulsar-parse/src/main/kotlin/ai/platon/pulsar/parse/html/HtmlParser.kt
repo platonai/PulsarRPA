@@ -20,7 +20,10 @@ package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.CACHING_FORBIDDEN_CONTENT
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
+import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
@@ -57,10 +60,7 @@ class HtmlParser(
 
     private val log = LoggerFactory.getLogger(HtmlParser::class.java)
     private val tracer = log.takeIf { it.isDebugEnabled }
-    private val defaultCharEncoding = conf.get(CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8")
-    private val cachingPolicy =
-        conf.get(CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
-    private val volatileConfig = conf.toVolatileConfig()
+    private val defaultCharEncoding = conf.get(PARSE_DEFAULT_ENCODING, "utf-8")
     private val primerParser = PrimerParser(conf)
 
     init {
@@ -71,7 +71,6 @@ class HtmlParser(
         return Params.of(
             "className", this.javaClass.simpleName,
             "defaultCharEncoding", defaultCharEncoding,
-            "cachingPolicy", cachingPolicy,
             "parseFilters", parseFilters
         )
     }
@@ -81,7 +80,7 @@ class HtmlParser(
             // The base url is set by protocol. Might be different from url if the request redirected
             beforeHtmlParse(page)
 
-            val parseContext = parseHTMLDocument(page)
+            val parseContext = primerParser.parseHTMLDocument(page)
             parseFilters.filter(parseContext)
 
             val document = parseContext.document
@@ -121,60 +120,5 @@ class HtmlParser(
         }
 
         numHtmlParsed.incrementAndGet()
-    }
-
-    @Throws(Exception::class)
-    private fun parseHTMLDocument(page: WebPage): ParseContext {
-        tracer?.trace(
-            "{}.\tParsing page | {} | {} | {} | {}",
-            page.id,
-            Strings.readableBytes(page.contentLength),
-            page.protocolStatus,
-            page.htmlIntegrity,
-            page.url
-        )
-
-        val baseUrl = page.baseUrl ?: page.url
-        val baseURL = URL(baseUrl)
-        if (page.encoding == null) {
-            primerParser.detectEncoding(page)
-        }
-
-        val jsoupParser = JsoupParser(page, conf)
-        jsoupParser.parse()
-        val document = jsoupParser.document
-        val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
-
-        val metaTags = parseMetaTags(baseURL, fragment, page)
-        val parseResult = initParseResult(metaTags)
-        parseResult.document = document
-
-        return ParseContext(page, parseResult, document)
-    }
-
-    private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
-        val metaTags = HTMLMetaTags(docRoot, baseURL)
-        val tags = metaTags.generalTags
-        val metadata = page.metadata
-        tags.names().forEach { name: String -> metadata["meta_$name"] = tags[name] }
-        if (metaTags.noCache) {
-            metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
-        }
-        return metaTags
-    }
-
-    private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
-        if (metaTags.noIndex) {
-            return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX)
-        }
-
-        val parseResult = ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK)
-        if (metaTags.refresh) {
-            parseResult.minorCode = ParseStatus.SUCCESS_REDIRECT
-            parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
-            parseResult.args[ParseStatus.REFRESH_TIME] = metaTags.refreshTime.toString()
-        }
-
-        return parseResult
     }
 }

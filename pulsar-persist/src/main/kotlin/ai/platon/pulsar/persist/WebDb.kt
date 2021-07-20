@@ -264,8 +264,8 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             flush()
-//            store.close()
-            GoraStorage.close()
+            store.close()
+//            GoraStorage.close()
         }
     }
 

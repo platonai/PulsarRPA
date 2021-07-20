@@ -28,6 +28,7 @@ open class HyperlinkExtractor(
 
     fun extractTo(fetchUrls: MutableCollection<Hyperlink>): MutableCollection<Hyperlink> {
         val selector = appendSelectorIfMissing(cssSelector, "a")
+
         var i = 0
         val parsedUrls = document.select(selector).mapNotNull { element ->
             element.attr("abs:href").takeIf { Urls.isValidUrl(it) }

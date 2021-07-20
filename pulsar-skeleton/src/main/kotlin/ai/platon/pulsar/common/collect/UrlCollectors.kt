@@ -4,10 +4,8 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
-import ai.platon.pulsar.persist.WebDb
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -28,7 +26,7 @@ open class QueueCollector(
 
     var loadArgs: String? = null
 
-    constructor(priority: Priority13): this(ConcurrentLinkedQueue(), priority.value)
+    constructor(priority: Priority13) : this(ConcurrentLinkedQueue(), priority.value)
 
     override fun hasMore() = queue.isNotEmpty()
 
@@ -68,7 +66,6 @@ open class HyperlinkCollector(
 
     var urlNormalizer: UrlNormalizerPipeline = UrlNormalizerPipeline()
 
-    private val webDb = session.context.getBean<WebDb>()
     private val fatLinkExtractor = FatLinkExtractor(session, urlNormalizer)
 
     private var parsedSeedCount = 0
@@ -110,8 +107,10 @@ open class HyperlinkCollector(
 
         val knownFatLink = fatLinks[seed.spec]
         if (knownFatLink != null) {
-            log.warn("Still has {} active tasks | idle: {} | {}",
-                knownFatLink.numActive, knownFatLink.idleTime.readable(), seed)
+            log.warn(
+                "Still has {} active tasks | idle: {} | {}",
+                knownFatLink.numActive, knownFatLink.idleTime.readable(), seed
+            )
             return 0
         }
 
@@ -134,6 +133,7 @@ open class HyperlinkCollector(
         page.prevCrawlTime1 = Instant.now()
         fatLinks[fatLink.url] = fatLink
         // url might be normalized, href is exactly the same as seed.spec
+        requireNotNull(fatLink.href)
         require(fatLink.href == seed.spec)
 
         val options = seed.options

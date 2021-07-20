@@ -43,7 +43,7 @@ class LoadComponent(
     val webDb: WebDb,
     val globalCache: GlobalCache,
     val fetchComponent: BatchFetchComponent,
-    val parseComponent: ParseComponent? = null,
+    val parseComponent: ParseComponent,
     val updateComponent: UpdateComponent,
     val statusTracker: AppStatusTracker? = null,
     val crawlLoop: CrawlLoop? = null,
@@ -94,9 +94,10 @@ class LoadComponent(
         webDb: WebDb,
         globalCache: GlobalCache,
         fetchComponent: BatchFetchComponent,
+        parseComponent: ParseComponent,
         updateComponent: UpdateComponent,
         immutableConfig: ImmutableConfig,
-    ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, null, immutableConfig)
+    ) : this(webDb, globalCache, fetchComponent, parseComponent, updateComponent, null, null, immutableConfig)
 
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus

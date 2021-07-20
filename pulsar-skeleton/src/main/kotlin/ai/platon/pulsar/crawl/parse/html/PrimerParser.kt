@@ -18,18 +18,23 @@
  */
 package ai.platon.pulsar.crawl.parse.html
 
-import ai.platon.pulsar.common.DomUtil
-import ai.platon.pulsar.common.EncodingDetector
-import ai.platon.pulsar.common.NodeWalker
-import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.CACHING_FORBIDDEN_CONTENT
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
 import ai.platon.pulsar.common.urls.Urls.resolveURL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlFilters
+import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Maps
+import org.jsoup.helper.W3CDom
 import org.slf4j.LoggerFactory
+import org.w3c.dom.DocumentFragment
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.net.MalformedURLException
@@ -44,9 +49,11 @@ import java.util.*
  * This class holds a few utility methods for pulling content out of DOM nodes,
  * such as getLiveLinks, getPageText, etc.
  */
-class PrimerParser(conf: ImmutableConfig) {
-    private val log = LoggerFactory.getLogger(Parser::class.java)
+class PrimerParser(val conf: ImmutableConfig) {
+    private val logger = LoggerFactory.getLogger(Parser::class.java)
+    private val tracer = logger.takeIf { it.isTraceEnabled }
 
+    private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, CACHING_FORBIDDEN_CONTENT)
     private var encodingDetector = EncodingDetector(conf)
     private val linkParams = HashMap<String, LinkParams>()
 
@@ -84,8 +91,63 @@ class PrimerParser(conf: ImmutableConfig) {
             page.encoding = encoding
             page.encodingClues = encodingDetector.cluesAsString
         } else {
-            log.warn("Failed to detect encoding, url: " + page.url)
+            logger.warn("Failed to detect encoding, url: " + page.url)
         }
+    }
+
+    @Throws(Exception::class)
+    fun parseHTMLDocument(page: WebPage): ParseContext {
+        tracer?.trace(
+            "{}.\tParsing page | {} | {} | {} | {}",
+            page.id,
+            Strings.readableBytes(page.contentLength),
+            page.protocolStatus,
+            page.htmlIntegrity,
+            page.url
+        )
+
+        val baseUrl = page.baseUrl ?: page.url
+        val baseURL = URL(baseUrl)
+        if (page.encoding == null) {
+            detectEncoding(page)
+        }
+
+        val jsoupParser = JsoupParser(page, conf)
+        jsoupParser.parse()
+        val document = jsoupParser.document
+        val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
+
+        val metaTags = parseMetaTags(baseURL, fragment, page)
+        val parseResult = initParseResult(metaTags)
+        parseResult.document = document
+
+        return ParseContext(page, parseResult, document)
+    }
+
+    private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
+        val metaTags = HTMLMetaTags(docRoot, baseURL)
+        val tags = metaTags.generalTags
+        val metadata = page.metadata
+        tags.names().forEach { name: String -> metadata["meta_$name"] = tags[name] }
+        if (metaTags.noCache) {
+            metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
+        }
+        return metaTags
+    }
+
+    private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
+        if (metaTags.noIndex) {
+            return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX)
+        }
+
+        val parseResult = ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK)
+        if (metaTags.refresh) {
+            parseResult.minorCode = ParseStatus.SUCCESS_REDIRECT
+            parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
+            parseResult.args[ParseStatus.REFRESH_TIME] = metaTags.refreshTime.toString()
+        }
+
+        return parseResult
     }
 
     /**
@@ -341,7 +403,7 @@ class PrimerParser(conf: ImmutableConfig) {
                 getLinksStep2(base, hyperlinks, currentNode, crawlFilters)
                 walker.skipChildren()
             } else {
-                log.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
+                logger.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
             }
         }
 
@@ -354,7 +416,7 @@ class PrimerParser(conf: ImmutableConfig) {
         while (walker.hasNext()) {
             val currentNode = walker.nextNode()
             if (crawlFilters != null && crawlFilters.isDisallowed(currentNode)) {
-                log.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
+                logger.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
                 walker.skipChildren()
                 continue
             }
