@@ -510,7 +510,6 @@ open class LoadOptions(
                 val count = it.annotations.filterIsInstance<Parameter>().count { it.names.contains("-$name") }
                 require(count > 0) { "Missing -$name option for field <$name>" }
             }
-//        val declaredFields = LoadOptions::class.java.declaredFields
         val defaultParams = optionFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
         val arity0BooleanParams = optionFields

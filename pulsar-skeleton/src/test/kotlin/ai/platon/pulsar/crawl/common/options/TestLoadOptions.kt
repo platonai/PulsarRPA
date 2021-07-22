@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.options.Condition
 import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
@@ -66,6 +67,17 @@ class TestLoadOptions {
         assertFalse { "-storeContent" in options.modifiedParams.asMap().keys }
         assertTrue { args.contains("-parse") }
         assertEquals("-parse", args)
+    }
+
+    @Test
+    fun testNetConditionOptions() {
+        val options = LoadOptions.parse("-netCond worst", VolatileConfig.UNSAFE)
+//        println(options.toString())
+//        println(options.clone().toString())
+
+        assertEquals(Condition.WORST, options.netCondition)
+        assertEquals(Condition.WORST, options.clone().netCondition)
+        assertEquals(options.toString(), options.clone().toString())
     }
 
     @Test
