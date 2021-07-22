@@ -100,7 +100,7 @@ abstract class AbstractPulsarSession(
         context.normalizeOrNull(url, options, toItemOption)
 
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(urls, options, toItemOption).onEach { it.options }
+        context.normalize(urls, options, toItemOption)
 
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(url, options, toItemOption)
@@ -109,7 +109,7 @@ abstract class AbstractPulsarSession(
         context.normalizeOrNull(url, options, toItemOption)
 
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean) =
-        context.normalize(urls, options, toItemOption).onEach { it.options }
+        context.normalize(urls, options, toItemOption)
 
     /**
      * Inject a url

@@ -273,6 +273,7 @@ open class BrowserEmulator(
     protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
         val random = ThreadLocalRandom.current().nextInt(3)
         val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
+        val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
 
         val expressions = mutableListOf(
             "__utils__.scrollToMiddle(0.25)",
@@ -283,7 +284,7 @@ open class BrowserEmulator(
         repeat(scrollDownCount) {
             expressions.add("__utils__.scrollDown()")
         }
-        evaluate(interactTask, expressions, 500)
+        evaluate(interactTask, expressions, scrollInterval)
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {

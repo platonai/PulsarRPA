@@ -20,8 +20,8 @@ data class EmulateSettings(
     var pageLoadTimeout: Duration = Duration.ofMinutes(3)
 ) {
     constructor(conf: ImmutableConfig): this(
-        conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
-        conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
+        scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
+        scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
         scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofMinutes(1)),
         pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
     )
@@ -46,17 +46,17 @@ data class EmulateSettings(
         var goodNetSettings = EmulateSettings()
 
         var worseNetSettings = EmulateSettings(
-            10,
-            Duration.ofSeconds(5),
+            scrollCount = 10,
+            scrollInterval = Duration.ofSeconds(1),
             scriptTimeout = Duration.ofMinutes(2),
-            Duration.ofMinutes(5),
+            Duration.ofMinutes(3),
         )
 
         var worstNetSettings = EmulateSettings(
-            10,
-            Duration.ofSeconds(10),
+            scrollCount = 15,
+            scrollInterval = Duration.ofSeconds(3),
             scriptTimeout = Duration.ofMinutes(3),
-            Duration.ofMinutes(5),
+            Duration.ofMinutes(4),
         )
     }
 }

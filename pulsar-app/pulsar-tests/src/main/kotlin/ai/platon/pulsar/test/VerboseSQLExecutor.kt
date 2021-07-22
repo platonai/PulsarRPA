@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLConverter
 import ai.platon.pulsar.common.sql.SQLInstance
@@ -7,13 +8,14 @@ import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
+import java.nio.file.Files
 import java.sql.ResultSet
 
 open class VerboseSQLExecutor(
     val context: SQLContext = SQLContexts.activate()
 ): VerboseCrawler(context) {
 
-    fun execute(sql: String, printResult: Boolean = true, formatAsList: Boolean = false) {
+    fun execute(sql: String, printResult: Boolean = true, withHeader: Boolean = true, formatAsList: Boolean = false) {
         if (sql.isBlank()) {
             throw IllegalArgumentException("Illegal sql: $sql")
         }
@@ -21,10 +23,7 @@ open class VerboseSQLExecutor(
         try {
             val regex = "^(SELECT|CALL).+".toRegex()
             if (sql.toUpperCase().filter { it != '\n' }.trimIndent().matches(regex)) {
-                val rs = context.executeQuery(sql)
-                if (printResult) {
-                    println(ResultSetFormatter(rs, asList = formatAsList))
-                }
+                query(sql, printResult, withHeader, formatAsList)
             } else {
                 val r = context.execute(sql)
                 if (printResult) {
@@ -36,7 +35,7 @@ open class VerboseSQLExecutor(
         }
     }
 
-    fun query(sql: String, printResult: Boolean = true, withHeader: Boolean = true): ResultSet {
+    fun query(sql: String, printResult: Boolean = true, withHeader: Boolean = true, formatAsList: Boolean = false): ResultSet {
         if (sql.isBlank()) {
             throw IllegalArgumentException("Illegal sql: $sql")
         }
@@ -50,6 +49,15 @@ open class VerboseSQLExecutor(
             if (printResult) {
                 rs.beforeFirst()
                 println(ResultSetFormatter(rs, withHeader = withHeader, asList = (count == 1)))
+            }
+
+            val csv = ResultSetUtils.toCSV(rs)
+            if (csv.isNotBlank()) {
+                val now = System.currentTimeMillis()
+                val path = AppPaths.getTmp("rs").resolve("$now.csv")
+                Files.createDirectories(path.parent)
+                Files.writeString(path, ResultSetUtils.toCSV(rs))
+                println("Written to file://$path")
             }
 
             rs.beforeFirst()
@@ -74,14 +82,7 @@ open class VerboseSQLExecutor(
             throw IllegalArgumentException("Illegal sql template: ${sqlInstance.template.resource}")
         }
 
-        var rs = query(sql, printResult = true)
-
-        if (sqlInstance.template.resource?.contains("x-similar-items.sql") == true) {
-            rs = ResultSetUtils.transpose(rs)
-            println("Transposed: ")
-            rs.beforeFirst()
-            println(ResultSetFormatter(rs, withHeader = true).toString())
-        }
+        val rs = query(sql, printResult = true)
 
         val count = ResultSetUtils.count(rs)
         logger.info("Extracted $count records")

@@ -9,7 +9,6 @@ import com.google.gson.GsonBuilder
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
-import org.slf4j.LoggerFactory
 import java.sql.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -214,8 +213,34 @@ object ResultSetUtils {
     }
 
     @Throws(SQLException::class)
+    fun getTextEntitiesFromResultSet(resultSet: ResultSet): List<Map<String, Any?>> {
+        val entities = arrayListOf<Map<String, Any?>>()
+        resultSet.beforeFirst()
+        while (resultSet.next()) {
+            entities.add(getTextEntityFromCurrentRecord(resultSet))
+        }
+        return entities
+    }
+
+    @Throws(SQLException::class)
+    private fun getTextEntityFromCurrentRecord(resultSet: ResultSet): Map<String, String?> {
+        val metaData = resultSet.metaData
+        val columnCount: Int = metaData.columnCount
+        val record = mutableMapOf<String, String?>()
+        for (i in 1..columnCount) {
+            val columnName = metaData.getColumnName(i)
+            val columnType = metaData.getColumnType(i)
+            // remove ValueDom from the result
+            if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
+                record[columnName.toLowerCase()] = resultSet.getString(i)
+            }
+        }
+        return record
+    }
+
+    @Throws(SQLException::class)
     fun toJson(resultSet: ResultSet): String {
-        val entities = getEntitiesFromResultSet(resultSet)
+        val entities = getTextEntitiesFromResultSet(resultSet)
         val gson = GsonBuilder().serializeNulls().create()
         return gson.toJson(entities)
     }
@@ -224,13 +249,21 @@ object ResultSetUtils {
     fun toJson(resultSets: List<ResultSet>): String {
         val entities = resultSets.map {
             mapOf(
-                "result" to getEntitiesFromResultSet(it),
+                "result" to getTextEntitiesFromResultSet(it),
                 "statement" to it.statement,
                 "columnCount" to it.metaData.columnCount
             )
         }
         val gson = GsonBuilder().serializeNulls().create()
         return gson.toJson(entities)
+    }
+
+    @Throws(SQLException::class)
+    fun toCSV(rs: ResultSet, separator: String = "|"): String {
+        val entities = getTextEntitiesFromResultSet(rs)
+        return entities.joinToString("\n") {
+            it.values.joinToString(separator)
+        }
     }
 
     /**
