@@ -10,8 +10,8 @@ import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import java.sql.ResultSet
 
 open class VerboseSQLExecutor(
-    val sqlContext: SQLContext = SQLContexts.activate()
-): VerboseCrawler(sqlContext) {
+    val context: SQLContext = SQLContexts.activate()
+): VerboseCrawler(context) {
 
     fun execute(sql: String, printResult: Boolean = true, formatAsList: Boolean = false) {
         if (sql.isBlank()) {
@@ -21,12 +21,12 @@ open class VerboseSQLExecutor(
         try {
             val regex = "^(SELECT|CALL).+".toRegex()
             if (sql.toUpperCase().filter { it != '\n' }.trimIndent().matches(regex)) {
-                val rs = sqlContext.executeQuery(sql)
+                val rs = context.executeQuery(sql)
                 if (printResult) {
                     println(ResultSetFormatter(rs, asList = formatAsList))
                 }
             } else {
-                val r = sqlContext.execute(sql)
+                val r = context.execute(sql)
                 if (printResult) {
                     println(r)
                 }
@@ -42,7 +42,7 @@ open class VerboseSQLExecutor(
         }
 
         try {
-            val rs = sqlContext.executeQuery(sql)
+            val rs = context.executeQuery(sql)
 
             rs.beforeFirst()
             val count = ResultSetUtils.count(rs)
@@ -52,6 +52,7 @@ open class VerboseSQLExecutor(
                 println(ResultSetFormatter(rs, withHeader = withHeader, asList = (count == 1)))
             }
 
+            rs.beforeFirst()
             return rs
         } catch (e: Throwable) {
             logger.warn("Failed to execute sql: \n{}", sql)
@@ -68,9 +69,6 @@ open class VerboseSQLExecutor(
     }
 
     fun execute(sqlInstance: SQLInstance): ResultSet {
-        val url = sqlInstance.url
-        val document = session.loadDocument(url)
-
         val sql = sqlInstance.sql
         if (sql.isBlank()) {
             throw IllegalArgumentException("Illegal sql template: ${sqlInstance.template.resource}")
@@ -110,7 +108,6 @@ open class VerboseSQLExecutor(
     }
 
     fun executeAll(sqls: List<Pair<String, String>>) {
-        var i = 0
         val sqlInstances = sqls.map { (url, resource) ->
             val name = resource.substringAfterLast("/").substringBeforeLast(".sql")
             SQLInstance.load(url, resource, name = name)

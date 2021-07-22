@@ -112,14 +112,14 @@ object Queries {
 
         val normUrl = session.normalize(portalUrl)
         val document = session.loadDocument(normUrl)
-        var links = transformer(document.document, restrictCss, offset, limit)
+        var links = transformer(document.document, restrictCss, offset, limit).filter { !Urls.isInternal(it) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
         }
 
         val itemOptions = normUrl.options.createItemOptions()
-        return session.loadAll(links, itemOptions, true).filter { it.isNotNil }
+        return session.loadAll(links, itemOptions, true).filter { it.isNotInternal }
     }
 
     /**

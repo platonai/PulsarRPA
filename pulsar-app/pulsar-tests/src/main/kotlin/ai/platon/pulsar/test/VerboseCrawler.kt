@@ -14,6 +14,8 @@ open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
 ) {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
+    // trigger loop start
+    val crawlLoop = session.context.crawlLoops
 
     constructor(context: PulsarContext) : this(context.createSession())
 
