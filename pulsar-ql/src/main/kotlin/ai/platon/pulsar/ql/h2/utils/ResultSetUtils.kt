@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.utils
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
@@ -9,6 +10,8 @@ import com.google.gson.GsonBuilder
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
+import java.nio.file.Files
+import java.nio.file.Path
 import java.sql.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -264,6 +267,27 @@ object ResultSetUtils {
         return entities.joinToString("\n") {
             it.values.joinToString(separator)
         }
+    }
+
+    @Throws(SQLException::class)
+    fun toCSV(resultsets: Iterable<ResultSet>, separator: String = "|"): String {
+        val sb = StringBuilder()
+        resultsets.forEach { rs ->
+            val entities = getTextEntitiesFromResultSet(rs)
+            entities.forEach { entity ->
+                entity.values.joinTo(sb, separator) { it.toString().replace(separator, "^^") }
+                sb.appendLine()
+            }
+        }
+        return sb.toString()
+    }
+
+    fun exportToCSV(resultsets: Iterable<ResultSet>, separator: String = "|"): Path {
+        val now = System.currentTimeMillis()
+        val path = AppPaths.getTmp("rs").resolve("$now.csv")
+        Files.createDirectories(path.parent)
+        Files.writeString(path, toCSV(resultsets, separator))
+        return path
     }
 
     /**

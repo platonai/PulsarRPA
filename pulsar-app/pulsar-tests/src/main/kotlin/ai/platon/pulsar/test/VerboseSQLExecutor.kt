@@ -43,21 +43,18 @@ open class VerboseSQLExecutor(
         try {
             val rs = context.executeQuery(sql)
 
-            rs.beforeFirst()
-            val count = ResultSetUtils.count(rs)
-
             if (printResult) {
-                rs.beforeFirst()
+                val count = ResultSetUtils.count(rs)
                 println(ResultSetFormatter(rs, withHeader = withHeader, asList = (count == 1)))
-            }
 
-            val csv = ResultSetUtils.toCSV(rs)
-            if (csv.isNotBlank()) {
-                val now = System.currentTimeMillis()
-                val path = AppPaths.getTmp("rs").resolve("$now.csv")
-                Files.createDirectories(path.parent)
-                Files.writeString(path, ResultSetUtils.toCSV(rs))
-                println("Written to file://$path")
+                val csv = ResultSetUtils.toCSV(rs)
+                if (csv.isNotBlank()) {
+                    val now = System.currentTimeMillis()
+                    val path = AppPaths.getTmp("rs").resolve("$now.csv")
+                    Files.createDirectories(path.parent)
+                    Files.writeString(path, ResultSetUtils.toCSV(rs))
+                    println("Written to file://$path")
+                }
             }
 
             rs.beforeFirst()
@@ -68,6 +65,15 @@ open class VerboseSQLExecutor(
         }
 
         return ResultSets.newSimpleResultSet()
+    }
+
+    fun queryAll(sqls: Iterable<String>): Map<String, ResultSet> {
+        val resultSets = mutableMapOf<String, ResultSet>()
+        sqls.forEach { sql ->
+            val reviewRs = query(sql, printResult = false)
+            resultSets[sql] = reviewRs
+        }
+        return resultSets
     }
 
     fun execute(url: String, sqlResource: String): ResultSet {

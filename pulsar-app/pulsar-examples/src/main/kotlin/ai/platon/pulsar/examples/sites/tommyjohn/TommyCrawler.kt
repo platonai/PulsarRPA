@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.sites.tommyjohn
 
 import ai.platon.pulsar.ql.context.withSQLContext
+import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.test.VerboseSQLExecutor
 
 fun main() {
@@ -60,15 +61,24 @@ fun main() {
            dom_base_uri(dom) as `baseUri`
         from
            load_and_select(
-                'https://tommyjohn.com/collections/second-skin-pajama-short/?color=dress-blues -i 1d -netCond worse',
+                '@url -i 1d -netCond worse',
                 'ul.review-list li.review-item'
            )
         """
 
     withSQLContext { ctx ->
         val executor = VerboseSQLExecutor(ctx)
-        executor.query(indexSQL)
-        executor.query(itemsSQL)
-        executor.query(reviewsSQL)
+        val rs = executor.query(itemsSQL)
+
+        val sqls = mutableListOf<String>()
+        while (rs.next()) {
+            val url = rs.getString("baseUri")
+            val sql = reviewsSQL.replace("@url", url)
+            sqls.add(sql)
+        }
+        val resultSets = executor.queryAll(sqls)
+
+        val path = ResultSetUtils.exportToCSV(resultSets.values)
+        println("Reviews are written to file://$path")
     }
 }
