@@ -1,12 +1,15 @@
 package ai.platon.pulsar.ql.h2.utils
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.DateTimes.PATH_SAFE_FORMAT_1
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.gson.GsonBuilder
+import org.apache.commons.lang3.RandomStringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
@@ -167,6 +170,19 @@ object ResultSetUtils {
     }
 
     @Throws(SQLException::class)
+    fun getColumnNames(resultSet: ResultSet): List<String> {
+        val names = mutableListOf<String>()
+
+        val columnCount = resultSet.metaData.columnCount
+        IntRange(1, columnCount).forEach { i ->
+            val name = resultSet.metaData.getColumnName(i)
+            names.add(name)
+        }
+
+        return names
+    }
+
+    @Throws(SQLException::class)
     fun getEntitiesFromResultSet(resultSet: ResultSet): List<Map<String, Any?>> {
         val entities = arrayListOf<Map<String, Any?>>()
         resultSet.beforeFirst()
@@ -259,35 +275,6 @@ object ResultSetUtils {
         }
         val gson = GsonBuilder().serializeNulls().create()
         return gson.toJson(entities)
-    }
-
-    @Throws(SQLException::class)
-    fun toCSV(rs: ResultSet, separator: String = "|"): String {
-        val entities = getTextEntitiesFromResultSet(rs)
-        return entities.joinToString("\n") {
-            it.values.joinToString(separator)
-        }
-    }
-
-    @Throws(SQLException::class)
-    fun toCSV(resultsets: Iterable<ResultSet>, separator: String = "|"): String {
-        val sb = StringBuilder()
-        resultsets.forEach { rs ->
-            val entities = getTextEntitiesFromResultSet(rs)
-            entities.forEach { entity ->
-                entity.values.joinTo(sb, separator) { it.toString().replace(separator, "^^") }
-                sb.appendLine()
-            }
-        }
-        return sb.toString()
-    }
-
-    fun exportToCSV(resultsets: Iterable<ResultSet>, separator: String = "|"): Path {
-        val now = System.currentTimeMillis()
-        val path = AppPaths.getTmp("rs").resolve("$now.csv")
-        Files.createDirectories(path.parent)
-        Files.writeString(path, toCSV(resultsets, separator))
-        return path
     }
 
     /**

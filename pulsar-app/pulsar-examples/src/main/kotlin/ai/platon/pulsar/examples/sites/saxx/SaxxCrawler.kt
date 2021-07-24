@@ -1,12 +1,16 @@
 package ai.platon.pulsar.examples.sites.saxx
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
+import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
+import ai.platon.pulsar.test.ProductExtractor
 import ai.platon.pulsar.test.VerboseSQLExecutor
 import kotlin.system.exitProcess
 
 fun main() {
-    BrowserSettings.withGUI()
+//    BrowserSettings.withGUI()
 
     val indexSQL = """
         select
@@ -27,50 +31,58 @@ fun main() {
            )
         """
 
-    val itemSQL = """
+    val itemsSQLTemplate = """
         select
-           dom_first_text(dom, 'section.product-main h1.product-info__title') as `name`,
-           dom_first_text(dom, 'section.product-main span.product-info__price') as `price`,
-           dom_first_text(dom, 'section.product-main .yotpo-stars span:contains(star rating)') as `rating`,
-           dom_first_text(dom, 'section.product-main .yotpo-stars ~ a') as `reviews`,
+           dom_first_text(dom, 'h1.title') as `name`,
+           dom_first_text(dom, '.price-preview del[data-product-id]') as `list_Price`,
+           dom_first_text(dom, '.price-preview span[data-product-id]') as `price`,
+           dom_first_text(dom, 'div.bottom-line-items span:contains(star rating)') as `rating`,
+           dom_first_text(dom, 'span.reviews-qa-label') as `reviews`,
 
-           dom_all_attrs(dom, 'div[data-color-section=Color] ul li input', 'value') as `color_Variants`,
-           dom_all_texts(dom, 'div[data-option-name=Size] ul li') as `size_Variants`,
+           dom_all_texts(dom, '.product-options.has-options .swatch.size label') as `color_Variants`,
 
-           dom_first_text(dom, 'div.product-details-container section[data-product-details-description]') as `product_Details`,
-           dom_first_text(dom, 'div.product-page__options .product-description') as `description`,
+           dom_first_text(dom, '.product-description') as `description`,
 
            dom_first_attr(dom, 'div.product-gallery div[data-zoom-img]', 'data-zoom-img') as `big_Images`,
            dom_base_uri(dom) as `baseUri`
         from
-           load_and_select(
-                'https://www.saxxunderwear.com/collections/underwear -i 1d -netCond worse',
-                'body'
+           load_out_pages(
+                '{{url}}
+                    -i 1d -requireSize 500000 -itemRequireSize 300000 -ignoreFailure -netCond worst',
+                'div.product-card a[href~=/products/]'
            )
         """
 
-    val reviewsSQL = """
+    val reviewsSQLTemplate = """
         select
-           dom_first_text(dom, 'p.reviewer-user-name') as `user_Name`,
-           dom_first_text(dom, 'p.reviewer-user-type') as `user_Type`,
-           dom_first_text(dom, 'p.yotpo-review-buyer-data') as `buyer_Data`,
-           dom_first_text(dom, 'p.reviewer-user-type') as `user_Type`,
+           dom_first_text(dom, '.yotpo-user-name') as `user_Name`,
+           dom_first_text(dom, '.yotpo-review-date') as `date`,
+           dom_first_text(dom, '.yotpo-user-field:contains(Fit)') as `fit`,
+           dom_first_text(dom, '.yotpo-user-title') as `user_Type`,
 
-           dom_first_text(dom, 'span.yotpo-review-stars span:contains(rating)') as `rating`,
-           dom_first_text(dom, 'p.yotpo-review-title') as `title`,
-           dom_first_text(dom, 'p.yotpo-review-title') as `content`,
+           dom_first_text(dom, 'div.yotpo-review-stars span:contains(rating)') as `rating`,
+           dom_first_text(dom, '.yotpo-main .content-title') as `title`,
+           dom_first_text(dom, '.content-review') as `content`,
            dom_base_uri(dom) as `baseUri`
         from
            load_and_select(
-                'https://www.saxxunderwear.com/collections/underwear -i 1d -netCond worse',
-                'ul.review-list li.review-item'
+                '{{url}} -i 1d -netCond worse',
+                '.yotpo-reviews .yotpo-review'
            )
         """
 
     withSQLContext { ctx ->
-        val executor = VerboseSQLExecutor(ctx)
-        executor.query(indexSQL)
-        executor.query(itemSQL)
-        executor.query(reviewsSQL)
+        val now = DateTimes.formatNow("HH")
+        val path = AppPaths.getTmp("rs").resolve(now).resolve("saxx")
+        val executor = ProductExtractor(path, ctx)
+        val itemUrls = arrayOf(
+            "https://www.saxxunderwear.com/collections/underwear",
+        )
+        itemUrls.forEach { url ->
+            val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
+            executor.extract(itemsSQL, reviewsSQLTemplate)
+        }
     }
+
+    exitProcess(0)
 }

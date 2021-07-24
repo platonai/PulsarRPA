@@ -50,6 +50,10 @@
 <!--    <logger name="ai.platon.pulsar.protocol.browser.emulator.EventHandler" level="INFO"/>-->
 <!--    <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="INFO"/>-->
 
+    <logger name="ai.platon.pulsar.ql.context.ClassPathXmlSQLContext" level="WARN"/>
+    <logger name="ai.platon.pulsar.ql.context.AbstractSQLContext" level="WARN"/>
+    <logger name="ai.platon.pulsar.ql.h2.H2SessionFactory" level="WARN"/>
+
     <logger name="ai.platon.pulsar.examples" level="INFO"/>
 
     <logger name="org.springframework.core" level="INFO"/>

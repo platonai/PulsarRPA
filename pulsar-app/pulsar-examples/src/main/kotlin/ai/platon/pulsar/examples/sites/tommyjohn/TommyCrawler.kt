@@ -1,8 +1,11 @@
 package ai.platon.pulsar.examples.sites.tommyjohn
 
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
-import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
-import ai.platon.pulsar.test.VerboseSQLExecutor
+import ai.platon.pulsar.test.ProductExtractor
+import kotlin.system.exitProcess
 
 fun main() {
     // BrowserSettings.withGUI()
@@ -26,12 +29,12 @@ fun main() {
            )
         """
 
-    val itemsSQL = """
+    val itemsSQLTemplate = """
         select
            dom_first_text(dom, 'section.product-main h1.product-info__title') as `name`,
            dom_first_text(dom, 'section.product-main span.product-info__price') as `price`,
            dom_first_text(dom, 'section.product-main .yotpo-stars span:contains(star rating)') as `rating`,
-           dom_first_text(dom, 'section.product-main .yotpo-stars ~ a') as `reviews`,
+           str_substring_between(dom_first_text(dom, 'section.product-main .yotpo-stars ~ a'), '(', ')') as `reviews`,
 
            dom_all_attrs(dom, 'div[data-color-section=Color] ul li input', 'value') as `color_Variants`,
            dom_all_texts(dom, 'div[data-option-name=Size] ul li') as `size_Variants`,
@@ -43,42 +46,45 @@ fun main() {
            dom_base_uri(dom) as `baseUri`
         from
            load_out_pages(
-                'https://tommyjohn.com/collections/loungewear-mens?sort-by=relevance&sort-order=descending
-                    -i 1d -requireSize 500000 -itemRequireSize 300000 -ignoreFailure -netCond worst',
+                '{{url}}
+                    -i 1d -requireSize 500000 -itemRequireSize 250000 -ignoreFailure -netCond worst',
                 'div.product-item a.product-meta:has(span.product-meta__title)'
            )
         """
 
-    val reviewsSQL = """
+    val reviewsSQLTemplate = """
         select
            dom_first_text(dom, 'p.reviewer-user-name') as `user_Name`,
-           dom_first_text(dom, 'p.yotpo-review-buyer-data') as `buyer_Data`,
+           dom_first_text(dom, 'p.yotpo-review-buyer-data:contains(Date)') as `date`,
+           dom_first_text(dom, 'p.yotpo-review-buyer-data:contains(Fit)') as `fit`,
            dom_first_text(dom, 'p.reviewer-user-type') as `user_Type`,
 
            dom_first_text(dom, 'span.yotpo-review-stars span:contains(rating)') as `rating`,
            dom_first_text(dom, 'p.yotpo-review-title') as `title`,
-           dom_first_text(dom, 'p.yotpo-review-title') as `content`,
+           dom_first_text(dom, 'div.yotpo-review-content') as `content`,
            dom_base_uri(dom) as `baseUri`
         from
            load_and_select(
-                '@url -i 1d -netCond worse',
+                '{{url}} -i 1d -netCond worse',
                 'ul.review-list li.review-item'
            )
         """
 
     withSQLContext { ctx ->
-        val executor = VerboseSQLExecutor(ctx)
-        val rs = executor.query(itemsSQL)
-
-        val sqls = mutableListOf<String>()
-        while (rs.next()) {
-            val url = rs.getString("baseUri")
-            val sql = reviewsSQL.replace("@url", url)
-            sqls.add(sql)
+        val now = DateTimes.formatNow("HH")
+        val path = AppPaths.getTmp("rs").resolve(now).resolve("tommy")
+        val executor = ProductExtractor(path, ctx)
+        val itemUrls = arrayOf(
+            "https://tommyjohn.com/collections/loungewear-mens?sort-by=relevance&sort-order=descending",
+            "https://tommyjohn.com/collections/mens-socks?sort-by=relevance&sort-order=descending",
+            "https://tommyjohn.com/collections/mens-undershirts?sort-by=relevance&sort-order=descending",
+            "https://tommyjohn.com/collections/mens-underwear-all-styles",
+        )
+        itemUrls.forEach { url ->
+            val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
+            executor.extract(itemsSQL, reviewsSQLTemplate)
         }
-        val resultSets = executor.queryAll(sqls)
-
-        val path = ResultSetUtils.exportToCSV(resultSets.values)
-        println("Reviews are written to file://$path")
     }
+
+    exitProcess(0)
 }

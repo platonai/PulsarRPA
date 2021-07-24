@@ -1,6 +1,5 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLConverter
 import ai.platon.pulsar.common.sql.SQLInstance
@@ -8,12 +7,11 @@ import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
-import java.nio.file.Files
 import java.sql.ResultSet
 
 open class VerboseSQLExecutor(
-    val context: SQLContext = SQLContexts.activate()
-): VerboseCrawler(context) {
+    val context: SQLContext = SQLContexts.activate(),
+) : VerboseCrawler(context) {
 
     fun execute(sql: String, printResult: Boolean = true, withHeader: Boolean = true, formatAsList: Boolean = false) {
         if (sql.isBlank()) {
@@ -35,7 +33,12 @@ open class VerboseSQLExecutor(
         }
     }
 
-    fun query(sql: String, printResult: Boolean = true, withHeader: Boolean = true, formatAsList: Boolean = false): ResultSet {
+    fun query(
+        sql: String,
+        printResult: Boolean = true,
+        withHeader: Boolean = true,
+        formatAsList: Boolean = false,
+    ): ResultSet {
         if (sql.isBlank()) {
             throw IllegalArgumentException("Illegal sql: $sql")
         }
@@ -46,15 +49,6 @@ open class VerboseSQLExecutor(
             if (printResult) {
                 val count = ResultSetUtils.count(rs)
                 println(ResultSetFormatter(rs, withHeader = withHeader, asList = (count == 1)))
-
-                val csv = ResultSetUtils.toCSV(rs)
-                if (csv.isNotBlank()) {
-                    val now = System.currentTimeMillis()
-                    val path = AppPaths.getTmp("rs").resolve("$now.csv")
-                    Files.createDirectories(path.parent)
-                    Files.writeString(path, ResultSetUtils.toCSV(rs))
-                    println("Written to file://$path")
-                }
             }
 
             rs.beforeFirst()
@@ -67,12 +61,13 @@ open class VerboseSQLExecutor(
         return ResultSets.newSimpleResultSet()
     }
 
-    fun queryAll(sqls: Iterable<String>): Map<String, ResultSet> {
+    fun queryAll(sqls: Iterable<String>, printResult: Boolean = true): Map<String, ResultSet> {
         val resultSets = mutableMapOf<String, ResultSet>()
         sqls.forEach { sql ->
-            val reviewRs = query(sql, printResult = false)
+            val reviewRs = query(sql, printResult)
             resultSets[sql] = reviewRs
         }
+
         return resultSets
     }
 
