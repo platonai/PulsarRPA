@@ -49,8 +49,8 @@ import java.net.URL
  * representation returned by Tika as SAX events
  */
 class TikaParser(
-        val crawlFilters: CrawlFilters,
-        val parseFilters: ParseFilters,
+        val crawlFilters: CrawlFilters? = null,
+        val parseFilters: ParseFilters? = null,
         val conf: ImmutableConfig
 ) : Parser {
     private val LOG = LoggerFactory.getLogger(TikaParser::class.java)
@@ -58,6 +58,8 @@ class TikaParser(
     private val tikaConfig = TikaConfig.getDefaultConfig()
     private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private var htmlMapper = conf.get(PARSE_TIKA_HTML_MAPPER_NAME)?.let { ReflectionUtils.forNameOrNull<HtmlMapper>(it) }
+
+    constructor(conf: ImmutableConfig): this(null, null, conf)
 
     override fun parse(page: WebPage): ParseResult {
         val baseUrl = page.location
@@ -131,7 +133,7 @@ class TikaParser(
             parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
 
-        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult))
+        parseFilters?.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult))
         if (metaTags.noCache) { // not okay to cache
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }

@@ -3,7 +3,7 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -29,7 +29,7 @@ class TestWebDriver {
 
         val context = PulsarContexts.activate()
         val conf = context.unmodifiedConfig
-        val driverControl = WebDriverControl(conf)
+        val driverControl = WebDriverSettings(conf)
         val driverPoolManager = DefaultWebDriverPoolManager(conf)
         var quitMultiThreadTesting = false
 

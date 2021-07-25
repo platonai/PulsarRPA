@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.DateTimeDetector
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -17,32 +16,32 @@ import java.util.*
  * Created by vincent on 17-4-7.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class DurationConverter: IStringConverter<Duration> {
+class DurationConverter : IStringConverter<Duration> {
     override fun convert(value: String): Duration {
         return SParser(value).duration
     }
 }
 
-class InstantConverter: IStringConverter<Instant> {
+class InstantConverter : IStringConverter<Instant> {
     override fun convert(value: String): Instant {
         return SParser(value).getInstant(Instant.EPOCH)
     }
 }
 
-class PairConverter: IStringConverter<Pair<Int, Int>> {
+class PairConverter : IStringConverter<Pair<Int, Int>> {
     override fun convert(value: String): Pair<Int, Int> {
         val parts = value.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         return Pair.of(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]))
     }
 }
 
-class BrowserTypeConverter: IStringConverter<BrowserType> {
+class BrowserTypeConverter : IStringConverter<BrowserType> {
     override fun convert(value: String): BrowserType {
         return BrowserType.fromString(value)
     }
 }
 
-class FetchModeConverter: IStringConverter<FetchMode> {
+class FetchModeConverter : IStringConverter<FetchMode> {
     override fun convert(value: String): FetchMode {
         return FetchMode.fromString(value)
     }
@@ -71,7 +70,7 @@ enum class ItemExtractor {
     }
 }
 
-class ItemExtractorConverter: IStringConverter<ItemExtractor> {
+class ItemExtractorConverter : IStringConverter<ItemExtractor> {
     override fun convert(value: String): ItemExtractor {
         return ItemExtractor.fromString(value)
     }
@@ -116,4 +115,22 @@ class DimensionConverter : IStringConverter<Dimension> {
         val (a, b) = value.toLowerCase().split("x".toRegex())
         return Dimension(a.toInt(), b.toInt())
     }
+}
+
+enum class Condition {
+    BEST, BETTER, GOOD, WORSE, WORST;
+
+    companion object {
+        fun valueOfOrDefault(s: String?): Condition {
+            return try {
+                valueOf(s?.toUpperCase() ?: "GOOD")
+            } catch (e: Throwable) {
+                GOOD
+            }
+        }
+    }
+}
+
+class ConditionConverter : IStringConverter<Condition> {
+    override fun convert(value: String) = Condition.valueOfOrDefault(value)
 }

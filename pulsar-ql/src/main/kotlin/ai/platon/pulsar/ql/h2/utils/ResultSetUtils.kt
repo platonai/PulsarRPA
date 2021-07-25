@@ -1,14 +1,20 @@
 package ai.platon.pulsar.ql.h2.utils
 
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.DateTimes.PATH_SAFE_FORMAT_1
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
+import ai.platon.pulsar.ql.types.ValueDom
 import com.google.gson.GsonBuilder
+import org.apache.commons.lang3.RandomStringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
-import org.slf4j.LoggerFactory
+import java.nio.file.Files
+import java.nio.file.Path
 import java.sql.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -164,6 +170,19 @@ object ResultSetUtils {
     }
 
     @Throws(SQLException::class)
+    fun getColumnNames(resultSet: ResultSet): List<String> {
+        val names = mutableListOf<String>()
+
+        val columnCount = resultSet.metaData.columnCount
+        IntRange(1, columnCount).forEach { i ->
+            val name = resultSet.metaData.getColumnName(i)
+            names.add(name)
+        }
+
+        return names
+    }
+
+    @Throws(SQLException::class)
     fun getEntitiesFromResultSet(resultSet: ResultSet): List<Map<String, Any?>> {
         val entities = arrayListOf<Map<String, Any?>>()
         resultSet.beforeFirst()
@@ -202,15 +221,45 @@ object ResultSetUtils {
         val columnCount: Int = metaData.columnCount
         val record = mutableMapOf<String, Any?>()
         for (i in 1..columnCount) {
-            val columnName = metaData.getColumnName(i).toLowerCase()
-            record[columnName] = resultSet.getObject(i)
+            val columnName = metaData.getColumnName(i)
+            val columnType = metaData.getColumnType(i)
+            // remove ValueDom from the result
+            if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
+                record[columnName.toLowerCase()] = resultSet.getObject(i)
+            }
+        }
+        return record
+    }
+
+    @Throws(SQLException::class)
+    fun getTextEntitiesFromResultSet(resultSet: ResultSet): List<Map<String, Any?>> {
+        val entities = arrayListOf<Map<String, Any?>>()
+        resultSet.beforeFirst()
+        while (resultSet.next()) {
+            entities.add(getTextEntityFromCurrentRecord(resultSet))
+        }
+        return entities
+    }
+
+    @Throws(SQLException::class)
+    private fun getTextEntityFromCurrentRecord(resultSet: ResultSet): Map<String, String?> {
+        val metaData = resultSet.metaData
+        val columnCount: Int = metaData.columnCount
+        val record = mutableMapOf<String, String?>()
+        for (i in 1..columnCount) {
+            val columnName = metaData.getColumnName(i)
+            val columnType = metaData.getColumnType(i)
+            // remove ValueDom from the result
+            if (columnType != ValueDom.type && columnName !in arrayOf("DOC", "DOM")) {
+                record[columnName.toLowerCase()] = resultSet.getString(i)
+            }
         }
         return record
     }
 
     @Throws(SQLException::class)
     fun toJson(resultSet: ResultSet): String {
-        val entities = getEntitiesFromResultSet(resultSet)
+        val entities = getTextEntitiesFromResultSet(resultSet)
         val gson = GsonBuilder().serializeNulls().create()
         return gson.toJson(entities)
     }
@@ -219,7 +268,7 @@ object ResultSetUtils {
     fun toJson(resultSets: List<ResultSet>): String {
         val entities = resultSets.map {
             mapOf(
-                "result" to getEntitiesFromResultSet(it),
+                "result" to getTextEntitiesFromResultSet(it),
                 "statement" to it.statement,
                 "columnCount" to it.metaData.columnCount
             )

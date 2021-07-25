@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.openqa.selenium.UnexpectedAlertBehaviour
@@ -44,11 +44,11 @@ import org.openqa.selenium.remote.DesiredCapabilities
         webStorageEnabled: true
     }
  * */
-open class WebDriverControl(
+open class WebDriverSettings(
         parameters: Map<String, Any> = mapOf(),
         jsDirectory: String = "js",
         immutableConfig: ImmutableConfig
-): BrowserControl(parameters, jsDirectory, immutableConfig) {
+): BrowserSettings(parameters, jsDirectory, immutableConfig) {
 
     constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
 

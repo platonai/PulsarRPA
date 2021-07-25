@@ -1,11 +1,10 @@
 package ai.platon.pulsar.cn
 
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_CONTEXT_CONFIG_LOCATION
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.sql.SQLInstance
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
-import ai.platon.pulsar.test.XSQLRunner
+import ai.platon.pulsar.test.VerboseSQLRunner
 import kotlin.system.exitProcess
 
 fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
@@ -30,7 +29,7 @@ from
         .map { SQLInstance(it.first, SQLTemplate(it.second)) }
         .filter { "loadOutPagesAndExtractArticles" in it.sql }
 
-    XSQLRunner(cx).executeAll(sqls)
+    VerboseSQLRunner(cx).executeAll(sqls)
 
     exitProcess(0)
 }

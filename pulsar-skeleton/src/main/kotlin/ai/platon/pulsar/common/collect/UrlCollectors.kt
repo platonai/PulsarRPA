@@ -2,16 +2,45 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
-import ai.platon.pulsar.persist.WebDb
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
+
+open class QueueCollector(
+    val queue: Queue<UrlAware> = ConcurrentLinkedQueue(),
+    priority: Int = Priority13.NORMAL.value
+) : AbstractPriorityDataCollector<UrlAware>(priority) {
+
+    override var name = "QueueC"
+
+    override val size: Int
+        get() = queue.size
+
+    override val estimatedSize: Int
+        get() = queue.size
+
+    var loadArgs: String? = null
+
+    constructor(priority: Priority13) : this(ConcurrentLinkedQueue(), priority.value)
+
+    override fun hasMore() = queue.isNotEmpty()
+
+    override fun collectTo(sink: MutableList<UrlAware>): Int {
+        beforeCollect()
+
+        val count = queue.poll()
+            ?.let { it.also { if (loadArgs != null) it.args += " $loadArgs" } }
+            ?.takeIf { sink.add(it) }
+            ?.let { 1 } ?: 0
+
+        return afterCollect(count)
+    }
+}
 
 /**
  * Collect hyper links from the given [seeds]. The urls are restricted by [loadArguments] and [urlNormalizer].
@@ -37,7 +66,6 @@ open class HyperlinkCollector(
 
     var urlNormalizer: UrlNormalizerPipeline = UrlNormalizerPipeline()
 
-    private val webDb = session.context.getBean<WebDb>()
     private val fatLinkExtractor = FatLinkExtractor(session, urlNormalizer)
 
     private var parsedSeedCount = 0
@@ -79,8 +107,10 @@ open class HyperlinkCollector(
 
         val knownFatLink = fatLinks[seed.spec]
         if (knownFatLink != null) {
-            log.warn("Still has {} active tasks | idle: {} | {}",
-                knownFatLink.numActive, knownFatLink.idleTime.readable(), seed)
+            log.warn(
+                "Still has {} active tasks | idle: {} | {}",
+                knownFatLink.numActive, knownFatLink.idleTime.readable(), seed
+            )
             return 0
         }
 
@@ -103,6 +133,7 @@ open class HyperlinkCollector(
         page.prevCrawlTime1 = Instant.now()
         fatLinks[fatLink.url] = fatLink
         // url might be normalized, href is exactly the same as seed.spec
+        requireNotNull(fatLink.href)
         require(fatLink.href == seed.spec)
 
         val options = seed.options

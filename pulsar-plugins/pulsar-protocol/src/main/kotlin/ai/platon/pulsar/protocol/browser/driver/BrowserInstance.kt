@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
@@ -16,6 +17,7 @@ class BrowserInstance(
         val launcherConfig: LauncherConfig,
         val launchOptions: ChromeDevtoolsOptions
 ): AutoCloseable {
+
     /**
      * Every browser instance have an unique data dir, proxy is required to be unique too if it is enabled
      * */
@@ -63,6 +65,11 @@ class BrowserInstance(
     }
 
     override fun close() {
+        if (!launchOptions.headless) {
+            log.info("Chrome dev tools are in GUI mode, please manually quit the tabs")
+            return
+        }
+
         if (launched.get() && closed.compareAndSet(false, true)) {
             log.info("Closing {} devtools ... | {}", devToolsList.size, id.display)
 

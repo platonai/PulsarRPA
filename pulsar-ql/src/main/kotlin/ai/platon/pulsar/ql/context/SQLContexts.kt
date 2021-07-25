@@ -8,10 +8,7 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.component.BatchFetchComponent
-import ai.platon.pulsar.crawl.component.InjectComponent
-import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.UpdateComponent
+import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.ql.AbstractSQLSession
@@ -26,6 +23,7 @@ import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
 import java.sql.Connection
+import kotlin.system.exitProcess
 
 open class H2SQLContext(
     applicationContext: AbstractApplicationContext
@@ -80,13 +78,18 @@ class StaticH2SQLContext(
      * */
     override val fetchComponent = getBeanOrNull() ?: BatchFetchComponent(webDb, unmodifiedConfig)
     /**
+     * The parse component
+     * */
+    override val parseComponent: ParseComponent = getBeanOrNull() ?: ParseComponent(globalCache, unmodifiedConfig)
+    /**
      * The update component
      * */
     override val updateComponent = getBeanOrNull() ?: UpdateComponent(webDb, unmodifiedConfig)
     /**
      * The load component
      * */
-    override val loadComponent = getBeanOrNull() ?: LoadComponent(webDb, globalCache, fetchComponent, updateComponent, unmodifiedConfig)
+    override val loadComponent = getBeanOrNull() ?: LoadComponent(
+        webDb, globalCache, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
     /**
      * The main loop
      * */

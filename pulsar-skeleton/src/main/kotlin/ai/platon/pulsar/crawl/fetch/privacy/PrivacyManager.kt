@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -69,11 +70,13 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            log.info("Closing privacy contexts")
+
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
 
             zombieContexts.toList().parallelStream().forEach {
-                kotlin.runCatching { it.close() }.onFailure { it.printStackTrace() }
+                kotlin.runCatching { it.close() }.onFailure { log.warn(it.stringify()) }
             }
         }
     }

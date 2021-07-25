@@ -30,6 +30,7 @@ class ResultSetFormatter(
 
     fun format() {
         try {
+            rs.beforeFirst()
             if (asList) formatResultAsList() else formatResultAsTable()
         } catch (e: SQLException) {
             "(Exception)" + e.message

@@ -43,7 +43,7 @@ class LoadComponent(
     val webDb: WebDb,
     val globalCache: GlobalCache,
     val fetchComponent: BatchFetchComponent,
-    val parseComponent: ParseComponent? = null,
+    val parseComponent: ParseComponent,
     val updateComponent: UpdateComponent,
     val statusTracker: AppStatusTracker? = null,
     val crawlLoop: CrawlLoop? = null,
@@ -53,8 +53,6 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
-        // TODO: configurable
-        var maxBatchWaitTime = 90L
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -94,9 +92,10 @@ class LoadComponent(
         webDb: WebDb,
         globalCache: GlobalCache,
         fetchComponent: BatchFetchComponent,
+        parseComponent: ParseComponent,
         updateComponent: UpdateComponent,
         immutableConfig: ImmutableConfig,
-    ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, null, immutableConfig)
+    ) : this(webDb, globalCache, fetchComponent, parseComponent, updateComponent, null, null, immutableConfig)
 
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
@@ -190,6 +189,7 @@ class LoadComponent(
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val queue = globalCache.fetchCaches.highestCache.nReentrantQueue
+        val timeoutSeconds = options.pageLoadTimeout.seconds + 1
         val links = normUrls
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
@@ -199,15 +199,27 @@ class LoadComponent(
                     (url as? CompletableListenableHyperlink<WebPage>)?.complete(page)
                 }
             }
-            .onEach { it.completeOnTimeout(WebPage.NIL, maxBatchWaitTime, TimeUnit.SECONDS) }
+            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
+
         queue.addAll(links)
         logger.debug("Waiting for {} completable hyperlinks", links.size)
+
+//        var i = 120
+//        val pendingLinks = links.toMutableList()
+//        while (i-- > 0 && pendingLinks.isNotEmpty()) {
+//            val finishedLinks = pendingLinks.filter { it.isDone }
+//            logger.debug("Has finished links:")
+//            logger.debug(finishedLinks.joinToString("\n"))
+//            pendingLinks.removeIf { it.isDone }
+//            sleepSeconds(1)
+//        }
+
         // timeout process?
         val future = CompletableFuture.allOf(*links.toTypedArray())
         future.join()
 
-        return links.mapNotNull { it.get() }.filter { it.isNotInternal }
+        return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
     private fun load0(normUrl: NormUrl): WebPage {

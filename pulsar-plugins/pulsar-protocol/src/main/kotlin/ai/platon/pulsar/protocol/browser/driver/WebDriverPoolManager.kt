@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -41,6 +42,7 @@ open class WebDriverPoolManager(
     private val log = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
 
+    val headless get() = immutableConfig.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
     val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val taskTimeout = Duration.ofMinutes(6)
     val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
@@ -236,8 +238,13 @@ open class WebDriverPoolManager(
         preempt {
             retiredPools.add(browserId)
             driverPools.remove(browserId)?.also { driverPool ->
-                log.info("Closing driver pool | {} | {}", driverPool.formatStatus(verbose = true), browserId)
-                driverPool.close()
+                val mode = if (headless) "headless" else "GUI"
+                log.info("Web drivers are {} mode with {} ", mode, browserId)
+                log.info(driverPool.formatStatus(verbose = true))
+                if (!headless) {
+                    log.info("Closing driver pool in {} mode with {} ", mode, browserId)
+                    driverPool.close()
+                }
             }
         }
     }
@@ -248,11 +255,6 @@ open class WebDriverPoolManager(
 
     private fun formatStatus(verbose: Boolean = false): String {
         val sb = StringBuilder()
-        gauges?.entries?.takeIf { it.isNotEmpty() }
-                ?.filter { it.value.value != 0 }
-                ?.joinTo(sb, ", ", "gauges: ", "\n") {
-                    it.key + ": " + it.value.value
-                }
         if (driverPools.isNotEmpty()) {
             driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
         }

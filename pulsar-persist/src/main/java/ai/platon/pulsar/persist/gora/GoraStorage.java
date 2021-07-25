@@ -19,7 +19,7 @@ import static ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 
 public class GoraStorage {
-    public static final Logger log = LoggerFactory.getLogger(GoraStorage.class);
+    public static final Logger logger = LoggerFactory.getLogger(GoraStorage.class);
 
     // load properties from gora.properties
     public static Properties properties = DataStoreFactory.createProps();
@@ -64,11 +64,21 @@ public class GoraStorage {
             Params.of(
                     "Backend data store", dataStore.getClass().getSimpleName(),
                     "realSchema", dataStore.getSchemaName()
-            ).withLogger(log).info(true);
+            ).withLogger(logger).info(true);
 
             return dataStore;
         }
 
         return (DataStore<K, V>) o;
+    }
+
+    public synchronized static void close() {
+        dataStores.forEach((schema, store) -> {
+            if (store instanceof DataStore) {
+                logger.info("Closing data store <{}>", schema);
+                ((DataStore<?, ?>) store).close();
+            }
+        });
+        dataStores.clear();
     }
 }

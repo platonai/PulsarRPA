@@ -15,10 +15,7 @@ import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.component.BatchFetchComponent
-import ai.platon.pulsar.crawl.component.InjectComponent
-import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.UpdateComponent
+import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
@@ -82,6 +79,11 @@ abstract class AbstractPulsarContext(
      * The fetch component
      * */
     open val fetchComponent: BatchFetchComponent get() = getBean()
+
+    /**
+     * The load component
+     * */
+    open val parseComponent: ParseComponent get() = getBean()
 
     /**
      * The update component
@@ -387,8 +389,6 @@ abstract class AbstractPulsarContext(
         if (closed.compareAndSet(false, true)) {
             log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
-            kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
-
             sessions.values.forEach {
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
@@ -397,8 +397,7 @@ abstract class AbstractPulsarContext(
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
 
-            // NOTE: close is already registered as a destroy method
-            kotlin.runCatching { getBeanOrNull(AppMetrics::class)?.close() }.onFailure { log.warn(it.message) }
+            applicationContext.close()
         }
 
         AppContext.terminate()

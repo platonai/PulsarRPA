@@ -1,8 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
@@ -11,7 +10,6 @@ import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
 
@@ -140,15 +138,15 @@ class ManagedWebDriver(
         }
     }
 
-    override fun setTimeouts(driverConfig: BrowserControl) {
+    override fun setTimeouts(driverConfig: BrowserSettings) {
         if (isNotWorking) {
             return
         }
 
         if (driver is ChromeDriver) {
             val timeouts = driver.manage().timeouts()
-            timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
-            timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
+//            timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
+//            timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
         } else if (driver is ChromeDevtoolsDriver) {
             // not implemented
         }

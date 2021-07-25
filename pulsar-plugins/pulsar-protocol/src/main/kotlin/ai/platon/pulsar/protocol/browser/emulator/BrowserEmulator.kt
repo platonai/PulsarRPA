@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
@@ -34,6 +34,7 @@ open class BrowserEmulator(
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
 
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
@@ -90,10 +91,10 @@ open class BrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: NavigateTaskCancellationException) {
             exception = e
-            taskLogger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
+            logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            logger.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
+            logger.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page)
@@ -142,7 +143,7 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class,
             IllegalApplicationContextStateException::class,
             WebDriverException::class)
-    private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserControl): InteractResult {
+    private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
         eventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
@@ -151,7 +152,7 @@ open class BrowserEmulator(
         meterNavigates.mark()
         numDeferredNavigates.mark()
 
-        taskLogger.trace("{}. Navigating | {}", task.page.id, task.url)
+        tracer?.trace("{}. Navigating | {}", task.page.id, task.url)
 
         checkState(driver)
         checkState(task)
@@ -194,6 +195,8 @@ open class BrowserEmulator(
         val volatileConfig = task.fetchTask.page.conf
         val eventHandler = volatileConfig.getBean(JsEventHandler::class)
 
+        tracer?.trace("{}", task.emulateSettings)
+
         jsCheckDOMState(task, result)
 
         task.driver.bringToFront()
@@ -220,7 +223,7 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun jsCheckDOMState(interactTask: InteractTask, result: InteractResult) {
         var status = ProtocolStatus.STATUS_SUCCESS
-        val scriptTimeout = interactTask.driverConfig.scriptTimeout
+        val scriptTimeout = interactTask.emulateSettings.scriptTimeout
         val fetchTask = interactTask.fetchTask
 
         // make sure the document is ready
@@ -256,10 +259,10 @@ open class BrowserEmulator(
                 result.activeDomMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK
             } else {
-                if (taskLogger.isTraceEnabled) {
+                if (tracer != null) {
                     val page = interactTask.fetchTask.page
                     val truncatedMessage = message.toString().substringBefore("urls")
-                    taskLogger.trace("{}. DOM is ready after {} evaluation | {}", page.id, i, truncatedMessage)
+                    tracer?.trace("{}. DOM is ready after {} evaluation | {}", page.id, i, truncatedMessage)
                 }
             }
         }
@@ -269,7 +272,8 @@ open class BrowserEmulator(
 
     protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
         val random = ThreadLocalRandom.current().nextInt(3)
-        val scrollDownCount = (interactTask.scrollDownCount + random - 1).coerceAtLeast(1)
+        val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
+        val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
 
         val expressions = mutableListOf(
             "__utils__.scrollToMiddle(0.25)",
@@ -280,7 +284,7 @@ open class BrowserEmulator(
         repeat(scrollDownCount) {
             expressions.add("__utils__.scrollDown()")
         }
-        evaluate(interactTask, expressions, 500)
+        evaluate(interactTask, expressions, scrollInterval)
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
@@ -299,13 +303,13 @@ open class BrowserEmulator(
     private suspend fun evaluate(interactTask: InteractTask,
         expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
-            taskLogger.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
+            logger.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
             val value = evaluate(interactTask, it)
             if (value is String) {
                 val s = Strings.stripNonPrintableChar(value)
-                taskLogger.takeIf { verbose }?.info("Result >>>$s<<<")
+                logger.takeIf { verbose }?.info("Result >>>$s<<<")
             } else if (value is Int || value is Long) {
-                taskLogger.takeIf { verbose }?.info("Result >>>$value<<<")
+                logger.takeIf { verbose }?.info("Result >>>$value<<<")
             }
             delay(delayMillis)
         }

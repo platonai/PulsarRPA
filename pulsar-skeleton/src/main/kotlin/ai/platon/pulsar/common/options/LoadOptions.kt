@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.browser.driver.EmulateSettings
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
@@ -49,6 +50,8 @@ object LoadOptionDefaults {
 /**
  * Created by vincent on 19-4-24.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
+ *
+ * NOTICE: every option with name [optionName] has to take a Parameter name [-optionName]
  */
 open class LoadOptions(
     argv: Array<String>,
@@ -112,7 +115,7 @@ open class LoadOptions(
      * The page is expired if the current time > expireAt
      * */
     @ApiPublic
-    @Parameter(names = ["-fi", "fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
+    @Parameter(names = ["-fi", "-fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
         description = "If a page is expired, it should be fetched from the internet again")
     var fetchInterval = ChronoUnit.DECADES.duration
 
@@ -175,19 +178,19 @@ open class LoadOptions(
 
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
-    var scrollCount = 3
+    var scrollCount = EmulateSettings.DEFAULT.scrollCount
 
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
-    var scrollInterval = Duration.ofMillis(500)
+    var scrollInterval = EmulateSettings.DEFAULT.scrollInterval
 
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
-    var scriptTimeout = Duration.ofSeconds(90)
+    var scriptTimeout = EmulateSettings.DEFAULT.scriptTimeout
 
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to finish from the first http request start")
-    var pageLoadTimeout = Duration.ofMinutes(3)
+    var pageLoadTimeout = EmulateSettings.DEFAULT.pageLoadTimeout
 
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
@@ -336,6 +339,13 @@ open class LoadOptions(
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
+    @Parameter(
+        names = ["-netCond", "-netCondition", "--net-condition"],
+        converter = ConditionConverter::class,
+        description = "The network condition level"
+    )
+    var netCondition = Condition.GOOD
+
     @Parameter(names = ["-test", "--test"], description = "The test level, 0 to disable, we will talk more in test mode")
     var test = LoadOptionDefaults.test
 
@@ -376,7 +386,7 @@ open class LoadOptions(
         val b = super.parse()
         if (b) {
             // fix zero-arity boolean parameter overwriting
-            declaredFields.asSequence()
+            optionFields.asSequence()
                 .filter { arity0BooleanParams.contains("-${it.name}") }
                 .filter { argv.contains("-${it.name}") }
                 .forEach {
@@ -432,23 +442,32 @@ open class LoadOptions(
     }
 
     fun apply(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+        val emulateSettings = when (netCondition) {
+            Condition.WORSE -> EmulateSettings.worseNetSettings
+            Condition.WORST -> EmulateSettings.worstNetSettings
+            else -> EmulateSettings.goodNetSettings
+        }.copy()
+
+        if (!isDefault("scrollCount")) emulateSettings.scrollCount = scrollCount
+        if (!isDefault("scrollInterval")) emulateSettings.scrollInterval = scrollInterval
+        if (!isDefault("scriptTimeout")) emulateSettings.scriptTimeout = scriptTimeout
+        if (!isDefault("pageLoadTimeout")) emulateSettings.pageLoadTimeout = pageLoadTimeout
+
+        emulateSettings.apply(conf)
+
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
-        setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 
     open fun isDefault(option: String): Boolean {
-        val value = declaredFields.find { it.name == option }
+        val value = optionFields.find { it.name == option }
                 ?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
 
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
-        return declaredFields.filter { it.annotations.any { it is Parameter } }
+        return optionFields.filter { it.annotations.any { it is Parameter } }
                 .onEach { it.isAccessible = true }
                 .associate { "-${it.name}" to it.get(this) }
                 .filter { it.value != null }
@@ -482,10 +501,18 @@ open class LoadOptions(
 
     companion object {
         val default = LoadOptions("", VolatileConfig())
-        val declaredFields = LoadOptions::class.java.declaredFields
-        val defaultParams = declaredFields.associate { it.name to it.get(default) }
+        val optionFields = LoadOptions::class.java.declaredFields
+            .asSequence()
+            .onEach { it.isAccessible = true }
+            .filter { it.annotations.filterIsInstance<Parameter>().isNotEmpty() }
+            .onEach {
+                val name = it.name
+                val count = it.annotations.filterIsInstance<Parameter>().count { it.names.contains("-$name") }
+                require(count > 0) { "Missing -$name option for field <$name>" }
+            }
+        val defaultParams = optionFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val arity0BooleanParams = declaredFields
+        val arity0BooleanParams = optionFields
             .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(default) is Boolean }
@@ -494,7 +521,7 @@ open class LoadOptions(
             .filter { it.arity < 1 }
             .flatMap { it.names.toList() }
             .toList()
-        val arity1BooleanParams = declaredFields
+        val arity1BooleanParams = optionFields
             .asSequence()
             .onEach { it.isAccessible = true }
             .filter { it.get(default) is Boolean }
@@ -503,13 +530,13 @@ open class LoadOptions(
             .filter { it.arity == 1 }
             .flatMap { it.names.toList() }
             .toList()
-        val optionNames = declaredFields
+        val optionNames = optionFields
             .asSequence()
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
             .toList()
-        val apiPublicOptionNames = declaredFields
+        val apiPublicOptionNames = optionFields
             .asSequence()
             .filter { it.kotlinProperty?.hasAnnotation<ApiPublic>() == true }
             .flatMap { it.annotations.toList() }
@@ -518,7 +545,7 @@ open class LoadOptions(
             .toList()
 
         val helpList: List<List<String>> get() =
-                declaredFields
+            optionFields
                     .asSequence()
                     .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
                     .map {
@@ -530,7 +557,7 @@ open class LoadOptions(
                     }.toList()
 
         fun setFieldByAnnotation(options: LoadOptions, annotationName: String, value: Any) {
-            declaredFields.forEach {
+            optionFields.forEach {
                 val found = it.annotations.filterIsInstance<Parameter>().any { annotationName in it.names }
                 if (found) {
                     it.isAccessible = true
@@ -540,7 +567,7 @@ open class LoadOptions(
         }
 
         fun getOptionNames(fieldName: String): List<String> {
-            return declaredFields
+            return optionFields
                 .asSequence()
                 .filter { it.name == fieldName }
                 .flatMap { it.annotations.toList() }

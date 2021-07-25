@@ -47,16 +47,6 @@ abstract class TestBase {
     val context = SQLContexts.activate(DefaultClassPathXmlSQLContext())
     val session = context.createSession()
 
-    @Before
-    fun setup() {
-        LoadComponent.maxBatchWaitTime = 30
-    }
-
-    @After
-    fun tearDown() {
-        LoadComponent.maxBatchWaitTime = 90
-    }
-
     fun execute(sql: String, printResult: Boolean = true) {
         context.run { connection ->
             connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)

@@ -37,6 +37,7 @@ interface DataCollector<T> {
      * */
     val capacity: Int
     val size: Int
+    val externalSize: Int
     val estimatedSize: Int
     val collectCount: Int
     val collectedCount: Int
@@ -94,6 +95,7 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
     override var district: String = "*"
 
     override val size: Int get() = 0
+    override val externalSize: Int = 0
     override val estimatedSize: Int = 0
 
     /**
@@ -117,7 +119,8 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
         } else Duration.ZERO
 
     override fun collectTo(element: E, sink: MutableList<E>): Int {
-        return collectTo(sink.size - 1, element, sink)
+        val indexOfEnd = if (sink.isEmpty()) 0 else sink.size - 1
+        return collectTo(indexOfEnd, element, sink)
     }
 
     override fun collectTo(index: Int, element: E, sink: MutableList<E>): Int {

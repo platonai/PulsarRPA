@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
+import ai.platon.pulsar.browser.driver.EmulateSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -8,21 +9,22 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
-        val driverControl: WebDriverControl,
-        /**
+    val driverControl: WebDriverSettings,
+    /**
          * The event handler to handle page content
          * TODO: use a pipeline
          * */
         val eventHandler: EventHandler,
-        val immutableConfig: ImmutableConfig
+    val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
     private val tracer = log.takeIf { it.isTraceEnabled }
+    val emulateSettings get() = EmulateSettings(immutableConfig)
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
@@ -34,10 +36,10 @@ abstract class BrowserEmulatorBase(
 
     override fun getParams(): Params {
         return Params.of(
-                "pageLoadTimeout", driverControl.pageLoadTimeout,
-                "scriptTimeout", driverControl.scriptTimeout,
-                "scrollDownCount", driverControl.scrollDownCount,
-                "scrollInterval", driverControl.scrollInterval,
+                "pageLoadTimeout", emulateSettings.pageLoadTimeout,
+                "scriptTimeout", emulateSettings.scriptTimeout,
+                "scrollDownCount", emulateSettings.scrollCount,
+                "scrollInterval", emulateSettings.scrollInterval,
                 "jsInvadingEnabled", driverControl.jsInvadingEnabled,
                 "emulatorEventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATOR_EVENT_HANDLER)
         )

@@ -241,7 +241,8 @@ object DomFunctionTables {
 
         val docs =
                 Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
-                .map { session.parse(it) }
+                    .map { session.parse(it) }
+                    .filterNot { it.isInternal() }
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }

@@ -64,7 +64,7 @@ data class BatchStat(
     val bytesPerSecond get() = 1.0 * totalSuccessBytes / (0.1 + elapsedTime.seconds)
 }
 
-class FetchTask(
+class FetchTask constructor(
         val batchId: Int,
         val priority: Int,
         val page: WebPage,

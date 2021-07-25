@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.reactor
 
-import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
@@ -12,7 +12,7 @@ class ReactiveChromeService {
     val testUrl = "https://item.jd.com/100001071956.html"
 
     val headless: Boolean = false
-    val browserControl = BrowserControl()
+    val browserControl = BrowserSettings()
     val clientLibJs = browserControl.parseLibJs()
     val launchOptions = ChromeDevtoolsOptions()
             .addArguments("window-size", browserControl.formatViewPort())
