@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.collect.queue
 
 import ai.platon.pulsar.common.collect.ExternalUrlLoader
 import ai.platon.pulsar.common.collect.UrlGroup
-import ai.platon.pulsar.common.collect.queue.DelayLoadingQueue
 import ai.platon.pulsar.common.urls.UrlAware
 import com.google.common.collect.HashMultiset
 
