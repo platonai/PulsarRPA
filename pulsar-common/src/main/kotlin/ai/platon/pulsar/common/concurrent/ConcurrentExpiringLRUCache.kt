@@ -18,7 +18,7 @@ class ExpiringItem<T>(
     }
 }
 
-class ConcurrentExpiringLRUCache<T>(
+class ConcurrentExpiringLRUCache<K, T>(
         val capacity: Int,
         val ttl: Duration = CACHE_TTL
 ) {
@@ -27,41 +27,41 @@ class ConcurrentExpiringLRUCache<T>(
         const val CACHE_CAPACITY = 200
     }
 
-    val cache = ConcurrentLRUCache<String, ExpiringItem<T>>(ttl.seconds, capacity)
+    val cache = ConcurrentLRUCache<K, ExpiringItem<T>>(ttl.seconds, capacity)
 
     val size get() = cache.size
 
-    fun put(key: String, item: ExpiringItem<T>) {
+    fun put(key: K, item: ExpiringItem<T>) {
         cache.put(key, item)
     }
 
-    fun putDatum(key: String, datum: T, timestamp: Long = System.currentTimeMillis()) {
+    fun putDatum(key: K, datum: T, timestamp: Long = System.currentTimeMillis()) {
         put(key, ExpiringItem(datum, timestamp))
     }
 
-    fun get(key: String): ExpiringItem<T>? {
+    fun get(key: K): ExpiringItem<T>? {
         return cache[key]
     }
 
-    fun getDatum(key: String): T? {
+    fun getDatum(key: K): T? {
         return cache[key]?.datum
     }
 
-    fun getDatum(key: String, expires: Duration, now: Instant = Instant.now()): T? {
+    fun getDatum(key: K, expires: Duration, now: Instant = Instant.now()): T? {
         return get(key)?.takeUnless { it.isExpired(expires, now) }?.datum
     }
 
-    fun contains(key: String): Boolean {
+    fun contains(key: K): Boolean {
         return cache[key] != null
     }
 
-    fun computeIfAbsent(key: String, mappingFunction: (String) -> T): T {
+    fun computeIfAbsent(key: K, mappingFunction: (K) -> T): T {
         return cache.computeIfAbsent(key) { ExpiringItem(mappingFunction(key)) }.datum
     }
 
-    fun remove(key: String) = cache.remove(key)
+    fun remove(key: K) = cache.remove(key)
 
-    fun removeAll(keys: Iterable<String>) = keys.forEach { cache.remove(it) }
+    fun removeAll(keys: Iterable<K>) = keys.forEach { cache.remove(it) }
 
     fun clear() = cache.clear()
 }

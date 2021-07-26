@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
+open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
     private val log = LoggerFactory.getLogger(LocalFileUrlLoader::class.java)
     private val delimiter = "\t"
     private val gson = GsonBuilder().create()

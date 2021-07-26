@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import com.google.common.collect.Iterators
