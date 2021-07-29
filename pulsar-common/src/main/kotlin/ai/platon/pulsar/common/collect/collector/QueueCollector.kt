@@ -34,4 +34,6 @@ open class QueueCollector(
 
         return afterCollect(count)
     }
+
+    override fun clear() = queue.clear()
 }

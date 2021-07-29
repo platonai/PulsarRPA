@@ -113,6 +113,8 @@ class MultiSourceHyperlinkIterable(
         realTimeCollector.fetchCache.clear()
         delayCollector.queue.clear()
         // TODO: should we call clear on each collector?
-        regularCollector.collectors.clear()
+        regularCollector.collectors.forEach {
+            // it.clear()
+        }
     }
 }

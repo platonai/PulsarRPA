@@ -51,6 +51,7 @@ interface DataCollector<T> {
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
     fun collectTo(sink: MutableList<T>): Int
     fun collectTo(index: Int, sink: MutableList<T>): Int
+    fun clear()
 }
 
 interface PriorityDataCollector<T> : DataCollector<T>, Comparable<PriorityDataCollector<T>> {
@@ -133,6 +134,10 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
         collectTo(list)
         sink.addAll(index, list)
         return list.size
+    }
+
+    override fun clear() {
+        // nothing to do
     }
 
     override fun toString(): String {

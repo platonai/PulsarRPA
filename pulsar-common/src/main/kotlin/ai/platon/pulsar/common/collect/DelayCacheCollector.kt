@@ -31,4 +31,6 @@ open class DelayCacheCollector(
 
         return afterCollect(count)
     }
+
+    override fun clear() = queue.clear()
 }

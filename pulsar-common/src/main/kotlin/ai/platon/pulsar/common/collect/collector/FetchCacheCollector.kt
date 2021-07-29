@@ -61,4 +61,6 @@ open class FetchCacheCollector(
         }
         return queue.poll()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
     }
+
+    override fun clear() = fetchCache.clear()
 }

@@ -59,7 +59,7 @@ class PriorityDataCollectorFormatter<T>(
 }
 
 class PriorityDataCollectorsTableFormatter<T>(
-    val collectors: List<PriorityDataCollector<T>>,
+    val collectors: Collection<PriorityDataCollector<T>>,
 ) : PriorityDataCollectorFormatterBase<T>() {
     fun abstract(): String {
         val firstCollectTime = collectors.filter { it.firstCollectTime > Instant.EPOCH }

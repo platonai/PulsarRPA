@@ -12,37 +12,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 
-open class QueueCollector(
-    val queue: Queue<UrlAware> = ConcurrentLinkedQueue(),
-    priority: Int = Priority13.NORMAL.value
-) : AbstractPriorityDataCollector<UrlAware>(priority) {
-
-    override var name = "QueueC"
-
-    override val size: Int
-        get() = queue.size
-
-    override val estimatedSize: Int
-        get() = queue.size
-
-    var loadArgs: String? = null
-
-    constructor(priority: Priority13) : this(ConcurrentLinkedQueue(), priority.value)
-
-    override fun hasMore() = queue.isNotEmpty()
-
-    override fun collectTo(sink: MutableList<UrlAware>): Int {
-        beforeCollect()
-
-        val count = queue.poll()
-            ?.let { it.also { if (loadArgs != null) it.args += " $loadArgs" } }
-            ?.takeIf { sink.add(it) }
-            ?.let { 1 } ?: 0
-
-        return afterCollect(count)
-    }
-}
-
 /**
  * Collect hyper links from the given [seeds]. The urls are restricted by [loadArguments] and [urlNormalizer].
  * 1. all urls are restricted by css outLinkSelector
@@ -156,6 +125,8 @@ open class HyperlinkCollector(
 
         return tailLinks.size
     }
+
+    override fun clear() = seeds.clear()
 }
 
 open class CircularHyperlinkCollector(
@@ -201,6 +172,8 @@ open class CircularHyperlinkCollector(
 
         return count
     }
+
+    override fun clear() = seeds.clear()
 }
 
 open class PeriodicalHyperlinkCollector(

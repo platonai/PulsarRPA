@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.FatLink
 import java.time.Duration
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -27,7 +28,7 @@ open class MultiSourceDataCollector<E>(
 
     override var name: String = "MultiSourceDC"
 
-    val collectors: ConcurrentLinkedQueue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
+    val collectors: Queue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
 
     private val roundCounter = AtomicInteger()
 
@@ -78,6 +79,10 @@ open class MultiSourceDataCollector<E>(
             }
         }
         return collected
+    }
+
+    override fun clear() {
+        collectors.forEach { it.clear() }
     }
 }
 
