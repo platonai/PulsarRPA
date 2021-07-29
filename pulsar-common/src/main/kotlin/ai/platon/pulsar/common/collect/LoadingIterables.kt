@@ -36,6 +36,13 @@ open class ConcurrentLoadingIterable<E>(
         cache.shuffle()
     }
 
+    fun clear() {
+        realTimeCollector?.clear()
+        delayCollector?.clear()
+        regularCollector.clear()
+        cache.clear()
+    }
+
     class LoadingIterator<E>(
             private val iterable: ConcurrentLoadingIterable<E>
     ): Iterator<E> {

@@ -75,7 +75,7 @@ class FetchMonitor(
     /**
      * Throughput control
      */
-    private var minSuccessPagesPerSecond = conf.getInt(FETCH_THROUGHPUT_PAGES_PER_SECOND, -1)
+    private var minSuccessPagesPerSecond = conf.getFloat(FETCH_THROUGHPUT_PAGES_PER_SECOND, 0.0f)
     private var maxLowThroughputCount = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_SEQENCE, 10)
     private var maxTotalLowThroughputCount = maxLowThroughputCount * 10
     /*

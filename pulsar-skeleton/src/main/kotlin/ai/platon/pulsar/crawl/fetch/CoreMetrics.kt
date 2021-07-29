@@ -152,7 +152,7 @@ class CoreMetrics(
         get() = networkIFsRecvBytes / successTasks.count.coerceAtLeast(1)
 
     val successTasksPerSecond
-        get() = successTasks.count / elapsedTime.seconds.coerceAtLeast(1)
+        get() = successTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
 
     private var lastSystemInfoRefreshTime = 0L
     private val closed = AtomicBoolean()
@@ -365,14 +365,19 @@ class CoreMetrics(
     }
 
     private fun reportStatus() {
+        if (!log.isInfoEnabled) {
+            return
+        }
+
         val i = finishedTasks.count
-        val a = successTasksPerSecond.coerceAtLeast(1) * 60
+        val a = successTasksPerSecond * 60
         val period = when {
-            i < 100 -> a / 2
+            i < 100 -> a / 3
             i < 10000 -> a
             else -> a * 2 + 60 * (i % 3 - 1) // generate: 60, 120, 180, 60, 120, 180, ...
-        }
-        if (log.isInfoEnabled && tasks.count > 0L && i % period == 0L) {
+        }.toInt()
+
+        if (tasks.count > 0L && i % period == 0L) {
             log.info(formatStatus())
         }
     }

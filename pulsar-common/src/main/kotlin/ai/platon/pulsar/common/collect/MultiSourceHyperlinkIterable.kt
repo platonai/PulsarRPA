@@ -110,11 +110,9 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun clear() {
+        loadingIterable.clear()
         realTimeCollector.fetchCache.clear()
         delayCollector.queue.clear()
-        // TODO: should we call clear on each collector?
-        regularCollector.collectors.forEach {
-            // it.clear()
-        }
+        regularCollector.clear()
     }
 }

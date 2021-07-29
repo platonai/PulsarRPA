@@ -8,7 +8,7 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * An url queue should be small since every url uses about 1s to fetch
+ * A delay loading queue to reduce IO
  * */
 open class DelayLoadingQueue(
     loader: ExternalUrlLoader,
@@ -38,7 +38,7 @@ open class DelayLoadingQueue(
         get() = Duration.between(lastBusyTime, Instant.now()).seconds > 60
 
     // always access the underlying layer with a delay to reduce possible IO reads
-    val realEstimateDelay get() = if (isIdle) Duration.ofMinutes(1) else estimateDelay
+    val realEstimateDelay get() = if (isIdle) Duration.ofSeconds(30) else estimateDelay
 
     val isExpired get() = isExpired(loadDelay)
 
