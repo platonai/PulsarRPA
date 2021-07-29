@@ -80,6 +80,6 @@ class ConcurrentLRUCache<K, V> {
             return key.toString()
         }
         val secondsDivTTL = System.currentTimeMillis() / 1000 / ttl
-        return secondsDivTTL.toString() + "\t" + key.toString()
+        return "$secondsDivTTL\t$key"
     }
 }

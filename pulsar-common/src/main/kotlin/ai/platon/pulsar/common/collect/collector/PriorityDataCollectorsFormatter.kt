@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.readable
 import java.time.Instant
 
 class PriorityDataCollectorsFormatter<T>(
-    val collectors: List<PriorityDataCollector<T>>,
+    val collectors: Collection<PriorityDataCollector<T>>,
 ) {
     fun abstract(): String {
         val firstCollectTime = collectors.filter { it.firstCollectTime > Instant.EPOCH }

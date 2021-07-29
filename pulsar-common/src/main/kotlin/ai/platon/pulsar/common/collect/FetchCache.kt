@@ -2,8 +2,6 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantQueue
 import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantQueue
-import ai.platon.pulsar.common.collect.ExternalUrlLoader
-import ai.platon.pulsar.common.collect.UrlGroup
 import ai.platon.pulsar.common.collect.queue.ConcurrentLoadingQueue
 import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantLoadingQueue
 import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantLoadingQueue
@@ -76,13 +74,10 @@ class LoadingFetchCache(
         const val G_REENTRANT = 3
     }
 
-    override val nonReentrantQueue =
-        ConcurrentNonReentrantLoadingQueue(urlLoader, UrlGroup(name, G_NON_REENTRANT, priority, capacity), transformer)
-    override val nReentrantQueue =
-        ConcurrentNEntrantLoadingQueue(urlLoader, UrlGroup(name, G_N_ENTRANT, priority, capacity), 3, transformer)
-    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, UrlGroup(name, G_REENTRANT, priority, capacity), transformer)
-    override val queues: List<Queue<UrlAware>>
-        get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
+    override val nonReentrantQueue = ConcurrentNonReentrantLoadingQueue(urlLoader, topic(G_NON_REENTRANT), transformer)
+    override val nReentrantQueue = ConcurrentNEntrantLoadingQueue(urlLoader, topic(G_N_ENTRANT), 3, transformer)
+    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, topic(G_REENTRANT), transformer)
+    override val queues: List<Queue<UrlAware>> get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     override val size get() = queues.sumOf { it.size }
     override val externalSize: Int
         get() = queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.externalSize }
@@ -96,4 +91,6 @@ class LoadingFetchCache(
     override fun loadNow(): Collection<UrlAware> {
         return queues.filterIsInstance<Loadable<UrlAware>>().flatMap { it.loadNow() }
     }
+
+    private fun topic(group: Int) = UrlTopic(name, group, priority, capacity)
 }

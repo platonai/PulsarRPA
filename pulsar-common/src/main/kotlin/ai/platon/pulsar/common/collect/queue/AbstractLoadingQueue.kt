@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.collect.queue
 
 import ai.platon.pulsar.common.collect.ExternalUrlLoader
-import ai.platon.pulsar.common.collect.UrlGroup
+import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
@@ -13,14 +13,14 @@ import java.util.function.Predicate
  * */
 abstract class AbstractLoadingQueue(
     val loader: ExternalUrlLoader,
-    val group: UrlGroup,
+    val topic: UrlTopic,
     val transformer: (UrlAware) -> UrlAware
 ) : AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     private val logger = getLogger(AbstractLoadingQueue::class)
 
     protected val urlCache = ConcurrentLinkedQueue<UrlAware>()
 
-    private val capacity = group.pageSize
+    private val capacity = topic.pageSize
 
     var loadCount: Int = 0
         protected set
@@ -44,7 +44,7 @@ abstract class AbstractLoadingQueue(
     override val externalSize: Int
         get() {
             try {
-                return loader.countRemaining(group)
+                return loader.countRemaining(topic)
             } catch (e: Exception) {
                 logger.warn("Failed to count", e)
             }
@@ -71,7 +71,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     fun externalClear() {
-        loader.deleteAll(group)
+        loader.deleteAll(topic)
     }
 
     @Synchronized
@@ -87,7 +87,7 @@ abstract class AbstractLoadingQueue(
 
         return try {
             ++loadCount
-            loader.loadToNow(urlCache, freeSlots, group, transformer)
+            loader.loadToNow(urlCache, freeSlots, topic, transformer)
         } catch (e: Exception) {
             logger.warn("Failed to load", e)
             listOf()
@@ -150,14 +150,14 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun overflow(url: UrlAware) {
-        loader.save(url, group)
+        loader.save(url, topic)
         ++savedCount
     }
 
     @Synchronized
     override fun overflow(urls: List<UrlAware>) {
         try {
-            loader.saveAll(urls, group)
+            loader.saveAll(urls, topic)
             savedCount += urls.size
         } catch (e: Exception) {
             logger.warn("Failed to save urls", e)

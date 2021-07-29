@@ -9,16 +9,16 @@ import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAccessor
 import java.util.*
 
-data class TimedValue<T>(val value: T, val duration: Duration)
+data class JvmTimedValue<T>(val value: T, val duration: Duration)
 
-inline fun <T> measureTimedValue(block: () -> T): TimedValue<T> {
+inline fun <T> measureTimedValueJvm(block: () -> T): JvmTimedValue<T> {
     val startTime = Instant.now()
     val value = block()
     val elapsedTime = Duration.between(startTime, Instant.now())
-    return TimedValue(value, elapsedTime)
+    return JvmTimedValue(value, elapsedTime)
 }
 
-inline fun <T> measureTime(block: () -> Unit): Duration {
+inline fun <T> measureTimeJvm(block: () -> Unit): Duration {
     val startTime = Instant.now()
     block()
     return Duration.between(startTime, Instant.now())

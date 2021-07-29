@@ -3,16 +3,18 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
+import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlAware
+import java.util.*
 
 interface CrawlLoop: StartStopRunnable {
     val name: String
     val unmodifiedConfig: ImmutableConfig
     val defaultOptions: LoadOptions
     val fetchIterable: Iterable<UrlAware>
-    val collectors: List<DataCollector<UrlAware>>
+    val collectors: SortedSet<out DataCollector<UrlAware>>
     val crawler: Crawler
     val abstract: String
     val report: String
@@ -34,7 +36,8 @@ abstract class AbstractCrawlLoop(
     /**
      * The shortcut for all collectors
      * */
-    override val collectors: List<DataCollector<UrlAware>> get() = fetchIterable.collectors
+    override val collectors: SortedSet<PriorityDataCollector<UrlAware>>
+        get() = fetchIterable.collectors
 
     abstract override val crawler: AbstractCrawler
 

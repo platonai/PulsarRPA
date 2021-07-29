@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.collect.queue
 
 import ai.platon.pulsar.common.collect.ExternalUrlLoader
-import ai.platon.pulsar.common.collect.UrlGroup
+import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
@@ -12,14 +12,14 @@ import java.time.Instant
  * */
 open class DelayLoadingQueue(
     loader: ExternalUrlLoader,
-    group: UrlGroup,
+    topic: UrlTopic,
     /**
      * The delay time to load after another load
      * */
     var loadDelay: Duration = Duration.ofSeconds(5),
     var estimateDelay: Duration = Duration.ofSeconds(5),
     transformer: (UrlAware) -> UrlAware
-) : AbstractLoadingQueue(loader, group, transformer) {
+) : AbstractLoadingQueue(loader, topic, transformer) {
     private val logger = getLogger(DelayLoadingQueue::class)
 
     @Volatile
@@ -79,7 +79,7 @@ open class DelayLoadingQueue(
 
         val urls = try {
             ++loadCount
-            loader.loadToNow(urlCache, freeSlots, group, transformer)
+            loader.loadToNow(urlCache, freeSlots, topic, transformer)
         } catch (e: Exception) {
             logger.warn("Failed to load", e)
             listOf()

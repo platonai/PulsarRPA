@@ -48,7 +48,7 @@ class TestDataCollectors : TestBase() {
         collectors += FetchCacheCollector(fetchCache, fetchCache.priority)
         val fetchQueueIterable = ConcurrentLoadingIterable(MultiSourceDataCollector(collectors), null, null, 10)
 
-        assertTrue { fetchQueueIterable.collector.hasMore() }
+        assertTrue { fetchQueueIterable.regularCollector.hasMore() }
         assertTrue { fetchQueueIterable.iterator().hasNext() }
         assertEquals(AppConstants.EXAMPLE_URL, fetchQueueIterable.iterator().next().url)
     }

@@ -16,18 +16,18 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
     private val gson = GsonBuilder().create()
     private val urlExtractor = UrlExtractor()
 
-    override fun save(url: UrlAware, group: UrlGroup) {
+    override fun save(url: UrlAware, topic: UrlTopic) {
         val hyperlink = if (url is Hyperlink) url else Hyperlink(url)
         val json = gson.toJson(hyperlink.data())
-        Files.writeString(path, "${group.group}$delimiter$json\n", StandardOpenOption.APPEND)
+        Files.writeString(path, "${topic.group}$delimiter$json\n", StandardOpenOption.APPEND)
     }
 
-    override fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, group: UrlGroup): Collection<UrlAware> {
+    override fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, topic: UrlTopic): Collection<UrlAware> {
         if (!Files.exists(path)) {
             return listOf()
         }
 
-        val g = "${group.group}"
+        val g = "${topic.group}"
         runCatching {
             Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
@@ -35,12 +35,12 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
         return sink
     }
 
-    override fun <T> loadToNow(sink: MutableCollection<T>, size: Int, group: UrlGroup, transformer: (UrlAware) -> T): Collection<T> {
+    override fun <T> loadToNow(sink: MutableCollection<T>, size: Int, topic: UrlTopic, transformer: (UrlAware) -> T): Collection<T> {
         if (!Files.exists(path)) {
             return listOf()
         }
 
-        val g = "${group.group}"
+        val g = "${topic.group}"
         runCatching {
             Files.readAllLines(path).mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
@@ -48,7 +48,7 @@ open class LocalFileUrlLoader(val path: Path): OneLoadExternalUrlLoader() {
         return sink
     }
 
-    override fun deleteAll(group: UrlGroup): Long {
+    override fun deleteAll(topic: UrlTopic): Long {
         return 0
     }
 

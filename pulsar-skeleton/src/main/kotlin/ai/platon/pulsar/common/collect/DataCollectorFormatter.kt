@@ -58,7 +58,7 @@ class PriorityDataCollectorFormatter<T>(
     }
 }
 
-class PriorityDataCollectorsFormatter<T>(
+class PriorityDataCollectorsTableFormatter<T>(
     val collectors: List<PriorityDataCollector<T>>,
 ) : PriorityDataCollectorFormatterBase<T>() {
     fun abstract(): String {

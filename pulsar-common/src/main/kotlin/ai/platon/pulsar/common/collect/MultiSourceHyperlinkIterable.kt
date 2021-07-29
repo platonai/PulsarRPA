@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollectorsFormatter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
+import java.util.*
 
 class MultiSourceHyperlinkIterable(
     val fetchCaches: FetchCacheManager,
@@ -18,23 +19,20 @@ class MultiSourceHyperlinkIterable(
         .apply { name = "FCC@RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCC@Delay" }
-    private val multiSourceDataCollector = MultiSourceDataCollector<UrlAware>()
+    private val regularCollector = MultiSourceDataCollector<UrlAware>()
 
     val loadingIterable =
-        ConcurrentLoadingIterable(multiSourceDataCollector, realTimeCollector, delayCollector, lowerCacheSize)
+        ConcurrentLoadingIterable(regularCollector, realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
     val openCollectors: Collection<PriorityDataCollector<UrlAware>>
-        get() = multiSourceDataCollector.collectors
+        get() = regularCollector.collectors
 
-    val collectors: List<PriorityDataCollector<UrlAware>>
-        get() {
-            val list = mutableListOf<PriorityDataCollector<UrlAware>>()
-            list += realTimeCollector
-            list += delayCollector
-            list += this.openCollectors
-            list.sortBy { it.priority }
-            return list
+    val collectors: SortedSet<PriorityDataCollector<UrlAware>>
+        get() = TreeSet<PriorityDataCollector<UrlAware>>(compareBy { it.priority }).also {
+            it += realTimeCollector
+            it += delayCollector
+            it += openCollectors
         }
 
     init {
@@ -59,6 +57,7 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun estimatedOrder(priority: Int): Int {
+        val collectors = collectors
         val priorCount = collectors.filter { it.priority > priority }.sumBy { it.estimatedSize }
         val competitorCollectors = collectors.filter { it.priority == priority }
         val competitorCount = competitorCollectors.sumBy { it.estimatedSize }
@@ -67,7 +66,7 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        multiSourceDataCollector.collectors.removeIf { it is FetchCacheCollector }
+        regularCollector.collectors.removeIf { it is FetchCacheCollector }
         fetchCaches.caches.forEach { (priority, fetchCache) ->
             val collector = FetchCacheCollector(fetchCache, priority)
             collector.name = "FC@" + collector.id
@@ -77,25 +76,25 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun addCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
-        multiSourceDataCollector.collectors += collector
+        regularCollector.collectors += collector
         return this
     }
 
     fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
-        multiSourceDataCollector.collectors += collectors
+        regularCollector.collectors += collectors
         return this
     }
 
     fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
-        return multiSourceDataCollector.collectors.filter { it.name == name }
+        return regularCollector.collectors.filter { it.name == name }
     }
 
     fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
-        return multiSourceDataCollector.collectors.filter { it.name in names }
+        return regularCollector.collectors.filter { it.name in names }
     }
 
     fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
-        return multiSourceDataCollector.collectors.filter { it.name.matches(regex) }
+        return regularCollector.collectors.filter { it.name.matches(regex) }
     }
 
     fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> {
@@ -103,16 +102,17 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun remove(collector: PriorityDataCollector<UrlAware>): Boolean {
-        return multiSourceDataCollector.collectors.remove(collector)
+        return regularCollector.collectors.remove(collector)
     }
 
     fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>): Boolean {
-        return multiSourceDataCollector.collectors.removeAll(collectors)
+        return regularCollector.collectors.removeAll(collectors)
     }
 
     fun clear() {
         realTimeCollector.fetchCache.clear()
         delayCollector.queue.clear()
-        multiSourceDataCollector.collectors.clear()
+        // TODO: should we call clear on each collector?
+        regularCollector.collectors.clear()
     }
 }

@@ -19,8 +19,8 @@ class ExpiringItem<T>(
 }
 
 class ConcurrentExpiringLRUCache<K, T>(
-        val capacity: Int,
-        val ttl: Duration = CACHE_TTL
+    val ttl: Duration = CACHE_TTL,
+    val capacity: Int = CACHE_CAPACITY,
 ) {
     companion object {
         val CACHE_TTL = Duration.ofMinutes(5)

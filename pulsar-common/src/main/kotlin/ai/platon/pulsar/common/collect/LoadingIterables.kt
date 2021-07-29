@@ -5,7 +5,7 @@ import java.util.*
 import kotlin.NoSuchElementException
 
 open class ConcurrentLoadingIterable<E>(
-    val collector: DataCollector<E>,
+    val regularCollector: DataCollector<E>,
     val realTimeCollector: DataCollector<E>? = null,
     val delayCollector: DataCollector<E>? = null,
     val lowerCacheSize: Int = 20,
@@ -39,15 +39,15 @@ open class ConcurrentLoadingIterable<E>(
     class LoadingIterator<E>(
             private val iterable: ConcurrentLoadingIterable<E>
     ): Iterator<E> {
-        private val collector = iterable.collector
+        private val regularCollector = iterable.regularCollector
         private val realTimeCollector = iterable.realTimeCollector
         private val delayCollector = iterable.delayCollector
         private val cache = iterable.cache
 
         @Synchronized
         fun tryLoad() {
-            if (collector.hasMore() && cache.size < iterable.lowerCacheSize) {
-                collector.collectTo(cache)
+            if (regularCollector.hasMore() && cache.size < iterable.lowerCacheSize) {
+                regularCollector.collectTo(cache)
             }
         }
 
@@ -61,7 +61,7 @@ open class ConcurrentLoadingIterable<E>(
                 delayCollector.collectTo(0, cache)
             }
 
-            while (cache.isEmpty() && collector.hasMore()) {
+            while (cache.isEmpty() && regularCollector.hasMore()) {
                 tryLoad()
             }
 

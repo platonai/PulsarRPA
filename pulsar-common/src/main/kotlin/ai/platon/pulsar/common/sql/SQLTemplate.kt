@@ -4,10 +4,12 @@ import org.apache.commons.lang3.RandomStringUtils
 
 class SQLTemplate(
     val template: String,
-    val resource: String? = null,
     val name: String = generatedName,
-    var display: String = generateDisplay(resource, template)
 ) {
+    var resource: String? = null
+
+    val display: String get() = generateDisplay(resource, name)
+
     fun createSQL(url: String) = createInstance(url).sql
 
     fun createInstance(url: String) = SQLInstance(url, this, name)
@@ -17,12 +19,12 @@ class SQLTemplate(
     companion object {
         private val generatedName: String = RandomStringUtils.randomAlphabetic(4)
 
-        private fun generateDisplay(resource: String?, template: String): String {
-            return resource?.substringAfterLast("/") ?: generatedName
+        private fun generateDisplay(resource: String?, name: String): String {
+            return resource?.substringAfterLast("/") ?: name
         }
 
         fun load(resource: String, name: String = generatedName): SQLTemplate {
-            return SQLTemplate(SQLUtils.loadSQL(resource), resource = resource, name = name)
+            return SQLTemplate(SQLUtils.loadSQL(resource), name = name).also { it.resource = resource }
         }
     }
 }

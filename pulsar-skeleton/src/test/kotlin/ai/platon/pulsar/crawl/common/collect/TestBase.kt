@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common.collect
 
 import ai.platon.pulsar.common.collect.TemporaryLocalFileUrlLoader
-import ai.platon.pulsar.common.collect.UrlGroup
+import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
@@ -10,7 +10,7 @@ import org.junit.Before
 
 open class TestBase {
     protected val conf = ImmutableConfig()
-    protected val group = UrlGroup("", 0, 0, 10000)
+    protected val group = UrlTopic("", 0, 0, 10000)
     protected val queueSize = 100
     protected lateinit var urlLoader: TemporaryLocalFileUrlLoader
 

@@ -1,21 +1,21 @@
 package ai.platon.pulsar.common.collect.queue
 
 import ai.platon.pulsar.common.collect.ExternalUrlLoader
-import ai.platon.pulsar.common.collect.UrlGroup
+import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.urls.UrlAware
 import com.google.common.collect.HashMultiset
 
 class ConcurrentLoadingQueue(
     loader: ExternalUrlLoader,
-    group: UrlGroup,
+    topic: UrlTopic,
     transformer: (UrlAware) -> UrlAware = { it }
-) : DelayLoadingQueue(loader, group, transformer = transformer)
+) : DelayLoadingQueue(loader, topic, transformer = transformer)
 
 class ConcurrentNonReentrantLoadingQueue(
     loader: ExternalUrlLoader,
-    group: UrlGroup,
+    topic: UrlTopic,
     transformer: (UrlAware) -> UrlAware = { it }
-) : DelayLoadingQueue(loader, group, transformer = transformer) {
+) : DelayLoadingQueue(loader, topic, transformer = transformer) {
     private val historyHash = HashSet<Int>()
 
     @Synchronized
@@ -41,10 +41,10 @@ class ConcurrentNonReentrantLoadingQueue(
 
 class ConcurrentNEntrantLoadingQueue(
     loader: ExternalUrlLoader,
-    group: UrlGroup,
+    topic: UrlTopic,
     val n: Int = 3,
     transformer: (UrlAware) -> UrlAware = { it }
-) : DelayLoadingQueue(loader, group, transformer = transformer) {
+) : DelayLoadingQueue(loader, topic, transformer = transformer) {
 
     private val historyHash = HashMultiset.create<Int>()
 

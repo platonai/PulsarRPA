@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.C
 import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_DOCUMENT_CACHE_SIZE
 import ai.platon.pulsar.common.config.CapabilityTypes.GLOBAL_PAGE_CACHE_SIZE
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.ConcurrentSkipListSet
@@ -15,12 +14,12 @@ import java.util.concurrent.ConcurrentSkipListSet
 /**
  * TODO: WebPage is very large, we need a loading cache
  * */
-typealias PageCatch = ConcurrentExpiringLRUCache<WebPage>
+typealias PageCatch = ConcurrentExpiringLRUCache<String, WebPage>
 
 /**
  * TODO: FeaturedDocument is very large, we need a loading cache
  * */
-typealias DocumentCatch = ConcurrentExpiringLRUCache<FeaturedDocument>
+typealias DocumentCatch = ConcurrentExpiringLRUCache<String, FeaturedDocument>
 
 class FetchingCache {
 
@@ -69,11 +68,11 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */
-    open val pageCache = PageCatch(pageCacheCapacity)
+    open val pageCache = PageCatch(capacity = pageCacheCapacity)
     /**
      * The global document cache, a document might be removed if it's expired or the cache is full
      * */
-    open val documentCache = DocumentCatch(documentCacheCapacity)
+    open val documentCache = DocumentCatch(capacity = documentCacheCapacity)
 
     open val fetchingCache = FetchingCache()
 
