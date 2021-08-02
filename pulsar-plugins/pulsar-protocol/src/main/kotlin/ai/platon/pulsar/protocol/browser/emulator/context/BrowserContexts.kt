@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -152,7 +153,7 @@ class ProxyContext(
 
     companion object {
         val numProxyAbsence = AtomicInteger()
-        var proxyAbsenceCountTime = Instant.now()
+        var lastProxyAbsentTime = Instant.now()
         val numRunningTasks = AtomicInteger()
         var maxAllowedProxyAbsence = 200
 
@@ -187,14 +188,16 @@ class ProxyContext(
 
         fun checkProxyAbsence() {
             if (numProxyAbsence.get() > maxAllowedProxyAbsence) {
-                // clear the proxy absence counter every day
-                val proxyProviderRefreshTime = Duration.ofDays(1)
                 val now = Instant.now()
-                if (Duration.between(proxyAbsenceCountTime, now) > proxyProviderRefreshTime) {
+                val day1 = DateTimes.dayOfMonth(lastProxyAbsentTime)
+                val day2 = DateTimes.dayOfMonth(now)
+                if (day2 != day1) {
+                    // clear the proxy absence counter at every start of day
                     numProxyAbsence.set(0)
-                    proxyAbsenceCountTime = now
+                    lastProxyAbsentTime = now
                 } else {
-                    throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
+                    throw ProxyVendorUntrustedException("No proxy available, the vendor is untrusted." +
+                            " Proxy is absent for $numProxyAbsence times from $lastProxyAbsentTime")
                 }
             }
         }

@@ -36,7 +36,7 @@ class ConcurrentNonReentrantLoadingQueue(
         if (countHistory(hashCode) == 0) {
             return if (!url.isPersistable || freeSlots > 0) {
                 historyHash[hashCode] = 1
-                urlCache.add(url)
+                cacheImplementation.add(url)
             } else {
                 overflow(url)
                 true
@@ -74,7 +74,7 @@ class ConcurrentNEntrantLoadingQueue(
         if (countHistory(hashCode) <= n) {
             return if (!url.isPersistable || freeSlots > 0) {
                 historyHash.computeIfAbsent(hashCode) { AtomicInteger() }.incrementAndGet()
-                urlCache.add(url)
+                cacheImplementation.add(url)
             } else {
                 overflow(url)
                 true

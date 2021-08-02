@@ -192,6 +192,18 @@ object DateTimes {
         return LocalDate.now().atTime(hour, minute, second).toInstant(zoneOffset)
     }
 
+    fun dayOfWeek() = dayOfWeek(Instant.now())
+
+    fun dayOfWeek(instant: Instant): DayOfWeek {
+        return instant.atZone(zoneId).dayOfWeek
+    }
+
+    fun dayOfMonth() = dayOfMonth(Instant.now())
+
+    fun dayOfMonth(instant: Instant): Int {
+        return instant.atZone(zoneId).dayOfMonth
+    }
+
     fun elapsedTime(): Duration {
         return elapsedTime(startTime, Instant.now())
     }

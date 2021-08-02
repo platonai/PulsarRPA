@@ -115,7 +115,6 @@ http://www.tianya.cn
 http://military.china.com
 http://mini.eastday.com
 http://www.cankaoxiaoxi.com
-https://s.click.taobao.com
 https://www.apple.com
 http://www.cnr.cn
 http://finance.sina.com.cn
@@ -172,7 +171,6 @@ http://www.baixing.com
 http://www.sporttery.cn
 http://www.youth.cn
 https://www.douban.com
-http://www.163.com
 https://www.booking.com
 https://www.yy.com
 http://dl.hao123.com
@@ -217,7 +215,6 @@ http://che.hao123.com
 http://guba.eastmoney.com
 http://changba.com
 https://www.zhipin.com
-https://www.taobao.com
 http://www.kugou.com
 http://www.12377.cn
 http://www.cri.cn

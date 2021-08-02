@@ -55,7 +55,7 @@
 
     <logger name="ai.platon.scent.examples" level="DEBUG"/>
 
-    <logger name="ai.platon.pulsar.common.MetricsManagement" level="DEBUG" additivity="false">
+    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="DEBUG" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
 

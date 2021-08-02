@@ -45,7 +45,7 @@ class ProxyEntry(
     val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val numTests = AtomicInteger()
-    val numConnectionLosts = AtomicInteger()
+    val numConnectionLosses = AtomicInteger()
     // accumulated test time
     val accumResponseMillis = AtomicLong()
     // last time the proxy is proven be available (note: )
@@ -64,7 +64,7 @@ class ProxyEntry(
     val isFree get() = status.get() == Status.FREE
     val isWorking get() = status.get() == Status.WORKING
     val isBanned get() = isRetired && !isExpired
-    val isFailed get() = numConnectionLosts.get() >= 3 // large value means ignoring failures
+    val isFailed get() = numConnectionLosses.get() >= 3 // large value means ignoring failures
     val isGone get() = isRetired || isFailed
 
     val numRunningTasks = AtomicInteger()
@@ -133,14 +133,14 @@ class ProxyEntry(
         }
 
         if (!available) {
-            numConnectionLosts.incrementAndGet()
+            numConnectionLosses.incrementAndGet()
             if (isGone) {
                 log.warn("Proxy is gone after {} tests | {}", numTests, this)
             } else {
                 log.info("Proxy is not available | $this")
             }
         } else {
-            numConnectionLosts.set(0)
+            numConnectionLosses.set(0)
             refresh()
         }
 
@@ -185,7 +185,7 @@ class ProxyEntry(
 
     private fun formatMetadata(): String {
         val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "st:${status.get().ordinal} pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
+        return "st:${status.get().ordinal} pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosses, fpg:$numFailedPages"
     }
 
     companion object {
@@ -193,7 +193,7 @@ class ProxyEntry(
 
         private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
-        // Check if the proxy server is still available if it's not used for 30 seconds
+        // Check if the proxy server is still available if it's not used for 60 seconds
         private val PROXY_EXPIRED = Duration.ofSeconds(60)
         // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)

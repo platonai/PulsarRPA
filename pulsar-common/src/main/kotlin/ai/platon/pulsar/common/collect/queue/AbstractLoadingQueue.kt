@@ -18,7 +18,8 @@ abstract class AbstractLoadingQueue(
 ) : AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     private val logger = getLogger(AbstractLoadingQueue::class)
 
-    protected val urlCache = ConcurrentLinkedQueue<UrlAware>()
+    // TODO: check the synchronization, non-concurrent collection is OK
+    protected val cacheImplementation = ConcurrentLinkedQueue<UrlAware>()
 
     private val capacity = topic.pageSize
 
@@ -28,14 +29,14 @@ abstract class AbstractLoadingQueue(
     var savedCount: Int = 0
         protected set
 
-    val cache: Collection<UrlAware> = urlCache
+    val cache: Collection<UrlAware> = cacheImplementation
 
     /**
      * The cache size
      * */
     @get:Synchronized
     override val size: Int
-        get() = urlCache.size
+        get() = cacheImplementation.size
 
     /**
      * Query the underlying database, this operation might be slow, try to use estimatedExternalSize
@@ -58,7 +59,7 @@ abstract class AbstractLoadingQueue(
 
     @get:Synchronized
     val freeSlots
-        get() = capacity - urlCache.size
+        get() = capacity - cacheImplementation.size
 
     @get:Synchronized
     val isFull
@@ -66,7 +67,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun clear() {
-        urlCache.clear()
+        cacheImplementation.clear()
     }
 
     @Synchronized
@@ -87,7 +88,7 @@ abstract class AbstractLoadingQueue(
 
         return try {
             ++loadCount
-            loader.loadToNow(urlCache, freeSlots, topic, transformer)
+            loader.loadToNow(cacheImplementation, freeSlots, topic, transformer)
         } catch (e: Exception) {
             logger.warn("Failed to load", e)
             listOf()
@@ -96,10 +97,10 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun shuffle() {
-        val l = urlCache.toMutableList()
-        urlCache.clear()
+        val l = cacheImplementation.toMutableList()
+        cacheImplementation.clear()
         l.shuffle()
-        urlCache.addAll(l)
+        cacheImplementation.addAll(l)
     }
 
     @Synchronized
@@ -121,7 +122,7 @@ abstract class AbstractLoadingQueue(
     @Synchronized
     override fun offer(url: UrlAware): Boolean {
         return if (!url.isPersistable || freeSlots > 0) {
-            urlCache.add(url)
+            cacheImplementation.add(url)
         } else {
             overflow(url)
             true
@@ -130,22 +131,22 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun removeIf(filter: Predicate<in UrlAware>): Boolean {
-        return urlCache.removeIf(filter)
+        return cacheImplementation.removeIf(filter)
     }
 
     @Synchronized
-    override fun iterator(): MutableIterator<UrlAware> = refreshIfNecessary().urlCache.iterator()
+    override fun iterator(): MutableIterator<UrlAware> = refreshIfNecessary().cacheImplementation.iterator()
 
     @Synchronized
     override fun peek(): UrlAware? {
         refreshIfNecessary()
-        return urlCache.peek()
+        return cacheImplementation.peek()
     }
 
     @Synchronized
     override fun poll(): UrlAware? {
         refreshIfNecessary()
-        return urlCache.poll()
+        return cacheImplementation.poll()
     }
 
     @Synchronized
@@ -165,7 +166,7 @@ abstract class AbstractLoadingQueue(
     }
 
     private fun refreshIfNecessary(): AbstractLoadingQueue {
-        if (urlCache.isEmpty()) {
+        if (cacheImplementation.isEmpty()) {
             load()
         }
 

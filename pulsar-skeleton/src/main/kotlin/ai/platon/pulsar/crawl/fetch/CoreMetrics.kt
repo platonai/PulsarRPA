@@ -371,7 +371,7 @@ class CoreMetrics(
 
         val i = finishedTasks.count
         val a = successTasksPerSecond * 60
-        val period = when {
+        val period = 10 + when {
             i < 100 -> a / 3
             i < 10000 -> a
             else -> a * 2 + 60 * (i % 3 - 1) // generate: 60, 120, 180, 60, 120, 180, ...

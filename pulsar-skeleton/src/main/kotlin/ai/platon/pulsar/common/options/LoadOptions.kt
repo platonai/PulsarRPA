@@ -589,11 +589,16 @@ open class LoadOptions(
 
         fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
 
-        fun eraseOptions(text: String, vararg fields: String): String {
+        fun eraseOptions(args: String, vararg fieldNames: String): String {
             // do not forget the blank
-            val separator = " | "
-            val optionNames = fields.flatMap { getOptionNames(it) }.joinToString(separator)
-            return text.replace(optionNames.toRegex(), " -erased ")
+            var normalizedArgs = " $args "
+
+            val optionNames = fieldNames.flatMap { LoadOptions.getOptionNames(it) }.map { " $it " }
+            optionNames.forEach {
+                normalizedArgs = normalizedArgs.replace(it, " -erased ")
+            }
+
+            return normalizedArgs.trim()
         }
     }
 }

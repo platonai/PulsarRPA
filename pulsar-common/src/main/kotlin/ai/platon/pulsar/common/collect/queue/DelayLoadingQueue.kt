@@ -26,19 +26,28 @@ open class DelayLoadingQueue(
     protected var lastEstimatedExternalSize: Int = -1
 
     @Volatile
-    protected var lastLoadTime = Instant.EPOCH
-
-    @Volatile
     protected var lastEstimateTime = Instant.EPOCH
 
     @Volatile
-    protected var lastBusyTime = Instant.now()
+    protected var lastLoadTime = Instant.EPOCH
 
-    protected val isIdle
-        get() = Duration.between(lastBusyTime, Instant.now()).seconds > 60
+    /**
+     * The last time we loaded something
+     * */
+    @Volatile
+    protected var lastReapedTime = Instant.now()
+
+    /**
+     * The time since last reaped time
+     * */
+    val idleTime get() = Duration.between(lastReapedTime, Instant.now())
+
+    val isFree get() = idleTime.seconds > 60
+
+    val isBusy get() = !isFree
 
     // always access the underlying layer with a delay to reduce possible IO reads
-    val realEstimateDelay get() = if (isIdle) Duration.ofSeconds(30) else estimateDelay
+    val adjustedEstimateDelay get() = if (isFree) Duration.ofSeconds(30) else estimateDelay
 
     val isExpired get() = isExpired(loadDelay)
 
@@ -53,11 +62,12 @@ open class DelayLoadingQueue(
     fun expire() {
         lastLoadTime = Instant.EPOCH
         lastEstimateTime = Instant.EPOCH
+        lastReapedTime = Instant.now()
     }
 
     @Synchronized
     override fun load() {
-        if (urlCache.isEmpty() && estimatedExternalSize > 0) {
+        if (cacheImplementation.isEmpty() && estimatedExternalSize > 0) {
             loadNow()
         } else if (freeSlots > 0 && isExpired) {
             loadNow()
@@ -79,14 +89,14 @@ open class DelayLoadingQueue(
 
         val urls = try {
             ++loadCount
-            loader.loadToNow(urlCache, freeSlots, topic, transformer)
+            loader.loadToNow(cacheImplementation, freeSlots, topic, transformer)
         } catch (e: Exception) {
             logger.warn("Failed to load", e)
             listOf()
         }
 
         if (urls.isNotEmpty()) {
-            lastBusyTime = Instant.now()
+            lastReapedTime = Instant.now()
             estimateNow()
         }
 
@@ -96,17 +106,17 @@ open class DelayLoadingQueue(
     @Synchronized
     override fun peek(): UrlAware? {
         refreshIfNecessary()
-        return urlCache.peek()
+        return cacheImplementation.peek()
     }
 
     @Synchronized
     override fun poll(): UrlAware? {
         refreshIfNecessary()
-        return urlCache.poll()
+        return cacheImplementation.poll()
     }
 
     private fun estimateIfExpired(): DelayLoadingQueue {
-        if (lastEstimateTime + realEstimateDelay < Instant.now()) {
+        if (lastEstimateTime + adjustedEstimateDelay < Instant.now()) {
             estimateNow()
         }
         return this
@@ -120,7 +130,7 @@ open class DelayLoadingQueue(
     private fun refreshIfNecessary(): DelayLoadingQueue {
         estimateIfExpired()
 
-        if (urlCache.isEmpty()) {
+        if (cacheImplementation.isEmpty()) {
             load()
         }
 
