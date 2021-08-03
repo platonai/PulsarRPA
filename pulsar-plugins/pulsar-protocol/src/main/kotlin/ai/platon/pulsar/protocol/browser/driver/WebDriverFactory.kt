@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 open class WebDriverFactory(
-    val driverControl: WebDriverSettings,
+    val driverSettings: WebDriverSettings,
     val browserInstanceManager: BrowserInstanceManager,
     val immutableConfig: ImmutableConfig
 ) {
@@ -38,7 +38,7 @@ open class WebDriverFactory(
     fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): ManagedWebDriver {
         log.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
-        val capabilities = driverControl.createGeneralOptions()
+        val capabilities = driverSettings.createGeneralOptions()
         browserInstanceId.proxyServer?.let { setProxy(capabilities, it) }
 
         // Choose the WebDriver
@@ -47,7 +47,7 @@ open class WebDriverFactory(
             when {
                 browserType == BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId, capabilities)
                 browserType == BrowserType.CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
-                browserType == BrowserType.SELENIUM_CHROME -> ChromeDriver(driverControl.createChromeOptions(capabilities))
+                browserType == BrowserType.SELENIUM_CHROME -> ChromeDriver(driverSettings.createChromeOptions(capabilities))
                 RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) ->
                     defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
                 else -> defaultWebDriverClass.getConstructor().newInstance()
@@ -76,13 +76,13 @@ open class WebDriverFactory(
     private fun createChromeDevtoolsDriver(
         browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities): ChromeDevtoolsDriver {
         val launcherConfig = LauncherConfig().apply {
-            supervisorProcess = driverControl.supervisorProcess
-            supervisorProcessArgs.addAll(driverControl.supervisorProcessArgs)
+            supervisorProcess = driverSettings.supervisorProcess
+            supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
         }
-        val launchOptions = driverControl.createChromeDevtoolsOptions(capabilities).apply {
+        val launchOptions = driverSettings.createChromeDevtoolsOptions(capabilities).apply {
             userDataDir = browserInstanceId.dataDir
         }
-        return ChromeDevtoolsDriver(launcherConfig, launchOptions, driverControl, browserInstanceManager)
+        return ChromeDevtoolsDriver(launcherConfig, launchOptions, driverSettings, browserInstanceManager)
     }
 
     private fun createMockChromeDevtoolsDriver(

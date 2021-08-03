@@ -11,14 +11,8 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.ConcurrentSkipListSet
 
-/**
- * TODO: WebPage is very large, we need a loading cache
- * */
 typealias PageCatch = ConcurrentExpiringLRUCache<String, WebPage>
 
-/**
- * TODO: FeaturedDocument is very large, we need a loading cache
- * */
 typealias DocumentCatch = ConcurrentExpiringLRUCache<String, FeaturedDocument>
 
 class FetchingCache {

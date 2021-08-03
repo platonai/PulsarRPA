@@ -32,7 +32,7 @@ open class BrowserEmulator(
         val driverManager: WebDriverPoolManager,
         eventHandler: EventHandler,
         immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
+): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, eventHandler, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!

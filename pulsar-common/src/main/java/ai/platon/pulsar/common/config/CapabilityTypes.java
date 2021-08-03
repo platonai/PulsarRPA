@@ -352,147 +352,87 @@ public interface CapabilityTypes {
      * The web driver to use, selenium or pulsar browser, etc
      * */
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
-    /** Constant <code>BROWSER_WEB_DRIVER_PRIORITY="browser.web.driver.priority"</code> */
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
-    /** Constant <code>BROWSER_DRIVER_POOL_IDLE_TIMEOUT="browser.driver.pool.idle.timeout"</code> */
     String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
-    /** Constant <code>BROWSER_TYPE="browser.type"</code> */
     String BROWSER_TYPE = "browser.type";
-    /** Constant <code>BROWSER_INCOGNITO="browser.incognito"</code> */
     String BROWSER_INCOGNITO = "browser.incognito";
-    /** Set browser driver to be headless or not */
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
-    /** Constant <code>BROWSER_IMAGES_ENABLED="browser.images.enabled"</code> */
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
-    /** Constant <code>BROWSER_JS_INVADING_ENABLED="browser.js.invading.enabled"</code> */
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
-    /** Constant <code>BROWSER_DELETE_ALL_COOKIES="browser.delete.all.cookies"</code> */
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
-    /** Constant <code>BROWSER_EMULATOR_EVENT_HANDLER="browser.emulate.event.handler"</code> */
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
-    /** Constant <code>BROWSER_ENABLE_URL_BLOCKING="browser.enable.url.blocking"</code> */
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
-    /** Constant <code>BROWSER_CHROME_PATH="browser.chrome.path"</code> */
     String BROWSER_CHROME_PATH = "browser.chrome.path";
-    /** Constant <code>BROWSER_DATA_DIR="browser.data.dir"</code> */
     String BROWSER_DATA_DIR = "browser.data.dir";
-    /** Constant <code>BROWSER_TAKE_SCREENSHOT="browser.take.screenshot"</code> */
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
-    /** Constant <code>BROWSER_LAUNCH_SUPERVISOR_PROCESS="browser.launch.supervisor.process"</code> */
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
-    /** Constant <code>BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS="browser.launch.supervisor.process.args"</code> */
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
 
     /**
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
-    /** Constant <code>PROXY_POOL_MONITOR_CLASS="proxy.pool.monitor.class"</code> */
     String PROXY_POOL_MONITOR_CLASS = "proxy.pool.monitor.class";
-    /** Constant <code>PROXY_LOADER_CLASS="proxy.loader.class"</code> */
     String PROXY_LOADER_CLASS = "proxy.loader.class";
-    /** Constant <code>PROXY_MAX_FETCH_SUCCESS="proxy.max.fetch.success"</code> */
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
-    /** Constant <code>PROXY_MAX_ALLOWED_PROXY_ABSENCE="proxy.max.allowed.proxy.absence"</code> */
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.proxy.absence";
-    /** Constant <code>PROXY_POOL_CAPACITY="proxy.pool.size"</code> */
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
-    /** Constant <code>PROXY_POOL_POLLING_TIMEOUT="proxy.pool.polling.interval"</code> */
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
-    /** Constant <code>PROXY_IDLE_TIMEOUT="proxy.idle.timeout"</code> */
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
-    /** Constant <code>PROXY_ENABLE_DEFAULT_PROVIDERS="proxy.enable.default.providers"</code> */
     String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
-    /** Constant <code>PROXY_ENABLE_LOCAL_FORWARD_SERVER="proxy.enable.local.forward.server"</code> */
     String PROXY_ENABLE_LOCAL_FORWARD_SERVER = "proxy.enable.local.forward.server";
-    /** Constant <code>PROXY_SERVER_BOSS_THREADS="proxy.forward.server.boss.threads"</code> */
     String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";
-    /** Constant <code>PROXY_SERVER_WORKER_THREADS="proxy.forward.server.worker.threads"</code> */
     String PROXY_SERVER_WORKER_THREADS = "proxy.forward.server.worker.threads";
 
     /**
      * Network
      */
     String HTTP_TIMEOUT = "http.timeout";
-    /** Constant <code>HTTP_FETCH_MAX_RETRY="http.fetch.max.retry"</code> */
     String HTTP_FETCH_MAX_RETRY = "http.fetch.max.retry";
 
     /**
      * Generator parameters
      */
     String PARTITION_MODE_KEY = "partition.url.mode";
-    /** Constant <code>PARTITION_URL_SEED="partition.url.seed"</code> */
     String PARTITION_URL_SEED = "partition.url.seed";
 
-    /** Constant <code>GENERATE_TIME="generate.generate.time"</code> */
     String GENERATE_TIME = "generate.generate.time";
-    /** Constant <code>GENERATE_UPDATE_CRAWLDB="generate.update.crawldb"</code> */
     String GENERATE_UPDATE_CRAWLDB = "generate.update.crawldb";
-    /** Constant <code>GENERATE_MIN_SCORE="generate.min.score"</code> */
     String GENERATE_MIN_SCORE = "generate.min.score";
-    /** Constant <code>GENERATE_REGENERATE="generate.regenerate"</code> */
     String GENERATE_REGENERATE = "generate.regenerate";
-    /** Constant <code>GENERATE_REGENERATE_SEEDS="generate.regenerate.seeds"</code> */
     String GENERATE_REGENERATE_SEEDS = "generate.regenerate.seeds";
-    /** Constant <code>GENERATE_FILTER="generate.filter"</code> */
     String GENERATE_FILTER = "generate.filter";
-    /** Constant <code>GENERATE_NORMALISE="generate.normalise"</code> */
     String GENERATE_NORMALISE = "generate.normalise";
-    /** Constant <code>GENERATE_MAX_TASKS_PER_HOST="generate.max.tasks.per.host"</code> */
     String GENERATE_MAX_TASKS_PER_HOST = "generate.max.tasks.per.host";
-    /** Constant <code>GENERATE_SITE_GROUP_MODE="generate.count.mode"</code> */
     String GENERATE_SITE_GROUP_MODE = "generate.count.mode";
-    /** Constant <code>GENERATE_TOP_N="generate.topN"</code> */
     String GENERATE_TOP_N = "generate.topN";
-    /** Constant <code>GENERATE_LAST_GENERATED_ROWS="generate.last.generated.rows"</code> */
     String GENERATE_LAST_GENERATED_ROWS = "generate.last.generated.rows";
-    /** Constant <code>GENERATE_CUR_TIME="generate.curr.time"</code> */
     String GENERATE_CUR_TIME = "generate.curr.time";
-    /** Constant <code>GENERATE_DETAIL_PAGE_RATE="generate.detail.page.rate"</code> */
     String GENERATE_DETAIL_PAGE_RATE = "generate.detail.page.rate";
-    /** Constant <code>GENERATE_DELAY="crawl.gen.delay"</code> */
     String GENERATE_DELAY = "crawl.gen.delay";
-    /** Constant <code>GENERATE_RANDOM_SEED="generate.partition.seed"</code> */
     String GENERATE_RANDOM_SEED = "generate.partition.seed";
     /**
      * Parser parameters
      */
     String PARSE_PARSE = "parser.parse";
-    /** Constant <code>PARSE_REPARSE="parser.reparse"</code> */
     String PARSE_REPARSE = "parser.reparse";
-    /** Constant <code>PARSE_TIMEOUT="parser.timeout"</code> */
     String PARSE_TIMEOUT = "parser.timeout";
-    /** Constant <code>PARSE_NORMALISE="parse.normalise"</code> */
     String PARSE_NORMALISE = "parse.normalise";
-    /** Constant <code>PARSE_MAX_URL_LENGTH="parse.max.url.length"</code> */
     String PARSE_MAX_URL_LENGTH = "parse.max.url.length";
-    /** Constant <code>PARSE_MIN_ANCHOR_LENGTH="parse.min.anchor.length"</code> */
     String PARSE_MIN_ANCHOR_LENGTH = "parse.min.anchor.length";
-    /** Constant <code>PARSE_MAX_ANCHOR_LENGTH="parse.max.anchor.length"</code> */
     String PARSE_MAX_ANCHOR_LENGTH = "parse.max.anchor.length";
-    /** Constant <code>PARSE_LINK_PATTERN="parse.link.pattern"</code> */
     String PARSE_LINK_PATTERN = "parse.link.pattern";
-    /** Constant <code>PARSE_MAX_LINKS_PER_PAGE="parse.max.links"</code> */
     String PARSE_MAX_LINKS_PER_PAGE = "parse.max.links";
-    /** Constant <code>PARSE_IGNORE_EXTERNAL_LINKS="parse.ignore.external.links"</code> */
     String PARSE_IGNORE_EXTERNAL_LINKS = "parse.ignore.external.links";
-    /** Constant <code>PARSE_SKIP_TRUNCATED="parser.skip.truncated"</code> */
     String PARSE_SKIP_TRUNCATED = "parser.skip.truncated";
-    /** Constant <code>PARSE_HTML_IMPL="parser.html.impl"</code> */
     String PARSE_HTML_IMPL = "parser.html.impl";
-    /** Constant <code>PARSE_SUPPORT_ALL_CHARSETS="parser.support.all.charsets"</code> */
     String PARSE_SUPPORT_ALL_CHARSETS = "parser.support.all.charsets";
-    /** Constant <code>PARSE_SUPPORTED_CHARSETS="parser.supported.charsets"</code> */
     String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
-    /** Constant <code>PARSE_DEFAULT_ENCODING="parser.character.encoding.default"</code> */
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
-    /** Constant <code>PARSE_CACHING_FORBIDDEN_POLICY="parser.caching.forbidden.policy"</code> */
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
-    /** Constant <code>PARSE_TIKA_HTML_MAPPER_NAME="tika.htmlmapper.classname"</code> */
     String PARSE_TIKA_HTML_MAPPER_NAME = "tika.htmlmapper.classname";
 
     // TODO: not used, may be caused by a git merge problem
-    /** Constant <code>PARSE_RETRIEVE_FADED_LINKS="parse.retrieve.faded.links"</code> */
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
     /**

@@ -51,7 +51,7 @@ class LoadingWebDriverPool(
     private val notBusy = lock.newCondition()
     private val notEmpty = lock.newCondition()
 
-    private val headless get() = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
+    private val driverSettings get() = driverFactory.driverSettings
     private val closed = AtomicBoolean()
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
@@ -244,7 +244,7 @@ class LoadingWebDriverPool(
     }
 
     private fun closeAllDrivers(drivers: List<WebDriver>) {
-        if (!headless) {
+        if (driverSettings.isGUI) {
             log.info("Web drivers are in GUI mode, please manually quit the tabs")
             return
         }
@@ -275,7 +275,7 @@ class LoadingWebDriverPool(
 
     private fun logDriverOnline(driver: WebDriver) {
         if (log.isTraceEnabled) {
-            val driverControl = driverFactory.driverControl
+            val driverControl = driverFactory.driverSettings
             log.trace("The {}th web driver is online, browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {}",
                     numOnline,
                     driver.name,

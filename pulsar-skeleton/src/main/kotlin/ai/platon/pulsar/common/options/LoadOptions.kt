@@ -590,10 +590,10 @@ open class LoadOptions(
         fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
 
         fun eraseOptions(args: String, vararg fieldNames: String): String {
-            // do not forget the blank
+            // do not forget the blanks
             var normalizedArgs = " $args "
 
-            val optionNames = fieldNames.flatMap { LoadOptions.getOptionNames(it) }.map { " $it " }
+            val optionNames = fieldNames.flatMap { getOptionNames(it) }.map { " $it " }
             optionNames.forEach {
                 normalizedArgs = normalizedArgs.replace(it, " -erased ")
             }

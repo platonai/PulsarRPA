@@ -47,7 +47,7 @@ open class EventHandler(
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
-    protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverControl.jsInvadingEnabled
+    protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverSettings.jsInvadingEnabled
 
     private val registry = AppMetrics.defaultMetricRegistry
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
