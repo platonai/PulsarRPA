@@ -68,10 +68,10 @@ open class GlobalCache(val conf: ImmutableConfig) {
      * */
     open val documentCache = DocumentCatch(capacity = documentCacheCapacity)
 
-    open val fetchingCache = FetchingCache()
+    open val fetchingUrlQueue = FetchingCache()
 
     fun resetCaches() {
-        fetchingCache.clear()
+        fetchingUrlQueue.clear()
         pageCache.clear()
         documentCache.clear()
         fetchCaches = ConcurrentFetchCacheManager(conf).apply { initialize() }

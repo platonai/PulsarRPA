@@ -17,6 +17,7 @@ import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
@@ -89,6 +90,7 @@ open class StreamingCrawler<T : UrlAware>(
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
         private val globalKilledTasks = AtomicInteger()
+        private val globalTasks = AtomicInteger()
 
         private val globalMetrics = StreamingCrawlerMetrics()
 
@@ -124,6 +126,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private val logger = getLogger(StreamingCrawler::class)
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
     private val conf = session.sessionConfig
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
@@ -197,10 +200,17 @@ open class StreamingCrawler<T : UrlAware>(
             }
 
             urls.forEachIndexed { j, url ->
+                globalTasks.incrementAndGet()
+
                 if (!isActive) {
                     globalMetrics.drops.mark()
                     return@startCrawlLoop
                 }
+
+                tracer?.trace(
+                    "{}. {}/{} running tasks, processing {}",
+                    globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
+                )
 
                 // The largest disk must have at least 10GiB remaining space
                 if (AppMetrics.freeSpace.maxOfOrNull { ByteUnit.convert(it, "G") } ?: 0.0 < 10.0) {
@@ -214,12 +224,14 @@ open class StreamingCrawler<T : UrlAware>(
                     return@forEachIndexed
                 }
 
-                val state = try {
-                    globalLoadingUrls.add(url.url)
-                    runWithStatusCheck(1 + j, url, scope)
-                } finally {
-                    globalLoadingUrls.remove(url.url)
+                // disabled, might be slow
+                val urlSpec = Urls.splitUrlArgs(url.url).first
+                if (alwaysFalse() && doLaterIfProcessing(urlSpec, url, Duration.ofSeconds(10))) {
+                    return@forEachIndexed
                 }
+
+                globalLoadingUrls.add(urlSpec)
+                val state = runWithStatusCheck(1 + j, url, scope)
 
                 if (state != FlowState.CONTINUE) {
                     return@startCrawlLoop
@@ -291,21 +303,25 @@ open class StreamingCrawler<T : UrlAware>(
         criticalWarning = null
 
         val context = Dispatchers.Default + CoroutineName("w")
+        val urlSpec = Urls.splitUrlArgs(url.url).first
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
             try {
                 globalMetrics.tasks.mark()
-                if (AmazonDiagnosis.isAmazon(url.url)) {
-                    AmazonMetrics.tasks.mark(url.url)
+                if (AmazonDiagnosis.isAmazon(urlSpec)) {
+                    AmazonMetrics.tasks.mark(urlSpec)
                 }
                 runUrlTask(url)
             } finally {
                 lastActiveTime = Instant.now()
+
+                globalLoadingUrls.remove(urlSpec)
                 globalRunningTasks.decrementAndGet()
+
                 globalMetrics.finishes.mark()
-                if (AmazonDiagnosis.isAmazon(url.url)) {
-                    AmazonMetrics.finishes.mark(url.url)
+                if (AmazonDiagnosis.isAmazon(urlSpec)) {
+                    AmazonMetrics.finishes.mark(urlSpec)
                 }
             }
         }
@@ -476,15 +492,22 @@ open class StreamingCrawler<T : UrlAware>(
         return FlowState.CONTINUE
     }
 
-    private fun handleRetry(url: UrlAware, page: WebPage?) {
+    private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {
         if (globalCache == null) {
-            return
+            return false
         }
 
-        if (url.url in globalCache.fetchingCache) {
-            return
+        if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingUrlQueue) {
+            // process later, hope the page is fetched
+            logger.debug("Task is in process, do it {} later | {}", delay.readable(), url.configuredUrl)
+            fetchDelayed(url, delay)
+            return true
         }
 
+        return false
+    }
+
+    private fun handleRetry(url: UrlAware, page: WebPage?) {
         val retries = 1L + (page?.fetchRetries ?: 0)
         if (page != null && retries > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
@@ -494,15 +517,31 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         val delay = Duration.ofMinutes(1L + 2 * retries)
-        val delayCache = globalCache.fetchCaches.delayCache
-        // erase -refresh options
-        url.args = url.args?.replace("-refresh", "-refresh-erased")
-        delayCache.add(DelayUrl(url, delay))
+//        val delayCache = globalCache.fetchCaches.delayCache
+//        // erase -refresh options
+//        url.args = url.args?.replace("-refresh", "-refresh-erased")
+//        delayCache.add(DelayUrl(url, delay))
+        fetchDelayed(url, delay)
+
         globalMetrics.retries.mark()
         if (page != null) {
             val prefix = "Trying ${retries}th ${delay.readable()} later"
             taskLogger.info("{}", LoadedPageFormatter(page, prefix = prefix))
         }
+    }
+
+    private fun fetchDelayed(url: UrlAware, delay: Duration) {
+        if (globalCache == null) {
+            return
+        }
+
+        val delayCache = globalCache.fetchCaches.delayCache
+        // erase -refresh options
+//        url.args = url.args?.replace("-refresh", "-refresh-erased")
+        url.args = url.args?.let { LoadOptions.eraseOptions(it, "refresh") }
+        require(url.args?.contains("refresh") != true)
+
+        delayCache.add(DelayUrl(url, delay))
     }
 
     private fun handleMemoryShortage(j: Int) {
@@ -529,8 +568,10 @@ open class StreamingCrawler<T : UrlAware>(
         var k = 0
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }
-                ?.warn("Context leaks too fast: {} leaks/seconds, memory: {}",
-                    contextLeaksRate, Strings.readableBytes(availableMemory))
+                ?.warn(
+                    "Context leaks too fast: {} leaks/seconds, memory: {}",
+                    contextLeaksRate, Strings.readableBytes(availableMemory)
+                )
             delay(1000)
 
             // trigger the meter updating

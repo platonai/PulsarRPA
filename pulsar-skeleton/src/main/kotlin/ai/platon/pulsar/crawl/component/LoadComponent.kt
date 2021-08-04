@@ -373,12 +373,7 @@ class LoadComponent(
     }
 
     private fun parse(page: WebPage, options: LoadOptions): ParseResult? {
-        if (parseComponent == null) {
-            logger.info("Parser is null")
-            return null
-        }
-
-        val parser = parseComponent?.takeIf { options.parse } ?: return null
+        val parser = parseComponent.takeIf { options.parse } ?: return null
         val parseResult = parser.parse(page, options.query, options.reparseLinks, options.noFilter)
         tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
 
@@ -443,7 +438,7 @@ class LoadComponent(
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         // require(page.options == options)
         page.setVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE, page.prevFetchTime)
-        globalCache.fetchingCache.add(page.url)
+        globalCache.fetchingUrlQueue.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
 
@@ -469,7 +464,7 @@ class LoadComponent(
         // the metadata of the page is loaded from database but the content is not cached,
         // so load the content again
         update(page, options)
-        globalCache.fetchingCache.remove(page.url)
+        globalCache.fetchingUrlQueue.remove(page.url)
     }
 
     /**

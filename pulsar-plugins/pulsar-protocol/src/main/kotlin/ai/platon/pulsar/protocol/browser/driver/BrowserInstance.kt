@@ -22,6 +22,7 @@ class BrowserInstance(
      * Every browser instance have an unique data dir, proxy is required to be unique too if it is enabled
      * */
     val id = BrowserInstanceId(launchOptions.userDataDir, launchOptions.proxyServer)
+    val isGUI get() = launcherConfig.supervisorProcess == null && !launchOptions.headless
 
     val proxyServer get() = launchOptions.proxyServer
 
@@ -65,7 +66,7 @@ class BrowserInstance(
     }
 
     override fun close() {
-        if (!launchOptions.headless) {
+        if (!isGUI) {
             log.info("Chrome dev tools are in GUI mode, please manually quit the tabs")
             return
         }
