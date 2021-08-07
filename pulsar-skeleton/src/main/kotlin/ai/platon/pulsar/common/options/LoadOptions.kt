@@ -460,8 +460,7 @@ open class LoadOptions(
     }
 
     open fun isDefault(option: String): Boolean {
-        val value = optionFields.find { it.name == option }
-                ?.also { it.isAccessible = true }?.get(this) ?: return false
+        val value = optionFieldsMap[option]?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
 
@@ -510,6 +509,7 @@ open class LoadOptions(
                 val count = it.annotations.filterIsInstance<Parameter>().count { it.names.contains("-$name") }
                 require(count > 0) { "Missing -$name option for field <$name>" }
             }
+        val optionFieldsMap = optionFields.associateBy { it.name }
         val defaultParams = optionFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
         val arity0BooleanParams = optionFields

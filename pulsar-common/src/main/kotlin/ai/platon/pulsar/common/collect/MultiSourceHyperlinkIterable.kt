@@ -19,21 +19,22 @@ class MultiSourceHyperlinkIterable(
         .apply { name = "FCC@RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCC@Delay" }
-    private val regularCollector = MultiSourceDataCollector<UrlAware>()
 
     val loadingIterable =
-        ConcurrentLoadingIterable(regularCollector, realTimeCollector, delayCollector, lowerCacheSize)
+        ConcurrentLoadingIterable(MultiSourceDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    val openCollectors: Collection<PriorityDataCollector<UrlAware>>
-        get() = regularCollector.collectors
+    private val multiSourceCollector get() = loadingIterable.regularCollector as MultiSourceDataCollector
 
-    val collectors: SortedSet<PriorityDataCollector<UrlAware>>
-        get() = TreeSet<PriorityDataCollector<UrlAware>>(compareBy { it.priority }).also {
+    val openCollectors: Collection<PriorityDataCollector<UrlAware>>
+        get() = multiSourceCollector.collectors
+
+    val collectors: List<PriorityDataCollector<UrlAware>>
+        get() = mutableListOf<PriorityDataCollector<UrlAware>>().also {
             it += realTimeCollector
             it += delayCollector
             it += openCollectors
-        }
+        }.sortedBy { it.priority }
 
     init {
         if (enableDefaults && openCollectors.isEmpty()) {
@@ -57,7 +58,6 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun estimatedOrder(priority: Int): Int {
-        val collectors = collectors
         val priorCount = collectors.filter { it.priority > priority }.sumBy { it.estimatedSize }
         val competitorCollectors = collectors.filter { it.priority == priority }
         val competitorCount = competitorCollectors.sumBy { it.estimatedSize }
@@ -66,7 +66,7 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        regularCollector.collectors.removeIf { it is FetchCacheCollector }
+        multiSourceCollector.collectors.removeIf { it is FetchCacheCollector }
         fetchCaches.caches.forEach { (priority, fetchCache) ->
             val collector = FetchCacheCollector(fetchCache, priority)
             collector.name = "FC@" + collector.id
@@ -76,25 +76,25 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun addCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
-        regularCollector.collectors += collector
+        multiSourceCollector.collectors += collector
         return this
     }
 
     fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
-        regularCollector.collectors += collectors
+        multiSourceCollector.collectors += collectors
         return this
     }
 
     fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
-        return regularCollector.collectors.filter { it.name == name }
+        return multiSourceCollector.collectors.filter { it.name == name }
     }
 
     fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
-        return regularCollector.collectors.filter { it.name in names }
+        return multiSourceCollector.collectors.filter { it.name in names }
     }
 
     fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
-        return regularCollector.collectors.filter { it.name.matches(regex) }
+        return multiSourceCollector.collectors.filter { it.name.matches(regex) }
     }
 
     fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> {
@@ -102,17 +102,17 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun remove(collector: PriorityDataCollector<UrlAware>): Boolean {
-        return regularCollector.collectors.remove(collector)
+        return multiSourceCollector.collectors.remove(collector)
     }
 
     fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>): Boolean {
-        return regularCollector.collectors.removeAll(collectors)
+        return multiSourceCollector.collectors.removeAll(collectors)
     }
 
     fun clear() {
         loadingIterable.clear()
         realTimeCollector.fetchCache.clear()
         delayCollector.queue.clear()
-        regularCollector.clear()
+        multiSourceCollector.clear()
     }
 }

@@ -28,7 +28,7 @@ abstract class PriorityDataCollectorFormatterBase<T> {
             Duration.between(c.firstCollectTime, c.lastCollectedTime) else Duration.ZERO
         val elapsedSeconds = elapsedTime.seconds.coerceAtLeast(1)
         val priorityName = Priority13.valueOfOrNull(c.priority)?.name ?: ""
-        var labels = c.labels.map { StringUtils.abbreviateMiddle(it, "*", 4) }.joinToString()
+        var labels = c.labels.joinToString { StringUtils.abbreviateMiddle(it, "*", 4) }
         if (labels.length > 16) {
             labels = StringUtils.abbreviateMiddle(labels, "..", 16)
         }
@@ -89,4 +89,8 @@ class PriorityDataCollectorsTableFormatter<T>(
         collectors.forEach { addRow(it, rs) }
         return ResultSetFormatter(rs, withHeader = true).toString()
     }
+}
+
+fun <T> formatAsTable(collectors: Collection<PriorityDataCollector<T>>): String {
+    return PriorityDataCollectorsTableFormatter(collectors).toString()
 }

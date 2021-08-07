@@ -105,7 +105,10 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
     fun report(collector: DataCollector<out UrlAware>, message: String = "") {
         val msg = if (message.isBlank()) "" else " | $message"
 
-        dcLogger.info("Task <{}> has {}/{} items{}", collector.name, collector.size, collector.estimatedSize, msg)
+        dcLogger.info("Task <{}> has {}/{} items{}, adding to {}@{}",
+            collector.name, collector.size, collector.estimatedSize, msg,
+            fetchIterable.openCollectors.javaClass.simpleName,
+            fetchIterable.openCollectors.hashCode())
         dcLogger.info("{}", collector)
     }
 }

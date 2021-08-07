@@ -71,7 +71,8 @@ open class LocalFileHyperlinkCollector(
                 Hyperlinks.toHyperlink(it).also { it.args = args }
             }
 
-            log.info("Loaded total {}/{} urls from file | {} | {}", cache.size, capacity, loadArgs, path)
+            val msg = if (loadArgs != null) " | $loadArgs " else ""
+            log.info("Loaded total {} urls from file | $msg{}", cache.size, path)
         }
 
         return this
