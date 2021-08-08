@@ -17,6 +17,7 @@
 package ai.platon.pulsar.common.config;
 
 import ai.platon.pulsar.common.AppContext;
+import ai.platon.pulsar.common.measure.ByteUnit;
 
 import java.awt.*;
 import java.time.Duration;
@@ -193,7 +194,7 @@ public interface AppConstants {
     /**
      * Browser
      * */
-    int BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY = 500 * 1024 * 1024; // 500 MiB
+    double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.MIB.toBytes(500); // 500 MiB
 
     Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";

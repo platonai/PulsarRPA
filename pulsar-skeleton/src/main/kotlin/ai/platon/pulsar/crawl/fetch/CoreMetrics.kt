@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -27,7 +27,6 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 class CoreMetrics(
     private val messageWriter: MiscMessageWriter,
@@ -221,7 +220,7 @@ class CoreMetrics(
         val bytes = page.contentLength
         histogramContentBytes.update(bytes)
         meterContentBytes.mark(bytes)
-        meterContentMBytes.inc(ByteUnit.convert(bytes, "M").toLong())
+        meterContentMBytes.inc(ByteUnitConverter.convert(bytes, "M").toLong())
 
         page.activeDomStats["lastStat"]?.apply {
             pageAnchors.update(na)

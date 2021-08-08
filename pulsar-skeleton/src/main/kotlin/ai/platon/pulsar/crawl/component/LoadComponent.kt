@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
@@ -576,7 +576,7 @@ class LoadComponent(
             val bytes = page.content?.array()?.size ?: 0
             if (bytes > 0) {
                 metrics.contentPersists.mark()
-                metrics.persistContentMBytes.inc(ByteUnit.convert(bytes, "M").toLong())
+                metrics.persistContentMBytes.inc(ByteUnitConverter.convert(bytes, "M").toLong())
             }
         }
         tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)

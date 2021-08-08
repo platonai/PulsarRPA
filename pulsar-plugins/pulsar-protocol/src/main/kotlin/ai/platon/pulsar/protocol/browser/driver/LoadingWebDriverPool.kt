@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.config.AppConstants.BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -121,7 +121,7 @@ class LoadingWebDriverPool(
         }
 
         // close open tabs to reduce memory usage
-        if (availableMemory < BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY) {
+        if (availableMemory < BROWSER_TAB_REQUIRED_MEMORY) {
             if (numOnline > 0.5 * capacity) {
                 driver.retire()
             }
@@ -229,7 +229,7 @@ class LoadingWebDriverPool(
     }
 
     private fun shouldCreateDriver(): Boolean {
-        return isActive && availableMemory > BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY && onlineDrivers.size < capacity
+        return isActive && availableMemory > BROWSER_TAB_REQUIRED_MEMORY && onlineDrivers.size < capacity
     }
 
     private fun doClose(timeToWait: Duration) {

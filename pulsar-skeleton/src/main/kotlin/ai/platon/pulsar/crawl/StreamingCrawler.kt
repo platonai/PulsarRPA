@@ -4,10 +4,11 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.common.config.AppConstants.BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
@@ -97,7 +98,9 @@ open class StreamingCrawler<T : UrlAware>(
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
 
         private val availableMemory get() = AppMetrics.availableMemory
-        private val requiredMemory = BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY // 500 MiB
+        private val requiredMemory = if (ByteUnit.BYTE.toGiB(availableMemory.toDouble()) >= 30)
+            ByteUnit.GIB.toBytes(2.5) else BROWSER_TAB_REQUIRED_MEMORY
+
         private val remainingMemory get() = availableMemory - requiredMemory
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
@@ -213,7 +216,7 @@ open class StreamingCrawler<T : UrlAware>(
                 )
 
                 // The largest disk must have at least 10GiB remaining space
-                if (AppMetrics.freeSpace.maxOfOrNull { ByteUnit.convert(it, "G") } ?: 0.0 < 10.0) {
+                if (AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0 < 10.0) {
                     logger.error("Disk space is full!")
                     criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@startCrawlLoop
@@ -549,8 +552,8 @@ open class StreamingCrawler<T : UrlAware>(
             "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
             globalRunningTasks,
             Strings.readableBytes(availableMemory),
-            Strings.readableBytes(requiredMemory),
-            Strings.readableBytes(abs(remainingMemory))
+            Strings.readableBytes(requiredMemory.toLong()),
+            Strings.readableBytes(abs(remainingMemory.toLong()))
         )
         session.context.clearCaches()
         System.gc()

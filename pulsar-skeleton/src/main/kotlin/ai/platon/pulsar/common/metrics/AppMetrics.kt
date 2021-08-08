@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.measure.ByteUnitConverter
 import com.codahale.metrics.*
 import com.codahale.metrics.graphite.GraphiteReporter
 import com.codahale.metrics.graphite.PickledGraphite
@@ -84,9 +85,11 @@ class AppMetrics(
         val elapsedTime get() = Duration.between(startTime, Instant.now())
         val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
-        val availableMemory get() = systemInfo.hardware.memory.available
+        val memoryInfo get() = systemInfo.hardware.memory
+        // available memory in bytes
+        val availableMemory get() = memoryInfo.available
         val freeSpace get() = FileSystems.getDefault().fileStores
-            .filter { ByteUnit.convert(it.totalSpace, "G") > 20 }
+            .filter { ByteUnitConverter.convert(it.totalSpace, "G") > 20 }
             .map { it.unallocatedSpace }
 
         init {

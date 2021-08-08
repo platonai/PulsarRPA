@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.common.metrics.EnumCounterUtils
-import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
@@ -308,7 +308,7 @@ class TaskScheduler(
 
         EnumCounterUtils.increaseRDepth(page.distance, enumCounters)
 
-        enumCounters.inc(Counter.rMbytes, ByteUnit.convert(page.contentLength, "M").toInt())
+        enumCounters.inc(Counter.rMbytes, ByteUnitConverter.convert(page.contentLength, "M").toInt())
     }
 
     private fun logFetchFailure(message: String) {
