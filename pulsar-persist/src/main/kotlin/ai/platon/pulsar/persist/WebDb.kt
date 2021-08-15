@@ -17,7 +17,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
-class WebDb(val conf: ImmutableConfig): AutoCloseable {
+class WebDb(
+    val conf: ImmutableConfig
+): AutoCloseable {
     companion object {
         val dbGetCount = AtomicLong()
         val accumulateGetNanos = AtomicLong()
@@ -33,14 +35,13 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDb::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
-    private var storeInitialized = false
 
-    val customStore: DataStore<String, GWebPage>? = null
-    val store: DataStore<String, GWebPage> by lazy {
-        storeInitialized = true
-        customStore ?: AutoDetectStorageProvider(conf).createPageStore()
-    }
-    val storeOrNull: DataStore<String, GWebPage>? get() = if (storeInitialized) store else null
+    var customStore: DataStore<String, GWebPage>? = null
+
+    private val storeDelegate = lazy { customStore ?: AutoDetectStorageProvider(conf).createPageStore() }
+
+    val store: DataStore<String, GWebPage> by storeDelegate
+    val storeOrNull: DataStore<String, GWebPage>? get() = if (storeDelegate.isInitialized()) store else null
     val schemaName: String get() = storeOrNull?.schemaName?:""
 
     fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
@@ -112,7 +113,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * "HBase sometimes does not delete arbitrarily"
      */
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
-        if (!storeInitialized) {
+        if (!storeDelegate.isInitialized()) {
             return false
         }
 
@@ -144,7 +145,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        if (!storeInitialized) {
+        if (!storeDelegate.isInitialized()) {
             return false
         }
 
@@ -261,7 +262,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     }
 
     fun flush() {
-        if (!storeInitialized) {
+        if (!storeDelegate.isInitialized()) {
             return
         }
 
@@ -278,7 +279,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            if (storeInitialized) {
+            if (storeDelegate.isInitialized()) {
                 flush()
                 store.close()
             }
