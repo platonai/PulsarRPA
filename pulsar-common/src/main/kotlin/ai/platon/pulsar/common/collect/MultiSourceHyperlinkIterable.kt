@@ -58,7 +58,7 @@ class MultiSourceHyperlinkIterable(
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     fun estimatedOrder(priority: Int): Int {
-        val priorCount = collectors.filter { it.priority > priority }.sumBy { it.estimatedSize }
+        val priorCount = collectors.filter { it.priority < priority }.sumBy { it.estimatedSize }
         val competitorCollectors = collectors.filter { it.priority == priority }
         val competitorCount = competitorCollectors.sumBy { it.estimatedSize }
 
