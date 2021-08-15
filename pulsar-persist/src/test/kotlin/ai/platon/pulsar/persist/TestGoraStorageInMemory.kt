@@ -55,7 +55,7 @@ class TestGoraStorageInMemory {
     }
 
     private lateinit var webDb: WebDb
-    private val store: DataStore<String, GWebPage> get() = webDb.store
+    private val store: DataStore<String, GWebPage> get() = webDb.dataStore
     private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
     @Before

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.reverseUrlOrNull
-import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -36,13 +35,13 @@ class WebDb(
     private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
-    var customStore: DataStore<String, GWebPage>? = null
+    var specifiedDataStore: DataStore<String, GWebPage>? = null
 
-    private val storeDelegate = lazy { customStore ?: AutoDetectStorageProvider(conf).createPageStore() }
+    private val dataStoreDelegate = lazy { specifiedDataStore ?: AutoDetectStorageProvider(conf).createPageStore() }
 
-    val store: DataStore<String, GWebPage> by storeDelegate
-    val storeOrNull: DataStore<String, GWebPage>? get() = if (storeDelegate.isInitialized()) store else null
-    val schemaName: String get() = storeOrNull?.schemaName?:""
+    val dataStore: DataStore<String, GWebPage> by dataStoreDelegate
+    val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
+    val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
 
     fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
         return getOrNull(originalUrl, field.toString())
@@ -70,7 +69,7 @@ class WebDb(
         tracer?.trace("Getting $key")
 
         val startTime = System.nanoTime()
-        val page = fields?.let { store.get(key, it) } ?: store.get(key)
+        val page = fields?.let { dataStore.get(key, it) } ?: dataStore.get(key)
         dbGetCount.incrementAndGet()
         accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
 
@@ -113,7 +112,7 @@ class WebDb(
      * "HBase sometimes does not delete arbitrarily"
      */
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
-        if (!storeDelegate.isInitialized()) {
+        if (!dataStoreDelegate.isInitialized()) {
             return false
         }
 
@@ -128,13 +127,13 @@ class WebDb(
         }
 
         if (replaceIfExists) {
-            store.delete(key)
+            dataStore.delete(key)
         }
 
         tracer?.trace("Putting $key")
 
         val startTime = System.nanoTime()
-        store.put(key, page.unbox())
+        dataStore.put(key, page.unbox())
         dbPutCount.incrementAndGet()
         accumulatePutNanos.addAndGet(System.nanoTime() - startTime)
 
@@ -145,29 +144,29 @@ class WebDb(
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        if (!storeDelegate.isInitialized()) {
+        if (!dataStoreDelegate.isInitialized()) {
             return false
         }
 
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
 
         return if (key.isNotEmpty()) {
-            store.delete(key)
+            dataStore.delete(key)
             return true
         } else false
     }
 
     @JvmOverloads
     fun truncate(force: Boolean = false): Boolean {
-        val schemaName = store.schemaName
+        val schemaName = dataStore.schemaName
         if (force) {
-            store.truncateSchema()
+            dataStore.truncateSchema()
             log.info("Schema $schemaName is truncated")
             return true
         }
 
         return if (schemaName.startsWith("tmp_") || schemaName.endsWith("_tmp_webpage")) {
-            store.truncateSchema()
+            dataStore.truncateSchema()
             log.info("Schema $schemaName is truncated")
             true
         } else {
@@ -184,10 +183,10 @@ class WebDb(
      * @return The iterator to retrieve pages
      */
     fun scan(urlBase: String): Iterator<WebPage> {
-        val query = store.newQuery()
+        val query = dataStore.newQuery()
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
-        val result = store.execute(query)
+        val result = dataStore.execute(query)
         return DbIterator(result, conf)
     }
 
@@ -208,11 +207,11 @@ class WebDb(
      * @return The iterator to retrieve pages
      */
     fun scan(originalUrl: String, fields: Array<String>): Iterator<WebPage> {
-        val query = store.newQuery()
+        val query = dataStore.newQuery()
         query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
-        val result = store.execute(query)
+        val result = dataStore.execute(query)
         return DbIterator(result, conf)
     }
 
@@ -223,13 +222,13 @@ class WebDb(
      * @return The iterator to retrieve pages
      */
     fun scan(originalUrl: String, fields: Array<String>, filter: Filter<String, GWebPage>): Iterator<WebPage> {
-        val query = store.newQuery()
+        val query = dataStore.newQuery()
 
         query.filter = filter
         query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
-        val result = store.execute(query)
+        val result = dataStore.execute(query)
         return DbIterator(result, conf)
     }
 
@@ -240,7 +239,7 @@ class WebDb(
      * @return The iterator to retrieve pages
      */
     fun query(query: DbQuery): Iterator<WebPage> {
-        val goraQuery = store.newQuery()
+        val goraQuery = dataStore.newQuery()
 
         val startKey = query.startUrl?.let { reverseUrlOrNull(it) }
         var endKey = query.endUrl?.let { reverseUrlOrNull(it) }
@@ -256,18 +255,18 @@ class WebDb(
 
         val fields = prepareFields(query.fields)
         goraQuery.setFields(*fields)
-        val result = store.execute(goraQuery)
+        val result = dataStore.execute(goraQuery)
 
         return DbIterator(result, conf)
     }
 
     fun flush() {
-        if (!storeDelegate.isInitialized()) {
+        if (!dataStoreDelegate.isInitialized()) {
             return
         }
 
         try {
-            store.flush()
+            dataStore.flush()
         } catch (e: IllegalStateException) {
             log.warn(e.message)
         } catch (e: Throwable) {
@@ -279,9 +278,9 @@ class WebDb(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            if (storeDelegate.isInitialized()) {
+            if (dataStoreDelegate.isInitialized()) {
                 flush()
-                store.close()
+                dataStore.close()
             }
 //            GoraStorage.close()
         }

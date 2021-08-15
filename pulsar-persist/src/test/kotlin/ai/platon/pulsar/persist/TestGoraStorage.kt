@@ -9,7 +9,6 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
 import org.apache.gora.memory.store.MemStore
-import org.apache.gora.mongodb.store.MongoStore
 import org.apache.gora.persistency.impl.DirtyCollectionWrapper
 import org.apache.gora.persistency.impl.DirtyListWrapper
 import org.apache.gora.store.DataStore
@@ -31,7 +30,7 @@ class TestGoraStorage {
         private val LOG = LoggerFactory.getLogger(TestGoraStorage::class.java)
         private val conf = VolatileConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
-        private var store: DataStore<String, GWebPage> = webDb.store
+        private var store: DataStore<String, GWebPage> = webDb.dataStore
         private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
         @BeforeClass
