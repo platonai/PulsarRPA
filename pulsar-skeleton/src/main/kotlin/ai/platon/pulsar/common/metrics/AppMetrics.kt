@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import com.codahale.metrics.*
 import com.codahale.metrics.graphite.GraphiteReporter
@@ -114,7 +113,7 @@ class AppMetrics(
     val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
     val graphiteReportInterval = conf.getDuration("metrics.graphite.report.interval", Duration.ofMinutes(2))
     val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
-    val hostname = conf.get("graphite.server", "crawl2")
+    val graphiteServer = conf.get("graphite.server", "crawl2")
     val batchSize = conf.getInt("graphite.pickled.batch.size", 100)
 
     private val metricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
@@ -138,7 +137,7 @@ class AppMetrics(
     private val counterReporter = EnumCounterReporter(metricRegistry.enumCounterRegistry, conf = conf).apply {
         outputTo(LoggerFactory.getLogger(EnumCounterReporter::class.java))
     }
-    private val pickledGraphite get() = hostname.takeIf { NetUtil.testNetwork(hostname, 2004) }
+    private val pickledGraphite get() = graphiteServer.takeIf { NetUtil.testNetwork(it, 2004) }
         ?.let { PickledGraphite(InetSocketAddress(it, 2004), batchSize) }
     private var graphiteReporter: GraphiteReporter? = pickledGraphite?.let { pickled ->
         GraphiteReporter.forRegistry(metricRegistry)
@@ -175,7 +174,7 @@ class AppMetrics(
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
             counterReporter.start(initialDelay, counterReportInterval)
 
-            if (NetUtil.testNetwork(hostname, 2004)) {
+            if (NetUtil.testNetwork(graphiteServer, 2004)) {
                 graphiteReporter?.start(initialDelay.seconds, graphiteReportInterval.seconds, TimeUnit.SECONDS)
                 logger.info("GraphiteReporter is started, report interval: {}", graphiteReportInterval)
             }

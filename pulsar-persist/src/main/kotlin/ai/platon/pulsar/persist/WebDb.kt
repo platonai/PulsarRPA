@@ -33,12 +33,15 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDb::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
+    private var storeInitialized = false
 
     val customStore: DataStore<String, GWebPage>? = null
     val store: DataStore<String, GWebPage> by lazy {
+        storeInitialized = true
         customStore ?: AutoDetectStorageProvider(conf).createPageStore()
     }
-    val schemaName: String get() = store.schemaName
+    val storeOrNull: DataStore<String, GWebPage>? get() = if (storeInitialized) store else null
+    val schemaName: String get() = storeOrNull?.schemaName?:""
 
     fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
         return getOrNull(originalUrl, field.toString())
@@ -109,6 +112,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * "HBase sometimes does not delete arbitrarily"
      */
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
+        if (!storeInitialized) {
+            return false
+        }
+
         // Never update NIL page
         if (page.isNil) {
             return false
@@ -137,6 +144,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
+        if (!storeInitialized) {
+            return false
+        }
+
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
 
         return if (key.isNotEmpty()) {
@@ -250,6 +261,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     }
 
     fun flush() {
+        if (!storeInitialized) {
+            return
+        }
+
         try {
             store.flush()
         } catch (e: IllegalStateException) {
@@ -263,8 +278,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            flush()
-            store.close()
+            if (storeInitialized) {
+                flush()
+                store.close()
+            }
 //            GoraStorage.close()
         }
     }

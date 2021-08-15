@@ -369,7 +369,12 @@ class CoreMetrics(
             return
         }
 
+        if (tasks.count == 0L) {
+            return
+        }
+
         val i = finishedTasks.count
+        // successTasksPerSecond is about to be 1.0
         val a = successTasksPerSecond * 60
         val period = 10 + when {
             i < 100 -> a / 3
@@ -377,7 +382,7 @@ class CoreMetrics(
             else -> a * 2 + 60 * (i % 3 - 1) // generate: 60, 120, 180, 60, 120, 180, ...
         }.toInt()
 
-        if (tasks.count > 0L && i % period == 0L) {
+        if (i % period == 0L) {
             log.info(formatStatus())
         }
     }

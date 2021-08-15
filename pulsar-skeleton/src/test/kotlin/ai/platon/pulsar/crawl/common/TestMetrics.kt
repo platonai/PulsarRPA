@@ -39,7 +39,7 @@ class TestMetrics {
 
     @Test
     fun testProperties() {
-        if (!NetUtil.testHttpNetwork(metrics.hostname, 2004)) {
+        if (!NetUtil.testHttpNetwork(metrics.graphiteServer, 2004)) {
             logger.warn("Graphite server is not available")
             return
         }
@@ -47,13 +47,13 @@ class TestMetrics {
         assertEquals(10, metrics.batchSize)
         assertEquals(Duration.ZERO, metrics.initialDelay)
         assertEquals(Duration.ofSeconds(10), metrics.graphiteReportInterval)
-        assertEquals("crawl2", metrics.hostname)
-        assertTrue { NetUtil.testHttpNetwork(metrics.hostname, 2004) }
+        assertEquals("crawl2", metrics.graphiteServer)
+        assertTrue { NetUtil.testHttpNetwork(metrics.graphiteServer, 2004) }
     }
 
     @Test
     fun testGraphiteReporter() {
-        if (!NetUtil.testHttpNetwork(metrics.hostname, 2004)) {
+        if (!NetUtil.testHttpNetwork(metrics.graphiteServer, 2004)) {
             logger.warn("Graphite server is not available")
             return
         }

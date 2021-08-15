@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
-import ai.platon.pulsar.dom.nodes.Anchor
+import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -204,7 +204,7 @@ object Queries {
     /**
      * Get result set for each field in Web page
      */
-    fun toResultSet(anchors: Collection<Anchor>): ResultSet {
+    fun toResultSet(anchors: Collection<GeoAnchor>): ResultSet {
         val rs = SimpleResultSet()
         rs.addColumns("URL", "TEXT", "PATH", "LEFT", "TOP", "WIDTH", "HEIGHT")
 

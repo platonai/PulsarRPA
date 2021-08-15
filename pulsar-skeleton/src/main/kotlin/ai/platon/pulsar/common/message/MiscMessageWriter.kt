@@ -1,14 +1,14 @@
 package ai.platon.pulsar.common.message
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.MultiSinkMessageWriter
+import ai.platon.pulsar.common.MultiSinkWriter
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.urls.LabeledHyperlink
+import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.PageCounters.Self
@@ -17,7 +17,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.DomStatistics
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -34,20 +33,23 @@ class MiscMessageWriter(
      * */
     val webDb: WebDb,
     conf: ImmutableConfig
-) : MultiSinkMessageWriter(conf) {
+) : MultiSinkWriter(conf) {
     private val log = LoggerFactory.getLogger(MiscMessageWriter::class.java)
     private val hostname = NetUtil.getHostname()
+
     // TODO: job name is set in job setup phrase, so it's not available unless this is a [JobInitialized] class
     private val weakIndexer = WeakPageIndexer(AppConstants.CRAWL_LOG_HOME_URL, webDb)
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
-    private val urlPrefix = AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimes.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
+    private val urlPrefix =
+        AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimes.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
     private var reportCount = 0
+
     // We need predictable iteration order, LinkedHashSet is all right
     private val metricsPageUrls: MutableSet<CharSequence> = LinkedHashSet()
     private val metricsPages: MutableMap<String, WebPage> = HashMap()
     private val closed = AtomicBoolean()
 
-    constructor(conf: ImmutableConfig): this(WebDb(conf), conf)
+    constructor(conf: ImmutableConfig) : this(WebDb(conf), conf)
 
     fun report(page: WebPage) {
         var category = page.pageCategory.name.toLowerCase()
@@ -79,7 +81,8 @@ class MiscMessageWriter(
         if (metricsPage == null) {
             metricsPage = WebPage.newInternalPage(url, "Pulsar Metrics Page")
             metricsPage.setContent("")
-            metricsPage.metadata["JobName"] = conf[CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimes.now("MMdd.HHmm")]
+            metricsPage.metadata["JobName"] =
+                conf[CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimes.now("MMdd.HHmm")]
         }
         return metricsPage
     }
@@ -138,9 +141,9 @@ class MiscMessageWriter(
             sb.append('\n')
             // NOTE: it seems they are all the same
             val location = urls.location
-            if (location != page.url)         sb.append("location:    ").appendln(location)
-            if (urls.URL != location)         sb.append("URL:         ").appendln(urls.URL)
-            if (urls.baseURI != location)     sb.append("baseURI:     ").appendln(urls.baseURI)
+            if (location != page.url) sb.append("location:    ").appendln(location)
+            if (urls.URL != location) sb.append("URL:         ").appendln(urls.URL)
+            if (urls.baseURI != location) sb.append("baseURI:     ").appendln(urls.baseURI)
             if (urls.documentURI != location) sb.append("documentURI: ").appendln(urls.documentURI)
         }
 
@@ -152,16 +155,18 @@ class MiscMessageWriter(
     fun reportGeneratedHosts(hostNames: Set<String>) {
         val report = StringBuilder("# Total " + hostNames.size + " hosts generated : \n")
         hostNames.asSequence()
-                .map { Urls.reverseHost(it) }.sorted().map { Urls.unreverseHost(it) }
-                .joinTo(report, "\n") { String.format("%40s", it) }
+            .map { Urls.reverseHost(it) }.sorted().map { Urls.unreverseHost(it) }
+            .joinTo(report, "\n") { String.format("%40s", it) }
         write(report.toString(), "generate-hosts.txt")
     }
 
     fun reportDOMStatistics(page: WebPage, stat: DomStatistics) {
-        val report = String.format("%s | a:%-4d i:%-4d mi:%-4d ai:%-4d ia:%-4d | %s",
-                page.pageCategory.symbol(),
-                stat.anchor, stat.img, stat.mediumImg, stat.anchorImg, stat.imgAnchor,
-                page.url)
+        val report = String.format(
+            "%s | a:%-4d i:%-4d mi:%-4d ai:%-4d ia:%-4d | %s",
+            page.pageCategory.symbol(),
+            stat.anchor, stat.img, stat.mediumImg, stat.anchorImg, stat.imgAnchor,
+            page.url
+        )
 
         write(report, "document-statistics.txt")
     }
@@ -170,7 +175,7 @@ class MiscMessageWriter(
         if (hyperLinks.isEmpty()) return
         val groupedHyperlinks = hyperLinks.groupBy { it.label }
         groupedHyperlinks.keys.forEach { label ->
-            val links = groupedHyperlinks[label]?:return@forEach
+            val links = groupedHyperlinks[label] ?: return@forEach
 
             val report = links.joinToString("\n") {
                 String.format("%4d %4d | %-50s | %s", it.depth, it.order, it.text, it.url)
@@ -196,13 +201,15 @@ class MiscMessageWriter(
     }
 
     fun debugIllegalLastFetchTime(page: WebPage) {
-        val report = String.format("ft: {} lft: {}, fc: {} fh: {} status: {} mk: {}",
-                page.fetchTime,
-                page.prevFetchTime,
-                page.fetchCount,
-                page.getFetchTimeHistory(""),
-                page.protocolStatus,
-                page.marks)
+        val report = String.format(
+            "ft: {} lft: {}, fc: {} fh: {} status: {} mk: {}",
+            page.fetchTime,
+            page.prevFetchTime,
+            page.fetchCount,
+            page.getFetchTimeHistory(""),
+            page.protocolStatus,
+            page.marks
+        )
 
         write(report, "illegal-last-fetch-time.txt")
     }
@@ -218,9 +225,9 @@ class MiscMessageWriter(
 
         report.append('\n')
         // NOTE: it seems they are all the same
-        if (location != url)              report.append("location:    ").appendln(location)
-        if (urls.URL != location)         report.append("URL:         ").appendln(urls.URL)
-        if (urls.baseURI != location)     report.append("baseURI:     ").appendln(urls.baseURI)
+        if (location != url) report.append("location:    ").appendln(location)
+        if (urls.URL != location) report.append("URL:         ").appendln(urls.URL)
+        if (urls.baseURI != location) report.append("baseURI:     ").appendln(urls.baseURI)
         if (urls.documentURI != location) report.append("documentURI: ").appendln(urls.documentURI)
 
         write(report.toString(), "browser-redirects.txt")
@@ -240,10 +247,10 @@ class MiscMessageWriter(
         val parseStatus = page.parseStatus
 
         val params = Params.of(
-                "parseStatus", parseStatus.toString(),
-                "parseErr", pageCounters.get(Self.parseErr),
-                "extractErr", pageCounters.get(Self.extractErr),
-                "U", page.url
+            "parseStatus", parseStatus.toString(),
+            "parseErr", pageCounters.get(Self.parseErr),
+            "extractErr", pageCounters.get(Self.extractErr),
+            "U", page.url
         ).withKVDelimiter(":")
 
         var report = params.formatAsLine()

@@ -27,10 +27,19 @@ open class QueueCollector(
     override fun collectTo(sink: MutableList<UrlAware>): Int {
         beforeCollect()
 
-        val count = queue.poll()
-            ?.let { it.also { if (loadArgs != null) it.args += " $loadArgs" } }
-            ?.takeIf { sink.add(it) }
-            ?.let { 1 } ?: 0
+        var count = 0
+        val url = queue.poll()
+        if (url != null) {
+            if (loadArgs != null) {
+                url.args += " $loadArgs"
+            }
+            if (url.label.isNotBlank()) {
+                labels.add(url.label)
+            }
+
+            sink.add(url)
+            ++count
+        }
 
         return afterCollect(count)
     }

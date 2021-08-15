@@ -66,15 +66,16 @@ val TEMPORARY_ATTRIBUTES = setOf(
 val BOX_CSS_PATTERN_1 = Pattern.compile(".{1,5}:in-box\\(\\d+(,\\d+\\){1,4})")
 val BOX_CSS_PATTERN = Pattern.compile("$BOX_CSS_PATTERN_1(,$BOX_CSS_PATTERN_1)?")
 
-data class Anchor(
+data class GeoAnchor(
         val url: String,
         val text: String,
-        val path: String,
-        val left: Int,
-        val top: Int,
-        val width: Int,
-        val height: Int
-): Comparable<Anchor> {
+        val path: String = "",
+        val left: Int = 0,
+        val top: Int = 0,
+        val width: Int = 0,
+        val height: Int = 0,
+): Comparable<GeoAnchor> {
+
     constructor(url: String, text: String, path: String, rect: Rectangle):
             this(url, text, path, rect.x, rect.y, rect.width, rect.height)
 
@@ -88,10 +89,10 @@ data class Anchor(
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is Anchor && url == other.url
+        return other is GeoAnchor && url == other.url
     }
 
-    override fun compareTo(other: Anchor): Int {
+    override fun compareTo(other: GeoAnchor): Int {
         return url.compareTo(other.url)
     }
 

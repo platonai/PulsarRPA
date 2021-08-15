@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.common.urls.Urls
-import ai.platon.pulsar.dom.nodes.Anchor
+import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.dom.nodes.TraverseState
 import ai.platon.pulsar.dom.nodes.node.ext.cleanText
 import ai.platon.pulsar.dom.nodes.node.ext.rectangle
@@ -250,11 +250,11 @@ fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     return q
 }
 
-fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<Anchor> {
+fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<GeoAnchor> {
     val cssQuery = appendSelectorIfMissing(restrictCss, "a")
     return select(cssQuery, offset, limit).mapNotNull {
         it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
-                ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
+                ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
     }
 }
 
