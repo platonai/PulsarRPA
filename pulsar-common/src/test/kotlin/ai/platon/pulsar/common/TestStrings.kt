@@ -44,4 +44,5 @@ class TestStrings {
         assertEquals(50, s2.length)
         assertTrue(s2) { s2.endsWith("a...") }
     }
+
 }

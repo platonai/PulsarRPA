@@ -72,6 +72,7 @@
         <module>pulsar-common</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>
+        <module>pulsar-resources</module>
         <module>pulsar-dom</module>
         <module>pulsar-plugins</module>
 
@@ -386,6 +387,11 @@
                 <artifactId>pulsar-skeleton</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -462,6 +468,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-qa</artifactId>

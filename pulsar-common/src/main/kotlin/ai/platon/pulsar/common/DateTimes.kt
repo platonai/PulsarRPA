@@ -172,6 +172,10 @@ object DateTimes {
         return instant.atZone(zoneId).toLocalDateTime()
     }
 
+    fun toOffsetDateTime(instant: Instant): OffsetDateTime {
+        return instant.atZone(zoneId).toOffsetDateTime()
+    }
+
     fun startOfHour(): Instant {
         return Instant.now().truncatedTo(ChronoUnit.HOURS)
     }

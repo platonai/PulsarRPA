@@ -112,10 +112,6 @@ class WebDb(
      * "HBase sometimes does not delete arbitrarily"
      */
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
-        if (!dataStoreDelegate.isInitialized()) {
-            return false
-        }
-
         // Never update NIL page
         if (page.isNil) {
             return false
@@ -144,10 +140,6 @@ class WebDb(
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        if (!dataStoreDelegate.isInitialized()) {
-            return false
-        }
-
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
 
         return if (key.isNotEmpty()) {
