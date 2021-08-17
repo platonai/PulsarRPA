@@ -151,6 +151,9 @@ class CoreMetrics(
     val networkIFsRecvBytesPerPage
         get() = networkIFsRecvBytes / successTasks.count.coerceAtLeast(1)
 
+    val finishedTasksPerSecond
+        get() = finishedTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
+
     val successTasksPerSecond
         get() = successTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
 
@@ -216,6 +219,11 @@ class CoreMetrics(
 
         successTasks.mark()
         finishedTasks.mark()
+
+        // update system info for about every 30 seconds
+        if (finishedTasks.count % 30 == 0L) {
+            updateSystemInfo()
+        }
 
         val bytes = page.contentLength
         histogramContentBytes.update(bytes)
