@@ -20,6 +20,7 @@ interface FetchCache {
         get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     val size get() = queues.sumOf { it.size }
     val externalSize: Int get() = 0
+    val estimatedExternalSize get() = 0
     val estimatedSize get() = size
 
     fun removeDeceased()
@@ -77,8 +78,9 @@ class LoadingFetchCache(
     override val size get() = queues.sumOf { it.size }
     override val externalSize: Int
         get() = queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.externalSize }
-    override val estimatedSize: Int
-        get() = size + queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.estimatedExternalSize }
+    override val estimatedExternalSize: Int
+        get() = queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.estimatedExternalSize }
+    override val estimatedSize: Int get() = size + estimatedExternalSize
 
     override fun load() {
         queues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load() }

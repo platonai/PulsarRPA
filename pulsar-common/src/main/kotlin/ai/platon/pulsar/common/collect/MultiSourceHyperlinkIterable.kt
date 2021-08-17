@@ -57,10 +57,16 @@ class MultiSourceHyperlinkIterable(
 
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
+    /**
+     * Estimate the order to fetch for the next task to add with priority [priority]
+     * */
     fun estimatedOrder(priority: Int): Int {
-        val priorCount = collectors.filter { it.priority < priority }.sumBy { it.estimatedSize }
+        val priorCount = collectors.asSequence()
+            .filter { it.priority < priority }
+            .filterNot { it is DelayCacheCollector }
+            .sumBy { it.size }
         val competitorCollectors = collectors.filter { it.priority == priority }
-        val competitorCount = competitorCollectors.sumBy { it.estimatedSize }
+        val competitorCount = competitorCollectors.sumBy { it.size }
 
         return priorCount + competitorCount / competitorCollectors.size
     }
