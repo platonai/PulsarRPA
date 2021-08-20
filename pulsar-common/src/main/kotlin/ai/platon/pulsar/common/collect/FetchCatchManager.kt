@@ -20,6 +20,7 @@ open class DelayUrl(
     val url: UrlAware,
     val delay: Duration,
 ) : Delayed {
+    // The time to start the task
     val startTime = System.currentTimeMillis() + delay.toMillis()
 
     override fun compareTo(other: Delayed): Int {

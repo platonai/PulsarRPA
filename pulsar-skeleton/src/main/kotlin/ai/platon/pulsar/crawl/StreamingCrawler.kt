@@ -67,7 +67,7 @@ open class StreamingCrawler<T : UrlAware>(
     /**
      * The url sequence
      * */
-    val urls: Sequence<T>,
+    var urls: Sequence<T>,
     /**
      * The default load options
      * */
@@ -84,7 +84,14 @@ open class StreamingCrawler<T : UrlAware>(
      * The crawl event handler
      * */
     val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
-    autoClose: Boolean = true
+    /**
+     * The crawl name
+     * */
+    val name: String = "StreamingCrawler",
+    /**
+     * Auto close or not
+     * */
+    autoClose: Boolean = true,
 ) : AbstractCrawler(session, autoClose) {
     companion object {
         private val instanceSequencer = AtomicInteger()
@@ -132,14 +139,15 @@ open class StreamingCrawler<T : UrlAware>(
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
     private val conf = session.sessionConfig
-    private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
-    private val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
-    private val idleTimeout = Duration.ofMinutes(20)
+
+    val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
+    val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
-    private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    private val isIdle get() = idleTime > idleTimeout
-    private val defaultArgs = defaultOptions.toString()
+    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+    val isIdle get() = idleTime > idleTimeout
+    val defaultArgs = defaultOptions.toString()
 
     private var proxyOutOfService = 0
     private var quit = false
@@ -191,18 +199,18 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        logger.info("Starting streaming crawler ... | {}", defaultOptions)
+        logger.info("Starting streaming crawler #{}-{} ... {}", name, id, defaultOptions)
 
         globalRunningInstances.incrementAndGet()
 
         val startTime = Instant.now()
 
+        var idleSeconds = 0
         while (isActive) {
-            if (!urls.iterator().hasNext()) {
-                sleepSeconds(1)
-            }
+            checkEmptyUrlSequence(++idleSeconds)
 
             urls.forEachIndexed { j, url ->
+                idleSeconds = 0
                 globalTasks.incrementAndGet()
 
                 if (!isActive) {
@@ -253,6 +261,22 @@ open class StreamingCrawler<T : UrlAware>(
             globalMetrics.tasks.counter.count, session,
             DateTimes.elapsedTime(startTime).readable()
         )
+    }
+
+    private fun checkEmptyUrlSequence(idleSeconds: Int) {
+        val reportPeriod = when {
+            idleSeconds < 1000 -> 120
+            idleSeconds < 10000 -> 300
+            else -> 6000
+        }
+
+        if (!urls.iterator().hasNext()) {
+            if (idleSeconds % reportPeriod == 0) {
+                logger.info("The url sequence is empty")
+            }
+
+            sleepSeconds(1)
+        }
     }
 
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {

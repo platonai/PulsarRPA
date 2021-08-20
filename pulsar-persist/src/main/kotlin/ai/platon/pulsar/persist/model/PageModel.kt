@@ -53,6 +53,10 @@ class PageModel(
         return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
     }
 
+    fun deepCopy(): PageModel {
+        return PageModel(fieldGroups.mapTo(mutableListOf()) { GFieldGroup.newBuilder(it).build() })
+    }
+
     companion object {
         @JvmStatic
         fun box(fieldGroups: MutableList<GFieldGroup>): PageModel {

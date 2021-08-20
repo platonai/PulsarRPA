@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollectorsFormatter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
-import java.util.*
 
 class MultiSourceHyperlinkIterable(
     val fetchCaches: FetchCacheManager,
@@ -65,10 +64,20 @@ class MultiSourceHyperlinkIterable(
             .filter { it.priority < priority }
             .filterNot { it is DelayCacheCollector }
             .sumBy { it.size }
+
+        val now = System.currentTimeMillis()
+        // the fetch speed, pages per second
+        val speed = 1.0
+        var delayQueueCount = delayCollector.queue.count { it.startTime - now < speed * priorCount }
+        // if a task in delayed queue is ready to run in 15 seconds, count it
+        if (delayQueueCount == 0) {
+            delayQueueCount = delayCollector.queue.count { it.startTime - now < 15_000 }
+        }
+
         val competitorCollectors = collectors.filter { it.priority == priority }
         val competitorCount = competitorCollectors.sumBy { it.size }
 
-        return priorCount + competitorCount / competitorCollectors.size
+        return priorCount + delayQueueCount + competitorCount / competitorCollectors.size
     }
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
