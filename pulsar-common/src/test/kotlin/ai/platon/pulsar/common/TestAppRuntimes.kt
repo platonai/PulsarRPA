@@ -20,12 +20,15 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.Runtimes.checkIfProcessRunning
 import ai.platon.pulsar.common.Runtimes.deleteBrokenSymbolicLinks
+import ai.platon.pulsar.common.Runtimes.locateBinary
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import org.junit.Test
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class TestAppRuntimes {
@@ -35,9 +38,15 @@ class TestAppRuntimes {
     }
 
     @Test
-    fun testJavaProcess() {
-        val running = checkIfProcessRunning("HMaster")
-        println(running)
+    fun testCheckIfProcessRunning() {
+        val running = checkIfProcessRunning("java")
+        assertTrue { running }
+    }
+
+    @Test
+    fun testLocateBinary() {
+        val locations = locateBinary("dir")
+        assertTrue { locations.isNotEmpty() }
     }
 
     @Test

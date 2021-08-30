@@ -3,7 +3,9 @@ package ai.platon.pulsar.common
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -21,15 +23,18 @@ object Runtimes {
         return listOf()
     }
 
-    fun locateBinary(executable: String): String? {
+    fun locateBinary(executable: String): List<String> {
         val command = when {
             SystemUtils.IS_OS_WINDOWS -> "where $executable"
             SystemUtils.IS_OS_LINUX -> "whereis $executable"
-            else -> return null
+            else -> return listOf()
         }
+
         return exec(command)
             .filter { it.contains(File.pathSeparatorChar) }
-            .find { it.contains(executable) }
+            .filter { it.contains(executable) }
+            .flatMap { it.split(" ") }
+            .filter { Files.exists(Paths.get(it)) }
     }
 
     fun countSystemProcess(pattern: String): Int {
