@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.getLogger
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -17,7 +18,6 @@ import java.io.InputStreamReader
 import java.nio.channels.FileChannel
 import java.nio.file.*
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -276,14 +276,21 @@ class ChromeLauncher(
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
-        val program = config.supervisorProcess?:"$chromeBinary"
-        val arguments = if (config.supervisorProcess == null) chromeOptions.toList() else {
+        var supervisorProcess = config.supervisorProcess
+        if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess) != null) {
+            log.warn("Supervisor program {} can not be located", config.supervisorProcess)
+        } else {
+            supervisorProcess = null
+        }
+
+        val executable = supervisorProcess?:"$chromeBinary"
+        val arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             config.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
-            process = processLauncher.launch(program, arguments)
+            process = processLauncher.launch(executable, arguments)
             process?.also {
                 Files.createDirectories(userDataDir)
                 val pidPath = userDataDir.resolveSibling("chromeLauncher.pid")

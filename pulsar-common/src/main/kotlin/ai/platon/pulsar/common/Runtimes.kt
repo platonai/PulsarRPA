@@ -2,6 +2,7 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -18,6 +19,17 @@ object Runtimes {
         }
 
         return listOf()
+    }
+
+    fun locateBinary(executable: String): String? {
+        val command = when {
+            SystemUtils.IS_OS_WINDOWS -> "where $executable"
+            SystemUtils.IS_OS_LINUX -> "whereis $executable"
+            else -> return null
+        }
+        return exec(command)
+            .filter { it.contains(File.pathSeparatorChar) }
+            .find { it.contains(executable) }
     }
 
     fun countSystemProcess(pattern: String): Int {
