@@ -277,7 +277,7 @@ class ChromeLauncher(
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
         var supervisorProcess = config.supervisorProcess
-        if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess) == null) {
+        if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
             log.warn("Supervisor program {} can not be located", config.supervisorProcess)
             supervisorProcess = null
         }
