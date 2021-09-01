@@ -3,7 +3,9 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.sleep
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.FatLink
 import java.time.Duration
@@ -55,7 +57,9 @@ open class MultiSourceDataCollector<E>(
      * */
     override fun collectTo(sink: MutableList<E>): Int {
         roundCounter.incrementAndGet()
-        return collectTo0(sink)
+        return kotlin.runCatching { collectTo0(sink) }
+            .onFailure { getLogger(this).warn(it.stringify()) }
+            .getOrDefault(0)
     }
 
     private fun collectTo0(sink: MutableList<E>): Int {

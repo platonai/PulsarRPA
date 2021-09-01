@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.collect.collector.DataCollector
+import ai.platon.pulsar.common.getLogger
 import java.util.*
 import kotlin.NoSuchElementException
 
@@ -60,19 +61,25 @@ open class ConcurrentLoadingIterable<E>(
 
         @Synchronized
         override fun hasNext(): Boolean {
-            if (realTimeCollector != null && realTimeCollector.hasMore()) {
-                realTimeCollector.collectTo(0, cache)
+            try {
+                if (realTimeCollector != null && realTimeCollector.hasMore()) {
+                    realTimeCollector.collectTo(0, cache)
+                }
+
+                if (delayCollector != null && delayCollector.hasMore()) {
+                    delayCollector.collectTo(0, cache)
+                }
+
+                while (cache.isEmpty() && regularCollector.hasMore()) {
+                    tryLoad()
+                }
+
+                return cache.isNotEmpty()
+            } catch (e: Throwable) {
+                getLogger(this).warn("Unexpected exception", e)
             }
 
-            if (delayCollector != null && delayCollector.hasMore()) {
-                delayCollector.collectTo(0, cache)
-            }
-
-            while (cache.isEmpty() && regularCollector.hasMore()) {
-                tryLoad()
-            }
-
-            return cache.isNotEmpty()
+            return false
         }
 
         @Synchronized
