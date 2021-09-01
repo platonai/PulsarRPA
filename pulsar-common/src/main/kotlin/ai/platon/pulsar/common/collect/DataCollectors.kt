@@ -3,7 +3,9 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.sleep
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.CrawlableFatLink
 import ai.platon.pulsar.common.urls.FatLink
 import java.time.Duration
@@ -26,6 +28,8 @@ open class MultiSourceDataCollector<E>(
         priority: Priority13 = Priority13.NORMAL,
 ): AbstractPriorityDataCollector<E>(priority) {
 
+    private val logger = getLogger(this)
+
     override var name: String = "MultiSourceDC"
 
     val collectors: Queue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
@@ -44,7 +48,11 @@ open class MultiSourceDataCollector<E>(
         initCollectors.toCollection(collectors)
     }
 
-    override fun hasMore() = collectors.any { it.hasMore() }
+    override fun hasMore() = collectors.any {
+        kotlin.runCatching { it.hasMore() }
+            .onFailure { logger.warn(it.stringify()) }
+            .getOrDefault(false)
+    }
 
     /**
      * Collect items from delegated collectors to the sink.
@@ -55,7 +63,9 @@ open class MultiSourceDataCollector<E>(
      * */
     override fun collectTo(sink: MutableList<E>): Int {
         roundCounter.incrementAndGet()
-        return collectTo0(sink)
+        return kotlin.runCatching { collectTo0(sink) }
+            .onFailure { logger.warn(it.stringify()) }
+            .getOrDefault(0)
     }
 
     private fun collectTo0(sink: MutableList<E>): Int {

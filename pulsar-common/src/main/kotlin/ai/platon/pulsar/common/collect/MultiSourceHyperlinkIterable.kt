@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollectorsFormatter
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 
 class MultiSourceHyperlinkIterable(
@@ -60,6 +61,12 @@ class MultiSourceHyperlinkIterable(
      * Estimate the order to fetch for the next task to add with priority [priority]
      * */
     fun estimatedOrder(priority: Int): Int {
+        return kotlin.runCatching { doEstimatedOrder(priority) }
+            .onFailure { logger.warn(it.stringify()) }
+            .getOrDefault(-2)
+    }
+
+    private fun doEstimatedOrder(priority: Int): Int {
         val priorCount = collectors.asSequence()
             .filter { it.priority < priority }
             .filterNot { it is DelayCacheCollector }
