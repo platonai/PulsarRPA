@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.6.5-SNAPSHOT</version>
+        <version>1.6.5.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-ql-common</artifactId>
