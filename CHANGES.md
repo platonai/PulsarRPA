@@ -6,7 +6,11 @@ Plan:
     2. improve DataCollector
     3. configurable GlobalCache creation
 
-Imps: 
+Features:
 
-    1. add DataCollector.deepClear
-    2. change AbstractDataCollector.labels to be a ConcurrentSkipListSet
+    1. Configurable GlobalCache
+
+Imps:
+
+    1. Add DataCollector.deepClear
+    2. Change AbstractDataCollector.labels to be a ConcurrentSkipListSet
