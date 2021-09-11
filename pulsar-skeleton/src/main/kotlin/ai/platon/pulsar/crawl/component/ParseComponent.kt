@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -41,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ParseComponent(
         val crawlFilters: CrawlFilters,
         val pageParser: PageParser,
-        val globalCache: GlobalCache,
+        val globalCacheFactory: GlobalCacheFactory,
         val conf: ImmutableConfig
 ) {
     companion object {
@@ -52,7 +53,7 @@ class ParseComponent(
     private val logger = LoggerFactory.getLogger(ParseComponent::class.java)
     private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
-    constructor(globalCache: GlobalCache, conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), globalCache, conf)
+    constructor(globalCacheFactory: GlobalCacheFactory, conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), globalCacheFactory, conf)
 
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = true): ParseResult {
         return parse(page, "", reparseLinks, noLinkFilter)
@@ -89,7 +90,7 @@ class ParseComponent(
 
         val document = result.document
         if (document != null) {
-            globalCache.documentCache.putDatum(page.url, document)
+            globalCacheFactory.globalCache.documentCache.putDatum(page.url, document)
         }
 
         numParsed.incrementAndGet()

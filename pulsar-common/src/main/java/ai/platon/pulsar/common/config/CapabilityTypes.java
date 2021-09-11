@@ -213,6 +213,7 @@ public interface CapabilityTypes {
      */
     String QE_HANDLE_PERIODICAL_FETCH_TASKS = "query.engine.handle.periodical.fetch.tasks";
 
+    String GLOBAL_CACHE_CLASS = "global.cache.class";
     /**
      * Load parameters
      */

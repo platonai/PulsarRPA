@@ -16,7 +16,7 @@ import java.util.logging.Level
 /**
  * TODO: remove selenium dependency
  * */
-class ManagedWebDriver(
+class WebDriverAdapter(
     browserInstanceId: BrowserInstanceId,
     val driver: org.openqa.selenium.WebDriver,
     val priority: Int = 1000,
@@ -25,7 +25,7 @@ class ManagedWebDriver(
         val instanceSequencer = AtomicInteger()
     }
 
-    private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
+    private val log = LoggerFactory.getLogger(WebDriverAdapter::class.java)
 
     /**
      * The driver name

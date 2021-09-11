@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
+class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     private val dcLogger = getLogger(DataCollector::class)
     private val fetchCaches get() = fetchIterable.fetchCaches
 
@@ -72,25 +72,25 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
         return collector
     }
 
-    fun remove(name: String) {
-        removeAll(listOf(name))
+    fun remove(name: String): DataCollector<UrlAware>? {
+        return removeAll(listOf(name)).firstOrNull()
     }
 
-    fun removeAll(names: Iterable<String>) {
+    fun removeAll(names: Iterable<String>): Collection<DataCollector<UrlAware>> {
         val collectors = fetchIterable.getCollectors(names)
-        removeAll(collectors)
+        return removeAll(collectors)
     }
 
-    fun removeAll(regex: Regex) {
+    fun removeAll(regex: Regex): Collection<DataCollector<UrlAware>> {
         val collectors = fetchIterable.getCollectors(regex)
-        removeAll(collectors)
+        return removeAll(collectors)
     }
 
-    fun removeAllLike(name: String) {
+    fun removeAllLike(name: String): Collection<DataCollector<UrlAware>> {
         return removeAll(".*$name.*".toRegex())
     }
 
-    fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>) {
+    fun removeAll(collectors: Collection<DataCollector<UrlAware>>): Collection<DataCollector<UrlAware>> {
         fetchIterable.removeAll(collectors)
         collectors.filterIsInstance<FetchCacheCollector>().map { it.fetchCache }
             .let { fetchCaches.unorderedCaches.removeAll(it) }
@@ -100,6 +100,7 @@ class CollectorManager(val fetchIterable: MultiSourceHyperlinkIterable) {
             collectors.forEachIndexed { i, c -> dcLogger.info("${i + 1}.\t$c") }
             dcLogger.info("")
         }
+        return collectors
     }
 
     fun report(collector: DataCollector<out UrlAware>, message: String = "") {

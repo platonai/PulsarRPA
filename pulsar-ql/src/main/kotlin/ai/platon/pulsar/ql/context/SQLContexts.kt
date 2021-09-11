@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
-import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.persist.WebDb
@@ -23,7 +23,6 @@ import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
 import java.sql.Connection
-import kotlin.system.exitProcess
 
 open class H2SQLContext(
     applicationContext: AbstractApplicationContext
@@ -68,7 +67,7 @@ class StaticH2SQLContext(
     /**
      * The global cache
      * */
-    override val globalCache = getBeanOrNull() ?: GlobalCache(unmodifiedConfig)
+    override val globalCacheFactory = getBeanOrNull() ?: GlobalCacheFactory(unmodifiedConfig)
     /**
      * The inject component
      * */
@@ -80,7 +79,7 @@ class StaticH2SQLContext(
     /**
      * The parse component
      * */
-    override val parseComponent: ParseComponent = getBeanOrNull() ?: ParseComponent(globalCache, unmodifiedConfig)
+    override val parseComponent: ParseComponent = getBeanOrNull() ?: ParseComponent(globalCacheFactory, unmodifiedConfig)
     /**
      * The update component
      * */
@@ -89,11 +88,12 @@ class StaticH2SQLContext(
      * The load component
      * */
     override val loadComponent = getBeanOrNull() ?: LoadComponent(
-        webDb, globalCache, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
+        webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
     /**
      * The main loop
      * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(mutableListOf(StreamingCrawlLoop(globalCache, unmodifiedConfig)))
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(
+        mutableListOf(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)))
 
     init {
         applicationContext.refresh()

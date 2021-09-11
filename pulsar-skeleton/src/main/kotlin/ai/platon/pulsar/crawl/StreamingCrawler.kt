@@ -21,6 +21,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
@@ -79,7 +80,7 @@ open class StreamingCrawler<T : UrlAware>(
     /**
      * A optional global cache which will hold the retry tasks
      * */
-    val globalCache: GlobalCache? = null,
+    val globalCacheFactory: GlobalCacheFactory? = null,
     /**
      * The crawl event handler
      * */
@@ -170,11 +171,11 @@ open class StreamingCrawler<T : UrlAware>(
     init {
         AppMetrics.reg.registerAll(this, "$id.g", gauges)
 
-        val cache = globalCache
-        if (cache != null) {
+        val globalCache = globalCacheFactory?.globalCache
+        if (globalCache != null) {
             val cacheGauges = mapOf(
-                "pageCacheSize" to Gauge { cache.pageCache.size },
-                "documentCacheSize" to Gauge { cache.documentCache.size }
+                "pageCacheSize" to Gauge { globalCache.pageCache.size },
+                "documentCacheSize" to Gauge { globalCache.documentCache.size }
             )
             AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
         }
@@ -520,9 +521,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {
-        if (globalCache == null) {
-            return false
-        }
+        val globalCache = globalCacheFactory?.globalCache ?: return false
 
         if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingUrlQueue) {
             // process later, hope the page is fetched
@@ -558,9 +557,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun fetchDelayed(url: UrlAware, delay: Duration) {
-        if (globalCache == null) {
-            return
-        }
+        val globalCache = globalCacheFactory?.globalCache ?: return
 
         val delayCache = globalCache.fetchCaches.delayCache
         // erase -refresh options

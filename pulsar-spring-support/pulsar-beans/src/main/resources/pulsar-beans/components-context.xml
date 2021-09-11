@@ -42,7 +42,7 @@
     <bean id="parseComponent" class="ai.platon.pulsar.crawl.component.ParseComponent">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="pageParser"/>
-        <constructor-arg ref="globalCache"/>
+        <constructor-arg ref="globalCacheFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="indexComponent" class="ai.platon.pulsar.crawl.component.IndexComponent">
@@ -59,7 +59,7 @@
     </bean>
     <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
-        <constructor-arg ref="globalCache"/>
+        <constructor-arg ref="globalCacheFactory"/>
         <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="updateComponent"/>
         <constructor-arg ref="parseComponent"/>

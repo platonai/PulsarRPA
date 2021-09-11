@@ -3,9 +3,7 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.DegenerateUrl
-import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.*
-import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import org.slf4j.LoggerFactory
@@ -17,9 +15,9 @@ import java.util.*
 open class DegenerateScrapeHyperlink(
     request: ScrapeRequest,
     session: PulsarSession,
-    globalCache: GlobalCache,
+    globalCacheFactory: GlobalCacheFactory,
     uuid: String = UUID.randomUUID().toString(),
-) : ScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, globalCache, uuid), DegenerateUrl {
+) : ScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, globalCacheFactory, uuid), DegenerateUrl {
     private val logger = LoggerFactory.getLogger(DegenerateScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
 

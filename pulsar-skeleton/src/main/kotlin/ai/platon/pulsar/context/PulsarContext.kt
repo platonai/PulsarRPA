@@ -35,7 +35,7 @@ interface PulsarContext: AutoCloseable {
     fun closeSession(session: PulsarSession)
 
     /**
-     * Close objects when sessions closes
+     * Close objects when sessions close
      * */
     fun registerClosable(closable: AutoCloseable)
 

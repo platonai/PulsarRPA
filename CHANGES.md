@@ -4,6 +4,7 @@ Plan:
 
     1. bugfix
     2. improve DataCollector
+    3. configurable GlobalCache creation
 
 Imps: 
 

@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.DefaultLoadEventHandler
 import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -59,7 +60,7 @@ open class ScrapeHyperlink(
     val request: ScrapeRequest,
     val sql: NormXSQL,
     val session: PulsarSession,
-    val globalCache: GlobalCache,
+    val globalCacheFactory: GlobalCacheFactory,
     val uuid: String = UUID.randomUUID().toString()
 ) : CompletableListenableHyperlink<ScrapeResponse>(sql.url) {
 

@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 
@@ -13,7 +14,7 @@ open class StreamingCrawlLoop(
     /**
      * The global cache
      * */
-    val globalCache: GlobalCache,
+    val globalCacheFactory: GlobalCacheFactory,
     /**
      * The unmodified configuration load from file
      * */
@@ -31,12 +32,15 @@ open class StreamingCrawlLoop(
     @Volatile
     private var running = false
     private var crawlJob: Job? = null
+    private val globalCache get() = globalCacheFactory.globalCache
+
     val isRunning get() = running
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
-    override val fetchIterable =
+    override val fetchIterable by lazy {
         MultiSourceHyperlinkIterable(globalCache.fetchCaches, enableDefaults = enableDefaultCollectors)
+    }
 
     override lateinit var crawler: StreamingCrawler<UrlAware>
         protected set
@@ -57,7 +61,7 @@ open class StreamingCrawlLoop(
         val session = PulsarContexts.activate().createSession()
 
         val urls = fetchIterable.asSequence()
-        crawler = StreamingCrawler(urls, defaultOptions, session, globalCache, crawlEventHandler)
+        crawler = StreamingCrawler(urls, defaultOptions, session, globalCacheFactory, crawlEventHandler)
         crawler.proxyPool = session.context.getBeanOrNull()
 
         crawlJob = GlobalScope.launch { crawler.run() }

@@ -22,7 +22,7 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.driver.WebDriverAdapter
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -282,7 +282,7 @@ open class EventHandler(
     private fun takeScreenshotIfNecessary(task: NavigateTask) {
         if (takeScreenshot && task.pageDatum.protocolStatus.isSuccess) {
             val driver = task.driver
-            if (driver is ManagedWebDriver) {
+            if (driver is WebDriverAdapter) {
                 takeScreenshot(task.pageDatum.contentLength, task.page, driver.driver as RemoteWebDriver)
             }
         }

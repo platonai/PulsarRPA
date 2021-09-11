@@ -15,6 +15,7 @@ import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -68,7 +69,7 @@ abstract class AbstractPulsarContext(
     /**
      * The global cache manager
      * */
-    open val globalCache: GlobalCache get() = getBean()
+    open val globalCacheFactory: GlobalCacheFactory get() = getBean()
 
     /**
      * The inject component
@@ -161,8 +162,8 @@ abstract class AbstractPulsarContext(
     fun clearCaches() {
         if (!isActive) return
 
-        globalCache.pageCache.clear()
-        globalCache.documentCache.clear()
+        globalCacheFactory.globalCache.pageCache.clear()
+        globalCacheFactory.globalCache.documentCache.clear()
     }
 
     /**

@@ -46,12 +46,12 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="globalCache" class="ai.platon.pulsar.crawl.common.GlobalCache">
+    <bean id="globalCacheFactory" class="ai.platon.pulsar.crawl.common.GlobalCacheFactory">
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="crawlLoop" class="ai.platon.pulsar.crawl.StreamingCrawlLoop">
-        <constructor-arg ref="globalCache"/>
+        <constructor-arg ref="globalCacheFactory"/>
         <constructor-arg ref="conf"/>
         <constructor-arg value="DefaultCrawlLoop"/>
     </bean>

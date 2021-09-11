@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
+import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollectorsFormatter
@@ -123,11 +124,11 @@ class MultiSourceHyperlinkIterable(
         return getCollectors(".*$name.*".toRegex())
     }
 
-    fun remove(collector: PriorityDataCollector<UrlAware>): Boolean {
+    fun remove(collector: DataCollector<UrlAware>): Boolean {
         return multiSourceCollector.collectors.remove(collector)
     }
 
-    fun removeAll(collectors: Collection<PriorityDataCollector<UrlAware>>): Boolean {
+    fun removeAll(collectors: Collection<DataCollector<UrlAware>>): Boolean {
         return multiSourceCollector.collectors.removeAll(collectors)
     }
 
