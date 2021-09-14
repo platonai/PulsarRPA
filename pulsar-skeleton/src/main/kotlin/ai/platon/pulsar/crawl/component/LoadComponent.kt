@@ -190,7 +190,7 @@ class LoadComponent(
     }
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        val queue = globalCache.fetchCaches.higher3Cache.nReentrantQueue
+        val queue = globalCache.fetchCaches.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
         val links = normUrls
             .asSequence()
@@ -205,14 +205,21 @@ class LoadComponent(
             .toList()
 
         queue.addAll(links)
-        logger.debug("Waiting for {} completable hyperlinks", links.size)
+        logger.debug("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
+            globalCache.javaClass, globalCache.hashCode(), globalCache.fetchCaches.hashCode())
 
-        var i = 120
+        var i = 90
         val pendingLinks = links.toMutableList()
         while (i-- > 0 && pendingLinks.isNotEmpty()) {
             val finishedLinks = pendingLinks.filter { it.isDone }
-            logger.debug("Has finished links:")
-            logger.debug(finishedLinks.joinToString("\n"))
+            if (finishedLinks.isNotEmpty()) {
+                logger.debug("Has finished {} links", finishedLinks.size)
+            }
+
+            if (i % 30 == 0) {
+                logger.debug("Still {} pending links", pendingLinks.size)
+            }
+
             pendingLinks.removeIf { it.isDone }
             sleepSeconds(1)
         }
