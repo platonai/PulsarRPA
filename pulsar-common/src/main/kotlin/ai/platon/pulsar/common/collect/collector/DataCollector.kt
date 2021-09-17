@@ -5,6 +5,8 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.readable
 import java.time.Duration
 import java.time.Instant
+import java.util.*
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -52,6 +54,7 @@ interface DataCollector<T> {
     fun collectTo(sink: MutableList<T>): Int
     fun collectTo(index: Int, sink: MutableList<T>): Int
     fun clear()
+    fun deepClear() = clear()
 }
 
 interface PriorityDataCollector<T> : DataCollector<T>, Comparable<PriorityDataCollector<T>> {
@@ -81,7 +84,7 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
     /**
      * The task labels
      * */
-    override val labels = mutableSetOf<String>()
+    override val labels: MutableSet<String> = ConcurrentSkipListSet()
     /**
      * Required website language
      * */

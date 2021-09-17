@@ -31,9 +31,9 @@ import java.io.Serializable;
  */
 public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
 
-    /** Constant <code>DEFAULT_VALUE=0.0</code> */
+
     public static final double DEFAULT_VALUE = 0.0;
-    /** Constant <code>EMPTY</code> */
+
     public static final OrderedIntDoubleMapping EMPTY = new OrderedIntDoubleMapping(0);
 
     private int[] indices;

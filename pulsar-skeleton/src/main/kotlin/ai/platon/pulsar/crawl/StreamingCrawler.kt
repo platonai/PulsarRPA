@@ -4,9 +4,8 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
+import ai.platon.pulsar.common.config.AppConstants.*
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadedPageFormatter
@@ -20,7 +19,7 @@ import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
@@ -79,7 +78,7 @@ open class StreamingCrawler<T : UrlAware>(
     /**
      * A optional global cache which will hold the retry tasks
      * */
-    val globalCache: GlobalCache? = null,
+    val globalCacheFactory: GlobalCacheFactory? = null,
     /**
      * The crawl event handler
      * */
@@ -104,11 +103,6 @@ open class StreamingCrawler<T : UrlAware>(
 
         private val globalLoadingUrls = ConcurrentSkipListSet<String>()
 
-        private val availableMemory get() = AppMetrics.availableMemory
-        private val requiredMemory = if (ByteUnit.BYTE.toGiB(availableMemory.toDouble()) >= 30)
-            ByteUnit.GIB.toBytes(2.5) else BROWSER_TAB_REQUIRED_MEMORY
-
-        private val remainingMemory get() = availableMemory - requiredMemory
         private var contextLeakWaitingTime = Duration.ZERO
         private var proxyVendorWaitingTime = Duration.ZERO
         private var criticalWarning: CriticalWarning? = null
@@ -143,6 +137,13 @@ open class StreamingCrawler<T : UrlAware>(
     val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
+
+    private val availableMemory get() = AppMetrics.availableMemory
+    private val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
+    private val memoryToReserveProduction get() = conf.getDouble(MEMORY_TO_RESERVE_MIB, DEFAULT_RESERVED_MEMORY_MIB)
+    private val memoryToReserve = if (availableMemoryGiB >= 30)
+        memoryToReserveProduction else BROWSER_TAB_REQUIRED_MEMORY
+
     val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -170,11 +171,11 @@ open class StreamingCrawler<T : UrlAware>(
     init {
         AppMetrics.reg.registerAll(this, "$id.g", gauges)
 
-        val cache = globalCache
-        if (cache != null) {
+        val globalCache = globalCacheFactory?.globalCache
+        if (globalCache != null) {
             val cacheGauges = mapOf(
-                "pageCacheSize" to Gauge { cache.pageCache.size },
-                "documentCacheSize" to Gauge { cache.documentCache.size }
+                "pageCacheSize" to Gauge { globalCache.pageCache.size },
+                "documentCacheSize" to Gauge { globalCache.documentCache.size }
             )
             AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
         }
@@ -224,7 +225,8 @@ open class StreamingCrawler<T : UrlAware>(
                 )
 
                 // The largest disk must have at least 10GiB remaining space
-                if (AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0 < 10.0) {
+                val freeSpace = AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
+                if (freeSpace < 10.0) {
                     logger.error("Disk space is full!")
                     criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
                     return@startCrawlLoop
@@ -293,7 +295,7 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         var k = 0
-        while (isActive && remainingMemory < 0) {
+        while (isActive && availableMemory < memoryToReserve) {
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
             }
@@ -520,9 +522,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {
-        if (globalCache == null) {
-            return false
-        }
+        val globalCache = globalCacheFactory?.globalCache ?: return false
 
         if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingUrlQueue) {
             // process later, hope the page is fetched
@@ -558,9 +558,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun fetchDelayed(url: UrlAware, delay: Duration) {
-        if (globalCache == null) {
-            return
-        }
+        val globalCache = globalCacheFactory?.globalCache ?: return
 
         val delayCache = globalCache.fetchCaches.delayCache
         // erase -refresh options
@@ -576,8 +574,8 @@ open class StreamingCrawler<T : UrlAware>(
             "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
             globalRunningTasks,
             Strings.readableBytes(availableMemory),
-            Strings.readableBytes(requiredMemory.toLong()),
-            Strings.readableBytes(abs(remainingMemory.toLong()))
+            Strings.readableBytes(memoryToReserve.toLong()),
+            Strings.readableBytes(availableMemory - memoryToReserve.toLong())
         )
         session.context.clearCaches()
         System.gc()

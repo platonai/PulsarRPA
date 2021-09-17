@@ -25,6 +25,7 @@ interface FetchCache {
 
     fun removeDeceased()
     fun clear()
+    fun deepClear() = clear()
 }
 
 abstract class AbstractFetchCache(
@@ -88,6 +89,10 @@ class LoadingFetchCache(
 
     override fun loadNow(): Collection<UrlAware> {
         return queues.filterIsInstance<Loadable<UrlAware>>().flatMap { it.loadNow() }
+    }
+
+    override fun deepClear() {
+        queues.filterIsInstance<LoadingQueue<UrlAware>>().forEach { it.deepClear() }
     }
 
     private fun topic(group: Int) = UrlTopic(name, group, priority, capacity)

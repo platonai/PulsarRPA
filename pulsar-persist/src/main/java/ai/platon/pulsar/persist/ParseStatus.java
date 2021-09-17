@@ -22,14 +22,14 @@ import java.util.stream.Collectors;
  * @version $Id: $Id
  */
 public class ParseStatus implements ParseStatusCodes {
-    /** Constant <code>REFRESH_HREF="refreshHref"</code> */
+
     public static final String REFRESH_HREF = "refreshHref";
-    /** Constant <code>REFRESH_TIME="refreshTime"</code> */
+
     public static final String REFRESH_TIME = "refreshTime";
 
-    /** Constant <code>majorCodes</code> */
+
     public static final HashMap<Short, String> majorCodes = new HashMap<>();
-    /** Constant <code>minorCodes</code> */
+
     public static final HashMap<Integer, String> minorCodes = new HashMap<>();
 
     static {

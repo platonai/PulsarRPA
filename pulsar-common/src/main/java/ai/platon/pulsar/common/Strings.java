@@ -40,57 +40,57 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
  */
 public final class Strings {
 
-    /** Constant <code>emptyStringArray</code> */
+    
     final public static String[] emptyStringArray = {};
-    /** Constant <code>COMMA=','</code> */
+    
     final public static char COMMA = ',';
-    /** Constant <code>COMMA_STR=","</code> */
+    
     final public static String COMMA_STR = ",";
-    /** Constant <code>ESCAPE_CHAR='\\'</code> */
+    
     final public static char ESCAPE_CHAR = '\\';
 
     // public static final Pattern HTML_CHARSET_PATTERN = Pattern.compile("^<meta(?!\\s*(?:name|value)\\s*=)(?:[^>]*?content\\s*=[\\s\"']*)?([^>]*?)[\\s\"';]*charset\\s*=[\\s\"']([a-zA-Z0-9]{3,8})([^\\s\"'(/>)]*)", CASE_INSENSITIVE);
-    /** Constant <code>HTML_CHARSET_PATTERN</code> */
+    
     public static final Pattern HTML_CHARSET_PATTERN = Pattern.compile("^<meta.+charset\\s*=[\\s\"']*([a-zA-Z0-9\\-]{3,8})[\\s\"'/>]*", CASE_INSENSITIVE);
 
-    /** Constant <code>PRICE_PATTERN</code> */
+    
     public static final Pattern PRICE_PATTERN = Pattern.compile("[1-9](,{0,1}\\d+){0,8}(\\.\\d{1,2})|[1-9](,{0,1}\\d+){0,8}");
 
     // all special chars on a standard keyboard
-    /** Constant <code>DEFAULT_KEEP_CHARS="~!@#$%^&*()_+`-={}|[]\\:\";'<>?,./' \n\"{trunked}</code> */
+    
     public static final String DEFAULT_KEEP_CHARS = "~!@#$%^&*()_+`-={}|[]\\:\";'<>?,./' \n\r\t";
 
-    /** Constant <code>HTML_TAG_REGEX="<(\"[^\"]*\"|'[^']*'|[^'\">])*>"</code> */
+    
     public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
 
-    /** Constant <code>FLOAT_REGEX="^([+-]?(\\d+\\.)?\\d+)$"</code> */
+    
     public static final String FLOAT_REGEX = "^([+-]?(\\d+\\.)?\\d+)$";
 
-    /** Constant <code>FLOAT_PATTERN</code> */
+    
     public static Pattern FLOAT_PATTERN = Pattern.compile(FLOAT_REGEX);
 
-    /** Constant <code>HTML_TAG_PATTERN</code> */
+    
     public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
 
-    /** Constant <code>NUMERIC_LIKE_REGEX="^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$"</code> */
+    
     public static final String NUMERIC_LIKE_REGEX = "^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$";
 
-    /** Constant <code>NUMERIC_LIKE_PATTERN</code> */
+    
     public static Pattern NUMERIC_LIKE_PATTERN = Pattern.compile(NUMERIC_LIKE_REGEX);
 
-    /** Constant <code>MONEY_LIKE_REGEX="^[¥￥$]?[0-9]+(\\.[0-9]{1,2})?$"</code> */
+    
     public static final String MONEY_LIKE_REGEX = "^[¥￥$]?[0-9]+(\\.[0-9]{1,2})?$";
 
-    /** Constant <code>MONEY_LIKE_PATTERN</code> */
+    
     public static Pattern MONEY_LIKE_PATTERN = Pattern.compile(MONEY_LIKE_REGEX);
 
-    /** Constant <code>CHINESE_PHONE_NUMBER_LIKE_REGEX="^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))"{trunked}</code> */
+    
     public static final String CHINESE_PHONE_NUMBER_LIKE_REGEX = "^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,1,2,5-9])|(177))\\d{8}$";
 
-    /** Constant <code>CHINESE_PHONE_NUMBER_LIKE_PATTERN</code> */
+    
     public static Pattern CHINESE_PHONE_NUMBER_LIKE_PATTERN = Pattern.compile(CHINESE_PHONE_NUMBER_LIKE_REGEX);
 
-    /** Constant <code>IP_PORT_REGEX="^(((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A"{trunked}</code> */
+    
     public static final String IP_PORT_REGEX = "^"
             + "(((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}" // Domain name
             + "|"
@@ -100,30 +100,30 @@ public final class Strings {
             + ":"
             + "[0-9]{1,5}$"; // Port
 
-    /** Constant <code>IP_PORT_PATTERN</code> */
+    
     public static final Pattern IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX); // Port
 
-    /** Constant <code>CODE_KEYBOARD_WHITESPACE=32</code> */
+    
     public static final int CODE_KEYBOARD_WHITESPACE = 32;
-    /** Constant <code>CODE_NBSP=160</code> */
+    
     public static final int CODE_NBSP = 160;
 
-    /** Constant <code>KEYBOARD_WHITESPACE="String.valueOf(CODE_KEYBOARD_WHITESPACE"{trunked}</code> */
+    
     public static final String KEYBOARD_WHITESPACE = String.valueOf(CODE_KEYBOARD_WHITESPACE);
     // Html entity: {@code &nbsp;} looks just like a white space
-    /** Constant <code>NBSP="String.valueOf(CODE_NBSP)"</code> */
+    
     public static final String NBSP = String.valueOf(CODE_NBSP);
 
-    /** Constant <code>HEX_DIGITS</code> */
+    
     public static final char[] HEX_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
             'f'};
 
     // memoised padding up to 10
-    /** Constant <code>padding</code> */
+    
     public static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
             "         ", "          "};
 
-    /** Constant <code>LongerFirstComparator</code> */
+    
     public static final Comparator<String> LongerFirstComparator = (s, s2) -> {
         int result = Integer.compare(s2.length(), s.length());
         if (result == 0)
@@ -131,10 +131,10 @@ public final class Strings {
         return result;
     };
 
-    /** Constant <code>ShorterFirstComparator</code> */
+    
     public static final Comparator<String> ShorterFirstComparator = (s, s2) -> LongerFirstComparator.compare(s2, s);
 
-    /** Constant <code>PatternTime</code> */
+    
     public static final Pattern PatternTime = Pattern.compile("[0-2][0-3]:[0-5][0-9]");
 
     /**

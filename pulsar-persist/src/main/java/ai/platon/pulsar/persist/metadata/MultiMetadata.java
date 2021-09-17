@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  */
 public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
 
-    /** Constant <code>META_TMP="TMP_"</code> */
+    
     public static final String META_TMP = "TMP_";
 
     /**

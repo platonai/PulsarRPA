@@ -71,6 +71,12 @@ abstract class AbstractLoadingQueue(
     }
 
     @Synchronized
+    override fun deepClear() {
+        externalClear()
+        clear()
+    }
+
+    @Synchronized
     fun externalClear() {
         loader.deleteAll(topic)
     }

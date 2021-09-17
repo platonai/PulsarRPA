@@ -3,6 +3,7 @@ package ai.platon.pulsar.rest.api.service
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.rest.api.common.DegenerateScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
@@ -18,11 +19,11 @@ import java.util.concurrent.TimeUnit
 @Service
 class ScrapeService(
     val session: PulsarSession,
-    val globalCache: GlobalCache,
+    val globalCacheFactory: GlobalCacheFactory,
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
-    private val fetchCaches get() = globalCache.fetchCaches
+    private val fetchCaches get() = globalCacheFactory.globalCache.fetchCaches
 
     /**
      * Execute a scrape task and wait until the execution is done,
@@ -57,9 +58,9 @@ class ScrapeService(
         val sql = request.sql
         return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
             val xSQL = ScrapeAPIUtils.normalize(sql)
-            ScrapeHyperlink(request, xSQL, session, globalCache)
+            ScrapeHyperlink(request, xSQL, session, globalCacheFactory)
         } else {
-            DegenerateScrapeHyperlink(request, session, globalCache)
+            DegenerateScrapeHyperlink(request, session, globalCacheFactory)
         }
     }
 }

@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.FetchCache
 import ai.platon.pulsar.common.collect.Loadable
 import ai.platon.pulsar.common.collect.queue.LoadingQueue
 import ai.platon.pulsar.common.urls.UrlAware
+import java.time.Instant
 import java.util.*
 
 open class FetchCacheCollector(
@@ -38,6 +39,10 @@ open class FetchCacheCollector(
             return true
         }
 
+        if (deadTime <= Instant.now()) {
+            return false
+        }
+
         // size is 0, estimatedSize > 0, there are items in the database
         // estimatedSize is updated at least every 5 seconds
         // load actually performed at least every 5 seconds
@@ -63,4 +68,8 @@ open class FetchCacheCollector(
     }
 
     override fun clear() = fetchCache.clear()
+
+    override fun deepClear() {
+        fetchCache.deepClear()
+    }
 }

@@ -14,6 +14,7 @@ import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
@@ -41,7 +42,7 @@ import java.util.concurrent.atomic.AtomicLong
 @Component
 class LoadComponent(
     val webDb: WebDb,
-    val globalCache: GlobalCache,
+    val globalCacheFactory: GlobalCacheFactory,
     val fetchComponent: BatchFetchComponent,
     val parseComponent: ParseComponent,
     val updateComponent: UpdateComponent,
@@ -59,6 +60,7 @@ class LoadComponent(
     private val taskLogger = LoggerFactory.getLogger(LoadComponent::class.java.name + ".Task")
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
+    val globalCache get() = globalCacheFactory.globalCache
     val pageCache get() = globalCache.pageCache
     val documentCache get() = globalCache.documentCache
 
@@ -90,12 +92,12 @@ class LoadComponent(
 
     constructor(
         webDb: WebDb,
-        globalCache: GlobalCache,
+        globalCacheFactory: GlobalCacheFactory,
         fetchComponent: BatchFetchComponent,
         parseComponent: ParseComponent,
         updateComponent: UpdateComponent,
         immutableConfig: ImmutableConfig,
-    ) : this(webDb, globalCache, fetchComponent, parseComponent, updateComponent, null, null, immutableConfig)
+    ) : this(webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, null, null, immutableConfig)
 
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
@@ -188,7 +190,7 @@ class LoadComponent(
     }
 
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        val queue = globalCache.fetchCaches.highestCache.nReentrantQueue
+        val queue = globalCache.fetchCaches.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
         val links = normUrls
             .asSequence()
@@ -203,21 +205,28 @@ class LoadComponent(
             .toList()
 
         queue.addAll(links)
-        logger.debug("Waiting for {} completable hyperlinks", links.size)
+        logger.debug("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
+            globalCache.javaClass, globalCache.hashCode(), globalCache.fetchCaches.hashCode())
 
-//        var i = 120
-//        val pendingLinks = links.toMutableList()
-//        while (i-- > 0 && pendingLinks.isNotEmpty()) {
-//            val finishedLinks = pendingLinks.filter { it.isDone }
-//            logger.debug("Has finished links:")
-//            logger.debug(finishedLinks.joinToString("\n"))
-//            pendingLinks.removeIf { it.isDone }
-//            sleepSeconds(1)
-//        }
+        var i = 90
+        val pendingLinks = links.toMutableList()
+        while (i-- > 0 && pendingLinks.isNotEmpty()) {
+            val finishedLinks = pendingLinks.filter { it.isDone }
+            if (finishedLinks.isNotEmpty()) {
+                logger.debug("Has finished {} links", finishedLinks.size)
+            }
+
+            if (i % 30 == 0) {
+                logger.debug("Still {} pending links", pendingLinks.size)
+            }
+
+            pendingLinks.removeIf { it.isDone }
+            sleepSeconds(1)
+        }
 
         // timeout process?
-        val future = CompletableFuture.allOf(*links.toTypedArray())
-        future.join()
+//        val future = CompletableFuture.allOf(*links.toTypedArray())
+//        future.join()
 
         return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
     }

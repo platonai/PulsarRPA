@@ -35,7 +35,7 @@ open class WebDriverFactory(
      */
     @Throws(DriverLaunchException::class)
     @Synchronized
-    fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): ManagedWebDriver {
+    fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): WebDriverAdapter {
         log.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
         val capabilities = driverSettings.createGeneralOptions()
@@ -70,7 +70,7 @@ open class WebDriverFactory(
 //             devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
         }
 
-        return ManagedWebDriver(browserInstanceId, driver, priority)
+        return WebDriverAdapter(browserInstanceId, driver, priority)
     }
 
     private fun createChromeDevtoolsDriver(

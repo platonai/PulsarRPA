@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
-import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import org.h2.tools.Server
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,9 +24,10 @@ import java.sql.SQLException
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api")
 class PulsarMaster(
-    val globalCache: GlobalCache
+    val globalCacheFactory: GlobalCacheFactory
 ) {
     private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
+    private val globalCache get() = globalCacheFactory.globalCache
     private val fetchCache get() = globalCache.fetchCaches.normalCache
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
@@ -66,7 +67,7 @@ class PulsarMaster(
 
     @Bean(initMethod = "start", destroyMethod = "stop")
     fun fetch(): StreamingCrawlLoop {
-        return StreamingCrawlLoop(globalCache, unmodifiedConfig)
+        return StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)
     }
 }
 

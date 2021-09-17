@@ -76,9 +76,9 @@ abstract class AbstractPulsarSession(
 
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
-    override val pageCache get() = context.globalCache.pageCache
-    override val documentCache get() = context.globalCache.documentCache
-    override val globalCache get() = context.globalCache
+    override val globalCacheFactory get() = context.globalCacheFactory
+    override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
+    override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
     /**
@@ -418,7 +418,7 @@ abstract class AbstractPulsarSession(
             return context.parse(page) ?: nil
         }
 
-        val document = globalCache.documentCache.getDatum(page.url)
+        val document = documentCache.getDatum(page.url)
         if (document != null) {
             documentCacheHits.incrementAndGet()
             return document
