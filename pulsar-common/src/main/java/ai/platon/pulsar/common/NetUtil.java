@@ -19,13 +19,13 @@ public class NetUtil {
 
     private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
-    /** Constant <code>CONNECTION_TIMEOUT</code> */
+
     public static Duration CONNECTION_TIMEOUT = Duration.ofSeconds(3);
-    /** Constant <code>PROXY_CONNECTION_TIMEOUT</code> */
+
     public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(3);
 
     // Pattern for matching ip[:port]
-    /** Constant <code>IP_PORT_PATTERN</code> */
+
     public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
     /**

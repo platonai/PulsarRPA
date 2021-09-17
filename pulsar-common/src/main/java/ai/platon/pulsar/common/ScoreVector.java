@@ -20,7 +20,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
     private final int dimension;
     private final ArrayList<ScoreEntry> entries;
 
-    /** Constant <code>ZERO</code> */
+    
     public static ScoreVector ZERO = new ScoreVector(0);
 
     /**

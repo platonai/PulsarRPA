@@ -8,8 +8,8 @@ package ai.platon.pulsar.persist.metadata;
  * @version $Id: $Id
  */
 public class Namespace {
-    /** Constant <code>NORMAL="normal"</code> */
+    
     public static final String NORMAL = "normal";
-    /** Constant <code>INTERNAL="internal"</code> */
+    
     public static final String INTERNAL = "internal";
 }

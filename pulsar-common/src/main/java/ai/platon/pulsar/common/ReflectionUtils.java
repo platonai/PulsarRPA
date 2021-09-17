@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ReflectionUtils {
 
-    /** Constant <code>LOG</code> */
+    
     public static final Logger LOG = LoggerFactory.getLogger(ReflectionUtils.class);
 
     private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();

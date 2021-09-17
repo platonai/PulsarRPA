@@ -96,13 +96,13 @@ public class PulsarParams extends Params {
      * Depth (number of cycles) of a crawl.
      */
     public static final String ARG_DEPTH = "-depth";
-    /** Constant <code>ARG_START_KEY="-startKey"</code> */
+
     public static final String ARG_START_KEY = "-startKey";
-    /** Constant <code>ARG_END_KEY="-endKey"</code> */
+
     public static final String ARG_END_KEY = "-endKey";
-    /** Constant <code>ARG_LIMIT="-limit"</code> */
+    
     public static final String ARG_LIMIT = "-limit";
-    /** Constant <code>ARG_VERBOSE="-verbose"</code> */
+    
     public static final String ARG_VERBOSE = "-verbose";
     /**
      * Injector Relative
@@ -116,7 +116,7 @@ public class PulsarParams extends Params {
      * Generate Relative
      */
     public static final String ARG_PRIORITY = "-priority";
-    /** Constant <code>ARG_SCORE="-score"</code> */
+    
     public static final String ARG_SCORE = "-score";
     /**
      * Fetcher Relative
@@ -124,7 +124,7 @@ public class PulsarParams extends Params {
   /* Fetch interval. */
     public static final String ARG_FETCH_INTERVAL = "-fetchInterval";
     /* Fetch mode. */
-    /** Constant <code>ARG_FETCH_MODE="-fetchMode"</code> */
+    
     public static final String ARG_FETCH_MODE = "-fetchMode";
     /**
      * Generator Relative

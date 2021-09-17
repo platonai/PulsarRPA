@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
  */
 public class PageCounters {
 
-    /** Constant <code>DELIMITER="'"</code> */
+    
     public static String DELIMITER = "'";
-    /** Constant <code>COUNTER_GROUPS</code> */
+    
     public static Map<Class, String> COUNTER_GROUPS = new HashMap<>();
 
     static {

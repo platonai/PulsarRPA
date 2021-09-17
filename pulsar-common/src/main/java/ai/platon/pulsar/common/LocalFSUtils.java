@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class LocalFSUtils {
 
-    /** Constant <code>LOG</code> */
+
     public static final Logger LOG = LoggerFactory.getLogger(LocalFSUtils.class);
 
     /**
