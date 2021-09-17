@@ -214,6 +214,8 @@ public interface CapabilityTypes {
     String QE_HANDLE_PERIODICAL_FETCH_TASKS = "query.engine.handle.periodical.fetch.tasks";
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
+
+    String MEMORY_TO_RESERVE_MIB = "memory.to.reserve.MiB";
     /**
      * Load parameters
      */
@@ -280,44 +282,20 @@ public interface CapabilityTypes {
     /** Constant <code>FETCH_NET_BANDWIDTH_M="fetcher.net.bandwidth.m"</code> */
     String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
-//    String FETCH_BEFORE_LOAD_HANDLER = "onBeforeLoad";
-//
-//    /** Constant <code>FETCH_BEFORE_FETCH_HANDLER="onBeforeFetch"</code> */
-//    String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
-//    /** Constant <code>FETCH_AFTER_FETCH_HANDLER="onAfterFetch"</code> */
-//    String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
-//    /** Constant <code>FETCH_AFTER_FETCH_N_HANDLER="onAfterFetchN"</code> */
     String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
-//    /** Constant <code>FETCH_BEFORE_FETCH_BATCH_HANDLER="onBeforeFetchBatch"</code> */
     String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
-//    /** Constant <code>FETCH_AFTER_FETCH_BATCH_HANDLER="onAfterFetchBatch"</code> */
     String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
-//
-//    String FETCH_BEFORE_PARSE_HANDLER = "onBeforeParse";
-//    String FETCH_BEFORE_HTML_PARSE_HANDLER = "onBeforeHtmlParse";
-//
-//    String FETCH_BEFORE_EXTRACT_HANDLER = "onBeforeExtract";
-//    String FETCH_AFTER_EXTRACT_HANDLER = "onAfterExtract";
-//
-//    String FETCH_AFTER_HTML_PARSE_HANDLER = "onAfterHtmlParse";
-//    String FETCH_AFTER_PARSE_HANDLER = "onAfterParse";
-//
-//    String FETCH_AFTER_LOAD_HANDLER = "onAfterLoad";
 
     /**
      * Browser
      * */
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
-    /** Constant <code>FETCH_SCRIPT_TIMEOUT="fetch.script.timeout"</code> */
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
-    /** Constant <code>FETCH_SCROLL_DOWN_COUNT="fetch.scroll.down.count"</code> */
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
-    /** Constant <code>FETCH_SCROLL_DOWN_INTERVAL="fetch.scroll.down.interval"</code> */
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
 
     String FETCH_BROWSER_EVENT_HANDLER = "fetch.browser.event.handler";
 
-    /** Constant <code>FETCH_CLIENT_JS="fetch.browser.client.js"</code> */
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
     /**
      * If log the result of expressions
@@ -335,11 +313,8 @@ public interface CapabilityTypes {
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
     /** The class name of privacy context id generator */
     String PRIVACY_CONTEXT_ID_GENERATOR_CLASS = "privacy.context.id.generator.class";
-    /** Constant <code>PRIVACY_MINOR_WARNING_FACTOR="privacy.minor.warning.factor"</code> */
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
-    /** Constant <code>PRIVACY_MAX_WARNINGS="privacy.max.warnings"</code> */
     String PRIVACY_MAX_WARNINGS = "privacy.max.warnings";
-    /** Constant <code>PRIVACY_CONTEXT_MIN_THROUGHPUT="privacy.context.min.throughput"</code> */
     String PRIVACY_CONTEXT_MIN_THROUGHPUT = "privacy.context.min.throughput";
     /**
      * The max value of tabs a browser can open
@@ -443,19 +418,12 @@ public interface CapabilityTypes {
     /** Constant <code>UPDATE_IGNORE_IN2OUT_GRAPH="update.ignore.in.graph"</code> */
     String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
 
-    /** Constant <code>SCHEDULE_INC_RATE="db.fetch.schedule.adaptive.inc_rate"</code> */
     String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
-    /** Constant <code>SCHEDULE_DEC_RATE="db.fetch.schedule.adaptive.dec_rate"</code> */
     String SCHEDULE_DEC_RATE = "db.fetch.schedule.adaptive.dec_rate";
-    /** Constant <code>SCHEDULE_MIN_INTERVAL="db.fetch.schedule.adaptive.min_interval"</code> */
     String SCHEDULE_MIN_INTERVAL = "db.fetch.schedule.adaptive.min_interval";
-    /** Constant <code>SCHEDULE_MAX_INTERVAL="db.fetch.schedule.adaptive.max_interval"</code> */
     String SCHEDULE_MAX_INTERVAL = "db.fetch.schedule.adaptive.max_interval";
-    /** Constant <code>SCHEDULE_SEED_MAX_INTERVAL="db.fetch.schedule.adaptive.seed_max_int"{trunked}</code> */
     String SCHEDULE_SEED_MAX_INTERVAL = "db.fetch.schedule.adaptive.seed_max_interval";
-    /** Constant <code>SCHEDULE_SYNC_DELTA="db.fetch.schedule.adaptive.sync_delta"</code> */
     String SCHEDULE_SYNC_DELTA = "db.fetch.schedule.adaptive.sync_delta";
-    /** Constant <code>SCHEDULE_SYNC_DELTA_RATE="db.fetch.schedule.adaptive.sync_delta_r"{trunked}</code> */
     String SCHEDULE_SYNC_DELTA_RATE = "db.fetch.schedule.adaptive.sync_delta_rate";
 
     /**
@@ -463,9 +431,7 @@ public interface CapabilityTypes {
      */
     // divisor may have a better name
     String SCORE_SORT_ERROR_COUNTER_DIVISOR = "score.sort.error.counter.divisor";
-    /** Constant <code>SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR="score.sort.web.graph.score.divisor"</code> */
     String SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR = "score.sort.web.graph.score.divisor";
-    /** Constant <code>SCORE_SORT_CONTENT_SCORE_DIVISOR="score.sort.content.score.divisor"</code> */
     String SCORE_SORT_CONTENT_SCORE_DIVISOR = "score.sort.content.score.divisor";
     /**
      * Indexing parameters
