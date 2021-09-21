@@ -15,9 +15,6 @@ open class QueueCollector(
     override val size: Int
         get() = queue.size
 
-    override val estimatedSize: Int
-        get() = queue.size
-
     var loadArgs: String? = null
 
     constructor(priority: Priority13): this(ConcurrentLinkedQueue(), priority.value)

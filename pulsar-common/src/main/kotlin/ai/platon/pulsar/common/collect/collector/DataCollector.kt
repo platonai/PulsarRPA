@@ -41,12 +41,15 @@ interface DataCollector<T> {
     val size: Int
     val externalSize: Int
     val estimatedSize: Int
+    val estimatedExternalSize: Int
     val collectCount: Int
     val collectedCount: Int
     val firstCollectTime: Instant
     val lastCollectedTime: Instant
     val collectTime: Duration
     val deadTime: Instant
+
+    val isDead get() = deadTime <= Instant.now()
 
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableList<T>): Int
@@ -100,8 +103,8 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
 
     override val size: Int get() = 0
     override val externalSize: Int = 0
-    override val estimatedSize: Int = 0
-
+    override val estimatedExternalSize: Int get() = externalSize
+    override val estimatedSize: Int get() = size + estimatedExternalSize
     /**
      * The total count of collect attempt
      * */

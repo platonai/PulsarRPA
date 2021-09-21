@@ -24,6 +24,9 @@ open class FetchCacheCollector(
     override val externalSize: Int
         get() = fetchCache.externalSize
 
+    override val estimatedExternalSize: Int
+        get() = fetchCache.estimatedExternalSize
+
     override val estimatedSize: Int
         get() = fetchCache.estimatedSize
 

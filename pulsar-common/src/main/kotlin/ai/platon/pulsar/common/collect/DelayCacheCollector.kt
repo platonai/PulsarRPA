@@ -15,9 +15,6 @@ open class DelayCacheCollector(
     override val size: Int
         get() = queue.size
 
-    override val estimatedSize: Int
-        get() = queue.size
-
     constructor(queue: Queue<DelayUrl>, priority: Priority13) : this(queue, priority.value)
 
     @Synchronized
