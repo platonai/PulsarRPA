@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import com.codahale.metrics.*
 import com.codahale.metrics.graphite.GraphiteReporter
@@ -85,8 +86,16 @@ class AppMetrics(
         val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         val memoryInfo get() = systemInfo.hardware.memory
-        // available memory in bytes
+        // Free memory in bytes
+        // Free memory is the amount of memory which is currently not used for anything.
+        // This number should be small, because memory which is not used is simply wasted.
+        val freeMemory get() = Runtime.getRuntime().freeMemory()
+        val freeMemoryGiB get() = ByteUnit.BYTE.toGiB(freeMemory.toDouble())
+        // Available memory in bytes
+        // Available memory is the amount of memory which is available for allocation to a new process or to existing
+        // processes.
         val availableMemory get() = memoryInfo.available
+
         val freeSpace get() = FileSystems.getDefault().fileStores
             .filter { ByteUnitConverter.convert(it.totalSpace, "G") > 20 }
             .map { it.unallocatedSpace }

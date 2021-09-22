@@ -213,7 +213,9 @@ public interface CapabilityTypes {
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
 
-    String MEMORY_TO_RESERVE_MIB = "memory.to.reserve.MiB";
+    String BROWSER_MEMORY_TO_RESERVE_KEY = "browser.memory.to.reserve";
+
+    String MEMORY_TO_RESERVE_MIB_KEY = "browser.memory.to.reserve.MiB";
     /**
      * Load parameters
      */
