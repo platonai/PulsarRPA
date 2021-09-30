@@ -208,6 +208,17 @@ class TestLoadOptions {
     }
 
     @Test
+    fun testErase() {
+        val args = "-incognito -expires 1s -retry"
+        val erasedArgs = "-erased -erased 1s -retry"
+        val args1 = LoadOptions.eraseOptions(args, "incognito", "expires", "")
+        assertEquals(erasedArgs, args1, args1)
+        val options = LoadOptions.parse(args1, conf)
+        val reparsedArgs = "-retryFailed"
+        assertEquals(reparsedArgs, options.toString(), options.toString())
+    }
+
+    @Test
     fun testOverride() {
         assertOptionEquals("-tl 50", "-tl 40 -tl 50")
     }
