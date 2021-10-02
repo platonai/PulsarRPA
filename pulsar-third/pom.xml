@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.6.5.2-SNAPSHOT</version>
+        <version>1.6.5.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-third</artifactId>
@@ -26,7 +26,6 @@
     <modules>
         <module>pulsar-boilerpipe</module>
         <module>pulsar-jsoup</module>
-        <module>pulsar-chrome-devtools</module>
         <module>pulsar-distributed-lock</module>
 
         <!-- Including gora-shaded-mongodb breaks Intellij Idea's path searching,

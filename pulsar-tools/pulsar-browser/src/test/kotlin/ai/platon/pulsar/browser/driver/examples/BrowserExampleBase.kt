@@ -2,8 +2,7 @@ package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
-import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
-import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
+import ai.platon.pulsar.browser.driver.chrome.ChromeLauncherV2
 import org.slf4j.LoggerFactory
 
 abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable {
@@ -16,10 +15,10 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     val launchOptions = ChromeDevtoolsOptions()
             .addArguments("window-size", browserControl.formatViewPort())
             .also { it.headless = headless }
-    val launcher = ChromeLauncher()
+    val launcher = ChromeLauncherV2()
     val chrome = launcher.launch(launchOptions)
-    val tab = chrome.createTab() // TODO: how to avoid this tab creation?
-    val devTools = chrome.createDevTools(tab, DevToolsConfig())
+    val tab = chrome.createTab()
+    val devTools = chrome.createDevToolsService(tab)
 
     val browser get() = devTools.browser
     val network get() = devTools.network

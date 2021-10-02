@@ -1,3 +1,9 @@
+dev-1.6.5.3
+
+Feature:
+
+    1. use the latest com.github.kklisura.cdt:cdt-java-client to match the upgraded chrome
+
 dev-1.6.5.2
 
 Plan:
