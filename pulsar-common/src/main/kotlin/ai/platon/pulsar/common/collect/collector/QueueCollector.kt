@@ -41,5 +41,9 @@ open class QueueCollector(
         return afterCollect(count)
     }
 
+    override fun dump(): List<String> {
+        return queue.map { it.url }
+    }
+
     override fun clear() = queue.clear()
 }

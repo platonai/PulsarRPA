@@ -96,9 +96,13 @@ class BrowserInstance(
 
             val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
             nonSynchronized.parallelStream().forEach {
-                it.close()
-                // should we?
-                it.waitUntilClosed()
+                try {
+                    it.close()
+                    // should we?
+                    it.waitUntilClosed()
+                } catch (e: Exception) {
+                    log.warn("Failed to close the dev tool", e)
+                }
             }
 
             // chrome.close()

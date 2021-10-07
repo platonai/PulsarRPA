@@ -56,6 +56,7 @@ interface DataCollector<T> {
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
     fun collectTo(sink: MutableList<T>): Int
     fun collectTo(index: Int, sink: MutableList<T>): Int
+    fun dump(): List<String>
     fun clear()
     fun deepClear() = clear()
 }

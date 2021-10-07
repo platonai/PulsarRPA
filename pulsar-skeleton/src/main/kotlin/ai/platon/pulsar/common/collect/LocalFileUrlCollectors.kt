@@ -62,6 +62,11 @@ open class LocalFileHyperlinkCollector(
         return afterCollect(count)
     }
 
+    @Synchronized
+    override fun dump(): List<String> {
+        return hyperlinks.map { it.toString() }
+    }
+
     private fun ensureLoaded(): LocalFileHyperlinkCollector {
         if (isLoaded.compareAndSet(false, true)) {
             val remainingCapacity = capacity - cache.size

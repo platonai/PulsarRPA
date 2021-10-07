@@ -91,6 +91,10 @@ open class MultiSourceDataCollector<E>(
         return collected
     }
 
+    override fun dump(): List<String> {
+        return collectors.flatMap { it.dump() }
+    }
+
     override fun clear() {
         collectors.forEach { it.clear() }
     }
@@ -123,5 +127,9 @@ open class PauseDataCollector<E>(
         ++collected
 
         return 1
+    }
+
+    override fun dump(): List<String> {
+        return listOf()
     }
 }

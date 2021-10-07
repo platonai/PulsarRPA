@@ -67,11 +67,26 @@ open class FetchCacheCollector(
         if (queue is LoadingQueue && queue.size == 0 && queue.estimatedExternalSize == 0) {
             return 0
         }
-        return queue.poll()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
+
+        val e = queue.poll()
+        if (e != null) {
+            labels.add(e.label)
+            sink.add(e)
+            return 1
+        }
+
+        return 0
     }
 
+    @Synchronized
+    override fun dump(): List<String> {
+        return queues.flatMap { it.map { it.toString() } }
+    }
+
+    @Synchronized
     override fun clear() = fetchCache.clear()
 
+    @Synchronized
     override fun deepClear() {
         fetchCache.deepClear()
     }

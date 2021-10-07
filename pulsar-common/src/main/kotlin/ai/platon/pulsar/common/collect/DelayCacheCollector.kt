@@ -29,5 +29,10 @@ open class DelayCacheCollector(
         return afterCollect(count)
     }
 
+    @Synchronized
+    override fun dump(): List<String> {
+        return queue.map { it.url.toString() + " delay: " + it.delay }
+    }
+
     override fun clear() = queue.clear()
 }
