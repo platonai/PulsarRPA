@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-plugins</artifactId>
-        <version>1.6.5.3-SNAPSHOT</version>
+        <version>1.6.5.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-schedule</artifactId>
