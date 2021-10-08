@@ -13,6 +13,23 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     private val dcLogger = getLogger(DataCollector::class)
     private val fetchCaches get() = fetchIterable.fetchCaches
 
+    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> = fetchIterable.getCollectors(name)
+
+    fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> =
+        fetchIterable.getCollectors(names)
+
+    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> = fetchIterable.getCollectors(regex)
+
+    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> = fetchIterable.getCollectorsLike(name)
+
+    fun contains(name: String): Boolean = getCollectors(name).isNotEmpty()
+
+    fun contains(names: Iterable<String>): Boolean = getCollectors(names).isNotEmpty()
+
+    fun contains(regex: Regex): Boolean = getCollectors(regex).isNotEmpty()
+
+    fun containsLike(name: String): Boolean = getCollectorsLike(name).isNotEmpty()
+
     fun addDefaults() {
         fetchIterable.addDefaultCollectors()
     }
@@ -34,9 +51,9 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     }
 
     fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
-        val fetchCache = LoadingFetchCache(name, urlLoader, priority)
+        val fetchCache = LoadingFetchCache(name, priority, urlLoader)
         fetchCaches.unorderedCaches.add(fetchCache)
-        val collector = FetchCacheCollector(fetchCache, priority).also { it.name = name }
+        val collector = FetchCacheCollector(fetchCache).also { it.name = name }
 
         report(collector)
         fetchIterable.addCollector(collector)
@@ -51,7 +68,7 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     fun addFetchCacheCollector(name: String, priority: Int): FetchCacheCollector {
         val fetchCache = ConcurrentFetchCache(name)
         fetchCaches.unorderedCaches.add(fetchCache)
-        val collector = FetchCacheCollector(fetchCache, priority).also { it.name = name }
+        val collector = FetchCacheCollector(fetchCache).also { it.name = name }
 
         fetchIterable.addCollector(collector)
         report(collector)

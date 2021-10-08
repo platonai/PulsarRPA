@@ -14,7 +14,7 @@ class TestLoadingQueues : TestBase() {
 
     @Test
     fun `When create a LoadingFetchCache then the first page is loaded`() {
-        val fetchCache = LoadingFetchCache("", urlLoader, group.priority)
+        val fetchCache = LoadingFetchCache("", group.priority, urlLoader)
         // not loaded
         assertEquals(0, fetchCache.size)
         fetchCache.load()
@@ -23,13 +23,13 @@ class TestLoadingQueues : TestBase() {
 
     @Test
     fun `When collect from collector with loading fetch cache then sink has items`() {
-        val source = LoadingFetchCache("", urlLoader, group.priority)
+        val source = LoadingFetchCache("", group.priority, urlLoader)
         val sink = mutableListOf<UrlAware>()
 
         assertEquals(0, source.size)
         assertTrue { sink.isEmpty() }
 
-        val collector = FetchCacheCollector(source, source.priority)
+        val collector = FetchCacheCollector(source)
         source.loadNow()
         collector.collectTo(sink)
 

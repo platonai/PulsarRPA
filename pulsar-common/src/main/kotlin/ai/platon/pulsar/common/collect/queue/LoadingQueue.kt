@@ -20,7 +20,7 @@ interface LoadingQueue<T> : Queue<T>, Loadable<T> {
 
     fun overflow(url: UrlAware)
 
-    fun overflow(url: List<UrlAware>)
+    fun overflow(urls: List<UrlAware>)
 
     fun deepClear() = clear()
 }

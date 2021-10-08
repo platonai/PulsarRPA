@@ -44,6 +44,7 @@ interface DataCollector<T> {
     val estimatedExternalSize: Int
     val collectCount: Int
     val collectedCount: Int
+    val createTime: Instant
     val firstCollectTime: Instant
     val lastCollectedTime: Instant
     val collectTime: Duration
@@ -116,9 +117,11 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
      * */
     override var collectedCount: Int = 0
 
-    override var firstCollectTime = Instant.EPOCH
+    override val createTime: Instant = Instant.now()
 
-    override var lastCollectedTime = Instant.EPOCH
+    override var firstCollectTime: Instant = Instant.EPOCH
+
+    override var lastCollectedTime: Instant = Instant.EPOCH
 
     override var deadTime: Instant = DateTimes.doomsday
 

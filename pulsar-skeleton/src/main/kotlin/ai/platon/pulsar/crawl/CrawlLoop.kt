@@ -1,15 +1,16 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.StartStopRunnable
-import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
+import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlAware
-import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 interface CrawlLoop: StartStopRunnable {
+    val id: Int
     val name: String
     val unmodifiedConfig: ImmutableConfig
     val defaultOptions: LoadOptions
@@ -24,6 +25,12 @@ abstract class AbstractCrawlLoop(
     override val name: String,
     override val unmodifiedConfig: ImmutableConfig
 ) : CrawlLoop {
+    companion object {
+        val idGen = AtomicInteger()
+    }
+
+    override val id: Int = idGen.incrementAndGet()
+
     /**
      * Data collector lower capacity
      * */

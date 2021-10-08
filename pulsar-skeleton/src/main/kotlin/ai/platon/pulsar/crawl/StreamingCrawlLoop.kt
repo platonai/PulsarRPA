@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.ENABLE_DEFAULT_DATA_COLLEC
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -32,7 +31,8 @@ open class StreamingCrawlLoop(
     @Volatile
     private var running = false
     private var crawlJob: Job? = null
-    private val globalCache get() = globalCacheFactory.globalCache
+
+    val globalCache get() = globalCacheFactory.globalCache
 
     val isRunning get() = running
 
@@ -45,15 +45,19 @@ open class StreamingCrawlLoop(
     override lateinit var crawler: StreamingCrawler<UrlAware>
         protected set
 
+    init {
+        logger.info("Streaming crawl loop is created | {}", this.javaClass.name + "@" + hashCode())
+    }
+
     @Synchronized
     override fun start() {
         if (running) {
-            logger.warn("Crawl loop is already running")
+            logger.warn("Crawl loop #{} is already running", id)
             return
         }
         running = true
 
-        logger.debug("Registered {} hyperlink collectors", fetchIterable.collectors.size)
+        logger.info("Registered {} hyperlink collectors | #{} @{}", fetchIterable.collectors.size, id, hashCode())
 
         /**
          * The pulsar session
@@ -80,7 +84,7 @@ open class StreamingCrawlLoop(
             crawlJob?.cancelAndJoin()
             crawlJob = null
 
-            logger.info("Streaming crawler is stopped")
+            logger.info("Streaming crawler #{} is stopped", id)
         }
     }
 }

@@ -16,19 +16,19 @@ class MultiSourceHyperlinkIterable(
 ) : Iterable<UrlAware> {
     private val logger = getLogger(this)
 
-    private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache, Priority13.HIGHEST)
-        .apply { name = "FCC@RealTime" }
+    private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache)
+        .apply { name = "FCC#RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
-        .apply { name = "DelayCC@Delay" }
+        .apply { name = "DelayCC#Delay" }
 
     val loadingIterable =
-        ConcurrentLoadingIterable(MultiSourceDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
+        ConcurrentLoadingIterable(CombinedDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    private val multiSourceCollector get() = loadingIterable.regularCollector as MultiSourceDataCollector
+    private val combinedDataCollector get() = loadingIterable.regularCollector as CombinedDataCollector
 
     val openCollectors: Collection<PriorityDataCollector<UrlAware>>
-        get() = multiSourceCollector.collectors
+        get() = combinedDataCollector.collectors
 
     val collectors: List<PriorityDataCollector<UrlAware>>
         get() = mutableListOf<PriorityDataCollector<UrlAware>>().also {
@@ -89,35 +89,33 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        multiSourceCollector.collectors.removeIf { it is FetchCacheCollector }
-        fetchCaches.caches.forEach { (priority, fetchCache) ->
-            val collector = FetchCacheCollector(fetchCache, priority)
-            collector.name = "FC@" + collector.id
-            addCollector(collector)
+        combinedDataCollector.collectors.removeIf { it is FetchCacheCollector }
+        fetchCaches.orderedCaches.values.forEach { fetchCache ->
+            addCollector(FetchCacheCollector(fetchCache).apply { name = "FCC.$id" })
         }
         return this
     }
 
     fun addCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
-        multiSourceCollector.collectors += collector
+        combinedDataCollector.collectors += collector
         return this
     }
 
     fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
-        multiSourceCollector.collectors += collectors
+        combinedDataCollector.collectors += collectors
         return this
     }
 
     fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
-        return multiSourceCollector.collectors.filter { it.name == name }
+        return combinedDataCollector.collectors.filter { it.name == name }
     }
 
     fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
-        return multiSourceCollector.collectors.filter { it.name in names }
+        return combinedDataCollector.collectors.filter { it.name in names }
     }
 
     fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
-        return multiSourceCollector.collectors.filter { it.name.matches(regex) }
+        return combinedDataCollector.collectors.filter { it.name.matches(regex) }
     }
 
     fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> {
@@ -125,17 +123,17 @@ class MultiSourceHyperlinkIterable(
     }
 
     fun remove(collector: DataCollector<UrlAware>): Boolean {
-        return multiSourceCollector.collectors.remove(collector)
+        return combinedDataCollector.collectors.remove(collector)
     }
 
     fun removeAll(collectors: Collection<DataCollector<UrlAware>>): Boolean {
-        return multiSourceCollector.collectors.removeAll(collectors)
+        return combinedDataCollector.collectors.removeAll(collectors)
     }
 
     fun clear() {
         loadingIterable.clear()
         realTimeCollector.fetchCache.clear()
         delayCollector.queue.clear()
-        multiSourceCollector.clear()
+        combinedDataCollector.clear()
     }
 }

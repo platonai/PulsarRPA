@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantQueue
 import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantQueue
 import ai.platon.pulsar.common.collect.queue.ConcurrentLoadingQueue
@@ -13,6 +14,10 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 interface FetchCache {
     val name: String
+    /**
+     * The priority
+     * */
+    val priority: Int
     val nonReentrantQueue: Queue<UrlAware>
     val nReentrantQueue: Queue<UrlAware>
     val reentrantQueue: Queue<UrlAware>
@@ -29,7 +34,8 @@ interface FetchCache {
 }
 
 abstract class AbstractFetchCache(
-    override val name: String = ""
+    override val name: String,
+    override val priority: Int
 ) : FetchCache {
     override fun removeDeceased() {
         val now = Instant.now()
@@ -41,30 +47,33 @@ abstract class AbstractFetchCache(
     }
 }
 
-open class ConcurrentFetchCache(name: String = "") : AbstractFetchCache(name) {
+open class ConcurrentFetchCache(
+    name: String = "",
+    priority: Int = Priority13.NORMAL.value
+) : AbstractFetchCache(name, priority) {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
 }
 
-class LoadingFetchCache(
+class LoadingFetchCache constructor(
     /**
      * The cache name, a loading fetch cache requires a unique name
      * */
-    name: String = "",
+    name: String,
+    /**
+     * The priority
+     * */
+    priority: Int,
     /**
      * The external url loader
      * */
     val urlLoader: ExternalUrlLoader,
     /**
-     * The priority
-     * */
-    val priority: Int,
-    /**
      * The cache capacity
      * */
     val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
-) : AbstractFetchCache(name), Loadable<UrlAware> {
+) : AbstractFetchCache(name, priority), Loadable<UrlAware> {
 
     companion object {
         const val G_NON_REENTRANT = 1
@@ -76,7 +85,6 @@ class LoadingFetchCache(
     override val nReentrantQueue = ConcurrentNEntrantLoadingQueue(urlLoader, topic(G_N_ENTRANT), 3)
     override val reentrantQueue = ConcurrentLoadingQueue(urlLoader, topic(G_REENTRANT))
     override val queues: List<Queue<UrlAware>> get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
-    override val size get() = queues.sumOf { it.size }
     override val externalSize: Int
         get() = queues.filterIsInstance<LoadingQueue<UrlAware>>().sumOf { it.externalSize }
     override val estimatedExternalSize: Int

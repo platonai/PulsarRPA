@@ -26,12 +26,12 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun `When add a item to queue then queue is not empty`() {
-        val source = LoadingFetchCache("", TemporaryLocalFileUrlLoader(), 0)
+        val source = LoadingFetchCache("", 0, TemporaryLocalFileUrlLoader())
         val sink = mutableListOf<UrlAware>()
 
         source.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { source.size == 1 }
-        val collector = FetchCacheCollector(source, source.priority)
+        val collector = FetchCacheCollector(source)
         assertTrue { collector.hasMore() }
         collector.collectTo(sink)
 
@@ -40,13 +40,13 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun `When add an item to LoadingFetchCache then LoadingIterable has next`() {
-        val fetchCache = LoadingFetchCache("", TemporaryLocalFileUrlLoader(), 0)
+        val fetchCache = LoadingFetchCache("", 0, TemporaryLocalFileUrlLoader())
         fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertEquals(1, fetchCache.size)
 
         val collectors: MutableList<PriorityDataCollector<UrlAware>> = Collections.synchronizedList(LinkedList())
-        collectors += FetchCacheCollector(fetchCache, fetchCache.priority)
-        val fetchQueueIterable = ConcurrentLoadingIterable(MultiSourceDataCollector(collectors), null, null, 10)
+        collectors += FetchCacheCollector(fetchCache)
+        val fetchQueueIterable = ConcurrentLoadingIterable(CombinedDataCollector(collectors), null, null, 10)
 
         assertTrue { fetchQueueIterable.regularCollector.hasMore() }
         assertTrue { fetchQueueIterable.iterator().hasNext() }
@@ -57,16 +57,16 @@ class TestDataCollectors : TestBase() {
     fun testDataCollectorSorting() {
         // Object information is erased
         val collectors = mutableListOf<AbstractPriorityDataCollector<UrlAware>>()
-        fetchCaches.caches.forEach { (priority, fetchCache) ->
-            collectors += FetchCacheCollector(fetchCache, priority)
+        fetchCaches.orderedCaches.forEach { (priority, fetchCache) ->
+            collectors += FetchCacheCollector(fetchCache)
         }
-        assertEquals(fetchCaches.caches.size, collectors.size)
+        assertEquals(fetchCaches.orderedCaches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
 //        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         println("Adding another normal collector ...")
         val priority = Priority13.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCaches.normalCache, priority)
+        val normalCollector = FetchCacheCollector(fetchCaches.normalCache)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
 //        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
@@ -81,16 +81,16 @@ class TestDataCollectors : TestBase() {
     fun testDataCollectorSorting2() {
         val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<UrlAware>>()
 
-        globalCache.fetchCaches.caches.forEach { (priority, fetchCache) ->
-            collectors[priority] = FetchCacheCollector(fetchCache, priority)
+        globalCache.fetchCaches.orderedCaches.forEach { (priority, fetchCache) ->
+            collectors[priority] = FetchCacheCollector(fetchCache)
         }
-        assertEquals(fetchCaches.caches.size, collectors.keys.size)
+        assertEquals(fetchCaches.orderedCaches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
 
         println("Adding 2nd normal collector ...")
         val priority = Priority13.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCaches.normalCache, priority)
+        val normalCollector = FetchCacheCollector(fetchCaches.normalCache)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }

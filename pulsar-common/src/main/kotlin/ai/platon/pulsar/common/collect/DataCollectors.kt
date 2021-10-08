@@ -24,7 +24,7 @@ interface CrawlableFatLinkCollector {
     fun removeAll(fatLinks: List<FatLink>): Int = fatLinks.count { remove(it) != null }
 }
 
-open class MultiSourceDataCollector<E>(
+open class CombinedDataCollector<E>(
         priority: Priority13 = Priority13.NORMAL,
 ): AbstractPriorityDataCollector<E>(priority) {
 

@@ -18,7 +18,7 @@ abstract class AbstractLoadingQueue(
 ) : AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     private val logger = getLogger(AbstractLoadingQueue::class)
 
-    // TODO: check the synchronization, non-concurrent collection is OK
+    // TODO: check the synchronization, non-concurrent collection might be OK
     protected val cacheImplementation = ConcurrentLinkedQueue<UrlAware>()
 
     private val capacity = topic.pageSize
@@ -44,13 +44,12 @@ abstract class AbstractLoadingQueue(
     @get:Synchronized
     override val externalSize: Int
         get() {
-            try {
-                return loader.countRemaining(topic)
+            return try {
+                loader.countRemaining(topic)
             } catch (e: Exception) {
                 logger.warn("Failed to count", e)
+                0
             }
-
-            return 0
         }
 
     @get:Synchronized
