@@ -1,14 +1,16 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.chrome.LauncherConfig.Companion.CHROME_BINARY_SEARCH_PATHS
+import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
-import com.github.kklisura.cdt.launch.exceptions.ChromeProcessException
-import com.github.kklisura.cdt.launch.exceptions.ChromeProcessTimeoutException
-import com.github.kklisura.cdt.services.ChromeService
-import com.github.kklisura.cdt.services.impl.ChromeServiceImpl
+import ai.platon.pulsar.common.getLogger
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.LoggerContext
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -38,15 +40,15 @@ class LauncherConfig {
         val THREAD_JOIN_WAIT_TIME = Duration.ofSeconds(5)
 
         val CHROME_BINARY_SEARCH_PATHS = arrayOf(
-            "/usr/bin/google-chrome-stable",
-            "/usr/bin/google-chrome",
-            "/opt/google/chrome/chrome",
-            "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-            "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-            "/Applications/Chromium.app/Contents/MacOS/Chromium",
-            "/usr/bin/chromium",
-            "/usr/bin/chromium-browser"
+                "/usr/bin/google-chrome-stable",
+                "/usr/bin/google-chrome",
+                "/opt/google/chrome/chrome",
+                "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+                "/Applications/Chromium.app/Contents/MacOS/Chromium",
+                "/usr/bin/chromium",
+                "/usr/bin/chromium-browser"
         )
     }
 }
@@ -57,56 +59,56 @@ class LauncherConfig {
 annotation class ChromeParameter(val value: String)
 
 class ChromeDevtoolsOptions(
-    @ChromeParameter("user-data-dir")
-    var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
-    @ChromeParameter("proxy-server")
-    var proxyServer: String? = null,
-    @ChromeParameter("headless")
-    var headless: Boolean = false,
-    @ChromeParameter("incognito")
-    var incognito: Boolean = false,
-    @ChromeParameter("disable-gpu")
-    var disableGpu: Boolean = true,
-    @ChromeParameter("hide-scrollbars")
-    var hideScrollbars: Boolean = true,
-    @ChromeParameter("remote-debugging-port")
-    var remoteDebuggingPort: Int = 0,
-    @ChromeParameter("no-default-browser-check")
-    var noDefaultBrowserCheck: Boolean = true,
-    @ChromeParameter("no-first-run")
-    var noFirstRun: Boolean = true,
-    @ChromeParameter("mute-audio")
-    var muteAudio: Boolean = true,
-    @ChromeParameter("disable-background-networking")
-    var disableBackgroundNetworking: Boolean = true,
-    @ChromeParameter("disable-background-timer-throttling")
-    var disableBackgroundTimerThrottling: Boolean = true,
-    @ChromeParameter("disable-client-side-phishing-detection")
-    var disableClientSidePhishingDetection: Boolean = true,
-    @ChromeParameter("disable-default-apps")
-    var disableDefaultApps: Boolean = false,
-    @ChromeParameter("disable-extensions")
-    var disableExtensions: Boolean = false,
-    @ChromeParameter("disable-hang-monitor")
-    var disableHangMonitor: Boolean = true,
-    @ChromeParameter("disable-popup-blocking")
-    var disablePopupBlocking: Boolean = true,
-    @ChromeParameter("disable-prompt-on-repost")
-    var disablePromptOnRepost: Boolean = true,
-    @ChromeParameter("disable-sync")
-    var disableSync: Boolean = true,
-    @ChromeParameter("disable-translate")
-    var disableTranslate: Boolean = true,
-    @ChromeParameter("metrics-recording-only")
-    var metricsRecordingOnly: Boolean = true,
-    @ChromeParameter("safebrowsing-disable-auto-update")
-    var safebrowsingDisableAutoUpdate: Boolean = true,
-    @ChromeParameter("ignore-certificate-errors")
-    var ignoreCertificateErrors: Boolean = true,
-    @ChromeParameter("no-sandbox")
-    var noSandbox: Boolean = true,
-    @ChromeParameter("disable-setuid-sandbox")
-    var disableSetuidSandbox: Boolean = true
+        @ChromeParameter("user-data-dir")
+        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
+        @ChromeParameter("proxy-server")
+        var proxyServer: String? = null,
+        @ChromeParameter("headless")
+        var headless: Boolean = false,
+        @ChromeParameter("incognito")
+        var incognito: Boolean = false,
+        @ChromeParameter("disable-gpu")
+        var disableGpu: Boolean = true,
+        @ChromeParameter("hide-scrollbars")
+        var hideScrollbars: Boolean = true,
+        @ChromeParameter("remote-debugging-port")
+        var remoteDebuggingPort: Int = 0,
+        @ChromeParameter("no-default-browser-check")
+        var noDefaultBrowserCheck: Boolean = true,
+        @ChromeParameter("no-first-run")
+        var noFirstRun: Boolean = true,
+        @ChromeParameter("mute-audio")
+        var muteAudio: Boolean = true,
+        @ChromeParameter("disable-background-networking")
+        var disableBackgroundNetworking: Boolean = true,
+        @ChromeParameter("disable-background-timer-throttling")
+        var disableBackgroundTimerThrottling: Boolean = true,
+        @ChromeParameter("disable-client-side-phishing-detection")
+        var disableClientSidePhishingDetection: Boolean = true,
+        @ChromeParameter("disable-default-apps")
+        var disableDefaultApps: Boolean = false,
+        @ChromeParameter("disable-extensions")
+        var disableExtensions: Boolean = false,
+        @ChromeParameter("disable-hang-monitor")
+        var disableHangMonitor: Boolean = true,
+        @ChromeParameter("disable-popup-blocking")
+        var disablePopupBlocking: Boolean = true,
+        @ChromeParameter("disable-prompt-on-repost")
+        var disablePromptOnRepost: Boolean = true,
+        @ChromeParameter("disable-sync")
+        var disableSync: Boolean = true,
+        @ChromeParameter("disable-translate")
+        var disableTranslate: Boolean = true,
+        @ChromeParameter("metrics-recording-only")
+        var metricsRecordingOnly: Boolean = true,
+        @ChromeParameter("safebrowsing-disable-auto-update")
+        var safebrowsingDisableAutoUpdate: Boolean = true,
+        @ChromeParameter("ignore-certificate-errors")
+        var ignoreCertificateErrors: Boolean = true,
+        @ChromeParameter("no-sandbox")
+        var noSandbox: Boolean = true,
+        @ChromeParameter("disable-setuid-sandbox")
+        var disableSetuidSandbox: Boolean = true
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 
@@ -124,9 +126,9 @@ class ChromeDevtoolsOptions(
 
     fun toMap(): Map<String, Any?> {
         val args = ChromeDevtoolsOptions::class.java.declaredFields
-            .filter { it.annotations.any { it is ChromeParameter } }
-            .onEach { it.isAccessible = true }
-            .associateTo(LinkedHashMap()) { it.getAnnotation(ChromeParameter::class.java).value to it.get(this) }
+                .filter { it.annotations.any { it is ChromeParameter } }
+                .onEach { it.isAccessible = true }
+                .associateTo(LinkedHashMap()) { it.getAnnotation(ChromeParameter::class.java).value to it.get(this) }
 
         args.putAll(additionalArguments)
 
@@ -159,9 +161,9 @@ class ProcessLauncher {
     fun launch(program: String, args: List<String>): Process {
         val command = mutableListOf<String>().apply { add(program); addAll(args) }
         val processBuilder = ProcessBuilder()
-            .command(command)
-            .redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .command(command)
+                .redirectErrorStream(true)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
 
         log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
             Strings.doubleQuoteIfContainsWhitespace(it)
@@ -171,7 +173,7 @@ class ProcessLauncher {
     }
 }
 
-class ChromeLauncherV2(
+class ChromeLauncher(
         private val processLauncher: ProcessLauncher = ProcessLauncher(),
         private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
         private val config: LauncherConfig = LauncherConfig()
@@ -179,14 +181,19 @@ class ChromeLauncherV2(
 
     companion object {
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+
+        fun enableDebugChromeOutput() {
+            val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+            loggerContext.getLogger("com.github.kklisura.cdt.launch.chrome.output").level = Level.DEBUG
+        }
     }
 
-    private val log = LoggerFactory.getLogger(ChromeLauncherV2::class.java)
+    private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
     private var process: Process? = null
     private var userDataDir = AppPaths.CHROME_TMP_DIR
     private val shutdownHookThread = Thread { this.close() }
 
-    fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): ChromeService {
+    fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
         userDataDir = options.userDataDir
 
         // if the data dir is the default dir, we might have problem to prepare user dir
@@ -197,7 +204,7 @@ class ChromeLauncherV2(
         }
 
         val port = launchChromeProcess(chromeBinaryPath, options)
-        return ChromeServiceImpl(port)
+        return Chrome(port)
     }
 
     fun launch(options: ChromeDevtoolsOptions) = launch(searchChromeBinary(), options)
@@ -211,12 +218,12 @@ class ChromeLauncherV2(
         this.process = null
         if (p.isAlive) {
             Runtimes.destroyProcess(p, config.shutdownWaitTime)
-//            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-//                    .onFailure { log.warn("Unexpected exception", it) }
+            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+                    .onFailure { log.warn("Unexpected exception", it) }
         }
 
         // if the data dir is the default dir, we might have problem to clean up
-        if ("context\\default" !in userDataDir.toString()) {
+        if (!userDataDir.toString().contains("context\\default", true)) {
             kotlin.runCatching { cleanUp() }.onFailure {
                 log.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
             }
@@ -374,9 +381,7 @@ class ChromeLauncherV2(
                 if (!Files.exists(userDataDir.resolve("Default"))) {
                     log.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
                     // remove dead symbolic links
-                    Files.list(prototypeUserDataDir)
-                        .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
-                        .forEach { Files.delete(it) }
+                    Files.list(prototypeUserDataDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
@@ -418,7 +423,7 @@ class ChromeLauncherV2(
      * */
     @Throws(IOException::class)
     private fun forceDeleteDirectory(dirToDelete: Path) {
-        synchronized(ChromeLauncherV2::class.java) {
+        synchronized(ChromeLauncher::class.java) {
             val lock = AppPaths.BROWSER_TMP_DIR_LOCK
 
             val maxTry = 10
@@ -443,7 +448,8 @@ class ChromeLauncherV2(
         }
 
         fun remove(thread: Thread) {
-            Runtime.getRuntime().removeShutdownHook(thread)
+            // TODO: java.lang.IllegalStateException: Shutdown in progress
+            // Runtime.getRuntime().removeShutdownHook(thread)
         }
     }
 

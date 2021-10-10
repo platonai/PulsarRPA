@@ -28,9 +28,26 @@
             <version>${netty.version}</version>
         </dependency>
         <dependency>
+            <groupId>javax.websocket</groupId>
+            <artifactId>javax.websocket-api</artifactId>
+            <version>${websocket.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.tyrus</groupId>
+            <artifactId>tyrus-container-grizzly-client</artifactId>
+            <version>${tyrus.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.kklisura.cdt</groupId>
             <artifactId>cdt-java-client</artifactId>
             <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>4.1.58.Final</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

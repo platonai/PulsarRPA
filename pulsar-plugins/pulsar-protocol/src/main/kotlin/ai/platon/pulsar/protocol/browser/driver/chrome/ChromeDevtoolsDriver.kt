@@ -1,8 +1,9 @@
 package ai.platon.pulsar.protocol.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
-import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
+import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.readable
@@ -14,11 +15,7 @@ import ai.platon.pulsar.protocol.browser.conf.mustPassUrlPatterns
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
-import com.github.kklisura.cdt.launch.ChromeLauncher
 import com.github.kklisura.cdt.protocol.types.page.Viewport
-import com.github.kklisura.cdt.services.ChromeDevToolsService
-import com.github.kklisura.cdt.services.exceptions.ChromeDevToolsInvocationException
-import com.github.kklisura.cdt.services.types.ChromeTab
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -27,10 +24,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
-import org.openqa.selenium.remote.ScreenshotException
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -40,16 +35,6 @@ internal data class DeviceMetrics(
     val deviceScaleFactor: Double,
     val mobile: Boolean
 )
-
-class DevToolsConfig(
-//    var workerGroup: EventLoopGroup = DefaultEventLoopGroup(),
-    var readTimeout: Duration = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
-) {
-    companion object {
-        private const val READ_TIMEOUT_PROPERTY = "chrome.browser.services.config.readTimeout"
-        private val READ_TIMEOUT_MINUTES = System.getProperty(READ_TIMEOUT_PROPERTY, "3").toLong()
-    }
-}
 
 /**
  * TODO: inherit from ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -74,7 +59,7 @@ class ChromeDevtoolsDriver(
 
     val browserInstance: BrowserInstance
     val tab: ChromeTab
-    val devTools: ChromeDevToolsService
+    val devTools: RemoteDevTools
 
     private var lastSessionId: SessionId? = null
     private val browser get() = devTools.browser
@@ -89,7 +74,7 @@ class ChromeDevtoolsDriver(
     private val enableBlockingReport = false
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
-    private val isGone get() = closed.get() || devTools.isClosed || numSessionLost.get() > 1
+    private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
     private val isActive get() = !isGone
 
     val viewport = Viewport().apply {
@@ -108,7 +93,7 @@ class ChromeDevtoolsDriver(
             tab = browserInstance.createTab()
             navigateUrl = tab.url ?: ""
 
-            devTools = browserInstance.createDevTools(tab)
+            devTools = browserInstance.createDevTools(tab, devToolsConfig)
 
             if (userAgent.isNotEmpty()) {
                 emulation.setUserAgentOverride(userAgent)

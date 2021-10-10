@@ -1,15 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
-import ai.platon.pulsar.browser.driver.chrome.ChromeLauncherV2
-import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
+import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
-import com.github.kklisura.cdt.launch.ChromeArguments
-import com.github.kklisura.cdt.launch.ChromeLauncher
-import com.github.kklisura.cdt.services.ChromeDevToolsService
-import com.github.kklisura.cdt.services.ChromeService
-import com.github.kklisura.cdt.services.types.ChromeTab
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -33,9 +26,9 @@ class BrowserInstance(
     val proxyServer get() = launchOptions.proxyServer
 
     val numTabs = AtomicInteger()
-    lateinit var launcher: ChromeLauncherV2
-    lateinit var chrome: ChromeService
-    val devToolsList = ConcurrentLinkedQueue<ChromeDevToolsService>()
+    lateinit var launcher: ChromeLauncher
+    lateinit var chrome: RemoteChrome
+    val devToolsList = ConcurrentLinkedQueue<RemoteDevTools>()
 
     private val log = LoggerFactory.getLogger(BrowserInstance::class.java)
     private val launched = AtomicBoolean()
@@ -47,20 +40,10 @@ class BrowserInstance(
         synchronized(ChromeLauncher::class.java) {
             if (launched.compareAndSet(false, true)) {
                 val shutdownHookRegistry = ChromeDevtoolsDriver.ShutdownHookRegistry()
-//                launcher = ChromeLauncherKK(
-//                    processLauncher = ProcessLauncherImpl(),
-//                    environment = ChromeLauncherKK.Environment { System.getenv(it) },
-//                    shutdownHookRegistry = ChromeLauncherKK.RuntimeShutdownHookRegistry(),
-//                    configuration = ChromeLauncherConfiguration())
-
-                val args = ChromeArguments.defaults(false) // Sets the correct arguments: enable-logging and logging level
-                    .enableLogging("stderr")
-                    .userDataDir("/home/vincent/.pulsar/browser/chrome/prototype/google-chrome")
-                    .additionalArguments("v", "1")
-                    .build()
-                launcher = ChromeLauncherV2(config = launcherConfig)
-
-//                chrome = launcher.launch(launchOptions)
+                launcher = ChromeLauncher(
+                    config = launcherConfig,
+                    shutdownHookRegistry = shutdownHookRegistry
+                )
                 chrome = launcher.launch(launchOptions)
             }
         }
@@ -78,9 +61,8 @@ class BrowserInstance(
 
     @Synchronized
     @Throws(Exception::class)
-    fun createDevTools(tab: ChromeTab): ChromeDevToolsService {
-        val devTools= chrome.createDevToolsService(tab)
-        // chrome.createDevTools(tab, config)
+    fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
+        val devTools= chrome.createDevTools(tab, config)
         devToolsList.add(devTools)
         return devTools
     }

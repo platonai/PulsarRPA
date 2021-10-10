@@ -98,8 +98,15 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    val headless get() = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
-    val isGUI get() = supervisorProcess == null && !headless
+    val isSupervised get() = supervisorProcess != null
+    val isHeadless get() = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
+    val isGUI get() = !isSupervised && !isHeadless
+    val mode get() = when {
+        isSupervised -> "SUPERVISED"
+        isGUI -> "GUI"
+        isHeadless -> "HEADLESS"
+        else -> "UNKNOWN"
+    }
     val eagerAllocateTabs get() = conf.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val imagesEnabled get() = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
     val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
