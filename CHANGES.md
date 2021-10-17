@@ -2,6 +2,12 @@ dev-1.6.5.4
 
 Plan:
 
+    1. bug fix for dev-1.6.5.x
+
+dev-1.6.5.4
+
+Plan:
+
     1. bug fix for dev-1.6.5.3
 
 dev-1.6.5.3
