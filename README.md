@@ -14,6 +14,10 @@ Turn the Web into tables and charts using simple SQLs.
 
 For more information check [platon.ai](http://platon.ai)
 
+## TODO
+
+    1. Choose the proper chrome protocol automatically or provide a build-in chrome
+
 ## X-SQL
 
 Scrape a single page:
