@@ -56,6 +56,8 @@
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-shaded-mongodb</artifactId>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib3/gora-shaded-mongodb-0.8.jar</systemPath>
         </dependency>
 
         <dependency>

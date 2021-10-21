@@ -30,6 +30,6 @@
 
         <!-- Including gora-shaded-mongodb breaks Intellij Idea's path searching,
         it failed to find class MongoStore -->
-        <!-- <module>gora-shaded-mongodb</module>-->
+<!--        <module>gora-shaded-mongodb</module>-->
     </modules>
 </project>
