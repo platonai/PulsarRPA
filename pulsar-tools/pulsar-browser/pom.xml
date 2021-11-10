@@ -23,11 +23,6 @@
         </dependency>
 
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-chrome-devtools</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>javax.websocket</groupId>
             <artifactId>javax.websocket-api</artifactId>
             <version>${websocket.api.version}</version>
