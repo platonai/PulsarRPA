@@ -30,7 +30,6 @@ class WebSocketClientImpl : WebSocketClient {
 
     class WSMessageHandler(val consumer: Consumer<String>): MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
-            println(message)
             consumer.accept(message)
         }
     }
