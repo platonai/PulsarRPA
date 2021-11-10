@@ -9,6 +9,22 @@ import org.junit.Test
  */
 class TestUdfs: TestBase() {
 
+    @Test
+    fun testFirstFloat() {
+        val sql = """
+select
+    dom_first_text(dom, '.c-goods-item__name') as Name,
+    dom_first_float(dom, '.c-goods-item__sale-price', 0.0) as Price,
+    dom_first_float(dom, '.c-goods-item__market-price', 0.0) as Tag_Price,
+    dom_first_float(dom, '.c-goods-item__market-price', 0.0) - dom_first_float(dom, '.c-goods-item__sale-price', 0.0) as Promotion,
+    dom_base_uri(dom)
+from 
+    load_and_select('https://list.vip.com/autolist.html?rule_id=57889442 -refresh', 'div.c-goods-item');
+        """.trimIndent()
+
+        execute(sql)
+    }
+
     @Ignore("Transpose is not correctly implemented")
     @Test
     fun testTranspose() {
