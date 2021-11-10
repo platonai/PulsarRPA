@@ -1,7 +1,5 @@
 package ai.platon.pulsar.browser.driver.examples
 
-import com.google.gson.Gson
-
 class LogRequestsExample: BrowserExampleBase() {
     override fun run() {
         network.onRequestWillBeSent { event ->

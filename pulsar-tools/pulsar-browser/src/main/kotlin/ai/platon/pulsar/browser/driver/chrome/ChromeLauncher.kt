@@ -104,11 +104,7 @@ class ChromeDevtoolsOptions(
         @ChromeParameter("safebrowsing-disable-auto-update")
         var safebrowsingDisableAutoUpdate: Boolean = true,
         @ChromeParameter("ignore-certificate-errors")
-        var ignoreCertificateErrors: Boolean = true,
-        @ChromeParameter("no-sandbox")
-        var noSandbox: Boolean = true,
-        @ChromeParameter("disable-setuid-sandbox")
-        var disableSetuidSandbox: Boolean = true
+        var ignoreCertificateErrors: Boolean = true
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 

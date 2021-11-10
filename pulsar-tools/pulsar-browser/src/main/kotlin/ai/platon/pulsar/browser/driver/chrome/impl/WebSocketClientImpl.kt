@@ -28,6 +28,13 @@ class WebSocketClientImpl : WebSocketClient {
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
 
+    class WSMessageHandler(val consumer: Consumer<String>): MessageHandler.Whole<String> {
+        override fun onMessage(message: String) {
+            println(message)
+            consumer.accept(message)
+        }
+    }
+
     override fun isClosed(): Boolean {
         return !session.isOpen || closed.get()
     }
@@ -51,6 +58,7 @@ class WebSocketClientImpl : WebSocketClient {
 
             override fun onError(session: Session, e: Throwable?) {
                 super.onError(session, e)
+                e?.printStackTrace()
                 webSocketService.onError(session, e)
             }
         }
@@ -88,7 +96,6 @@ class WebSocketClientImpl : WebSocketClient {
         meterRequests.mark()
 
         return try {
-            // TODO: use session.asyncRemote?
             session.asyncRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)
@@ -106,7 +113,7 @@ class WebSocketClientImpl : WebSocketClient {
             throw WebSocketServiceException("You are already subscribed to this web socket service.")
         }
 
-        session.addMessageHandler(MessageHandler.Whole<String> { consumer.accept(it) })
+        session.addMessageHandler(WSMessageHandler(consumer))
     }
 
     private fun onOpen(session: Session, config: EndpointConfig) {

@@ -23,6 +23,11 @@
         </dependency>
 
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.websocket</groupId>
             <artifactId>javax.websocket-api</artifactId>
             <version>${websocket.api.version}</version>
@@ -34,32 +39,15 @@
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport</artifactId>
-            <version>${netty.version}</version>
+            <groupId>com.github.kklisura.cdt</groupId>
+            <artifactId>cdt-java-client</artifactId>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-handler</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <version>4.1.58.Final</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
