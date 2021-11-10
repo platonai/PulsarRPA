@@ -1,23 +1,16 @@
 package ai.platon.pulsar.ql.h2.utils
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.DateTimes.PATH_SAFE_FORMAT_1
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.gson.GsonBuilder
-import org.apache.commons.lang3.RandomStringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
-import java.nio.file.Files
-import java.nio.file.Path
 import java.sql.*
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * Only for small result sets

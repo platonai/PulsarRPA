@@ -247,7 +247,7 @@ open class BrowserEmulator(
         } finally {
             if (message == null) {
                 if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
-                    logger.warn("Unexpected script result (null) | {}", interactTask.url)
+                    logger.warn("Script result is null for waitForReady, retry is supposed | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK
                 }
