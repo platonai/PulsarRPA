@@ -40,7 +40,6 @@ class WebSocketClientImpl : WebSocketClient {
 
     @Throws(WebSocketServiceException::class)
     override fun connect(uri: URI) {
-
         val webSocketService = this
 
         val endpoint = object : Endpoint() {
@@ -57,7 +56,6 @@ class WebSocketClientImpl : WebSocketClient {
 
             override fun onError(session: Session, e: Throwable?) {
                 super.onError(session, e)
-                e?.printStackTrace()
                 webSocketService.onError(session, e)
             }
         }
