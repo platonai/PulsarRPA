@@ -76,8 +76,10 @@ open class WebDriverFactory(
     private fun createChromeDevtoolsDriver(
         browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities): ChromeDevtoolsDriver {
         val launcherConfig = LauncherConfig().apply {
-            supervisorProcess = driverSettings.supervisorProcess
-            supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
+            if (driverSettings.isSupervised) {
+                supervisorProcess = driverSettings.supervisorProcess
+                supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
+            }
         }
         val launchOptions = driverSettings.createChromeDevtoolsOptions(capabilities).apply {
             userDataDir = browserInstanceId.dataDir

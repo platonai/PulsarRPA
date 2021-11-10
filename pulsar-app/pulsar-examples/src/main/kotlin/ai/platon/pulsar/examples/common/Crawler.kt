@@ -77,6 +77,7 @@ open class Crawler(
 
     fun loadOutPages(portalUrl: String, options: LoadOptions) {
         val page = i.load(portalUrl, options)
+
         val document = i.parse(page)
         document.absoluteLinks()
         document.stripScripts()
@@ -95,15 +96,6 @@ open class Crawler(
         val pages = i.loadAll(links, options.createItemOptions())
         pages.forEach {
             println(it.url)
-        }
-
-        val query = options.query
-        if (query != null) {
-            pages.map { i.parse(it) }.map { it.first(query) }.forEachIndexed { i, e ->
-                val baseUri = e?.baseUri()?:"(null)"
-                val title = e?.text()?:"(null)"
-                println("$i\t$baseUri\n$title")
-            }
         }
     }
 

@@ -18,11 +18,6 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.CACHING_FORBIDDEN_CONTENT
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
@@ -31,19 +26,12 @@ import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
-import ai.platon.pulsar.crawl.parse.html.JsoupParser
-import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import org.jsoup.helper.W3CDom
 import org.slf4j.LoggerFactory
-import org.w3c.dom.DocumentFragment
 import java.net.MalformedURLException
-import java.net.URL
 import java.util.concurrent.atomic.AtomicInteger
 
 /**

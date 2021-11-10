@@ -205,7 +205,7 @@ class LoadComponent(
             .toList()
 
         queue.addAll(links)
-        logger.debug("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
+        logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
             globalCache.javaClass, globalCache.hashCode(), globalCache.fetchCaches.hashCode())
 
         var i = 90

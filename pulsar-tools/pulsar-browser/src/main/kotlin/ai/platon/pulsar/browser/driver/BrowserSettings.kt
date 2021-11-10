@@ -13,6 +13,8 @@ import java.nio.file.Path
 import java.time.Duration
 import kotlin.random.Random
 
+enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
+
 data class EmulateSettings(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
@@ -85,7 +87,7 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
-            System.setProperty(BROWSER_DRIVER_HEADLESS, "false")
+            System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
             return BrowserSettings
         }
 
@@ -98,15 +100,10 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    val isSupervised get() = supervisorProcess != null
-    val isHeadless get() = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
-    val isGUI get() = !isSupervised && !isHeadless
-    val mode get() = when {
-        isSupervised -> "SUPERVISED"
-        isGUI -> "GUI"
-        isHeadless -> "HEADLESS"
-        else -> "UNKNOWN"
-    }
+    val displayMode get() = conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
+    val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
+    val isHeadless get() = displayMode == DisplayMode.HEADLESS
+    val isGUI get() = displayMode == DisplayMode.GUI
     val eagerAllocateTabs get() = conf.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val imagesEnabled get() = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
     val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)

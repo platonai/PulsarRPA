@@ -152,18 +152,24 @@ object SQLContexts {
 
 fun withSQLContext(block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(DefaultClassPathXmlSQLContext()).use {
+        it.crawlLoops.start()
         block(it)
+        it.crawlLoops.stop()
     }
 }
 
 fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(ClassPathXmlSQLContext(contextLocation)).use {
+        it.crawlLoops.start()
         block(it)
+        it.crawlLoops.stop()
     }
 }
 
 fun withSQLContext(applicationContext: ApplicationContext, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(applicationContext).use {
+        it.crawlLoops.start()
         block(it)
+        it.crawlLoops.stop()
     }
 }
