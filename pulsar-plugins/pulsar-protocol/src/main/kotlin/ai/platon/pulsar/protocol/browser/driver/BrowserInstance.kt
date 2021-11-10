@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
@@ -14,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserInstance(
-        val launcherConfig: LauncherConfig,
-        val launchOptions: ChromeDevtoolsOptions
+    val launcherConfig: LauncherConfig,
+    val launchOptions: ChromeDevtoolsOptions
 ): AutoCloseable {
 
     /**
@@ -41,7 +40,10 @@ class BrowserInstance(
         synchronized(ChromeLauncher::class.java) {
             if (launched.compareAndSet(false, true)) {
                 val shutdownHookRegistry = ChromeDevtoolsDriver.ShutdownHookRegistry()
-                launcher = ChromeLauncher(config = launcherConfig, shutdownHookRegistry = shutdownHookRegistry)
+                launcher = ChromeLauncher(
+                    config = launcherConfig,
+                    shutdownHookRegistry = shutdownHookRegistry
+                )
                 chrome = launcher.launch(launchOptions)
             }
         }
@@ -76,12 +78,16 @@ class BrowserInstance(
 
             val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
             nonSynchronized.parallelStream().forEach {
-                it.close()
-                // should we?
-                it.waitUntilClosed()
+                try {
+                    it.close()
+                    // should we?
+                    it.waitUntilClosed()
+                } catch (e: Exception) {
+                    log.warn("Failed to close the dev tool", e)
+                }
             }
 
-            chrome.close()
+            // chrome.close()
             launcher.close()
 
             log.info("Launcher is closed | {}", id.display)

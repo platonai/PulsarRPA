@@ -238,11 +238,10 @@ open class WebDriverPoolManager(
         preempt {
             retiredPools.add(browserId)
             driverPools.remove(browserId)?.also { driverPool ->
-                val isGUI = driverSettings.isGUI
-                val mode = if (isGUI) "GUI" else "headless"
+                val mode = driverSettings.mode
                 log.info("Web drivers are {} mode with {} ", mode, browserId)
                 log.info(driverPool.formatStatus(verbose = true))
-                if (!isGUI) {
+                if (!driverSettings.isGUI) {
                     log.info("Closing driver pool in {} mode with {} ", mode, browserId)
                     driverPool.close()
                 }

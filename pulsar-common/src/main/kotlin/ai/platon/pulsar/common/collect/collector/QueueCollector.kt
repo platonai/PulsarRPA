@@ -15,9 +15,6 @@ open class QueueCollector(
     override val size: Int
         get() = queue.size
 
-    override val estimatedSize: Int
-        get() = queue.size
-
     var loadArgs: String? = null
 
     constructor(priority: Priority13): this(ConcurrentLinkedQueue(), priority.value)
@@ -42,6 +39,10 @@ open class QueueCollector(
         }
 
         return afterCollect(count)
+    }
+
+    override fun dump(): List<String> {
+        return queue.map { it.url }
     }
 
     override fun clear() = queue.clear()

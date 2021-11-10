@@ -45,7 +45,6 @@ class ConcurrentNonReentrantLoadingQueue(
 
         return false
     }
-
 }
 
 class ConcurrentNEntrantLoadingQueue(

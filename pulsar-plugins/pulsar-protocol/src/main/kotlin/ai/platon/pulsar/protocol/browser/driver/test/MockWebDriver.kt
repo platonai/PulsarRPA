@@ -1,12 +1,12 @@
 package ai.platon.pulsar.protocol.browser.driver.test
 
-import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
+import org.openqa.selenium.remote.ScreenshotException
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
 import java.nio.file.Files

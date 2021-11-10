@@ -194,11 +194,11 @@ public interface AppConstants {
     /**
      * Browser
      * */
-    double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.MIB.toBytes(500); // 500 MiB
+    double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.GIB.toBytes(1); // 500 MiB
 
-    double DEFAULT_RESERVED_MEMORY = ByteUnit.GIB.toBytes(5.0); // 5 GiB
+    double DEFAULT_BROWSER_RESERVED_MEMORY = ByteUnit.GIB.toBytes(5.0); // 5 GiB
 
-    double DEFAULT_RESERVED_MEMORY_MIB = ByteUnit.BYTE.toMiB(DEFAULT_RESERVED_MEMORY); // 5 GiB
+    double DEFAULT_BROWSER_RESERVED_MEMORY_MIB = ByteUnit.BYTE.toMiB(DEFAULT_BROWSER_RESERVED_MEMORY); // 5 GiB
 
     Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";

@@ -126,6 +126,10 @@ open class HyperlinkCollector(
         return tailLinks.size
     }
 
+    override fun dump(): List<String> {
+        return seeds.map { it.toString() }
+    }
+
     override fun clear() = seeds.clear()
 }
 

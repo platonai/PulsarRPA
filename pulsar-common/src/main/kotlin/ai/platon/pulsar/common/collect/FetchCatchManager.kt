@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.collect.ExternalUrlLoader
 import ai.platon.pulsar.common.collect.FetchCacheManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
@@ -38,13 +37,13 @@ open class DelayUrl(
  * */
 interface FetchCacheManager {
     companion object {
-        val REAL_TIME_PRIORITY = Priority13.HIGHEST.value * 2
+        val REAL_TIME_PRIORITY = Priority13.HIGHEST.value
     }
 
     /**
      * The priority fetch caches
      * */
-    val caches: MutableMap<Int, FetchCache>
+    val orderedCaches: MutableMap<Int, FetchCache>
     val unorderedCaches: MutableList<FetchCache>
     val realTimeCache: FetchCache
     val delayCache: Queue<DelayUrl>
@@ -73,25 +72,25 @@ interface FetchCacheManager {
  * */
 abstract class AbstractFetchCacheManager(val conf: ImmutableConfig) : FetchCacheManager {
     protected val initialized = AtomicBoolean()
-    override val totalItems get() = ensureInitialized().caches.values.sumOf { it.size }
+    override val totalItems get() = ensureInitialized().orderedCaches.values.sumOf { it.size }
 
-    override val lowestCache: FetchCache get() = ensureInitialized().caches[Priority13.LOWEST.value]!!
-    override val lower5Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER5.value]!!
-    override val lower4Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER4.value]!!
-    override val lower3Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER3.value]!!
-    override val lower2Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER2.value]!!
-    override val lowerCache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER.value]!!
-    override val normalCache: FetchCache get() = ensureInitialized().caches[Priority13.NORMAL.value]!!
-    override val higherCache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER.value]!!
-    override val higher2Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER2.value]!!
-    override val higher3Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER3.value]!!
-    override val higher4Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER4.value]!!
-    override val higher5Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER5.value]!!
-    override val highestCache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHEST.value]!!
+    override val lowestCache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.LOWEST.value]!!
+    override val lower5Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.LOWER5.value]!!
+    override val lower4Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.LOWER4.value]!!
+    override val lower3Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.LOWER3.value]!!
+    override val lower2Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.LOWER2.value]!!
+    override val lowerCache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.LOWER.value]!!
+    override val normalCache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.NORMAL.value]!!
+    override val higherCache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER.value]!!
+    override val higher2Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER2.value]!!
+    override val higher3Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER3.value]!!
+    override val higher4Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER4.value]!!
+    override val higher5Cache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER5.value]!!
+    override val highestCache: FetchCache get() = ensureInitialized().orderedCaches[Priority13.HIGHEST.value]!!
 
     override fun removeDeceased() {
         ensureInitialized()
-        caches.values.forEach { it.removeDeceased() }
+        orderedCaches.values.forEach { it.removeDeceased() }
         unorderedCaches.forEach { it.removeDeceased() }
         val now = Instant.now()
         delayCache.removeIf { it.url.deadTime < now }
@@ -112,14 +111,14 @@ open class ConcurrentFetchCacheManager(conf: ImmutableConfig) : AbstractFetchCac
     /**
      * The priority fetch caches
      * */
-    override val caches = ConcurrentSkipListMap<Int, FetchCache>()
+    override val orderedCaches = ConcurrentSkipListMap<Int, FetchCache>()
 
     override val unorderedCaches: MutableList<FetchCache> = Collections.synchronizedList(mutableListOf())
 
     /**
      * The real time fetch cache
      * */
-    override val realTimeCache: FetchCache = ConcurrentFetchCache("realtime")
+    override val realTimeCache: FetchCache = ConcurrentFetchCache("realtime0", REAL_TIME_PRIORITY)
 
     /**
      * The delayed fetch cache
@@ -128,7 +127,7 @@ open class ConcurrentFetchCacheManager(conf: ImmutableConfig) : AbstractFetchCac
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority13.values().forEach { caches[it.value] = ConcurrentFetchCache(it.name) }
+            Priority13.values().forEach { orderedCaches[it.value] = ConcurrentFetchCache(it.name, it.value) }
         }
     }
 }
@@ -141,12 +140,13 @@ class LoadingFetchCacheManager(
     /**
      * The real time fetch cache
      * */
-    override val realTimeCache: FetchCache = LoadingFetchCache("realtime", urlLoader, REAL_TIME_PRIORITY, capacity)
+    override val realTimeCache: FetchCache = LoadingFetchCache("realtime", REAL_TIME_PRIORITY, urlLoader, capacity)
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
             Priority13.values().forEach {
-                caches[it.value] = LoadingFetchCache(it.name, urlLoader, it.value, capacity)
+                // TODO: better fetch cache name, it affects the topic id
+                orderedCaches[it.value] = LoadingFetchCache(it.name, it.value, urlLoader, capacity)
             }
         }
     }

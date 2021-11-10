@@ -8,6 +8,8 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationExcep
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.LoggerContext
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.CountDownLatch

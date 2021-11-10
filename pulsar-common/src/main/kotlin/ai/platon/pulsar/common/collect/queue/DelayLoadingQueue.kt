@@ -16,8 +16,8 @@ open class DelayLoadingQueue(
     /**
      * The delay time to load after another load
      * */
-    var loadDelay: Duration = Duration.ofSeconds(5),
-    var estimateDelay: Duration = Duration.ofSeconds(5),
+    var loadDelay: Duration = Duration.ofSeconds(3),
+    var estimateDelay: Duration = Duration.ofSeconds(3),
     transformer: (UrlAware) -> UrlAware
 ) : AbstractLoadingQueue(loader, topic, transformer) {
     private val logger = getLogger(DelayLoadingQueue::class)
@@ -42,12 +42,12 @@ open class DelayLoadingQueue(
      * */
     val idleTime get() = Duration.between(lastReapedTime, Instant.now())
 
-    val isFree get() = idleTime.seconds > 60
+    val isIdle get() = idleTime.seconds > 60
 
-    val isBusy get() = !isFree
+    val isBusy get() = !isIdle
 
     // always access the underlying layer with a delay to reduce possible IO reads
-    val adjustedEstimateDelay get() = if (isFree) Duration.ofSeconds(30) else estimateDelay
+    val adjustedEstimateDelay get() = if (isIdle) Duration.ofSeconds(15) else estimateDelay
 
     val isExpired get() = isExpired(loadDelay)
 

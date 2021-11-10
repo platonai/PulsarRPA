@@ -17,7 +17,7 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
     }
 
     fun bestSeller() {
-        val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs -i 1s"
+        val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs -refresh"
         val document = i.loadDocument(portalUrl)
         document.select("a[href~=/dp/]").forEach {
             println(it.attr("abs:href"))

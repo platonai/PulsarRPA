@@ -31,8 +31,7 @@ class ChromeTab {
     var webSocketDebuggerUrl: String? = null
     var faviconUrl: String? = null
 
-    val isPageType: Boolean
-        get() = PAGE_TYPE == type
+    fun isPageType(): Boolean = PAGE_TYPE == type
 
     companion object {
         const val PAGE_TYPE = "page"

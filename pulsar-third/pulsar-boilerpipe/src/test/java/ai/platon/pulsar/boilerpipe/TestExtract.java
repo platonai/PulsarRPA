@@ -4,12 +4,15 @@ import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
+import ai.platon.pulsar.boilerpipe.sax.SAXInput;
 import ai.platon.pulsar.common.ResourceLoader;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +38,7 @@ public class TestExtract {
         }
       } catch (Exception e) {
         System.out.println("Failed to extract " + url);
+        e.printStackTrace();
       }
     }
   }
@@ -43,9 +47,9 @@ public class TestExtract {
     String html;
     try {
       html = HTMLDownloader.fetch(url);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       System.out.println("Failed to fetch url " + StringUtils.substring(url, 0, 100));
+      e.printStackTrace();
       return;
     }
 
@@ -54,10 +58,13 @@ public class TestExtract {
       return;
     }
 
-    // TextDocument doc = new SAXInput(is, url).getTextDocument();
-    HTMLParser parser = new HTMLParser(url);
-    parser.parse(html);
-    TextDocument doc = parser.getTextDocument();
+    // InputStream is = new ByteArrayInputStream(html.getBytes());
+    TextDocument doc = new SAXInput().parse(url, html);
+//    HTMLParser parser = new HTMLParser(url);
+//
+//    parser.parse(html);
+
+//    TextDocument doc = parser.getTextDocument();
 
 //    System.out.println("\n\n\n\n");
 //    System.out.println(doc.getTextBlocks());
@@ -68,9 +75,9 @@ public class TestExtract {
 
 //    download(url);
 
-//      System.out.println(doc.getPageTitle());
-//      System.out.println(doc.getTextContent(true, true));
-//      System.out.println(doc.getHtmlContent());
+//    System.out.println(doc.getPageTitle());
+//    System.out.println(doc.getTextContent(true, true));
+//    System.out.println(doc.getHtmlContent());
 //    System.out.println("--------------");
 //    System.out.println("Fields : ");
 //    System.out.println(doc.getFields());

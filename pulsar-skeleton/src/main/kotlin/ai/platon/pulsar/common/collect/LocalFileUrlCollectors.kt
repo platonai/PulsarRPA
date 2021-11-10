@@ -48,7 +48,7 @@ open class LocalFileHyperlinkCollector(
 
     val hyperlinks: List<Hyperlink> get() = ensureLoaded().cache
 
-    override val estimatedSize: Int get() = hyperlinks.size
+    override val size: Int get() = hyperlinks.size
 
     constructor(path: Path, priority: Priority13): this(path, priority.value)
 
@@ -60,6 +60,11 @@ open class LocalFileHyperlinkCollector(
         val count = cache.removeFirstOrNull()?.takeIf { sink.add(it) }?.let { 1 } ?: 0
 
         return afterCollect(count)
+    }
+
+    @Synchronized
+    override fun dump(): List<String> {
+        return hyperlinks.map { it.toString() }
     }
 
     private fun ensureLoaded(): LocalFileHyperlinkCollector {

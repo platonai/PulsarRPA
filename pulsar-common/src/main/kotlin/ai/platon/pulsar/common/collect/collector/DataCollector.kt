@@ -41,18 +41,23 @@ interface DataCollector<T> {
     val size: Int
     val externalSize: Int
     val estimatedSize: Int
+    val estimatedExternalSize: Int
     val collectCount: Int
     val collectedCount: Int
+    val createTime: Instant
     val firstCollectTime: Instant
     val lastCollectedTime: Instant
     val collectTime: Duration
     val deadTime: Instant
+
+    val isDead get() = deadTime <= Instant.now()
 
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableList<T>): Int
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
     fun collectTo(sink: MutableList<T>): Int
     fun collectTo(index: Int, sink: MutableList<T>): Int
+    fun dump(): List<String>
     fun clear()
     fun deepClear() = clear()
 }
@@ -100,8 +105,8 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
 
     override val size: Int get() = 0
     override val externalSize: Int = 0
-    override val estimatedSize: Int = 0
-
+    override val estimatedExternalSize: Int get() = externalSize
+    override val estimatedSize: Int get() = size + estimatedExternalSize
     /**
      * The total count of collect attempt
      * */
@@ -112,9 +117,11 @@ abstract class AbstractDataCollector<E> : DataCollector<E> {
      * */
     override var collectedCount: Int = 0
 
-    override var firstCollectTime = Instant.EPOCH
+    override val createTime: Instant = Instant.now()
 
-    override var lastCollectedTime = Instant.EPOCH
+    override var firstCollectTime: Instant = Instant.EPOCH
+
+    override var lastCollectedTime: Instant = Instant.EPOCH
 
     override var deadTime: Instant = DateTimes.doomsday
 

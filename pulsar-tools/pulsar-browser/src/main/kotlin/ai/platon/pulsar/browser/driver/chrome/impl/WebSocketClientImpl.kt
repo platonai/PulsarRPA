@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.simplify
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -18,8 +19,8 @@ import javax.websocket.*
 class WebSocketClientImpl : WebSocketClient {
     val id = instanceSequencer.incrementAndGet()
 
-    private val log = LoggerFactory.getLogger(WebSocketClientImpl::class.java)
-    private val tracer = log.takeIf { it.isTraceEnabled }
+    private val logger = LoggerFactory.getLogger(WebSocketClientImpl::class.java)
+    private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
     private lateinit var session: Session
@@ -33,23 +34,34 @@ class WebSocketClientImpl : WebSocketClient {
 
     @Throws(WebSocketServiceException::class)
     override fun connect(uri: URI) {
+
+        val webSocketService = this
+
         val endpoint = object : Endpoint() {
             override fun onOpen(session: Session, config: EndpointConfig) {
-                // log.info("Connected to ws server {}", uri)
+                webSocketService.onOpen(session, config)
+                logger.info("Connected to ws server {}", uri)
             }
 
             override fun onClose(session: Session, closeReason: CloseReason) {
-                // log.info("Closing ws server {}", uri)
+                super.onClose(session, closeReason)
+                webSocketService.onClose(session, closeReason)
+                logger.info("Closing ws server {}", uri)
+            }
+
+            override fun onError(session: Session, e: Throwable?) {
+                super.onError(session, e)
+                webSocketService.onError(session, e)
             }
         }
 
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
-            log.warn("Failed connecting to ws server | {}", uri, e)
+            logger.warn("Failed connecting to ws server | {}", uri, e)
             throw WebSocketServiceException("Failed connecting to ws server {}", e)
         } catch (e: IOException) {
-            log.warn("Failed connecting to ws server | {}", uri, e)
+            logger.warn("Failed connecting to ws server | {}", uri, e)
             throw WebSocketServiceException("Failed connecting to ws server {}", e)
         }
     }
@@ -60,13 +72,14 @@ class WebSocketClientImpl : WebSocketClient {
 
         try {
             // TODO: use session.asyncRemote?
+            // logger.info(message)
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)
         } catch (e: java.lang.IllegalStateException) {
             throw WebSocketServiceException("The connection is closed", e)
         } catch (e: Exception) {
-            log.error("Unexpected exception | ${session.requestURI}", e)
+            logger.error("Unexpected exception | ${session.requestURI}", e)
         }
     }
 
@@ -82,7 +95,7 @@ class WebSocketClientImpl : WebSocketClient {
         } catch (e: java.lang.IllegalStateException) {
             throw WebSocketServiceException("The connection is closed", e)
         } catch (e: Exception) {
-            log.error("Unexpected exception | ${session.requestURI}", e)
+            logger.error("Unexpected exception | ${session.requestURI}", e)
             throw e
         }
     }
@@ -96,12 +109,36 @@ class WebSocketClientImpl : WebSocketClient {
         session.addMessageHandler(MessageHandler.Whole<String> { consumer.accept(it) })
     }
 
+    private fun onOpen(session: Session, config: EndpointConfig) {
+        logger.info("Connected to ws {}", session.requestURI)
+    }
+
+    private fun onClose(session: Session, closeReason: CloseReason) {
+        logger.info(
+            "Web socket connection closed {}, {}",
+            closeReason.closeCode,
+            closeReason.reasonPhrase
+        )
+
+        if (WebSocketUtils.isTyrusBufferOverflowCloseReason(closeReason)) {
+            logger.error(
+                "Web socket connection closed due to BufferOverflow raised by Tyrus client. This indicates the message "
+                        + "about to be received is larger than the incoming buffer in Tyrus client. "
+                        + "See DefaultWebSocketContainerFactory class source on how to increase the incoming buffer size in Tyrus or visit https://github.com/kklisura/chrome-devtools-java-client/blob/master/cdt-examples/src/main/java/com/github/kklisura/cdt/examples/IncreasedIncomingBufferInTyrusExample.java"
+            )
+        }
+    }
+
+    private fun onError(session: Session, e: Throwable?) {
+        logger.error("WS session error | {}\n>>>{}<<<", session.requestURI, e?.simplify())
+    }
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
                 session.close()
             } catch (e: IOException) {
-                log.error("Failed closing ws session", e)
+                logger.error("Failed closing ws session", e)
             }
         }
     }

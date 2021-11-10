@@ -9,6 +9,8 @@ import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.getLogger
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.LoggerContext
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -179,6 +181,11 @@ class ChromeLauncher(
 
     companion object {
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+
+        fun enableDebugChromeOutput() {
+            val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+            loggerContext.getLogger("com.github.kklisura.cdt.launch.chrome.output").level = Level.DEBUG
+        }
     }
 
     private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
@@ -216,7 +223,7 @@ class ChromeLauncher(
         }
 
         // if the data dir is the default dir, we might have problem to clean up
-        if ("context\\default" !in userDataDir.toString()) {
+        if (!userDataDir.toString().contains("context\\default", true)) {
             kotlin.runCatching { cleanUp() }.onFailure {
                 log.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
             }
@@ -441,7 +448,8 @@ class ChromeLauncher(
         }
 
         fun remove(thread: Thread) {
-            Runtime.getRuntime().removeShutdownHook(thread)
+            // TODO: java.lang.IllegalStateException: Shutdown in progress
+            // Runtime.getRuntime().removeShutdownHook(thread)
         }
     }
 

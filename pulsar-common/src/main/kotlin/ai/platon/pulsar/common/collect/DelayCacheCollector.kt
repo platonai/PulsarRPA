@@ -15,9 +15,6 @@ open class DelayCacheCollector(
     override val size: Int
         get() = queue.size
 
-    override val estimatedSize: Int
-        get() = queue.size
-
     constructor(queue: Queue<DelayUrl>, priority: Priority13) : this(queue, priority.value)
 
     @Synchronized
@@ -30,6 +27,11 @@ open class DelayCacheCollector(
         val count = queue.poll()?.takeIf { sink.add(it.url) }?.let { 1 } ?: 0
 
         return afterCollect(count)
+    }
+
+    @Synchronized
+    override fun dump(): List<String> {
+        return queue.map { it.url.toString() + " delay: " + it.delay }
     }
 
     override fun clear() = queue.clear()

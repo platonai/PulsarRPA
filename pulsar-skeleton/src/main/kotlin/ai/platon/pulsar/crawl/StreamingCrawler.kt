@@ -36,7 +36,6 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.abs
 
 class StreamingCrawlerMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
@@ -138,11 +137,12 @@ open class StreamingCrawler<T : UrlAware>(
     val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
 
+    private val totalMemory get() = Runtime.getRuntime().totalMemory()
+    private val totalMemoryGiB get() = ByteUnit.BYTE.toGiB(totalMemory.toDouble())
     private val availableMemory get() = AppMetrics.availableMemory
     private val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
-    private val memoryToReserveProduction get() = conf.getDouble(MEMORY_TO_RESERVE_MIB, DEFAULT_RESERVED_MEMORY_MIB)
-    private val memoryToReserve = if (availableMemoryGiB >= 30)
-        memoryToReserveProduction else BROWSER_TAB_REQUIRED_MEMORY
+    private val memoryToReserveLarge get() = conf.getDouble(BROWSER_MEMORY_TO_RESERVE_KEY, DEFAULT_BROWSER_RESERVED_MEMORY)
+    private val memoryToReserve = if (totalMemoryGiB >= 30) memoryToReserveLarge else BROWSER_TAB_REQUIRED_MEMORY
 
     val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
@@ -594,7 +594,7 @@ open class StreamingCrawler<T : UrlAware>(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }
                 ?.warn(
-                    "Context leaks too fast: {} leaks/seconds, memory: {}",
+                    "Context leaks too fast: {} leaks/seconds, available memory: {}",
                     contextLeaksRate, Strings.readableBytes(availableMemory)
                 )
             delay(1000)
