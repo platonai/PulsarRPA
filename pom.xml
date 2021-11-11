@@ -353,18 +353,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.gora</groupId>
-                <artifactId>gora-shaded-mongodb</artifactId>
-                <version>0.8</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-plugins</artifactId>
                 <type>pom</type>
