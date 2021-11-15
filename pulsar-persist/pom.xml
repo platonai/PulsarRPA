@@ -97,7 +97,6 @@
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

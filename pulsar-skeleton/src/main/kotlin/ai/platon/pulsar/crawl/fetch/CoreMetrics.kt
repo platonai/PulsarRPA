@@ -72,7 +72,10 @@ class CoreMetrics(
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()
-    private val processor = systemInfo.hardware.processor
+    // Exception on windows 11:
+    // Caused by: java.lang.IllegalStateException: Unmapped relationship: 7
+    //	at com.sun.jna.platform.win32.WinNT$SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX.fromPointer(WinNT.java:3033)
+//    private val processor = systemInfo.hardware.processor
 
     /**
      * The limitation of url length
