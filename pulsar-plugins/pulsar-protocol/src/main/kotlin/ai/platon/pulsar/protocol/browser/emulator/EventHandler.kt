@@ -103,7 +103,7 @@ open class EventHandler(
         pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
-            task.pageSource = normalizePageSource(task.pageSource).toString()
+            task.pageSource = normalizePageSource(task.url, task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
             pageDatum.protocolStatus = handleBrokenPageSource(task.task, integrity)
@@ -143,7 +143,7 @@ open class EventHandler(
         }
     }
 
-    open fun normalizePageSource(pageSource: String): StringBuilder {
+    open fun normalizePageSource(url: String, pageSource: String): StringBuilder {
         // The browser has already convert source code to UTF-8
         return replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
     }

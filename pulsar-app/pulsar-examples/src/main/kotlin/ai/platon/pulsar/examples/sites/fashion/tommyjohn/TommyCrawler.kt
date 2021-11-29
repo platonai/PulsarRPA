@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.tommyjohn
+package ai.platon.pulsar.examples.sites.fashion.tommyjohn
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes

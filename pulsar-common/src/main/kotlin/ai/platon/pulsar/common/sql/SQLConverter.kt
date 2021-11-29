@@ -14,14 +14,16 @@ object SQLConverter {
     }
 
     fun extractSQL2createSQL(extractSQL: String, tableName: String): String {
-        val prefix = "drop table `$tableName` if exists;\ncreate table `$tableName`(\n" +
+        val prefix = "drop table if exists `$tableName`;\ncreate table `$tableName`(\n" +
                 "    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',"
-        val postfix = "\n) ENGINE=MYISAM DEFAULT CHARSET=utf8mb4 COMMENT='auto created table from x-sql';"
+        val postfix = "\n) DEFAULT CHARSET=utf8mb4 COMMENT='auto created table from x-sql';"
+        // TODO: define primary key
         return extractSQL.split("\n")
-                .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
-                .map { StringUtils.substringAfterLast(it, " as ").removeSuffix(",").trim('`') }
-                .filter { it.isNotBlank() }
-                .map { "    `$it` varchar(255) default null" }
-                .joinToString(",\n", prefix, postfix) { it }
+            .asSequence()
+            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
+            .map { StringUtils.substringAfterLast(it, " as ").removeSuffix(",").trim('`') }
+            .filter { it.isNotBlank() }
+            .map { "    `$it` varchar(255) default null" }
+            .joinToString(",\n", prefix, postfix) { it }
     }
 }
