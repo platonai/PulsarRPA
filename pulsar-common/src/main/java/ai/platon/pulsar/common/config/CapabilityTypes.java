@@ -336,7 +336,7 @@ public interface CapabilityTypes {
      * @deprecated Use BROWSER_DISPLAY_MODE instead
      * */
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
-    String BROWSER_DISPLAY_MODE = "browser.gui.mode";
+    String BROWSER_DISPLAY_MODE = "browser.display.mode";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";

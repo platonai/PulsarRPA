@@ -4,7 +4,8 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.common.config.AppConstants.*
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
@@ -142,7 +143,11 @@ open class StreamingCrawler<T : UrlAware>(
     private val availableMemory get() = AppMetrics.availableMemory
     private val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
     private val memoryToReserveLarge get() = conf.getDouble(BROWSER_MEMORY_TO_RESERVE_KEY, DEFAULT_BROWSER_RESERVED_MEMORY)
-    private val memoryToReserve = if (totalMemoryGiB >= 30) memoryToReserveLarge else BROWSER_TAB_REQUIRED_MEMORY
+    private val memoryToReserve = when {
+        totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 2 GiB
+        totalMemoryGiB >= 30 -> memoryToReserveLarge
+        else -> BROWSER_TAB_REQUIRED_MEMORY
+    }
 
     val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
@@ -165,7 +170,10 @@ open class StreamingCrawler<T : UrlAware>(
     val id = instanceSequencer.incrementAndGet()
 
     private val gauges = mapOf(
-        "idleTime" to Gauge { idleTime.readable() }
+        "idleTime" to Gauge { idleTime.readable() },
+        "numPrivacyContexts" to Gauge { numPrivacyContexts },
+        "numMaxActiveTabs" to Gauge { numMaxActiveTabs },
+        "fetchConcurrency" to Gauge { fetchConcurrency },
     )
 
     init {
@@ -536,6 +544,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun handleRetry(url: UrlAware, page: WebPage?) {
         val retries = 1L + (page?.fetchRetries ?: 0)
+
         if (page != null && retries > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()
@@ -571,7 +580,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun handleMemoryShortage(j: Int) {
         logger.info(
-            "$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
+            "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             globalRunningTasks,
             Strings.readableBytes(availableMemory),
             Strings.readableBytes(memoryToReserve.toLong()),

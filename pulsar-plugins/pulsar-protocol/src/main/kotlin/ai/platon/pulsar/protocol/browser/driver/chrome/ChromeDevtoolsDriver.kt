@@ -335,10 +335,17 @@ class ChromeDevtoolsDriver(
     }
 
     private fun setupUrlBlocking() {
+        // TODO: avoid hard coding
+        if (navigateUrl.contains("item.jd.com")) {
+            val jdBlockingUrls = listOf("*img30.360buyimg.com.+.jpg")
+            network.setBlockedURLs(jdBlockingUrls)
+        }
+
         if (!enableUrlBlocking) return
 
         // TODO: case sensitive or not?
         network.setBlockedURLs(blockingUrls)
+
         network.takeIf { enableBlockingReport }?.onRequestWillBeSent {
             val requestUrl = it.request.url
             if (mustPassUrlPatterns.any { requestUrl.matches(it) }) {

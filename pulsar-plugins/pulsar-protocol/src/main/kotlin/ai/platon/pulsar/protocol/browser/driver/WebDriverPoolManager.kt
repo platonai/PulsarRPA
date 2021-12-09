@@ -174,7 +174,7 @@ open class WebDriverPoolManager(
             driverPools.keys.forEach { doCloseDriverPool(it) }
             driverPools.clear()
             log.info("Web driver pool manager is closed")
-            if (gauges?.entries?.isNullOrEmpty() == false || driverPools.isNotEmpty()) {
+            if (gauges?.entries?.isEmpty() == false || driverPools.isNotEmpty()) {
                 log.info(formatStatus(true))
             }
         }

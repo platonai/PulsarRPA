@@ -90,7 +90,7 @@ open class EventHandler(
         }
 
         // Check if the page source is integral
-        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.protocolStatus, task.task)
+        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.protocolStatus, task)
         // Check browse timeout event, transform status to be success if the page source is good
         if (pageDatum.protocolStatus.isTimeout) {
             if (integrity.isOK) {
@@ -129,10 +129,10 @@ open class EventHandler(
     }
 
     /**
-     * Check if the html is integral without field extraction, a further html integrity checking can be
+     * Check if the html is integral before field extraction, a further html integrity checking can be
      * applied after field extraction.
      * */
-    open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
+    open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: NavigateTask): HtmlIntegrity {
         val length = pageSource.length.toLong()
 
         return when {

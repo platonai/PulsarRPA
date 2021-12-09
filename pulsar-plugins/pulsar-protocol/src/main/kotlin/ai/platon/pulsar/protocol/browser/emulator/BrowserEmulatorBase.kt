@@ -32,6 +32,8 @@ abstract class BrowserEmulatorBase(
     val isActive get() = !closed.get()
     val meterNavigates by lazy { AppMetrics.reg.meter(this,"navigates") }
     val counterRequests by lazy { AppMetrics.reg.counter(this,"requests") }
+    val counterJsEvaluates by lazy { AppMetrics.reg.counter(this,"jsEvaluates") }
+    val counterJsWaits by lazy { AppMetrics.reg.counter(this,"jsWaits") }
     val counterCancels by lazy { AppMetrics.reg.counter(this,"cancels") }
 
     override fun getParams(): Params {
