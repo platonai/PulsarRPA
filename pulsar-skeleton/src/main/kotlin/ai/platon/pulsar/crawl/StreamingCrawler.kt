@@ -392,14 +392,20 @@ open class StreamingCrawler<T : UrlAware>(
             globalMetrics.timeouts.mark()
             logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, taskTimeout, url)
         } catch (e: Throwable) {
-            if (e.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
-                if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.beginTerminate()
-                    logger.warn("Streaming crawler coroutine was cancelled, quit ...", e)
+            when {
+                e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
+                    if (isIllegalApplicationState.compareAndSet(false, true)) {
+                        AppContext.beginTerminate()
+                        logger.warn("Streaming crawler coroutine was cancelled, quit ...", e)
+                    }
+                    flowState = FlowState.BREAK
                 }
-                flowState = FlowState.BREAK
-            } else {
-                logger.warn("Unexpected exception", e)
+                e.javaClass.name.contains("DriverLaunchException") -> {
+                    logger.warn(e.message)
+                }
+                else -> {
+                    logger.warn("Unexpected exception", e)
+                }
             }
         }
 
@@ -543,6 +549,11 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry(url: UrlAware, page: WebPage?) {
+        // TODO: avoid hard coding
+        if (url.url.contains("item.jd.com")) {
+            return
+        }
+
         val retries = 1L + (page?.fetchRetries ?: 0)
 
         if (page != null && retries > page.maxRetries) {

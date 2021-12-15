@@ -91,6 +91,19 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * TODO: seems not working
+         * */
+        fun disableImages(): Companion {
+            System.setProperty(BROWSER_IMAGES_ENABLED, "false")
+            return BrowserSettings
+        }
+
+        fun enableUrlBlocking(): Companion {
+            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
+            return BrowserSettings
+        }
+
         fun generateUserDataDir(): Path {
             val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
@@ -115,9 +128,8 @@ open class BrowserSettings(
 
     // The javascript to execute by Web browsers
     val propertyNames
-        get() = conf.getTrimmedStrings(
-            FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES
-        )
+        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES,
+            AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
     var clientJsVersion = "0.2.3"
     val scripts = mutableMapOf<String, String>()

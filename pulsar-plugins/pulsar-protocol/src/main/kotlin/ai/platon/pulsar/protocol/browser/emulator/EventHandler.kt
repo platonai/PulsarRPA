@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.nodes.node.ext.ExportPaths
@@ -59,7 +60,7 @@ open class EventHandler(
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
-    fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserSettings) {
+    fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
             val emulateSettings = EmulateSettings(task.volatileConfig)
             logger.trace("Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",

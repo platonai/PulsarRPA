@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable {
     val log = LoggerFactory.getLogger(BrowserExampleBase::class.java)
 
-    val testUrl = "https://item.jd.com/100001071956.html"
+    open val testUrl = "https://item.jd.com/100001071956.html"
 
     val browserControl = BrowserSettings()
     val clientLibJs = browserControl.parseLibJs()

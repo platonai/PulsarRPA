@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
 
@@ -117,15 +118,26 @@ open class BrowserEmulator(
         } finally {
         }
 
+        // TODO: avoid the hard coding
+        emulateJd(task, driverSettings, driver)
+
+        if (driverSettings.isGUI) {
+            // in gui mode, just stop the loading, so we can make the diagnosis
+            driver.stopLoading()
+        } else {
+            // go to about:blank, so the browser stops the previous page and release all resources
+            driver.navigateTo("about:blank")
+        }
+
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }
 
     @Throws(NavigateTaskCancellationException::class)
     private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
-        val navigateTask = NavigateTask(task, driver, driverControl)
+        val navigateTask = NavigateTask(task, driver, driverSettings)
 
         try {
-            val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
+            val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
             navigateTask.pageDatum.apply {
                 protocolStatus = interactResult.protocolStatus
                 activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
@@ -207,7 +219,8 @@ open class BrowserEmulator(
         }
 
         // TODO: move to the session config
-        val requiredElements = if (task.url.contains("item.jd.com")) {
+        val isJd = task.url.contains("item.jd.com")
+        val requiredElements = if (isJd) {
             listOf(".itemInfo-wrap .summary-price .p-price .price")
         } else listOf()
 
@@ -285,12 +298,9 @@ open class BrowserEmulator(
         val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
         val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
 
-        val expressions = mutableListOf(
-            "__utils__.scrollToMiddle(0.25)",
-            "__utils__.scrollToMiddle(0.5)",
-            "__utils__.scrollToMiddle(0.75)",
-            "__utils__.scrollToMiddle(0.5)"
-        )
+        val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4)
+            .map { "__utils__.scrollToMiddle($it)" }
+            .toMutableList()
         repeat(scrollDownCount) {
             expressions.add("__utils__.scrollDown()")
         }
@@ -324,6 +334,33 @@ open class BrowserEmulator(
                 taskLogger.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
             }
         }
+    }
+
+    protected suspend fun emulateJd(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
+        val isJd = task.url.contains("item.jd.com")
+        val rand = Random.nextInt(3)
+        if (isJd && rand == 0) {
+            val interactTask = InteractTask(task, driverSettings, driver)
+            val expressions = listOf(
+                "document.querySelector('#summary-service a').click()",
+                "document.querySelector('#ns_services a').click()",
+                "document.querySelector('.summary-price a').click()",
+                "document.querySelector('#comment-count a').click()",
+                "document.querySelector('#sp-hot-sale a').click()",
+                "document.querySelector('#choose-service a').click()",
+                "document.querySelector('#choose-baitiao a').click()",
+                "document.querySelector('#detail li:nth-child(2)').click()",
+                "document.querySelector('#detail li:nth-child(3)').click()",
+                "document.querySelector('#detail li:nth-child(4)').click()",
+                "document.querySelector('#detail li:nth-child(5)').click()",
+            ).shuffled().take(3)
+            evaluate(interactTask, expressions, Duration.ofMillis(500), true)
+        }
+    }
+
+    private suspend fun evaluate(interactTask: InteractTask,
+                                 expressions: Iterable<String>, delay: Duration, verbose: Boolean = false) {
+        return evaluate(interactTask, expressions, delay.toMillis(), verbose)
     }
 
     private suspend fun evaluate(interactTask: InteractTask,

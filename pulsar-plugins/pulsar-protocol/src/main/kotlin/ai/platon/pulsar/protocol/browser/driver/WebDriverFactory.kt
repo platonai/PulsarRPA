@@ -55,7 +55,7 @@ open class WebDriverFactory(
         }.onFailure {
             log.error("Failed to create web driver $browserType", it)
         }.getOrElse {
-            throw DriverLaunchException("Failed to create web driver $browserType")
+            throw DriverLaunchException("Failed to create web driver | $browserType")
         }
 
         if (driver is ChromeDriver) {

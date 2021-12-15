@@ -1,7 +1,10 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.EmulateSettings
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
+import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -14,12 +17,12 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
-    val driverControl: WebDriverSettings,
+    val driverSettings: WebDriverSettings,
     /**
-         * The event handler to handle page content
-         * TODO: use a pipeline
-         * */
-        val eventHandler: EventHandler,
+     * The event handler to handle page content
+     * TODO: use a pipeline
+     * */
+    val eventHandler: EventHandler,
     val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
@@ -42,7 +45,7 @@ abstract class BrowserEmulatorBase(
                 "scriptTimeout", emulateSettings.scriptTimeout,
                 "scrollDownCount", emulateSettings.scrollCount,
                 "scrollInterval", emulateSettings.scrollInterval,
-                "jsInvadingEnabled", driverControl.jsInvadingEnabled,
+                "jsInvadingEnabled", driverSettings.jsInvadingEnabled,
                 "emulatorEventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATOR_EVENT_HANDLER)
         )
     }

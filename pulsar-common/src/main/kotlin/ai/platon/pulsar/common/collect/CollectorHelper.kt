@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.collect
 
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
@@ -78,7 +79,7 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
 
     fun addQueueCollector(
         name: String,
-        priority: Int,
+        priority: Int = Priority13.NORMAL.value,
         queue: Queue<UrlAware> = ConcurrentLinkedQueue()
     ): QueueCollector {
         val collector = QueueCollector(queue, priority).also { it.name = name }

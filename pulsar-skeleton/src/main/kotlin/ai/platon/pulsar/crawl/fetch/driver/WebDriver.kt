@@ -3,11 +3,17 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
+import java.time.Duration
+import java.time.Instant
 
 interface WebDriver {
     val id: Int
     val url: String
     val browserInstanceId: BrowserInstanceId
+
+    val lastActiveTime: Instant
+    val idleTimeout: Duration
+    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
     val isCanceled: Boolean
     val isQuit: Boolean

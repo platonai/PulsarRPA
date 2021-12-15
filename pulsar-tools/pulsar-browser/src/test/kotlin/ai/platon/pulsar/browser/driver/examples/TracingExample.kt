@@ -9,6 +9,8 @@ import java.nio.file.Paths
 
 class TracingExample: BrowserExampleBase() {
 
+    override val testUrl: String = "https://www.stbchina.cn/"
+
     override fun run() {
         val page = devTools.page
         val tracing = devTools.tracing
@@ -21,6 +23,7 @@ class TracingExample: BrowserExampleBase() {
                 dataCollectedList.addAll(event.value)
             }
         }
+
         // When tracing is complete, dump dataCollectedList to JSON file.
         tracing.onTracingComplete {
             // Dump tracing to file.
