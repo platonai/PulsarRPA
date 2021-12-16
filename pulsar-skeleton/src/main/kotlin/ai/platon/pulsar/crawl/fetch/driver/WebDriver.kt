@@ -29,9 +29,9 @@ interface WebDriver {
 
     fun navigateTo(url: String)
     fun setTimeouts(driverConfig: BrowserSettings)
-    fun evaluate(expression: String): Any?
     fun bringToFront()
     fun stopLoading()
+    fun evaluate(expression: String): Any?
     fun evaluateSilently(expression: String): Any?
 
     fun free()

@@ -3,10 +3,12 @@ package ai.platon.pulsar.browser.driver
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.Wildchar
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
+import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
 import java.nio.file.Files
 import java.nio.file.Path
@@ -63,6 +65,36 @@ data class EmulateSettings(
     }
 }
 
+object BlockRules {
+    /**
+     * amazon.com note:
+     * The following have to pass, or the site refuses to serve:
+     * .woff,
+     * .mp4
+     * */
+    val mustPassUrls = listOf("*.woff", "*.mp4").toMutableList()
+
+    /**
+     * Blocking urls patten using widcards
+     * */
+    val blockingUrls = listOf(
+        "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
+        "*.woff", "*.woff2",
+        "*.mp4", "*.svg",
+        "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
+        "https://img*"
+    ).filterNot { it in mustPassUrls }.toMutableList()
+
+    val mustPassUrlPatterns = listOf(
+        "about:blank",
+        "data:.+",
+    ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
+
+    val blockingUrlPatterns = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
+
+    val blockingResourceTypes = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
+}
+
 open class BrowserSettings(
     parameters: Map<String, Any> = mapOf(),
     var jsDirectory: String = "js",
@@ -91,16 +123,13 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
-        /**
-         * TODO: seems not working
-         * */
-        fun disableImages(): Companion {
-            System.setProperty(BROWSER_IMAGES_ENABLED, "false")
+        fun enableUrlBlocking(): Companion {
+            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
             return BrowserSettings
         }
 
-        fun enableUrlBlocking(): Companion {
-            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
+        fun blockImages(): Companion {
+            enableUrlBlocking()
             return BrowserSettings
         }
 

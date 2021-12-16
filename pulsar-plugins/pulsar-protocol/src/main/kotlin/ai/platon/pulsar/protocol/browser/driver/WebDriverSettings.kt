@@ -77,6 +77,9 @@ open class WebDriverSettings(
         chromeOptions.setHeadless(isHeadless)
         // chromeOptions.addArguments("--incognito") // may cause anti-spider
         chromeOptions.addArguments("--window-size=${formatViewPort()}")
+        /**
+         * TODO: seems not work, we might just use network.setBlockedURLs
+         * */
         chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
         chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
 

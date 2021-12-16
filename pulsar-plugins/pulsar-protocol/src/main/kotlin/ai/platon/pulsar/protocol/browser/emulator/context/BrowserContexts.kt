@@ -1,9 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -15,6 +15,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.D
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
+import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -63,6 +64,9 @@ class WebDriverContext(
             log.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } catch (e: WebDriverPoolException) {
+            log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            FetchResult.crawlRetry(task)
+        } catch (e: WebDriverException) {
             log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } finally {
