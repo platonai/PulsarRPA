@@ -47,6 +47,10 @@ The result set is as the following:
 
     bin/pulsar
 
+## Scrape a webpage
+
+    bin/scrape.sh
+
 or if you are using an IDE, run main() in [PulsarMaster](pulsar-app\pulsar-master\src\main\kotlin\ai\platon\pulsar\app\master\PulsarMaster.kt)
 
 ## Issue a request to scrape

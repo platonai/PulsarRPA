@@ -32,7 +32,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.ParserConfigurationException
 
 /**
- * A reader to load the information stored in the `$PULSAR_HOME/config/parse-plugins.xml` file.
+ * A reader to load the information stored in the `$APP_HOME/config/parse-plugins.xml` file.
  *
  * @author mattmann
  * @version 1.0

@@ -398,7 +398,7 @@ abstract class AbstractPulsarContext(
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
 
-            applicationContext.close()
+            // applicationContext.close()
         }
 
         AppContext.terminate()

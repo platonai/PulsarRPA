@@ -3,7 +3,7 @@
 bin=$(dirname "$0")
 bin=$(cd "$bin">/dev/null || exit; pwd)
 
-cd pulsar-third/gora-shaded-mongodb
+cd "pulsar-third/gora-shaded-mongodb" || exit
 mvn install
 
 cd - || exit
