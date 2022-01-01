@@ -1,9 +1,13 @@
-package ai.platon.pulsar.common.options
+package ai.platon.pulsar.common.options.deprecated
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.CommonOptions
+import ai.platon.pulsar.common.options.DurationConverter
+import ai.platon.pulsar.common.options.LinkOptions
+import ai.platon.pulsar.common.options.WeightedKeywordsConverter
 import com.beust.jcommander.Parameter
 import org.apache.commons.lang3.StringUtils
 import java.text.DecimalFormat

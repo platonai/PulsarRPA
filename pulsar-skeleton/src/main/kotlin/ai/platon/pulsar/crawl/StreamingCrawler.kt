@@ -549,11 +549,6 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry(url: UrlAware, page: WebPage?) {
-        // TODO: avoid hard coding
-        if (url.url.contains("item.jd.com")) {
-            return
-        }
-
         val retries = 1L + (page?.fetchRetries ?: 0)
 
         if (page != null && retries > page.maxRetries) {

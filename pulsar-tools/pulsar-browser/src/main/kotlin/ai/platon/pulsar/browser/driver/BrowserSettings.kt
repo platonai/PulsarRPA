@@ -65,19 +65,22 @@ data class EmulateSettings(
     }
 }
 
-object BlockRules {
+open class BlockRules {
+
+    open val blockingResourceTypes = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
+
     /**
      * amazon.com note:
      * The following have to pass, or the site refuses to serve:
      * .woff,
      * .mp4
      * */
-    val mustPassUrls = listOf("*.woff", "*.mp4").toMutableList()
+    open val mustPassUrls = mutableListOf<String>()
 
     /**
      * Blocking urls patten using widcards
      * */
-    val blockingUrls = listOf(
+    open val blockingUrls = listOf(
         "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
         "*.woff", "*.woff2",
         "*.mp4", "*.svg",
@@ -85,14 +88,12 @@ object BlockRules {
         "https://img*"
     ).filterNot { it in mustPassUrls }.toMutableList()
 
-    val mustPassUrlPatterns = listOf(
+    open val mustPassUrlPatterns get() = listOf(
         "about:blank",
         "data:.+",
     ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
 
-    val blockingUrlPatterns = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
-
-    val blockingResourceTypes = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
+    open val blockingUrlPatterns get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
 }
 
 open class BrowserSettings(
@@ -119,6 +120,9 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
+            arrayOf(BROWSER_LAUNCH_SUPERVISOR_PROCESS, BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS).forEach {
+                System.clearProperty(it)
+            }
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
             return BrowserSettings
         }

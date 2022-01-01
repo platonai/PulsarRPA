@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.chrome
 
+import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
@@ -8,7 +9,8 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
-import ai.platon.pulsar.protocol.browser.conf.*
+import ai.platon.pulsar.protocol.browser.conf.sites.amazon.AmazonBlockRules
+import ai.platon.pulsar.protocol.browser.conf.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
@@ -24,7 +26,6 @@ import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -52,7 +53,6 @@ class ChromeDevtoolsDriver(
 
     val userAgent get() = browserSettings.randomUserAgent()
 
-    // TODO: load blocking rules from config files
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val clientLibJs = browserSettings.parseLibJs(false)
     var devToolsConfig = DevToolsConfig()
@@ -306,25 +306,11 @@ class ChromeDevtoolsDriver(
 
         try {
             page.addScriptToEvaluateOnNewDocument(clientLibJs)
-//        page.onDomContentEventFired { event: DomContentEventFired ->
-//            // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
-//            // runtime.evaluate("__utils__.checkPulsarStatus()")
-//        }
-//
-//        page.onLoadEventFired { event: LoadEventFired ->
-//            simulate()
-//        }
-
-            // block urls by url pattern
-//            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
-//            }
 
             page.enable()
 
-            // NOTE: There are too many network relative traffic, especially when the proxy is disabled
-            // TODO: Find out the reason why there are too many network relative traffic, especially when the proxy is disabled
             if (enableUrlBlocking) {
-                setupUrlBlocking()
+                setupUrlBlocking(url)
                 network.enable()
             }
 //            fetch.enable()
@@ -351,26 +337,27 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun setupUrlBlocking() {
-        // TODO: avoid hard coding
-        if (navigateUrl.contains("item.jd.com")) {
-            val jdBlockingUrls = listOf("*img30.360buyimg.com.+.jpg")
-            network.setBlockedURLs(jdBlockingUrls)
+    /**
+     * TODO: load blocking rules from config files
+     * */
+    private fun setupUrlBlocking(url: String) {
+        val blockRules = when {
+            "amazon.com" in url -> AmazonBlockRules()
+            "jd.com" in url -> JdBlockRules()
+            else -> BlockRules()
         }
 
-        if (!enableUrlBlocking) return
-
         // TODO: case sensitive or not?
-        network.setBlockedURLs(UrlBlockRule.blockingUrls)
+        network.setBlockedURLs(blockRules.blockingUrls)
 
         network.takeIf { enableBlockingReport }?.onRequestWillBeSent {
             val requestUrl = it.request.url
-            if (UrlBlockRule.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
+            if (blockRules.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
                 return@onRequestWillBeSent
             }
 
-            if (it.type in UrlBlockRule.blockingResourceTypes) {
-                if (UrlBlockRule.blockingUrlPatterns.none { requestUrl.matches(it) }) {
+            if (it.type in blockRules.blockingResourceTypes) {
+                if (blockRules.blockingUrlPatterns.none { requestUrl.matches(it) }) {
                     logger.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
                 }
 
