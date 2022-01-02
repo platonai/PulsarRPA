@@ -29,6 +29,9 @@ const val V_VIEW_PORT = "V_VIEW_PORT"
 val BOX_SYNTAX_PATTERN_1 = Pattern.compile("(\\d+)[xX](\\d+)")
 val BOX_SYNTAX_PATTERN = Pattern.compile("$BOX_SYNTAX_PATTERN_1(,$BOX_SYNTAX_PATTERN_1)?")
 
+/**
+ * The standard html attributes
+ * */
 val STANDARD_ATTRIBUTES = setOf(
         "abbr", "accept", "accept-charset", "accesskey", "action", "align",
         "alink", "alt", "archive", "axis", "background", "bgcolor", "border",

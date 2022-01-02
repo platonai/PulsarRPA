@@ -15,15 +15,24 @@ import java.nio.file.Path
 import java.time.Duration
 import kotlin.random.Random
 
+/**
+ * The chrome display mode
+ * SUPERVISED: supervised by other programs
+ * GUI: open as a normal browser
+ * HEADLESS: open in headless mode
+ * */
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
+/**
+ * The emulate settings
+ * */
 data class EmulateSettings(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     var pageLoadTimeout: Duration = Duration.ofMinutes(3)
 ) {
-    constructor(conf: ImmutableConfig): this(
+    constructor(conf: ImmutableConfig) : this(
         scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
         scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
         scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofMinutes(1)),
@@ -65,6 +74,9 @@ data class EmulateSettings(
     }
 }
 
+/**
+ * The block rules of urls and resources
+ * */
 open class BlockRules {
 
     open val blockingResourceTypes = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
@@ -88,10 +100,11 @@ open class BlockRules {
         "https://img*"
     ).filterNot { it in mustPassUrls }.toMutableList()
 
-    open val mustPassUrlPatterns get() = listOf(
-        "about:blank",
-        "data:.+",
-    ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
+    open val mustPassUrlPatterns
+        get() = listOf(
+            "about:blank",
+            "data:.+",
+        ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
 
     open val blockingUrlPatterns get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
 }
@@ -161,8 +174,10 @@ open class BrowserSettings(
 
     // The javascript to execute by Web browsers
     val propertyNames
-        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES,
-            AppConstants.CLIENT_JS_PROPERTY_NAMES)
+        get() = conf.getTrimmedStrings(
+            FETCH_CLIENT_JS_COMPUTED_STYLES,
+            AppConstants.CLIENT_JS_PROPERTY_NAMES
+        )
 
     var clientJsVersion = "0.2.3"
     val scripts = mutableMapOf<String, String>()

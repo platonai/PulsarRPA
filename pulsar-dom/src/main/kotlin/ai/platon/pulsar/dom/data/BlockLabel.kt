@@ -3,6 +3,11 @@ package ai.platon.pulsar.dom.data
 import org.apache.commons.lang3.StringUtils
 import java.util.*
 
+/**
+ * The block label
+ *
+ * @param value The label
+ * */
 open class BlockLabel(value: String) : Comparable<BlockLabel> {
 
     val text: String = value.toLowerCase()

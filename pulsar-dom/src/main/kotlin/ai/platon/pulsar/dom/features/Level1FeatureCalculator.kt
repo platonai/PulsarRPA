@@ -16,6 +16,9 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 
+/**
+ * The level 1 feature calculator calculate for the minimal features
+ * */
 class Level1FeatureCalculator: AbstractFeatureCalculator() {
     companion object {
         init {
@@ -32,7 +35,10 @@ class Level1FeatureCalculator: AbstractFeatureCalculator() {
     }
 }
 
-class ClassFactory : ai.platon.pulsar.common.ResourceLoader.ClassFactory {
+/**
+ * The class factory for ResourceLoader
+ * */
+class ClassFactory : ResourceLoader.ClassFactory {
     override fun match(name: String): Boolean {
         return name.startsWith(this.javaClass.`package`.name)
     }

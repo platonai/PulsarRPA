@@ -20,6 +20,10 @@ import java.awt.Dimension
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * The featured document.
+ * A featured document have all it's features calculated
+ * */
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25

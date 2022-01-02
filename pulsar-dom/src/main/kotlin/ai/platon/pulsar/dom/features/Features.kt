@@ -17,11 +17,19 @@ import java.awt.Color
 import java.awt.Rectangle
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * The feature entry
+ * @param key The feature key
+ * @param value The feature value
+ * */
 data class FeatureEntry(val key: Int, val value: Double) {
     constructor(key: Int, value: Int): this(key, value.toDouble())
     constructor(key: Int, value: Boolean): this(key, if (value) 1.0 else 0.0)
 }
 
+/**
+ * The feature registry
+ * */
 object FeatureRegistry {
 
     var registeredFeatures: Set<NodeFeature> = setOf()
@@ -62,6 +70,9 @@ object FeatureRegistry {
     var floatFeatureKeysToNames: Map<Int, String> = mapOf()
         private set
 
+    /**
+     * Register features
+     * */
     fun register(features: Iterable<NodeFeature>) {
         registeredFeatures = features.toSet()
 

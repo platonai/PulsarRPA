@@ -5,8 +5,10 @@ import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import com.google.common.collect.Lists
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.nodes.Element
-import java.util.*
 
+/**
+ * The block pattern
+ * */
 class BlockPattern(value: String): BlockLabel(value) {
 
     constructor(label: BlockLabel): this(label.text)
