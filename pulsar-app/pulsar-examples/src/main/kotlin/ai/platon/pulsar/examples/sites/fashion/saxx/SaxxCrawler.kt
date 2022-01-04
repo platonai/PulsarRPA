@@ -1,5 +1,6 @@
-package ai.platon.pulsar.examples.sites.saxx
+package ai.platon.pulsar.examples.sites.fashion.saxx
 
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.sql.SQLTemplate
@@ -10,7 +11,7 @@ import ai.platon.pulsar.test.VerboseSQLExecutor
 import kotlin.system.exitProcess
 
 fun main() {
-//    BrowserSettings.withGUI()
+    BrowserSettings.withGUI()
 
     val indexSQL = """
         select

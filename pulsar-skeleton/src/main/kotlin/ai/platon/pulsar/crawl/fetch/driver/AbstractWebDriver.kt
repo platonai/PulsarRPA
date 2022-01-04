@@ -2,6 +2,8 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
 abstract class AbstractWebDriver(
@@ -21,6 +23,10 @@ abstract class AbstractWebDriver(
     }
 
     var proxyEntry: ProxyEntry? = null
+
+    override var lastActiveTime: Instant = Instant.now()
+
+    override var idleTimeout: Duration = Duration.ofMinutes(10)
 
     /**
      * The current loading page url

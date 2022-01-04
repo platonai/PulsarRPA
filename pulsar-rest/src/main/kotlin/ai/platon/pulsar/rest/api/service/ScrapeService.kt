@@ -32,7 +32,7 @@ class ScrapeService(
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
         val hyperlink = createScrapeHyperlink(request)
         fetchCaches.highestCache.reentrantQueue.add(hyperlink)
-        return hyperlink.get(2, TimeUnit.MINUTES)
+        return hyperlink.get(3, TimeUnit.MINUTES)
     }
 
     /**

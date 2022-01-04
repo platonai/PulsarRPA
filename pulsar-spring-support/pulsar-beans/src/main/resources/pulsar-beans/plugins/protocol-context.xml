@@ -26,7 +26,7 @@
         <constructor-arg name="suppressMetrics" value="false"/>
     </bean>
 
-    <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager" destroy-method="close">
+    <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager" destroy-method="close">
         <constructor-arg ref="proxyPoolManager"/>
         <constructor-arg ref="driverPoolManager"/>
         <constructor-arg ref="coreMetrics"/>

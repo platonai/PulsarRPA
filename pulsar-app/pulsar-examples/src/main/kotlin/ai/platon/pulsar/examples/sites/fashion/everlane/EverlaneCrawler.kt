@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.everlane
+package ai.platon.pulsar.examples.sites.fashion.everlane
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.ql.context.withSQLContext

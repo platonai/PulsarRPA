@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.*
+import ai.platon.pulsar.common.options.deprecated.CrawlOptions
 import ai.platon.pulsar.common.options.deprecated.EntityOptions
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.CollectionUtils

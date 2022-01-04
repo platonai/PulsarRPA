@@ -6,6 +6,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+/**
+ * A simple scraper which just send an X-SQL request to the pulsar server and get the scrape result
+ * */
 public class Scraper {
 
     public static void main(String[] args) throws IOException, InterruptedException {

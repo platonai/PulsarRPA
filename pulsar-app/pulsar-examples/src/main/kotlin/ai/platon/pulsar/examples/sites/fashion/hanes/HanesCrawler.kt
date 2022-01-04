@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.hanes
+package ai.platon.pulsar.examples.sites.fashion.hanes
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.AppPaths

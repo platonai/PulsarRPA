@@ -11,16 +11,23 @@ class BrowserInstanceManager: AutoCloseable {
     private val browserInstances = ConcurrentHashMap<Path, BrowserInstance>()
 
     @Synchronized
+    fun hasLaunched(launchOptions: ChromeDevtoolsOptions): Boolean {
+        return browserInstances.containsKey(launchOptions.userDataDir)
+    }
+
+    @Synchronized
     fun launchIfAbsent(launcherConfig: LauncherConfig, launchOptions: ChromeDevtoolsOptions): BrowserInstance {
         return browserInstances.computeIfAbsent(launchOptions.userDataDir) {
             BrowserInstance(launcherConfig, launchOptions).apply { launch() }
         }
     }
 
+    @Synchronized
     fun closeIfPresent(dataDir: Path) {
         browserInstances.remove(dataDir)?.close()
     }
 
+    @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             doClose()

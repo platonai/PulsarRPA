@@ -24,6 +24,9 @@ import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.component2
 
+/**
+ * The launch config
+ * */
 class LauncherConfig {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
     var shutdownWaitTime = DEFAULT_SHUTDOWN_WAIT_TIME
@@ -58,6 +61,9 @@ class LauncherConfig {
 @Target(AnnotationTarget.FIELD)
 annotation class ChromeParameter(val value: String)
 
+/**
+ * The options to open chrome devtools
+ * */
 class ChromeDevtoolsOptions(
         @ChromeParameter("user-data-dir")
         var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
@@ -150,6 +156,9 @@ class ChromeDevtoolsOptions(
     override fun toString() = toList().joinToString(" ") { it }
 }
 
+/**
+ * The process launcher
+ * */
 class ProcessLauncher {
     private val log = LoggerFactory.getLogger(ProcessLauncher::class.java)
 
@@ -169,6 +178,9 @@ class ProcessLauncher {
     }
 }
 
+/**
+ * The chrome launcher
+ * */
 class ChromeLauncher(
         private val processLauncher: ProcessLauncher = ProcessLauncher(),
         private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
@@ -189,6 +201,9 @@ class ChromeLauncher(
     private var userDataDir = AppPaths.CHROME_TMP_DIR
     private val shutdownHookThread = Thread { this.close() }
 
+    /**
+     * Launch the chrome
+     * */
     fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
         userDataDir = options.userDataDir
 
@@ -203,10 +218,19 @@ class ChromeLauncher(
         return Chrome(port)
     }
 
+    /**
+     * Launch the chrome
+     * */
     fun launch(options: ChromeDevtoolsOptions) = launch(searchChromeBinary(), options)
 
+    /**
+     * Launch the chrome
+     * */
     fun launch(headless: Boolean) = launch(searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
 
+    /**
+     * Launch the chrome
+     * */
     fun launch() = launch(true)
 
     override fun close() {

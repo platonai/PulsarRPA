@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
 
@@ -25,7 +27,7 @@ class WebDriverAdapter(
         val instanceSequencer = AtomicInteger()
     }
 
-    private val log = LoggerFactory.getLogger(WebDriverAdapter::class.java)
+    private val logger = LoggerFactory.getLogger(WebDriverAdapter::class.java)
 
     /**
      * The driver name
@@ -44,7 +46,7 @@ class WebDriverAdapter(
     override val currentUrl: String?
         get() = if (isQuit) null else
             driver.runCatching { currentUrl }
-                .onFailure { log.warn("Unexpected exception", it) }
+                .onFailure { logger.warn("Unexpected exception", it) }
                 .getOrNull()
 
     /**
@@ -93,9 +95,11 @@ class WebDriverAdapter(
     @Throws(NoSuchSessionException::class)
     override fun navigateTo(url: String) {
         if (isWorking) {
+            lastActiveTime = Instant.now()
             driver.get(url)
             this.url = url
             pageViews.incrementAndGet()
+            lastActiveTime = Instant.now()
         }
     }
 
@@ -160,7 +164,7 @@ class WebDriverAdapter(
             synchronized(status) {
                 if (!isQuit) {
                     status.set(Status.QUIT)
-                    driver.runCatching { quit() }.onFailure { log.warn("Unexpected exception", it) }
+                    driver.runCatching { quit() }.onFailure { logger.warn("Unexpected exception", it) }
                 }
             }
         }

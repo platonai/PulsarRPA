@@ -5,6 +5,7 @@ import com.google.common.collect.Multiset
 import com.google.common.collect.TreeMultimap
 import com.google.common.collect.TreeMultiset
 import com.google.common.net.InetAddresses
+import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -140,6 +141,9 @@ class TestCases {
 
 //        println(n % a)
 //        println((a * 3 + b) % a)
+
+        SystemUtils.USER_NAME
+        println(System.getProperty("USER"))
 
         for (i in 0..10) {
             assertEquals(b, (a * i + b) % a, "i=$i")

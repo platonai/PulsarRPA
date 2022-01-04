@@ -7,6 +7,9 @@ import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
 class BlockUrlsExample: BrowserExampleBase() {
+
+    override val testUrl = "https://www.stbchina.cn/"
+
     override fun run() {
         page.addScriptToEvaluateOnNewDocument(clientLibJs)
 
@@ -68,9 +71,11 @@ class BlockUrlsExample: BrowserExampleBase() {
         }
 
         page.enable()
-        page.navigate(testUrl)
+        page.navigate("about:blank")
 
         println(Gson().toJson(chrome.version))
+
+        readLine()
     }
 
     private fun isMainFrame(frameId: String): Boolean {

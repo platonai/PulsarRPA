@@ -27,11 +27,11 @@ object AppContext {
      */
     val TMP_DIR = SystemUtils.JAVA_IO_TMPDIR
 
-    // User's home directory
-    val USER_HOME = SystemUtils.USER_HOME
-
     // User's current working directory
     val USER_DIR = SystemUtils.USER_DIR
+
+    // User's home directory
+    val USER_HOME = SystemUtils.USER_HOME
 
     // The identity of this running instance
     val APP_VERSION = sniffVersion()
@@ -44,7 +44,9 @@ object AppContext {
     } else {
         Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
     }
-    val APP_DATA_DIR = Paths.get(USER_HOME).resolve(".$APP_NAME")
+    // Special users such as tomcat do not have it's own home
+    val APP_DATA_DIR = listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
+        .first { Files.isWritable(it) }.resolve(".$APP_NAME")
 
     val state = AtomicReference(State.NEW)
 

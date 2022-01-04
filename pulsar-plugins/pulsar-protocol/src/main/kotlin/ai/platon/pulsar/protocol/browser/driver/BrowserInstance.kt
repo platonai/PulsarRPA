@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -25,7 +27,12 @@ class BrowserInstance(
 
     val proxyServer get() = launchOptions.proxyServer
 
+    val navigateHistory = mutableListOf<String>()
     val numTabs = AtomicInteger()
+    var lastActiveTime = Instant.now()
+        private set
+    val idleTimeout = Duration.ofMinutes(10)
+    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     lateinit var launcher: ChromeLauncher
     lateinit var chrome: RemoteChrome
     val devToolsList = ConcurrentLinkedQueue<RemoteDevTools>()
@@ -51,7 +58,11 @@ class BrowserInstance(
 
     @Synchronized
     @Throws(Exception::class)
-    fun createTab() = chrome.createTab().also { numTabs.incrementAndGet() }
+    fun createTab(): ChromeTab {
+        lastActiveTime = Instant.now()
+        numTabs.incrementAndGet()
+        return chrome.createTab("about:blank")
+    }
 
     @Synchronized
     fun closeTab(tab: ChromeTab) {

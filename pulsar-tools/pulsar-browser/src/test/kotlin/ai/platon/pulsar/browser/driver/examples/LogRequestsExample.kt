@@ -1,10 +1,22 @@
 package ai.platon.pulsar.browser.driver.examples
 
 class LogRequestsExample: BrowserExampleBase() {
+    override val testUrl: String = "https://www.stbchina.cn/"
+
     override fun run() {
         network.onRequestWillBeSent { event ->
             println(String.format("request: [%s] %s\n", event.request.method, event.request.url))
         }
+
+        network.onResponseReceived { event ->
+            if ("application/json" == event.response.mimeType) {
+                println(String.format("response: [%s] %s", event.response.mimeType, event.response.url))
+                if ("listChildrenCategoryWithNologin.do" in event.response.url) {
+                    println(event.response.serviceWorkerResponseSource)
+                }
+            }
+        }
+
         network.onLoadingFinished {
             // Close the tab and close the browser when loading finishes.
 //            chrome.closeTab(tab)
@@ -15,8 +27,6 @@ class LogRequestsExample: BrowserExampleBase() {
         page.enable()
 
         page.navigate(testUrl)
-        page.resetNavigationHistory()
-        page.navigate("https://list.jd.com/list.html?cat=670,677,688")
     }
 
     private fun isBlocked(url: String): Boolean {

@@ -7,6 +7,9 @@ import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import kotlin.system.exitProcess
 
+/**
+ * A simple scraper which just send an X-SQL request to the pulsar server and get the scrape result
+ * */
 fun main() {
     val sql = """
         select

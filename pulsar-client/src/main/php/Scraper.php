@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * A simple scraper which just send an X-SQL request to the pulsar server and get the scrape result
+ * */
+
 $url = "http://localhost:8182/api/x/e";
 $sql = "select
             dom_first_text(dom, '#productTitle') as title,

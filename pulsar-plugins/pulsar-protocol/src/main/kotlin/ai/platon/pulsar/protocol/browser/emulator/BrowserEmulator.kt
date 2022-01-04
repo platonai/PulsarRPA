@@ -22,7 +22,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
@@ -116,15 +118,26 @@ open class BrowserEmulator(
         } finally {
         }
 
+        // TODO: avoid the hard coding
+        emulateJd(task, driverSettings, driver)
+
+        if (driverSettings.isGUI) {
+            // in gui mode, just stop the loading, so we can make the diagnosis
+            driver.stopLoading()
+        } else {
+            // go to about:blank, so the browser stops the previous page and release all resources
+            driver.navigateTo("about:blank")
+        }
+
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }
 
     @Throws(NavigateTaskCancellationException::class)
     private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
-        val navigateTask = NavigateTask(task, driver, driverControl)
+        val navigateTask = NavigateTask(task, driver, driverSettings)
 
         try {
-            val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
+            val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
             navigateTask.pageDatum.apply {
                 protocolStatus = interactResult.protocolStatus
                 activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
@@ -205,6 +218,16 @@ open class BrowserEmulator(
             jsScrollDown(task, result)
         }
 
+        // TODO: move to the session config
+        val isJd = task.url.contains("item.jd.com")
+        val requiredElements = if (isJd) {
+            listOf(".itemInfo-wrap .summary-price .p-price .price")
+        } else listOf()
+
+        if (result.state.isContinue && requiredElements.isNotEmpty()) {
+            jsWaitForElement(task, requiredElements)
+        }
+
         if (result.state.isContinue) {
             eventHandler?.onBeforeComputeFeature(task.fetchTask.page, task.driver)
         }
@@ -275,16 +298,29 @@ open class BrowserEmulator(
         val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
         val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
 
-        val expressions = mutableListOf(
-            "__utils__.scrollToMiddle(0.25)",
-            "__utils__.scrollToMiddle(0.5)",
-            "__utils__.scrollToMiddle(0.75)",
-            "__utils__.scrollToMiddle(0.5)"
-        )
+        val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4)
+            .map { "__utils__.scrollToMiddle($it)" }
+            .toMutableList()
         repeat(scrollDownCount) {
             expressions.add("__utils__.scrollDown()")
         }
         evaluate(interactTask, expressions, scrollInterval)
+    }
+
+    protected open suspend fun jsWaitForElement(
+        interactTask: InteractTask, requiredElements: List<String>
+    ) {
+        val expressions = requiredElements.map { "!!document.querySelector('$it')" }
+        var scrollCount = 0
+
+        val delayMillis = interactTask.emulateSettings.scrollInterval.toMillis()
+        var exists: Any? = null
+        while (scrollCount-- > 0 && (exists == null || exists == false)) {
+            counterJsWaits.inc()
+            val verbose = false
+            exists = expressions.all { expression -> true == evaluate(interactTask, expression, verbose) }
+            delay(delayMillis)
+        }
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
@@ -300,23 +336,62 @@ open class BrowserEmulator(
         }
     }
 
+    protected suspend fun emulateJd(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
+        val isJd = task.url.contains("item.jd.com")
+        val rand = Random.nextInt(3)
+        if (isJd && rand == 0) {
+            val interactTask = InteractTask(task, driverSettings, driver)
+            val expressions = listOf(
+                "document.querySelector('#summary-service a').click()",
+                "document.querySelector('#ns_services a').click()",
+                "document.querySelector('.summary-price a').click()",
+                "document.querySelector('#comment-count a').click()",
+                "document.querySelector('#sp-hot-sale a').click()",
+                "document.querySelector('#choose-service a').click()",
+                "document.querySelector('#choose-baitiao a').click()",
+                "document.querySelector('#detail li:nth-child(2)').click()",
+                "document.querySelector('#detail li:nth-child(3)').click()",
+                "document.querySelector('#detail li:nth-child(4)').click()",
+                "document.querySelector('#detail li:nth-child(5)').click()",
+            ).shuffled().take(3)
+            evaluate(interactTask, expressions, Duration.ofMillis(500), true)
+        }
+    }
+
+    private suspend fun evaluate(interactTask: InteractTask,
+                                 expressions: Iterable<String>, delay: Duration, verbose: Boolean = false) {
+        return evaluate(interactTask, expressions, delay.toMillis(), verbose)
+    }
+
     private suspend fun evaluate(interactTask: InteractTask,
         expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
-        expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
-            logger.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
-            val value = evaluate(interactTask, it)
-            if (value is String) {
-                val s = Strings.stripNonPrintableChar(value)
-                logger.takeIf { verbose }?.info("Result >>>$s<<<")
-            } else if (value is Int || value is Long) {
-                logger.takeIf { verbose }?.info("Result >>>$value<<<")
+        expressions.asSequence()
+            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
+            .filterNot { it.startsWith("// ") }
+            .filterNot { it.startsWith("# ") }
+            .forEach { expression ->
+                evaluate(interactTask, expression, verbose)
+                delay(delayMillis)
             }
-            delay(delayMillis)
+    }
+
+    private suspend fun evaluate(
+        interactTask: InteractTask, expression: String, verbose: Boolean
+    ): Any? {
+        logger.takeIf { verbose }?.info("Evaluate expression >>>$expression<<<")
+        val value = evaluate(interactTask, expression)
+        if (value is String) {
+            val s = Strings.stripNonPrintableChar(value)
+            logger.takeIf { verbose }?.info("Result >>>$s<<<")
+        } else if (value is Int || value is Long) {
+            logger.takeIf { verbose }?.info("Result >>>$value<<<")
         }
+        return value
     }
 
     private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
         counterRequests.inc()
+        counterJsEvaluates.inc()
         checkState(interactTask.driver)
         checkState(interactTask.fetchTask)
         val result = interactTask.driver.evaluate(expression)

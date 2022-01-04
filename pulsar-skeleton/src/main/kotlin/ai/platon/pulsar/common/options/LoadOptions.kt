@@ -35,7 +35,7 @@ object LoadOptionDefaults {
      * The are several cases to enable jit retry
      * For example, in test environment
      * */
-    var nJitRetry = 0
+    var nJitRetry = -1
     /**
      * The default browser
      * */

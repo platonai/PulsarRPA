@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.nodes.node.ext.ExportPaths
@@ -59,7 +60,7 @@ open class EventHandler(
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
-    fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserSettings) {
+    fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
             val emulateSettings = EmulateSettings(task.volatileConfig)
             logger.trace("Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
@@ -90,7 +91,7 @@ open class EventHandler(
         }
 
         // Check if the page source is integral
-        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.protocolStatus, task.task)
+        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.protocolStatus, task)
         // Check browse timeout event, transform status to be success if the page source is good
         if (pageDatum.protocolStatus.isTimeout) {
             if (integrity.isOK) {
@@ -103,7 +104,7 @@ open class EventHandler(
         pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
-            task.pageSource = normalizePageSource(task.pageSource).toString()
+            task.pageSource = normalizePageSource(task.url, task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
             pageDatum.protocolStatus = handleBrokenPageSource(task.task, integrity)
@@ -129,10 +130,10 @@ open class EventHandler(
     }
 
     /**
-     * Check if the html is integral without field extraction, a further html integrity checking can be
+     * Check if the html is integral before field extraction, a further html integrity checking can be
      * applied after field extraction.
      * */
-    open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
+    open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: NavigateTask): HtmlIntegrity {
         val length = pageSource.length.toLong()
 
         return when {
@@ -143,7 +144,7 @@ open class EventHandler(
         }
     }
 
-    open fun normalizePageSource(pageSource: String): StringBuilder {
+    open fun normalizePageSource(url: String, pageSource: String): StringBuilder {
         // The browser has already convert source code to UTF-8
         return replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
     }

@@ -3,25 +3,36 @@ package ai.platon.pulsar.browser.driver
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.Wildchar
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
+import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import kotlin.random.Random
 
+/**
+ * The chrome display mode
+ * SUPERVISED: supervised by other programs
+ * GUI: open as a normal browser
+ * HEADLESS: open in headless mode
+ * */
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
+/**
+ * The emulate settings
+ * */
 data class EmulateSettings(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     var pageLoadTimeout: Duration = Duration.ofMinutes(3)
 ) {
-    constructor(conf: ImmutableConfig): this(
+    constructor(conf: ImmutableConfig) : this(
         scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
         scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
         scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofMinutes(1)),
@@ -63,6 +74,41 @@ data class EmulateSettings(
     }
 }
 
+/**
+ * The block rules of urls and resources
+ * */
+open class BlockRules {
+
+    open val blockingResourceTypes = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
+
+    /**
+     * amazon.com note:
+     * The following have to pass, or the site refuses to serve:
+     * .woff,
+     * .mp4
+     * */
+    open val mustPassUrls = mutableListOf<String>()
+
+    /**
+     * Blocking urls patten using widcards
+     * */
+    open val blockingUrls = listOf(
+        "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
+        "*.woff", "*.woff2",
+        "*.mp4", "*.svg",
+        "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
+        "https://img*"
+    ).filterNot { it in mustPassUrls }.toMutableList()
+
+    open val mustPassUrlPatterns
+        get() = listOf(
+            "about:blank",
+            "data:.+",
+        ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
+
+    open val blockingUrlPatterns get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
+}
+
 open class BrowserSettings(
     parameters: Map<String, Any> = mapOf(),
     var jsDirectory: String = "js",
@@ -87,7 +133,20 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
+            arrayOf(BROWSER_LAUNCH_SUPERVISOR_PROCESS, BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS).forEach {
+                System.clearProperty(it)
+            }
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
+            return BrowserSettings
+        }
+
+        fun enableUrlBlocking(): Companion {
+            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
+            return BrowserSettings
+        }
+
+        fun blockImages(): Companion {
+            enableUrlBlocking()
             return BrowserSettings
         }
 
@@ -116,7 +175,8 @@ open class BrowserSettings(
     // The javascript to execute by Web browsers
     val propertyNames
         get() = conf.getTrimmedStrings(
-            FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES
+            FETCH_CLIENT_JS_COMPUTED_STYLES,
+            AppConstants.CLIENT_JS_PROPERTY_NAMES
         )
 
     var clientJsVersion = "0.2.3"

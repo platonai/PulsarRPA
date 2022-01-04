@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.chrome
 
+import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
@@ -8,13 +9,12 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
-import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
-import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
-import ai.platon.pulsar.protocol.browser.conf.blockingUrls
-import ai.platon.pulsar.protocol.browser.conf.mustPassUrlPatterns
+import ai.platon.pulsar.protocol.browser.conf.sites.amazon.AmazonBlockRules
+import ai.platon.pulsar.protocol.browser.conf.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
+import ai.platon.pulsar.protocol.browser.driver.chrome.hotfix.JdInitializer
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +26,7 @@ import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -42,25 +43,25 @@ internal data class DeviceMetrics(
 class ChromeDevtoolsDriver(
     private val launcherConfig: LauncherConfig,
     private val launchOptions: ChromeDevtoolsOptions,
-    private val browserControl: WebDriverSettings,
+    private val browserSettings: WebDriverSettings,
     private val browserInstanceManager: BrowserInstanceManager,
 ) : RemoteWebDriver() {
-    private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
+    private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
     val dataDir get() = launchOptions.userDataDir
     val proxyServer get() = launchOptions.proxyServer
 
-    val userAgent get() = browserControl.randomUserAgent()
+    val userAgent get() = browserSettings.randomUserAgent()
 
-    // TODO: load blocking rules from config files
-    val enableUrlBlocking get() = browserControl.enableUrlBlocking
-    val clientLibJs = browserControl.parseLibJs(false)
+    val enableUrlBlocking get() = browserSettings.enableUrlBlocking
+    val clientLibJs = browserSettings.parseLibJs(false)
     var devToolsConfig = DevToolsConfig()
 
     val browserInstance: BrowserInstance
     val tab: ChromeTab
     val devTools: RemoteDevTools
 
+    private var isFirstLaunch = true
     private var lastSessionId: SessionId? = null
     private val browser get() = devTools.browser
     private var navigateUrl = ""
@@ -72,10 +73,13 @@ class ChromeDevtoolsDriver(
     private val emulation get() = devTools.emulation
 
     private val enableBlockingReport = false
-    private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
-    private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
-    private val isActive get() = !isGone
+
+    val numSessionLost = AtomicInteger()
+    var lastActiveTime = Instant.now()
+        private set
+    val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
+    val isActive get() = !isGone
 
     val viewport = Viewport().apply {
         x = 0.0
@@ -87,6 +91,7 @@ class ChromeDevtoolsDriver(
 
     init {
         try {
+            isFirstLaunch = !browserInstanceManager.hasLaunched(launchOptions)
             browserInstance = browserInstanceManager.launchIfAbsent(launcherConfig, launchOptions)
 
             // In chrome every tab is a separate process
@@ -105,7 +110,19 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     override fun get(url: String) {
-        takeIf { browserControl.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
+        initSpecialSiteBeforeVisit(url)
+
+        browserInstance.navigateHistory.add(url)
+        lastActiveTime = Instant.now()
+        takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
+    }
+
+    private fun initSpecialSiteBeforeVisit(url: String) {
+        if (isFirstLaunch && url.contains("jd.com")) {
+            // the first visit to jd.com
+            browserInstance.navigateHistory.none { it.contains("jd.com") }
+            JdInitializer().init(page)
+        }
     }
 
     @Throws(NoSuchSessionException::class)
@@ -116,7 +133,7 @@ class ChromeDevtoolsDriver(
             page.stopLoading()
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
-            log.warn("Failed to call stop loading, session is already closed, {}", Strings.simplifyException(e))
+            logger.warn("Failed to call stop loading, session is already closed, {}", Strings.simplifyException(e))
         }
     }
 
@@ -245,12 +262,12 @@ class ChromeDevtoolsDriver(
                             page.captureScreenshot()
                         }
 
-                        log.debug("It takes {} to take screenshot | {}",
+                        logger.debug("It takes {} to take screenshot | {}",
                             DateTimes.elapsedTime(startTime).readable(),
                             navigateUrl)
                         outputType.convertFromBase64Png(screenshot)
                     }
-                    log.takeIf { result == null }?.warn("Timeout to take screenshot | {}", navigateUrl)
+                    logger.takeIf { result == null }?.warn("Timeout to take screenshot | {}", navigateUrl)
                 }
             }
             return result ?: throw ScreenshotException("Failed to take screenshot | $navigateUrl")
@@ -289,25 +306,11 @@ class ChromeDevtoolsDriver(
 
         try {
             page.addScriptToEvaluateOnNewDocument(clientLibJs)
-//        page.onDomContentEventFired { event: DomContentEventFired ->
-//            // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
-//            // runtime.evaluate("__utils__.checkPulsarStatus()")
-//        }
-//
-//        page.onLoadEventFired { event: LoadEventFired ->
-//            simulate()
-//        }
-
-            // block urls by url pattern
-//            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
-//            }
 
             page.enable()
 
-            // NOTE: There are too many network relative traffic, especially when the proxy is disabled
-            // TODO: Find out the reason why there are too many network relative traffic, especially when the proxy is disabled
             if (enableUrlBlocking) {
-                setupUrlBlocking()
+                setupUrlBlocking(url)
                 network.enable()
             }
 //            fetch.enable()
@@ -334,20 +337,28 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun setupUrlBlocking() {
-        if (!enableUrlBlocking) return
+    /**
+     * TODO: load blocking rules from config files
+     * */
+    private fun setupUrlBlocking(url: String) {
+        val blockRules = when {
+            "amazon.com" in url -> AmazonBlockRules()
+            "jd.com" in url -> JdBlockRules()
+            else -> BlockRules()
+        }
 
         // TODO: case sensitive or not?
-        network.setBlockedURLs(blockingUrls)
+        network.setBlockedURLs(blockRules.blockingUrls)
+
         network.takeIf { enableBlockingReport }?.onRequestWillBeSent {
             val requestUrl = it.request.url
-            if (mustPassUrlPatterns.any { requestUrl.matches(it) }) {
+            if (blockRules.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
                 return@onRequestWillBeSent
             }
 
-            if (it.type in blockingResourceTypes) {
-                if (blockingUrlPatterns.none { requestUrl.matches(it) }) {
-                    log.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
+            if (it.type in blockRules.blockingResourceTypes) {
+                if (blockRules.blockingUrlPatterns.none { requestUrl.matches(it) }) {
+                    logger.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
                 }
 
                 // TODO: when fetch is enabled, no resources is return, find out the reason

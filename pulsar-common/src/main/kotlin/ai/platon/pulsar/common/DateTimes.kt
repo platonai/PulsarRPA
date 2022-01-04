@@ -49,6 +49,10 @@ object DateTimes {
     const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
 
     const val MILLIS_OF_SECOND = 1000L
+    const val MILLIS_OF_MINUTE = 60 * MILLIS_OF_SECOND
+    const val MILLIS_OF_HOUR = 60 * MILLIS_OF_MINUTE
+    const val MILLIS_OF_DAY = 24 * MILLIS_OF_HOUR
+
     const val MINUTES_OF_HOUR = 60L
 
     const val SECONDS_OF_MINUTE = 60L

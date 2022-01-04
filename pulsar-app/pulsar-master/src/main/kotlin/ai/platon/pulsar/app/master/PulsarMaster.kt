@@ -56,15 +56,6 @@ class PulsarMaster(
         return Server.createWebServer("-webAllowOthers")
     }
 
-    @Bean
-    fun generate() {
-        val resource = "config/sites/amazon/crawl/inject/seeds/category/best-sellers/leaf-categories.txt"
-
-        LinkExtractors.fromResource(resource)
-            .map { Hyperlink(it, args = "-i 1s") }
-            .toCollection(fetchCache.nReentrantQueue)
-    }
-
     @Bean(initMethod = "start", destroyMethod = "stop")
     fun fetch(): StreamingCrawlLoop {
         return StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)

@@ -15,7 +15,7 @@ import java.time.Instant
 class NavigateTask(
         val task: FetchTask,
         val driver: WebDriver,
-        val driverConfig: BrowserSettings
+        val driverSettings: BrowserSettings
 ) {
     val startTime = Instant.now()
 

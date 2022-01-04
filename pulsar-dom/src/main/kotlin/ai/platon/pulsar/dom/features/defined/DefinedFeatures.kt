@@ -5,6 +5,9 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.incKey
 
 const val FEATURE_VERSION: Int = 10001
 
+/**
+ * The level 1 features definition
+ * */
 enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true, val isFloat: Boolean = false) {
     TOP(incKey, "top"),
     LEFT(incKey, "left"),
