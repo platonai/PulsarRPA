@@ -41,6 +41,11 @@
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>gora-shaded-mongodb</artifactId>
+            <version>0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
 
@@ -52,13 +57,6 @@
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-shaded-mongodb</artifactId>
-            <version>0.8</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib3/gora-shaded-mongodb-0.8.jar</systemPath>
         </dependency>
 
         <dependency>
