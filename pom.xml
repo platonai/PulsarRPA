@@ -121,10 +121,38 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>org.jetbrains.dokka</groupId>
+                        <artifactId>dokka-maven-plugin</artifactId>
+                        <version>${dokka.version}</version>
+                        <executions>
+                            <execution>
+                                <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>javadocJar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <sourceDirectories>
+                                <dir>${project.basedir}/src/main/java</dir>
+                                <dir>${project.basedir}/src/main/kotlin</dir>
+                            </sourceDirectories>
+                        </configuration>
+                    </plugin>
                     <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <!-- Skip maven-deploy-plugin to use nexus-staging-maven-plugin -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
@@ -582,6 +610,9 @@
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
         <autolink.version>0.10.0</autolink.version>
+        <dokka.version>1.4.32</dokka.version>
+
+        <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
     </properties>
 
 </project>
