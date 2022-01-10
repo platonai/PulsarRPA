@@ -1,6 +1,6 @@
 package ai.platon.pulsar.qa
 
-import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
+import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.ImportResource

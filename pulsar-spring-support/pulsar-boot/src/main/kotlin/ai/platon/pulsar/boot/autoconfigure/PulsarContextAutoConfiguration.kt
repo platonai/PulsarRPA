@@ -1,4 +1,4 @@
-package ai.platon.pulsar.boot.autoconfigure.pulsar
+package ai.platon.pulsar.boot.autoconfigure
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.ql.context.SQLContexts

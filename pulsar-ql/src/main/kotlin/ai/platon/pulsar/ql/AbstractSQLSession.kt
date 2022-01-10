@@ -12,9 +12,9 @@ abstract class AbstractSQLSession(
     config: SessionConfig
 ) : AbstractPulsarSession(context, config, sessionDelegate.id), SQLSession {
 
-    override val udfClassSamples: MutableList<KClass<out Any>> = mutableListOf()
+    override val udfClassSamples: MutableSet<KClass<out Any>> = mutableSetOf()
 
-    override val registeredAllUdfClasses: MutableList<Class<out Any>> = mutableListOf()
+    override val registeredAllUdfClasses: MutableSet<Class<out Any>> = mutableSetOf()
 
     override fun parseValueDom(page: WebPage) = ValueDom.get(parse(page))
 

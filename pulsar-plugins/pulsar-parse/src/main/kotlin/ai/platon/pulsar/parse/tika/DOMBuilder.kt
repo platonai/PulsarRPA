@@ -46,11 +46,7 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
      * First node of document fragment or null if not a DocumentFragment
      */
     var m_docFrag: DocumentFragment? = null
-    /**
-     * Get the node currently being processed.
-     *
-     * @return the current node being processed
-     */
+
     /**
      * Current node
      */
@@ -113,8 +109,7 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
      *
      * @return null
      */
-    val writer: Writer?
-        get() = null
+    val writer: Writer? = null
 
     /**
      * Append a node to the current container.
@@ -152,17 +147,10 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * Receive an object for locating the origin of SAX document events.
      *
-     *
-     *
-     *
      * SAX parsers are strongly encouraged (though not absolutely required) to
      * supply a locator: if it does so, it must supply the locator to the
      * application by invoking this method before invoking any of the other
      * methods in the ContentHandler interface.
-     *
-     *
-     *
-     *
      *
      * The locator allows the application to determine the end position of any
      * document-related event, even if the parser is not reporting an error.
@@ -171,14 +159,9 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
      * business rules). The information returned by the locator is probably not
      * sufficient for use with a search engine.
      *
-     *
-     *
-     *
-     *
      * Note that the locator will return correct information only during the
      * invocation of the events in this interface. The application should not
      * attempt to use it at any other time.
-     *
      *
      * @param locator An object that can return the location of any SAX document event.
      * @see org.xml.sax.Locator
@@ -188,9 +171,6 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
 
     /**
      * Receive notification of the beginning of a document.
-     *
-     *
-     *
      *
      * The SAX parser will invoke this method only once, before any other methods
      * in this interface or in DTDHandler (except for setDocumentLocator).
@@ -202,9 +182,6 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
 
     /**
      * Receive notification of the end of a document.
-     *
-     *
-     *
      *
      * The SAX parser will invoke this method only once, and it will be the last
      * method invoked during the parse. The parser shall not invoke this method
@@ -219,24 +196,16 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * Receive notification of the beginning of an element.
      *
-     *
-     *
-     *
      * The Parser will invoke this method at the beginning of every element in the
      * XML document; there will be a corresponding endElement() event for every
      * startElement() event (even when the element is empty). All of the element's
      * content will be reported, in order, before the corresponding endElement()
      * event.
      *
-     *
-     *
-     *
-     *
      * If the element name has a namespace prefix, the prefix will still be
      * attached. Note that the attribute list provided will contain only
      * attributes with explicit values (specified or defaulted): #IMPLIED
      * attributes will be omitted.
-     *
      *
      * @param ns        The namespace of the node
      * @param localName The local part of the qualified name
@@ -286,20 +255,12 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * Receive notification of the end of an element.
      *
-     *
-     *
-     *
      * The SAX parser will invoke this method at the end of every element in the
      * XML document; there will be a corresponding startElement() event for every
      * endElement() event (even when the element is empty).
      *
-     *
-     *
-     *
-     *
      * If the element name has a namespace prefix, the prefix will still be
      * attached to the name.
-     *
      *
      * @param ns        the namespace of the element
      * @param localName The local part of the qualified name of the element
@@ -323,30 +284,18 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * Receive notification of character data.
      *
-     *
-     *
-     *
      * The Parser will call this method to report each chunk of character data.
      * SAX parsers may return all contiguous character data in a single chunk, or
      * they may split it into several chunks; however, all of the characters in
      * any single event must come from the same external entity, so that the
      * Locator provides useful information.
      *
-     *
-     *
-     *
-     *
      * The application must not attempt to read from the array outside of the
      * specified range.
-     *
-     *
-     *
-     *
      *
      * Note that some parsers will report whitespace using the
      * ignorableWhitespace() method rather than this one (validating parsers must
      * do so).
-     *
      *
      * @param ch     The characters from the XML document.
      * @param start  The start position in the array.
@@ -364,8 +313,7 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
             return
         }
         val s = String(ch, start, length)
-        val childNode: Node?
-        childNode = if (currentNode != null) currentNode!!.lastChild else null
+        val childNode = if (currentNode != null) currentNode!!.lastChild else null
         if (childNode != null && childNode.nodeType == Node.TEXT_NODE) {
             (childNode as Text).appendData(s)
         } else {
@@ -486,20 +434,12 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * Receive notification of a processing instruction.
      *
-     *
-     *
-     *
      * The Parser will invoke this method once for each processing instruction
      * found: note that processing instructions may occur before or after the main
      * document element.
      *
-     *
-     *
-     *
-     *
      * A SAX parser should never report an XML declaration (XML 1.0, section 2.8)
      * or a text declaration (XML 1.0, section 4.3.1) using this method.
-     *
      *
      * @param target The processing instruction target.
      * @param data   The processing instruction data, or null if none was supplied.
@@ -511,7 +451,6 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
 
     /**
      * Report an XML comment anywhere in the document.
-     *
      *
      * This callback will be used for comments inside or outside the document
      * element, including comments in the external DTD subset (if read).
@@ -550,30 +489,18 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * Receive notification of cdata.
      *
-     *
-     *
-     *
      * The Parser will call this method to report each chunk of character data.
      * SAX parsers may return all contiguous character data in a single chunk, or
      * they may split it into several chunks; however, all of the characters in
      * any single event must come from the same external entity, so that the
      * Locator provides useful information.
      *
-     *
-     *
-     *
-     *
      * The application must not attempt to read from the array outside of the
      * specified range.
-     *
-     *
-     *
-     *
      *
      * Note that some parsers will report whitespace using the
      * ignorableWhitespace() method rather than this one (validating parsers must
      * do so).
-     *
      *
      * @param ch     The characters from the XML document.
      * @param start  The start position in the array.
@@ -584,8 +511,10 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
      */
     @Throws(SAXException::class)
     fun cdata(ch: CharArray, start: Int, length: Int) {
-        if (isOutsideDocElem
-                && XMLCharacterRecognizer.isWhiteSpace(ch, start, length)) return  // avoid DOM006 Hierarchy request error
+        if (isOutsideDocElem && XMLCharacterRecognizer.isWhiteSpace(ch, start, length)) {
+            return  // avoid DOM006 Hierarchy request error
+        }
+
         val s = String(ch, start, length)
         // XXX ab@apache.org: modified from the original, to accomodate TagSoup.
         val n = currentNode!!.lastChild
@@ -594,7 +523,6 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
 
     /**
      * Report the start of DTD declarations, if any.
-     *
      *
      * Any declarations are assumed to be in the internal subset unless otherwise
      * indicated.
@@ -618,39 +546,28 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
      * @see .startDTD
      */
     @Throws(SAXException::class)
-    override fun endDTD() { // Do nothing for now.
+    override fun endDTD() {
+        // Do nothing for now.
     }
 
     /**
      * Begin the scope of a prefix-URI Namespace mapping.
-     *
-     *
-     *
      *
      * The information from this event is not necessary for normal Namespace
      * processing: the SAX XML reader will automatically replace prefixes for
      * element and attribute names when the http://xml.org/sax/features/namespaces
      * feature is true (the default).
      *
-     *
-     *
-     *
-     *
      * There are cases, however, when applications need to use prefixes in
      * character data or in attribute values, where they cannot safely be expanded
      * automatically; the start/endPrefixMapping event supplies the information to
      * the application to expand prefixes in those contexts itself, if necessary.
-     *
-     *
-     *
-     *
      *
      * Note that start/endPrefixMapping events are not guaranteed to be properly
      * nested relative to each-other: all startPrefixMapping events will occur
      * before the corresponding startElement event, and all endPrefixMapping
      * events will occur after the corresponding endElement event, but their order
      * is not guaranteed.
-     *
      *
      * @param prefix The Namespace prefix being declared.
      * @param uri    The Namespace URI the prefix is mapped to.
@@ -676,13 +593,9 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
     /**
      * End the scope of a prefix-URI mapping.
      *
-     *
-     *
-     *
      * See startPrefixMapping for details. This event will always occur after the
      * corresponding endElement event, but the order of endPrefixMapping events is
      * not otherwise guaranteed.
-     *
      *
      * @param prefix The prefix that was being mapping.
      * @see .startPrefixMapping
@@ -695,9 +608,6 @@ internal class DOMBuilder : ContentHandler, LexicalHandler {
 
     /**
      * Receive notification of a skipped entity.
-     *
-     *
-     *
      *
      * The Parser will invoke this method once for each entity skipped.
      * Non-validating processors may skip entities if they have not seen the

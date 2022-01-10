@@ -1,4 +1,4 @@
-package ai.platon.pulsar.boot.autoconfigure.pulsar
+package ai.platon.pulsar.boot.autoconfigure
 
 import ai.platon.pulsar.context.PulsarContexts
 import org.springframework.context.ApplicationContextInitializer

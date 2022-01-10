@@ -57,7 +57,8 @@ public interface AppConstants {
     Character UNICODE_LAST_CODE_POINT = '\uFFFF';
 
     /**
-     * A example of the shortest url
+     * An example of the shortest url
+     * TODO: consider ws://t.tt
      * */
     String SHORTEST_VALID_URL = "ftp://t.tt";
     /**

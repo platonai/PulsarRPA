@@ -448,11 +448,13 @@ class ChromeLauncher(
 
             val maxTry = 10
             var i = 0
-            while (i++ < maxTry && Files.exists(dirToDelete)) {
+            while (i++ < maxTry && Files.exists(dirToDelete) && !Files.isSymbolicLink(dirToDelete)) {
                 FileChannel.open(lock, StandardOpenOption.APPEND).use {
                     it.lock()
                     kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                            .onFailure { log.warn("Failed to delete directory", it) }
+                            .onFailure { log.warn("Failed to delete directory | {} | {}",
+                                dirToDelete, it.message)
+                            }
                 }
 
                 Thread.sleep(500)

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest
 
-import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
+import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper

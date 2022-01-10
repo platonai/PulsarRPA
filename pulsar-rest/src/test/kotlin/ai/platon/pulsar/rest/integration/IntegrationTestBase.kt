@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.integration
 
 import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
+import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger

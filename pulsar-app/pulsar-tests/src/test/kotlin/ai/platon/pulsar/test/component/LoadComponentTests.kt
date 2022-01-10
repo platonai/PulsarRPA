@@ -1,6 +1,6 @@
 package ai.platon.pulsar.test.component
 
-import ai.platon.pulsar.boot.autoconfigure.pulsar.test.PulsarTestContextInitializer
+import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.crawl.component.LoadComponent
 import org.junit.Test
 import org.junit.runner.RunWith

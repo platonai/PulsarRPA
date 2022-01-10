@@ -15,15 +15,19 @@ interface SQLSession : PulsarSession {
 
     val sessionDelegate: SessionDelegate
 
-    val udfClassSamples: List<KClass<out Any>>
+    val udfClassSamples: Set<KClass<out Any>>
 
-    val registeredAllUdfClasses: List<Class<out Any>>
+    val registeredAllUdfClasses: Set<Class<out Any>>
 
     val registeredAdminUdfClasses
-        get() = registeredAllUdfClasses.filter { it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" } }
+        get() = registeredAllUdfClasses
+            .filter { it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" } }
+            .toSet()
 
     val registeredUdfClasses
-        get() = registeredAllUdfClasses.filterNot { it in registeredAdminUdfClasses }
+        get() = registeredAllUdfClasses
+            .filterNot { it in registeredAdminUdfClasses }
+            .toSet()
 
     fun parseValueDom(page: WebPage): ValueDom
 
