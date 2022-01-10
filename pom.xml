@@ -92,12 +92,6 @@
 
         <profile>
             <id>platon-release</id>
-            <modules>
-                <module>pulsar-distribution</module>
-            </modules>
-            <properties>
-                <pulsar.skip.assembly>false</pulsar.skip.assembly>
-            </properties>
 
             <build>
                 <plugins>
