@@ -4,7 +4,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.6.6.1-SNAPSHOT</version>
+        <version>1.7.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-resources</artifactId>
@@ -15,7 +15,6 @@
         <plugins>
             <plugin>
                 <artifactId>maven-remote-resources-plugin</artifactId>
-                <version>1.5</version>
                 <executions>
                     <execution>
                         <goals>

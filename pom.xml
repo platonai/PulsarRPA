@@ -22,7 +22,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.6.6.1-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>The easy way to crawl and scrape the web:
