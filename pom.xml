@@ -77,44 +77,35 @@
         <module>pulsar-plugins</module>
 
         <module>pulsar-tools</module>
-        <module>pulsar-third</module>
         <module>pulsar-ql-common</module>
 
         <module>pulsar-spring-support</module>
         <module>pulsar-ql</module>
         <module>pulsar-rest</module>
 
-        <module>pulsar-app</module>
         <module>pulsar-client</module>
     </modules>
 
     <profiles>
+        <profile>
+            <id>app</id>
+            <modules>
+                <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>third</id>
+            <modules>
+                <module>pulsar-third</module>
+            </modules>
+        </profile>
 
         <profile>
             <id>platon-release</id>
 
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kdoc-maven-plugin</artifactId>
-                        <version>0.12.1230</version>
-                        <configuration>
-                            <title>API documentation for ${project.artifactId} ${project.version}</title>
-                            <sources>
-                                <source>src/main/kotlin</source>
-                            </sources>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>apidoc</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>apidoc</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.jetbrains.dokka</groupId>
                         <artifactId>dokka-maven-plugin</artifactId>
@@ -321,7 +312,6 @@
                     <version>1.6.7</version>
                     <extensions>true</extensions>
                 </plugin>
-
             </plugins>
         </pluginManagement>
 
@@ -331,8 +321,6 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
             </plugin>
-            <!-- platon-release is enabled by default in maven-apache-parent -->
-            <!-- see http://maven.apache.org/pom/asf/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

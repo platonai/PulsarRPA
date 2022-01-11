@@ -26,6 +26,5 @@
     <modules>
         <module>pulsar-boilerpipe</module>
         <module>pulsar-jsoup</module>
-        <module>pulsar-distributed-lock</module>
     </modules>
 </project>
