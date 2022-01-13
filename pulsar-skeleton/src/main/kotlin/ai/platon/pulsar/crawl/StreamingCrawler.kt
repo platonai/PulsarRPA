@@ -282,7 +282,7 @@ open class StreamingCrawler<T : UrlAware>(
 
         if (!urls.iterator().hasNext()) {
             if (idleSeconds % reportPeriod == 0) {
-                logger.info("The url sequence is empty")
+                logger.debug("The url sequence is empty")
             }
 
             sleepSeconds(1)

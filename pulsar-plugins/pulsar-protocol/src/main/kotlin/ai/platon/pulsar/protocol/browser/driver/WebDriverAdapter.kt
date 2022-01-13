@@ -10,14 +10,10 @@ import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
 
-/**
- * TODO: remove selenium dependency
- * */
 class WebDriverAdapter(
     browserInstanceId: BrowserInstanceId,
     val driver: org.openqa.selenium.WebDriver,

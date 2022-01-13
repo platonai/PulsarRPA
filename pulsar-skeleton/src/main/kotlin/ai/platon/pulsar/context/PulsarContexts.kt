@@ -27,7 +27,7 @@ object PulsarContexts {
         contexts.add(context)
         activeContext = context
         context.registerShutdownHook()
-        logger.info("Active contexts | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
+        logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
         return context
     }
 

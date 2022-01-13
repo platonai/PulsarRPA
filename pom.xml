@@ -494,7 +494,6 @@
                 <version>${pulsar-h2.version}</version>
             </dependency>
 
-
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-java</artifactId>
@@ -510,12 +509,7 @@
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-chrome-driver</artifactId>
                 <version>${selenium.version}</version>
-<!--                <exclusions>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>*</groupId>-->
-<!--                        <artifactId>*</artifactId>-->
-<!--                    </exclusion>-->
-<!--                </exclusions>-->
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -555,6 +549,7 @@
                 <version>${jackson.version}</version>
             </dependency>
 
+            <!-- TODO: check if we need this, default version might be OK? -->
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>bson</artifactId>
@@ -591,6 +586,7 @@
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
+        <selenium.version>4.0.0</selenium.version>
         <autolink.version>0.10.0</autolink.version>
         <dokka.version>1.4.32</dokka.version>
 

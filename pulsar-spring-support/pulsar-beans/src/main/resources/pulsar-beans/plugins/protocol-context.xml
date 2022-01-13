@@ -20,13 +20,19 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="driverPoolManager" class="ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager" destroy-method="close">
+    <bean id="driverPoolManager"
+          class="ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager"
+          destroy-method="close"
+    >
         <constructor-arg ref="webDriverFactory"/>
         <constructor-arg ref="conf"/>
         <constructor-arg name="suppressMetrics" value="false"/>
     </bean>
 
-    <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager" destroy-method="close">
+    <bean id="privacyManager"
+          class="ai.platon.pulsar.protocol.browser.emulator.context.MultiPrivacyContextManager"
+          destroy-method="close"
+    >
         <constructor-arg ref="proxyPoolManager"/>
         <constructor-arg ref="driverPoolManager"/>
         <constructor-arg ref="coreMetrics"/>

@@ -32,9 +32,9 @@ class CSV(
     }
 
     @Throws(SQLException::class)
-    fun toCSV(resultsets: Iterable<ResultSet>): String {
+    fun toCSV(resultSets: Iterable<ResultSet>): String {
         val sb = StringBuilder()
-        resultsets.forEachIndexed { i, rs ->
+        resultSets.forEachIndexed { i, rs ->
             if (i == 0) {
                 val headers = ResultSetUtils.getColumnNames(rs).map { it.replace(separator, replacement) }
                 headers.joinTo(sb, separator)
