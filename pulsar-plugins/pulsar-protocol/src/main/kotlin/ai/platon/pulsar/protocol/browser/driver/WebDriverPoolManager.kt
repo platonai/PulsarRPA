@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -39,7 +38,7 @@ open class WebDriverPoolManager(
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
     }
 
-    private val log = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
+    private val logger = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
 
     val driverSettings get() = driverFactory.driverSettings
@@ -71,11 +70,11 @@ open class WebDriverPoolManager(
             "idleTime" to Gauge { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
-    val numWaiting get() = driverPools.values.sumBy { it.numWaiting.get() }
-    val numFreeDrivers get() = driverPools.values.sumBy { it.numFree }
-    val numWorkingDrivers get() = driverPools.values.sumBy { it.numWorking.get() }
-    val numAvailableDrivers get() = driverPools.values.sumBy { it.numAvailable }
-    val numOnline get() = driverPools.values.sumBy { it.onlineDrivers.size }
+    val numWaiting get() = driverPools.values.sumOf { it.numWaiting.get() }
+    val numFreeDrivers get() = driverPools.values.sumOf { it.numFree }
+    val numWorkingDrivers get() = driverPools.values.sumOf { it.numWorking.get() }
+    val numAvailableDrivers get() = driverPools.values.sumOf { it.numAvailable }
+    val numOnline get() = driverPools.values.sumOf { it.onlineDrivers.size }
 
     init {
         gauges?.let { AppMetrics.reg.registerAll(this, it) }
@@ -173,9 +172,9 @@ open class WebDriverPoolManager(
         if (closed.compareAndSet(false, true)) {
             driverPools.keys.forEach { doCloseDriverPool(it) }
             driverPools.clear()
-            log.info("Web driver pool manager is closed")
+            logger.info("Web driver pool manager is closed")
             if (gauges?.entries?.isEmpty() == false || driverPools.isNotEmpty()) {
-                log.info(formatStatus(true))
+                logger.info(formatStatus(true))
             }
         }
     }
@@ -214,7 +213,7 @@ open class WebDriverPoolManager(
                     driverPool.numDismissWarnings.incrementAndGet()
 
                     // This should not happen since the task itself should handle the timeout event
-                    log.warn("Web driver task timeout({}) | {} | {}",
+                    logger.warn("Web driver task timeout({}) | {} | {}",
                             taskTimeout.readable(), formatStatus(browserId), browserId)
                 } else {
                     driverPool.numSuccess.incrementAndGet()
@@ -237,14 +236,25 @@ open class WebDriverPoolManager(
     private fun doCloseDriverPool(browserId: BrowserInstanceId) {
         preempt {
             retiredPools.add(browserId)
-            driverPools.remove(browserId)?.also { driverPool ->
-                val displayMode = driverSettings.displayMode
-                log.info("Web drivers are in {} mode with {} ", displayMode, browserId)
-                log.info(driverPool.formatStatus(verbose = true))
-                if (!driverSettings.isGUI) {
-                    log.info("Closing driver pool in {} mode with {} ", displayMode, browserId)
-                    driverPool.close()
+
+            val isGUI = driverSettings.isGUI
+            val displayMode = driverSettings.displayMode
+            logger.info("Web drivers are in {} mode with {} ", displayMode, browserId)
+
+            val driverPool = when {
+                !isGUI -> driverPools.remove(browserId)
+                isGUI && driverPools.size > 10 -> {
+                    driverPools.values.filter { it.isRetired }.minByOrNull { it.lastActiveTime }
                 }
+                else -> null
+            }
+
+            if (driverPool != null) {
+                driverPool.isRetired = true
+                logger.info(driverPool.formatStatus(verbose = true))
+
+                logger.info("Closing driver pool in {} mode with {}", displayMode, browserId)
+                driverPool.close()
             }
         }
     }

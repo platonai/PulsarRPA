@@ -21,38 +21,6 @@
     <artifactId>pulsar-rest</artifactId>
     <name>Pulsar Rest</name>
 
-    <profiles>
-        <profile>
-            <id>platon-release</id>
-            <build>
-                <defaultGoal>install</defaultGoal>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                            <packagingExcludes>
-                                %regex[WEB-INF/lib/log4j-(?!over-slf4j).*.jar]
-                                <!--%regex[WEB-INF/lib/slf4j-log4j12.*.jar],-->
-                            </packagingExcludes>
-                            <!--<outputDirectory>${project.basedir}/../pulsar-server/target/</outputDirectory>-->
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>package-a-war</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>war</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <dependencies>
         <!-- Pulsar dependency -->
         <dependency>
@@ -163,23 +131,6 @@
             <scope>test</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>javax.servlet</groupId>-->
-<!--            <artifactId>javax.servlet-api</artifactId>-->
-<!--&lt;!&ndash;            <scope>provided</scope>&ndash;&gt;-->
-<!--            <scope>runtime</scope>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>jstl</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>${solr.version}</version>
-        </dependency>
     </dependencies>
 
 </project>

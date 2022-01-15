@@ -61,7 +61,8 @@ class LoadingWebDriverPool(
     val counterRetired = registry.counter(this, "retired")
     val counterQuit = registry.counter(this, "quit")
 
-    val isActive get() = !closed.get()
+    var isRetired = false
+    val isActive get() = !isRetired && !closed.get()
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numTasks = AtomicInteger()
@@ -162,12 +163,12 @@ class LoadingWebDriverPool(
                     p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
         }
 
-        if (isIdle) {
-            val time = idleTime.readable()
-            return "[Idle] $time | $status"
+        val time = idleTime.readable()
+        return when {
+            isIdle -> "[Idle] $time | $status"
+            isRetired -> "[Retired] $time | $status"
+            else -> status
         }
-
-        return status
     }
 
     override fun toString(): String = formatStatus(false)
