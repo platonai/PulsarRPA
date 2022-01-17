@@ -15,11 +15,11 @@ class PageModel(
 ) {
     val numGroups get() = fieldGroups.size
 
-    val numFields get() = fieldGroups.sumBy { it.fields.size }
+    val numFields get() = fieldGroups.sumOf { it.fields.size }
 
-    val numNonNullFields get() = fieldGroups.sumBy { it.fields.count { it.value != null } }
+    val numNonNullFields get() = fieldGroups.sumOf { it.fields.count { it.value != null } }
 
-    val numNonBlankFields get() = fieldGroups.sumBy { it.fields.count { !it.value.isNullOrBlank() } }
+    val numNonBlankFields get() = fieldGroups.sumOf { it.fields.count { !it.value.isNullOrBlank() } }
 
     val isEmpty: Boolean get() = fieldGroups.isEmpty()
 

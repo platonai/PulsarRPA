@@ -130,7 +130,7 @@ class CoreMetrics(
     val pageHeights = registry.histogram(this, "pageHeights")
 
     val realTimeNetworkIFsRecvBytes
-        get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
+        get() = systemInfo.hardware.networkIFs.sumOf { it.bytesRecv.toInt() }
             .toLong().coerceAtLeast(0)
 
     /**
@@ -367,7 +367,7 @@ class CoreMetrics(
         }
         lastSystemInfoRefreshTime = currentTimeMillis
 
-        totalNetworkIFsRecvBytes = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+        totalNetworkIFsRecvBytes = systemInfo.hardware.networkIFs.sumOf { it.bytesRecv.toInt() }.toLong()
             .coerceAtLeast(totalNetworkIFsRecvBytes)
         meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024 / 1024)
 

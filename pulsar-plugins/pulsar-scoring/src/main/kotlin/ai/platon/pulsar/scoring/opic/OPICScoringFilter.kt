@@ -69,7 +69,7 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
      * Increase the score by a sum of inlinked scores.
      */
     override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
-        val score = incomingEdges.sumByDouble { if (it.isLoop) 0.0 else graph.getEdgeWeight(it) }.toFloat()
+        val score = incomingEdges.sumOf { if (it.isLoop) 0.0 else graph.getEdgeWeight(it) }.toFloat()
         page.score = page.score + score
         page.cash = page.cash + score
     }
@@ -111,8 +111,8 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
     /**
      * Dampen the boost value by scorePower.
      */
-    override fun indexerScore(url: String, doc: IndexDocument, row: WebPage, initScore: Float): Float {
-        return row.score.toDouble().pow(scorePower.toDouble()).toFloat() * initScore
+    override fun indexerScore(url: String, doc: IndexDocument, page: WebPage, initScore: Float): Float {
+        return page.score.toDouble().pow(scorePower.toDouble()).toFloat() * initScore
     }
 
 }

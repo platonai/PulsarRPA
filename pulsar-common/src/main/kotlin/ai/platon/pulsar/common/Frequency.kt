@@ -31,11 +31,11 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     /**
      * The entry with the most frequency
      * */
-    val mostEntry: Entry<T> get() = entrySet().maxBy { it.count }?:throw NoSuchElementException("Collection is empty.")
+    val mostEntry: Entry<T> get() = entrySet().maxByOrNull { it.count }?:throw NoSuchElementException("Collection is empty.")
     /**
      * The entry with the least frequency
      * */
-    val leastEntry: Entry<T> get() = entrySet().minBy { it.count }?:throw NoSuchElementException("Collection is empty.")
+    val leastEntry: Entry<T> get() = entrySet().maxByOrNull { it.count }?:throw NoSuchElementException("Collection is empty.")
     /**
      * The mode value
      * The mode of a sample is the element that occurs most often in the collection.
@@ -246,7 +246,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     fun toReport(prefix: String = "", postfix: String = ""): String {
         val sb = StringBuilder(prefix)
 
-        var maxLength = entrySet().map { it.element.toString().length }.max()?:return ""
+        var maxLength = entrySet().map { it.element.toString().length }.maxOrNull()?:return ""
         maxLength += 2
 
         sb.append(String.format("%-10s%${maxLength}s%10s%10s%10s\n", "", "Value", "Freq", "Pct", "Cum Pct"))

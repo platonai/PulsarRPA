@@ -71,7 +71,7 @@ class MultiSourceHyperlinkIterable(
         val priorCount = collectors.asSequence()
             .filter { it.priority < priority }
             .filterNot { it is DelayCacheCollector }
-            .sumBy { it.size }
+            .sumOf { it.size }
 
         val now = System.currentTimeMillis()
         // the fetch speed, pages per second
@@ -83,7 +83,7 @@ class MultiSourceHyperlinkIterable(
         }
 
         val competitorCollectors = collectors.filter { it.priority == priority }
-        val competitorCount = competitorCollectors.sumBy { it.size }
+        val competitorCount = competitorCollectors.sumOf { it.size }
 
         return priorCount + delayQueueCount + competitorCount / competitorCollectors.size
     }

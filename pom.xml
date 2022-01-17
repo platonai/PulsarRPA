@@ -598,7 +598,7 @@
     </dependencies>
 
     <properties>
-        <kotlin.version>1.6.10</kotlin.version>
+        <kotlin.version>1.5.32</kotlin.version>
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
