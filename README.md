@@ -27,7 +27,7 @@ Scrape a single page:
     from
         load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
 
-The result set is as the following:
+The result set is as follows:
 
     TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
     Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926
@@ -47,23 +47,7 @@ The result set is as the following:
 
     bin/scrape.sh
 
-or if you are using an IDE, run main() in [PulsarMaster](pulsar-app\pulsar-master\src\main\kotlin\ai\platon\pulsar\app\master\PulsarMaster.kt)
-
-## Issue a request to scrape
-
-CURL
-
-    curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-        select
-            dom_first_text(dom, '#productTitle') as title,
-            dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
-            dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as price,
-            array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as categories,
-            dom_base_uri(dom) as baseUri
-            from
-        load_and_select('https://www.amazon.com/dp/B00BTX5926 -expires 10s', ':root')"
-
-The response is as the following:
+The response is as follows:
 
     {
         "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
@@ -84,32 +68,3 @@ The response is as the following:
     }
 
 Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-support/pulsar-site-amazon/src/main/resources/config/sites/amazon/crawl/parse/sql).
-
-## Other languages
-
-[PHP](pulsar-client/src/main/php/Scraper.php)
-
-    $sql = "...";
-    $ch = curl_init("http://localhost:8182/api/x/e");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $sql);
-    $output = curl_exec($ch);
-    curl_close($ch);
-
-[Kotlin](pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt):
-
-    val sql = """..."""
-    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
-        .header("Content-Type", "text/plain")
-        .POST(BodyPublishers.ofString(sql)).build()
-    val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
-
-[Java](pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java):
-
-    String sql = "...";
-    HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
-        .header("Content-Type", "text/plain")
-        .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
-    String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
-
-Here are the [java driver](https://github.com/platonai/pulsar-java-driver) and demos.

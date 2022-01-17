@@ -3,12 +3,8 @@
 bin=$(dirname "$0")
 bin=$(cd "$bin">/dev/null || exit; pwd)
 
-cd "pulsar-third/gora-shaded-mongodb" || exit
-mvn install
+mvn clean && mvn -DskipTests=true -Pthird -Papp
 
-cd - || exit
-mvn -DskipTests=true
+"$bin"/tools/install-depends.sh
 
-bin/tools/install-depends.sh
-
-bin/pulsar
+"$bin"/pulsar

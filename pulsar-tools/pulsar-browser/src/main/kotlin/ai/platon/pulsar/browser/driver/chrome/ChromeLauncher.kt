@@ -191,8 +191,8 @@ class ChromeLauncher(
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
 
         fun enableDebugChromeOutput() {
-            val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
-            loggerContext.getLogger("com.github.kklisura.cdt.launch.chrome.output").level = Level.DEBUG
+//            val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+//            loggerContext.getLogger("com.github.kklisura.cdt.launch.chrome.output").level = Level.DEBUG
         }
     }
 
