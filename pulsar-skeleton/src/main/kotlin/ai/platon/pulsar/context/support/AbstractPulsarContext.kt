@@ -115,16 +115,16 @@ abstract class AbstractPulsarContext(
     val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
 
     /**
-     * Registered closeables, will be closed by Pulsar object
+     * Registered closable objects, will be closed by Pulsar object
      * */
     private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
 
     private val closed = AtomicBoolean()
 
-    /** Synchronization monitor for the "refresh" and "destroy".  */
+    /** Synchronization monitor for the "refresh" and "destroy" */
     private val startupShutdownMonitor = Any()
 
-    /** Reference to the JVM shutdown hook, if registered.  */
+    /** Reference to the JVM shutdown hook, if registered */
     private var shutdownHook: Thread? = null
 
     private val webDbOrNull: WebDb? get() = if (isActive) webDb else null

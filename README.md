@@ -7,7 +7,7 @@ Turn the Web into tables and charts using simple SQLs.
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- X-SQL: extend SQL to manage the web data: Web crawling, scraping, Web content mining, Web BI
+- X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
 - Big data: large scale, various backend storage support: HBase/MongoDB
 - Complete amazon web data model

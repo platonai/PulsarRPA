@@ -27,8 +27,7 @@ class PulsarMaster(
     val globalCacheFactory: GlobalCacheFactory
 ) {
     private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
-    private val globalCache get() = globalCacheFactory.globalCache
-    private val fetchCache get() = globalCache.fetchCaches.normalCache
+
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
 
@@ -64,7 +63,6 @@ class PulsarMaster(
 
 fun main(args: Array<String>) {
     runApplication<PulsarMaster>(*args) {
-        // setAdditionalProfiles("rest", "crawler", "amazon")
         addInitializers(PulsarContextInitializer())
         setRegisterShutdownHook(true)
         setLogStartupInfo(true)
