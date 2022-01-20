@@ -103,6 +103,14 @@
 
         <profile>
             <id>platon-release</id>
+            <modules>
+                <module>pulsar-third</module>
+                <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>platon-deploy</id>
 
             <build>
                 <plugins>
@@ -126,33 +134,17 @@
                             </sourceDirectories>
                         </configuration>
                     </plugin>
-                    <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <!-- Skip maven-deploy-plugin to use nexus-staging-maven-plugin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <version>2.8.2</version>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
                     <!-- We want to sign the artifact, the POM, and all attached artifacts -->
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
                         <configuration>
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>true</autoReleaseAfterClose>
                         </configuration>
+                        <extensions>true</extensions>
                     </plugin>
                 </plugins>
             </build>
@@ -310,12 +302,6 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.7</version>
-                    <extensions>true</extensions>
-                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -346,6 +332,25 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.1.0</version>
+            </plugin>
+
+            <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <!-- Skip maven-deploy-plugin to use nexus-staging-maven-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
