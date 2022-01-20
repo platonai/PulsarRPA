@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -99,5 +100,27 @@ object Runtimes {
         }
 
         logger.debug("Exit | {}", info)
+    }
+}
+
+/**
+ * The process launcher
+ * */
+object ProcessLauncher {
+    private val log = LoggerFactory.getLogger(ProcessLauncher::class.java)
+
+    @Throws(IOException::class)
+    fun launch(executable: String, args: List<String>): Process {
+        val command = mutableListOf<String>().apply { add(executable); addAll(args) }
+        val processBuilder = ProcessBuilder()
+            .command(command)
+            .redirectErrorStream(true)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+
+        log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
+            Strings.doubleQuoteIfContainsWhitespace(it)
+        })
+
+        return processBuilder.start()
     }
 }

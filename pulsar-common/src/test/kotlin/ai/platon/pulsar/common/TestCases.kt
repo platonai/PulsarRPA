@@ -425,16 +425,6 @@ class TestCases {
     }
 
     @Test
-    fun testHaffmanTree() {
-        val frequency: Frequency<String> = urls.flatMapTo(Frequency()) { it.split("/") }
-        println(frequency)
-
-        val tree = HuffmanTree(frequency)
-        ai.platon.pulsar.common.BTreePrinter.print(tree.root.convert())
-        // tree.getEncodingMap().also { println(it) }
-    }
-
-    @Test
     fun testFrequencyTree() {
         val frequency: Frequency<String> = urls.flatMapTo(Frequency()) { it.split("/") }
         println(frequency)
@@ -442,7 +432,7 @@ class TestCases {
         val tree = FrequencyTree(frequency)
         // tree.print()
         val ptree = tree.root.convert()
-        ai.platon.pulsar.common.BTreePrinter.print(ptree)
+        BTreePrinter.print(ptree)
     }
 
     @Test

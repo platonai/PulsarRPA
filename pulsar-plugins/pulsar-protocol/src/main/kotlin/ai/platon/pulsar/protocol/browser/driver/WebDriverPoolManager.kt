@@ -99,6 +99,9 @@ open class WebDriverPoolManager(
         return run0(task).also { lastActiveTime = Instant.now() }
     }
 
+    /**
+     * Create a driver pool, but the driver pool is not added to [driverPools]
+     * */
     fun createUnmanagedDriverPool(
             browserId: BrowserInstanceId = BrowserInstanceId.DEFAULT,
             priority: Int = 0,
@@ -219,8 +222,7 @@ open class WebDriverPoolManager(
                     driverPool.numSuccess.incrementAndGet()
                     driverPool.numDismissWarnings.decrementAndGet()
                 }
-            }
-            finally {
+            } finally {
                 driver?.let { driverPool.put(it) }
             }
         }

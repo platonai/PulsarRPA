@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
@@ -103,8 +104,10 @@ class ChromeDevtoolsDriver(
             if (userAgent.isNotEmpty()) {
                 emulation.setUserAgentOverride(userAgent)
             }
-        } catch (t: Throwable) {
-            throw DriverLaunchException("Failed to create chrome devtools driver", t)
+        } catch (e: ChromeProcessTimeoutException) {
+            throw DriverLaunchException("Failed to create chrome devtools driver | " + e.message)
+        } catch (e: Exception) {
+            throw DriverLaunchException("Failed to create chrome devtools driver", e)
         }
     }
 

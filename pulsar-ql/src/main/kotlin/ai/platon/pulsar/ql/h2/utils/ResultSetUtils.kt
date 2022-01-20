@@ -288,12 +288,12 @@ object ResultSetUtils {
         var j = 0
         // find the last 'from'
         i = sql.lastIndexOf("from", ignoreCase = true)
-        if (i <= 0) {
+        if (i <= 0 || i >= len) {
             return null
         }
 
         // find "(" in from clause "from load_and_select('https:"
-        while (sql[i] != '(' && i < len) {
+        while (i < len && sql[i] != '(') {
             ++i
         }
         if (i == len) {

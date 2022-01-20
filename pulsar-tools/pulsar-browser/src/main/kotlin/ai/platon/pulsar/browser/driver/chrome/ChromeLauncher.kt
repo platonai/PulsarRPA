@@ -1,16 +1,12 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.browser.driver.chrome.LauncherConfig.Companion.CHROME_BINARY_SEARCH_PATHS
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.ProcessLauncher
 import ai.platon.pulsar.common.Runtimes
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.getLogger
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.LoggerContext
+import ai.platon.pulsar.common.browser.Browsers
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -18,7 +14,10 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.regex.Pattern
 import kotlin.collections.component1
@@ -41,18 +40,6 @@ class LauncherConfig {
         val DEFAULT_SHUTDOWN_WAIT_TIME = Duration.ofSeconds(60)
         /** 5 seconds wait time for threads to stop.  */
         val THREAD_JOIN_WAIT_TIME = Duration.ofSeconds(5)
-
-        val CHROME_BINARY_SEARCH_PATHS = arrayOf(
-                "/usr/bin/google-chrome-stable",
-                "/usr/bin/google-chrome",
-                "/opt/google/chrome/chrome",
-                "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-                "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-                "/Applications/Chromium.app/Contents/MacOS/Chromium",
-                "/usr/bin/chromium",
-                "/usr/bin/chromium-browser"
-        )
     }
 }
 
@@ -157,34 +144,11 @@ class ChromeDevtoolsOptions(
 }
 
 /**
- * The process launcher
- * */
-class ProcessLauncher {
-    private val log = LoggerFactory.getLogger(ProcessLauncher::class.java)
-
-    @Throws(IOException::class)
-    fun launch(program: String, args: List<String>): Process {
-        val command = mutableListOf<String>().apply { add(program); addAll(args) }
-        val processBuilder = ProcessBuilder()
-                .command(command)
-                .redirectErrorStream(true)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-
-        log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
-            Strings.doubleQuoteIfContainsWhitespace(it)
-        })
-
-        return processBuilder.start()
-    }
-}
-
-/**
  * The chrome launcher
  * */
 class ChromeLauncher(
-        private val processLauncher: ProcessLauncher = ProcessLauncher(),
-        private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
-        private val config: LauncherConfig = LauncherConfig()
+    private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
+    private val config: LauncherConfig = LauncherConfig()
 ) : AutoCloseable {
 
     companion object {
@@ -221,12 +185,12 @@ class ChromeLauncher(
     /**
      * Launch the chrome
      * */
-    fun launch(options: ChromeDevtoolsOptions) = launch(searchChromeBinary(), options)
+    fun launch(options: ChromeDevtoolsOptions) = launch(Browsers.searchChromeBinary(), options)
 
     /**
      * Launch the chrome
      * */
-    fun launch(headless: Boolean) = launch(searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
+    fun launch(headless: Boolean) = launch(Browsers.searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
 
     /**
      * Launch the chrome
@@ -270,24 +234,6 @@ class ChromeLauncher(
     val isAlive: Boolean get() = process?.isAlive == true
 
     /**
-     * Returns the chrome binary path.
-     *
-     * @return Chrome binary path.
-     */
-    private fun searchChromeBinary(): Path {
-        val path = System.getProperty(CapabilityTypes.BROWSER_CHROME_PATH)
-        if (path != null) {
-            return Paths.get(path).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
-                    ?: throw RuntimeException("CHROME_PATH is not executable | $path")
-        }
-
-        return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }
-                .firstOrNull { Files.isExecutable(it) }
-                ?.toAbsolutePath()
-                ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
-    }
-
-    /**
      * Launches a chrome process given a chrome binary and its arguments.
      *
      * Launching chrome processes is CPU consuming, so we do this in a synchronized manner
@@ -316,7 +262,7 @@ class ChromeLauncher(
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
-            process = processLauncher.launch(executable, arguments)
+            process = ProcessLauncher.launch(executable, arguments)
             process?.also {
                 Files.createDirectories(userDataDir)
                 val pidPath = userDataDir.resolveSibling("chromeLauncher.pid")
@@ -326,7 +272,7 @@ class ChromeLauncher(
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)
-            throw ChromeProcessException("Failed starting chrome process", e)
+            throw ChromeProcessException("Failed to start chrome", e)
         } catch (e: Exception) {
             close()
             throw e
@@ -355,7 +301,7 @@ class ChromeLauncher(
                         port = matcher.group(1).toInt()
                         break
                     }
-                    processOutput.appendln(line)
+                    processOutput.appendLine(line)
                 }
             }
         }
@@ -374,6 +320,7 @@ class ChromeLauncher(
             log.error("Interrupted while waiting for devtools server, close it", e)
             close(readLineThread)
         }
+
         return port
     }
 

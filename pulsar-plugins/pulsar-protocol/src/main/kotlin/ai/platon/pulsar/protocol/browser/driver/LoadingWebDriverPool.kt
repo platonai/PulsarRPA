@@ -245,11 +245,6 @@ class LoadingWebDriverPool(
     }
 
     private fun closeAllDrivers(drivers: List<WebDriver>) {
-        if (driverSettings.isGUI) {
-            log.info("Web drivers are in GUI mode, please manually quit the tabs")
-            return
-        }
-
         val i = AtomicInteger()
         val total = drivers.size
         drivers.parallelStream().forEach { driver ->

@@ -74,7 +74,7 @@ open class BrowserEmulator(
     @Throws(IllegalApplicationContextStateException::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         checkState()
-        // page.lastBrowser is used by AppFiles.export, so it have to be set before export
+        // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         task.page.lastBrowser = driver.browserType
 
         if (task.nRetries > fetchMaxRetry) {
@@ -122,7 +122,7 @@ open class BrowserEmulator(
         emulateJd(task, driverSettings, driver)
 
         if (driverSettings.isGUI) {
-            // in gui mode, just stop the loading, so we can make the diagnosis
+            // in gui mode, just stop the loading, so we can make a diagnosis
             driver.stopLoading()
         } else {
             // go to about:blank, so the browser stops the previous page and release all resources
@@ -212,7 +212,7 @@ open class BrowserEmulator(
 
         jsCheckDOMState(task, result)
 
-        task.driver.bringToFront()
+        // task.driver.bringToFront()
 
         if (result.state.isContinue) {
             jsScrollDown(task, result)
