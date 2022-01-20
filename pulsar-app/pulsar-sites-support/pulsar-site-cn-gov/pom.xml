@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-sites-support</artifactId>
-        <version>1.7.0</version>
+        <version>1.7.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-site-cn-gov</artifactId>
