@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
-import org.junit.Test
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
 
 class TestCases: TestBase() {
     private val productIndexUrl = TestResource.productIndexUrl
@@ -85,6 +86,7 @@ class TestCases: TestBase() {
         execute(sql)
     }
 
+    @Tag("SlowTest")
     @Test
     fun loadInlineSelectNeeq() {
         val cssQuery = "tbody:not(:first-child) > tr td:nth-child(7) > a:nth-child(2)"
@@ -99,6 +101,7 @@ class TestCases: TestBase() {
         execute(sql)
     }
 
+    @Tag("SlowTest")
     @Test
     fun loadOutPagesAndSelectNeeq() {
         val cssQuery = "tbody:not(:first-child) > tr td:nth-child(7) > a:nth-child(2)"
@@ -125,6 +128,7 @@ from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.
         execute(sql)
     }
 
+    @Tag("SlowTest")
     @Test
     fun loadOutPagesAndSelectCityFlower() {
         val sql = """

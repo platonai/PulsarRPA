@@ -1,15 +1,12 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.support.BasicPulsarContext
-import ai.platon.pulsar.context.support.StaticPulsarContext
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import ai.platon.pulsar.ql.context.StaticH2SQLContext
 import org.junit.Ignore
 import org.junit.Test
+import org.junit.jupiter.api.Tag
 import java.util.concurrent.TimeUnit
 
 class TestExtractCases : TestBase() {
@@ -96,6 +93,7 @@ from
         execute(sql)
     }
 
+    @Tag("SlowTest")
     @Test
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
@@ -132,12 +130,13 @@ SELECT
   DOM_FIRST_TEXT(DOM, '.pro-title-main') AS Title,
   DOM_FIRST_TEXT(DOM, '.price-sell') AS Price,
   DOM_FIRST_TEXT(DOM, '.g-pro-param') AS Parameters
-FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 10)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 5)
 """
 
         execute(sql)
     }
 
+    @Tag("SlowTest")
     @Test
     fun testLoadOutPagesForJd() {
         val url = urlGroups["jd"]!![0]

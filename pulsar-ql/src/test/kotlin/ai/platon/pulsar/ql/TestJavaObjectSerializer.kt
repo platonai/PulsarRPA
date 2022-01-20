@@ -15,6 +15,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
+import org.junit.jupiter.api.Tag
 import java.nio.file.Files
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -164,6 +165,7 @@ class TestJavaObjectSerializer: TestBase() {
         println(dom.element.uniqueName)
     }
 
+    @Tag("SlowTest")
     @Test
     fun testNetworkSerialization3() {
         val conn = remoteDB.getConnection("testNetworkSerialization3")

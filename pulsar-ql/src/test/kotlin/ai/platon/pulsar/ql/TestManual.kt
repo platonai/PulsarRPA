@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
 import org.junit.Test
+import org.junit.jupiter.api.Tag
 
 class TestManual : TestBase() {
     private val productIndexUrl = TestResource.productIndexUrl
@@ -83,6 +84,7 @@ class TestManual : TestBase() {
     }
 
     @Test
+    @Tag("SlowTest")
     fun loadOutPagesUsingPreDefinedFunction() {
         val expr = "width > 240 && width < 250 && height > 360 && height < 370"
         execute("CALL SET_PAGE_EXPIRES('1s', 1)")
@@ -134,6 +136,7 @@ class TestManual : TestBase() {
     /**
      * Extracting by box is the most simple method to extract text from Web pages
      * */
+    @Tag("SlowTest")
     @Test
     fun extractByBox() {
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
@@ -167,7 +170,7 @@ SELECT
   DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.brand')) AS W,
   DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.brand')) AS H,
   IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 100)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
 WHERE DOM_CH(DOM) > 100
 """
         execute(sql)
@@ -217,7 +220,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
   DOM_FIRST_TEXT(DOM, '#LeftTool') AS DATE_TIME,
   DOM_FIRST_TEXT(DOM, '.content-article') AS CONTENT
-FROM LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 100)
+FROM LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 10)
 """
         execute(sql)
     }
@@ -242,7 +245,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
   DOM_FIRST_TEXT(DOM, '.jcwsy_mini_content') AS DATE_TIME,
   DOM_FIRST_TEXT(DOM, '.content_box') AS CONTENT
-FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
+FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 10)
 """
         execute(sql)
     }
@@ -251,7 +254,8 @@ FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
      * A simple Web page monitor, monitoring products
      * */
     @Test
-    fun monitorProductColumnForMia() {
+    @Tag("SlowTest")
+    fun monitorProductColumn() {
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
         val titleExpr =
             "TOP>=287 && TOP<=307 && LEFT==472 && width==560 && height>=27 && height<=54 && char>=34 && char<=41"
@@ -271,7 +275,8 @@ WHERE DOM_CH(DOM) > 100
      * A simple Web page monitor, monitoring products
      * */
     @Test
-    fun monitorProductColumnForMia2() {
+    @Tag("SlowTest")
+    fun monitorProductColumn2() {
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$productIndexUrl') " +
                 "WHERE SIBLING>30 AND DOM_TEXT_LENGTH(DOM) > 10 AND TOP > 300 AND TOP < 3000")
