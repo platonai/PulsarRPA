@@ -50,6 +50,7 @@ class ChromeDevtoolsDriver(
 
     override val browserType: BrowserType = BrowserType.CHROME
 
+    val openSequence = 1 + browserInstance.devToolsCount
     val userAgent get() = browserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val clientLibJs = browserSettings.parseLibJs(false)
@@ -58,7 +59,7 @@ class ChromeDevtoolsDriver(
     val tab: ChromeTab
     val devTools: RemoteDevTools
 
-    private var isFirstLaunch = true
+    private var isFirstLaunch = openSequence == 1
     private var lastSessionId: SessionId? = null
     private val browser get() = devTools.browser
     private var navigateUrl = ""

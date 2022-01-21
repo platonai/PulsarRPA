@@ -36,6 +36,7 @@ class BrowserInstance(
     lateinit var launcher: ChromeLauncher
     lateinit var chrome: RemoteChrome
     val devToolsList = ConcurrentLinkedQueue<RemoteDevTools>()
+    val devToolsCount get() = devToolsList.size
 
     private val log = LoggerFactory.getLogger(BrowserInstance::class.java)
     private val launched = AtomicBoolean()

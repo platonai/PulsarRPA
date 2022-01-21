@@ -34,6 +34,13 @@ The result set is as follows:
 
 # Build & Run
 
+## Minimal requirement
+
+    Memory 4G+
+    Maven 3.2+
+    Google Chrome
+    Ubuntu Desktop
+
 ## Build from source
 
     git clone https://github.com/platonai/pulsar.git
@@ -43,7 +50,7 @@ The result set is as follows:
 
     bin/pulsar
 
-## Scrape a webpage
+## Scrape a webpage in another terminal window
 
     bin/scrape.sh
 

@@ -38,7 +38,7 @@ class WebDriverAdapter(
     /**
      * The real time page source return by the browser
      * */
-    override val pageSource: String get() = driver.runCatching { pageSource }.getOrThrow()
+    override val pageSource: String get() = driver.pageSource
 
     /**
      * The id of the session to the browser
@@ -46,31 +46,17 @@ class WebDriverAdapter(
     override val sessionId: String?
         get() = when {
             isQuit -> null
-            driver is MockWebDriver || driver is ChromeDevtoolsDriver -> driver.runCatching { sessionId }.getOrNull()
-            else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+            else -> driver.sessionId
         }
 
     /**
      * The browser type
      * */
-    override val browserType: BrowserType
-        get() = when (driver) {
-            is MockWebDriver -> BrowserType.MOCK_CHROME
-            is ChromeDevtoolsDriver -> BrowserType.CHROME
-            else -> BrowserType.CHROME
-        }
+    override val browserType get() = driver.browserType
 
-    override val supportJavascript: Boolean
-        get() = when (driver) {
-            is MockWebDriver -> driver.supportJavascript
-            else -> true
-        }
+    override val supportJavascript get() = driver.supportJavascript
 
-    override val isMockedPageSource: Boolean
-        get() = when (driver) {
-            is MockWebDriver -> driver.isMockedPageSource
-            else -> false
-        }
+    override val isMockedPageSource get() = driver.isMockedPageSource
 
     /**
      * Navigate to the url
@@ -147,7 +133,5 @@ class WebDriverAdapter(
         }
     }
 
-    override fun close() {
-        driver.close()
-    }
+    override fun close() = driver.close()
 }

@@ -68,43 +68,65 @@
         </repository>
     </repositories>
 
-    <modules>
-        <module>pulsar-common</module>
-        <module>pulsar-persist</module>
-        <module>pulsar-skeleton</module>
-        <module>pulsar-resources</module>
-        <module>pulsar-dom</module>
-        <module>pulsar-plugins</module>
-
-        <module>pulsar-tools</module>
-        <module>pulsar-ql-common</module>
-
-        <module>pulsar-spring-support</module>
-        <module>pulsar-ql</module>
-        <module>pulsar-rest</module>
-
-        <module>pulsar-client</module>
-    </modules>
-
     <profiles>
         <profile>
             <id>all-modules</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <modules>
+                <module>pulsar-common</module>
+                <module>pulsar-persist</module>
                 <module>pulsar-third</module>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-resources</module>
+                <module>pulsar-dom</module>
+                <module>pulsar-plugins</module>
+
+                <module>pulsar-tools</module>
+                <module>pulsar-ql-common</module>
+                <module>pulsar-ql</module>
+
+                <module>pulsar-spring-support</module>
+                <module>pulsar-rest</module>
+
+                <module>pulsar-client</module>
                 <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>develop-set1</id>
+
+            <modules>
+                <module>pulsar-common</module>
+                <module>pulsar-persist</module>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-resources</module>
+                <module>pulsar-dom</module>
+                <module>pulsar-plugins</module>
+
+                <module>pulsar-tools</module>
+                <module>pulsar-ql-common</module>
+                <module>pulsar-ql</module>
+
+                <module>pulsar-spring-support</module>
+                <module>pulsar-rest</module>
             </modules>
         </profile>
 
         <profile>
             <id>platon-release</id>
-            <modules>
-                <module>pulsar-third</module>
-                <module>pulsar-app</module>
-            </modules>
+            <properties>
+                <platon-release-active>true</platon-release-active>
+            </properties>
         </profile>
 
         <profile>
             <id>platon-deploy</id>
+            <properties>
+                <platon-deploy-active>true</platon-deploy-active>
+            </properties>
 
             <build>
                 <plugins>
@@ -513,6 +535,7 @@
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>
                 <artifactId>selenium-api</artifactId>
+                <version>${selenium.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.seleniumhq.selenium</groupId>

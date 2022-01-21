@@ -1,3 +1,17 @@
+## dev-1.7.1
+
+Plan:
+
+    1. bug fix
+    2. remove selenium dependency, support selenium as a plugin
+    3. add playwright support to simplify the installation
+
+## dev-1.7.0
+
+Plan:
+
+    1. bug fix
+
 ## dev-1.6.6.1
 
 Plan:

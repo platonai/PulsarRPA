@@ -10,6 +10,8 @@ class BrowserInstanceManager: AutoCloseable {
     private val closed = AtomicBoolean()
     private val browserInstances = ConcurrentHashMap<Path, BrowserInstance>()
 
+    val instanceCount get() = browserInstances.size
+
     @Synchronized
     fun hasLaunched(launchOptions: ChromeDevtoolsOptions): Boolean {
         return browserInstances.containsKey(launchOptions.userDataDir)
