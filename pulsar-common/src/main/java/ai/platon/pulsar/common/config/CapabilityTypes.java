@@ -332,10 +332,6 @@ public interface CapabilityTypes {
     String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
     String BROWSER_TYPE = "browser.type";
     String BROWSER_INCOGNITO = "browser.incognito";
-    /**
-     * @deprecated Use BROWSER_DISPLAY_MODE instead
-     * */
-    String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
     String BROWSER_DISPLAY_MODE = "browser.display.mode";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
@@ -345,6 +341,11 @@ public interface CapabilityTypes {
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_DATA_DIR = "browser.data.dir";
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
+    /**
+     * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
+     * for example, virtualbox, vmware or WSL
+     * */
+    String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
 

@@ -159,10 +159,17 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+    /**
+     * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
+     * for example, virtualbox, vmware or WSL
+     * */
+    val noSandbox get() = conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, false)
+
     val displayMode get() = conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
     val isHeadless get() = displayMode == DisplayMode.HEADLESS
     val isGUI get() = displayMode == DisplayMode.GUI
+
     val eagerAllocateTabs get() = conf.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val imagesEnabled get() = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
     val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)

@@ -46,7 +46,6 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 
 fun main() {
     withContext { cx ->
-        cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
         AmazonCrawler(cx).bestSeller()
     }
 }

@@ -96,6 +96,8 @@ class ChromeDevtoolsOptions(
         var metricsRecordingOnly: Boolean = true,
         @ChromeParameter("safebrowsing-disable-auto-update")
         var safebrowsingDisableAutoUpdate: Boolean = true,
+        @ChromeParameter("no-sandbox")
+        var noSandbox: Boolean = false,
         @ChromeParameter("ignore-certificate-errors")
         var ignoreCertificateErrors: Boolean = true
 ) {

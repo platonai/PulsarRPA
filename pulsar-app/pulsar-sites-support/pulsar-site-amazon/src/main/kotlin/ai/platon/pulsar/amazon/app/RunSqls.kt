@@ -9,9 +9,6 @@ import ai.platon.pulsar.test.VerboseSQLRunner
 import kotlin.system.exitProcess
 
 fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
-    cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-    System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-
     val resourcePrefix = "config/sites/amazon/crawl/parse/sql"
 
     val productUrl = "https://www.amazon.com/dp/B082P8J28M"

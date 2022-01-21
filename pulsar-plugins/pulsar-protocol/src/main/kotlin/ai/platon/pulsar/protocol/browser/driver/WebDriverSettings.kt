@@ -80,6 +80,7 @@ open class WebDriverSettings(
 
         chromeOptions.userDataDir = userDataDir
         chromeOptions.headless = isHeadless
+        chromeOptions.noSandbox = noSandbox
         chromeOptions.addArguments("window-size", formatViewPort())
 
         return chromeOptions

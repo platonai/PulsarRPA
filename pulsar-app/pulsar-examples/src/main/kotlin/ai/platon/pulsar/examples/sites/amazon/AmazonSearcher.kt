@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples.sites.amazon
 
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.crawl.AbstractJsEventHandler
@@ -43,7 +44,6 @@ fun main() {
     val portalUrl = "https://www.amazon.com/ -i 0s"
 
     withContext { cx ->
-        cx.unmodifiedConfig.unbox().set(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
         val i = cx.createSession()
         i.sessionConfig.putBean(AmazonSearcherJsEventHandler())
         i.load(portalUrl)

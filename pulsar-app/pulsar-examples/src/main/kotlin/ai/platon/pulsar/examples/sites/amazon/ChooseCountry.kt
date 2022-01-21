@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.sites.amazon
 
 import ai.platon.pulsar.amazon.environment.ChooseCountry
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.withContext
@@ -20,13 +21,10 @@ fun main(args: Array<String>) {
     }
 
     withContext { cx ->
-        val unmodifiedConfig = (cx as AbstractPulsarContext).unmodifiedConfig.unbox()
-
         if (gui) {
-            System.clearProperty(CapabilityTypes.BROWSER_LAUNCH_SUPERVISOR_PROCESS)
-            unmodifiedConfig.unset(CapabilityTypes.BROWSER_LAUNCH_SUPERVISOR_PROCESS)
-            System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+            BrowserSettings.withGUI()
         }
+
         System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "false")
         System.setProperty(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator")
 
