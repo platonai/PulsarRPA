@@ -9,11 +9,12 @@ import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.conf.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.conf.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
-import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.driver.chrome.hotfix.JdInitializer
 import com.github.kklisura.cdt.protocol.types.page.Viewport
@@ -24,7 +25,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
-import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -35,30 +35,26 @@ internal data class DeviceMetrics(
     val width: Int,
     val height: Int,
     val deviceScaleFactor: Double,
-    val mobile: Boolean
+    val mobile: Boolean,
 )
 
-/**
- * TODO: inherit from ai.platon.pulsar.crawl.fetch.driver.WebDriver
- * */
 class ChromeDevtoolsDriver(
-    private val launcherConfig: LauncherConfig,
-    private val launchOptions: ChromeDevtoolsOptions,
     private val browserSettings: WebDriverSettings,
-    private val browserInstanceManager: BrowserInstanceManager,
-) : RemoteWebDriver() {
+    private val browserInstance: BrowserInstance,
+) : AbstractWebDriver(browserInstance.id) {
+
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
-    val dataDir get() = launchOptions.userDataDir
-    val proxyServer get() = launchOptions.proxyServer
+//    val dataDir get() = launchOptions.userDataDir
+//    val proxyServer get() = launchOptions.proxyServer
+
+    override val browserType: BrowserType = BrowserType.CHROME
 
     val userAgent get() = browserSettings.randomUserAgent()
-
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val clientLibJs = browserSettings.parseLibJs(false)
     var devToolsConfig = DevToolsConfig()
 
-    val browserInstance: BrowserInstance
     val tab: ChromeTab
     val devTools: RemoteDevTools
 
@@ -77,8 +73,7 @@ class ChromeDevtoolsDriver(
     private val closed = AtomicBoolean()
 
     val numSessionLost = AtomicInteger()
-    var lastActiveTime = Instant.now()
-        private set
+    override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
     val isActive get() = !isGone
 
@@ -92,9 +87,6 @@ class ChromeDevtoolsDriver(
 
     init {
         try {
-            isFirstLaunch = !browserInstanceManager.hasLaunched(launchOptions)
-            browserInstance = browserInstanceManager.launchIfAbsent(launcherConfig, launchOptions)
-
             // In chrome every tab is a separate process
             tab = browserInstance.createTab()
             navigateUrl = tab.url ?: ""
@@ -111,8 +103,11 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    override fun setTimeouts(driverConfig: BrowserSettings) {
+    }
+
     @Throws(NoSuchSessionException::class)
-    override fun get(url: String) {
+    override fun navigateTo(url: String) {
         initSpecialSiteBeforeVisit(url)
 
         browserInstance.navigateHistory.add(url)
@@ -129,7 +124,7 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(NoSuchSessionException::class)
-    fun stopLoading() {
+    override fun stopLoading() {
         if (!isActive) return
 
         try {
@@ -141,7 +136,7 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(NoSuchSessionException::class)
-    fun evaluate(expression: String): Any? {
+    override fun evaluate(expression: String): Any? {
         if (!isActive) return null
 
         try {
@@ -155,52 +150,50 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Throws(NoSuchSessionException::class)
-    override fun executeScript(script: String, vararg args: Any): Any? {
-        TODO("Use evaluate instead")
-    }
-
-    @Throws(NoSuchSessionException::class)
-    override fun getSessionId(): SessionId? {
-        try {
-            lastSessionId = if (!isActive) null else SessionId(mainFrame.id)
-            return lastSessionId
-        } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
+    override val sessionId: String
+        @Throws(NoSuchSessionException::class)
+        get() {
+            try {
+                lastSessionId = if (!isActive) null else SessionId(mainFrame.id)
+                return lastSessionId.toString()
+            } catch (e: ChromeDevToolsInvocationException) {
+                numSessionLost.incrementAndGet()
+                throw NoSuchSessionException(e.message)
+            }
         }
-    }
 
-    @Throws(NoSuchSessionException::class)
-    override fun getCurrentUrl(): String {
-        try {
-            navigateUrl = if (!isActive) navigateUrl else mainFrame.url
-            return navigateUrl
-        } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
+    override val currentUrl: String
+        @Throws(NoSuchSessionException::class)
+        get() {
+            try {
+                navigateUrl = if (!isActive) navigateUrl else mainFrame.url
+                return navigateUrl
+            } catch (e: ChromeDevToolsInvocationException) {
+                numSessionLost.incrementAndGet()
+                throw NoSuchSessionException(e.message)
+            }
         }
-    }
 
     @Throws(NoSuchSessionException::class)
-    override fun getWindowHandles(): Set<String> {
+    fun getWindowHandles(): Set<String> {
         if (!isActive) return setOf()
         return browserInstance.chrome.getTabs().mapTo(HashSet()) { it.id }
     }
 
-    @Throws(NoSuchSessionException::class)
-    override fun getPageSource(): String {
-        try {
-            val evaluate = runtime.evaluate("document.documentElement.outerHTML")
-            return evaluate?.result?.value?.toString() ?: ""
-        } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
+    override val pageSource: String
+        @Throws(NoSuchSessionException::class)
+        get() {
+            try {
+                val evaluate = runtime.evaluate("document.documentElement.outerHTML")
+                return evaluate?.result?.value?.toString() ?: ""
+            } catch (e: ChromeDevToolsInvocationException) {
+                numSessionLost.incrementAndGet()
+                throw NoSuchSessionException(e.message)
+            }
         }
-    }
 
     @Throws(NoSuchSessionException::class)
-    fun bringToFront() {
+    override fun bringToFront() {
         if (isActive) {
             page.bringToFront()
         }
@@ -248,13 +241,13 @@ class ChromeDevtoolsDriver(
 //    }
 
     @Throws(ScreenshotException::class, NoSuchSessionException::class)
-    override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
+    fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
         try {
             val startTime = System.currentTimeMillis()
             var result: X? = null
             runBlocking {
                 withContext(Dispatchers.IO) {
-                    result = withTimeoutOrNull(30 * 1000) {
+                    result = withTimeoutOrNull(30 * 1000L) {
                         val deviceMetricsOverride = evaluate("__utils__.getFullPageMetrics()")?.toString()
                         val screenshot = if (deviceMetricsOverride != null) {
                             val m = GsonBuilder().create().fromJson(deviceMetricsOverride, DeviceMetrics::class.java)
@@ -290,7 +283,7 @@ class ChromeDevtoolsDriver(
      * */
     override fun quit() {
         close()
-        browserInstanceManager.closeIfPresent(launchOptions.userDataDir)
+        // browserInstanceManager.closeIfPresent(launchOptions.userDataDir)
     }
 
     /**

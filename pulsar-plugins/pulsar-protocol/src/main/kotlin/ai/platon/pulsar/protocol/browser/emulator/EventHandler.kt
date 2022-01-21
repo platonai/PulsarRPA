@@ -284,7 +284,7 @@ open class EventHandler(
         if (takeScreenshot && task.pageDatum.protocolStatus.isSuccess) {
             val driver = task.driver
             if (driver is WebDriverAdapter) {
-                takeScreenshot(task.pageDatum.contentLength, task.page, driver.driver as RemoteWebDriver)
+                // takeScreenshot(task.pageDatum.contentLength, task.page, driver.driver as RemoteWebDriver)
             }
         }
     }

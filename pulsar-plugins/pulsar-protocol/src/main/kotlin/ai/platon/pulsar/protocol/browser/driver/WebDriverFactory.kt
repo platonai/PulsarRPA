@@ -7,26 +7,20 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
-import org.openqa.selenium.Capabilities
-import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.DesiredCapabilities
-import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
 open class WebDriverFactory(
     val driverSettings: WebDriverSettings,
     val browserInstanceManager: BrowserInstanceManager,
-    val immutableConfig: ImmutableConfig
+    val immutableConfig: ImmutableConfig,
 ) {
     private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
-    private val defaultWebDriverClass = immutableConfig.getClass(
-            CapabilityTypes.BROWSER_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-    private val localForwardServerEnabled =
-            immutableConfig.getBoolean(CapabilityTypes.PROXY_ENABLE_LOCAL_FORWARD_SERVER, false)
     val numDrivers = AtomicInteger()
 
     /**
@@ -45,12 +39,10 @@ open class WebDriverFactory(
         val browserType = getBrowserType(conf)
         val driver = kotlin.runCatching {
             when {
-                browserType == BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId, capabilities)
                 browserType == BrowserType.CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
-                browserType == BrowserType.SELENIUM_CHROME -> ChromeDriver(driverSettings.createChromeOptions(capabilities))
-                RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) ->
-                    defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
-                else -> defaultWebDriverClass.getConstructor().newInstance()
+                browserType == BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId,
+                    capabilities)
+                else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
             }
         }.onFailure {
             log.error("Failed to create web driver $browserType", it)
@@ -58,39 +50,32 @@ open class WebDriverFactory(
             throw DriverLaunchException("Failed to create web driver | $browserType")
         }
 
-        if (driver is ChromeDriver) {
-//            val fakeAgent = driverControl.randomUserAgent()
-//            val devTools = driver.devTools
-//            devTools.createSession()
-//            devTools.send(Log.enable())
-//            devTools.addListener(Log.entryAdded()) { e -> log.error(e.text) }
-//            devTools.send(Network.setUserAgentOverride(fakeAgent, Optional.empty(), Optional.empty()))
-//
-//             devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty()));
-//             devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
-        }
-
         return WebDriverAdapter(browserInstanceId, driver, priority)
     }
 
     private fun createChromeDevtoolsDriver(
-        browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities): ChromeDevtoolsDriver {
+        browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+    ): ChromeDevtoolsDriver {
         val launcherConfig = LauncherConfig().apply {
             if (driverSettings.isSupervised) {
                 supervisorProcess = driverSettings.supervisorProcess
                 supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
             }
         }
+
         val launchOptions = driverSettings.createChromeDevtoolsOptions(capabilities).apply {
             userDataDir = browserInstanceId.dataDir
         }
-        return ChromeDevtoolsDriver(launcherConfig, launchOptions, driverSettings, browserInstanceManager)
+
+        val browserInstance = browserInstanceManager.launchIfAbsent(launcherConfig, launchOptions)
+        return ChromeDevtoolsDriver(driverSettings, browserInstance)
     }
 
     private fun createMockChromeDevtoolsDriver(
-            browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities): MockWebDriver {
+        browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+    ): MockWebDriver {
         val backupDriverCreator = { createChromeDevtoolsDriver(browserInstanceId, capabilities) }
-        return MockWebDriver(backupDriverCreator)
+        return MockWebDriver(browserInstanceId, backupDriverCreator)
     }
 
     private fun setProxy(capabilities: DesiredCapabilities, proxyServer: String) {
@@ -110,6 +95,6 @@ open class WebDriverFactory(
      */
     private fun getBrowserType(volatileConfig: VolatileConfig?): BrowserType {
         return volatileConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
-                ?: immutableConfig.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
+            ?: immutableConfig.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
     }
 }

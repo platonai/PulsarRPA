@@ -3,10 +3,11 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
+import java.io.Closeable
 import java.time.Duration
 import java.time.Instant
 
-interface WebDriver {
+interface WebDriver: Closeable {
     val id: Int
     val url: String
     val browserInstanceId: BrowserInstanceId

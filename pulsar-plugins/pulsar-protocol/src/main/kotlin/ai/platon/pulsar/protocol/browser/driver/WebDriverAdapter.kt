@@ -2,21 +2,20 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
-import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.logging.Level
 
 class WebDriverAdapter(
     browserInstanceId: BrowserInstanceId,
-    val driver: org.openqa.selenium.WebDriver,
+    val driver: WebDriver,
     val priority: Int = 1000,
 ) : AbstractWebDriver(browserInstanceId, instanceSequencer.incrementAndGet()) {
     companion object {
@@ -25,16 +24,7 @@ class WebDriverAdapter(
 
     private val logger = LoggerFactory.getLogger(WebDriverAdapter::class.java)
 
-    /**
-     * The driver name
-     * */
-    override val name = driver.javaClass.simpleName + "-" + id
-
     val pageViews = AtomicInteger()
-
-    init {
-        setLogLevel()
-    }
 
     /**
      * The actual url return by the browser
@@ -56,8 +46,7 @@ class WebDriverAdapter(
     override val sessionId: String?
         get() = when {
             isQuit -> null
-            driver is MockWebDriver || driver is ChromeDevtoolsDriver ->
-                driver.runCatching { sessionId }.getOrNull()?.toString()
+            driver is MockWebDriver || driver is ChromeDevtoolsDriver -> driver.runCatching { sessionId }.getOrNull()
             else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
         }
 
@@ -68,7 +57,6 @@ class WebDriverAdapter(
         get() = when (driver) {
             is MockWebDriver -> BrowserType.MOCK_CHROME
             is ChromeDevtoolsDriver -> BrowserType.CHROME
-            is ChromeDriver -> BrowserType.SELENIUM_CHROME
             else -> BrowserType.CHROME
         }
 
@@ -92,7 +80,7 @@ class WebDriverAdapter(
     override fun navigateTo(url: String) {
         if (isWorking) {
             lastActiveTime = Instant.now()
-            driver.get(url)
+            driver.navigateTo(url)
             this.url = url
             pageViews.incrementAndGet()
             lastActiveTime = Instant.now()
@@ -105,7 +93,6 @@ class WebDriverAdapter(
             isNotWorking -> null
             driver is MockWebDriver -> driver.evaluate(expression)
             driver is ChromeDevtoolsDriver -> driver.evaluate(expression)
-            driver is ChromeDriver -> driver.executeScript(expression)
             else -> null
         }
     }
@@ -143,13 +130,7 @@ class WebDriverAdapter(
             return
         }
 
-        if (driver is ChromeDriver) {
-            val timeouts = driver.manage().timeouts()
-//            timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
-//            timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
-        } else if (driver is ChromeDevtoolsDriver) {
-            // not implemented
-        }
+        driver.setTimeouts(driverConfig)
     }
 
     /**
@@ -166,17 +147,7 @@ class WebDriverAdapter(
         }
     }
 
-    private fun setLogLevel() {
-        // Set log level
-        if (driver is org.openqa.selenium.remote.RemoteWebDriver) {
-            val logger = LoggerFactory.getLogger(org.openqa.selenium.WebDriver::class.java)
-            val level = when {
-                logger.isDebugEnabled -> Level.FINER
-                logger.isTraceEnabled -> Level.ALL
-                else -> Level.FINE
-            }
-
-            driver.setLogLevel(level)
-        }
+    override fun close() {
+        driver.close()
     }
 }

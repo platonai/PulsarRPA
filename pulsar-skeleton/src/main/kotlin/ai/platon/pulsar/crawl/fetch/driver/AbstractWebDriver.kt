@@ -28,6 +28,8 @@ abstract class AbstractWebDriver(
 
     override var idleTimeout: Duration = Duration.ofMinutes(10)
 
+    override val name get() = javaClass.simpleName + "-" + id
+
     /**
      * The current loading page url
      * The browser might redirect, so it might not be the same with [currentUrl]

@@ -3,8 +3,6 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.openqa.selenium.UnexpectedAlertBehaviour
-import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.CapabilityType.SUPPORTS_JAVASCRIPT
 import org.openqa.selenium.remote.DesiredCapabilities
@@ -67,23 +65,6 @@ open class WebDriverSettings(
         generalOptions.setCapability("pageLoadStrategy", pageLoadStrategy)
 
         return generalOptions
-    }
-
-    fun createChromeOptions(generalOptions: DesiredCapabilities = createGeneralOptions()): ChromeOptions {
-        val chromeOptions = ChromeOptions()
-
-        // see https://peter.sh/experiments/chromium-command-line-switches/
-        chromeOptions.merge(generalOptions)
-        chromeOptions.setHeadless(isHeadless)
-        // chromeOptions.addArguments("--incognito") // may cause anti-spider
-        chromeOptions.addArguments("--window-size=${formatViewPort()}")
-        /**
-         * TODO: seems not work, we might just use network.setBlockedURLs
-         * */
-        chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
-        chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
-
-        return chromeOptions
     }
 
     fun createChromeDevtoolsOptions(generalOptions: DesiredCapabilities): ChromeDevtoolsOptions {

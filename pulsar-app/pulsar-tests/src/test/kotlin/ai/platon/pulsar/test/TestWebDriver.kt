@@ -43,17 +43,12 @@ class TestWebDriver {
         }
     }
 
-    @Test
-    fun testCapabilities() {
-        val generalOptions = driverControl.createGeneralOptions()
-        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-
-        val chromeOptions = driverControl.createChromeOptions()
-        chromeOptions.addArguments("--blink-settings=imagesEnabled=false")
-        chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
-    }
+//    @Test
+//    fun testCapabilities() {
+//        val generalOptions = driverControl.createGeneralOptions()
+//        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
+//        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
+//    }
 
     @Test
     fun testWebDriverPool() {

@@ -79,11 +79,6 @@ class BrowserInstance(
     }
 
     override fun close() {
-        if (isGUI) {
-            log.info("Chrome dev tools are in GUI mode, please manually quit the tabs")
-            return
-        }
-
         if (launched.get() && closed.compareAndSet(false, true)) {
             log.info("Closing {} devtools ... | {}", devToolsList.size, id.display)
 
