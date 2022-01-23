@@ -31,17 +31,6 @@ class PulsarMaster(
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
 
-    @Bean
-    fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
-        return CommandLineRunner { args ->
-            val beans = ctx.beanDefinitionNames.sorted()
-            val s = beans.joinToString("\n") { it }
-            val path = AppPaths.getTmp("spring-beans.txt")
-            AppFiles.saveTo(s, path)
-            log.info("Report of all active spring beans is written to $path")
-        }
-    }
-
     @Bean(initMethod = "start", destroyMethod = "stop")
     @Throws(SQLException::class)
     fun h2Server(): Server {
@@ -56,7 +45,7 @@ class PulsarMaster(
     }
 
     @Bean(initMethod = "start", destroyMethod = "stop")
-    fun fetch(): StreamingCrawlLoop {
+    fun crawlLoop(): StreamingCrawlLoop {
         return StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)
     }
 }
@@ -64,6 +53,7 @@ class PulsarMaster(
 fun main(args: Array<String>) {
     runApplication<PulsarMaster>(*args) {
         addInitializers(PulsarContextInitializer())
+        setAdditionalProfiles("master")
         setRegisterShutdownHook(true)
         setLogStartupInfo(true)
     }

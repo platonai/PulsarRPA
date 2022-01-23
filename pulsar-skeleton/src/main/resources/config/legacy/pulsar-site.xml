@@ -5,8 +5,6 @@
 
 <configuration>
 
-  <!-- fetch rules -->
-
   <property>
     <name>http.useHttp11</name>
     <value>true</value>

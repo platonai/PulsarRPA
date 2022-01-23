@@ -99,7 +99,7 @@
 
     <logger name="ai.platon.pulsar.examples" level="INFO"/>
 
-    <logger name="org.springframework.core" level="INFO"/>
+    <logger name="org.springframework.core" level="DEBUG"/>
     <logger name="org.springframework.core.env" level="INFO"/>
 
     <logger name="org.apache.gora" level="ERROR"/>

@@ -14,8 +14,8 @@ class SessionConfig(private val sessionDelegate: SessionDelegate, fallbackConfig
         val ttl = super.getTTL(key)
         val expired = sequence > ttl
         // log.debug("Property {}, sequence: {}, ttl: {}", propertyName, sequence, ttl);
-        if (LOG.isDebugEnabled && expired) {
-            LOG.debug("Property {} is expired at the {}th command", key, sequence)
+        if (logger.isDebugEnabled && expired) {
+            logger.debug("Property {} is expired at the {}th command", key, sequence)
         }
 
         return expired

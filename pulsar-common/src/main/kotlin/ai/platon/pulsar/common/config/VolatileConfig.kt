@@ -46,8 +46,8 @@ open class VolatileConfig : MutableConfig {
             if (!isExpired(name)) {
                 return super.get(name, defaultValue)
             } else {
-                if (LOG.isTraceEnabled) {
-                    LOG.trace("Session config (with default) {} is expired", name)
+                if (logger.isTraceEnabled) {
+                    logger.trace("Session config (with default) {} is expired", name)
                 }
                 ttls.remove(name)
                 super.unset(name)
@@ -63,8 +63,8 @@ open class VolatileConfig : MutableConfig {
             if (!isExpired(name)) {
                 return value
             } else {
-                if (LOG.isTraceEnabled) {
-                    LOG.trace("Session config {} is expired", name)
+                if (logger.isTraceEnabled) {
+                    logger.trace("Session config {} is expired", name)
                 }
                 ttls.remove(name)
                 super.unset(name)
@@ -107,16 +107,19 @@ open class VolatileConfig : MutableConfig {
         return variables.put(name, bean)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> getBean(bean: Class<T>): T? {
         val obj = variables.values.firstOrNull { bean.isAssignableFrom(it.javaClass) }
         return obj as? T
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T : Any> getBean(bean: KClass<T>): T? {
         val obj = variables.values.firstOrNull { bean.java.isAssignableFrom(it.javaClass) }
         return obj as? T
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun <T> getBean(name: String, bean: Class<T>): T? {
         val obj = variables[name]
         return if (obj != null && bean.isAssignableFrom(obj.javaClass)) {

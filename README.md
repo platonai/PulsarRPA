@@ -34,12 +34,12 @@ The result set is as follows:
 
 # Build & Run
 
-## Minimal requirement
+## System requirement
 
     Memory 4G+
     Maven 3.2+
-    Google Chrome
-    Ubuntu Desktop
+    Google Chrome 90+
+    JDK 1.8+
 
 ## Build from source
 

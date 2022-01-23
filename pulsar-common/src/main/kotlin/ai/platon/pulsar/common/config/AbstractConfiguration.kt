@@ -18,21 +18,16 @@
  */
 package ai.platon.pulsar.common.config
 
-import kotlin.jvm.JvmOverloads
 import ai.platon.pulsar.common.SParser
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
 import java.io.InputStream
-import java.io.Reader
-import java.lang.StringBuilder
 import java.net.URL
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.function.Consumer
-import java.util.stream.Stream
 
 /**
  * Created by vincent on 17-1-17.
@@ -41,6 +36,8 @@ import java.util.stream.Stream
  * @author vincent
  */
 abstract class AbstractConfiguration {
+    protected val logger = LoggerFactory.getLogger(AbstractConfiguration::class.java)
+
     private val resources = LinkedHashSet<String>()
     var name = "Configuration#" + hashCode()
     var profile = ""
@@ -99,12 +96,12 @@ abstract class AbstractConfiguration {
             if (realResource != null) {
                 fullPathResources.add(realResource)
             } else {
-                LOG.info("Resource not find: $name")
+                logger.info("Resource not find: $name")
             }
         }
 
         fullPathResources.forEach { conf.addResource(it) }
-        LOG.info(toString())
+        logger.info(toString())
     }
 
     private fun getRealResource(profile: String, mode: String, name: String): URL? {
@@ -118,7 +115,7 @@ abstract class AbstractConfiguration {
 
         val resource = searchPaths.mapNotNull { getResource(it) }.firstOrNull()
         if (resource != null) {
-            LOG.info("Find legacy resource: $resource")
+            logger.info("Find legacy resource: $resource")
         }
         return resource
     }
@@ -133,8 +130,7 @@ abstract class AbstractConfiguration {
         get() = getBoolean(CapabilityTypes.DRY_RUN, false)
 
     /**
-     *
-     * isDistributedFs.
+     * Check if we are running on hdfs
      *
      * @return a boolean.
      */
@@ -148,13 +144,11 @@ abstract class AbstractConfiguration {
      *
      * unbox.
      */
-    fun unbox(): KConfiguration {
-        return conf
-    }
+    fun unbox() = conf
 
     /**
      *
-     * size.
+     * The configured item size.
      *
      * @return a int.
      */
@@ -164,7 +158,6 @@ abstract class AbstractConfiguration {
      * Get the value of the `name` property, `null` if
      * no such property exists. If the key is deprecated, it returns the value of
      * the first key which replaces the deprecated key and is not null.
-     *
      *
      * Values are processed for [variable expansion](#VariableExpansion)
      * before being returned.
@@ -189,9 +182,7 @@ abstract class AbstractConfiguration {
      * @return property value, or `defaultValue` if the property
      * doesn't exist.
      */
-    open operator fun get(name: String, defaultValue: String): String {
-        return get(name) ?: defaultValue
-    }
+    open operator fun get(name: String, defaultValue: String) = get(name) ?: defaultValue
 
     /**
      * Get the value of the `name` property as an `int`.
@@ -207,9 +198,7 @@ abstract class AbstractConfiguration {
      * or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
-    fun getInt(name: String, defaultValue: Int): Int {
-        return p(name).getInt(defaultValue)
-    }
+    fun getInt(name: String, defaultValue: Int) = p(name).getInt(defaultValue)
 
     /**
      * Get the value of the `name` property as a set of comma-delimited
@@ -222,9 +211,7 @@ abstract class AbstractConfiguration {
      * @return property value interpreted as an array of comma-delimited
      * `int` values
      */
-    fun getInts(name: String): IntArray {
-        return p(name).ints
-    }
+    fun getInts(name: String) = p(name).ints
 
     /**
      * Get the value of the `name` property as a `long`.
@@ -238,9 +225,7 @@ abstract class AbstractConfiguration {
      * or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
-    fun getLong(name: String, defaultValue: Long): Long {
-        return p(name).getLong(defaultValue)
-    }
+    fun getLong(name: String, defaultValue: Long) = p(name).getLong(defaultValue)
 
     /**
      * Get the value of the `name` property as a `float`.
@@ -254,9 +239,7 @@ abstract class AbstractConfiguration {
      * or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
-    fun getFloat(name: String, defaultValue: Float): Float {
-        return p(name).getFloat(defaultValue)
-    }
+    fun getFloat(name: String, defaultValue: Float) = p(name).getFloat(defaultValue)
 
     /**
      * Get the value of the `name` property as a `double`.
@@ -270,9 +253,7 @@ abstract class AbstractConfiguration {
      * or `defaultValue`.
      * @throws java.lang.NumberFormatException when the value is invalid
      */
-    fun getDouble(name: String, defaultValue: Double): Double {
-        return p(name).getDouble(defaultValue)
-    }
+    fun getDouble(name: String, defaultValue: Double) = p(name).getDouble(defaultValue)
 
     /**
      * Get the value of the `name` property as a `boolean`.
@@ -284,9 +265,7 @@ abstract class AbstractConfiguration {
      * @return property value as a `boolean`,
      * or `defaultValue`.
      */
-    fun getBoolean(name: String, defaultValue: Boolean): Boolean {
-        return p(name).getBoolean(defaultValue)
-    }
+    fun getBoolean(name: String, defaultValue: Boolean) = p(name).getBoolean(defaultValue)
 
     /**
      * Return value matching this enumerated type.
@@ -298,9 +277,7 @@ abstract class AbstractConfiguration {
      * @param <T> a T object.
      * @return a T object.
     </T> */
-    fun <T : Enum<T>?> getEnum(name: String, defaultValue: T): T {
-        return p(name).getEnum(defaultValue)
-    }
+    fun <T : Enum<T>?> getEnum(name: String, defaultValue: T) = p(name).getEnum(defaultValue)
 
     /**
      * Get the comma delimited values of the `name` property as
@@ -313,9 +290,7 @@ abstract class AbstractConfiguration {
      * @param name property name.
      * @return property value as a collection of `String`s.
      */
-    fun getStringCollection(name: String): Collection<String> {
-        return p(name).stringCollection
-    }
+    fun getStringCollection(name: String) = p(name).stringCollection
 
     /**
      * Get the comma delimited values of the `name` property as
@@ -326,9 +301,7 @@ abstract class AbstractConfiguration {
      * @return property value as an array of `String`s,
      * or `null`.
      */
-    fun getStrings(name: String): Array<String> {
-        return p(name).strings ?: arrayOf()
-    }
+    fun getStrings(name: String) = p(name).strings ?: arrayOf()
 
     /**
      * Get the comma delimited values of the `name` property as
@@ -340,9 +313,7 @@ abstract class AbstractConfiguration {
      * @return property value as an array of `String`s,
      * or default value.
      */
-    fun getStrings(name: String, vararg defaultValue: String): Array<String> {
-        return p(name).getStrings(*defaultValue)
-    }
+    fun getStrings(name: String, vararg defaultValue: String) = p(name).getStrings(*defaultValue)
 
     /**
      * Get the comma delimited values of the `name` property as
@@ -352,9 +323,7 @@ abstract class AbstractConfiguration {
      * @param name property name.
      * @return property value as a collection of `String`s, or empty `Collection`
      */
-    fun getTrimmedStringCollection(name: String): Collection<String> {
-        return p(name).trimmedStringCollection
-    }
+    fun getTrimmedStringCollection(name: String) = p(name).trimmedStringCollection
 
     /**
      * Get the comma delimited values of the `name` property as
@@ -365,9 +334,7 @@ abstract class AbstractConfiguration {
      * @return property value as an array of trimmed `String`s,
      * or empty array.
      */
-    fun getTrimmedStrings(name: String): Array<String> {
-        return p(name).trimmedStrings
-    }
+    fun getTrimmedStrings(name: String) = p(name).trimmedStrings
 
     /**
      * Get the comma delimited values of the `name` property as
@@ -421,9 +388,7 @@ abstract class AbstractConfiguration {
      * @param name a [java.lang.String] object.
      * @return a [java.time.Duration] object.
      */
-    fun getDuration(name: String): Duration {
-        return p(name).duration
-    }
+    fun getDuration(name: String) = p(name).duration
 
     /**
      *
@@ -433,9 +398,7 @@ abstract class AbstractConfiguration {
      * @param defaultValue a [java.time.Duration] object.
      * @return a [java.time.Duration] object.
      */
-    fun getDuration(name: String, defaultValue: Duration): Duration {
-        return p(name).getDuration(defaultValue)
-    }
+    fun getDuration(name: String, defaultValue: Duration) = p(name).getDuration(defaultValue)
 
     /**
      *
@@ -445,9 +408,7 @@ abstract class AbstractConfiguration {
      * @param defaultValue a [java.time.Instant] object.
      * @return a [java.time.Instant] object.
      */
-    fun getInstant(name: String, defaultValue: Instant): Instant {
-        return p(name).getInstant(defaultValue)
-    }
+    fun getInstant(name: String, defaultValue: Instant) = p(name).getInstant(defaultValue)
 
     /**
      *
@@ -457,9 +418,7 @@ abstract class AbstractConfiguration {
      * @param elsePath a [java.nio.file.Path] object.
      * @return a [java.nio.file.Path] object.
      */
-    fun getPath(name: String, elsePath: Path): Path {
-        return p(name).getPath(elsePath)
-    }
+    fun getPath(name: String, elsePath: Path) = p(name).getPath(elsePath)
 
     /**
      *
@@ -468,9 +427,7 @@ abstract class AbstractConfiguration {
      * @param name a [java.lang.String] object.
      * @return a [java.nio.file.Path] object.
      */
-    fun getPathOrNull(name: String): Path? {
-        return p(name).pathOrNull
-    }
+    fun getPathOrNull(name: String) = p(name).pathOrNull
 
     /**
      *
@@ -479,9 +436,7 @@ abstract class AbstractConfiguration {
      * @param name a [java.lang.String] object.
      * @return a [java.util.Map] object.
      */
-    fun getKvs(name: String): Map<String, String> {
-        return p(name).kvs
-    }
+    fun getKvs(name: String) = p(name).kvs
 
     /**
      *
@@ -501,9 +456,7 @@ abstract class AbstractConfiguration {
      * @param resource a [java.lang.String] object.
      * @return a [java.io.Reader] object.
      */
-    fun getConfResourceAsReader(resource: String): Reader {
-        return SParser.wrap(resource).resourceAsReader
-    }
+    fun getConfResourceAsReader(resource: String) = SParser.wrap(resource).resourceAsReader
 
     /**
      *
@@ -512,9 +465,7 @@ abstract class AbstractConfiguration {
      * @param resource a [java.lang.String] object.
      * @return a [java.net.URL] object.
      */
-    fun getResource(resource: String): URL? {
-        return SParser.wrap(resource).resource
-    }
+    fun getResource(resource: String) = SParser.wrap(resource).resource
 
     /**
      * Get the value of the `name` property as a `Class`.
@@ -553,14 +504,11 @@ abstract class AbstractConfiguration {
         return p(name).getClass(defaultValue, xface)
     }
 
-    private fun p(name: String): SParser {
-        return SParser(get(name))
-    }
+    private fun p(name: String) = SParser(get(name))
 
     override fun toString() = "profile: <$profile> | $conf"
 
     companion object {
-        val LOG = LoggerFactory.getLogger(AbstractConfiguration::class.java)
         const val APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml"
         val DEFAULT_RESOURCES = LinkedHashSet<String>()
     }
