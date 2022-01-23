@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
+import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
 import org.slf4j.LoggerFactory
@@ -13,7 +13,7 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
 
     val browserControl = BrowserSettings()
     val clientLibJs = browserControl.parseLibJs()
-    val launchOptions = ChromeDevtoolsOptions()
+    val launchOptions = ChromeOptions()
             .addArguments("window-size", browserControl.formatViewPort())
             .also { it.headless = headless }
     val launcher = ChromeLauncher()

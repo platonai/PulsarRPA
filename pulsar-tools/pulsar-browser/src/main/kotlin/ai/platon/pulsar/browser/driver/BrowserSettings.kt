@@ -163,7 +163,7 @@ open class BrowserSettings(
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
-    val noSandbox get() = conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, false)
+    val noSandbox get() = conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
     val displayMode get() = conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver
 
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
+import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import ai.platon.pulsar.common.AppPaths
@@ -15,7 +15,7 @@ class TestChromeLauncher {
     @Ignore("Temporary disabled")
     @Test
     fun testLauncher() {
-        val launchOptions = ChromeDevtoolsOptions()
+        val launchOptions = ChromeOptions()
         launchOptions.headless = false
         launchOptions.userDataDir = AppPaths.CHROME_TMP_DIR.resolve(LocalDateTime.now().second.toString())
         val launcher = ChromeLauncher(config = LauncherConfig())

@@ -34,12 +34,13 @@ The result set is as follows:
 
 # Build & Run
 
-## System requirement
+## Requirements
 
-    Memory 4G+
-    Maven 3.2+
-    Google Chrome 90+
-    JDK 1.8+
+- Memory 4G+
+- Maven 3.2+
+- The latest version of the Java 11 OpenJDK
+- java and jar on the PATH
+- Google Chrome 90+
 
 ## Build from source
 

@@ -51,7 +51,7 @@ annotation class ChromeParameter(val value: String)
 /**
  * The options to open chrome devtools
  * */
-class ChromeDevtoolsOptions(
+class ChromeOptions(
         @ChromeParameter("user-data-dir")
         var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("proxy-server")
@@ -70,6 +70,8 @@ class ChromeDevtoolsOptions(
         var noDefaultBrowserCheck: Boolean = true,
         @ChromeParameter("no-first-run")
         var noFirstRun: Boolean = true,
+        @ChromeParameter("no-startup-window")
+        var noStartupWindow: Boolean = true,
         @ChromeParameter("mute-audio")
         var muteAudio: Boolean = true,
         @ChromeParameter("disable-background-networking")
@@ -103,12 +105,12 @@ class ChromeDevtoolsOptions(
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 
-    fun addArguments(key: String, value: String? = null): ChromeDevtoolsOptions {
+    fun addArguments(key: String, value: String? = null): ChromeOptions {
         additionalArguments[key] = value
         return this
     }
 
-    fun removeArguments(key: String): ChromeDevtoolsOptions {
+    fun removeArguments(key: String): ChromeOptions {
         additionalArguments.remove(key)
         return this
     }
@@ -116,7 +118,7 @@ class ChromeDevtoolsOptions(
     fun merge(args: Map<String, Any?>) = args.forEach { (key, value) -> addArguments(key, value?.toString()) }
 
     fun toMap(): Map<String, Any?> {
-        val args = ChromeDevtoolsOptions::class.java.declaredFields
+        val args = ChromeOptions::class.java.declaredFields
                 .filter { it.annotations.any { it is ChromeParameter } }
                 .onEach { it.isAccessible = true }
                 .associateTo(LinkedHashMap()) { it.getAnnotation(ChromeParameter::class.java).value to it.get(this) }
@@ -170,7 +172,7 @@ class ChromeLauncher(
     /**
      * Launch the chrome
      * */
-    fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
+    fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
         userDataDir = options.userDataDir
 
         // if the data dir is the default dir, we might have problem to prepare user dir
@@ -187,12 +189,12 @@ class ChromeLauncher(
     /**
      * Launch the chrome
      * */
-    fun launch(options: ChromeDevtoolsOptions) = launch(Browsers.searchChromeBinary(), options)
+    fun launch(options: ChromeOptions) = launch(Browsers.searchChromeBinary(), options)
 
     /**
      * Launch the chrome
      * */
-    fun launch(headless: Boolean) = launch(Browsers.searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
+    fun launch(headless: Boolean) = launch(Browsers.searchChromeBinary(), ChromeOptions().also { it.headless = headless })
 
     /**
      * Launch the chrome
@@ -249,7 +251,7 @@ class ChromeLauncher(
      */
     @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
-    private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
+    private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
         var supervisorProcess = config.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {

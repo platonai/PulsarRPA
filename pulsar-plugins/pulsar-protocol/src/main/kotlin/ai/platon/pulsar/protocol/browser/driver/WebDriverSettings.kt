@@ -1,10 +1,9 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
+import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.openqa.selenium.remote.CapabilityType
-import org.openqa.selenium.remote.CapabilityType.SUPPORTS_JAVASCRIPT
 import org.openqa.selenium.remote.DesiredCapabilities
 
 /**
@@ -64,8 +63,8 @@ open class WebDriverSettings(
         return generalOptions
     }
 
-    fun createChromeDevtoolsOptions(generalOptions: DesiredCapabilities): ChromeDevtoolsOptions {
-        val chromeOptions = ChromeDevtoolsOptions()
+    fun createChromeDevtoolsOptions(generalOptions: DesiredCapabilities): ChromeOptions {
+        val chromeOptions = ChromeOptions()
         chromeOptions.merge(generalOptions.asMap())
 
         // rewrite proxy argument

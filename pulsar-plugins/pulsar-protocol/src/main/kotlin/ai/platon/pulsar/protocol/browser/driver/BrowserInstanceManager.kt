@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
+import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -13,12 +13,12 @@ class BrowserInstanceManager: AutoCloseable {
     val instanceCount get() = browserInstances.size
 
     @Synchronized
-    fun hasLaunched(launchOptions: ChromeDevtoolsOptions): Boolean {
+    fun hasLaunched(launchOptions: ChromeOptions): Boolean {
         return browserInstances.containsKey(launchOptions.userDataDir)
     }
 
     @Synchronized
-    fun launchIfAbsent(launcherConfig: LauncherConfig, launchOptions: ChromeDevtoolsOptions): BrowserInstance {
+    fun launchIfAbsent(launcherConfig: LauncherConfig, launchOptions: ChromeOptions): BrowserInstance {
         return browserInstances.computeIfAbsent(launchOptions.userDataDir) {
             BrowserInstance(launcherConfig, launchOptions).apply { launch() }
         }

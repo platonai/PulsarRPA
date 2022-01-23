@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class BrowserInstance(
     val launcherConfig: LauncherConfig,
-    val launchOptions: ChromeDevtoolsOptions
+    val launchOptions: ChromeOptions
 ): AutoCloseable {
 
     /**
