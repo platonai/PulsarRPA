@@ -79,7 +79,8 @@ data class EmulateSettings(
  * */
 open class BlockRules {
 
-    open val blockingResourceTypes = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
+    open val blockingResourceTypes: MutableList<ResourceType>
+        get() = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
 
     /**
      * amazon.com note:
@@ -87,26 +88,29 @@ open class BlockRules {
      * .woff,
      * .mp4
      * */
-    open val mustPassUrls = mutableListOf<String>()
+    open val mustPassUrls: MutableList<String>
+        get() = mutableListOf()
 
     /**
      * Blocking urls patten using widcards
      * */
-    open val blockingUrls = listOf(
-        "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
-        "*.woff", "*.woff2",
-        "*.mp4", "*.svg",
-        "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
-        "https://img*"
-    ).filterNot { it in mustPassUrls }.toMutableList()
+    open val blockingUrls: MutableList<String>
+        get() = listOf(
+            "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
+            "*.woff", "*.woff2",
+            "*.mp4", "*.svg",
+            "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
+            "https://img*"
+        ).filterNot { it in mustPassUrls }.toMutableList()
 
-    open val mustPassUrlPatterns
+    open val mustPassUrlPatterns: MutableList<Regex>
         get() = listOf(
             "about:blank",
             "data:.+",
         ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
 
-    open val blockingUrlPatterns get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
+    open val blockingUrlPatterns: MutableList<Regex>
+        get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
 }
 
 open class BrowserSettings(
@@ -145,8 +149,14 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        fun disableUrlBlocking(): Companion {
+            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "false")
+            return BrowserSettings
+        }
+
+        // TODO: not implemented
         fun blockImages(): Companion {
-            enableUrlBlocking()
+            // enableUrlBlocking()
             return BrowserSettings
         }
 
@@ -170,8 +180,6 @@ open class BrowserSettings(
     val isHeadless get() = displayMode == DisplayMode.HEADLESS
     val isGUI get() = displayMode == DisplayMode.GUI
 
-    val eagerAllocateTabs get() = conf.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
-    val imagesEnabled get() = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
     val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     val userDataDir get() = conf.getPathOrNull(BROWSER_DATA_DIR) ?: generateUserDataDir()
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
@@ -181,10 +189,7 @@ open class BrowserSettings(
 
     // The javascript to execute by Web browsers
     val propertyNames
-        get() = conf.getTrimmedStrings(
-            FETCH_CLIENT_JS_COMPUTED_STYLES,
-            AppConstants.CLIENT_JS_PROPERTY_NAMES
-        )
+        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
     var clientJsVersion = "0.2.3"
     val scripts = mutableMapOf<String, String>()
@@ -281,8 +286,7 @@ open class BrowserSettings(
             "node_traversor.js",
             "feature_calculator.js",
             "humanize.js"
-        ).associateTo(scripts) {
-            it to ResourceLoader.readAllLines("$jsDirectory/$it").joinToString("\n") { it }
-        }
+        ).associateWithTo(scripts) { ResourceLoader.readAllLines("$jsDirectory/$it")
+            .joinToString("\n") { it } }
     }
 }

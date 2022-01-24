@@ -9,5 +9,5 @@ class AmazonBlockRules: BlockRules() {
      * .woff,
      * .mp4
      * */
-    override val mustPassUrls = listOf("*.woff", "*.mp4").toMutableList()
+    override val mustPassUrls get() = listOf("*.woff", "*.mp4").toMutableList()
 }

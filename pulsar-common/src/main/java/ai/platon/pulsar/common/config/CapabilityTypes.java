@@ -322,6 +322,7 @@ public interface CapabilityTypes {
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
     /**
      * Open a set of blank tabs before the first page view
+     * @deprecated Not a useful feature
      * */
     String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
     /**

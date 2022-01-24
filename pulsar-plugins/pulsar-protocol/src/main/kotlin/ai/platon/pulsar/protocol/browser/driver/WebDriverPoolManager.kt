@@ -42,7 +42,6 @@ open class WebDriverPoolManager(
     private val closed = AtomicBoolean()
 
     val driverSettings get() = driverFactory.driverSettings
-    val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val taskTimeout = Duration.ofMinutes(6)
     val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
     val idleTimeout = Duration.ofMinutes(18)
@@ -107,9 +106,7 @@ open class WebDriverPoolManager(
             priority: Int = 0,
             volatileConfig: VolatileConfig? = null
     ): LoadingWebDriverPool {
-        return LoadingWebDriverPool(browserId, priority, driverFactory, immutableConfig).also {
-            it.takeIf { eagerAllocateTabs }?.allocate(volatileConfig?:immutableConfig.toVolatileConfig())
-        }
+        return LoadingWebDriverPool(browserId, priority, driverFactory, immutableConfig)
     }
 
     fun isRetiredPool(browserId: BrowserInstanceId) = retiredPools.contains(browserId)
