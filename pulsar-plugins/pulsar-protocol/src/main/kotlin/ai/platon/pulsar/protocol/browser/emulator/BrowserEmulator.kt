@@ -338,8 +338,10 @@ open class BrowserEmulator(
 
     protected suspend fun emulateJd(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
         val isJd = task.url.contains("item.jd.com")
+        if (!isJd) return
+
         val rand = Random.nextInt(3)
-        if (isJd && rand == 0) {
+        if (rand == 0) {
             val interactTask = InteractTask(task, driverSettings, driver)
             val expressions = listOf(
                 "document.querySelector('#summary-service a').click()",
@@ -354,7 +356,8 @@ open class BrowserEmulator(
                 "document.querySelector('#detail li:nth-child(4)').click()",
                 "document.querySelector('#detail li:nth-child(5)').click()",
             ).shuffled().take(3)
-            evaluate(interactTask, expressions, Duration.ofMillis(500), true)
+            val verbose = logger.isDebugEnabled
+            evaluate(interactTask, expressions, Duration.ofMillis(500), verbose)
         }
     }
 
