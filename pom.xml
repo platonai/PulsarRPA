@@ -47,7 +47,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.7.1</tag>
+        <tag>v1.7.2</tag>
     </scm>
 
     <repositories>
