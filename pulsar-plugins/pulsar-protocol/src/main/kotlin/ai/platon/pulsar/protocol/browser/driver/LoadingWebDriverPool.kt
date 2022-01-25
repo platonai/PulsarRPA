@@ -271,12 +271,10 @@ class LoadingWebDriverPool(
 
     private fun logDriverOnline(driver: WebDriver) {
         if (log.isTraceEnabled) {
-            val driverControl = driverFactory.driverSettings
-            log.trace("The {}th web driver is online, browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {}",
-                    numOnline,
-                    driver.name,
-                    driverControl.imagesEnabled,
-                    driverControl.pageLoadStrategy, capacity)
+            val driverSettings = driverFactory.driverSettings
+            log.trace("The {}th web driver is online, browser: {} pageLoadStrategy: {} capacity: {}",
+                    numOnline, driver.name,
+                driverSettings.pageLoadStrategy, capacity)
         }
     }
 
