@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+install_utils() {
+  if ! command -v mvn &> /dev/null
+  then
+      sudo apt-get install maven
+  fi
+}
+
 install_chrome() {
     echo "Installing latest stable google-chrome"
 
@@ -18,5 +25,7 @@ CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}'
 if [[ "$CHROME_VERSION" == "" ]]; then
     install_chrome
 fi
+
+install_utils
 
 cd - || exit
