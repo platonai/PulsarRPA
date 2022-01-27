@@ -1,20 +1,11 @@
 package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.crawl.CrawlLoops
 import org.h2.tools.Server
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.ImportResource
@@ -24,13 +15,16 @@ import java.sql.SQLException
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api")
 class PulsarMaster(
-    val globalCacheFactory: GlobalCacheFactory
+    /**
+     * Activate crawl loops
+     * */
+    val crawlLoops: CrawlLoops
 ) {
-    private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
+    private val logger = LoggerFactory.getLogger(PulsarMaster::class.java)
 
-    @Autowired
-    lateinit var unmodifiedConfig: ImmutableConfig
-
+    /**
+     * Enable H2 client
+     * */
     @Bean(initMethod = "start", destroyMethod = "stop")
     @Throws(SQLException::class)
     fun h2Server(): Server {
@@ -38,15 +32,13 @@ class PulsarMaster(
         return Server.createTcpServer()
     }
 
+    /**
+     * Enable H2 console
+     * */
     @Bean(initMethod = "start", destroyMethod = "stop")
     @Throws(SQLException::class)
     fun h2WebServer(): Server {
         return Server.createWebServer("-webAllowOthers")
-    }
-
-    @Bean(initMethod = "start", destroyMethod = "stop")
-    fun crawlLoop(): StreamingCrawlLoop {
-        return StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)
     }
 }
 
