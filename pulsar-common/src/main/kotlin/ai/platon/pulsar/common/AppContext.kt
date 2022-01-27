@@ -15,29 +15,29 @@ object AppContext {
     /**
      * The number of processors available to the Java virtual machine
      */
-    val NCPU = Runtime.getRuntime().availableProcessors()
+    val NCPU get() = Runtime.getRuntime().availableProcessors()
 
     // User's current working directory
-    val HOST_NAME = InetAddress.getLocalHost().hostName
+    val HOST_NAME get() = InetAddress.getLocalHost().hostName
 
-    val USER = SystemUtils.USER_NAME
+    val USER get() = SystemUtils.USER_NAME
 
     /**
      * Directories
      */
-    val TMP_DIR = SystemUtils.JAVA_IO_TMPDIR
+    val TMP_DIR get() = SystemUtils.JAVA_IO_TMPDIR
 
     // User's current working directory
-    val USER_DIR = SystemUtils.USER_DIR
+    val USER_DIR get() = SystemUtils.USER_DIR
 
     // User's home directory
-    val USER_HOME = SystemUtils.USER_HOME
+    val USER_HOME get() = SystemUtils.USER_HOME
 
     // windows subsystem for linux
     val OS_IS_WSL by lazy { checkIsWSL() }
 
     // The identity of this running instance
-    val APP_VERSION = sniffVersion()
+    val APP_VERSION by lazy { sniffVersion() }
     val APP_NAME = System.getProperty("app.name", "pulsar")
     val APP_IDENT = System.getProperty("app.id.str", USER)
     val APP_TMP_PROPERTY = System.getProperty("app.tmp.dir")
@@ -75,6 +75,10 @@ object AppContext {
     }
 
     private fun checkIsWSL(): Boolean {
+        if (!SystemUtils.IS_OS_WINDOWS) {
+            return false
+        }
+
         return try {
             val path = Paths.get("/proc/version")
             Files.isReadable(path) && Files.readString(path).contains("microsoft-*-WSL")
