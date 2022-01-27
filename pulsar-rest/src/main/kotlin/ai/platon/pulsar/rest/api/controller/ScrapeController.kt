@@ -21,8 +21,8 @@ class ScrapeController(
     val scrapeService: ScrapeService,
 ) {
     /**
-     * @param request The extract request
-     * @return The uuid of the task
+     * @param sql The sql to execute
+     * @return The response
      * */
     @PostMapping("e")
     fun execute(@RequestBody sql: String): ScrapeResponse {
@@ -30,8 +30,8 @@ class ScrapeController(
     }
 
     /**
-     * @param request The extract request
-     * @return The uuid of the task
+     * @param sql The sql to execute
+     * @return The uuid of the scrape task
      * */
     @PostMapping("s")
     fun submitJob(@RequestBody sql: String): String {
