@@ -75,10 +75,6 @@ object AppContext {
     }
 
     private fun checkIsWSL(): Boolean {
-        if (!SystemUtils.IS_OS_WINDOWS) {
-            return false
-        }
-
         return try {
             val path = Paths.get("/proc/version")
             Files.isReadable(path) && Files.readString(path).contains("microsoft-*-WSL")
