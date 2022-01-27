@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 object AppContext {
 
+    private val logger = getLogger(AppContext::class)
+
     enum class State {
         NEW, RUNNING, TERMINATING, TERMINATED
     }
@@ -75,12 +77,20 @@ object AppContext {
     }
 
     private fun checkIsWSL(): Boolean {
-        return try {
+        try {
             val path = Paths.get("/proc/version")
-            Files.isReadable(path) && Files.readString(path).contains("microsoft-*-WSL")
+            if (Files.isReadable(path)) {
+                val version = Files.readString(path)
+                logger.info("Version: $version")
+
+                if (version.contains("microsoft-*-WSL")) {
+                    return true
+                }
+            }
         } catch (t: Throwable) {
-            getLogger(this).warn("Unexpected exception", t)
-            false
+            logger.warn("Unexpected exception", t)
         }
+
+        return false
     }
 }

@@ -18,7 +18,11 @@ start_dependent_daemon() {
   uname=$(uname -a)
   if [[ "$uname" == *"microsoft"* ]]
   then
+    status=$(service dbus status)
+    if [[ "$status" != *"running"* ]]
+    then
       sudo service dbus start
+    fi
   fi
 }
 
