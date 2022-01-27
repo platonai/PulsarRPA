@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
+import java.awt.GraphicsEnvironment
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -136,8 +137,8 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
-            if (AppContext.OS_IS_WSL) {
-                logger.info("We are running on WSL, GUI mode is disabled")
+            if (GraphicsEnvironment.isHeadless()) {
+                logger.info("The OS is headless, GUI mode is disabled")
                 return BrowserSettings
             }
 
@@ -173,6 +174,9 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+    /**
+     * Chrome has to run without sandbox in a virtual machine
+     * */
     val forceNoSandbox get() = AppContext.OS_IS_WSL
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
@@ -180,7 +184,7 @@ open class BrowserSettings(
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    val forceHeadless get() = AppContext.OS_IS_WSL
+    val forceHeadless get() = GraphicsEnvironment.isHeadless()
     val displayMode get() = if (forceHeadless) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED

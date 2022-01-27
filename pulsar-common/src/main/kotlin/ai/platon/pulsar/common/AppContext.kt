@@ -83,7 +83,7 @@ object AppContext {
                 val version = Files.readString(path)
                 logger.info("Version: $version")
 
-                if (version.contains("microsoft-*-WSL")) {
+                if (version.contains("microsoft-*-WSL".toRegex())) {
                     return true
                 }
             }
