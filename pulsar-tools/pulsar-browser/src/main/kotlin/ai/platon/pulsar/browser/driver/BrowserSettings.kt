@@ -1,9 +1,6 @@
 package ai.platon.pulsar.browser.driver
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.Wildchar
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -119,6 +116,8 @@ open class BrowserSettings(
     val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
+        private val logger = getLogger(BrowserSettings::class)
+
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
 
@@ -137,6 +136,11 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
+            if (AppContext.OS_IS_WSL) {
+                logger.info("We are running on WSL, GUI mode is disabled")
+                return BrowserSettings
+            }
+
             arrayOf(BROWSER_LAUNCH_SUPERVISOR_PROCESS, BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS).forEach {
                 System.clearProperty(it)
             }
@@ -169,13 +173,16 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+    val forceNoSandbox get() = AppContext.OS_IS_WSL
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
-    val noSandbox get() = conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
+    val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    val displayMode get() = conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
+    val forceHeadless get() = AppContext.OS_IS_WSL
+    val displayMode get() = if (forceHeadless) DisplayMode.HEADLESS
+        else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
     val isHeadless get() = displayMode == DisplayMode.HEADLESS
     val isGUI get() = displayMode == DisplayMode.GUI

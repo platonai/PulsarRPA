@@ -33,6 +33,9 @@ object AppContext {
     // User's home directory
     val USER_HOME = SystemUtils.USER_HOME
 
+    // windows subsystem for linux
+    val OS_IS_WSL by lazy { checkIsWSL() }
+
     // The identity of this running instance
     val APP_VERSION = sniffVersion()
     val APP_NAME = System.getProperty("app.name", "pulsar")
@@ -69,5 +72,15 @@ object AppContext {
                 ?.let { Files.readAllLines(it).firstOrNull() }
         }
         return version ?: "unknown"
+    }
+
+    private fun checkIsWSL(): Boolean {
+        return try {
+            val path = Paths.get("/proc/version")
+            Files.isReadable(path) && Files.readString(path).contains("microsoft-*-WSL")
+        } catch (t: Throwable) {
+            getLogger(this).warn("Unexpected exception", t)
+            false
+        }
     }
 }
