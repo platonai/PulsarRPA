@@ -125,7 +125,7 @@ elif [[ "$COMMAND" = "sql" ]] ; then
   JAR1="pulsar-master-$VERSION.jar"
   CLASS=ai.platon.pulsar.app.h2.H2ShellKt
 elif [[ "$COMMAND" = "example" ]] ; then
-  MODULE=pulsar-examples
+  MODULE=pulsar-app/pulsar-examples
   JAR1="pulsar-examples-$VERSION.jar"
   PROC=$1
   if [[ -z "$PROC" ]]; then

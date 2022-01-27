@@ -5,6 +5,21 @@ install_utils() {
   then
       sudo apt-get install maven
   fi
+
+  if ! command -v curl &> /dev/null
+  then
+      sudo apt-get install curl
+  fi
+}
+
+start_dependent_daemon() {
+  # "Failed to connect to bus: No such file or directory" on clean WSL
+  # https://github.com/Microsoft/WSL/issues/2941
+  uname=$(uname -a)
+  if [[ "$uname" == *"microsoft"* ]]
+  then
+      sudo service dbus start
+  fi
 }
 
 install_chrome() {
@@ -18,6 +33,8 @@ install_chrome() {
 }
 
 cd /tmp/ || exit
+
+start_dependent_daemon
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"
