@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.dom.nodes.node.ext.namedRect
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
@@ -8,7 +7,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class MathematicalSelectorParseException(msg: String, vararg params: Any) : IllegalStateException(String.format(msg, *params))
+class PowerSelectorParseException(msg: String, vararg params: Any) : IllegalStateException(String.format(msg, *params))
 
 /**
  * CSS element selector, that finds elements matching a query.
@@ -78,9 +77,9 @@ class MathematicalSelectorParseException(msg: String, vararg params: Any) : Ille
  * @author Jonathan Hedley, jonathan@hedley.net
  * @see Element.select
  */
-object MathematicalSelector {
+object PowerSelector {
 
-    private val log = LoggerFactory.getLogger(MathematicalSelector::class.java)
+    private val logger = LoggerFactory.getLogger(PowerSelector::class.java)
     private val cache = ConcurrentHashMap<String, Evaluator>()
 
     /**
@@ -91,17 +90,16 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, root: Element): Elements {
+        val cssQuery0 = cssQuery.trim()
+        if (cssQuery0.isBlank()) {
+            return Elements()
+        }
+
         // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
         val q = cssQuery.trim().removeSurrounding("\"").takeIf { it.isNotBlank() }?:return Elements()
 
-        try {
-            val evaluator = cache.computeIfAbsent(q) { MathematicalQueryParser.parse(q) }
-            return select(evaluator, root)
-        } catch (e: MathematicalSelectorParseException) {
-            log.warn(e.message)
-        }
-
-        return Elements()
+        val evaluator = cache.computeIfAbsent(q) { PowerQueryParser.parse(q) }
+        return select(evaluator, root)
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
@@ -129,28 +127,22 @@ object MathematicalSelector {
             return Elements()
         }
 
-        try {
-            val evaluator = cache.computeIfAbsent(cssQuery0) { MathematicalQueryParser.parse(cssQuery0) }
-            val elements = ArrayList<Element>()
-            val seenElements = IdentityHashMap<Element, Boolean>()
-            // dedupe elements by identity, not equality
+        val evaluator = cache.computeIfAbsent(cssQuery0) { PowerQueryParser.parse(cssQuery0) }
+        val elements = ArrayList<Element>()
+        val seenElements = IdentityHashMap<Element, Boolean>()
+        // dedupe elements by identity, not equality
 
-            for (root in roots) {
-                val found = select(evaluator, root)
-                for (el in found) {
-                    if (!seenElements.containsKey(el)) {
-                        elements.add(el)
-                        seenElements[el] = java.lang.Boolean.TRUE
-                    }
+        for (root in roots) {
+            val found = select(evaluator, root)
+            for (el in found) {
+                if (!seenElements.containsKey(el)) {
+                    elements.add(el)
+                    seenElements[el] = java.lang.Boolean.TRUE
                 }
             }
-
-            return Elements(elements)
-        } catch (e: MathematicalSelectorParseException) {
-            log.warn(e.message)
         }
 
-        return Elements()
+        return Elements(elements)
     }
 
     /**
@@ -161,16 +153,12 @@ object MathematicalSelector {
      */
     fun selectFirst(cssQuery: String, root: Element): Element? {
         val cssQuery0 = cssQuery.trim()
-        if (cssQuery0.isBlank()) return null
-
-        try {
-            val evaluator = cache.computeIfAbsent(cssQuery0) { MathematicalQueryParser.parse(cssQuery0) }
-            return MathematicalCollector.findFirst(evaluator, root)
-        } catch (e: MathematicalSelectorParseException) {
-            log.warn(e.message)
+        if (cssQuery0.isBlank()) {
+            return null
         }
 
-        return null
+        val evaluator = cache.computeIfAbsent(cssQuery0) { PowerQueryParser.parse(cssQuery0) }
+        return PowerCollector.findFirst(evaluator, root)
     }
 
     /**
@@ -181,7 +169,7 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     private fun select(evaluator: Evaluator, root: Element): Elements {
-        return MathematicalCollector.collect(evaluator, root)
+        return PowerCollector.collect(evaluator, root)
     }
 
     private fun checkArguments(cssQuery: String, offset: Int = 1, limit: Int) {

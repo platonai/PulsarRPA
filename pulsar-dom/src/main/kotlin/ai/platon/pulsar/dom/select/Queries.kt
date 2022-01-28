@@ -169,13 +169,13 @@ fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elem
         return Elements()
     }
 
-    return MathematicalSelector.select(cssQuery, this, offset, limit)
+    return PowerSelector.select(cssQuery, this, offset, limit)
 }
 
 fun <O> Node.select(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
                     transformer: (Element) -> O): List<O> {
     return if (this is Element) {
-        MathematicalSelector.select(cssQuery, this, offset, limit, transformer)
+        PowerSelector.select(cssQuery, this, offset, limit, transformer)
     } else listOf()
 }
 
@@ -210,7 +210,7 @@ fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE):
 }
 
 fun Node.selectFirstOrNull(cssQuery: String): Element? {
-    return (this as? Element)?.let { MathematicalSelector.selectFirst(cssQuery, it) }
+    return (this as? Element)?.let { PowerSelector.selectFirst(cssQuery, it) }
 }
 
 fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O? {

@@ -5,7 +5,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.*
 
-object MathematicalCollector {
+object PowerCollector {
 
     /**
      * Build a list of elements, by visiting root and every descendant of root, and testing it against the evaluator.

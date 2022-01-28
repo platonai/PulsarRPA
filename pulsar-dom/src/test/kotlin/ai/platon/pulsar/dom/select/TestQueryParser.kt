@@ -16,7 +16,7 @@ class TestQueryParser {
     fun testOrGetsCorrectPrecedence() {
         // tests that a selector "a b, c d, e f" evals to (a AND b) OR (c AND d) OR (e AND f)"
         // top level or, three child ands
-        val eval = MathematicalQueryParser.parse("a b, c d, e f")
+        val eval = PowerQueryParser.parse("a b, c d, e f")
         assertTrue(eval is CombiningEvaluator.Or)
         val or = eval as CombiningEvaluator.Or
         assertEquals(3, or.evaluators.size.toLong())
@@ -31,7 +31,7 @@ class TestQueryParser {
 
     @Test
     fun testParsesMultiCorrectly() {
-        val eval = MathematicalQueryParser.parse(".foo > ol, ol > li + li")
+        val eval = PowerQueryParser.parse(".foo > ol, ol > li + li")
         assertTrue(eval is CombiningEvaluator.Or)
         val or = eval as CombiningEvaluator.Or
         assertEquals(2, or.evaluators.size.toLong())
@@ -45,13 +45,13 @@ class TestQueryParser {
         assertEquals(2, andLeft.evaluators.size.toLong())
     }
 
-    @Test(expected = MathematicalSelectorParseException::class)
+    @Test(expected = PowerSelectorParseException::class)
     fun exceptionOnUncloseAttribute() {
-        val parse = MathematicalQueryParser.parse("section > a[href=\"]")
+        val parse = PowerQueryParser.parse("section > a[href=\"]")
     }
 
-    @Test(expected = MathematicalSelectorParseException::class)
+    @Test(expected = PowerSelectorParseException::class)
     fun testParsesSingleQuoteInContains() {
-        val parse = MathematicalQueryParser.parse("p:contains(One \" One)")
+        val parse = PowerQueryParser.parse("p:contains(One \" One)")
     }
 }

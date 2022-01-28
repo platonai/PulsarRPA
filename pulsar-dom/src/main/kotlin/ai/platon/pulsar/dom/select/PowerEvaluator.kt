@@ -12,7 +12,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Evaluator
 import java.math.BigDecimal
 
-internal abstract class MathematicalEvaluator : Evaluator() {
+internal abstract class PowerEvaluator : Evaluator() {
 
     class ByBox(
             private val ops: Array<String>,
