@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.simplify
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
@@ -185,17 +185,21 @@ object PowerSelector {
         try {
             return PowerQueryParser.parse(cssQuery)
         } catch (e: PowerSelectorParseException) {
-            var message = e.message
+            var message = e.simplify()
             if (!message.isNullOrBlank()) {
                 val host = URL(baseUri).host
                 val key = "$host $cssQuery"
                 message = "$key\n>>>$message<<<"
                 val count = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
                 if (count == 1) {
-                    logger.warn("Failed to parse css query for document | $cssQuery | $baseUri", e)
-                } else if (count % 10 == 0) {
-                    logger.warn("Caught $count parse exceptions: ", e.message)
+                    logger.warn("Failed to parse css query | $cssQuery | $baseUri | ${e.simplify()}")
+                } else if (count < 100 && count % 10 == 0) {
+                    logger.warn("Caught $count parse exceptions | $cssQuery")
+                } else if (count % 50 == 0) {
+                    logger.warn("Caught $count parse exceptions | $cssQuery")
                 }
+            } else {
+                logger.warn("Unexpected exception", e)
             }
         }
 
