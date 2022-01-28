@@ -37,6 +37,7 @@ object AppContext {
 
     // windows subsystem for linux
     val OS_IS_WSL by lazy { checkIsWSL() }
+    val OS_IS_VIRT by lazy { checkVirtualEnv() }
 
     // The identity of this running instance
     val APP_VERSION by lazy { sniffVersion() }
@@ -77,6 +78,10 @@ object AppContext {
     }
 
     private fun checkIsWSL(): Boolean {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return false
+        }
+
         try {
             val path = Paths.get("/proc/version")
             if (Files.isReadable(path)) {
@@ -87,6 +92,23 @@ object AppContext {
                     return true
                 }
             }
+        } catch (t: Throwable) {
+            logger.warn("Unexpected exception", t)
+        }
+
+        return false
+    }
+
+    private fun checkVirtualEnv(): Boolean {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            logger.info("Not supported to check if a Windows OS running on a virtual machine")
+            return false
+        }
+
+//        var output = Runtimes.exec("hostnamectl")
+        try {
+            val output = Runtimes.exec("systemd-detect-virt")
+            return output.map { it.trim() }.filter { it != "none" }.any { it.isNotBlank() }
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
         }
