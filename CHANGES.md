@@ -1,3 +1,16 @@
+## 1.7.3
+
+Plan:
+
+    1. bug fix
+
+## 1.7.2
+
+Plan:
+
+    1. bug fix
+    2. support WSL and virtualbox + ubuntu
+
 ## dev-1.7.1
 
 Plan:
