@@ -1,13 +1,17 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
+import ai.platon.pulsar.common.urls.Urls
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
+import java.net.URL
+import java.time.Duration
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
-class PowerSelectorParseException(msg: String, vararg params: Any) : IllegalStateException(String.format(msg, *params))
+class PowerSelectorParseException(msg: String, vararg params: Any) : IllegalArgumentException(String.format(msg, *params))
 
 /**
  * CSS element selector, that finds elements matching a query.
@@ -80,7 +84,8 @@ class PowerSelectorParseException(msg: String, vararg params: Any) : IllegalStat
 object PowerSelector {
 
     private val logger = LoggerFactory.getLogger(PowerSelector::class.java)
-    private val cache = ConcurrentHashMap<String, Evaluator>()
+    private val cache = ConcurrentExpiringLRUCache<String, Evaluator?>(Duration.ofMinutes(10))
+    private val parseExceptions = ConcurrentExpiringLRUCache<String, AtomicInteger>(Duration.ofMinutes(10))
 
     /**
      * Find elements matching selector.
@@ -95,10 +100,7 @@ object PowerSelector {
             return Elements()
         }
 
-        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-        val q = cssQuery.trim().removeSurrounding("\"").takeIf { it.isNotBlank() }?:return Elements()
-
-        val evaluator = cache.computeIfAbsent(q) { PowerQueryParser.parse(q) }
+        val evaluator = parseOrNullCached(cssQuery0, root.baseUri()) ?: return Elements()
         return select(evaluator, root)
     }
 
@@ -117,17 +119,17 @@ object PowerSelector {
     /**
      * Find elements matching selector.
      *
-     * @param query CSS selector
+     * @param cssQuery CSS query
      * @param roots root elements to descend into
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, roots: Iterable<Element>): Elements {
         val cssQuery0 = cssQuery.trim()
-        if (cssQuery0.isBlank()) {
+        if (cssQuery0.isBlank() || !roots.iterator().hasNext()) {
             return Elements()
         }
 
-        val evaluator = cache.computeIfAbsent(cssQuery0) { PowerQueryParser.parse(cssQuery0) }
+        val evaluator = parseOrNullCached(cssQuery0, roots.first().baseUri())?: return Elements()
         val elements = ArrayList<Element>()
         val seenElements = IdentityHashMap<Element, Boolean>()
         // dedupe elements by identity, not equality
@@ -157,7 +159,7 @@ object PowerSelector {
             return null
         }
 
-        val evaluator = cache.computeIfAbsent(cssQuery0) { PowerQueryParser.parse(cssQuery0) }
+        val evaluator = parseOrNullCached(cssQuery, root.baseUri()) ?: return null
         return PowerCollector.findFirst(evaluator, root)
     }
 
@@ -170,6 +172,34 @@ object PowerSelector {
      */
     private fun select(evaluator: Evaluator, root: Element): Elements {
         return PowerCollector.collect(evaluator, root)
+    }
+
+    private fun parseOrNullCached(cssQuery: String, baseUri: String): Evaluator? {
+        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
+        val cssQuery0 = cssQuery.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
+        val key = "$baseUri $cssQuery0"
+        return cache.computeIfAbsent(key) { parseOrNull(cssQuery0, baseUri) }
+    }
+
+    private fun parseOrNull(cssQuery: String, baseUri: String): Evaluator? {
+        try {
+            return PowerQueryParser.parse(cssQuery)
+        } catch (e: PowerSelectorParseException) {
+            var message = e.message
+            if (!message.isNullOrBlank()) {
+                val host = URL(baseUri).host
+                val key = "$host $cssQuery"
+                message = "$key\n>>>$message<<<"
+                val count = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
+                if (count == 1) {
+                    logger.warn("Failed to parse css query for document | $cssQuery | $baseUri", e)
+                } else if (count % 10 == 0) {
+                    logger.warn("Caught $count parse exceptions: ", e.message)
+                }
+            }
+        }
+
+        return null
     }
 
     private fun checkArguments(cssQuery: String, offset: Int = 1, limit: Int) {
