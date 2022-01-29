@@ -273,7 +273,7 @@ abstract class AbstractPulsarSession(
      * @return The web pages
      */
     override fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
-        val outlinkSelector = appendSelectorIfMissing(options.outLinkSelector, "a")
+        val outlinkSelector = appendSelectorIfMissing(options.correctedOutLinkSelector, "a")
 
         val normUrl = normalize(portalUrl, options)
 

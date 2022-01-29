@@ -29,7 +29,7 @@ open class VerboseCrawler(
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
+        doc.select(options.correctedOutLinkSelector) { it.attr("abs:href") }.asSequence()
             .filter { Urls.isValidUrl(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()
@@ -60,7 +60,7 @@ open class VerboseCrawler(
         val path = session.export(document)
         logger.info("Portal page is exported to: file://$path")
 
-        val links = document.select(options.outLinkSelector) { it.attr("abs:href") }
+        val links = document.select(options.correctedOutLinkSelector) { it.attr("abs:href") }
             .mapTo(mutableSetOf()) { session.normalize(it, options) }
             .take(options.topLinks).map { it.spec }
         logger.info("Total {} items to load", links.size)

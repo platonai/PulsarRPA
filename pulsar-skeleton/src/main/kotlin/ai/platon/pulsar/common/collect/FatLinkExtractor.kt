@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
@@ -123,7 +122,7 @@ class FatLinkExtractor(
         val normalizedFatLink = normalizer.invoke(fatLinkSpec) ?: fatLinkSpec
         val options = seed.options
         val args = if (options.label.isNotBlank()) "-label ${options.label}" else ""
-        val selector = options.outLinkSelector
+        val selector = options.correctedOutLinkSelector
         val now = Instant.now()
 
         val vividLinks = if (document != null) {
@@ -171,7 +170,7 @@ class FatLinkExtractor(
         val now = Instant.now()
         val fatLinkSpec = seed.spec
         val options = seed.options
-        val selector = options.outLinkSelector
+        val selector = options.correctedOutLinkSelector
         val urlRegex = options.outLinkPattern.toRegex()
 
         return HyperlinkExtractor(page, document, selector, normalizer).extract()

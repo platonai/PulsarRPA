@@ -357,6 +357,9 @@ open class LoadOptions(
      * */
     val ignoreQuery get() = shortenKey
 
+    // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
+    val correctedOutLinkSelector get() = outLinkSelector.trim('"')
+
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"

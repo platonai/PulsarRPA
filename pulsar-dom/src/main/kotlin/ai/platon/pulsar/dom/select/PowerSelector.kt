@@ -193,7 +193,7 @@ object PowerSelector {
                 val count = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
                 if (count == 1) {
                     logger.warn("Failed to parse css query | $cssQuery | $baseUri | ${e.simplify()}")
-                } else if (count < 100 && count % 10 == 0) {
+                } else if (count < 50 && count % 10 == 0) {
                     logger.warn("Caught $count parse exceptions | $cssQuery")
                 } else if (count % 50 == 0) {
                     logger.warn("Caught $count parse exceptions | $cssQuery")

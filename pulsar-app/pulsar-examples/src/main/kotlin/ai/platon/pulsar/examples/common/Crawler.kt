@@ -56,8 +56,8 @@ open class Crawler(
         doc.absoluteLinks()
         doc.stripScripts()
 
-        if (options.outLinkSelector.isNotBlank()) {
-            doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
+        if (options.correctedOutLinkSelector.isNotBlank()) {
+            doc.select(options.correctedOutLinkSelector) { it.attr("abs:href") }.asSequence()
                     .filter { Urls.isValidUrl(it) }
                     .mapTo(HashSet()) { it.substringBefore(".com") }
                     .asSequence()
@@ -84,7 +84,7 @@ open class Crawler(
         val path = i.export(document)
         log.info("Portal page is exported to: file://$path")
 
-        val links = document.select(options.outLinkSelector) { it.attr("abs:href") }
+        val links = document.select(options.correctedOutLinkSelector) { it.attr("abs:href") }
                 .mapNotNullTo(mutableSetOf()) { i.normalizeOrNull(it)?.spec }
                 .take(options.topLinks)
         log.info("Total ${links.size} items to load")
