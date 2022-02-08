@@ -66,12 +66,11 @@ object DateTimes {
     const val SIMPLE_DATE_TIME_REGEX = "$DATE_REGEX\\s+\\d{2}:.+"
 
     const val PULSAR_ZONE_ID = "pulsar.zone.id"
-    const val PULSAR_ZONE_OFFSET = "pulsar.zone.offset"
 
     /**
      * The default zone id
      * */
-    var zoneId = ZoneId.of(System.getProperty(PULSAR_ZONE_ID, "Asia/Shanghai"))
+    var zoneId = ZoneId.of(System.getProperty(PULSAR_ZONE_ID, ZoneId.systemDefault().id))
 
     /**
      * The default zone offset, it must be consistent with zoneId
@@ -81,7 +80,7 @@ object DateTimes {
      * So you can only find the ZoneOffset for a ZoneId on a particular Instant.
      * See also [Tz_database](https://en.wikipedia.org/wiki/Tz_database)
      * */
-    var zoneOffset = ZoneOffset.of(System.getProperty(PULSAR_ZONE_OFFSET, "+08:00"))
+    val zoneOffset get() = zoneId.rules.getOffset(Instant.now())
 
     /**
      * The time to start the program
@@ -142,11 +141,12 @@ object DateTimes {
 
     @JvmOverloads
     fun readableDuration(duration: Duration, truncatedToUnit: ChronoUnit = ChronoUnit.SECONDS): String {
-        return StringUtils.removeStart(duration.truncatedTo(truncatedToUnit).toString(), "PT").toLowerCase()
+        return StringUtils.removeStart(duration.truncatedTo(truncatedToUnit).toString(), "PT")
+            .lowercase(Locale.getDefault())
     }
 
     fun readableDuration(duration: String): String {
-        return StringUtils.removeStart(duration, "PT").toLowerCase()
+        return StringUtils.removeStart(duration, "PT").lowercase(Locale.getDefault())
     }
 
     fun isoInstantFormat(time: Long): String {
@@ -332,7 +332,7 @@ object DateTimes {
     }
 
     @JvmStatic
-    fun constructTimeHistory(timeHistory: String?, fetchTime: Instant, maxRecords: Int): String? {
+    fun constructTimeHistory(timeHistory: String?, fetchTime: Instant, maxRecords: Int): String {
         var history = timeHistory
         val dateStr = isoInstantFormat(fetchTime)
         if (history == null) {

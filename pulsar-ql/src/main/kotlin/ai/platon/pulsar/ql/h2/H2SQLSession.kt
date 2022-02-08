@@ -15,6 +15,7 @@ import org.h2.engine.Constants
 import org.h2.engine.SessionInterface
 import org.slf4j.LoggerFactory
 import java.sql.Connection
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
@@ -122,7 +123,7 @@ class H2SQLSession(
         val name = aggregation.name
 
         var aggregateName = if (namespace.isEmpty()) name else namespace + "_" + name
-        aggregateName = aggregateName.replace("_", "").toUpperCase()
+        aggregateName = aggregateName.replace("_", "").uppercase(Locale.getDefault())
 
         var sql = "DROP AGGREGATE IF EXISTS $aggregateName"
         var command = session.prepareCommand(sql, Int.MAX_VALUE)
@@ -154,7 +155,7 @@ class H2SQLSession(
         var alias = if (namespace.isEmpty()) method else namespace + "_" + method
 
         // All underscores are ignored
-        alias = alias.replace("_", "").toUpperCase()
+        alias = alias.replace("_", "").uppercase(Locale.getDefault())
 
         var sql = "DROP ALIAS IF EXISTS $alias"
         // Notice : can not use session.prepare(sql) here, which causes a call cycle

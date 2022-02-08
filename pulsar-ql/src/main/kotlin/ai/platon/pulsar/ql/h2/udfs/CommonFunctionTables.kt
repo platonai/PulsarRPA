@@ -14,6 +14,7 @@ import org.h2.value.ValueArray
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Types
+import java.util.*
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
@@ -172,7 +173,11 @@ object CommonFunctionTables {
                     val parameters = getParameters(method).joinToString { it }
                     arrayOf(
                             if (hasShortcut) "$namespace(Ignorable)" else namespace,
-                            getAlias(udfClass, method.name, namespace) + "(" + parameters.toUpperCase() + ")",
+                        getAlias(
+                            udfClass,
+                            method.name,
+                            namespace
+                        ) + "(" + parameters.uppercase(Locale.getDefault()) + ")",
                             className + "." + method.name + "(" + parameters + ")",
                             getDescription(method)
                     )
@@ -187,7 +192,7 @@ object CommonFunctionTables {
     private fun getAlias(udfClass: KClass<out Any>, method: String, namespace: String = ""): String {
         var alias = method.split("(?=\\p{Upper})".toRegex()).joinToString("_") { it }
         alias = if (namespace.isEmpty()) alias else namespace + "_" + alias
-        return alias.toUpperCase()
+        return alias.uppercase(Locale.getDefault())
     }
 
     private fun getParameters(udf: KCallable<*>): List<String> {

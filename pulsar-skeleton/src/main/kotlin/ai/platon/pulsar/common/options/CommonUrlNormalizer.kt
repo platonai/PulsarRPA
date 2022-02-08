@@ -42,7 +42,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
             registerEventHandlers(url, finalOptions)
         }
 
-        // TODO: the normalization order might not be correct
+        // TODO: the normalization order might not be the best
         var normalizedUrl: String
         val eventHandler = finalOptions.conf.getBean(LoadEventHandler::class)
         if (eventHandler?.onNormalize != null) {

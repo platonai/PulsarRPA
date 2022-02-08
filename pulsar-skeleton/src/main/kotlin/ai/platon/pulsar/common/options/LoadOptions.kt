@@ -51,7 +51,7 @@ object LoadOptionDefaults {
  * Created by vincent on 19-4-24.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  *
- * NOTICE: every option with name [optionName] has to take a Parameter name [-optionName]
+ * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
  */
 open class LoadOptions(
     argv: Array<String>,
@@ -214,15 +214,15 @@ open class LoadOptions(
     var itemScrollCount = scrollCount
 
     @Parameter(names = ["-isi", "-itemScrollInterval", "--item-scroll-interval"], converter = DurationConverter::class,
-            description = "The same as scrollInterval, but only works for item pages in harvest tasks")
+            description = "The same as scrollInterval, but only works for item pages in some batch tasks")
     var itemScrollInterval = scrollInterval
 
     @Parameter(names = ["-ist", "-itemScriptTimeout", "--item-script-timeout"], converter = DurationConverter::class,
-            description = "The same as scriptTimeout, but only works for item pages in harvest tasks")
+            description = "The same as scriptTimeout, but only works for item pages in some batch tasks")
     var itemScriptTimeout = scriptTimeout
 
     @Parameter(names = ["-iplt", "-itemPageLoadTimeout", "--item-page-load-timeout"], converter = DurationConverter::class,
-            description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
+            description = "The same as pageLoadTimeout, but only works for item pages in some batch tasks")
     var itemPageLoadTimeout = pageLoadTimeout
 
     @ApiPublic

@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.ql.h2.H2MemoryDb
+import java.util.*
 
 class SqlManual {
     private val conn = H2MemoryDb().getRandomConnection()
@@ -41,7 +42,7 @@ class SqlManual {
 
     private fun execute(sql: String) {
         val regex = "^(SELECT|CALL).+".toRegex()
-        if (sql.toUpperCase().filter { it != '\n' }.trimIndent().matches(regex)) {
+        if (sql.uppercase(Locale.getDefault()).filter { it != '\n' }.trimIndent().matches(regex)) {
             val rs = statement.executeQuery(sql)
             println(ResultSetFormatter(rs, withHeader = true))
         } else {

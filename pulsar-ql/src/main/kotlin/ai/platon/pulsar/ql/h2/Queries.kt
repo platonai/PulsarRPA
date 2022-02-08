@@ -228,7 +228,7 @@ object Queries {
             kParameter.name ?: "C${1 + i}"
         }
         propertyNames.forEach {
-            rs.addColumn(it.toUpperCase())
+            rs.addColumn(it.uppercase(Locale.getDefault()))
         }
 
         val memberProperties = first::class.memberProperties.filter { it.name in propertyNames }

@@ -122,7 +122,7 @@ class TestDateTimes {
         assertEquals("2016-06-16T12:21", t.toString())
         t = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16 12") { LocalDateTime.from(it) }
         assertEquals("2016-06-16T12:00", t.toString())
-        var ld = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16") { LocalDate.from(it) }
+        val ld = DateTimeFormatter.ofPattern(pattern).parse("2016-06-16") { LocalDate.from(it) }
         assertEquals("2016-06-16", ld.toString())
     }
 
@@ -144,6 +144,12 @@ class TestDateTimes {
 
     @Test
     fun testTimeZone() {
+        val defaultZoneId = ZoneId.systemDefault()
+        if (defaultZoneId.id != "Asia/Shanghai") {
+            println("Only test time zone when the system time zone is Asia/Shanghai")
+            return
+        }
+
         val now = LocalDateTime.now()
 
         val tz = TimeZone.getTimeZone("Asia/Shanghai")
@@ -154,7 +160,7 @@ class TestDateTimes {
         println(ZoneId.systemDefault().id)
 
         val zoneId = DateTimes.zoneId
-        assertEquals("Asia/Shanghai", DateTimes.zoneId.id)
+        assertEquals("Asia/Shanghai", tz.id)
         assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffset)
         println(DateTimes.zoneOffset)
     }
@@ -223,7 +229,7 @@ class TestDateTimes {
         var dateString: String? = "Sat May 27 12:21:42 CST 2017"
 
         val date = Date()
-        dateString = DateFormatUtils.format(date, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.pattern)
+        dateString = DateFormatUtils.format(date, DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.pattern)
         println(dateString)
         dateString = DateTimeFormatter.ISO_INSTANT.format(date.toInstant())
         println(dateString)
@@ -246,7 +252,7 @@ class TestDateTimes {
             val date = DateUtils.parseDate(dateString, *DateTimeDetector.COMMON_DATE_TIME_FORMATS)
             // Date date = DateUtils.parseDate(dateString);
             dateString = DateFormatUtils.format(date,
-                DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.pattern,
+                DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.pattern,
                 TimeZone.getTimeZone("PRC"))
             println(dateString)
             dateString = DateTimeFormatter.ISO_INSTANT.format(date.toInstant())
@@ -276,9 +282,9 @@ class TestDateTimes {
     fun testSystemClockPerformance() {
         val round = 10000000
         val impreciseNow = System.currentTimeMillis()
-        var cost: Long = 0
-        var cost2: Long = 0
-        var cost3: Long = 0
+        var cost: Long
+        var cost2: Long
+        var cost3: Long
         var useless: Long
         var uselessTime: Instant?
         var start: Instant

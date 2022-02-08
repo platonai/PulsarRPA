@@ -8,6 +8,7 @@ import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import java.sql.ResultSet
+import java.util.*
 
 open class VerboseSQLExecutor(
     val context: SQLContext = SQLContexts.activate(),
@@ -20,7 +21,7 @@ open class VerboseSQLExecutor(
 
         try {
             val regex = "^(SELECT|CALL).+".toRegex()
-            if (sql.toUpperCase().filter { it != '\n' }.trimIndent().matches(regex)) {
+            if (sql.uppercase(Locale.getDefault()).filter { it != '\n' }.trimIndent().matches(regex)) {
                 query(sql, printResult, withHeader, formatAsList)
             } else {
                 val r = context.execute(sql)

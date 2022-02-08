@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Instant
+import java.util.*
 import kotlin.test.assertEquals
 
 /**
@@ -52,7 +53,7 @@ abstract class TestBase {
             connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
                 .use { stat ->
                     val regex = "^(SELECT|CALL).+".toRegex()
-                    if (sql.toUpperCase().filter { it != '\n' }.trimIndent().matches(regex)) {
+                    if (sql.uppercase(Locale.getDefault()).filter { it != '\n' }.trimIndent().matches(regex)) {
                         val rs = stat.executeQuery(sql)
                         if (printResult) {
                             println(ResultSetFormatter(rs, withHeader = true))

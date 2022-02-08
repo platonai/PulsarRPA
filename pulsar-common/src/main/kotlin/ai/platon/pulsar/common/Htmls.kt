@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import java.nio.charset.Charset
+import java.util.*
 import java.util.regex.Pattern
 
 const val DEFAULT_SUPPORTED_CHARSETS = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
@@ -52,7 +53,7 @@ enum class HtmlIntegrity {
             return if (s == null || s.isEmpty()) {
                 OK
             } else try {
-                valueOf(s.toUpperCase())
+                valueOf(s.uppercase(Locale.getDefault()))
             } catch (e: Throwable) {
                 OK
             }

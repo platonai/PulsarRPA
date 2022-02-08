@@ -26,6 +26,7 @@ import org.h2.value.ValueArray
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
+import java.util.*
 import kotlin.math.max
 
 @Suppress("unused")
@@ -163,7 +164,6 @@ object DomFunctionTables {
     /**
      * Load portalUrl page(s) and follow all links
      *
-     * @param portalUrl The portalUrl page(s) to fetch,
      * a portalUrl can be
      * 1) a configured urls, or
      * 2) a String[]
@@ -382,10 +382,10 @@ object DomFunctionTables {
         for (name in FeatureRegistry.featureNames) {
             if (NodeFeature.isFloating(name)) {
                 val type = DataType.convertTypeToSQLType(Value.DOUBLE)
-                rs.addColumn(name.toUpperCase(), type, 0, 0)
+                rs.addColumn(name.uppercase(Locale.getDefault()), type, 0, 0)
             } else {
                 val type = DataType.convertTypeToSQLType(Value.INT)
-                rs.addColumn(name.toUpperCase(), type, 0, 0)
+                rs.addColumn(name.uppercase(Locale.getDefault()), type, 0, 0)
             }
         }
 

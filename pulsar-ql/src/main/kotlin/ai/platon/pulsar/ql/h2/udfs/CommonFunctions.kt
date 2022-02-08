@@ -40,24 +40,23 @@ object CommonFunctions {
      *
      * TODO: do we need FetchMode any more?
      *
-     * @param h2session H2 session
      * @param mode The property value to set
      * @param ttl The property value time to live in session
      * @return The old value or null on failure
      */
     @UDFunction
     @JvmStatic
-    fun setFetchMode(@H2Context conn: Connection, mode_: String, ttl: Int): String? {
-        var mode = mode_
+    fun setFetchMode(@H2Context conn: Connection, mode: String, ttl: Int): String? {
+        var mode0 = mode
         try {
-            mode = FetchMode.valueOf(mode.toUpperCase()).toString()
+            mode0 = FetchMode.valueOf(mode0.uppercase(Locale.getDefault())).toString()
         } catch (e: Throwable) {
-            log.warn("Unknown FetchMode $mode")
+            log.warn("Unknown FetchMode $mode0")
             return null
         }
 
-        log.debug("Set fetch mode to $mode")
-        return getAndSetConf(conn, FETCH_MODE, mode, ttl)
+        log.debug("Set fetch mode to $mode0")
+        return getAndSetConf(conn, FETCH_MODE, mode0, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +

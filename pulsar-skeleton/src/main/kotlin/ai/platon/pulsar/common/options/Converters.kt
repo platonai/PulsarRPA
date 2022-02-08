@@ -61,7 +61,7 @@ enum class ItemExtractor {
             }
 
             try {
-                return valueOf(s.toUpperCase())
+                return valueOf(s.uppercase(Locale.getDefault()))
             } catch (e: Throwable) {
                 return DEFAULT
             }
@@ -82,10 +82,10 @@ class ItemExtractorConverter : IStringConverter<ItemExtractor> {
  */
 class WeightedKeywordsConverter : IStringConverter<Map<String, Double>> {
     override fun convert(value: String): Map<String, Double> {
-        var value = value
+        var value0 = value
         val keywords = HashMap<String, Double>()
-        value = StringUtils.remove(value, ' ')
-        val parts = value.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        value0 = StringUtils.remove(value0, ' ')
+        val parts = value0.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         for (part in parts) {
             var k = part
             var v = "1"
@@ -105,14 +105,14 @@ class WeightedKeywordsConverter : IStringConverter<Map<String, Double>> {
 
 class IntRangeConverter : IStringConverter<IntRange> {
     override fun convert(value: String): IntRange {
-        val (a, b) = value.toLowerCase().split("..".toRegex())
+        val (a, b) = value.lowercase(Locale.getDefault()).split("..".toRegex())
         return IntRange(a.toInt(), b.toInt())
     }
 }
 
 class DimensionConverter : IStringConverter<Dimension> {
     override fun convert(value: String): Dimension {
-        val (a, b) = value.toLowerCase().split("x".toRegex())
+        val (a, b) = value.lowercase(Locale.getDefault()).split("x".toRegex())
         return Dimension(a.toInt(), b.toInt())
     }
 }
@@ -123,7 +123,7 @@ enum class Condition {
     companion object {
         fun valueOfOrDefault(s: String?): Condition {
             return try {
-                valueOf(s?.toUpperCase() ?: "GOOD")
+                valueOf(s?.uppercase(Locale.getDefault()) ?: "GOOD")
             } catch (e: Throwable) {
                 GOOD
             }

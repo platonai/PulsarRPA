@@ -23,6 +23,7 @@ import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
+import java.util.*
 
 @UDFGroup(namespace = "NEWS")
 object NewsFunctionTables {
@@ -141,16 +142,16 @@ object NewsFunctionTables {
     private fun createResultSet(): SimpleResultSet {
         val rs = ResultSets.newSimpleResultSet()
 
-        rs.addColumn(DOC_FIELD_CONTENT_TITLE.toUpperCase())
-        rs.addColumn(DOC_FIELD_PAGE_TITLE.toUpperCase())
+        rs.addColumn(DOC_FIELD_CONTENT_TITLE.uppercase(Locale.getDefault()))
+        rs.addColumn(DOC_FIELD_PAGE_TITLE.uppercase(Locale.getDefault()))
 
         val timestampType = DataType.convertTypeToSQLType(Value.TIMESTAMP)
 
-        rs.addColumn(DOC_FIELD_PUBLISH_TIME.toUpperCase(), timestampType, 0, 0)
-        rs.addColumn(DOC_FIELD_MODIFIED_TIME.toUpperCase(), timestampType, 0, 0)
+        rs.addColumn(DOC_FIELD_PUBLISH_TIME.uppercase(Locale.getDefault()), timestampType, 0, 0)
+        rs.addColumn(DOC_FIELD_MODIFIED_TIME.uppercase(Locale.getDefault()), timestampType, 0, 0)
 
-        rs.addColumn(DOC_FIELD_TEXT_CONTENT.toUpperCase())
-        rs.addColumn(DOC_FIELD_PAGE_CATEGORY.toUpperCase())
+        rs.addColumn(DOC_FIELD_TEXT_CONTENT.uppercase(Locale.getDefault()))
+        rs.addColumn(DOC_FIELD_PAGE_CATEGORY.uppercase(Locale.getDefault()))
 
         val colType = ValueDom.type
         val sqlType = DataType.convertTypeToSQLType(colType)
