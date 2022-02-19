@@ -27,11 +27,6 @@ class ActiveUrls {
     documentURI = document.documentURI
 }
 
-class ActiveDomMessage {
-    multiStatus = new MultiStatus();
-    urls = new ActiveUrls()
-}
-
 let __utils__ = function () {};
 
 /**
@@ -41,14 +36,6 @@ let __utils__ = function () {};
  * */
 __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     return __utils__.checkPulsarStatus(maxRound, scroll);
-};
-
-__utils__.isBrowserError = function () {
-    if (document.documentURI.startsWith("chrome-error")) {
-        return true
-    }
-
-    return false
 };
 
 __utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
@@ -398,22 +385,6 @@ __utils__.increaseIntAttribute = function(node, attrName, add) {
 };
 
 /**
- * Get attribute as an integer
- * */
-__utils__.getReadableNodeName = function(node) {
-    let name = node.tagName
-        + (node.id ? ("#" + node.id) : "")
-        + (node.className ? ("#" + node.className) : "");
-
-    let seq = this.getIntAttribute(node, "_seq", -1);
-    if (seq >= 0) {
-        name += "-" + seq;
-    }
-
-    return name;
-};
-
-/**
  * Clean node's textContent
  * @param textContent {String} the string to clean
  * @return {String} The clean string
@@ -427,31 +398,6 @@ __utils__.getCleanTextContent = function(textContent) {
     textContent = textContent.replace(/\s+/g, " ");
 
     return textContent.trim();
-};
-
-/**
- * Get clean, merged textContent from node list
- * @param nodeOrList {NodeList|Array|Node} the node from which we extract the content
- * @return {String} The clean string, "" if no text content available.
- * */
-__utils__.getMergedTextContent = function(nodeOrList) {
-    if (!nodeOrList) {
-        return "";
-    }
-
-    if (nodeOrList instanceof  Node) {
-        return this.getTextContent(nodeOrList);
-    }
-
-    let content = "";
-    for (let i = 0; i < nodeOrList.length; ++i) {
-        if (i > 0) {
-            content += " ";
-        }
-        content += this.getTextContent(nodeOrList[i]);
-    }
-
-    return content;
 };
 
 /**
@@ -486,41 +432,6 @@ __utils__.getTextWidth = function(text, font) {
 };
 
 /**
- * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
- *
- * @param {String} text The text to be rendered.
- * @param {HTMLElement} ele The container element.
- * */
-__utils__.getElementTextWidth = function(text, ele) {
-    let style = window.getComputedStyle(ele);
-    let font = style.getPropertyValue('font-weight') + ' '
-        + style.getPropertyValue('font-size') + ' '
-        + style.getPropertyValue('font-family');
-
-    return this.getTextWidth(text, font);
-};
-
-/**
- * Format rectangle
- * @param top {Number}
- * @param left {Number}
- * @param width {Number}
- * @param height {Number}
- * @return {String|Boolean}
- * */
-__utils__.formatRect = function(top, left, width, height) {
-    if (width === 0 && height === 0) {
-        return false;
-    }
-
-    return ''
-        + Math.round(top * 10) / 10 + ' '
-        + Math.round(left * 10) / 10 + ' '
-        + Math.round(width * 10) / 10 + ' '
-        + Math.round(height * 10) / 10;
-};
-
-/**
  * Format a DOMRect object
  * @param rect {DOMRect}
  * @return {String|Boolean}
@@ -551,107 +462,6 @@ __utils__.getClientRect = function(node) {
     } else {
         return null
     }
-};
-
-/**
- * The computed style.
- *
- * @param node {Node|Element|Text}
- * @param propertyNames {Array}
- * @return {Object|Boolean}
- * */
-__utils__.getComputedStyle = function(node, propertyNames) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-        let styles = {};
-        let computedStyle = window.getComputedStyle(node, null);
-        propertyNames.forEach(propertyName =>
-            styles[propertyName] = __utils__.getPropertyValue(computedStyle, propertyName)
-        );
-        return styles
-    } else {
-        return null
-    }
-};
-
-/**
- * Get a simplified property value of computed style.
- *
- * @param style {CSSStyleDeclaration}
- * @param propertyName {String}
- * @return {String}
- * */
-__utils__.getPropertyValue = function(style, propertyName) {
-    let value = style.getPropertyValue(propertyName);
-
-    if (!value || value === '') {
-        return ''
-    }
-
-    if (propertyName === 'font-size') {
-        value = value.substring(0, value.lastIndexOf('px'))
-    } else if (propertyName === 'color' || propertyName === 'background-color') {
-        value = __utils__.shortenHex(__utils__.rgb2hex(value));
-        // skip prefix '#'
-        value = value.substring(1)
-    }
-
-    return value
-};
-
-/**
- * Color rgb(a) format to hex
- *
- * rgb(255, 255, 0) -> #
- *
- * @param rgb {String}
- * @return {String}
- * */
-__utils__.rgb2hex = function(rgb) {
-    let parts = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
-    return (parts && parts.length === 4) ? "#" +
-        ("0" + parseInt(parts[1],10).toString(16)).slice(-2) +
-        ("0" + parseInt(parts[2],10).toString(16)).slice(-2) +
-        ("0" + parseInt(parts[3],10).toString(16)).slice(-2) : '';
-};
-
-/**
- * CSS Hex to Shorthand Hex conversion
- * @param hex {String}
- * @return {String}
- * */
-__utils__.shortenHex = function(hex) {
-    if ((hex.charAt(1) === hex.charAt(2))
-        && (hex.charAt(3) === hex.charAt(4))
-        && (hex.charAt(5) === hex.charAt(6))) {
-        hex = "#" + hex.charAt(1) + hex.charAt(3) + hex.charAt(5);
-    }
-
-    // the most simple case: all chars are the same
-    if (hex.length === 4) {
-        let c = hex.charAt(1);
-        if (hex.charAt(2) === c && hex.charAt(3) === c) {
-            return '#' + c
-        }
-    }
-
-    return hex
-};
-
-/**
- * Add to attribute
- *
- * @param node {Node|Element|Text}
- * @param attributeName {String}
- * @param key {String}
- * @param value {Object}
- * */
-__utils__.addTuple = function(node, attributeName, key, value) {
-    let attributeValue = node.getAttribute(attributeName) || "";
-    if (attributeValue.length > 0) {
-        attributeValue += " "
-    }
-    attributeValue += key + ":" + value.toString();
-    node.setAttribute(attributeName, attributeValue);
 };
 
 /**
@@ -708,20 +518,6 @@ __utils__.getTextNodeClientRect = function(node) {
 };
 
 /**
- * The full page metrics
- * */
-__utils__.getFullPageMetrics = function() {
-    let metrics = {
-        width: Math.max(window.innerWidth, document.body.scrollWidth, document.documentElement.scrollWidth) | 0,
-        height: Math.max(window.innerHeight, document.body.scrollHeight, document.documentElement.scrollHeight) | 0,
-        deviceScaleFactor: window.devicePixelRatio || 1,
-        mobile: typeof window.orientation !== 'undefined'
-    };
-
-    return JSON.stringify(metrics)
-};
-
-/**
  * Generate meta data
  *
  * MetaInformation version :
@@ -745,8 +541,6 @@ __utils__.generateMetadata = function() {
     ele.setAttribute("domain", document.domain);
     ele.setAttribute("version", DATA_VERSION);
     ele.setAttribute("view-port", config.viewPortWidth + "x" + config.viewPortHeight);
-    ele.setAttribute("code-structure", CODE_STRUCTURE_SCHEMA_STRING);
-    ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
     ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
     ele.setAttribute("timestamp", date.getTime().toString());
 
@@ -789,29 +583,12 @@ __utils__.compute = function() {
     });
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization
-    new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
+    // new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
 
     __utils__.generateMetadata();
-
-    __utils__.addProjectSpecifiedData();
 
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute(DATA_ERROR, '0');
 
     return JSON.stringify(document.pulsarData)
-};
-
-__utils__.addProjectSpecifiedData = function() {
-
-};
-
-/**
- * Return a + b
- *
- * @param a {Number}
- * @param b {Number}
- * @return {Number}
- * */
-__utils__.add = function(a, b) {
-    return a + b
 };

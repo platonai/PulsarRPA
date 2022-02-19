@@ -22,7 +22,7 @@ import kotlin.random.Random
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
 /**
- * The emulate settings
+ * The emulation settings
  * */
 data class EmulateSettings(
     var scrollCount: Int = 10,
@@ -112,8 +112,6 @@ open class BlockRules {
 }
 
 open class BrowserSettings(
-    parameters: Map<String, Any> = mapOf(),
-    var jsDirectory: String = "js",
     val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
@@ -121,6 +119,15 @@ open class BrowserSettings(
 
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
+
+        val preloadJavaScriptResources = """
+            __utils__.js
+            configs.js
+            node_ext.js
+            node_traversor.js
+        """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
+        val preloadJavaScripts = mutableMapOf<String, String>()
+        val jsParameters = mutableMapOf<String, Any>()
 
         fun withGoodNetwork(): Companion {
             return BrowserSettings
@@ -184,9 +191,17 @@ open class BrowserSettings(
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    val forceHeadless get() = GraphicsEnvironment.isHeadless()
+    // GraphicsEnvironment.isHeadless does not always work correctly
+    val forceHeadless: Boolean get() {
+        return when {
+            AppContext.OS_IS_LINUX_DESKTOP -> false
+            AppContext.OS_IS_WSL -> true
+            else -> GraphicsEnvironment.isHeadless()
+        }
+    }
     val displayMode get() = if (forceHeadless) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
+
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
     val isHeadless get() = displayMode == DisplayMode.HEADLESS
     val isGUI get() = displayMode == DisplayMode.GUI
@@ -203,16 +218,14 @@ open class BrowserSettings(
         get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
     var clientJsVersion = "0.2.3"
-    val scripts = mutableMapOf<String, String>()
 
     // Available user agents
     val userAgents = mutableListOf<String>()
 
-    private val jsParameters = mutableMapOf<String, Any>()
-    private var mainJs = ""
-    private var libJs = ""
-
-    constructor(immutableConfig: ImmutableConfig) : this(mapOf(), "js", immutableConfig)
+    /**
+     * The js to inject to the browser
+     * */
+    protected var preloadJs = ""
 
     init {
         mapOf(
@@ -220,20 +233,44 @@ open class BrowserSettings(
             "viewPortWidth" to viewPort.width,
             "viewPortHeight" to viewPort.height
         ).also { jsParameters.putAll(it) }
-
-        jsParameters.putAll(parameters)
-
-        generateUserAgents()
-
-        loadDefaultResource()
     }
 
-    fun formatViewPort(delimiter: String = ","): String {
+    open fun formatViewPort(delimiter: String = ","): String {
         return "${viewPort.width}$delimiter${viewPort.height}"
     }
 
+    open fun generatePreloadJs(reload: Boolean): String {
+        if (reload) {
+            preloadJavaScripts.clear()
+            preloadJs = ""
+        }
+
+        if (preloadJs.isEmpty()) {
+            val sb = StringBuilder()
+            val jsVariables = generatePreloadJsVariables()
+            sb.appendLine(jsVariables)
+            loadDefaultResource()
+            preloadJavaScripts.values.joinTo(sb, ";\n")
+            preloadJs = sb.toString()
+        }
+
+        return preloadJs
+    }
+
+    open fun randomUserAgent(): String {
+        if (userAgents.isEmpty()) {
+            generateUserAgents()
+        }
+
+        if (userAgents.isNotEmpty()) {
+            return userAgents[Random.nextInt(userAgents.size)]
+        }
+
+        return ""
+    }
+
     // also see https://github.com/arouel/uadetector
-    fun generateUserAgents() {
+    open fun generateUserAgents() {
         if (userAgents.isNotEmpty()) return
 
         ResourceLoader.readAllLines("ua/chrome-user-agents-linux.txt")
@@ -241,7 +278,7 @@ open class BrowserSettings(
             .toCollection(userAgents)
     }
 
-    fun buildChromeUserAgent(
+    open fun buildChromeUserAgent(
         mozilla: String = "5.0",
         appleWebKit: String = "537.36",
         chrome: String = "70.0.3538.77",
@@ -250,54 +287,24 @@ open class BrowserSettings(
         return "Mozilla/$mozilla (X11; Linux x86_64) AppleWebKit/$appleWebKit (KHTML, like Gecko) Chrome/$chrome Safari/$safari"
     }
 
-    fun parseLibJs(reload: Boolean = false): String {
-        if (reload || libJs.isEmpty()) {
-            // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
-            val configs = GsonBuilder().create().toJson(jsParameters.toMap())
+    open fun generatePreloadJsVariables(): String {
+        // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
+        val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
-            val sb = StringBuilder()
-            sb.append(";\n")
-            // set predefined variables shared between javascript and jvm program
-            sb.appendLine("let META_INFORMATION_ID = \"${AppConstants.PULSAR_META_INFORMATION_ID}\";")
-            sb.appendLine("let SCRIPT_SECTION_ID = \"${AppConstants.PULSAR_SCRIPT_SECTION_ID}\";")
-            sb.appendLine("let ATTR_HIDDEN = \"${AppConstants.PULSAR_ATTR_HIDDEN}\";")
-            sb.appendLine("let ATTR_OVERFLOW_HIDDEN = \"${AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN}\";")
-            sb.appendLine("let ATTR_OVERFLOW_VISIBLE = \"${AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE}\";")
-            sb.appendLine("let PULSAR_CONFIGS = $configs;")
-            scripts.values.joinTo(sb, ";\n")
-            libJs = sb.toString()
-        }
-
-        return libJs
+        // set predefined variables shared between javascript and jvm program
+        return """
+            ;
+            let META_INFORMATION_ID = "${AppConstants.PULSAR_META_INFORMATION_ID}";
+            let SCRIPT_SECTION_ID = "${AppConstants.PULSAR_SCRIPT_SECTION_ID}";
+            let ATTR_HIDDEN = "${AppConstants.PULSAR_ATTR_HIDDEN}";
+            let ATTR_OVERFLOW_HIDDEN = "${AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN}";
+            let ATTR_OVERFLOW_VISIBLE = "${AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE}";
+            let PULSAR_CONFIGS = $configs;
+        """.trimIndent()
     }
 
-    fun parseJs(reload: Boolean = false): String {
-        if (reload || mainJs.isEmpty()) {
-            val sb = StringBuilder(parseLibJs(reload))
-            sb.append(";\n__utils__.emulate();")
-            sb.append(";\nreturn JSON.stringify(document.pulsarData);")
-            mainJs = sb.toString()
-        }
-
-        return mainJs
-    }
-
-    fun randomUserAgent(): String {
-        if (userAgents.isNotEmpty()) {
-            return userAgents[Random.nextInt(userAgents.size)]
-        }
-        return ""
-    }
-
-    private fun loadDefaultResource() {
-        arrayOf(
-            "configs.js",
-            "__utils__.js",
-            "node_ext.js",
-            "node_traversor.js",
-            "feature_calculator.js",
-            "humanize.js"
-        ).associateWithTo(scripts) { ResourceLoader.readAllLines("$jsDirectory/$it")
-            .joinToString("\n") { it } }
+    open fun loadDefaultResource() {
+        preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
+            ResourceLoader.readAllLines(it).joinToString("\n") { it } }
     }
 }

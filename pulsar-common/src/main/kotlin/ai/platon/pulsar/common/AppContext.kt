@@ -35,9 +35,19 @@ object AppContext {
     // User's home directory
     val USER_HOME get() = SystemUtils.USER_HOME
 
-    // windows subsystem for linux
+    /**
+     * Check if the operating system is a Windows subsystem for linux
+     * */
     val OS_IS_WSL by lazy { checkIsWSL() }
+    /**
+     * Check if the operating system is running on a virtual environment, e.g., virtualbox, vmware, etc
+     * */
     val OS_IS_VIRT by lazy { checkVirtualEnv() }
+    /**
+     * Check if the operating system is a linux and desktop is available
+     * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
+     * */
+    val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
 
     // The identity of this running instance
     val APP_VERSION by lazy { sniffVersion() }
@@ -75,6 +85,16 @@ object AppContext {
                 ?.let { Files.readAllLines(it).firstOrNull() }
         }
         return version ?: "unknown"
+    }
+
+    private fun checkIsLinuxDesktop(): Boolean {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            return false
+        }
+
+        val env = System.getenv("XDG_SESSION_TYPE")
+
+        return env == "x11" || env == "wayland"
     }
 
     private fun checkIsWSL(): Boolean {

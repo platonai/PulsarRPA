@@ -2,7 +2,10 @@ package ai.platon.pulsar.protocol.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
+import ai.platon.pulsar.browser.driver.chrome.ChromeTab
+import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
@@ -53,7 +56,7 @@ class ChromeDevtoolsDriver(
     val openSequence = 1 + browserInstance.devToolsCount
     val userAgent get() = browserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
-    val clientLibJs = browserSettings.parseLibJs(false)
+    val clientLibJs = browserSettings.generatePreloadJs(false)
     var devToolsConfig = DevToolsConfig()
 
     val tab: ChromeTab
@@ -302,7 +305,9 @@ class ChromeDevtoolsDriver(
         if (!isActive) return
 
         try {
-            page.addScriptToEvaluateOnNewDocument(clientLibJs)
+            if (clientLibJs.isNotBlank()) {
+                page.addScriptToEvaluateOnNewDocument(clientLibJs)
+            }
 
             page.enable()
 

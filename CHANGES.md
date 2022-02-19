@@ -1,3 +1,15 @@
+## 1.8.0
+
+Plan:
+
+    1. better preload javascript management
+
+## 1.7.4
+
+Plan:
+
+    1. bug fix
+
 ## 1.7.3
 
 Plan:

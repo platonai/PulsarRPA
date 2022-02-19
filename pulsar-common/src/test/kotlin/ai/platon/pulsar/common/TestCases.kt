@@ -142,14 +142,20 @@ class TestCases {
 //        println(n % a)
 //        println((a * 3 + b) % a)
 
-        SystemUtils.USER_NAME
-        println(System.getProperty("USER"))
-
         for (i in 0..10) {
             assertEquals(b, (a * i + b) % a, "i=$i")
         }
 
         assertTrue { Int.MIN_VALUE < Int.MAX_VALUE }
+    }
+
+    @Test
+    fun testEnv() {
+        SystemUtils.USER_NAME
+        println(System.getProperty("USER"))
+
+        var env = System.getenv("XDG_SESSION_TYPE")
+        println(env)
     }
 
     /**
