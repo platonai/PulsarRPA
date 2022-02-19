@@ -239,7 +239,7 @@ open class BrowserSettings(
         return "${viewPort.width}$delimiter${viewPort.height}"
     }
 
-    open fun generatePreloadJs(reload: Boolean): String {
+    open fun generatePreloadJs(reload: Boolean = false): String {
         if (reload) {
             preloadJavaScripts.clear()
             preloadJs = ""

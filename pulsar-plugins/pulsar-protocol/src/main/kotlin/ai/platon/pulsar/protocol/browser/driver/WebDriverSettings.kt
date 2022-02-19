@@ -42,11 +42,8 @@ import org.openqa.selenium.remote.DesiredCapabilities
     }
  * */
 open class WebDriverSettings(
-        jsDirectory: String = "js",
         immutableConfig: ImmutableConfig
-): BrowserSettings(jsDirectory, immutableConfig) {
-
-    constructor(immutableConfig: ImmutableConfig): this("js", immutableConfig)
+): BrowserSettings(immutableConfig) {
 
     // Special
     // var mobileEmulationEnabled = true
