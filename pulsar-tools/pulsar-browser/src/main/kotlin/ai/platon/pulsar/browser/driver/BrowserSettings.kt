@@ -184,7 +184,14 @@ open class BrowserSettings(
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    val forceHeadless get() = GraphicsEnvironment.isHeadless()
+    // GraphicsEnvironment.isHeadless does not always work correctly
+    val forceHeadless: Boolean get() {
+        return when {
+            AppContext.OS_IS_LINUX_DESKTOP -> false
+            AppContext.OS_IS_WSL -> true
+            else -> GraphicsEnvironment.isHeadless()
+        }
+    }
     val displayMode get() = if (forceHeadless) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
