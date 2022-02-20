@@ -1,12 +1,9 @@
 package ai.platon.pulsar.examples.sites.fashion.everlane
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.ql.context.withSQLContext
 import ai.platon.pulsar.test.VerboseSQLExecutor
 
 fun main() {
-    BrowserSettings.withGUI()
-
     val indexSQL = """
         select
            dom_first_text(dom, 'div.product-details h3.product__name') as `name`,

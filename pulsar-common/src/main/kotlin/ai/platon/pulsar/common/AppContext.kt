@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
+import java.awt.GraphicsEnvironment
 import java.net.InetAddress
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -48,6 +49,17 @@ object AppContext {
      * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
      * */
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
+
+    /**
+     * TODO: WSL actually supports GUI
+     * */
+    val isGUIAvailable: Boolean get() {
+        return when {
+            OS_IS_LINUX_DESKTOP -> true
+            OS_IS_WSL -> false
+            else -> GraphicsEnvironment.isHeadless()
+        }
+    }
 
     // The identity of this running instance
     val APP_VERSION by lazy { sniffVersion() }

@@ -11,20 +11,14 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
     var portalUrl = "https://www.amazon.com/"
     var loadArguments = ""
-    var gui = SystemUtils.IS_OS_WINDOWS
 
     var i = 0
     while (i++ < args.size - 1) {
         if (args[i] == "-url") portalUrl = args[i++]
         if (args[i] == "-args") loadArguments = args[i++]
-        if (args[i] == "-gui") gui = true
     }
 
     withContext { cx ->
-        if (gui) {
-            BrowserSettings.withGUI()
-        }
-
         System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "false")
         System.setProperty(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator")
 

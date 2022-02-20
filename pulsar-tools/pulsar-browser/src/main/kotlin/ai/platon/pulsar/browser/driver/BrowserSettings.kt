@@ -22,7 +22,7 @@ import kotlin.random.Random
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
 /**
- * The emulate settings
+ * The emulation settings
  * */
 data class EmulateSettings(
     var scrollCount: Int = 10,
@@ -122,6 +122,8 @@ open class BrowserSettings(
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
 
+        val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
+
         fun withGoodNetwork(): Companion {
             return BrowserSettings
         }
@@ -137,8 +139,8 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
-            if (GraphicsEnvironment.isHeadless()) {
-                logger.info("The OS is headless, GUI mode is disabled")
+            if (isHeadlessOnly) {
+                logger.info("GUI is not available")
                 return BrowserSettings
             }
 
@@ -177,22 +179,14 @@ open class BrowserSettings(
     /**
      * Chrome has to run without sandbox in a virtual machine
      * */
-    val forceNoSandbox get() = AppContext.OS_IS_WSL
+    val forceNoSandbox get() = AppContext.OS_IS_WSL || AppContext.OS_IS_VIRT
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    // GraphicsEnvironment.isHeadless does not always work correctly
-    val forceHeadless: Boolean get() {
-        return when {
-            AppContext.OS_IS_LINUX_DESKTOP -> false
-            AppContext.OS_IS_WSL -> true
-            else -> GraphicsEnvironment.isHeadless()
-        }
-    }
-    val displayMode get() = if (forceHeadless) DisplayMode.HEADLESS
+    val displayMode get() = if (isHeadlessOnly) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
     val isHeadless get() = displayMode == DisplayMode.HEADLESS

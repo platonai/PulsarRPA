@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.JsEventHandler
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -19,17 +20,20 @@ open class VerboseCrawler(
 
     constructor(context: PulsarContext) : this(context.createSession())
 
-    fun load(url: String, args: String) {
-        return load(url, LoadOptions.parse(args, session.sessionConfig))
+    fun load(url: String, args: String, eventHandler: JsEventHandler? = null) {
+        val options = session.options(args)
+        load(url, options, eventHandler)
     }
 
-    fun load(url: String, options: LoadOptions) {
-        val page = session.load(url)
+    fun load(url: String, options: LoadOptions, eventHandler: JsEventHandler? = null) {
+        eventHandler?.let { options.conf.putBean(it) }
+        val page = session.load(url, options)
+        eventHandler?.let { options.conf.removeBean(it) }
         val doc = session.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select(options.correctedOutLinkSelector) { it.attr("abs:href") }.asSequence()
+        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
             .filter { Urls.isValidUrl(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()

@@ -4,7 +4,7 @@ var MAX_EVENT_COUNT = 30;
  * Fire an event handler to the specified node. Event handlers can detect that
  * the event was fired programatically by testing for a 'synthetic=true'
  * property on the event object
- * 
+ *
  * @param node {Node|String}
  *            The node to fire the event handler on.
  * @param eventName {String}
