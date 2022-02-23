@@ -18,14 +18,16 @@ open class VerboseCrawler(
     // trigger loop start
     val crawlLoop = session.context.crawlLoops
 
+    var eventHandler: JsEventHandler? = null
+
     constructor(context: PulsarContext) : this(context.createSession())
 
-    fun load(url: String, args: String, eventHandler: JsEventHandler? = null) {
+    fun load(url: String, args: String) {
         val options = session.options(args)
-        load(url, options, eventHandler)
+        load(url, options)
     }
 
-    fun load(url: String, options: LoadOptions, eventHandler: JsEventHandler? = null) {
+    fun load(url: String, options: LoadOptions) {
         eventHandler?.let { options.conf.putBean(it) }
         val page = session.load(url, options)
         eventHandler?.let { options.conf.removeBean(it) }
@@ -53,7 +55,11 @@ open class VerboseCrawler(
     }
 
     fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
+        eventHandler?.let { options.conf.putBean(it) }
         val page = session.load(portalUrl, options)
+        eventHandler?.let { options.conf.removeBean(it) }
+
+//        val page = session.load(portalUrl, options)
         if (!page.protocolStatus.isSuccess) {
             logger.warn("Failed to load page | {}", portalUrl)
         }
@@ -70,7 +76,11 @@ open class VerboseCrawler(
         logger.info("Total {} items to load", links.size)
 
         val itemOptions = options.createItemOptions(session.sessionConfig).apply { parse = true }
-        return session.loadAll(links, itemOptions)
+        eventHandler?.let { itemOptions.conf.putBean(it) }
+        val pages = session.loadAll(links, itemOptions)
+        eventHandler?.let { itemOptions.conf.removeBean(it) }
+
+        return pages
     }
 
     fun loadAllNews(portalUrl: String, options: LoadOptions) {

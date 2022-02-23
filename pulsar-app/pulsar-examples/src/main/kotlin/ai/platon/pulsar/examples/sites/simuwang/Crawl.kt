@@ -10,11 +10,17 @@ class LoginJsEventHandler: AbstractJsEventHandler() {
     override var verbose = true
 
     override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+        val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
+        val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
+
         val expressions = """
-            let message = "Login in ...";
-            document.querySelector(".comp-login input.comp-login-input").value = 'username';
-            document.querySelector(".comp-login input#GLUXZipUpdateInput").value = 'password';
-            document.querySelector(".comp-login button#comp-login-btn").click();
+let message = "Login in ...";
+document.querySelector("button.comp-login-b2").click();
+document.querySelector("input[name=username]").value = '$username';
+document.querySelector("input[name=username]").dispatchEvent(new Event('input'));
+document.querySelector("input[type=password]").value = '$password';
+document.querySelector("input[type=password]").dispatchEvent(new Event('input'));
+document.querySelector("button.comp-login-btn").click();
         """.trimIndent()
 
         return evaluate(driver, expressions.split(";"))
@@ -27,7 +33,8 @@ fun main() {
 
     withSQLContext {
         val crawler = VerboseCrawler(it)
-        crawler.load(seed, "$args -refresh", LoginJsEventHandler())
-        crawler.loadOutPages(seed, args)
+        crawler.eventHandler = LoginJsEventHandler()
+        crawler.load(seed, "$args -refresh")
+        // crawler.loadOutPages(seed, args)
     }
 }
