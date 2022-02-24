@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.JsEventHandler
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
@@ -380,6 +380,8 @@ open class LoadOptions(
                     .associate { it.name to it.get(this) }
         }
 
+//    private val jsEventHandlers = mutableListOf<JsEventHandler>()
+
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
 
     /**
@@ -474,6 +476,20 @@ open class LoadOptions(
                 .associate { "-${it.name}" to it.get(this) }
                 .filter { it.value != null }
                 .let { Params.of(it).withRowFormat(rowFormat) }
+    }
+
+    fun addEventHandler(eventHandler: JsEventHandler?) {
+        if (eventHandler != null) {
+            // jsEventHandlers.add(eventHandler)
+            conf.putBean(eventHandler)
+        }
+    }
+
+    fun removeEventHandler(eventHandler: JsEventHandler?) {
+        if (eventHandler != null) {
+            // jsEventHandlers.remove(eventHandler)
+            conf.removeBean(eventHandler)
+        }
     }
 
     override fun toString(): String {

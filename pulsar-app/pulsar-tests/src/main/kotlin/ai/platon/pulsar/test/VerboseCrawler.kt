@@ -28,9 +28,9 @@ open class VerboseCrawler(
     }
 
     fun load(url: String, options: LoadOptions) {
-        eventHandler?.let { options.conf.putBean(it) }
+        options.addEventHandler(eventHandler)
         val page = session.load(url, options)
-        eventHandler?.let { options.conf.removeBean(it) }
+        options.removeEventHandler(eventHandler)
         val doc = session.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
@@ -55,9 +55,9 @@ open class VerboseCrawler(
     }
 
     fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
-        eventHandler?.let { options.conf.putBean(it) }
+        options.addEventHandler(eventHandler)
         val page = session.load(portalUrl, options)
-        eventHandler?.let { options.conf.removeBean(it) }
+        options.removeEventHandler(eventHandler)
 
 //        val page = session.load(portalUrl, options)
         if (!page.protocolStatus.isSuccess) {
