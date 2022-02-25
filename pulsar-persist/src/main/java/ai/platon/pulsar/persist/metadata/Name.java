@@ -46,9 +46,13 @@ public enum Name {
     PROXY("F_PX"),
     FETCHED_LINK_COUNT("FFLC"),
 
+    //////////////////////////
+    // parse section
+    //////////////////////////
     /**
-     * parse
-     */
+     * Embedded query is not used any more, use SQL instead
+     * */
+    @Deprecated
     QUERY("PQ"),
     NO_FOLLOW("PNF"),
     FORCE_FOLLOW("PFF"),

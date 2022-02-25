@@ -76,9 +76,9 @@ open class VerboseCrawler(
         logger.info("Total {} items to load", links.size)
 
         val itemOptions = options.createItemOptions(session.sessionConfig).apply { parse = true }
-        eventHandler?.let { itemOptions.conf.putBean(it) }
+        options.addEventHandler(eventHandler)
         val pages = session.loadAll(links, itemOptions)
-        eventHandler?.let { itemOptions.conf.removeBean(it) }
+        options.removeEventHandler(eventHandler)
 
         return pages
     }
