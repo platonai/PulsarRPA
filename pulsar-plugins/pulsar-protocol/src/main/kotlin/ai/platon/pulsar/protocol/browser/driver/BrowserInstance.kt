@@ -20,7 +20,7 @@ class BrowserInstance(
 ): AutoCloseable {
 
     /**
-     * Every browser instance have an unique data dir, proxy is required to be unique too if it is enabled
+     * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
      * */
     val id = BrowserInstanceId(launchOptions.userDataDir, launchOptions.proxyServer)
     val isGUI get() = launcherConfig.supervisorProcess == null && !launchOptions.headless

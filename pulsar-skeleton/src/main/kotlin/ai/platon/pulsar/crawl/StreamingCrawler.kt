@@ -549,16 +549,17 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry(url: UrlAware, page: WebPage?) {
-        val retries = 1L + (page?.fetchRetries ?: 0)
+        val nextRetryNumber = 1L + (page?.fetchRetries ?: 0)
 
-        if (page != null && retries > page.maxRetries) {
+        if (page != null && nextRetryNumber > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()
             taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone (unexpected)"))
             return
         }
 
-        val delay = Duration.ofMinutes(1L + 2 * retries)
+        // TODO: use a retry strategy
+        val delay = Duration.ofMinutes(1L + 2 * nextRetryNumber)
 //        val delayCache = globalCache.fetchCaches.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
@@ -567,7 +568,7 @@ open class StreamingCrawler<T : UrlAware>(
 
         globalMetrics.retries.mark()
         if (page != null) {
-            val prefix = "Trying ${retries}th ${delay.readable()} later"
+            val prefix = "Trying ${nextRetryNumber}th ${delay.readable()} later"
             taskLogger.info("{}", LoadedPageFormatter(page, prefix = prefix))
         }
     }
