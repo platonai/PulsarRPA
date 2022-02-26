@@ -48,7 +48,7 @@ class JobFetchTask(
     companion object {
         /**
          * The initial value is the current timestamp in second, to make it
-         * an unique id in the current host
+         * a unique id in the current host
          */
         private val instanceSequence = AtomicInteger(0)
 

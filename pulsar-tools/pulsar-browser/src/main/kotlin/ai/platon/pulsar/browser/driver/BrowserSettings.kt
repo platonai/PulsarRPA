@@ -112,6 +112,8 @@ open class BlockRules {
 }
 
 open class BrowserSettings(
+    parameters: Map<String, Any> = mapOf(),
+    var jsDirectory: String = "js",
     val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
@@ -119,6 +121,8 @@ open class BrowserSettings(
 
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
+
+        val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
         val preloadJavaScriptResources = """
             __utils__.js
@@ -128,6 +132,8 @@ open class BrowserSettings(
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
         val preloadJavaScripts = mutableMapOf<String, String>()
         val jsParameters = mutableMapOf<String, Any>()
+
+        val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
         fun withGoodNetwork(): Companion {
             return BrowserSettings
@@ -144,8 +150,8 @@ open class BrowserSettings(
         }
 
         fun withGUI(): Companion {
-            if (GraphicsEnvironment.isHeadless()) {
-                logger.info("The OS is headless, GUI mode is disabled")
+            if (isHeadlessOnly) {
+                logger.info("GUI is not available")
                 return BrowserSettings
             }
 
@@ -191,15 +197,7 @@ open class BrowserSettings(
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    // GraphicsEnvironment.isHeadless does not always work correctly
-    val forceHeadless: Boolean get() {
-        return when {
-            AppContext.OS_IS_LINUX_DESKTOP -> false
-            AppContext.OS_IS_WSL -> true
-            else -> GraphicsEnvironment.isHeadless()
-        }
-    }
-    val displayMode get() = if (forceHeadless) DisplayMode.HEADLESS
+    val displayMode get() = if (isHeadlessOnly) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
 
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED

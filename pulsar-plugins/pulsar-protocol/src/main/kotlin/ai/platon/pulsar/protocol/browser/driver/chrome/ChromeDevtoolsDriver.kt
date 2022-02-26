@@ -119,11 +119,17 @@ class ChromeDevtoolsDriver(
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
 
+    /**
+     * TODO: use an event handler to do this stuff
+     * */
     private fun initSpecialSiteBeforeVisit(url: String) {
-        if (isFirstLaunch && url.contains("jd.com")) {
+        if (isFirstLaunch) {
             // the first visit to jd.com
-            browserInstance.navigateHistory.none { it.contains("jd.com") }
-            JdInitializer().init(page)
+            val isFirstJdVisit = url.contains("jd.com")
+                    && browserInstance.navigateHistory.none { it.contains("jd.com") }
+            if (isFirstJdVisit) {
+                JdInitializer().init(page)
+            }
         }
     }
 

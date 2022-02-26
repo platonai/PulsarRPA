@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.JsEventHandler
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -17,19 +18,24 @@ open class VerboseCrawler(
     // trigger loop start
     val crawlLoop = session.context.crawlLoops
 
+    var eventHandler: JsEventHandler? = null
+
     constructor(context: PulsarContext) : this(context.createSession())
 
     fun load(url: String, args: String) {
-        return load(url, LoadOptions.parse(args, session.sessionConfig))
+        val options = session.options(args)
+        load(url, options)
     }
 
     fun load(url: String, options: LoadOptions) {
-        val page = session.load(url)
+        options.addEventHandler(eventHandler)
+        val page = session.load(url, options)
+        options.removeEventHandler(eventHandler)
         val doc = session.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select(options.correctedOutLinkSelector) { it.attr("abs:href") }.asSequence()
+        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
             .filter { Urls.isValidUrl(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()
@@ -49,7 +55,11 @@ open class VerboseCrawler(
     }
 
     fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
+        options.addEventHandler(eventHandler)
         val page = session.load(portalUrl, options)
+        options.removeEventHandler(eventHandler)
+
+//        val page = session.load(portalUrl, options)
         if (!page.protocolStatus.isSuccess) {
             logger.warn("Failed to load page | {}", portalUrl)
         }
@@ -66,7 +76,11 @@ open class VerboseCrawler(
         logger.info("Total {} items to load", links.size)
 
         val itemOptions = options.createItemOptions(session.sessionConfig).apply { parse = true }
-        return session.loadAll(links, itemOptions)
+        options.addEventHandler(eventHandler)
+        val pages = session.loadAll(links, itemOptions)
+        options.removeEventHandler(eventHandler)
+
+        return pages
     }
 
     fun loadAllNews(portalUrl: String, options: LoadOptions) {

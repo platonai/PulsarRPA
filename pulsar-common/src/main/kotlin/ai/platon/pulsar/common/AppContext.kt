@@ -49,6 +49,17 @@ object AppContext {
      * */
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
 
+    /**
+     * TODO: WSL actually supports GUI
+     * */
+    val isGUIAvailable: Boolean get() {
+        return when {
+            OS_IS_LINUX_DESKTOP -> true
+            OS_IS_WSL -> false
+            else -> GraphicsEnvironment.isHeadless()
+        }
+    }
+
     // The identity of this running instance
     val APP_VERSION by lazy { sniffVersion() }
     val APP_NAME = System.getProperty("app.name", "pulsar")

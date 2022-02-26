@@ -77,7 +77,6 @@ class ParseComponent(
         if (noLinkFilter) {
             page.variables[Name.PARSE_NO_LINK_FILTER] = AppConstants.YES_STRING
         }
-        page.query = query
         traceInfo?.clear()
     }
 
@@ -86,7 +85,6 @@ class ParseComponent(
         page.variables.remove(Name.FORCE_FOLLOW)
         page.variables.remove(Name.PARSE_LINK_FILTER_DEBUG_LEVEL)
         page.variables.remove(Name.PARSE_NO_LINK_FILTER)
-        page.query = null
 
         val document = result.document
         if (document != null) {

@@ -625,21 +625,6 @@ final public class WebPage implements Comparable<WebPage> {
         return configuredUrl.trim();
     }
 
-    /**
-     * @deprecated
-     */
-    @Nullable
-    public String getQuery() {
-        return getMetadata().get(Name.QUERY);
-    }
-
-    /**
-     *
-     */
-    public void setQuery(@Nullable String query) {
-        getMetadata().set(Name.QUERY, query);
-    }
-
     public int getFetchedLinkCount() {
         return getMetadata().getInt(Name.FETCHED_LINK_COUNT, 0);
     }

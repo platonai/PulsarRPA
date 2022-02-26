@@ -1,6 +1,5 @@
 package ai.platon.pulsar.examples.sites.fashion.hanes
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.sql.SQLTemplate
@@ -9,8 +8,6 @@ import ai.platon.pulsar.test.ProductExtractor
 import kotlin.system.exitProcess
 
 fun main() {
-    BrowserSettings.withGUI()
-
     val itemsSQLTemplate = """
         select
             dom_first_text(dom, 'h1.page-title') as `title`,

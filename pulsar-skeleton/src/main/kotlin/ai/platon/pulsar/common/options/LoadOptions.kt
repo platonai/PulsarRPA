@@ -54,6 +54,8 @@ object LoadOptionDefaults {
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  *
  * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
+ *
+ * TODO: consider make LoadOptions to be seen in all modules
  */
 open class LoadOptions(
     argv: Array<String>,
@@ -250,9 +252,14 @@ open class LoadOptions(
     /**
      * @deprecated shorten key is deprecated, use href instead
      * */
+    @Deprecated("Use ignoreQuery instead")
     @Parameter(names = ["-sk", "-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
     var shortenKey = false
+
+    @Parameter(names = ["-iq", "-ignoreQuery", "--ignore-query"],
+        description = "Remove the query parameters when normalize the url")
+    val ignoreQuery = false
 
     @Parameter(names = ["-persist", "--persist"], arity = 1,
             description = "Persist fetched pages as soon as possible")
@@ -286,8 +293,12 @@ open class LoadOptions(
             description = "Retry fetching the page even if it's failed last time")
     var ignoreFailure = LoadOptionDefaults.ignoreFailure
 
+    @Parameter(names = ["-nmr", "-nMaxRetry", "--n-max-retry"],
+        description = "Retry fetching at most n times, page.fetchRetries <= nMaxRetry")
+    var nMaxRetry = 3
+
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
-            description = "Retry at most n times if RETRY(1601) code return when fetching a page")
+            description = "Retry at most n times at fetch phrase immediately if RETRY(1601) code return")
     var nJitRetry = LoadOptionDefaults.nJitRetry
 
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
@@ -328,19 +339,6 @@ open class LoadOptions(
     @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
     var noFilter = false
 
-    @Deprecated("Use x-sql instead")
-    @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
-    var query: String? = null
-
-    @Parameter(names = ["-m", "-withModel", "--with-model"], description = "Also load page model when loading a page")
-    var withModel = false
-
-    @Parameter(names = ["-lk", "-withLinks", "--with-links"], description = "Contains links when loading page model")
-    var withLinks = false
-
-    @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
-    var withText = false
-
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
         converter = ConditionConverter::class,
@@ -353,11 +351,6 @@ open class LoadOptions(
 
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
     var version = "20210321"
-
-    /**
-     * If shortenKey is set, also ignore url query when fetch pages
-     * */
-    val ignoreQuery get() = shortenKey
 
     // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
     val correctedOutLinkSelector get() = outLinkSelector.trim('"')
@@ -381,6 +374,8 @@ open class LoadOptions(
                     .filter { it.get(this) != null }
                     .associate { it.name to it.get(this) }
         }
+
+//    private val jsEventHandlers = mutableListOf<JsEventHandler>()
 
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
 
@@ -476,6 +471,7 @@ open class LoadOptions(
 
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
+        setInt(CapabilityTypes.FETCH_MAX_RETRY, nMaxRetry)
     }
 
     open fun isDefault(option: String): Boolean {
@@ -490,6 +486,20 @@ open class LoadOptions(
                 .associate { "-${it.name}" to it.get(this) }
                 .filter { it.value != null }
                 .let { Params.of(it).withRowFormat(rowFormat) }
+    }
+
+    fun addEventHandler(eventHandler: JsEventHandler?) {
+        if (eventHandler != null) {
+            // jsEventHandlers.add(eventHandler)
+            conf.putBean(eventHandler)
+        }
+    }
+
+    fun removeEventHandler(eventHandler: JsEventHandler?) {
+        if (eventHandler != null) {
+            // jsEventHandlers.remove(eventHandler)
+            conf.removeBean(eventHandler)
+        }
     }
 
     override fun toString(): String {

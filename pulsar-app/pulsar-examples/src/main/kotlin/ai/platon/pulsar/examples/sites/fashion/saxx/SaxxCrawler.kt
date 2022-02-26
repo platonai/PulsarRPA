@@ -1,18 +1,13 @@
 package ai.platon.pulsar.examples.sites.fashion.saxx
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
-import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import ai.platon.pulsar.test.ProductExtractor
-import ai.platon.pulsar.test.VerboseSQLExecutor
 import kotlin.system.exitProcess
 
 fun main() {
-    BrowserSettings.withGUI()
-
     val indexSQL = """
         select
            dom_attr(dom, 'data-name') as `title`,
