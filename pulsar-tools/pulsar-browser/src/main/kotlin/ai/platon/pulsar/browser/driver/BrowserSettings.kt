@@ -139,6 +139,10 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        fun withDefaultDataDir() {
+            System.setProperty(BROWSER_DATA_DIR, AppPaths.CHROME_TMP_DIR.toString())
+        }
+
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
                 logger.info("GUI is not available")

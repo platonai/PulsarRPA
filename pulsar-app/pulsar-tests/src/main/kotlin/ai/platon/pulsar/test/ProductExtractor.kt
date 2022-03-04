@@ -15,7 +15,7 @@ open class ProductExtractor(
     val executor = VerboseSQLExecutor(context)
 
     fun extract(itemsSQL: String, reviewsSQLTemplate: String? = null) {
-        val rs = executor.query(itemsSQL)
+        val rs = executor.executeQuery(itemsSQL)
 
         var path = CSV().export(rs, exportDirectory.resolve("item.csv"))
         println("Items are written to file://$path")
