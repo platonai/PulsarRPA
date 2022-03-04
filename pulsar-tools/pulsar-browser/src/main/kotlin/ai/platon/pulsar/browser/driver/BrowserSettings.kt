@@ -11,6 +11,7 @@ import java.awt.GraphicsEnvironment
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import kotlin.io.path.listDirectoryEntries
 import kotlin.random.Random
 
 /**
@@ -204,7 +205,7 @@ open class BrowserSettings(
         get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
     var clientJsVersion = "0.2.3"
-    val scripts = mutableMapOf<String, String>()
+    val scripts = mutableListOf<Pair<String, String>>()
 
     // Available user agents
     val userAgents = mutableListOf<String>()
@@ -227,6 +228,8 @@ open class BrowserSettings(
         generateUserAgents()
 
         loadDefaultResource()
+
+        loadExternalResource()
     }
 
     fun formatViewPort(delimiter: String = ","): String {
@@ -265,8 +268,10 @@ open class BrowserSettings(
             sb.appendLine("let ATTR_OVERFLOW_HIDDEN = \"${AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN}\";")
             sb.appendLine("let ATTR_OVERFLOW_VISIBLE = \"${AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE}\";")
             sb.appendLine("let PULSAR_CONFIGS = $configs;")
-            scripts.values.joinTo(sb, ";\n")
+            scripts.map { it.second }.joinTo(sb, ";\n")
             libJs = sb.toString()
+
+            reportPreloadJs()
         }
 
         return libJs
@@ -290,6 +295,11 @@ open class BrowserSettings(
         return ""
     }
 
+    private fun loadExternalResource() {
+        AppPaths.get("browser", "js", "preload").listDirectoryEntries()
+            .mapTo(scripts) { it.toString() to Files.readString(it) }
+    }
+
     private fun loadDefaultResource() {
         arrayOf(
             "configs.js",
@@ -298,7 +308,17 @@ open class BrowserSettings(
             "node_traversor.js",
             "feature_calculator.js",
             "humanize.js"
-        ).associateWithTo(scripts) { ResourceLoader.readAllLines("$jsDirectory/$it")
-            .joinToString("\n") { it } }
+        ).mapTo(scripts) {
+            it to ResourceLoader.readAllLines("$jsDirectory/$it").joinToString("\n") { it }
+        }
+    }
+
+    private fun reportPreloadJs() {
+        val report = AppPaths.REPORT_DIR.resolve("browser/js/preload.js")
+        if (!Files.exists(report)) {
+            Files.createDirectories(report.parent)
+        }
+        Files.writeString(report, libJs)
+        logger.info("Generated js: file://$report")
     }
 }

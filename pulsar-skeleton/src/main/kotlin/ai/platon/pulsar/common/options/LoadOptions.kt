@@ -257,7 +257,7 @@ open class LoadOptions(
 
     @Parameter(names = ["-iq", "-ignoreQuery", "--ignore-query"],
         description = "Remove the query parameters when normalize the url")
-    val ignoreQuery = false
+    var ignoreQuery = false
 
     @Parameter(names = ["-persist", "--persist"], arity = 1,
             description = "Persist fetched pages as soon as possible")

@@ -9,7 +9,7 @@ import ai.platon.pulsar.test.VerboseCrawler
 class LoginJsEventHandler: AbstractJsEventHandler() {
     override var verbose = true
 
-    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
         val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
         val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
 
@@ -28,13 +28,13 @@ document.querySelector("button.comp-login-btn").click();
 }
 
 fun main() {
-    val seed = "https://ly.simuwang.com/"
-    val args = "-i 1s -ii 10d -ol a[href~=roadshow] -tl 100"
+    val portal = "https://dc.simuwang.com/"
+    val args = "-i 30s -ii 30s -ol a[href~=product] -tl 10"
 
     withSQLContext {
         val crawler = VerboseCrawler(it)
         crawler.eventHandler = LoginJsEventHandler()
-        crawler.load(seed, "$args -refresh")
-        // crawler.loadOutPages(seed, args)
+        crawler.open(portal)
+        // crawler.loadOutPages(portal, args)
     }
 }

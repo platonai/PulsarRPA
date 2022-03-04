@@ -428,7 +428,10 @@ abstract class AbstractJsEventHandler: JsEventHandler {
 
     protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
         var value: Any? = null
-        expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
+        val validExpressions = expressions
+            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
+            .filterNot { it.startsWith("// ") }
+        validExpressions.forEach {
             log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
             val v = evaluate(driver, it)
             if (v is String) {
