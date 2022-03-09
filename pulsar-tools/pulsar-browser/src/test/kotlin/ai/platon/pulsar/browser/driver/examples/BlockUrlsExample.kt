@@ -11,7 +11,7 @@ class BlockUrlsExample: BrowserExampleBase() {
     override val testUrl = "https://www.stbchina.cn/"
 
     override fun run() {
-        page.addScriptToEvaluateOnNewDocument(clientLibJs)
+        page.addScriptToEvaluateOnNewDocument(preloadJs)
 
         page.onDomContentEventFired { event: DomContentEventFired ->
             // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'

@@ -1,32 +1,34 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
-import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
+import ai.platon.pulsar.browser.driver.chrome.LauncherOptions
+import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 class BrowserInstanceManager: AutoCloseable {
     private val closed = AtomicBoolean()
-    private val browserInstances = ConcurrentHashMap<Path, BrowserInstance>()
+    private val browserInstances = ConcurrentHashMap<String, BrowserInstance>()
 
     val instanceCount get() = browserInstances.size
 
     @Synchronized
-    fun hasLaunched(launchOptions: ChromeOptions): Boolean {
-        return browserInstances.containsKey(launchOptions.userDataDir)
+    fun hasLaunched(userDataDir: String): Boolean {
+        return browserInstances.containsKey(userDataDir)
     }
 
     @Synchronized
-    fun launchIfAbsent(launcherConfig: LauncherConfig, launchOptions: ChromeOptions): BrowserInstance {
-        return browserInstances.computeIfAbsent(launchOptions.userDataDir) {
-            BrowserInstance(launcherConfig, launchOptions).apply { launch() }
+    fun launchIfAbsent(
+        userDataDir: Path, launcherOptions: LauncherOptions, launchOptions: ChromeOptions): BrowserInstance {
+        return browserInstances.computeIfAbsent(userDataDir.toString()) {
+            PlaywrightBrowserInstance(userDataDir, launchOptions.proxyServer, launcherOptions, launchOptions).apply { launch() }
         }
     }
 
     @Synchronized
     fun closeIfPresent(dataDir: Path) {
-        browserInstances.remove(dataDir)?.close()
+        browserInstances.remove(dataDir.toString())?.close()
     }
 
     @Synchronized
@@ -41,6 +43,7 @@ class BrowserInstanceManager: AutoCloseable {
             val unSynchronized = browserInstances.values.toList()
             browserInstances.clear()
             unSynchronized.parallelStream().forEach { it.close() }
+            // Playwright.create().close()
         }.onFailure {
             // kill -9
             it.printStackTrace()

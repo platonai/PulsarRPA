@@ -65,7 +65,7 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
                 it.conf = options.conf
                 it.args = options.toString()
 
-                it.variables[VAR_LOAD_OPTIONS] = options
+                it.setVar(VAR_LOAD_OPTIONS, options)
             }
         }
     }

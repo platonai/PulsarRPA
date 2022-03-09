@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
@@ -26,12 +27,13 @@ import kotlin.collections.component2
 /**
  * The launch config
  * */
-class LauncherConfig {
+class LauncherOptions(
+    var supervisorProcess: String? = null,
+    val supervisorProcessArgs: MutableList<String> = mutableListOf()
+) {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
     var shutdownWaitTime = DEFAULT_SHUTDOWN_WAIT_TIME
     var threadWaitTime = THREAD_JOIN_WAIT_TIME
-    var supervisorProcess: String? = null
-    val supervisorProcessArgs = mutableListOf<String>()
 
     companion object {
         /** Default startup wait time in seconds.  */
@@ -52,8 +54,8 @@ annotation class ChromeParameter(val value: String)
  * The options to open chrome devtools
  * */
 class ChromeOptions(
-        @ChromeParameter("user-data-dir")
-        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
+//        @ChromeParameter("user-data-dir")
+//        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("proxy-server")
         var proxyServer: String? = null,
         @ChromeParameter("headless")
@@ -130,7 +132,7 @@ class ChromeOptions(
 
     fun toList() = toList(toMap())
 
-    private fun toList(args: Map<String, Any?>): List<String> {
+    fun toList(args: Map<String, Any?>): List<String> {
         val result = ArrayList<String>()
         for ((key, value) in args) {
             if (value != null && false != value) {
@@ -151,8 +153,9 @@ class ChromeOptions(
  * The chrome launcher
  * */
 class ChromeLauncher(
+    private val userDataDir: Path = BrowserSettings.defaultUserDataDir(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
-    private val config: LauncherConfig = LauncherConfig()
+    private val config: LauncherOptions = LauncherOptions()
 ) : AutoCloseable {
 
     companion object {
@@ -166,15 +169,12 @@ class ChromeLauncher(
 
     private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
     private var process: Process? = null
-    private var userDataDir = AppPaths.CHROME_TMP_DIR
     private val shutdownHookThread = Thread { this.close() }
 
     /**
      * Launch the chrome
      * */
     fun launch(chromeBinaryPath: Path, options: ChromeOptions): RemoteChrome {
-        userDataDir = options.userDataDir
-
         // if the data dir is the default dir, we might have problem to prepare user dir
         if ("context\\default--" !in userDataDir.toString()) {
         }
@@ -182,7 +182,7 @@ class ChromeLauncher(
             log.warn("Failed to prepare user data dir", it)
         }
 
-        val port = launchChromeProcess(chromeBinaryPath, options)
+        val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
         return Chrome(port)
     }
 
@@ -243,6 +243,7 @@ class ChromeLauncher(
      * Launching chrome processes is CPU consuming, so we do this in a synchronized manner
      *
      * @param chromeBinary Chrome binary path.
+     * @param userDataDir Chrome user data dir.
      * @param chromeOptions Chrome arguments.
      * @return Port on which devtools is listening.
      * @throws IllegalStateException If chrome process has already been started.
@@ -251,7 +252,7 @@ class ChromeLauncher(
      */
     @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
-    private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeOptions): Int {
+    private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
         var supervisorProcess = config.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
@@ -260,9 +261,10 @@ class ChromeLauncher(
         }
 
         val executable = supervisorProcess?:"$chromeBinary"
-        val arguments = if (supervisorProcess == null) chromeOptions.toList() else {
+        var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             config.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }
+        arguments += " --user-data-dir=$userDataDir"
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)

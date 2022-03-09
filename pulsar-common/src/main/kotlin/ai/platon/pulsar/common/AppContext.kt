@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
+import java.awt.GraphicsEnvironment
 import java.net.InetAddress
 import java.nio.file.Files
 import java.nio.file.Paths

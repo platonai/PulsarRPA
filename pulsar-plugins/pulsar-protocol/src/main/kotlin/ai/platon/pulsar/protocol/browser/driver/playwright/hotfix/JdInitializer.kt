@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.driver.chrome.hotfix
+package ai.platon.pulsar.protocol.browser.driver.playwright.hotfix
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.sleepSeconds

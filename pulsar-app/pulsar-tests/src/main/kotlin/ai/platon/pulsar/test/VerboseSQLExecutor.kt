@@ -22,7 +22,7 @@ open class VerboseSQLExecutor(
         try {
             val regex = "^(SELECT|CALL).+".toRegex()
             if (sql.uppercase(Locale.getDefault()).filter { it != '\n' }.trimIndent().matches(regex)) {
-                query(sql, printResult, withHeader, formatAsList)
+                executeQuery(sql, printResult, withHeader, formatAsList)
             } else {
                 val r = context.execute(sql)
                 if (printResult) {
@@ -34,7 +34,7 @@ open class VerboseSQLExecutor(
         }
     }
 
-    fun query(
+    fun executeQuery(
         sql: String,
         printResult: Boolean = true,
         withHeader: Boolean = true,
@@ -65,7 +65,7 @@ open class VerboseSQLExecutor(
     fun queryAll(sqls: Iterable<String>, printResult: Boolean = true): Map<String, ResultSet> {
         val resultSets = mutableMapOf<String, ResultSet>()
         sqls.forEach { sql ->
-            val reviewRs = query(sql, printResult)
+            val reviewRs = executeQuery(sql, printResult)
             resultSets[sql] = reviewRs
         }
 
@@ -84,7 +84,7 @@ open class VerboseSQLExecutor(
             throw IllegalArgumentException("Illegal sql template: ${sqlInstance.template.resource}")
         }
 
-        val rs = query(sql, printResult = true)
+        val rs = executeQuery(sql, printResult = true)
 
         val count = ResultSetUtils.count(rs)
         logger.info("Extracted $count records")

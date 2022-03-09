@@ -6,9 +6,8 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.openqa.selenium.NoSuchSessionException
-import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,13 +16,13 @@ import java.util.*
 
 class MockWebDriver(
     browserInstanceId: BrowserInstanceId,
-    backupDriverCreator: () -> ChromeDevtoolsDriver,
+    backupDriverCreator: () -> PlaywrightDriver,
 ) : AbstractWebDriver(browserInstanceId) {
     private val log = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
     private val backupDriver by lazy { backupDriverCreator() }
 
-    private var lastSessionId: SessionId? = null
+    private var lastSessionId: String? = null
     private var navigateUrl = ""
 
     var mockPageSource: String? = null
@@ -36,12 +35,12 @@ class MockWebDriver(
     val realDriver: WebDriver get() = backupDriverOrNull ?: this
 
     override val browserType: BrowserType
-        get() = if (realDriver is ChromeDevtoolsDriver)
+        get() = if (realDriver is PlaywrightDriver)
             BrowserType.CHROME else BrowserType.MOCK_CHROME
 
     override val supportJavascript: Boolean
         get() = when (realDriver) {
-            is ChromeDevtoolsDriver -> true
+            is PlaywrightDriver -> true
             else -> false
         }
 
@@ -54,14 +53,24 @@ class MockWebDriver(
     override fun navigateTo(url: String) {
         log.info("Mock navigate to {}", url)
 
-        lastSessionId = SessionId(UUID.randomUUID().toString())
+        if (lastSessionId == null) {
+            lastSessionId = UUID.randomUUID().toString()
+        }
         navigateUrl = url
         mockPageSource = loadMockPageSourceOrNull(url)
         if (mockPageSource == null) {
-            log.info("Resource does not exist, fallback to ChromeDevtoolsDriver | {}", url)
+            log.info("Resource does not exist, fallback to PlaywrightDriver | {}", url)
         }
 
         backupDriverOrNull?.navigateTo(url)
+    }
+
+    override fun click(selector: String, count: Int) {
+
+    }
+
+    override fun type(selector: String, text: String) {
+
     }
 
     @Throws(NoSuchSessionException::class)

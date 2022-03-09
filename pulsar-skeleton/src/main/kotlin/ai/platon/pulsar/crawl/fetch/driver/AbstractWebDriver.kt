@@ -68,6 +68,7 @@ abstract class AbstractWebDriver(
             stopLoading()
         }
     }
+
     override fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id

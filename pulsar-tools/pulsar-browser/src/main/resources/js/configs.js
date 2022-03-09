@@ -1,5 +1,3 @@
-Object.defineProperty(navigator, 'webdriver', { get: () => false, });
-
 // The following variables should be initialized programmatically
 META_INFORMATION_ID = META_INFORMATION_ID || "META_INFORMATION_ID";
 SCRIPT_SECTION_ID = SCRIPT_SECTION_ID || "SCRIPT_SECTION_ID";

@@ -12,7 +12,7 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     open val testUrl = "https://item.jd.com/100001071956.html"
 
     val browserControl = BrowserSettings()
-    val clientLibJs = browserControl.generatePreloadJs()
+    val preloadJs = browserControl.generatePreloadJs()
     val launchOptions = ChromeOptions()
             .addArguments("window-size", browserControl.formatViewPort())
             .also { it.headless = headless }

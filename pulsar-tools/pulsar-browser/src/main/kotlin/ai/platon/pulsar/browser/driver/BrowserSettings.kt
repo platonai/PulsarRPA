@@ -7,10 +7,11 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
-import java.awt.GraphicsEnvironment
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import kotlin.io.path.isReadable
+import kotlin.io.path.listDirectoryEntries
 import kotlin.random.Random
 
 /**
@@ -122,15 +123,13 @@ open class BrowserSettings(
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
 
-        val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
-
         val preloadJavaScriptResources = """
             __utils__.js
             configs.js
             node_ext.js
             node_traversor.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
-        val preloadJavaScripts = mutableMapOf<String, String>()
+        val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
         val jsParameters = mutableMapOf<String, Any>()
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
@@ -178,6 +177,8 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        fun defaultUserDataDir() = AppPaths.CHROME_TMP_DIR
+
         fun generateUserDataDir(): Path {
             val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
@@ -187,17 +188,20 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+
     /**
      * Chrome has to run without sandbox in a virtual machine
      * */
     val forceNoSandbox get() = AppContext.OS_IS_WSL
+
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
-    val displayMode get() = if (isHeadlessOnly) DisplayMode.HEADLESS
+    val displayMode
+        get() = if (isHeadlessOnly) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
 
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
@@ -245,11 +249,16 @@ open class BrowserSettings(
 
         if (preloadJs.isEmpty()) {
             val sb = StringBuilder()
-            val jsVariables = generatePreloadJsVariables()
-            sb.appendLine(jsVariables)
+
+            val jsVariables = generatePredefinedJsVariables()
+            sb.appendLine(jsVariables).appendLine("\n\n\n")
+
+            loadExternalResource()
             loadDefaultResource()
             preloadJavaScripts.values.joinTo(sb, ";\n")
             preloadJs = sb.toString()
+
+            reportPreloadJs()
         }
 
         return preloadJs
@@ -285,7 +294,7 @@ open class BrowserSettings(
         return "Mozilla/$mozilla (X11; Linux x86_64) AppleWebKit/$appleWebKit (KHTML, like Gecko) Chrome/$chrome Safari/$safari"
     }
 
-    open fun generatePreloadJsVariables(): String {
+    open fun generatePredefinedJsVariables(): String {
         // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
         val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
@@ -304,5 +313,21 @@ open class BrowserSettings(
     open fun loadDefaultResource() {
         preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
             ResourceLoader.readAllLines(it).joinToString("\n") { it } }
+    }
+
+    private fun loadExternalResource() {
+        AppPaths.get("browser", "js", "preload").listDirectoryEntries()
+            .filter { it.isReadable() }
+            .filter { it.toString().endsWith(".js") }
+            .associateTo(preloadJavaScripts) { it.toString() to Files.readString(it) }
+    }
+
+    private fun reportPreloadJs() {
+        val report = AppPaths.REPORT_DIR.resolve("browser/js/preload.js")
+        if (!Files.exists(report)) {
+            Files.createDirectories(report.parent)
+        }
+        Files.writeString(report, preloadJs)
+        logger.info("Generated js: file://$report")
     }
 }

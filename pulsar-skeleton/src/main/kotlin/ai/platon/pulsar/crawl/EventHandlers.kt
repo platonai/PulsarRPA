@@ -426,6 +426,22 @@ abstract class AbstractJsEventHandler: JsEventHandler {
         return null
     }
 
+    protected fun exists(selector: String, driver: WebDriver) = driver.exists(selector)
+
+    protected suspend fun click(selector: String, driver: WebDriver, count: Int = 1) {
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        return driver.click(selector, count)
+    }
+
+    protected suspend fun type(selector: String, text: String, driver: WebDriver) {
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        return driver.type(selector, text)
+    }
+
     protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
         var value: Any? = null
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {

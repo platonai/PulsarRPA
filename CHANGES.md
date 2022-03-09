@@ -3,6 +3,7 @@
 Plan:
 
     1. better preload javascript management
+    2. use playwright as the default web driver
 
 ## 1.7.4
 

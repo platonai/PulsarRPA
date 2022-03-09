@@ -15,6 +15,9 @@ class Crawler: BrowserExampleBase() {
         network.setBlockedURLs(listOf("*fireyejs*"))
         network.enable()
 
+        page.addScriptToEvaluateOnNewDocument(preloadJs)
+        page.enable()
+
         page.navigate(testUrl)
     }
 }

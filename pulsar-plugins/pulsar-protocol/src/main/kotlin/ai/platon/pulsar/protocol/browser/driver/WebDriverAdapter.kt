@@ -4,10 +4,8 @@ import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
+import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
-import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -62,7 +60,6 @@ class WebDriverAdapter(
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
-    @Throws(NoSuchSessionException::class)
     override fun navigateTo(url: String) {
         if (isWorking) {
             lastActiveTime = Instant.now()
@@ -73,12 +70,17 @@ class WebDriverAdapter(
         }
     }
 
-    @Throws(NoSuchSessionException::class)
+    override fun exists(selector: String) = driver.exists(selector)
+
+    override fun click(selector: String, count: Int) = driver.click(selector, count)
+
+    override fun type(selector: String, text: String) = driver.type(selector, text)
+
     override fun evaluate(expression: String): Any? {
         return when {
             isNotWorking -> null
             driver is MockWebDriver -> driver.evaluate(expression)
-            driver is ChromeDevtoolsDriver -> driver.evaluate(expression)
+            driver is PlaywrightDriver -> driver.evaluate(expression)
             else -> null
         }
     }
@@ -88,7 +90,7 @@ class WebDriverAdapter(
             is MockWebDriver -> {
                 driver.bringToFront()
             }
-            is ChromeDevtoolsDriver -> {
+            is PlaywrightDriver -> {
                 driver.takeIf { isWorking }?.runCatching { bringToFront() }
             }
             else -> {
@@ -102,7 +104,7 @@ class WebDriverAdapter(
             is MockWebDriver -> {
                 driver.takeIf { isWorking }?.runCatching { stopLoading() }
             }
-            is ChromeDevtoolsDriver -> {
+            is PlaywrightDriver -> {
                 driver.takeIf { isWorking }?.runCatching { stopLoading() }
             }
             else -> {

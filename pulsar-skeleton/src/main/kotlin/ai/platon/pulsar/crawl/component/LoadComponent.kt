@@ -319,10 +319,10 @@ class LoadComponent(
             else -> fetchState(page, options)
         }
 
-        page.variables[VAR_FETCH_STATE] = state
+        page.setVar(VAR_FETCH_STATE, state)
         val refresh = state.code in FetchState.refreshCodes
         if (refresh) {
-            page.variables[VAR_REFRESH] = state
+            page.setVar(VAR_REFRESH, state)
         }
 
         return state

@@ -42,8 +42,12 @@ import org.openqa.selenium.remote.DesiredCapabilities
     }
  * */
 open class WebDriverSettings(
-        immutableConfig: ImmutableConfig
-): BrowserSettings(immutableConfig) {
+    parameters: Map<String, Any> = mapOf(),
+    jsDirectory: String = "js",
+    immutableConfig: ImmutableConfig
+): BrowserSettings(parameters, jsDirectory, immutableConfig) {
+
+    constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
 
     // Special
     // var mobileEmulationEnabled = true
@@ -59,7 +63,7 @@ open class WebDriverSettings(
         return generalOptions
     }
 
-    fun createChromeDevtoolsOptions(generalOptions: DesiredCapabilities): ChromeOptions {
+    fun createChromeOptions(generalOptions: DesiredCapabilities): ChromeOptions {
         val chromeOptions = ChromeOptions()
         chromeOptions.merge(generalOptions.asMap())
 
@@ -70,10 +74,10 @@ open class WebDriverSettings(
             chromeOptions.proxyServer = proxy.httpProxy
         }
 
-        chromeOptions.userDataDir = userDataDir
         chromeOptions.headless = isHeadless
         chromeOptions.noSandbox = noSandbox
         chromeOptions.addArguments("window-size", formatViewPort())
+        chromeOptions.addArguments("disable-blink-features", "AutomationControlled")
 
         return chromeOptions
     }

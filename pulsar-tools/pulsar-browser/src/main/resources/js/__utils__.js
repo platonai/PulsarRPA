@@ -63,10 +63,6 @@ __utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
         return false
     }
 
-    if (__utils__.isBrowserError()) {
-        document.pulsarData.multiStatus.status.ec = document.querySelector(".error-code").textContent
-    }
-
     // The document is ready
     return JSON.stringify(document.pulsarData)
 };
@@ -195,42 +191,6 @@ __utils__.updatePulsarStat = function(init = false) {
     let ni = 0;  // image
     let nst = 0; // short text in first screen
     let nnm = 0; // number like text in first screen
-
-    if (!__utils__.isBrowserError()) {
-        document.body.forEach((node) => {
-            if (node.isIFrame()) {
-                return
-            }
-
-            if (node.isAnchor()) ++na;
-            if (node.isImage() && !node.isSmallImage()) ++ni;
-
-            if (node.isText() && node.nScreen() <= 20) {
-                let isShortText = node.isShortText();
-                let isNumberLike = isShortText && node.isNumberLike();
-                if (isShortText) {
-                    ++nst;
-                    if (isNumberLike) {
-                        ++nnm;
-                    }
-
-                    let ele = node.bestElement();
-                    if (ele != null && !init && !ele.hasAttribute("_ps_tp")) {
-                        // not set at initialization, it's lazy loaded
-                        ele.setAttribute("_ps_lazy", "1")
-                    }
-
-                    if (ele != null) {
-                        let type = isNumberLike ? "nm" : "st";
-                        ele.setAttribute("_ps_tp", type);
-                    }
-                }
-            }
-
-            if (node.isDiv() && node.scrollWidth > width && node.scrollWidth < maxWidth) width = node.scrollWidth;
-            if (node.isDiv() && node.scrollWidth >= fineWidth && node.scrollHeight > height) height = node.scrollHeight;
-        });
-    }
 
     // unexpected but occurs when do performance test to parallel harvest Web sites
     if (!document.pulsarData) {

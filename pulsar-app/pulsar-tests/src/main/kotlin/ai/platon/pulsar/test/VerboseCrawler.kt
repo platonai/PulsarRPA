@@ -22,6 +22,15 @@ open class VerboseCrawler(
 
     constructor(context: PulsarContext) : this(context.createSession())
 
+    fun open(url: String) {
+        open(url, "")
+    }
+
+    fun open(url: String, args: String) {
+        val options = session.options("-refresh $args")
+        load(url, options)
+    }
+
     fun load(url: String, args: String) {
         val options = session.options(args)
         load(url, options)
@@ -34,6 +43,10 @@ open class VerboseCrawler(
         val doc = session.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
+
+        if (options.outLinkSelector.isBlank()) {
+            return
+        }
 
         doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
             .filter { Urls.isValidUrl(it) }
