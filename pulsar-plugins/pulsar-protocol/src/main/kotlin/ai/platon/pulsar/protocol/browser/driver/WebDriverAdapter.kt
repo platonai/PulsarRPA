@@ -70,13 +70,13 @@ class WebDriverAdapter(
         }
     }
 
-    override fun waitFor(selector: String) = driver.waitFor(selector)
+    override suspend fun waitFor(selector: String) = driver.waitFor(selector)
 
-    override fun exists(selector: String) = driver.exists(selector)
+    override suspend fun exists(selector: String) = driver.exists(selector)
 
-    override fun click(selector: String, count: Int) = driver.click(selector, count)
+    override suspend fun click(selector: String, count: Int) = driver.click(selector, count)
 
-    override fun type(selector: String, text: String) = driver.type(selector, text)
+    override suspend fun type(selector: String, text: String) = driver.type(selector, text)
 
     override fun evaluate(expression: String): Any? {
         return when {

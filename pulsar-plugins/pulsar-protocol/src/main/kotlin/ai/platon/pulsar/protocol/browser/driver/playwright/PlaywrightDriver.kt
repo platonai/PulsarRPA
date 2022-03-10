@@ -131,7 +131,7 @@ class PlaywrightDriver(
             return navigateUrl
         }
 
-    override fun exists(selector: String): Boolean {
+    override suspend fun exists(selector: String): Boolean {
         try {
             val locator = page.locator(selector)
             return locator.count() > 0
@@ -142,7 +142,7 @@ class PlaywrightDriver(
         return false
     }
 
-    override fun waitFor(selector: String): Long {
+    override suspend fun waitFor(selector: String): Long {
         try {
             val startTime = System.currentTimeMillis()
             page.waitForSelector(selector)
@@ -154,7 +154,7 @@ class PlaywrightDriver(
         return 0
     }
 
-    override fun type(selector: String, text: String) {
+    override suspend fun type(selector: String, text: String) {
         try {
             val locator = page.locator(selector)
             locator.scrollIntoViewIfNeeded()
@@ -164,7 +164,7 @@ class PlaywrightDriver(
         }
     }
 
-    override fun click(selector: String, count: Int) {
+    override suspend fun click(selector: String, count: Int) {
         try {
             val locator = page.locator(selector)
             locator.scrollIntoViewIfNeeded()

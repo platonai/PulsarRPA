@@ -34,10 +34,10 @@ interface WebDriver: Closeable {
     fun setTimeouts(driverConfig: BrowserSettings)
 
     fun bringToFront()
-    fun waitFor(selector: String): Long = 0
-    fun exists(selector: String): Boolean = false
-    fun type(selector: String, text: String) {}
-    fun click(selector: String, count: Int = 1) {}
+    suspend fun waitFor(selector: String): Long = 0
+    suspend fun exists(selector: String): Boolean = false
+    suspend fun type(selector: String, text: String) {}
+    suspend fun click(selector: String, count: Int = 1) {}
 
     fun evaluate(expression: String): Any?
     fun evaluateSilently(expression: String): Any?

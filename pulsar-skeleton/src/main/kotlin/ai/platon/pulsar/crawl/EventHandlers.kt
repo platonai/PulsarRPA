@@ -428,11 +428,11 @@ abstract class AbstractEmulateEventHandler: EmulateEventHandler {
     open var verbose = false
 
     override suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any? {
-
+        return null
     }
 
     override suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any? {
-
+        return null
     }
 
     override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage

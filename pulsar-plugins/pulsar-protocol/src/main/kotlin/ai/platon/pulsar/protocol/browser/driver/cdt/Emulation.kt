@@ -142,13 +142,13 @@ class Mouse(private val input: Input) {
     var currentX = 0.0
     var currentY = 0.0
 
-    fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
+    suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
         move(x, y)
         down(x, y, clickCount)
 
         if (delayMillis > 0) {
-            sleepMillis(delayMillis)
-//            delay(delayMillis)
+//            sleepMillis(delayMillis)
+            delay(delayMillis)
         }
 
         up(x, y, clickCount)

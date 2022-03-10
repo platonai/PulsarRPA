@@ -10,7 +10,6 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationExcep
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.geometric.OffsetD
-import ai.platon.pulsar.common.sleepMillis
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
@@ -20,6 +19,7 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import com.github.kklisura.cdt.protocol.types.page.Viewport
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -180,34 +180,34 @@ class ChromeDevtoolsDriver(
             }
         }
 
-    override fun exists(selector: String): Boolean {
+    override suspend fun exists(selector: String): Boolean {
         val nodeId = querySelector(selector)
         return nodeId != null && nodeId > 0
     }
 
-    override fun waitFor(selector: String): Long {
+    override suspend fun waitFor(selector: String): Long {
         val nodeId = querySelector(selector)
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
 
         while (elapsedTime < waitForTimeout && (nodeId == null || nodeId <= 0)) {
-            delay("gap")
+            delayFor("gap")
             elapsedTime = System.currentTimeMillis() - startTime
         }
 
         return waitForTimeout - elapsedTime
     }
 
-    override fun click(selector: String, count: Int) {
+    override suspend fun click(selector: String, count: Int) {
         val nodeId = scrollIntoViewIfNeeded(selector) ?: return
         val offset = OffsetD(4.0, 4.0)
         val point = ClickableDOM(page, dom, nodeId, offset).clickablePoint() ?: return
 
         mouse.click(point.x, point.y, count, delayPolicy("click"))
-        delay("gap")
+        delayFor("gap")
     }
 
-    override fun type(selector: String, text: String) {
+    override suspend fun type(selector: String, text: String) {
         val nodeId = focus(selector) ?: return
 
         text.forEach { char ->
@@ -216,15 +216,15 @@ class ChromeDevtoolsDriver(
             } else {
                 input.insertText("$char")
             }
-            delay("type")
+            delayFor("type")
         }
 
-        delay("gap")
+        delayFor("gap")
     }
 
-    private fun delay() = sleepMillis(delayPolicy("gap"))
+    private suspend fun delayFor() = delay(delayPolicy("gap"))
 
-    private fun delay(type: String) = sleepMillis(delayPolicy(type))
+    private suspend fun delayFor(type: String) = delay(delayPolicy(type))
 
     private fun focus(selector: String): Int? {
         val rootId = dom.document.nodeId
