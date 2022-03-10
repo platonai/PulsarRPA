@@ -8,6 +8,8 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
+import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
+import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
@@ -39,10 +41,10 @@ open class WebDriverFactory(
         // Choose the WebDriver
         val browserType = getBrowserType(conf)
         val driver = kotlin.runCatching {
-            when {
-                browserType == BrowserType.CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
-                browserType == BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId,
-                    capabilities)
+            when (browserType) {
+                BrowserType.CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
+                BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
+                BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId, capabilities)
                 else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
             }
         }.onFailure {
@@ -54,28 +56,39 @@ open class WebDriverFactory(
         return WebDriverAdapter(browserInstanceId, driver, priority)
     }
 
-    private fun createPlaywrightDriver(
+    private fun createChromeDevtoolsDriver(
         browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
-    ): PlaywrightDriver {
-        val launcherOptions = LauncherOptions().apply {
-            if (driverSettings.isSupervised) {
-                supervisorProcess = driverSettings.supervisorProcess
-                supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
-            }
+    ): ChromeDevtoolsDriver {
+        val launcherOptions = LauncherOptions(BrowserType.CHROME.name, driverSettings)
+        if (driverSettings.isSupervised) {
+            launcherOptions.supervisorProcess = driverSettings.supervisorProcess
+            launcherOptions.supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
         }
 
         val launchOptions = driverSettings.createChromeOptions(capabilities)
+        val browserInstance = browserInstanceManager.launchIfAbsent(browserInstanceId, launcherOptions, launchOptions)
+        return ChromeDevtoolsDriver(driverSettings, browserInstance as ChromeDevtoolsBrowserInstance)
+    }
 
-        val userDataDir = driverSettings.userDataDir
-        val browserInstance = browserInstanceManager.launchIfAbsent(userDataDir, launcherOptions, launchOptions)
+    private fun createPlaywrightDriver(
+        instanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+    ): PlaywrightDriver {
+        val launcherOptions = LauncherOptions(BrowserType.PLAYWRIGHT_CHROME.name, driverSettings)
+        if (driverSettings.isSupervised) {
+            launcherOptions.supervisorProcess = driverSettings.supervisorProcess
+            launcherOptions.supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
+        }
+
+        val launchOptions = driverSettings.createChromeOptions(capabilities)
+        val browserInstance = browserInstanceManager.launchIfAbsent(instanceId, launcherOptions, launchOptions)
         return PlaywrightDriver(driverSettings, browserInstance as PlaywrightBrowserInstance)
     }
 
     private fun createMockChromeDevtoolsDriver(
-        browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+        instanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
     ): MockWebDriver {
-        val backupDriverCreator = { createPlaywrightDriver(browserInstanceId, capabilities) }
-        return MockWebDriver(browserInstanceId, backupDriverCreator)
+        val backupDriverCreator = { createPlaywrightDriver(instanceId, capabilities) }
+        return MockWebDriver(instanceId, backupDriverCreator)
     }
 
     private fun setProxy(capabilities: DesiredCapabilities, proxyServer: String) {
@@ -88,13 +101,11 @@ open class WebDriverFactory(
     }
 
     /**
-     * Speed: native > htmlunit > chrome
-     * Quality: chrome > htmlunit > native
      *
-     * We support CHROME only now
      */
     private fun getBrowserType(volatileConfig: VolatileConfig?): BrowserType {
-        return volatileConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
-            ?: immutableConfig.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
+        val defaultType = BrowserType.CHROME
+        return volatileConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
+            ?: immutableConfig.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
     }
 }

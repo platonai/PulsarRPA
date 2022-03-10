@@ -7,7 +7,7 @@ package ai.platon.pulsar.persist.metadata;
  * @version $Id: $Id
  */
 public enum BrowserType {
-    NATIVE, CHROME, MOCK_CHROME, SELENIUM_CHROME, PHANTOMJS;
+    NATIVE, CHROME, MOCK_CHROME, SELENIUM_CHROME, PLAYWRIGHT_CHROME, PHANTOMJS;
 
     /**
      * <p>fromString.</p>

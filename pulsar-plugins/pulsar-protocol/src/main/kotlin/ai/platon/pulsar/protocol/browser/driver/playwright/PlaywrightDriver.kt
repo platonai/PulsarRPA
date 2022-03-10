@@ -3,21 +3,20 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.sleep
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.protocol.browser.conf.sites.amazon.AmazonBlockRules
-import ai.platon.pulsar.protocol.browser.conf.sites.jd.JdBlockRules
+import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
+import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
+import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import com.github.kklisura.cdt.protocol.types.page.Viewport
-import com.google.gson.Gson
-import com.microsoft.playwright.Browser
 import com.microsoft.playwright.Locator
 import com.microsoft.playwright.Mouse
 import com.microsoft.playwright.Page
+import com.microsoft.playwright.PlaywrightException
 import com.microsoft.playwright.options.Position
 import com.microsoft.playwright.options.WaitUntilState
-import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Duration
@@ -36,19 +35,20 @@ class PlaywrightDriver(
 
     private val logger = LoggerFactory.getLogger(PlaywrightDriver::class.java)!!
 
-    override val browserType: BrowserType = BrowserType.CHROME
+    override val browserType: BrowserType = BrowserType.PLAYWRIGHT_CHROME
+
+    val waitForTimeout = Duration.ofMinutes(1).toMillis()
 
     val openSequence = 1 + browserInstance.tabCount.get()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
-    val preloadJs get() = browserSettings.generatePreloadJs(false)
 
     private var isFirstLaunch = openSequence == 1
     private val _sessionId: String = "playwright-" + sessionIdGenerator.incrementAndGet()
 
     private var navigateUrl = ""
 
-    val page: Page = browserInstance.createTab()
-    val mouse: Mouse = page.mouse()
+    private val pageInitialized = AtomicBoolean()
+    private lateinit var page: Page
 
     private val enableBlockingReport = false
     private val closed = AtomicBoolean()
@@ -56,21 +56,17 @@ class PlaywrightDriver(
     val numSessionLost = AtomicInteger()
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || numSessionLost.get() > 1
-    val isActive get() = !isGone
-
-    val viewport = Viewport().apply {
-        x = 0.0
-        y = 0.0
-        width = BrowserSettings.viewPort.getWidth()
-        height = BrowserSettings.viewPort.getHeight()
-        scale = 1.0
-    }
+    val isActive get() = !isGone && !page.isClosed
 
     override fun setTimeouts(driverConfig: BrowserSettings) {
     }
 
-    @Throws(NoSuchSessionException::class)
+    @Throws(WebDriverException::class)
     override fun navigateTo(url: String) {
+        if (pageInitialized.compareAndSet(false, true)) {
+            page = browserInstance.createTab()
+        }
+
         initSpecialSiteBeforeVisit(url)
 
         browserInstance.navigateHistory.add(url)
@@ -92,7 +88,7 @@ class PlaywrightDriver(
         }
     }
 
-    @Throws(NoSuchSessionException::class)
+    @Throws(WebDriverException::class)
     override fun stopLoading() {
         if (!isActive) return
 
@@ -101,20 +97,22 @@ class PlaywrightDriver(
             // page.stopLoading()
         } catch (e: Exception) {
             numSessionLost.incrementAndGet()
-            logger.warn("Failed to call stop loading, session is already closed, {}", Strings.simplifyException(e))
+            logger.warn("Failed to call stop loading | {}", e.message)
         }
     }
 
     override fun evaluate(expression: String): Any? {
         if (!isActive) return null
 
-        try {
+        return try {
             val evaluate = page.evaluate(expression)
-            val result = evaluate?.toString()
-            return result
+            evaluate?.toString()
         } catch (e: Exception) {
-            numSessionLost.incrementAndGet()
-            throw e
+            val stackTrace = e.stringify()
+            if (!stackTrace.contains("Error: Target closed")) {
+                logger.warn("Failed to evaluate | {}", e.message)
+            }
+            null
         }
     }
 
@@ -125,46 +123,79 @@ class PlaywrightDriver(
 
     override val currentUrl: String
         get() {
-            navigateUrl = if (!isActive) navigateUrl else page.url()
+            try {
+                navigateUrl = if (!isActive) navigateUrl else page.url()
+            } catch (e: Exception) {
+                logger.warn("Failed to query url | {}", e.message)
+            }
             return navigateUrl
         }
 
     override fun exists(selector: String): Boolean {
-        val locator = page.locator(selector)
-        return locator.count() > 0
+        try {
+            val locator = page.locator(selector)
+            return locator.count() > 0
+        } catch (e: Exception) {
+            logger.warn("Failed to locate | {}", e.message)
+        }
+
+        return false
+    }
+
+    override fun waitFor(selector: String): Long {
+        try {
+            val startTime = System.currentTimeMillis()
+            page.waitForSelector(selector)
+            return waitForTimeout - (System.currentTimeMillis() - startTime)
+        } catch (e: Exception) {
+            logger.warn("Failed to wait | {}", e.message)
+        }
+
+        return 0
     }
 
     override fun type(selector: String, text: String) {
-        val locator = page.locator(selector)
-        locator.scrollIntoViewIfNeeded()
-        locator.type(text)
+        try {
+            val locator = page.locator(selector)
+            locator.scrollIntoViewIfNeeded()
+            locator.type(text)
+        } catch (e: Exception) {
+            logger.warn("Failed to type | {}", e.message)
+        }
     }
 
     override fun click(selector: String, count: Int) {
-        val locator = page.locator(selector)
-        locator.scrollIntoViewIfNeeded()
-        val box = locator.boundingBox()
-        var x = box.width / 3
-        var y = box.height / 3
-        x += Random.nextInt(x.toInt())
-        y += Random.nextInt(y.toInt())
-        val position = Position(x, y)
+        try {
+            val locator = page.locator(selector)
+            locator.scrollIntoViewIfNeeded()
+            val box = locator.boundingBox()
+            var x = box.width / 3
+            var y = box.height / 3
+            x += Random.nextInt(x.toInt())
+            y += Random.nextInt(y.toInt())
+            val position = Position(x, y)
 
-        val delayMillis = 500.0 + Random.nextInt(1500)
-        val options = Locator.ClickOptions()
-            .setDelay(delayMillis)
-            .setNoWaitAfter(true)
-            .setPosition(position)
-            .setClickCount(count)
-        locator.click(options)
+            val delayMillis = 500.0 + Random.nextInt(1500)
+            val options = Locator.ClickOptions()
+                .setDelay(delayMillis)
+                .setNoWaitAfter(true)
+                .setPosition(position)
+                .setClickCount(count)
+            locator.click(options)
+        } catch (e: Exception) {
+            logger.warn("Failed to click | {}", e.message)
+        }
     }
 
-    override val pageSource: String get() = page.content()
+    override val pageSource: String?
+        get() = kotlin.runCatching { page.content() }
+            .onFailure { logger.warn("Failed to get page source | {}", it.message) }.getOrNull()
 
     override fun bringToFront() = page.bringToFront()
 
     fun screenshot(path: Path) {
-        page.screenshot(Page.ScreenshotOptions().setPath(path))
+        kotlin.runCatching { page.screenshot(Page.ScreenshotOptions().setPath(path)) }
+            .onFailure { logger.warn("Failed to screenshot | {}", it.message) }.getOrNull()
     }
 
     override fun toString() = sessionId
@@ -191,15 +222,9 @@ class PlaywrightDriver(
         if (!isActive) return
 
         try {
-            if (preloadJs.isNotBlank()) {
-                page.addInitScript(preloadJs)
-            }
-
             if (enableUrlBlocking) {
                 setupUrlBlocking(url)
-                // network.enable()
             }
-//            fetch.enable()
 
             navigateUrl = url
             val options = Page.NavigateOptions()
@@ -208,7 +233,7 @@ class PlaywrightDriver(
             page.navigate(url, options)
         } catch (e: Exception) {
             numSessionLost.incrementAndGet()
-            throw e
+            logger.warn("Failed to navigate | {}", e.message)
         }
     }
 
@@ -220,7 +245,7 @@ class PlaywrightDriver(
             page.navigate(url)
         } catch (e: Exception) {
             numSessionLost.incrementAndGet()
-            throw e
+            logger.warn("Failed to navigate | {}", e.message)
         }
     }
 

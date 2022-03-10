@@ -18,7 +18,7 @@ class TestChromeLauncher {
         val launchOptions = ChromeOptions()
         launchOptions.headless = false
         val userDataDir = AppPaths.CHROME_TMP_DIR.resolve(LocalDateTime.now().second.toString())
-        val launcher = ChromeLauncher(userDataDir, config = LauncherOptions())
+        val launcher = ChromeLauncher(userDataDir, options = LauncherOptions())
         val chrome = launcher.launch(launchOptions)
 //        val tab = chrome.createTab("https://www.baidu.com")
 //        val versionString = Gson().toJson(chrome.version)

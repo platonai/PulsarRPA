@@ -65,14 +65,6 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
-    override fun click(selector: String, count: Int) {
-
-    }
-
-    override fun type(selector: String, text: String) {
-
-    }
-
     @Throws(NoSuchSessionException::class)
     override fun stopLoading() {
         backupDriverOrNull?.stopLoading()

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.conf.sites.jd
+package ai.platon.pulsar.protocol.browser.hotfix.sites.jd
 
 import ai.platon.pulsar.browser.driver.BlockRules
 

@@ -6,6 +6,7 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import java.io.Closeable
 import java.time.Duration
 import java.time.Instant
+import kotlin.random.Random
 
 interface WebDriver: Closeable {
     val id: Int
@@ -26,12 +27,14 @@ interface WebDriver: Closeable {
     val isMockedPageSource: Boolean
     val sessionId: String?
     val currentUrl: String?
-    val pageSource: String
+    val pageSource: String?
+    val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
     fun navigateTo(url: String)
     fun setTimeouts(driverConfig: BrowserSettings)
 
     fun bringToFront()
+    fun waitFor(selector: String): Long = 0
     fun exists(selector: String): Boolean = false
     fun type(selector: String, text: String) {}
     fun click(selector: String, count: Int = 1) {}

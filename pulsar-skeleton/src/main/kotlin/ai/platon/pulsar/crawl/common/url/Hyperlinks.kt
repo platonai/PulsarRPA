@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.urls.StatefulHyperlink
 import ai.platon.pulsar.common.urls.StatefulUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.*
-import ai.platon.pulsar.persist.WebPage
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -16,7 +15,7 @@ import java.util.concurrent.CompletableFuture
 
 interface ListenableHyperlink: UrlAware {
     val loadEventHandler: LoadEventHandler
-    val jsEventHandler: JsEventHandler
+    val jsEventHandler: EmulateEventHandler
     val crawlEventHandler: CrawlEventHandler
 }
 
@@ -53,7 +52,7 @@ open class StatefulListenableHyperlink(
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
     override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler()
-    override val jsEventHandler: JsEventHandler = DefaultJsEventHandler()
+    override val jsEventHandler: EmulateEventHandler = DefaultEmulateEventHandler()
     override val crawlEventHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
 }
 
@@ -184,5 +183,5 @@ open class CompletableListenableHyperlink<T>(
 
     override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler()
 
-    override val jsEventHandler: JsEventHandler = DefaultJsEventHandler()
+    override val jsEventHandler: EmulateEventHandler = DefaultEmulateEventHandler()
 }

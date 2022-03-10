@@ -28,6 +28,8 @@ import kotlin.collections.component2
  * The launch config
  * */
 class LauncherOptions(
+    val browserType: String = "CHROME",
+    val browserSettings: BrowserSettings = BrowserSettings(),
     var supervisorProcess: String? = null,
     val supervisorProcessArgs: MutableList<String> = mutableListOf()
 ) {
@@ -155,7 +157,7 @@ class ChromeOptions(
 class ChromeLauncher(
     private val userDataDir: Path = BrowserSettings.defaultUserDataDir(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
-    private val config: LauncherOptions = LauncherOptions()
+    private val options: LauncherOptions = LauncherOptions("CHROME")
 ) : AutoCloseable {
 
     companion object {
@@ -205,7 +207,7 @@ class ChromeLauncher(
         val p = process ?: return
         this.process = null
         if (p.isAlive) {
-            Runtimes.destroyProcess(p, config.shutdownWaitTime)
+            Runtimes.destroyProcess(p, options.shutdownWaitTime)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
                     .onFailure { log.warn("Unexpected exception", it) }
         }
@@ -254,15 +256,15 @@ class ChromeLauncher(
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
-        var supervisorProcess = config.supervisorProcess
+        var supervisorProcess = options.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
-            log.warn("Supervisor program {} can not be located", config.supervisorProcess)
+            log.warn("Supervisor program {} can not be located", options.supervisorProcess)
             supervisorProcess = null
         }
 
         val executable = supervisorProcess?:"$chromeBinary"
         var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
-            config.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
+            options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }
         arguments += " --user-data-dir=$userDataDir"
 
@@ -314,7 +316,7 @@ class ChromeLauncher(
         readLineThread.start()
 
         try {
-            readLineThread.join(config.startupWaitTime.toMillis())
+            readLineThread.join(options.startupWaitTime.toMillis())
 
             if (port == 0) {
                 close(readLineThread)
@@ -332,7 +334,7 @@ class ChromeLauncher(
 
     private fun close(thread: Thread) {
         try {
-            thread.join(config.threadWaitTime.toMillis())
+            thread.join(options.threadWaitTime.toMillis())
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         }

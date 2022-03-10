@@ -16,14 +16,14 @@ import java.util.concurrent.atomic.AtomicInteger
 abstract class BrowserInstance(
     val userDataDir: Path,
     val proxyServer: String?,
-    val launcherConfig: LauncherOptions,
+    val launcherOptions: LauncherOptions,
     val launchOptions: ChromeOptions
 ): AutoCloseable {
     /**
      * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
      * */
     val id = BrowserInstanceId(userDataDir, proxyServer)
-    val isGUI get() = launcherConfig.supervisorProcess == null && !launchOptions.headless
+    val isGUI get() = launcherOptions.supervisorProcess == null && !launchOptions.headless
 
     var tabCount = AtomicInteger()
     val navigateHistory = mutableListOf<String>()

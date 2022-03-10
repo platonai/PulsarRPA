@@ -2,6 +2,9 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.LauncherOptions
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -20,9 +23,10 @@ class BrowserInstanceManager: AutoCloseable {
 
     @Synchronized
     fun launchIfAbsent(
-        userDataDir: Path, launcherOptions: LauncherOptions, launchOptions: ChromeOptions): BrowserInstance {
+        instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions): BrowserInstance {
+        val userDataDir = instanceId.dataDir
         return browserInstances.computeIfAbsent(userDataDir.toString()) {
-            PlaywrightBrowserInstance(userDataDir, launchOptions.proxyServer, launcherOptions, launchOptions).apply { launch() }
+            createAndLaunch(instanceId, launcherOptions, launchOptions)
         }
     }
 
@@ -38,15 +42,21 @@ class BrowserInstanceManager: AutoCloseable {
         }
     }
 
+    private fun createAndLaunch(instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions): BrowserInstance {
+        val userDataDir = instanceId.dataDir
+        return when(launcherOptions.browserType.uppercase()) {
+            "PLAYWRIGHT_CHROME" -> PlaywrightBrowserInstance(userDataDir, launchOptions.proxyServer, launcherOptions, launchOptions)
+            else -> ChromeDevtoolsBrowserInstance(userDataDir, launchOptions.proxyServer, launcherOptions, launchOptions)
+        }.apply { launch() }
+    }
+
     private fun doClose() {
         kotlin.runCatching {
             val unSynchronized = browserInstances.values.toList()
             browserInstances.clear()
             unSynchronized.parallelStream().forEach { it.close() }
-            // Playwright.create().close()
         }.onFailure {
-            // kill -9
-            it.printStackTrace()
+            getLogger(this).warn("Failed to close | {}", it.message)
         }
     }
 }

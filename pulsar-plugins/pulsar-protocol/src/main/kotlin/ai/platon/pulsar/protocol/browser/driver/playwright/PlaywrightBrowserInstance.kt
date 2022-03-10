@@ -4,55 +4,134 @@ import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeTab
 import ai.platon.pulsar.browser.driver.chrome.LauncherOptions
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.Browsers
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import com.microsoft.playwright.*
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.log
 
 class PlaywrightBrowserInstance(
     userDataDir: Path,
     proxyServer: String?,
-    launcherConfig: LauncherOptions,
+    launcherOptions: LauncherOptions,
     launchOptions: ChromeOptions
-): BrowserInstance(userDataDir, proxyServer, launcherConfig, launchOptions) {
+): BrowserInstance(userDataDir, proxyServer, launcherOptions, launchOptions) {
+    companion object {
+        private val createOptions = Playwright.CreateOptions().setEnv(mutableMapOf("PWDEBUG" to "0"))
+        private val playwright = Playwright.create(createOptions)
+        private val instanceCount = AtomicInteger()
+
+        init {
+            System.setProperty("playwright.cli.dir", Paths.get("/tmp/playwright-java").toString())
+        }
+    }
 
     private val logger = LoggerFactory.getLogger(PlaywrightBrowserInstance::class.java)
 
-    lateinit var context: BrowserContext
-        private set
+    private val browserSettings get() = launcherOptions.browserSettings
+    private lateinit var context: BrowserContext
+    private lateinit var browser: Browser
     val drivers = ConcurrentLinkedQueue<PlaywrightDriver>()
     val driverCount get() = drivers.size
 
+    val preloadJs get() = browserSettings.generatePreloadJs(false)
+
     override fun launch() {
         if (launched.compareAndSet(false, true)) {
-            val vp = BrowserSettings.viewPort
-
-            val playwright = Playwright.create()
-            val browserType = playwright.chromium()
-            val options = BrowserType.LaunchPersistentContextOptions().apply {
-                headless = launchOptions.headless
-                setViewportSize(vp.width, vp.height)
-                if (proxyServer != null) {
-                    setProxy(proxyServer)
-                }
-                // userAgent = browserSettings.randomUserAgent()
-                executablePath = Browsers.searchChromeBinary()
-                ignoreHTTPSErrors = true
-                ignoreDefaultArgs = arrayListOf("--hide-scrollbars")
-                args = launchOptions.toList(launchOptions.additionalArguments).toMutableList()
-            }
-
-            logger.info(options.args.joinToString(" "))
-            context = browserType.launchPersistentContext(userDataDir, options)
-
-            context.setDefaultTimeout(Duration.ofMinutes(1).toMillis().toDouble())
-            context.setDefaultNavigationTimeout(Duration.ofMinutes(3).toMillis().toDouble())
+            launch1()
         }
+    }
+
+    private fun launch1() {
+        val vp = BrowserSettings.viewPort
+
+        val executablePath = kotlin.runCatching { Browsers.searchChromeBinary() }.getOrNull()
+        // TODO: no way to disable inspector
+
+        val browserType = playwright.chromium()
+        val options = BrowserType.LaunchPersistentContextOptions().apply {
+            headless = launchOptions.headless
+//            headless = true
+            setViewportSize(vp.width, vp.height)
+            // setChannel()
+//            setScreenSize(vp.width, vp.height)
+            if (proxyServer != null) {
+                setProxy(proxyServer)
+            }
+            // userAgent = browserSettings.randomUserAgent()
+            this.executablePath = executablePath
+            ignoreHTTPSErrors = true
+            // ignoreAllDefaultArgs = true
+            ignoreDefaultArgs = arrayListOf("--hide-scrollbars", "--enable-crashpad", "--window-size")
+            args = launchOptions.toList(launchOptions.additionalArguments).toMutableList()
+            args.add("--start-maximized")
+            // args = launchOptions.toList()
+//                acceptDownloads = false
+            // slowMo = 100.0
+        }
+
+        logger.info(options.args.joinToString(" "))
+//            context = browserType.launchPersistentContext(userDataDir, options)
+        context = browserType.launchPersistentContext(userDataDir, options)
+        instanceCount.incrementAndGet()
+
+        if (preloadJs.isNotBlank()) {
+            context.addInitScript(preloadJs)
+        }
+
+        context.setDefaultTimeout(Duration.ofMinutes(1).toMillis().toDouble())
+        context.setDefaultNavigationTimeout(Duration.ofMinutes(3).toMillis().toDouble())
+    }
+
+    private fun launch2() {
+        val vp = BrowserSettings.viewPort
+
+        val browserType = playwright.chromium()
+        val options = BrowserType.LaunchOptions().apply {
+            headless = launchOptions.headless
+
+            if (proxyServer != null) {
+                setProxy(proxyServer)
+            }
+            // userAgent = browserSettings.randomUserAgent()
+            this.executablePath = executablePath
+//            ignoreHTTPSErrors = true
+            // ignoreAllDefaultArgs = true
+//                ignoreDefaultArgs = arrayListOf("--hide-scrollbars", "--enable-crashpad")
+            args = launchOptions.toList(launchOptions.additionalArguments).toMutableList()
+//                acceptDownloads = false
+            // slowMo = 100.0
+        }
+
+        logger.info(options.args.joinToString(" "))
+        browser = browserType.launch(options)
+        instanceCount.incrementAndGet()
+
+        val contextOptions = Browser.NewContextOptions().apply {
+            setViewportSize(vp.width, vp.height)
+//                setScreenSize(vp.width, vp.height)
+            if (proxyServer != null) {
+                setProxy(proxyServer)
+            }
+            ignoreHTTPSErrors = true
+        }
+        context = browser.newContext(contextOptions)
+
+        if (preloadJs.isNotBlank()) {
+            context.addInitScript(preloadJs)
+        }
+
+        context.setDefaultTimeout(Duration.ofMinutes(1).toMillis().toDouble())
+        context.setDefaultNavigationTimeout(Duration.ofMinutes(3).toMillis().toDouble())
     }
 
     @Synchronized
@@ -62,7 +141,7 @@ class PlaywrightBrowserInstance(
 
         val page = context.newPage()
 
-        return page
+        return page!!
     }
 
     @Synchronized
@@ -74,17 +153,26 @@ class PlaywrightBrowserInstance(
 
     override fun close() {
         if (launched.get() && closed.compareAndSet(false, true)) {
-            logger.info("Closing {} playwright drivers ... | {}", drivers.size, id.display)
+            if (drivers.isNotEmpty()) {
+                logger.info("Closing {} playwright drivers ... | {}", drivers.size, id.display)
 
-            val nonSynchronized = drivers.toList().also { drivers.clear() }
-            nonSynchronized.parallelStream().forEach {
-                it.runCatching { close() }
-                    .onFailure { logger.warn("Failed to close the playwright driver", it) }
+                val nonSynchronized = drivers.toList().also { drivers.clear() }
+                nonSynchronized.parallelStream().forEach {
+                    runCatching { it.close() }
+                        .onFailure { logger.warn("{}", it.simplify()) }
+                }
             }
 
-            context.close()
+            instanceCount.decrementAndGet()
+            kotlin.runCatching { context.close() }
+                .onFailure { logger.warn("Failed to close playwright context | {}", it.message) }
 
             logger.info("Launcher is closed | {}", id.display)
+
+            if (instanceCount.get() == 0) {
+                kotlin.runCatching { Playwright.create().close() }
+                    .onFailure { logger.warn("Failed to close playwright | {}", it.message) }
+            }
         }
     }
 }

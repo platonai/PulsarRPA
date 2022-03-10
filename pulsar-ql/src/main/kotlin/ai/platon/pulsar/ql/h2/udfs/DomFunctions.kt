@@ -2,7 +2,7 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.urls.Urls
-import ai.platon.pulsar.crawl.DefaultJsEventHandler
+import ai.platon.pulsar.crawl.DefaultEmulateEventHandler
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
@@ -67,7 +67,7 @@ object DomFunctions {
 
         return sqlContext.getSession(h2session).run {
             val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
-            val eventHandler = DefaultJsEventHandler("", expressions)
+            val eventHandler = DefaultEmulateEventHandler("", expressions)
             normUrl.options.conf.putBean(eventHandler)
             parseValueDom(load(normUrl))
         }

@@ -2,14 +2,13 @@ package ai.platon.pulsar.amazon.environment
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.AbstractJsEventHandler
+import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-class ChooseLanguageJsEventHandler: AbstractJsEventHandler() {
+class ChooseLanguageJsEventHandler: AbstractEmulateEventHandler() {
     override var verbose = true
 
     override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
@@ -19,7 +18,7 @@ class ChooseLanguageJsEventHandler: AbstractJsEventHandler() {
     }
 }
 
-class ChooseCountryJsEventHandler: AbstractJsEventHandler() {
+class ChooseCountryJsEventHandler: AbstractEmulateEventHandler() {
     override var verbose = true
 
     override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {

@@ -8,7 +8,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
-import java.util.*
+import kotlin.random.Random
 
 interface EventHandler {
     val name: String
@@ -407,16 +407,33 @@ open class DefaultLoadEventHandler(
     onAfterLoadPipeline
 ), LoadEventPipelineHandler
 
-interface JsEventHandler {
+interface EmulateEventHandler {
+    suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any?
+    suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any?
     suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any?
     suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any?
 }
 
-abstract class AbstractJsEventHandler: JsEventHandler {
-    private val log = getLogger(AbstractJsEventHandler::class)
+abstract class AbstractEmulateEventHandler: EmulateEventHandler {
+    private val log = getLogger(AbstractEmulateEventHandler::class)
 
-    open var delayMillis = 500L
+    open val delayPolicy: (String) -> Long get() = { type ->
+        when (type) {
+            "click" -> 500L + Random.nextInt(500)
+            "type" -> 500L + Random.nextInt(500)
+            else -> 100L + Random.nextInt(500)
+        }
+    }
+
     open var verbose = false
+
+    override suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any? {
+
+    }
+
+    override suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any? {
+
+    }
 
     override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
         return null
@@ -426,21 +443,9 @@ abstract class AbstractJsEventHandler: JsEventHandler {
         return null
     }
 
-    protected fun exists(selector: String, driver: WebDriver) = driver.exists(selector)
+    protected suspend fun delay() = delay(delayPolicy(""))
 
-    protected suspend fun click(selector: String, driver: WebDriver, count: Int = 1) {
-        if (delayMillis > 0) {
-            delay(delayMillis)
-        }
-        return driver.click(selector, count)
-    }
-
-    protected suspend fun type(selector: String, text: String, driver: WebDriver) {
-        if (delayMillis > 0) {
-            delay(delayMillis)
-        }
-        return driver.type(selector, text)
-    }
+    protected suspend fun delay(type: String) = delay(delayPolicy(type))
 
     protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
         var value: Any? = null
@@ -459,19 +464,17 @@ abstract class AbstractJsEventHandler: JsEventHandler {
     }
 
     protected suspend fun evaluate(driver: WebDriver, expression: String): Any? {
-        if (delayMillis > 0) {
-            delay(delayMillis)
-        }
+        delayPolicy("evaluate").takeIf { it > 0 }?.let { delay(it) }
         return driver.evaluate(expression)
     }
 }
 
-class EmptyJsEventHandler: AbstractJsEventHandler()
+class EmptyEmulateEventHandler: AbstractEmulateEventHandler()
 
-class DefaultJsEventHandler(
+class DefaultEmulateEventHandler(
     val beforeComputeExpressions: Iterable<String> = listOf(),
     val afterComputeExpressions: Iterable<String> = listOf()
-): AbstractJsEventHandler() {
+): AbstractEmulateEventHandler() {
     constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
         bcExpressions.split(delimiters), acExpressions2.split(delimiters))
 

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Duration
@@ -44,6 +45,9 @@ internal class InvocationFuture(val returnProperty: String? = null) {
         this.result = result
         countDownLatch.countDown()
     }
+
+    @Throws(InterruptedException::class)
+    fun await(timeout: Duration) = await(timeout.toMillis(), TimeUnit.MILLISECONDS)
 
     @Throws(InterruptedException::class)
     fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
@@ -133,8 +137,11 @@ abstract class BasicDevTools(
 
         try {
             // TODO: consider use coroutine or wsClient.asyncSend
-            wsClient.send(OBJECT_MAPPER.writeValueAsString(method))
-            val responded = future.await(devToolsConfig.readTimeout.seconds, TimeUnit.SECONDS)
+            val message = OBJECT_MAPPER.writeValueAsString(method)
+            logger.takeIf { it.isTraceEnabled }?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
+
+            wsClient.send(message)
+            val responded = future.await(devToolsConfig.readTimeout)
             invocationFutures.remove(method.id)
             lastActiveTime = Instant.now()
 
@@ -191,7 +198,7 @@ abstract class BasicDevTools(
     }
 
     override fun accept(message: String) {
-        logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", message)
+        logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
         numAccepts.inc()
         try {
@@ -278,7 +285,7 @@ abstract class BasicDevTools(
         synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
         if (unmodifiedListeners.isEmpty()) return
 
-        // coroutine is OK
+        // TODO: use kotlin coroutine
         workerGroup.execute {
             var event: Any? = null
             for (listener in unmodifiedListeners) {

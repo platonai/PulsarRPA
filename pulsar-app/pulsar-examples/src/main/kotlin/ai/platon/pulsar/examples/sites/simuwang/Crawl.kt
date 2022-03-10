@@ -1,25 +1,28 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.crawl.AbstractJsEventHandler
+import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.test.VerboseSQLExecutor
+import kotlinx.coroutines.delay
 
-class LoginJsEventHandler: AbstractJsEventHandler() {
+class LoginHandler: AbstractEmulateEventHandler() {
     override var verbose = true
 
-    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
-        if (!exists(".comp-login-b2", driver)) {
+    override suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any? {
+        delay(5000)
+        if (!driver.exists(".comp-login-b2")) {
             return null
         }
 
         val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
         val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
 
-        click("button.comp-login-b2", driver)
-        type("input[name=username]", username, driver)
-        type("input[type=password]", password, driver)
-        click("button.comp-login-btn", driver, count = 2)
+        driver.click("button.comp-login-b2")
+        driver.type("input[name=username]", username)
+        driver.type("input[type=password]", password)
+        driver.click("button.comp-login-btn", count = 2)
 
         return null
     }
@@ -30,7 +33,7 @@ fun main() {
     val args = "-i 30s -ii 30s -ol a[href~=product] -tl 10"
 
     val executor = VerboseSQLExecutor()
-    executor.eventHandler = LoginJsEventHandler()
+    executor.eventHandler = LoginHandler()
     executor.open(portal, "-scrollCount 1")
 //    executor.open("https://bot.sannysoft.com/", "-scrollCount 1")
 
@@ -48,6 +51,6 @@ select
 from
     load_and_select('$portal', '.ranking-table-tbody .ranking-table-tbody-tr')
         """.trimIndent()
-    executor.executeQuery(sql)
-    executor.loadOutPages(portal, args)
+//    executor.executeQuery(sql)
+//    executor.loadOutPages(portal, args)
 }

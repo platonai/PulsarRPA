@@ -36,7 +36,7 @@ class WebDriverAdapter(
     /**
      * The real time page source return by the browser
      * */
-    override val pageSource: String get() = driver.pageSource
+    override val pageSource: String? get() = driver.pageSource
 
     /**
      * The id of the session to the browser
@@ -69,6 +69,8 @@ class WebDriverAdapter(
             lastActiveTime = Instant.now()
         }
     }
+
+    override fun waitFor(selector: String) = driver.waitFor(selector)
 
     override fun exists(selector: String) = driver.exists(selector)
 

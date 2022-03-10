@@ -121,6 +121,14 @@ fun sleepSeconds(seconds: Long) {
     }
 }
 
+fun sleepMillis(millis: Long) {
+    try {
+        TimeUnit.MILLISECONDS.sleep(millis)
+    } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
+    }
+}
+
 fun sleep(duration: Duration) {
     try {
         Thread.sleep(duration.toMillis())

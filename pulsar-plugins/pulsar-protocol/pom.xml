@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.microsoft.playwright</groupId>
             <artifactId>playwright</artifactId>
-            <version>1.18.0</version>
+            <version>1.19.0</version>
         </dependency>
     </dependencies>
 

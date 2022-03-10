@@ -5,12 +5,11 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.JsEventHandler
+import ai.platon.pulsar.crawl.EmulateEventHandler
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import com.google.common.annotations.Beta
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
@@ -398,14 +397,14 @@ open class LoadOptions(
     }
 
     @Beta
-    open fun setEventHandler(eventHandler: JsEventHandler? = null) {
+    open fun setEventHandler(eventHandler: EmulateEventHandler? = null) {
         if (eventHandler != null) {
             conf.putBean(eventHandler)
         }
     }
 
     @Beta
-    open fun clearEventHandler(eventHandler: JsEventHandler? = null) {
+    open fun clearEventHandler(eventHandler: EmulateEventHandler? = null) {
         if (eventHandler != null) {
             conf.removeBean(eventHandler)
         }
@@ -488,14 +487,14 @@ open class LoadOptions(
                 .let { Params.of(it).withRowFormat(rowFormat) }
     }
 
-    fun addEventHandler(eventHandler: JsEventHandler?) {
+    fun addEventHandler(eventHandler: EmulateEventHandler?) {
         if (eventHandler != null) {
             // jsEventHandlers.add(eventHandler)
             conf.putBean(eventHandler)
         }
     }
 
-    fun removeEventHandler(eventHandler: JsEventHandler?) {
+    fun removeEventHandler(eventHandler: EmulateEventHandler?) {
         if (eventHandler != null) {
             // jsEventHandlers.remove(eventHandler)
             conf.removeBean(eventHandler)

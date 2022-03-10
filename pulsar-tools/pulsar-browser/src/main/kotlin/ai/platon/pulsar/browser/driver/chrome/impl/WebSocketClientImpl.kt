@@ -76,8 +76,6 @@ class WebSocketClientImpl : WebSocketClient {
         meterRequests.mark()
 
         try {
-            // TODO: use session.asyncRemote?
-            // logger.info(message)
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)

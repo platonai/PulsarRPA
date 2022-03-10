@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.JsEventHandler
+import ai.platon.pulsar.crawl.EmulateEventHandler
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -18,7 +18,7 @@ open class VerboseCrawler(
     // trigger loop start
     val crawlLoop = session.context.crawlLoops
 
-    var eventHandler: JsEventHandler? = null
+    var eventHandler: EmulateEventHandler? = null
 
     constructor(context: PulsarContext) : this(context.createSession())
 

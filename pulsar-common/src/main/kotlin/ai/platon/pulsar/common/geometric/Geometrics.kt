@@ -114,3 +114,47 @@ fun Rectangle.testAlignment(r: Rectangle, bias: Double = 0.2): AlignType {
         else -> AlignType.NONE
     }
 }
+
+data class PointI(
+    var x: Int,
+    var y: Int
+)
+
+data class DimI(
+    var width: Int,
+    var height: Int
+)
+
+data class RectI(
+    var x: Int,
+    var y: Int,
+    var with: Int,
+    var height: Int
+)
+
+data class OffsetI(
+    var x: Int,
+    var y: Int,
+)
+
+data class PointD(
+    var x: Double,
+    var y: Double
+)
+
+data class DimD(
+    var width: Double,
+    var height: Double
+)
+
+data class RectD(
+    var x: Double,
+    var y: Double,
+    var with: Double,
+    var height: Double
+)
+
+data class OffsetD(
+    var x: Double,
+    var y: Double,
+)

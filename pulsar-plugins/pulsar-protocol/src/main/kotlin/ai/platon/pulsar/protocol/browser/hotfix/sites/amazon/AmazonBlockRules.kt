@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.conf.sites.amazon
+package ai.platon.pulsar.protocol.browser.hotfix.sites.amazon
 
 import ai.platon.pulsar.browser.driver.BlockRules
 

@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.JsEventHandler
+import ai.platon.pulsar.crawl.EmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -17,6 +17,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -143,7 +144,7 @@ open class BrowserEmulator(
                 activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
                 activeDomUrls = interactResult.activeDomMessage?.urls
             }
-            navigateTask.pageSource = driver.pageSource
+            navigateTask.pageSource = driver.pageSource ?: ""
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             logger.warn(e.message)
@@ -191,7 +192,7 @@ open class BrowserEmulator(
 
                 checkState(interactTask.driver)
                 checkState(interactTask.fetchTask)
-                pageSource = interactTask.driver.pageSource
+                pageSource = interactTask.driver.pageSource ?: ""
 
                 if (pageSource.length < 20_000) {
                     delay(1000)
@@ -206,16 +207,20 @@ open class BrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
-        val eventHandler = volatileConfig.getBean(JsEventHandler::class)
+        val eventHandler = volatileConfig.getBean(EmulateEventHandler::class)
 
         tracer?.trace("{}", task.emulateSettings)
 
+        eventHandler?.onBeforeCheckDOMState(task.fetchTask.page, task.driver)
+
         jsCheckDOMState(task, result)
+
+        eventHandler?.onAfterCheckDOMState(task.fetchTask.page, task.driver)
 
         // task.driver.bringToFront()
 
         if (result.state.isContinue) {
-            jsScrollDown(task, result)
+            // jsScrollDown(task, result)
         }
 
         // TODO: move to the session config
@@ -270,7 +275,7 @@ open class BrowserEmulator(
         } finally {
             if (message == null) {
                 if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
-                    logger.warn("Script result is null for waitForReady, retry is supposed | {}", interactTask.url)
+                    logger.warn("WaitForReady got null after $i round, retry is supposed | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK
                 }
@@ -343,19 +348,7 @@ open class BrowserEmulator(
         val rand = Random.nextInt(3)
         if (rand == 0) {
             val interactTask = InteractTask(task, driverSettings, driver)
-            val expressions = listOf(
-                "document.querySelector('#summary-service a').click()",
-                "document.querySelector('#ns_services a').click()",
-                "document.querySelector('.summary-price a').click()",
-                "document.querySelector('#comment-count a').click()",
-                "document.querySelector('#sp-hot-sale a').click()",
-                "document.querySelector('#choose-service a').click()",
-                "document.querySelector('#choose-baitiao a').click()",
-                "document.querySelector('#detail li:nth-child(2)').click()",
-                "document.querySelector('#detail li:nth-child(3)').click()",
-                "document.querySelector('#detail li:nth-child(4)').click()",
-                "document.querySelector('#detail li:nth-child(5)').click()",
-            ).shuffled().take(3)
+            val expressions = JdEmulator().expressions
             val verbose = logger.isDebugEnabled
             evaluate(interactTask, expressions, Duration.ofMillis(500), verbose)
         }
