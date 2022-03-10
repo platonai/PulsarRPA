@@ -30,19 +30,19 @@ interface WebDriver: Closeable {
     val pageSource: String?
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
-    fun navigateTo(url: String)
-    fun setTimeouts(driverConfig: BrowserSettings)
+    suspend fun navigateTo(url: String)
+    suspend fun setTimeouts(driverConfig: BrowserSettings)
 
-    fun bringToFront()
+    suspend fun bringToFront()
     suspend fun waitFor(selector: String): Long = 0
     suspend fun exists(selector: String): Boolean = false
     suspend fun type(selector: String, text: String) {}
     suspend fun click(selector: String, count: Int = 1) {}
 
-    fun evaluate(expression: String): Any?
-    fun evaluateSilently(expression: String): Any?
+    suspend fun evaluate(expression: String): Any?
+    suspend fun evaluateSilently(expression: String): Any?
 
-    fun stopLoading()
+    suspend fun stopLoading()
 
     fun free()
     fun startWork()

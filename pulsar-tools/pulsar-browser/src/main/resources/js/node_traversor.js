@@ -9,7 +9,7 @@
  *
  * @param visitor {Object} a class implementing the {@link NodeFeatureCalculator} interface, to be called when visiting each node.
  */
-function PlatonNodeTraversor(visitor) {
+function PulsarNodeTraversor(visitor) {
     this.visitor = visitor;
     this.options = {
         diagnosis : false
@@ -24,7 +24,7 @@ function PlatonNodeTraversor(visitor) {
  * Start a depth-first traverse of the root and all of its descendants.
  * @param root {Node} the root node point to traverse.
  */
-PlatonNodeTraversor.prototype.traverse = function(root) {
+PulsarNodeTraversor.prototype.traverse = function(root) {
     let node = root;
     let depth = 0;
     let visitor = this.visitor;

@@ -259,7 +259,7 @@ open class BrowserEmulator(
         val maxRound = scriptTimeout.seconds - 5 // leave 5 seconds to wait for script finish
 
         // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
-        val expression = "__utils__.waitForReady($maxRound, $initialScroll)"
+        val expression = "__pulsar_utils__.waitForReady($maxRound, $initialScroll)"
         var i = 0
         var message: Any? = null
         try {
@@ -304,10 +304,10 @@ open class BrowserEmulator(
         val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
 
         val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4)
-            .map { "__utils__.scrollToMiddle($it)" }
+            .map { "__pulsar_utils__.scrollToMiddle($it)" }
             .toMutableList()
         repeat(scrollDownCount) {
-            expressions.add("__utils__.scrollDown()")
+            expressions.add("__pulsar_utils__.scrollDown()")
         }
         evaluate(interactTask, expressions, scrollInterval)
     }
@@ -329,7 +329,7 @@ open class BrowserEmulator(
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
-        val expression = "__utils__.compute()"
+        val expression = "__pulsar_utils__.compute()"
         val message = evaluate(interactTask, expression)
 
         if (message is String) {

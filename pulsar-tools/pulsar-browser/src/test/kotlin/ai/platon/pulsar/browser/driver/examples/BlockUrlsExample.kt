@@ -15,14 +15,14 @@ class BlockUrlsExample: BrowserExampleBase() {
 
         page.onDomContentEventFired { event: DomContentEventFired ->
             // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
-            runtime.evaluate("__utils__.checkPulsarStatus()")
+            runtime.evaluate("__pulsar_utils__.checkPulsarStatus()")
         }
 
         page.onLoadEventFired { event: LoadEventFired ->
             // The page is completely loaded, document.readyState === 'complete'
 
-            runtime.evaluate("__utils__.scrollDownN();")
-            runtime.evaluate("__utils__.emulate();")
+            runtime.evaluate("__pulsar_utils__.scrollDownN();")
+            runtime.evaluate("__pulsar_utils__.emulate();")
 
             val source = pageSource
             val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(testUrl, "", ".htm"))

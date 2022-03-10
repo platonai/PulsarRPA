@@ -11,6 +11,7 @@ class LoginHandler: AbstractEmulateEventHandler() {
 
     override suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any? {
         delay(5000)
+
         if (!driver.exists(".comp-login-b2")) {
             return null
         }

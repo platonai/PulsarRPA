@@ -32,18 +32,18 @@ class ActiveDomMessage {
     urls = new ActiveUrls()
 }
 
-let __utils__ = function () {};
+let __pulsar_utils__ = function () {};
 
 /**
  * @param maxRound The maximum round to check ready
  * @param scroll The count to scroll down
  * @return {Object|boolean}
  * */
-__utils__.waitForReady = function(maxRound = 30, scroll = 2) {
-    return __utils__.checkPulsarStatus(maxRound, scroll);
+__pulsar_utils__.waitForReady = function(maxRound = 30, scroll = 2) {
+    return __pulsar_utils__.checkPulsarStatus(maxRound, scroll);
 };
 
-__utils__.isBrowserError = function () {
+__pulsar_utils__.isBrowserError = function () {
     if (document.documentURI.startsWith("chrome-error")) {
         return true
     }
@@ -51,11 +51,11 @@ __utils__.isBrowserError = function () {
     return false
 };
 
-__utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
+__pulsar_utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
     if (!document.pulsarData) {
         // initialization
-        __utils__.createPulsarDataIfAbsent();
-        __utils__.updatePulsarStat(true);
+        __pulsar_utils__.createPulsarDataIfAbsent();
+        __pulsar_utils__.updatePulsarStat(true);
     }
 
     let status = document.pulsarData.multiStatus.status;
@@ -71,12 +71,12 @@ __utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
         status.scroll += 1;
     }
 
-    let ready = __utils__.isActuallyReady();
+    let ready = __pulsar_utils__.isActuallyReady();
     if (!ready) {
         return false
     }
 
-    if (__utils__.isBrowserError()) {
+    if (__pulsar_utils__.isBrowserError()) {
         document.pulsarData.multiStatus.status.ec = document.querySelector(".error-code").textContent
     }
 
@@ -84,7 +84,7 @@ __utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
     return JSON.stringify(document.pulsarData)
 };
 
-__utils__.createPulsarDataIfAbsent = function() {
+__pulsar_utils__.createPulsarDataIfAbsent = function() {
     if (!document.pulsarData) {
         let location = "";
         if (window.location instanceof Location) {
@@ -111,7 +111,7 @@ __utils__.createPulsarDataIfAbsent = function() {
     }
 };
 
-__utils__.writePulsarData = function() {
+__pulsar_utils__.writePulsarData = function() {
     if (!document.body) {
         return false
     }
@@ -135,13 +135,13 @@ __utils__.writePulsarData = function() {
  * Check if the document is ready to analyze.
  * A document is hardly be perfect ready in time, since it's very common there are very slow sub resources to wait for.
  * */
-__utils__.isActuallyReady = function() {
+__pulsar_utils__.isActuallyReady = function() {
     // unexpected
     if (!document.body) {
         return false
     }
 
-    __utils__.updatePulsarStat();
+    __pulsar_utils__.updatePulsarStat();
 
     if (!document.pulsarData) {
         return false
@@ -176,7 +176,7 @@ __utils__.isActuallyReady = function() {
     return ready;
 };
 
-__utils__.isIdle = function(init = false) {
+__pulsar_utils__.isIdle = function(init = false) {
     let idle = false;
     let multiStatus = document.pulsarData.multiStatus;
     let status = multiStatus.status;
@@ -195,7 +195,7 @@ __utils__.isIdle = function(init = false) {
 /**
  * @return {Object}
  * */
-__utils__.updatePulsarStat = function(init = false) {
+__pulsar_utils__.updatePulsarStat = function(init = false) {
     const config = PULSAR_CONFIGS;
     const viewPortWidth = config.viewPortWidth;
     const viewPortHeight = config.viewPortHeight;
@@ -209,7 +209,7 @@ __utils__.updatePulsarStat = function(init = false) {
     let nst = 0; // short text in first screen
     let nnm = 0; // number like text in first screen
 
-    if (!__utils__.isBrowserError()) {
+    if (!__pulsar_utils__.isBrowserError()) {
         document.body.forEach((node) => {
             if (node.isIFrame()) {
                 return
@@ -288,7 +288,7 @@ __utils__.updatePulsarStat = function(init = false) {
 /**
  * @param {Number} ratio The ratio of the page's height to scroll to, default is 0.5
  * */
-__utils__.scrollToMiddle = function(ratio = 0.5) {
+__pulsar_utils__.scrollToMiddle = function(ratio = 0.5) {
     if (!document || !document.documentElement || !document.body) {
         return
     }
@@ -308,7 +308,7 @@ __utils__.scrollToMiddle = function(ratio = 0.5) {
     window.scrollTo(x, y)
 };
 
-__utils__.scrollToBottom = function() {
+__pulsar_utils__.scrollToBottom = function() {
     if (!document || !document.documentElement || !document.body) {
         return
     }
@@ -324,11 +324,11 @@ __utils__.scrollToBottom = function() {
     window.scrollTo(x, y)
 };
 
-__utils__.scrollToTop = function() {
+__pulsar_utils__.scrollToTop = function() {
     window.scrollTo(0, 0)
 };
 
-__utils__.scrollDown = function() {
+__pulsar_utils__.scrollDown = function() {
     if (!document.pulsarData) {
         // TODO: this occurs when do performance test, but the reason is not investigated
         return false
@@ -337,7 +337,7 @@ __utils__.scrollDown = function() {
     window.scrollBy(0, 500);
 };
 
-__utils__.scrollDownN = function(scrollCount = 5) {
+__pulsar_utils__.scrollDownN = function(scrollCount = 5) {
     if (!document.pulsarData) {
         // TODO: this occurs when do performance test, but the reason is not investigated
         return false
@@ -357,7 +357,7 @@ __utils__.scrollDownN = function(scrollCount = 5) {
  * @param  {Object} o
  * @return {Object}
  */
-__utils__.clone = function(o) {
+__pulsar_utils__.clone = function(o) {
     return JSON.parse(JSON.stringify(o))
 };
 
@@ -368,7 +368,7 @@ __utils__.clone = function(o) {
  * @param defaultValue {Number}
  * @return {Number}
  * */
-__utils__.getIntAttribute = function(node, attrName, defaultValue) {
+__pulsar_utils__.getIntAttribute = function(node, attrName, defaultValue) {
     if (!defaultValue) {
         defaultValue = 0;
     }
@@ -387,7 +387,7 @@ __utils__.getIntAttribute = function(node, attrName, defaultValue) {
  * @param attrName {String}
  * @param add {Number}
  * */
-__utils__.increaseIntAttribute = function(node, attrName, add) {
+__pulsar_utils__.increaseIntAttribute = function(node, attrName, add) {
     let value = node.getAttribute(attrName);
     if (!value) {
         value = '0';
@@ -400,7 +400,7 @@ __utils__.increaseIntAttribute = function(node, attrName, add) {
 /**
  * Get attribute as an integer
  * */
-__utils__.getReadableNodeName = function(node) {
+__pulsar_utils__.getReadableNodeName = function(node) {
     let name = node.tagName
         + (node.id ? ("#" + node.id) : "")
         + (node.className ? ("#" + node.className) : "");
@@ -418,7 +418,7 @@ __utils__.getReadableNodeName = function(node) {
  * @param textContent {String} the string to clean
  * @return {String} The clean string
  * */
-__utils__.getCleanTextContent = function(textContent) {
+__pulsar_utils__.getCleanTextContent = function(textContent) {
     // all control characters
     // @see http://www.asciima.com/
     textContent = textContent.replace(/[\x00-\x1f]/g, " ");
@@ -434,7 +434,7 @@ __utils__.getCleanTextContent = function(textContent) {
  * @param nodeOrList {NodeList|Array|Node} the node from which we extract the content
  * @return {String} The clean string, "" if no text content available.
  * */
-__utils__.getMergedTextContent = function(nodeOrList) {
+__pulsar_utils__.getMergedTextContent = function(nodeOrList) {
     if (!nodeOrList) {
         return "";
     }
@@ -459,7 +459,7 @@ __utils__.getMergedTextContent = function(nodeOrList) {
  * @param node {Node} the node from which we extract the content
  * @return {String} The clean string, "" if no text content available.
  * */
-__utils__.getTextContent = function(node) {
+__pulsar_utils__.getTextContent = function(node) {
     if (!node || !node.textContent || node.textContent.length === 0) {
         return "";
     }
@@ -475,7 +475,7 @@ __utils__.getTextContent = function(node) {
  *
  * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
  */
-__utils__.getTextWidth = function(text, font) {
+__pulsar_utils__.getTextWidth = function(text, font) {
     // re-use canvas object for better performance
     let canvas = this.getTextWidth.canvas || (this.getTextWidth.canvas = document.createElement("canvas"));
     let context = canvas.getContext("2d");
@@ -491,7 +491,7 @@ __utils__.getTextWidth = function(text, font) {
  * @param {String} text The text to be rendered.
  * @param {HTMLElement} ele The container element.
  * */
-__utils__.getElementTextWidth = function(text, ele) {
+__pulsar_utils__.getElementTextWidth = function(text, ele) {
     let style = window.getComputedStyle(ele);
     let font = style.getPropertyValue('font-weight') + ' '
         + style.getPropertyValue('font-size') + ' '
@@ -508,7 +508,7 @@ __utils__.getElementTextWidth = function(text, ele) {
  * @param height {Number}
  * @return {String|Boolean}
  * */
-__utils__.formatRect = function(top, left, width, height) {
+__pulsar_utils__.formatRect = function(top, left, width, height) {
     if (width === 0 && height === 0) {
         return false;
     }
@@ -525,7 +525,7 @@ __utils__.formatRect = function(top, left, width, height) {
  * @param rect {DOMRect}
  * @return {String|Boolean}
  * */
-__utils__.formatDOMRect = function(rect) {
+__pulsar_utils__.formatDOMRect = function(rect) {
     if (!rect || (rect.width === 0 && rect.height === 0)) {
         return false;
     }
@@ -543,7 +543,7 @@ __utils__.formatDOMRect = function(rect) {
  * @param node {Node|Element|Text}
  * @return {DOMRect|Boolean}
  * */
-__utils__.getClientRect = function(node) {
+__pulsar_utils__.getClientRect = function(node) {
     if (node.nodeType === Node.TEXT_NODE) {
         return this.getTextNodeClientRect(node)
     } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -560,12 +560,12 @@ __utils__.getClientRect = function(node) {
  * @param propertyNames {Array}
  * @return {Object|Boolean}
  * */
-__utils__.getComputedStyle = function(node, propertyNames) {
+__pulsar_utils__.getComputedStyle = function(node, propertyNames) {
     if (node.nodeType === Node.ELEMENT_NODE) {
         let styles = {};
         let computedStyle = window.getComputedStyle(node, null);
         propertyNames.forEach(propertyName =>
-            styles[propertyName] = __utils__.getPropertyValue(computedStyle, propertyName)
+            styles[propertyName] = __pulsar_utils__.getPropertyValue(computedStyle, propertyName)
         );
         return styles
     } else {
@@ -580,7 +580,7 @@ __utils__.getComputedStyle = function(node, propertyNames) {
  * @param propertyName {String}
  * @return {String}
  * */
-__utils__.getPropertyValue = function(style, propertyName) {
+__pulsar_utils__.getPropertyValue = function(style, propertyName) {
     let value = style.getPropertyValue(propertyName);
 
     if (!value || value === '') {
@@ -590,7 +590,7 @@ __utils__.getPropertyValue = function(style, propertyName) {
     if (propertyName === 'font-size') {
         value = value.substring(0, value.lastIndexOf('px'))
     } else if (propertyName === 'color' || propertyName === 'background-color') {
-        value = __utils__.shortenHex(__utils__.rgb2hex(value));
+        value = __pulsar_utils__.shortenHex(__pulsar_utils__.rgb2hex(value));
         // skip prefix '#'
         value = value.substring(1)
     }
@@ -606,7 +606,7 @@ __utils__.getPropertyValue = function(style, propertyName) {
  * @param rgb {String}
  * @return {String}
  * */
-__utils__.rgb2hex = function(rgb) {
+__pulsar_utils__.rgb2hex = function(rgb) {
     let parts = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
     return (parts && parts.length === 4) ? "#" +
         ("0" + parseInt(parts[1],10).toString(16)).slice(-2) +
@@ -619,7 +619,7 @@ __utils__.rgb2hex = function(rgb) {
  * @param hex {String}
  * @return {String}
  * */
-__utils__.shortenHex = function(hex) {
+__pulsar_utils__.shortenHex = function(hex) {
     if ((hex.charAt(1) === hex.charAt(2))
         && (hex.charAt(3) === hex.charAt(4))
         && (hex.charAt(5) === hex.charAt(6))) {
@@ -645,7 +645,7 @@ __utils__.shortenHex = function(hex) {
  * @param key {String}
  * @param value {Object}
  * */
-__utils__.addTuple = function(node, attributeName, key, value) {
+__pulsar_utils__.addTuple = function(node, attributeName, key, value) {
     let attributeValue = node.getAttribute(attributeName) || "";
     if (attributeValue.length > 0) {
         attributeValue += " "
@@ -665,7 +665,7 @@ __utils__.addTuple = function(node, attributeName, key, value) {
  * @param ele {Node|Element}
  * @return {DOMRect|Boolean}
  * */
-__utils__.getElementClientRect = function(ele) {
+__pulsar_utils__.getElementClientRect = function(ele) {
     let bodyRect = this.bodyRect || (this.bodyRect = document.body.getBoundingClientRect());
     let r = ele.getBoundingClientRect();
 
@@ -685,7 +685,7 @@ __utils__.getElementClientRect = function(ele) {
  * @param node {Node|Text}
  * @return {DOMRect|null}
  * */
-__utils__.getTextNodeClientRect = function(node) {
+__pulsar_utils__.getTextNodeClientRect = function(node) {
     let bodyRect = this.bodyRect || (this.bodyRect = document.body.getBoundingClientRect());
 
     let rect = null;
@@ -710,7 +710,7 @@ __utils__.getTextNodeClientRect = function(node) {
 /**
  * The full page metrics
  * */
-__utils__.getFullPageMetrics = function() {
+__pulsar_utils__.getFullPageMetrics = function() {
     let metrics = {
         width: Math.max(window.innerWidth, document.body.scrollWidth, document.documentElement.scrollWidth) | 0,
         height: Math.max(window.innerHeight, document.body.scrollHeight, document.documentElement.scrollHeight) | 0,
@@ -727,7 +727,7 @@ __utils__.getFullPageMetrics = function() {
  * MetaInformation version :
  * 0.2.2 :
  * */
-__utils__.generateMetadata = function() {
+__pulsar_utils__.generateMetadata = function() {
     let meta = document.getElementById(META_INFORMATION_ID);
     if (meta != null) {
         // already generated
@@ -760,7 +760,7 @@ __utils__.generateMetadata = function() {
 /**
  * Calculate visualization info and do human actions
  * */
-__utils__.compute = function() {
+__pulsar_utils__.compute = function() {
     if (!document.body || !document.body.firstChild) {
         return
     }
@@ -772,13 +772,13 @@ __utils__.compute = function() {
         return
     }
 
-    __utils__.scrollToTop();
+    __pulsar_utils__.scrollToTop();
 
     // calling window.stop will suppress onLoadComplete event
     window.stop();
 
-    __utils__.updatePulsarStat();
-    __utils__.writePulsarData();
+    __pulsar_utils__.updatePulsarStat();
+    __pulsar_utils__.writePulsarData();
 
     // do something like a human being
     // humanize(document.body);
@@ -789,11 +789,11 @@ __utils__.compute = function() {
     });
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization
-    // new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
+    // new PulsarNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
 
-    __utils__.generateMetadata();
+    __pulsar_utils__.generateMetadata();
 
-    __utils__.addProjectSpecifiedData();
+    __pulsar_utils__.addProjectSpecifiedData();
 
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute(DATA_ERROR, '0');
@@ -801,7 +801,7 @@ __utils__.compute = function() {
     return JSON.stringify(document.pulsarData)
 };
 
-__utils__.addProjectSpecifiedData = function() {
+__pulsar_utils__.addProjectSpecifiedData = function() {
 
 };
 
@@ -812,6 +812,6 @@ __utils__.addProjectSpecifiedData = function() {
  * @param b {Number}
  * @return {Number}
  * */
-__utils__.add = function(a, b) {
+__pulsar_utils__.add = function(a, b) {
     return a + b
 };

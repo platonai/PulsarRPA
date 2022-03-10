@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
@@ -65,11 +66,11 @@ abstract class AbstractWebDriver(
         }
 
         if (status.compareAndSet(Status.WORKING, Status.CANCELED)) {
-            stopLoading()
+            runBlocking { stopLoading() }
         }
     }
 
-    override fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
+    override suspend fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
 

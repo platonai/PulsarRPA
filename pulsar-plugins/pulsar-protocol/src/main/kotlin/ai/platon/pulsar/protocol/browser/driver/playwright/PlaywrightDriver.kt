@@ -58,11 +58,10 @@ class PlaywrightDriver(
     val isGone get() = closed.get() || numSessionLost.get() > 1
     val isActive get() = !isGone && !page.isClosed
 
-    override fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
     }
 
-    @Throws(WebDriverException::class)
-    override fun navigateTo(url: String) {
+    override suspend fun navigateTo(url: String) {
         if (pageInitialized.compareAndSet(false, true)) {
             page = browserInstance.createTab()
         }
@@ -88,8 +87,7 @@ class PlaywrightDriver(
         }
     }
 
-    @Throws(WebDriverException::class)
-    override fun stopLoading() {
+    override suspend fun stopLoading() {
         if (!isActive) return
 
         try {
@@ -101,7 +99,7 @@ class PlaywrightDriver(
         }
     }
 
-    override fun evaluate(expression: String): Any? {
+    override suspend fun evaluate(expression: String): Any? {
         if (!isActive) return null
 
         return try {
@@ -191,7 +189,7 @@ class PlaywrightDriver(
         get() = kotlin.runCatching { page.content() }
             .onFailure { logger.warn("Failed to get page source | {}", it.message) }.getOrNull()
 
-    override fun bringToFront() = page.bringToFront()
+    override suspend fun bringToFront() = page.bringToFront()
 
     fun screenshot(path: Path) {
         kotlin.runCatching { page.screenshot(Page.ScreenshotOptions().setPath(path)) }

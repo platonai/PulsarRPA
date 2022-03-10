@@ -6,7 +6,6 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
-import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -60,7 +59,7 @@ class WebDriverAdapter(
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
-    override fun navigateTo(url: String) {
+    override suspend fun navigateTo(url: String) {
         if (isWorking) {
             lastActiveTime = Instant.now()
             driver.navigateTo(url)
@@ -78,44 +77,22 @@ class WebDriverAdapter(
 
     override suspend fun type(selector: String, text: String) = driver.type(selector, text)
 
-    override fun evaluate(expression: String): Any? {
+    override suspend fun evaluate(expression: String): Any? {
         return when {
             isNotWorking -> null
-            driver is MockWebDriver -> driver.evaluate(expression)
-            driver is PlaywrightDriver -> driver.evaluate(expression)
-            else -> null
+            else -> driver.evaluate(expression)
         }
     }
 
-    override fun bringToFront() {
-        when (driver) {
-            is MockWebDriver -> {
-                driver.bringToFront()
-            }
-            is PlaywrightDriver -> {
-                driver.takeIf { isWorking }?.runCatching { bringToFront() }
-            }
-            else -> {
-                evaluateSilently(";document.blur();")
-            }
-        }
+    override suspend fun bringToFront() {
+        driver.takeIf { isWorking }?.runCatching { bringToFront() }
     }
 
-    override fun stopLoading() {
-        when (driver) {
-            is MockWebDriver -> {
-                driver.takeIf { isWorking }?.runCatching { stopLoading() }
-            }
-            is PlaywrightDriver -> {
-                driver.takeIf { isWorking }?.runCatching { stopLoading() }
-            }
-            else -> {
-                evaluateSilently(";window.stop();")
-            }
-        }
+    override suspend fun stopLoading() {
+        driver.takeIf { isWorking }?.runCatching { stopLoading() }
     }
 
-    override fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
         if (isNotWorking) {
             return
         }

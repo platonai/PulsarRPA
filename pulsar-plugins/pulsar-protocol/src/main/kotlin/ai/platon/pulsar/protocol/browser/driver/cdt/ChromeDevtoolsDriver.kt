@@ -8,7 +8,6 @@ import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -18,7 +17,6 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
-import com.github.kklisura.cdt.protocol.types.page.Viewport
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -71,18 +69,10 @@ class ChromeDevtoolsDriver(
     private val enableBlockingReport = false
     private val closed = AtomicBoolean()
 
-    val numSessionLost = AtomicInteger()
+    val sessionLosts = AtomicInteger()
     override var lastActiveTime = Instant.now()
-    val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
+    val isGone get() = closed.get() || !devTools.isOpen || sessionLosts.get() > 0
     val isActive get() = !isGone
-
-    val viewport = Viewport().apply {
-        x = 0.0
-        y = 0.0
-        width = BrowserSettings.viewPort.getWidth()
-        height = BrowserSettings.viewPort.getHeight()
-        scale = 1.0
-    }
 
     init {
         try {
@@ -103,11 +93,10 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    override fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
     }
 
-    @Throws(WebDriverException::class)
-    override fun navigateTo(url: String) {
+    override suspend fun navigateTo(url: String) {
         initSpecialSiteBeforeVisit(url)
 
         browserInstance.navigateHistory.add(url)
@@ -129,20 +118,18 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Throws(WebDriverException::class)
-    override fun stopLoading() {
+    override suspend fun stopLoading() {
         if (!isActive) return
 
         try {
             page.stopLoading()
         } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            logger.warn("Failed to call stop loading, session is already closed, {}", Strings.simplifyException(e))
+            sessionLosts.incrementAndGet()
+            logger.warn("Failed to call stop loading, session is already closed, {}", e.message)
         }
     }
 
-    @Throws(WebDriverException::class)
-    override fun evaluate(expression: String): Any? {
+    override suspend fun evaluate(expression: String): Any? {
         if (!isActive) return null
 
         try {
@@ -151,9 +138,11 @@ class ChromeDevtoolsDriver(
             // TODO: handle errors here
             return result?.value
         } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw WebDriverException(e.message)
+            sessionLosts.incrementAndGet()
+            logger.warn("Failed to evaluate, session might be closed, {}", e.message)
         }
+
+        return null
     }
 
     override val sessionId: String?
@@ -163,7 +152,7 @@ class ChromeDevtoolsDriver(
                 lastSessionId = if (!isActive) null else mainFrame.id
                 return lastSessionId
             } catch (e: ChromeDevToolsInvocationException) {
-                numSessionLost.incrementAndGet()
+                sessionLosts.incrementAndGet()
                 throw WebDriverException(e.message)
             }
         }
@@ -175,7 +164,7 @@ class ChromeDevtoolsDriver(
                 navigateUrl = if (!isActive) navigateUrl else mainFrame.url
                 return navigateUrl
             } catch (e: ChromeDevToolsInvocationException) {
-                numSessionLost.incrementAndGet()
+                sessionLosts.incrementAndGet()
                 throw WebDriverException(e.message)
             }
         }
@@ -273,15 +262,14 @@ class ChromeDevtoolsDriver(
             try {
                 return dom.getOuterHTML(dom.document.nodeId, null, null)
             } catch (e: ChromeDevToolsInvocationException) {
-                numSessionLost.incrementAndGet()
+                sessionLosts.incrementAndGet()
                 logger.warn("Failed to get page source | {}", e.message)
             }
 
             return null
         }
 
-    @Throws(WebDriverException::class)
-    override fun bringToFront() {
+    override suspend fun bringToFront() {
         if (isActive) {
             page.bringToFront()
         }
@@ -307,7 +295,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Throws(WebDriverException::class)
     private fun getInvaded(url: String) {
         if (!isActive) return
 
@@ -328,7 +315,7 @@ class ChromeDevtoolsDriver(
             navigateUrl = url
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
+            sessionLosts.incrementAndGet()
             logger.warn("Failed to navigate | {}", e.message)
         }
     }
@@ -342,7 +329,7 @@ class ChromeDevtoolsDriver(
             navigateUrl = url
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
+            sessionLosts.incrementAndGet()
             logger.warn("Failed to navigate | {}", e.message)
         }
     }

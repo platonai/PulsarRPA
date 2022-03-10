@@ -23,7 +23,7 @@ Node.prototype.count = function(predicate) {
         }
     };
 
-    new PlatonNodeTraversor(visitor).traverse(this);
+    new PulsarNodeTraversor(visitor).traverse(this);
     return c;
 };
 
@@ -35,7 +35,7 @@ Node.prototype.forEach = function(action) {
     visitor.head = function (node, depth) {
         action(node)
     };
-    new PlatonNodeTraversor(visitor).traverse(this);
+    new PulsarNodeTraversor(visitor).traverse(this);
 };
 
 /**
@@ -48,7 +48,7 @@ Node.prototype.forEachElement = function(action) {
             action(node)
         }
     };
-    new PlatonNodeTraversor(visitor).traverse(this);
+    new PulsarNodeTraversor(visitor).traverse(this);
 };
 
 /**
@@ -208,7 +208,7 @@ Node.prototype.getRect = function() {
         return null
     }
 
-    let rect = __utils__.getClientRect(element);
+    let rect = __pulsar_utils__.getClientRect(element);
 
     if (element.isImage()) {
         if (!rect) {
@@ -397,7 +397,7 @@ NodeExt.prototype.attr = function(attrName) {
  * Get the formatted rect
  * */
 NodeExt.prototype.formatDOMRect = function() {
-    return __utils__.formatDOMRect(this.rect)
+    return __pulsar_utils__.formatDOMRect(this.rect)
 };
 
 /**
