@@ -35,7 +35,7 @@ class WebDriverAdapter(
     /**
      * The real time page source return by the browser
      * */
-    override val pageSource: String? get() = driver.pageSource
+    override suspend fun pageSource(): String? = driver.pageSource()
 
     /**
      * The id of the session to the browser
