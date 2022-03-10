@@ -46,11 +46,10 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
-    override fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
     }
 
-    @Throws(NoSuchSessionException::class)
-    override fun navigateTo(url: String) {
+    override suspend fun navigateTo(url: String) {
         log.info("Mock navigate to {}", url)
 
         if (lastSessionId == null) {
@@ -65,13 +64,11 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
-    @Throws(NoSuchSessionException::class)
-    override fun stopLoading() {
+    override suspend fun stopLoading() {
         backupDriverOrNull?.stopLoading()
     }
 
-    @Throws(NoSuchSessionException::class)
-    override fun evaluate(expression: String): Any? {
+    override suspend fun evaluate(expression: String): Any? {
         return backupDriverOrNull?.evaluate(expression)
     }
 
@@ -82,19 +79,11 @@ class MockWebDriver(
         }
 
     override val currentUrl: String
-        @Throws(NoSuchSessionException::class)
-        get() {
-            return backupDriverOrNull?.currentUrl ?: navigateUrl
-        }
+        get() = backupDriverOrNull?.currentUrl ?: navigateUrl
 
-    override val pageSource: String
-        @Throws(NoSuchSessionException::class)
-        get() {
-            return mockPageSource ?: (backupDriverOrNull?.pageSource) ?: ""
-        }
+    override suspend fun pageSource(): String = mockPageSource ?: (backupDriverOrNull?.pageSource()) ?: ""
 
-    @Throws(NoSuchSessionException::class)
-    override fun bringToFront() {
+    override suspend fun bringToFront() {
         backupDriverOrNull?.bringToFront()
     }
 

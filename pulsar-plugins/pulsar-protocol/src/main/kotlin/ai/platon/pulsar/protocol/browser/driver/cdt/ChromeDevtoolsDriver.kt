@@ -257,17 +257,18 @@ class ChromeDevtoolsDriver(
         return nodeId
     }
 
-    override val pageSource: String?
-        get() {
-            try {
-                return dom.getOuterHTML(dom.document.nodeId, null, null)
-            } catch (e: ChromeDevToolsInvocationException) {
-                sessionLosts.incrementAndGet()
-                logger.warn("Failed to get page source | {}", e.message)
-            }
+    override suspend fun pageSource(): String? {
+        if (!isActive) return null
 
-            return null
+        try {
+            return dom.getOuterHTML(dom.document.nodeId, null, null)
+        } catch (e: ChromeDevToolsInvocationException) {
+            sessionLosts.incrementAndGet()
+            logger.warn("Failed to get page source | {}", e.message)
         }
+
+        return null
+    }
 
     override suspend fun bringToFront() {
         if (isActive) {

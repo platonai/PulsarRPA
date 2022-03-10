@@ -185,8 +185,7 @@ class PlaywrightDriver(
         }
     }
 
-    override val pageSource: String?
-        get() = kotlin.runCatching { page.content() }
+    override suspend fun pageSource(): String? = kotlin.runCatching { page.content() }
             .onFailure { logger.warn("Failed to get page source | {}", it.message) }.getOrNull()
 
     override suspend fun bringToFront() = page.bringToFront()

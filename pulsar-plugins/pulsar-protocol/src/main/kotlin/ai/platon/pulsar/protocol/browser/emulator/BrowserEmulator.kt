@@ -144,7 +144,7 @@ open class BrowserEmulator(
                 activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
                 activeDomUrls = interactResult.activeDomMessage?.urls
             }
-            navigateTask.pageSource = driver.pageSource ?: ""
+            navigateTask.pageSource = driver.pageSource() ?: ""
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             logger.warn(e.message)
@@ -192,7 +192,7 @@ open class BrowserEmulator(
 
                 checkState(interactTask.driver)
                 checkState(interactTask.fetchTask)
-                pageSource = interactTask.driver.pageSource ?: ""
+                pageSource = interactTask.driver.pageSource() ?: ""
 
                 if (pageSource.length < 20_000) {
                     delay(1000)
