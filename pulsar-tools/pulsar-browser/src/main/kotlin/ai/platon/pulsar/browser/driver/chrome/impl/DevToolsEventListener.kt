@@ -1,14 +1,14 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
+import ai.platon.pulsar.browser.driver.chrome.EventHandler
+import ai.platon.pulsar.browser.driver.chrome.EventListener
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
-import com.github.kklisura.cdt.protocol.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.support.types.EventListener
 
 class DevToolsEventListener(
-        val key: String,
-        val handler: EventHandler<Any>,
-        val paramType: Class<*>,
-        private val devTools: RemoteDevTools
+    val key: String,
+    val handler: EventHandler<Any>,
+    val paramType: Class<*>,
+    private val devTools: RemoteDevTools
 ): EventListener, Comparable<DevToolsEventListener> {
     override fun off() {
         unsubscribe()

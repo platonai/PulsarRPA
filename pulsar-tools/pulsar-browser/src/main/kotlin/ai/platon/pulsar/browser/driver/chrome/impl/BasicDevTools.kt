@@ -1,9 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
-import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
-import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
-import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
-import ai.platon.pulsar.browser.driver.chrome.Transport
+import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
@@ -16,8 +13,6 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
-import com.github.kklisura.cdt.protocol.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.support.types.EventListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -88,7 +83,7 @@ class EventDispatcher: Consumer<String> {
     fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
 
     @Throws(IOException::class)
-    fun <T> readJsonObject(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
+    fun <T> deserialize(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
             throw ChromeDevToolsInvocationException("Failed converting null response to clazz $parameterizedClazz")
         }
@@ -112,7 +107,7 @@ class EventDispatcher: Consumer<String> {
     }
 
     @Throws(IOException::class)
-    fun <T> readJsonObject(clazz: Class<T>, jsonNode: JsonNode?): T {
+    fun <T> deserialize(clazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
             throw ChromeDevToolsInvocationException("Failed converting null response to clazz " + clazz.name)
         }
@@ -199,7 +194,7 @@ class EventDispatcher: Consumer<String> {
         var event: Any? = null
         for (listener in unmodifiedListeners) {
             if (event == null) {
-                event = readJsonObject(listener.paramType, params)
+                event = deserialize(listener.paramType, params)
             }
 
             if (event != null) {
@@ -294,13 +289,13 @@ abstract class BasicDevTools(
             if (future.isSuccess) {
                 return when {
                     Void.TYPE == clazz -> null
-                    returnTypeClasses != null -> dispatcher.readJsonObject(returnTypeClasses, clazz, future.result)
-                    else -> dispatcher.readJsonObject(clazz, future.result)
+                    returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, future.result)
+                    else -> dispatcher.deserialize(clazz, future.result)
                 }
             }
 
             // Received an error
-            val error = dispatcher.readJsonObject(ErrorObject::class.java, future.result)
+            val error = dispatcher.deserialize(ErrorObject::class.java, future.result)
             val sb = StringBuilder(error.message)
             if (error.data != null) {
                 sb.append(": ")
@@ -319,8 +314,10 @@ abstract class BasicDevTools(
         }
     }
 
-    override fun addEventListener(domainName: String,
-            eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener {
+    override fun addEventListener(
+        domainName: String,
+        eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>
+    ): EventListener {
         val name = "$domainName.$eventName"
         val listener = DevToolsEventListener(name, eventHandler, eventType, this)
         dispatcher.registerListener(name, listener)
