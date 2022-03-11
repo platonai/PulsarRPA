@@ -18,7 +18,7 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
             .also { it.headless = headless }
     val launcher = ChromeLauncher()
     val chrome = launcher.launch(launchOptions)
-    val tab = chrome.createTab() // TODO: how to avoid this tab creation?
+    val tab = chrome.createTab()
     val devTools = chrome.createDevTools(tab, DevToolsConfig())
 
     val browser get() = devTools.browser

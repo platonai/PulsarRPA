@@ -1,8 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.netty.channel.DefaultEventLoopGroup
-import io.netty.channel.EventLoopGroup
 import java.time.Duration
 
 class ChromeVersion {

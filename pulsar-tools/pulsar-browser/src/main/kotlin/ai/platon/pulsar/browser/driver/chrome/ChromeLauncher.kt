@@ -127,7 +127,7 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
-        check(!isAlive) { "Chrome process has already been started" }
+        check(!isAlive) { "Chrome is started already" }
         var supervisorProcess = options.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
             log.warn("Supervisor program {} can not be located", options.supervisorProcess)
@@ -135,10 +135,10 @@ class ChromeLauncher(
         }
 
         val executable = supervisorProcess?:"$chromeBinary"
-        var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
+        val arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
-        }
-        arguments += " --user-data-dir=$userDataDir"
+        }.toMutableList()
+        arguments.add("--user-data-dir=$userDataDir")
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)

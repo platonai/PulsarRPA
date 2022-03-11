@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true" scanPeriod="30 seconds" debug="false">
+    <property name="logging.dir" value="${logging.dir:-logs}" />
+    <property name="logging.file" value="${logging.file:-pulsar.log}" />
+
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{36} - %msg%n</pattern>
+        </layout>
+    </appender>
+
+    <root level="${log.level:-WARN}">
+        <appender-ref ref="Console"/>
+    </root>
+
+    <logger name="ai.platon.pulsar.browser.driver.chrome" level="TRACE"/>
+
+</configuration>

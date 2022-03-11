@@ -107,7 +107,5 @@
     <logger name="org.apache.zookeeper" level="ERROR"/>
     <logger name="org.apache.solr" level="INFO"/>
     <logger name="org.apache.hadoop" level="WARN"/>
-    <logger name="io.netty" level="WARN"/>
-    <logger name="io.netty.handler.logging" level="INFO"/>
 
 </configuration>

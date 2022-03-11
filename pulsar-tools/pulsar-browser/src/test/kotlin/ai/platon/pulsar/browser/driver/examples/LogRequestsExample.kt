@@ -4,6 +4,10 @@ class LogRequestsExample: BrowserExampleBase() {
     override val testUrl: String = "https://www.stbchina.cn/"
 
     override fun run() {
+
+        network.enable()
+        page.enable()
+
         network.onRequestWillBeSent { event ->
             println(String.format("request: [%s] %s\n", event.request.method, event.request.url))
         }
@@ -22,9 +26,6 @@ class LogRequestsExample: BrowserExampleBase() {
 //            chrome.closeTab(tab)
 //            launcher.close()
         }
-
-        network.enable()
-        page.enable()
 
         page.navigate(testUrl)
     }

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import com.github.kklisura.cdt.protocol.ChromeDevTools
+import com.github.kklisura.cdt.protocol.support.types.EventHandler
+import com.github.kklisura.cdt.protocol.support.types.EventListener
 import java.net.URI
 import java.util.concurrent.Future
 import java.util.function.Consumer
@@ -28,23 +30,6 @@ interface RemoteChrome: AutoCloseable {
     fun closeTab(tab: ChromeTab)
 
     fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools
-}
-
-interface EventListener {
-    /** Alias to unsubscribe.  */
-    fun off()
-
-    /** Unsubscribe this event listener.  */
-    fun unsubscribe()
-}
-
-interface EventHandler<T> {
-    /**
-     * Handles the event of type T.
-     *
-     * @param event Event
-     */
-    fun onEvent(event: T)
 }
 
 interface RemoteDevTools: ChromeDevTools, AutoCloseable {

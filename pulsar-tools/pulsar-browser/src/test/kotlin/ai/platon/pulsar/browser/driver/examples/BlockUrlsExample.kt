@@ -11,6 +11,11 @@ class BlockUrlsExample: BrowserExampleBase() {
     override val testUrl = "https://www.stbchina.cn/"
 
     override fun run() {
+
+        page.enable()
+        network.enable()
+        runtime.enable()
+
         page.addScriptToEvaluateOnNewDocument(preloadJs)
 
         page.onDomContentEventFired { event: DomContentEventFired ->
@@ -22,7 +27,7 @@ class BlockUrlsExample: BrowserExampleBase() {
             // The page is completely loaded, document.readyState === 'complete'
 
             runtime.evaluate("__pulsar_utils__.scrollDownN();")
-            runtime.evaluate("__pulsar_utils__.emulate();")
+//            runtime.evaluate("__pulsar_utils__.emulate();")
 
             val source = pageSource
             val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(testUrl, "", ".htm"))
@@ -70,8 +75,7 @@ class BlockUrlsExample: BrowserExampleBase() {
             println()
         }
 
-        page.enable()
-        page.navigate("about:blank")
+        page.navigate(testUrl)
 
         println(Gson().toJson(chrome.version))
 

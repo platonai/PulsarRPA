@@ -1,6 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
-import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
+import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
@@ -13,6 +16,8 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
+import com.github.kklisura.cdt.protocol.support.types.EventHandler
+import com.github.kklisura.cdt.protocol.support.types.EventListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,7 +66,7 @@ internal class ErrorObject {
     var data: String? = null
 }
 
-class EventDispatcher: Consumer<String> {
+class EventDispatcher : Consumer<String> {
     companion object {
         private const val ID_PROPERTY = "id"
         private const val ERROR_PROPERTY = "error"
@@ -124,12 +129,12 @@ class EventDispatcher: Consumer<String> {
         invocationFutures.remove(id)
     }
 
-    fun registerListener(name: String, listener: DevToolsEventListener) {
-        eventListeners.computeIfAbsent(name) { ConcurrentSkipListSet<DevToolsEventListener>() }.add(listener)
+    fun registerListener(key: String, listener: DevToolsEventListener) {
+        eventListeners.computeIfAbsent(key) { ConcurrentSkipListSet<DevToolsEventListener>() }.add(listener)
     }
 
-    fun unregisterListener(name: String, listener: DevToolsEventListener) {
-         eventListeners[name]?.removeIf { listener.handler == it.handler }
+    fun unregisterListener(key: String, listener: DevToolsEventListener) {
+        eventListeners[key]?.removeIf { listener.handler == it.handler }
     }
 
     override fun accept(message: String) {
@@ -153,6 +158,7 @@ class EventDispatcher: Consumer<String> {
                                 resultNode = resultNode.get(future.returnProperty)
                             }
                         }
+
                         if (resultNode != null) {
                             future.signal(true, resultNode)
                         } else {
@@ -184,7 +190,7 @@ class EventDispatcher: Consumer<String> {
         synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
         if (unmodifiedListeners.isEmpty()) return
 
-        val scope = CoroutineScope(Dispatchers.Main)
+        val scope = CoroutineScope(Dispatchers.Default)
         scope.launch {
             handleEvent0(params, unmodifiedListeners)
         }
@@ -211,7 +217,7 @@ class EventDispatcher: Consumer<String> {
 abstract class BasicDevTools(
     private val client: Transport,
     private val config: DevToolsConfig
-): RemoteDevTools, AutoCloseable {
+) : RemoteDevTools, AutoCloseable {
 
     companion object {
         private val instanceSequencer = AtomicInteger()
@@ -225,7 +231,7 @@ abstract class BasicDevTools(
         private val numInvokes = metrics.counter("$metricsPrefix.invokes")
         val numAccepts = metrics.counter("$metricsPrefix.accepts")
         private val gauges = mapOf(
-                "idleTime" to Gauge { idleTime.readable() }
+            "idleTime" to Gauge { idleTime.readable() }
         )
 
         init {
@@ -253,10 +259,10 @@ abstract class BasicDevTools(
     }
 
     override operator fun <T> invoke(
-            returnProperty: String?,
-            clazz: Class<T>,
-            returnTypeClasses: Array<Class<out Any>>?,
-            method: MethodInvocation
+        returnProperty: String?,
+        clazz: Class<T>,
+        returnTypeClasses: Array<Class<out Any>>?,
+        method: MethodInvocation
     ): T? {
         if (!isOpen) {
             return null
@@ -318,9 +324,9 @@ abstract class BasicDevTools(
         domainName: String,
         eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>
     ): EventListener {
-        val name = "$domainName.$eventName"
-        val listener = DevToolsEventListener(name, eventHandler, eventType, this)
-        dispatcher.registerListener(name, listener)
+        val key = "$domainName.$eventName"
+        val listener = DevToolsEventListener(key, eventHandler, eventType, this)
+        dispatcher.registerListener(key, listener)
         return listener
     }
 
