@@ -9,7 +9,6 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
-import org.openqa.selenium.remote.CapabilityType
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue

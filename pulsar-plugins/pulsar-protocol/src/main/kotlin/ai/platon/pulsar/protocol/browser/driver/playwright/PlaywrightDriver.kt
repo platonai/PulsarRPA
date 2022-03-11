@@ -119,15 +119,14 @@ class PlaywrightDriver(
      * */
     override val sessionId: String get() = _sessionId
 
-    override val currentUrl: String
-        get() {
-            try {
-                navigateUrl = if (!isActive) navigateUrl else page.url()
-            } catch (e: Exception) {
-                logger.warn("Failed to query url | {}", e.message)
-            }
-            return navigateUrl
+    override suspend fun currentUrl(): String {
+        try {
+            navigateUrl = if (!isActive) navigateUrl else page.url()
+        } catch (e: Exception) {
+            logger.warn("Failed to query url | {}", e.message)
         }
+        return navigateUrl
+    }
 
     override suspend fun exists(selector: String): Boolean {
         try {

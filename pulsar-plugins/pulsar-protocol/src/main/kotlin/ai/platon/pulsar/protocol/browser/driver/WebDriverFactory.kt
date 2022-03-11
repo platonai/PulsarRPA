@@ -13,8 +13,6 @@ import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
-import org.openqa.selenium.remote.CapabilityType
-import org.openqa.selenium.remote.DesiredCapabilities
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -57,7 +55,7 @@ open class WebDriverFactory(
     }
 
     private fun createChromeDevtoolsDriver(
-        browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+        browserInstanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
         val launcherOptions = LauncherOptions(BrowserType.CHROME.name, driverSettings)
         if (driverSettings.isSupervised) {
@@ -71,7 +69,7 @@ open class WebDriverFactory(
     }
 
     private fun createPlaywrightDriver(
-        instanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+        instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): PlaywrightDriver {
         val launcherOptions = LauncherOptions(BrowserType.PLAYWRIGHT_CHROME.name, driverSettings)
         if (driverSettings.isSupervised) {
@@ -85,19 +83,19 @@ open class WebDriverFactory(
     }
 
     private fun createMockChromeDevtoolsDriver(
-        instanceId: BrowserInstanceId, capabilities: DesiredCapabilities,
+        instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): MockWebDriver {
-        val backupDriverCreator = { createPlaywrightDriver(instanceId, capabilities) }
+        val backupDriverCreator = { createChromeDevtoolsDriver(instanceId, capabilities) }
         return MockWebDriver(instanceId, backupDriverCreator)
     }
 
-    private fun setProxy(capabilities: DesiredCapabilities, proxyServer: String) {
-        val proxy = org.openqa.selenium.Proxy().apply {
-            httpProxy = proxyServer
-            sslProxy = proxyServer
-            ftpProxy = proxyServer
-        }
-        capabilities.setCapability(CapabilityType.PROXY, proxy)
+    private fun setProxy(capabilities: MutableMap<String, Any>, proxyServer: String) {
+//        val proxy = org.openqa.selenium.Proxy().apply {
+//            httpProxy = proxyServer
+//            sslProxy = proxyServer
+//            ftpProxy = proxyServer
+//        }
+        capabilities["proxy"] = proxyServer
     }
 
     /**

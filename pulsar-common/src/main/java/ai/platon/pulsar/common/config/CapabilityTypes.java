@@ -326,7 +326,7 @@ public interface CapabilityTypes {
      * */
     String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
     /**
-     * The web driver to use, selenium or pulsar browser, etc
+     * The web driver to use
      * */
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";

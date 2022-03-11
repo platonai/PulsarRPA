@@ -26,11 +26,12 @@ class WebDriverAdapter(
     /**
      * The actual url return by the browser
      * */
-    override val currentUrl: String?
-        get() = if (isQuit) null else
-            driver.runCatching { currentUrl }
+    override suspend fun currentUrl(): String {
+        return if (isQuit) "" else
+            kotlin.runCatching { driver.currentUrl() }
                 .onFailure { logger.warn("Unexpected exception", it) }
-                .getOrNull()
+                .getOrElse { "" }
+    }
 
     /**
      * The real time page source return by the browser

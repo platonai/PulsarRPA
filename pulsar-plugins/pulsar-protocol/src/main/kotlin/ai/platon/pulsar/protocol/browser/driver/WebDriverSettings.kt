@@ -3,8 +3,6 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.openqa.selenium.remote.CapabilityType
-import org.openqa.selenium.remote.DesiredCapabilities
 
 /**
  * A general chrome option set:
@@ -52,32 +50,29 @@ open class WebDriverSettings(
     // Special
     // var mobileEmulationEnabled = true
 
-    fun createGeneralOptions(): DesiredCapabilities {
-        val generalOptions = DesiredCapabilities()
+    fun createGeneralOptions(): MutableMap<String, Any> {
+        val generalOptions = mutableMapOf<String, Any>()
 
         // generalOptions.setCapability("browserLanguage", "zh_CN")
-        generalOptions.setCapability("throwExceptionOnScriptError", false)
         // generalOptions.setCapability("resolution", "${viewPort.width}x${viewPort.height}")
-        generalOptions.setCapability("pageLoadStrategy", pageLoadStrategy)
 
         return generalOptions
     }
 
-    fun createChromeOptions(generalOptions: DesiredCapabilities): ChromeOptions {
+    fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
         val chromeOptions = ChromeOptions()
-        chromeOptions.merge(generalOptions.asMap())
+        chromeOptions.merge(generalOptions)
 
         // rewrite proxy argument
-        val proxy = generalOptions.getCapability(CapabilityType.PROXY)
-        if (proxy is org.openqa.selenium.Proxy) {
-            chromeOptions.removeArguments(CapabilityType.PROXY)
-            chromeOptions.proxyServer = proxy.httpProxy
-        }
+        chromeOptions.removeArgument("proxy")
+        chromeOptions.proxyServer = generalOptions["proxy"]?.toString()
 
         chromeOptions.headless = isHeadless
         chromeOptions.noSandbox = noSandbox
-        chromeOptions.addArguments("window-size", formatViewPort())
-        chromeOptions.addArguments("disable-blink-features", "AutomationControlled")
+
+        chromeOptions.addArgument("window-size", formatViewPort())
+            .addArgument("pageLoadStrategy", pageLoadStrategy)
+            .addArgument("throwExceptionOnScriptError", "false")
 
         return chromeOptions
     }

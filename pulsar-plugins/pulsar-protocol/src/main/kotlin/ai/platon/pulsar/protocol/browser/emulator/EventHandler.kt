@@ -24,9 +24,6 @@ import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverAdapter
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import org.openqa.selenium.OutputType
-import org.openqa.selenium.remote.RemoteWebDriver
-import org.openqa.selenium.remote.ScreenshotException
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -289,23 +286,23 @@ open class EventHandler(
         }
     }
 
-    private fun takeScreenshot(contentLength: Long, page: WebPage, driver: RemoteWebDriver) {
-        try {
-            val bytes = driver.getScreenshotAs(OutputType.BYTES)
-            val readableLength = Strings.readableBytes(bytes.size)
-            val filename = AppPaths.fromUri(page.url, "", ".png")
-            val path = ExportPaths.get("screenshot", filename)
-            AppFiles.saveTo(bytes, path, true)
-            page.metadata[Name.SCREENSHOT_EXPORT_PATH] = path.toString()
-            logger.info("{}. Screenshot is exported ({}) | {}", page.id, readableLength, path)
-        } catch (e: ScreenshotException) {
-            logger.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
-        } catch (e: Exception) {
-            logger.warn(Strings.stringifyException(e))
-        }
+    private fun takeScreenshot(contentLength: Long, page: WebPage, driver: WebDriver) {
+//        try {
+//            val bytes = driver.getScreenshotAs(OutputType.BYTES)
+//            val readableLength = Strings.readableBytes(bytes.size)
+//            val filename = AppPaths.fromUri(page.url, "", ".png")
+//            val path = ExportPaths.get("screenshot", filename)
+//            AppFiles.saveTo(bytes, path, true)
+//            page.metadata[Name.SCREENSHOT_EXPORT_PATH] = path.toString()
+//            logger.info("{}. Screenshot is exported ({}) | {}", page.id, readableLength, path)
+//        } catch (e: ScreenshotException) {
+//            logger.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
+//        } catch (e: Exception) {
+//            logger.warn(Strings.stringifyException(e))
+//        }
     }
 
-    fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
+    private fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)

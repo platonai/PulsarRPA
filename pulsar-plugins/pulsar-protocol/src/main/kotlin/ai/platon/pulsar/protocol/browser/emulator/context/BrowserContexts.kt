@@ -10,12 +10,12 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
+import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
-import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant

@@ -26,6 +26,7 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -89,7 +90,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
     }
 
     fun getProtocol(mode: FetchMode): Protocol? {
-        return getProtocol(mode.name.toLowerCase() + "://")
+        return getProtocol(mode.name.lowercase(Locale.getDefault()) + "://")
     }
 
     private fun getInstance(config: List<String>): Protocol? {

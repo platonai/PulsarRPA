@@ -56,6 +56,7 @@ annotation class ChromeParameter(val value: String)
  * The options to open chrome devtools
  * */
 class ChromeOptions(
+    // user data dir is set in LauncherOptions
 //        @ChromeParameter("user-data-dir")
 //        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("proxy-server")
@@ -98,6 +99,8 @@ class ChromeOptions(
         var disableSync: Boolean = true,
         @ChromeParameter("disable-translate")
         var disableTranslate: Boolean = true,
+        @ChromeParameter("disable-blink-features")
+        var disableBlinkFeatures: String = "AutomationControlled",
         @ChromeParameter("metrics-recording-only")
         var metricsRecordingOnly: Boolean = true,
         @ChromeParameter("safebrowsing-disable-auto-update")
@@ -109,17 +112,17 @@ class ChromeOptions(
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 
-    fun addArguments(key: String, value: String? = null): ChromeOptions {
+    fun addArgument(key: String, value: String? = null): ChromeOptions {
         additionalArguments[key] = value
         return this
     }
 
-    fun removeArguments(key: String): ChromeOptions {
+    fun removeArgument(key: String): ChromeOptions {
         additionalArguments.remove(key)
         return this
     }
 
-    fun merge(args: Map<String, Any?>) = args.forEach { (key, value) -> addArguments(key, value?.toString()) }
+    fun merge(args: Map<String, Any?>) = args.forEach { (key, value) -> addArgument(key, value?.toString()) }
 
     fun toMap(): Map<String, Any?> {
         val args = ChromeOptions::class.java.declaredFields

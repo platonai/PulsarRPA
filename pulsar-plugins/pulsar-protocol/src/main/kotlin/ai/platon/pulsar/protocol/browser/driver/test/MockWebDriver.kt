@@ -6,8 +6,8 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
-import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -16,7 +16,7 @@ import java.util.*
 
 class MockWebDriver(
     browserInstanceId: BrowserInstanceId,
-    backupDriverCreator: () -> PlaywrightDriver,
+    backupDriverCreator: () -> ChromeDevtoolsDriver,
 ) : AbstractWebDriver(browserInstanceId) {
     private val log = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
@@ -73,13 +73,9 @@ class MockWebDriver(
     }
 
     override val sessionId: String?
-        @Throws(NoSuchSessionException::class)
-        get() {
-            return backupDriverOrNull?.sessionId
-        }
+        get() = backupDriverOrNull?.sessionId
 
-    override val currentUrl: String
-        get() = backupDriverOrNull?.currentUrl ?: navigateUrl
+    override suspend fun currentUrl(): String = backupDriverOrNull?.currentUrl() ?: navigateUrl
 
     override suspend fun pageSource(): String = mockPageSource ?: (backupDriverOrNull?.pageSource()) ?: ""
 

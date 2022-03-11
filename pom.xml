@@ -538,17 +538,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.seleniumhq.selenium</groupId>
-                <artifactId>selenium-api</artifactId>
-                <version>${selenium.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.seleniumhq.selenium</groupId>
-                <artifactId>selenium-remote-driver</artifactId>
-                <version>${selenium.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.nibor.autolink</groupId>
                 <artifactId>autolink</artifactId>
                 <version>${autolink.version}</version>
@@ -631,7 +620,6 @@
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-        <selenium.version>4.0.0</selenium.version>
         <autolink.version>0.10.0</autolink.version>
         <dokka.version>1.4.32</dokka.version>
 

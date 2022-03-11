@@ -26,9 +26,9 @@ interface WebDriver: Closeable {
     val supportJavascript: Boolean
     val isMockedPageSource: Boolean
     val sessionId: String?
-    val currentUrl: String?
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
+    suspend fun currentUrl(): String
     suspend fun pageSource(): String?
 
     suspend fun navigateTo(url: String)

@@ -146,28 +146,27 @@ class ChromeDevtoolsDriver(
     }
 
     override val sessionId: String?
-        @Throws(WebDriverException::class)
         get() {
-            try {
-                lastSessionId = if (!isActive) null else mainFrame.id
-                return lastSessionId
+            lastSessionId = try {
+                if (!isActive) null else mainFrame.id
             } catch (e: ChromeDevToolsInvocationException) {
                 sessionLosts.incrementAndGet()
-                throw WebDriverException(e.message)
+                logger.warn("Failed to retrieve session id, session might be closed, {}", e.message)
+                null
             }
+            return lastSessionId
         }
 
-    override val currentUrl: String
-        @Throws(WebDriverException::class)
-        get() {
-            try {
-                navigateUrl = if (!isActive) navigateUrl else mainFrame.url
-                return navigateUrl
-            } catch (e: ChromeDevToolsInvocationException) {
-                sessionLosts.incrementAndGet()
-                throw WebDriverException(e.message)
-            }
+    override suspend fun currentUrl(): String {
+        navigateUrl = try {
+            if (isActive) navigateUrl else mainFrame.url
+        } catch (e: ChromeDevToolsInvocationException) {
+            sessionLosts.incrementAndGet()
+            logger.warn("Failed to retrieve current url, session might be closed, {}", e.message)
+            ""
         }
+        return navigateUrl
+    }
 
     override suspend fun exists(selector: String): Boolean {
         val nodeId = querySelector(selector)

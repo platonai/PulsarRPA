@@ -16,12 +16,13 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
+import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
@@ -96,12 +97,12 @@ open class BrowserEmulator(
             exception = e
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
             response = ForwardingResponse.privacyRetry(task.page)
-        } catch (e: org.openqa.selenium.NoSuchSessionException) {
+        } catch (e: NoSuchSessionException) {
             logger.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page)
-        } catch (e: org.openqa.selenium.WebDriverException) {
+        } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
             } else {
@@ -145,7 +146,7 @@ open class BrowserEmulator(
                 activeDomUrls = interactResult.activeDomMessage?.urls
             }
             navigateTask.pageSource = driver.pageSource() ?: ""
-        } catch (e: org.openqa.selenium.NoSuchElementException) {
+        } catch (e: NoSuchElementException) {
             // TODO: when this exception is thrown?
             logger.warn(e.message)
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)

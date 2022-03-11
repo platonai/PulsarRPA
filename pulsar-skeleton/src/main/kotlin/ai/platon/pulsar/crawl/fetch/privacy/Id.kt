@@ -41,8 +41,7 @@ data class BrowserInstanceId(
     override fun toString() = "$dataDir"
 
     companion object {
-        /** TODO: better dir name, e.g. "browser" */
-        val DIR_NAME = "google-chrome"
+        val DIR_NAME = "browser"
         val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
 
         fun resolve(baseDir: Path) = BrowserInstanceId(baseDir.resolve(DIR_NAME))

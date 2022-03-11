@@ -119,11 +119,11 @@ public interface ProtocolStatusCodes {
      */
     int THREAD_TIMEOUT = 1470;
     /**
-     * Selenium web driver is timeout.
+     * Web driver timeout.
      */
     int WEB_DRIVER_TIMEOUT = 1471;
     /**
-     * Selenium web driver is timeout.
+     * Javascript execution timeout.
      */
     int SCRIPT_TIMEOUT = 1472;
     /**
@@ -132,16 +132,16 @@ public interface ProtocolStatusCodes {
      */
     int DOCUMENT_INCOMPLETE = 1473;
     /**
-     * Selenium web driver is timeout.
+     * Web driver timeout.
      * @deprecated
      */
     int BROWSER_ERR_CONNECTION_TIMED_OUT = 1480;
     /**
-     * Selenium web driver is timeout.
+     * Web driver timeout.
      */
     int PROXY_ERROR = 1481;
     /**
-     * Selenium web driver is timeout.
+     * Web driver timeout.
      */
     int WEB_DRIVER_GONE = 1482;
     /**

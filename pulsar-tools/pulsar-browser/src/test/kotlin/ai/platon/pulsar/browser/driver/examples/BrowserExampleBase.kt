@@ -14,7 +14,7 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     val browserControl = BrowserSettings()
     val preloadJs = browserControl.generatePreloadJs()
     val launchOptions = ChromeOptions()
-            .addArguments("window-size", browserControl.formatViewPort())
+            .addArgument("window-size", browserControl.formatViewPort())
             .also { it.headless = headless }
     val launcher = ChromeLauncher()
     val chrome = launcher.launch(launchOptions)

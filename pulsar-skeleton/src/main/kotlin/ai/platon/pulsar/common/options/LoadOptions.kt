@@ -172,7 +172,7 @@ open class LoadOptions(
     var requireAnchors = 0
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
-            description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
+            description = "The fetch mode")
     var fetchMode = FetchMode.BROWSER
 
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
@@ -188,7 +188,7 @@ open class LoadOptions(
     var scrollInterval = EmulateSettings.DEFAULT.scrollInterval
 
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to perform javascript injected into selenium")
+            description = "The maximum time to perform javascript injected into browser")
     var scriptTimeout = EmulateSettings.DEFAULT.scriptTimeout
 
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
