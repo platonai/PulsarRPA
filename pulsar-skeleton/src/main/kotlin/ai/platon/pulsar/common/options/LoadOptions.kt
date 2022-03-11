@@ -198,7 +198,7 @@ open class LoadOptions(
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
             description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
-    var itemBrowser = BrowserType.CHROME
+    var itemBrowser = LoadOptionDefaults.browser
 
     @ApiPublic
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,

@@ -27,7 +27,7 @@ import java.util.regex.Pattern
  * The chrome launcher
  * */
 class ChromeLauncher(
-    private val userDataDir: Path = BrowserSettings.defaultUserDataDir(),
+    private val userDataDir: Path = BrowserSettings.generateUserDataDir(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
     private val options: LauncherOptions = LauncherOptions("CHROME")
 ) : AutoCloseable {
@@ -41,7 +41,7 @@ class ChromeLauncher(
         }
     }
 
-    private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
+    private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
     private var process: Process? = null
     private val shutdownHookThread = Thread { this.close() }
 
@@ -53,7 +53,7 @@ class ChromeLauncher(
         if ("context\\default--" !in userDataDir.toString()) {
         }
         kotlin.runCatching { prepareUserDataDir() }.onFailure {
-            log.warn("Failed to prepare user data dir", it)
+            logger.warn("Failed to prepare user data dir", it)
         }
 
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
@@ -81,13 +81,13 @@ class ChromeLauncher(
         if (p.isAlive) {
             Runtimes.destroyProcess(p, options.shutdownWaitTime)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-                    .onFailure { log.warn("Unexpected exception", it) }
+                    .onFailure { logger.warn("Unexpected exception", it) }
         }
 
         // if the data dir is the default dir, we might have problem to clean up
         if (!userDataDir.toString().contains("context\\default", true)) {
             kotlin.runCatching { cleanUp() }.onFailure {
-                log.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
+                logger.warn("Failed to clear user data dir | {} | {}", userDataDir, it.message)
             }
         }
     }
@@ -130,7 +130,7 @@ class ChromeLauncher(
         check(!isAlive) { "Chrome is started already" }
         var supervisorProcess = options.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
-            log.warn("Supervisor program {} can not be located", options.supervisorProcess)
+            logger.warn("Supervisor program {} can not be located", options.supervisorProcess)
             supervisorProcess = null
         }
 
@@ -145,7 +145,7 @@ class ChromeLauncher(
             process = ProcessLauncher.launch(executable, arguments)
             process?.also {
                 Files.createDirectories(userDataDir)
-                val pidPath = userDataDir.resolveSibling("chromeLauncher.pid")
+                val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
@@ -175,7 +175,7 @@ class ChromeLauncher(
                 // Wait for DevTools listening line and extract port number.
                 var line: String
                 while (reader.readLine().also { line = it } != null) {
-                    log.takeIf { line.isNotBlank() }?.info("[output] - $line")
+                    logger.takeIf { line.isNotBlank() }?.info("[output] - $line")
                     val matcher = DEVTOOLS_LISTENING_LINE_PATTERN.matcher(line)
                     if (matcher.find()) {
                         port = matcher.group(1).toInt()
@@ -192,12 +192,12 @@ class ChromeLauncher(
 
             if (port == 0) {
                 close(readLineThread)
-                log.info("Process output:>>>\n$processOutput\n<<<")
+                logger.info("Process output:>>>\n$processOutput\n<<<")
                 throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
-            log.error("Interrupted while waiting for devtools server, close it", e)
+            logger.error("Interrupted while waiting for devtools server, close it", e)
             close(readLineThread)
         }
 
@@ -216,7 +216,7 @@ class ChromeLauncher(
     private fun prepareUserDataDir() {
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         if (userDataDir == prototypeUserDataDir || userDataDir.toString().contains("/default/")) {
-            log.info("Running chrome with prototype/default data dir, no cleaning | {}", userDataDir)
+            logger.info("Running chrome with prototype/default data dir, no cleaning | {}", userDataDir)
             return
         }
 
@@ -226,7 +226,7 @@ class ChromeLauncher(
                 it.lock()
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
-                    log.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
+                    logger.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
                     // remove dead symbolic links
                     Files.list(prototypeUserDataDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
@@ -255,11 +255,11 @@ class ChromeLauncher(
         if (target.startsWith(AppPaths.SYS_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
-                log.warn("Failed to delete browser cache, try again | {}", target)
+                logger.warn("Failed to delete browser cache, try again | {}", target)
                 forceDeleteDirectory(target)
 
                 if (Files.exists(target)) {
-                    log.error("Could not delete browser cache | {}", target)
+                    logger.error("Could not delete browser cache | {}", target)
                 }
             }
         }
@@ -279,7 +279,7 @@ class ChromeLauncher(
                 FileChannel.open(lock, StandardOpenOption.APPEND).use {
                     it.lock()
                     kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                            .onFailure { log.warn("Failed to delete directory | {} | {}",
+                            .onFailure { logger.warn("Failed to delete directory | {} | {}",
                                 dirToDelete, it.message)
                             }
                 }

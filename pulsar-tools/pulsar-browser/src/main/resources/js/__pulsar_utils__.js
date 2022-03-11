@@ -196,6 +196,10 @@ __pulsar_utils__.isIdle = function(init = false) {
  * @return {Object}
  * */
 __pulsar_utils__.updatePulsarStat = function(init = false) {
+    if (!document.body) {
+        return
+    }
+
     const config = PULSAR_CONFIGS;
     const viewPortWidth = config.viewPortWidth;
     const viewPortHeight = config.viewPortHeight;

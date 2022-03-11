@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.Name
 import org.junit.Before
 import org.junit.Test
@@ -31,6 +32,9 @@ class WebPageTests {
         val args = "-i 5s -njr 3"
         val normalizedArgs = "-expires PT5S -nJitRetry 3"
         val option = session.options(args)
+
+//        option.browser = BrowserType.PLAYWRIGHT_CHROME
+
         // expired, so the page is fetched
         var page = session.load(url, option)
         val prevFetchTime1 = page.prevFetchTime
