@@ -8,8 +8,6 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationExcep
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.LoggerContext
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -67,7 +65,7 @@ internal class ErrorObject {
 
 abstract class BasicDevTools(
         private val wsClient: WebSocketClient,
-        private val devToolsConfig: DevToolsConfig
+        private val config: DevToolsConfig
 ): RemoteDevTools, Consumer<String>, AutoCloseable {
 
     companion object {
@@ -102,7 +100,7 @@ abstract class BasicDevTools(
 
     private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
     private val id = instanceSequencer.incrementAndGet()
-    private val workerGroup = devToolsConfig.workerGroup
+    private val workerGroup = config.workerGroup
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
     private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
 
@@ -141,7 +139,7 @@ abstract class BasicDevTools(
             logger.takeIf { it.isTraceEnabled }?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
             wsClient.send(message)
-            val responded = future.await(devToolsConfig.readTimeout)
+            val responded = future.await(config.readTimeout)
             invocationFutures.remove(method.id)
             lastActiveTime = Instant.now()
 

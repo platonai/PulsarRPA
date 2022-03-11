@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.driver.cdt
+package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.common.geometric.DimD
 import ai.platon.pulsar.common.geometric.OffsetD

@@ -2,10 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
-import ai.platon.pulsar.browser.driver.chrome.ChromeTab
-import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
-import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.geometric.OffsetD
