@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
-import ai.platon.pulsar.browser.driver.chrome.LauncherOptions
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import java.nio.file.Path
 import java.time.Duration

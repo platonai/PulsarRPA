@@ -1,6 +1,5 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import com.github.kklisura.cdt.protocol.ChromeDevTools
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
@@ -8,8 +7,7 @@ import java.net.URI
 import java.util.concurrent.Future
 import java.util.function.Consumer
 
-interface WebSocketClient: AutoCloseable {
-    @Throws(WebSocketServiceException::class)
+interface Transport: AutoCloseable {
     fun connect(uri: URI)
     fun send(message: String)
     fun asyncSend(message: String): Future<Void>

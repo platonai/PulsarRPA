@@ -1,10 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver.playwright
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
-import ai.platon.pulsar.browser.driver.chrome.ChromeTab
-import ai.platon.pulsar.browser.driver.chrome.LauncherOptions
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
@@ -17,7 +15,6 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.log
 
 class PlaywrightBrowserInstance(
     userDataDir: Path,
@@ -31,7 +28,7 @@ class PlaywrightBrowserInstance(
         private val instanceCount = AtomicInteger()
 
         init {
-            System.setProperty("playwright.cli.dir", Paths.get("/tmp/playwright-java").toString())
+            // System.setProperty("playwright.cli.dir", Paths.get("/tmp/playwright-java").toString())
         }
     }
 
@@ -39,7 +36,6 @@ class PlaywrightBrowserInstance(
 
     private val browserSettings get() = launcherOptions.browserSettings
     private lateinit var context: BrowserContext
-    private lateinit var browser: Browser
     val drivers = ConcurrentLinkedQueue<PlaywrightDriver>()
     val driverCount get() = drivers.size
 
@@ -74,57 +70,13 @@ class PlaywrightBrowserInstance(
             ignoreDefaultArgs = arrayListOf("--hide-scrollbars", "--enable-crashpad", "--window-size")
             args = launchOptions.toList(launchOptions.additionalArguments).toMutableList()
             args.add("--start-maximized")
-            // args = launchOptions.toList()
-//                acceptDownloads = false
+            acceptDownloads = false
             // slowMo = 100.0
         }
 
         logger.info(options.args.joinToString(" "))
-//            context = browserType.launchPersistentContext(userDataDir, options)
         context = browserType.launchPersistentContext(userDataDir, options)
         instanceCount.incrementAndGet()
-
-        if (preloadJs.isNotBlank()) {
-            context.addInitScript(preloadJs)
-        }
-
-        context.setDefaultTimeout(Duration.ofMinutes(1).toMillis().toDouble())
-        context.setDefaultNavigationTimeout(Duration.ofMinutes(3).toMillis().toDouble())
-    }
-
-    private fun launch2() {
-        val vp = BrowserSettings.viewPort
-
-        val browserType = playwright.chromium()
-        val options = BrowserType.LaunchOptions().apply {
-            headless = launchOptions.headless
-
-            if (proxyServer != null) {
-                setProxy(proxyServer)
-            }
-            // userAgent = browserSettings.randomUserAgent()
-            this.executablePath = executablePath
-//            ignoreHTTPSErrors = true
-            // ignoreAllDefaultArgs = true
-//                ignoreDefaultArgs = arrayListOf("--hide-scrollbars", "--enable-crashpad")
-            args = launchOptions.toList(launchOptions.additionalArguments).toMutableList()
-//                acceptDownloads = false
-            // slowMo = 100.0
-        }
-
-        logger.info(options.args.joinToString(" "))
-        browser = browserType.launch(options)
-        instanceCount.incrementAndGet()
-
-        val contextOptions = Browser.NewContextOptions().apply {
-            setViewportSize(vp.width, vp.height)
-//                setScreenSize(vp.width, vp.height)
-            if (proxyServer != null) {
-                setProxy(proxyServer)
-            }
-            ignoreHTTPSErrors = true
-        }
-        context = browser.newContext(contextOptions)
 
         if (preloadJs.isNotBlank()) {
             context.addInitScript(preloadJs)

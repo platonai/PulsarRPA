@@ -1,12 +1,13 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
-import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
+import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.simplify
 import com.codahale.metrics.SharedMetricRegistries
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.URI
@@ -16,10 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import javax.websocket.*
 
-class WebSocketClientImpl : WebSocketClient {
+class TransportImpl : Transport {
     val id = instanceSequencer.incrementAndGet()
 
-    private val logger = LoggerFactory.getLogger(WebSocketClientImpl::class.java)
+    private val logger = LoggerFactory.getLogger(TransportImpl::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
@@ -28,7 +29,7 @@ class WebSocketClientImpl : WebSocketClient {
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
 
-    class WSMessageHandler(val consumer: Consumer<String>): MessageHandler.Whole<String> {
+    class DevToolsMessageHandler(val consumer: Consumer<String>): MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
             consumer.accept(message)
         }
@@ -76,6 +77,7 @@ class WebSocketClientImpl : WebSocketClient {
         meterRequests.mark()
 
         try {
+            logger.takeIf { it.isTraceEnabled }?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)
@@ -108,7 +110,7 @@ class WebSocketClientImpl : WebSocketClient {
             throw WebSocketServiceException("You are already subscribed to this web socket service.")
         }
 
-        session.addMessageHandler(WSMessageHandler(consumer))
+        session.addMessageHandler(DevToolsMessageHandler(consumer))
     }
 
     private fun onOpen(session: Session, config: EndpointConfig) {
@@ -162,8 +164,8 @@ class WebSocketClientImpl : WebSocketClient {
          * @throws WebSocketServiceException If it fails to connect.
          */
         @Throws(WebSocketServiceException::class)
-        fun create(uri: URI): WebSocketClient {
-            return WebSocketClientImpl().also { it.connect(uri) }
+        fun create(uri: URI): Transport {
+            return TransportImpl().also { it.connect(uri) }
         }
 
         /**

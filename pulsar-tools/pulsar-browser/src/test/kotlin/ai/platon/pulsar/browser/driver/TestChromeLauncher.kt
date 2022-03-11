@@ -1,14 +1,12 @@
 package ai.platon.pulsar.browser.driver
 
-import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
-import ai.platon.pulsar.browser.driver.chrome.LauncherOptions
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
-import com.google.gson.Gson
 import org.junit.Ignore
 import org.junit.Test
 import java.time.LocalDateTime
-import kotlin.test.assertTrue
 
 class TestChromeLauncher {
 

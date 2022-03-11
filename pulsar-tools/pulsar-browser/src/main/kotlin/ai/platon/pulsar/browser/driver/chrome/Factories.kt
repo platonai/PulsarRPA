@@ -9,7 +9,7 @@ import javax.websocket.WebSocketContainer
 @FunctionalInterface
 interface WebSocketServiceFactory {
     @Throws(WebSocketServiceException::class)
-    fun createWebSocketService(wsUrl: String): WebSocketClient
+    fun createWebSocketService(wsUrl: String): Transport
 }
 
 @FunctionalInterface
@@ -26,7 +26,7 @@ class DefaultWebSocketContainerFactory : WebSocketContainerFactory {
         }
 
     companion object {
-        const val WEBSOCKET_INCOMING_BUFFER_PROPERTY = "com.github.kklisura.cdt.services.config.incomingBuffer"
+        const val WEBSOCKET_INCOMING_BUFFER_PROPERTY = "ai.platon.pulsar.browser.driver.chrome.incomingBuffer"
         const val KB = 1024
         const val MB = 1024 * KB
         private const val DEFAULT_INCOMING_BUFFER_SIZE = 8 * MB

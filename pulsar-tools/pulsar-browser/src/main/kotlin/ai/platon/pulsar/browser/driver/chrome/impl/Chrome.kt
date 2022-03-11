@@ -44,8 +44,8 @@ class Chrome(
         }
 
     constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {
-        override fun createWebSocketService(wsUrl: String): WebSocketClient {
-            return WebSocketClientImpl.create(URI.create(wsUrl))
+        override fun createWebSocketService(wsUrl: String): Transport {
+            return TransportImpl.create(URI.create(wsUrl))
         }
     })
 
@@ -100,29 +100,27 @@ class Chrome(
     }
 
     @Throws(WebSocketServiceException::class)
-    private fun createDevTools0(tab: ChromeTab, devToolsConfig: DevToolsConfig): RemoteDevTools {
+    private fun createDevTools0(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         // Create invocation handler
-        val commandInvocationHandler = DevToolsInvocationHandler()
-        val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
+        val commandHandler = DevToolsInvocationHandler()
+        val commands: MutableMap<Method, Any> = ConcurrentHashMap()
         val invocationHandler = InvocationHandler { _, method, _ ->
-            commandsCache.computeIfAbsent(method) {
-                ProxyClasses.createProxy(method.returnType, commandInvocationHandler)
-            }
+            commands.computeIfAbsent(method) { ProxyClasses.createProxy(method.returnType, commandHandler) }
         }
 
         // Connect to a tab via web socket
         val debuggerUrl: String = tab.webSocketDebuggerUrl
-                ?:throw WebSocketServiceException("Invalid web socket debugger url")
+                ?: throw WebSocketServiceException("Invalid web socket debugger url")
 
-        val wsClient = wss.createWebSocketService(debuggerUrl)
+        val client = wss.createWebSocketService(debuggerUrl)
 
         // Create concrete dev tools instance from interface
         return ProxyClasses.createProxyFromAbstract(
                 BasicDevTools::class.java,
-                arrayOf(WebSocketClient::class.java, DevToolsConfig::class.java),
-                arrayOf(wsClient, devToolsConfig),
+                arrayOf(Transport::class.java, DevToolsConfig::class.java),
+                arrayOf(client, config),
                 invocationHandler
-        ).also { commandInvocationHandler.devTools = it }
+        ).also { commandHandler.devTools = it }
     }
 
     /**

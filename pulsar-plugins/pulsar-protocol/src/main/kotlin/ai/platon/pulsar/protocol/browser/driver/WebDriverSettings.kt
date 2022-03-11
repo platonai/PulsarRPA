@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 
 /**
@@ -42,8 +42,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 open class WebDriverSettings(
     parameters: Map<String, Any> = mapOf(),
     jsDirectory: String = "js",
-    immutableConfig: ImmutableConfig
-): BrowserSettings(parameters, jsDirectory, immutableConfig) {
+    config: ImmutableConfig
+): BrowserSettings(parameters, jsDirectory, config) {
 
     constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
 

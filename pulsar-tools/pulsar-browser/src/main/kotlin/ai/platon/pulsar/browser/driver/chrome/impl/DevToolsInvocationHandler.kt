@@ -8,7 +8,6 @@ import com.github.kklisura.cdt.protocol.support.annotations.ReturnTypeParameter
 import com.github.kklisura.cdt.protocol.support.annotations.Returns
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
-import java.lang.Exception
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType

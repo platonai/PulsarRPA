@@ -50,7 +50,6 @@ class MethodInvocation(
 }
 
 class DevToolsConfig(
-        var workerGroup: EventLoopGroup = DefaultEventLoopGroup(),
         var readTimeout: Duration = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
 ) {
     companion object {

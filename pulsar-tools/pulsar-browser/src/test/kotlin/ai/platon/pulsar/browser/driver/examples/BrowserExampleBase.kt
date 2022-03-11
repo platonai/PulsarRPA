@@ -1,9 +1,9 @@
 package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import org.slf4j.LoggerFactory
 
 abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable {

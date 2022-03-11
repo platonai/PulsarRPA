@@ -3,7 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
 import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
-import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
+import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
@@ -18,6 +18,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -33,7 +36,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import kotlin.concurrent.withLock
 
-internal class InvocationFuture(val returnProperty: String? = null) {
+class InvocationFuture(val returnProperty: String? = null) {
     var result: JsonNode? = null
     var isSuccess = false
     private val countDownLatch = CountDownLatch(1)
@@ -63,11 +66,7 @@ internal class ErrorObject {
     var data: String? = null
 }
 
-abstract class BasicDevTools(
-        private val wsClient: WebSocketClient,
-        private val config: DevToolsConfig
-): RemoteDevTools, Consumer<String>, AutoCloseable {
-
+class EventDispatcher: Consumer<String> {
     companion object {
         private const val ID_PROPERTY = "id"
         private const val ERROR_PROPERTY = "error"
@@ -76,129 +75,72 @@ abstract class BasicDevTools(
         private const val PARAMS_PROPERTY = "params"
 
         private val OBJECT_MAPPER = ObjectMapper()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
-        private val instanceSequencer = AtomicInteger()
-
-        private val startTime = Instant.now()
-        private var lastActiveTime = startTime
-        private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-
-        private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
-        private val metricsPrefix = "c.i.BasicDevTools.global"
-        private val numInvokes = metrics.counter("$metricsPrefix.invokes")
-        private val numAccepts = metrics.counter("$metricsPrefix.accepts")
-        private val gauges = mapOf(
-                "idleTime" to Gauge { idleTime.readable() }
-        )
-
-        init {
-            gauges.forEach { (name, gauge) -> metrics.gauge("$metricsPrefix.$name") { gauge } }
-        }
     }
 
-    private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
-    private val id = instanceSequencer.incrementAndGet()
-    private val workerGroup = config.workerGroup
+    private val logger = LoggerFactory.getLogger(EventDispatcher::class.java)
+
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
     private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
 
-    private val lock = ReentrantLock() // lock for containers
-    private val notBusy = lock.newCondition()
-    private val closeLatch = CountDownLatch(1)
-    private val closed = AtomicBoolean()
-    override val isOpen get() = !closed.get() && !wsClient.isClosed()
+    fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
 
-    init {
-        wsClient.addMessageHandler(this)
-    }
-
-    open operator fun <T> invoke(returnProperty: String, clazz: Class<T>, methodInvocation: MethodInvocation): T? {
-        return invoke(returnProperty, clazz, null, methodInvocation)
-    }
-
-    override operator fun <T> invoke(
-            returnProperty: String?,
-            clazz: Class<T>,
-            returnTypeClasses: Array<Class<out Any>>?,
-            method: MethodInvocation
-    ): T? {
-        if (!isOpen) {
-            return null
+    @Throws(IOException::class)
+    fun <T> readJsonObject(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
+        if (jsonNode == null) {
+            throw ChromeDevToolsInvocationException("Failed converting null response to clazz $parameterizedClazz")
         }
 
-        numInvokes.inc()
-        lastActiveTime = Instant.now()
-
-        val future = invocationFutures.computeIfAbsent(method.id) { InvocationFuture(returnProperty) }
-
-        try {
-            // TODO: consider use coroutine or wsClient.asyncSend
-            val message = OBJECT_MAPPER.writeValueAsString(method)
-            logger.takeIf { it.isTraceEnabled }?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
-
-            wsClient.send(message)
-            val responded = future.await(config.readTimeout)
-            invocationFutures.remove(method.id)
-            lastActiveTime = Instant.now()
-
-            lock.withLock {
-                if (invocationFutures.isEmpty()) {
-                    notBusy.signalAll()
+        val typeFactory: TypeFactory = OBJECT_MAPPER.typeFactory
+        var javaType: JavaType? = null
+        if (classParameters.size > 1) {
+            for (i in classParameters.size - 2 downTo 0) {
+                javaType = if (javaType == null) {
+                    typeFactory.constructParametricType(classParameters[i], classParameters[i + 1])
+                } else {
+                    typeFactory.constructParametricType(classParameters[i], javaType)
                 }
             }
-
-            if (!responded) {
-                logger.warn("Timeout to wait for ws response #{}", numInvokes.count)
-                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #${numInvokes.count}")
-            }
-
-            if (future.isSuccess) {
-                return when {
-                    Void.TYPE == clazz -> null
-                    returnTypeClasses != null -> readJsonObject(returnTypeClasses, clazz, future.result)
-                    else -> readJsonObject(clazz, future.result)
-                }
-            }
-
-            // Received a error
-            val error = readJsonObject(ErrorObject::class.java, future.result)
-            val sb = StringBuilder(error.message)
-            if (error.data != null) {
-                sb.append(": ")
-                sb.append(error.data)
-            }
-
-            throw ChromeDevToolsInvocationException(error.code, sb.toString())
-        } catch (e: WebSocketServiceException) {
-            throw ChromeDevToolsInvocationException("Web socket connection lost", e)
-        } catch (e: InterruptedException) {
-            logger.warn("Interrupted while invoke ${method.method}")
-            Thread.currentThread().interrupt()
-            return null
-        } catch (e: IOException) {
-            throw ChromeDevToolsInvocationException("Failed reading response message", e)
+            javaType = typeFactory.constructParametricType(parameterizedClazz, javaType)
+        } else {
+            javaType = typeFactory.constructParametricType(parameterizedClazz, classParameters[0])
         }
+
+        return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
     }
 
-    override fun addEventListener(domainName: String,
-            eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener {
-        val name = "$domainName.$eventName"
-        val listener = DevToolsEventListener(name, eventHandler, eventType, this)
+    @Throws(IOException::class)
+    fun <T> readJsonObject(clazz: Class<T>, jsonNode: JsonNode?): T {
+        if (jsonNode == null) {
+            throw ChromeDevToolsInvocationException("Failed converting null response to clazz " + clazz.name)
+        }
+        return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+    }
+
+    fun hasFutures() = invocationFutures.isNotEmpty()
+
+    fun subscribe(id: Long, returnProperty: String?): InvocationFuture {
+        return invocationFutures.computeIfAbsent(id) { InvocationFuture(returnProperty) }
+    }
+
+    fun unsubscribe(id: Long) {
+        invocationFutures.remove(id)
+    }
+
+    fun registerListener(name: String, listener: DevToolsEventListener) {
         eventListeners.computeIfAbsent(name) { ConcurrentSkipListSet<DevToolsEventListener>() }.add(listener)
-        return listener
     }
 
-    override fun removeEventListener(eventListener: EventListener) {
-        val listener = eventListener as DevToolsEventListener
-        eventListeners[listener.key]?.removeIf { listener.handler == it.handler }
+    fun unregisterListener(name: String, listener: DevToolsEventListener) {
+         eventListeners[name]?.removeIf { listener.handler == it.handler }
     }
 
     override fun accept(message: String) {
         logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
-        numAccepts.inc()
+        BasicDevTools.numAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
             val idNode = jsonNode.get(ID_PROPERTY)
@@ -239,6 +181,157 @@ abstract class BasicDevTools(
         }
     }
 
+    private fun handleEvent(name: String, params: JsonNode) {
+        val listeners = eventListeners[name] ?: return
+
+        // make a copy
+        val unmodifiedListeners = mutableSetOf<DevToolsEventListener>()
+        synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
+        if (unmodifiedListeners.isEmpty()) return
+
+        val scope = CoroutineScope(Dispatchers.Main)
+        scope.launch {
+            handleEvent0(params, unmodifiedListeners)
+        }
+    }
+
+    private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
+        var event: Any? = null
+        for (listener in unmodifiedListeners) {
+            if (event == null) {
+                event = readJsonObject(listener.paramType, params)
+            }
+
+            if (event != null) {
+                try {
+                    listener.handler.onEvent(event)
+                } catch (t: Throwable) {
+                    logger.warn("Unexpected exception", t)
+                }
+            }
+        }
+    }
+}
+
+abstract class BasicDevTools(
+    private val client: Transport,
+    private val config: DevToolsConfig
+): RemoteDevTools, AutoCloseable {
+
+    companion object {
+        private val instanceSequencer = AtomicInteger()
+
+        private val startTime = Instant.now()
+        private var lastActiveTime = startTime
+        private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+
+        private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
+        private val metricsPrefix = "c.i.BasicDevTools.global"
+        private val numInvokes = metrics.counter("$metricsPrefix.invokes")
+        val numAccepts = metrics.counter("$metricsPrefix.accepts")
+        private val gauges = mapOf(
+                "idleTime" to Gauge { idleTime.readable() }
+        )
+
+        init {
+            gauges.forEach { (name, gauge) -> metrics.gauge("$metricsPrefix.$name") { gauge } }
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
+    private val id = instanceSequencer.incrementAndGet()
+
+    private val lock = ReentrantLock() // lock for containers
+    private val notBusy = lock.newCondition()
+    private val closeLatch = CountDownLatch(1)
+    private val closed = AtomicBoolean()
+    override val isOpen get() = !closed.get() && !client.isClosed()
+
+    private val dispatcher = EventDispatcher()
+
+    init {
+        client.addMessageHandler(dispatcher)
+    }
+
+    open operator fun <T> invoke(returnProperty: String, clazz: Class<T>, methodInvocation: MethodInvocation): T? {
+        return invoke(returnProperty, clazz, null, methodInvocation)
+    }
+
+    override operator fun <T> invoke(
+            returnProperty: String?,
+            clazz: Class<T>,
+            returnTypeClasses: Array<Class<out Any>>?,
+            method: MethodInvocation
+    ): T? {
+        if (!isOpen) {
+            return null
+        }
+
+        numInvokes.inc()
+        lastActiveTime = Instant.now()
+
+        val future = dispatcher.subscribe(method.id, returnProperty)
+        val message = dispatcher.serialize(method)
+
+        try {
+            client.send(message)
+
+            val responded = future.await(config.readTimeout)
+            dispatcher.unsubscribe(method.id)
+            lastActiveTime = Instant.now()
+
+            lock.withLock {
+                if (!dispatcher.hasFutures()) {
+                    notBusy.signalAll()
+                }
+            }
+
+            if (!responded) {
+                logger.warn("Timeout to wait for ws response #{}", numInvokes.count)
+                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #${numInvokes.count}")
+            }
+
+            if (future.isSuccess) {
+                return when {
+                    Void.TYPE == clazz -> null
+                    returnTypeClasses != null -> dispatcher.readJsonObject(returnTypeClasses, clazz, future.result)
+                    else -> dispatcher.readJsonObject(clazz, future.result)
+                }
+            }
+
+            // Received an error
+            val error = dispatcher.readJsonObject(ErrorObject::class.java, future.result)
+            val sb = StringBuilder(error.message)
+            if (error.data != null) {
+                sb.append(": ")
+                sb.append(error.data)
+            }
+
+            throw ChromeDevToolsInvocationException(error.code, sb.toString())
+        } catch (e: WebSocketServiceException) {
+            throw ChromeDevToolsInvocationException("Web socket connection lost", e)
+        } catch (e: InterruptedException) {
+            logger.warn("Interrupted while invoke ${method.method}")
+            Thread.currentThread().interrupt()
+            return null
+        } catch (e: IOException) {
+            throw ChromeDevToolsInvocationException("Failed reading response message", e)
+        }
+    }
+
+    override fun addEventListener(domainName: String,
+            eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener {
+        val name = "$domainName.$eventName"
+        val listener = DevToolsEventListener(name, eventHandler, eventType, this)
+        dispatcher.registerListener(name, listener)
+        return listener
+    }
+
+    override fun removeEventListener(eventListener: EventListener) {
+        val listener = eventListener as DevToolsEventListener
+        dispatcher.unregisterListener(listener.key, listener)
+    }
+
     override fun waitUntilClosed() {
         runCatching { closeLatch.await() }.onFailure {
             if (it is InterruptedException) {
@@ -258,8 +351,9 @@ abstract class BasicDevTools(
     private fun doClose() {
         lock.withLock {
             try {
+                // TODO: no need to wait for all futures, just ignore them
                 var i = 0
-                while (i++ < 5 && invocationFutures.isNotEmpty()) {
+                while (i++ < 5 && dispatcher.hasFutures()) {
                     notBusy.await(1, TimeUnit.SECONDS)
                 }
             } catch (e: InterruptedException) {
@@ -267,74 +361,8 @@ abstract class BasicDevTools(
             }
         }
 
-        logger.trace("Closing ws client ... | {}", wsClient)
+        logger.trace("Closing ws client ... | {}", client)
 
-        wsClient.close()
-        workerGroup.shutdownGracefully()
-    }
-
-    private fun handleEvent(name: String, params: JsonNode) {
-        if (!isOpen) return
-
-        val listeners = eventListeners[name] ?:return
-
-        // make a copy
-        val unmodifiedListeners = mutableSetOf<DevToolsEventListener>()
-        synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
-        if (unmodifiedListeners.isEmpty()) return
-
-        // TODO: use kotlin coroutine
-        workerGroup.execute {
-            var event: Any? = null
-            for (listener in unmodifiedListeners) {
-                try {
-                    if (event == null) {
-                        event = readJsonObject(listener.paramType, params)
-                    }
-
-                    if (event != null) {
-                        try {
-                            listener.handler.onEvent(event)
-                        } catch (t: Throwable) {
-                            logger.warn("Unexpected exception", t)
-                        }
-                    }
-                } catch (e: Exception) {
-                    logger.error("Error while processing event {}", name, e)
-                }
-            }
-        }
-    }
-
-    @Throws(IOException::class)
-    private fun <T> readJsonObject(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
-        if (jsonNode == null) {
-            throw ChromeDevToolsInvocationException("Failed converting null response to clazz $parameterizedClazz")
-        }
-
-        val typeFactory: TypeFactory = OBJECT_MAPPER.typeFactory
-        var javaType: JavaType? = null
-        if (classParameters.size > 1) {
-            for (i in classParameters.size - 2 downTo 0) {
-                javaType = if (javaType == null) {
-                    typeFactory.constructParametricType(classParameters[i], classParameters[i + 1])
-                } else {
-                    typeFactory.constructParametricType(classParameters[i], javaType)
-                }
-            }
-            javaType = typeFactory.constructParametricType(parameterizedClazz, javaType)
-        } else {
-            javaType = typeFactory.constructParametricType(parameterizedClazz, classParameters[0])
-        }
-
-        return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
-    }
-
-    @Throws(IOException::class)
-    private fun <T> readJsonObject(clazz: Class<T>, jsonNode: JsonNode?): T {
-        if (jsonNode == null) {
-            throw ChromeDevToolsInvocationException("Failed converting null response to clazz " + clazz.name)
-        }
-        return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
+        client.close()
     }
 }

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
