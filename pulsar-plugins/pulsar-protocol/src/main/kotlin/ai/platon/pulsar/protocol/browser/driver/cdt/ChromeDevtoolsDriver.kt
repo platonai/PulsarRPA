@@ -40,16 +40,15 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    val waitForTimeout = Duration.ofMinutes(1).toMillis()
-
     val openSequence = 1 + browserInstance.devToolsCount
     val userAgent get() = browserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
-    var devToolsConfig = DevToolsConfig()
-    val tab: ChromeTab
-    val devTools: RemoteDevTools
-    private var mouse: Mouse
-    private var keyboard: Keyboard
+
+    private val config = DevToolsConfig()
+    private val tab: ChromeTab
+    private val devTools: RemoteDevTools
+    private val mouse: Mouse
+    private val keyboard: Keyboard
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
@@ -69,6 +68,7 @@ class ChromeDevtoolsDriver(
 
     val sessionLosts = AtomicInteger()
     override var lastActiveTime = Instant.now()
+    // TODO: collect application status from IO operations
     val isGone get() = closed.get() || !devTools.isOpen || sessionLosts.get() > 0
     val isActive get() = !isGone
 
@@ -78,7 +78,7 @@ class ChromeDevtoolsDriver(
             tab = browserInstance.createTab()
             navigateUrl = tab.url ?: ""
 
-            devTools = browserInstance.createDevTools(tab, devToolsConfig)
+            devTools = browserInstance.createDevTools(tab, config)
             mouse = Mouse(input)
             keyboard = Keyboard(input)
 
@@ -172,17 +172,17 @@ class ChromeDevtoolsDriver(
         return nodeId != null && nodeId > 0
     }
 
-    override suspend fun waitFor(selector: String): Long {
+    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
         val nodeId = querySelector(selector)
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
 
-        while (elapsedTime < waitForTimeout && (nodeId == null || nodeId <= 0)) {
+        while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
             gap()
             elapsedTime = System.currentTimeMillis() - startTime
         }
 
-        return waitForTimeout - elapsedTime
+        return timeoutMillis - elapsedTime
     }
 
     override suspend fun click(selector: String, count: Int) {
@@ -234,6 +234,7 @@ class ChromeDevtoolsDriver(
         }
 
         val node = dom.describeNode(nodeId, null, null, null, false)
+        // see org.w3c.dom.Node.ELEMENT_NODE
         val ELEMENT_NODE = 1
         if (node.nodeType != ELEMENT_NODE) {
             logger.info("Node is not an element: $selector")

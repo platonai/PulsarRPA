@@ -17,9 +17,9 @@
 
 package ai.platon.pulsar.schedule
 
-import ai.platon.pulsar.common.DateTimes.HOURS_OF_DAY
-import ai.platon.pulsar.common.DateTimes.HOURS_OF_MONTH
-import ai.platon.pulsar.common.DateTimes.HOURS_OF_YEAR
+import ai.platon.pulsar.common.DateTimes.HOURS_PER_DAY
+import ai.platon.pulsar.common.DateTimes.HOURS_PER_MONTH
+import ai.platon.pulsar.common.DateTimes.HOURS_PER_YEAR
 import ai.platon.pulsar.common.config.AppConstants.TCP_IP_STANDARDIZED_TIME
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -123,13 +123,13 @@ class NewsMonitorFetchSchedule(
         }
 
         val hours = ChronoUnit.HOURS.between(modifiedTime, fetchTime)
-        if (hours <= 1 * HOURS_OF_DAY) {
+        if (hours <= 1 * HOURS_PER_DAY) {
             // There are updates today, keep re-fetch the page in every crawl loop
             interval = MIN_INTERVAL
-        } else if (hours <= 3 * HOURS_OF_DAY) {
+        } else if (hours <= 3 * HOURS_PER_DAY) {
             // If there is not updates in 24 hours but there are updates in 72 hours, re-fetch the page a hour later
             interval = Duration.ofHours(1)
-        } else if (hours <= 3 * HOURS_OF_MONTH) {
+        } else if (hours <= 3 * HOURS_PER_MONTH) {
             // If there is no any updates in 72 hours but has updates in 3 month,
             // check the page at least 1 hour later and increase fetch interval time by time
             val inc = (interval.seconds * INC_RATE).toLong()
@@ -139,7 +139,7 @@ class NewsMonitorFetchSchedule(
                 interval = Duration.ofHours(1)
             }
 
-            if (hours < 10 * HOURS_OF_DAY) {
+            if (hours < 10 * HOURS_PER_DAY) {
                 // No longer than SEED_MAX_INTERVAL
                 if (interval > SEED_MAX_INTERVAL) {
                     interval = SEED_MAX_INTERVAL
@@ -148,7 +148,7 @@ class NewsMonitorFetchSchedule(
                 // The page is
                 messageWriter?.reportFetchSchedule(page, false)
             }
-        } else if (hours > 10 * HOURS_OF_YEAR) {
+        } else if (hours > 10 * HOURS_PER_YEAR) {
             // Longer than 10 years, it's very likely the publishTime/modifiedTime is wrong
             messageWriter?.reportFetchSchedule(page, false)
             return super.getFetchInterval(page, fetchTime, modifiedTime, state)

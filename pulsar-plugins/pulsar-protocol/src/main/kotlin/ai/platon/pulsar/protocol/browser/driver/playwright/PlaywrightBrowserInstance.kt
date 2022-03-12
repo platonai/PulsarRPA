@@ -3,15 +3,13 @@ package ai.platon.pulsar.protocol.browser.driver.playwright
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import com.microsoft.playwright.*
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -43,14 +41,14 @@ class PlaywrightBrowserInstance(
 
     override fun launch() {
         if (launched.compareAndSet(false, true)) {
-            launch1()
+            launch0()
         }
     }
 
-    private fun launch1() {
+    private fun launch0() {
         val vp = BrowserSettings.viewPort
 
-        val executablePath = kotlin.runCatching { Browsers.searchChromeBinary() }.getOrNull()
+        val executablePath = Browsers.searchChromeBinaryOrNull()
         // TODO: no way to disable inspector
 
         val browserType = playwright.chromium()
@@ -66,6 +64,7 @@ class PlaywrightBrowserInstance(
             // userAgent = browserSettings.randomUserAgent()
             this.executablePath = executablePath
             ignoreHTTPSErrors = true
+
             // ignoreAllDefaultArgs = true
             ignoreDefaultArgs = arrayListOf("--hide-scrollbars", "--enable-crashpad", "--window-size")
             args = launchOptions.toList(launchOptions.additionalArguments).toMutableList()
@@ -82,8 +81,8 @@ class PlaywrightBrowserInstance(
             context.addInitScript(preloadJs)
         }
 
-        context.setDefaultTimeout(Duration.ofMinutes(1).toMillis().toDouble())
-        context.setDefaultNavigationTimeout(Duration.ofMinutes(3).toMillis().toDouble())
+        context.setDefaultTimeout(1.0 * DateTimes.MILLIS_PER_MINUTE)
+        context.setDefaultNavigationTimeout(3.0 * DateTimes.MILLIS_PER_MINUTE)
     }
 
     @Synchronized

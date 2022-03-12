@@ -44,20 +44,20 @@ object DateTimes {
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
 
     // inaccurate date time
-    const val HOURS_OF_DAY = 24L
-    const val HOURS_OF_MONTH = HOURS_OF_DAY * 30
-    const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
+    const val HOURS_PER_DAY = 24L
+    const val HOURS_PER_MONTH = HOURS_PER_DAY * 30
+    const val HOURS_PER_YEAR = HOURS_PER_DAY * 365
 
-    const val MILLIS_OF_SECOND = 1000L
-    const val MILLIS_OF_MINUTE = 60 * MILLIS_OF_SECOND
-    const val MILLIS_OF_HOUR = 60 * MILLIS_OF_MINUTE
-    const val MILLIS_OF_DAY = 24 * MILLIS_OF_HOUR
+    const val MILLIS_PER_SECOND = 1000L
+    const val MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND
+    const val MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE
+    const val MILLIS_PER_DAY = 24 * MILLIS_PER_HOUR
 
-    const val MINUTES_OF_HOUR = 60L
+    const val MINUTES_PER_HOUR = 60L
 
-    const val SECONDS_OF_MINUTE = 60L
-    const val SECONDS_OF_HOUR = SECONDS_OF_MINUTE * MINUTES_OF_HOUR
-    const val SECONDS_OF_DAY = SECONDS_OF_HOUR * HOURS_OF_DAY
+    const val SECONDS_PER_MINUTE = 60L
+    const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
+    const val SECONDS_PER_DAY = SECONDS_PER_HOUR * HOURS_PER_DAY
 
     val ONE_YEAR_LATER: Instant = Instant.now() + Duration.ofDays(365)
 

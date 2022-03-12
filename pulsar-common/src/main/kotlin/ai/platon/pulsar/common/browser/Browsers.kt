@@ -36,4 +36,6 @@ object Browsers {
             ?.toAbsolutePath()
             ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
     }
+
+    fun searchChromeBinaryOrNull() = kotlin.runCatching { searchChromeBinary() }.getOrNull()
 }

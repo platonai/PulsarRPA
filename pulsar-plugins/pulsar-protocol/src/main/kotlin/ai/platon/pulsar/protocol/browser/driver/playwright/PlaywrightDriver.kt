@@ -37,8 +37,6 @@ class PlaywrightDriver(
 
     override val browserType: BrowserType = BrowserType.PLAYWRIGHT_CHROME
 
-    val waitForTimeout = Duration.ofMinutes(1).toMillis()
-
     val openSequence = 1 + browserInstance.tabCount.get()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
 
@@ -139,11 +137,11 @@ class PlaywrightDriver(
         return false
     }
 
-    override suspend fun waitFor(selector: String): Long {
+    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
         try {
             val startTime = System.currentTimeMillis()
             page.waitForSelector(selector)
-            return waitForTimeout - (System.currentTimeMillis() - startTime)
+            return timeoutMillis - (System.currentTimeMillis() - startTime)
         } catch (e: Exception) {
             logger.warn("Failed to wait | {}", e.message)
         }

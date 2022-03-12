@@ -25,6 +25,8 @@ abstract class AbstractWebDriver(
 
     var proxyEntry: ProxyEntry? = null
 
+    var waitForTimeout = Duration.ofMinutes(1)
+
     override var lastActiveTime: Instant = Instant.now()
 
     override var idleTimeout: Duration = Duration.ofMinutes(10)
@@ -32,8 +34,8 @@ abstract class AbstractWebDriver(
     override val name get() = javaClass.simpleName + "-" + id
 
     /**
-     * The current loading page url
-     * The browser might redirect, so it might not be the same with [currentUrl]
+     * The url to navigate
+     * The browser might redirect, so it might not be the same with currentUrl()
      * */
     override var url: String = ""
     /**
@@ -70,7 +72,10 @@ abstract class AbstractWebDriver(
         }
     }
 
-    override suspend fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
+    override suspend fun waitFor(selector: String): Long = waitFor(selector, waitForTimeout.toMillis())
+
+    override suspend fun evaluateSilently(expression: String): Any? =
+        takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
 

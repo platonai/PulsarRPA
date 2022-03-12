@@ -36,6 +36,7 @@ interface WebDriver: Closeable {
 
     suspend fun bringToFront()
     suspend fun waitFor(selector: String): Long = 0
+    suspend fun waitFor(selector: String, timeoutMillis: Long): Long = 0
     suspend fun exists(selector: String): Boolean = false
     suspend fun type(selector: String, text: String) {}
     suspend fun click(selector: String, count: Int = 1) {}
