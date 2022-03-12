@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.WebPageBatchHandler
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
@@ -44,13 +45,13 @@ open class Crawler(
         private var beforeBatchHandler: WebPageBatchHandler = BeforeWebPageBatchHandler(),
         private var afterBatchHandler: WebPageBatchHandler = AfterWebPageBatchHandler()
 ) {
-    private val log = LoggerFactory.getLogger(Crawler::class.java)
+    private val logger = LoggerFactory.getLogger(Crawler::class.java)
 
     val i = context.createSession()
 
     fun load(url: String, args: String) = load(url, i.options(args))
 
-    fun load(url: String, options: LoadOptions) {
+    fun load(url: String, options: LoadOptions): Pair<WebPage, FeaturedDocument> {
         val page = i.load(url, options)
         val doc = i.parse(page)
         doc.absoluteLinks()
@@ -70,7 +71,9 @@ open class Crawler(
         }
 
         val path = i.export(doc)
-        log.info("Export to: file://{}", path)
+        logger.info("Export to: file://{}", path)
+
+        return page to doc
     }
 
     fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, i.options(args))
@@ -82,12 +85,12 @@ open class Crawler(
         document.absoluteLinks()
         document.stripScripts()
         val path = i.export(document)
-        log.info("Portal page is exported to: file://$path")
+        logger.info("Portal page is exported to: file://$path")
 
         val links = document.select(options.correctedOutLinkSelector) { it.attr("abs:href") }
                 .mapNotNullTo(mutableSetOf()) { i.normalizeOrNull(it)?.spec }
                 .take(options.topLinks)
-        log.info("Total ${links.size} items to load")
+        logger.info("Total ${links.size} items to load")
 
         // TODO: use CrawlEventHandler
 //        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
@@ -113,14 +116,9 @@ open class Crawler(
     }
 
     fun scan(baseUri: String) {
-        // val contractBaseUri = "http://www.ccgp-hubei.gov.cn:8040/fcontractAction!download.action?path="
         i.context.scan(baseUri).forEachRemaining {
             val size = it.content?.array()?.size?:0
             println(size)
         }
-    }
-
-    fun truncate() {
-        i.context.webDb.truncate()
     }
 }

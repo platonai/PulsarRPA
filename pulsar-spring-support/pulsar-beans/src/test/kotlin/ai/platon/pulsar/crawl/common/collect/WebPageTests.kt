@@ -35,7 +35,7 @@ class WebPageTests {
 
 //        option.browser = BrowserType.PLAYWRIGHT_CHROME
 
-        // expired, so the page is fetched
+        // expired, so the page should be fetched
         var page = session.load(url, option)
         val prevFetchTime1 = page.prevFetchTime
         val fetchTime1 = page.fetchTime

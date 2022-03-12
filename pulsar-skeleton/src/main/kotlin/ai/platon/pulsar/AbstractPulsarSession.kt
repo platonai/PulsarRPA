@@ -82,7 +82,7 @@ abstract class AbstractPulsarSession(
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
     /**
-     * Close objects when sessions closes
+     * Close objects when the session is closing
      * */
     override fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
 
@@ -301,61 +301,53 @@ abstract class AbstractPulsarSession(
 
     override fun loadDocument(normUrl: NormUrl) = parse(load(normUrl))
 
-    override fun scrape(url: String, args: String, fieldCss: Iterable<String>): Map<String, String?> {
+    override fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?> {
         val document = loadDocument(url, args)
-        return fieldCss.associateWith { document.selectFirstOrNull(it)?.text() }
+        return fieldSelectors.associateWith { document.selectFirstOrNull(it)?.text() }
     }
 
-    override fun scrape(url: String, args: String, fieldCss: Map<String, String>): Map<String, String?> {
+    override fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?> {
         val document = loadDocument(url, args)
-        return fieldCss.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
+        return fieldSelectors.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
     }
 
     override fun scrape(
-        url: String,
-        args: String,
-        restrictCss: String,
-        fieldCss: Iterable<String>
+        url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
-        return loadDocument(url, args).select(restrictCss).map { ele ->
-            fieldCss.associateWith { ele.selectFirstOrNull(it)?.text() }
+        return loadDocument(url, args).select(restrictSelector).map { ele ->
+            fieldSelectors.associateWith { ele.selectFirstOrNull(it)?.text() }
         }
     }
 
     override fun scrape(
-        url: String,
-        args: String,
-        restrictCss: String,
-        fieldCss: Map<String, String>
+        url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {
-        return loadDocument(url, args).select(restrictCss).map { ele ->
-            fieldCss.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
+        return loadDocument(url, args).select(restrictSelector).map { ele ->
+            fieldSelectors.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
         }
     }
 
-    override fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Iterable<String>) =
-        scrapeOutPages(portalUrl, args, ":root", fieldsCss)
+    override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>) =
+        scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
     override fun scrapeOutPages(
-        portalUrl: String,
-        args: String, restrictCss: String, fieldsCss: Iterable<String>
+        portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
         return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
-            .mapNotNull { it.selectFirstOrNull(restrictCss) }
-            .map { ele -> fieldsCss.associateWith { ele.firstTextOrNull(it) } }
+            .mapNotNull { it.selectFirstOrNull(restrictSelector) }
+            .map { ele -> fieldSelectors.associateWith { ele.firstTextOrNull(it) } }
             .toList()
     }
 
-    override fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Map<String, String>) =
-        scrapeOutPages(portalUrl, args, ":root", fieldsCss)
+    override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>) =
+        scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
     override fun scrapeOutPages(
-        portalUrl: String,
-        args: String, restrictCss: String, fieldsCss: Map<String, String>
+        portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {
         return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
-            .mapNotNull { it.selectFirstOrNull(restrictCss) }
-            .map { ele -> fieldsCss.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
+            .mapNotNull { it.selectFirstOrNull(restrictSelector) }
+            .map { ele -> fieldSelectors.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
             .toList()
     }
 

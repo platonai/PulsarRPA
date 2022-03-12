@@ -164,26 +164,23 @@ interface PulsarSession : AutoCloseable {
     fun loadDocument(url: String, args: String): FeaturedDocument
     fun loadDocument(url: String, options: LoadOptions = options()): FeaturedDocument
     fun loadDocument(normUrl: NormUrl): FeaturedDocument
-    fun scrape(url: String, args: String, fieldCss: Iterable<String>): Map<String, String?>
-    fun scrape(url: String, args: String, fieldCss: Map<String, String>): Map<String, String?>
-    fun scrape(url: String, args: String, restrictCss: String, fieldCss: Iterable<String>): List<Map<String, String?>>
+    fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?>
+    fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?>
     fun scrape(
-        url: String,
-        args: String,
-        restrictCss: String,
-        fieldCss: Map<String, String>
+        url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>>
+    fun scrape(
+        url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
-    fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Iterable<String>): List<Map<String, String?>>
+    fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
     fun scrapeOutPages(
-        portalUrl: String,
-        args: String, restrictCss: String, fieldsCss: Iterable<String>
+        portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
 
-    fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Map<String, String>): List<Map<String, String?>>
+    fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
     fun scrapeOutPages(
-        portalUrl: String,
-        args: String, restrictCss: String, fieldsCss: Map<String, String>
+        portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
     fun getVariable(name: String): Any?

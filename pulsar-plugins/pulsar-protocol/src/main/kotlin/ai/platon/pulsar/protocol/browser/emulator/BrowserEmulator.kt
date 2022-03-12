@@ -221,7 +221,7 @@ open class BrowserEmulator(
         // task.driver.bringToFront()
 
         if (result.state.isContinue) {
-            // jsScrollDown(task, result)
+            jsScrollDown(task, result)
         }
 
         // TODO: move to the session config
@@ -316,6 +316,10 @@ open class BrowserEmulator(
     protected open suspend fun jsWaitForElement(
         interactTask: InteractTask, requiredElements: List<String>
     ) {
+        if (requiredElements.isNotEmpty()) {
+            return
+        }
+
         val expressions = requiredElements.map { "!!document.querySelector('$it')" }
         var scrollCount = 0
 

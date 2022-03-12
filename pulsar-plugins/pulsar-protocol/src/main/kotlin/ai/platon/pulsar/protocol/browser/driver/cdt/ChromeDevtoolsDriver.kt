@@ -49,6 +49,7 @@ class ChromeDevtoolsDriver(
     val tab: ChromeTab
     val devTools: RemoteDevTools
     private var mouse: Mouse
+    private var keyboard: Keyboard
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
@@ -79,6 +80,7 @@ class ChromeDevtoolsDriver(
 
             devTools = browserInstance.createDevTools(tab, devToolsConfig)
             mouse = Mouse(input)
+            keyboard = Keyboard(input)
 
             if (userAgent.isNotEmpty()) {
                 emulation.setUserAgentOverride(userAgent)
@@ -176,7 +178,7 @@ class ChromeDevtoolsDriver(
         var elapsedTime = 0L
 
         while (elapsedTime < waitForTimeout && (nodeId == null || nodeId <= 0)) {
-            delayFor("gap")
+            gap()
             elapsedTime = System.currentTimeMillis() - startTime
         }
 
@@ -189,27 +191,16 @@ class ChromeDevtoolsDriver(
         val point = ClickableDOM(page, dom, nodeId, offset).clickablePoint() ?: return
 
         mouse.click(point.x, point.y, count, delayPolicy("click"))
-        delayFor("gap")
+        gap()
     }
 
     override suspend fun type(selector: String, text: String) {
         val nodeId = focus(selector) ?: return
-
-        text.forEach { char ->
-            if (Character.isISOControl(char)) {
-                // TODO:
-            } else {
-                input.insertText("$char")
-            }
-            delayFor("type")
-        }
-
-        delayFor("gap")
+        keyboard.type(nodeId, text, delayPolicy("type"))
+        gap()
     }
 
-    private suspend fun delayFor() = delay(delayPolicy("gap"))
-
-    private suspend fun delayFor(type: String) = delay(delayPolicy(type))
+    private suspend fun gap() = delay(delayPolicy("gap"))
 
     private fun focus(selector: String): Int? {
         val rootId = dom.document.nodeId

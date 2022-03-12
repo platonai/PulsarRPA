@@ -52,6 +52,10 @@ __pulsar_utils__.isBrowserError = function () {
 };
 
 __pulsar_utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
+    if (!document) {
+        return false
+    }
+
     if (!document.pulsarData) {
         // initialization
         __pulsar_utils__.createPulsarDataIfAbsent();

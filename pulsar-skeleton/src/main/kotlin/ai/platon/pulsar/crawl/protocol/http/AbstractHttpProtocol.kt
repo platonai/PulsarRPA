@@ -149,7 +149,6 @@ abstract class AbstractHttpProtocol: Protocol {
     /**
      * TODO: do not translate status code, they are just OK to handle in FetchComponent
      */
-    @Throws(MalformedURLException::class)
     private fun getOutputWithHttpStatusTransformed(url: String, response: Response): ProtocolOutput {
         var u = URL(url)
         val httpCode = response.httpCode

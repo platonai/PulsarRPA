@@ -4,9 +4,11 @@ import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.examples.common.Crawler
 
 fun main() {
-    val portalUrl = "https://www.baidu.com/"
+    val portalUrl = "https://antispider8.scrape.center/"
 
     withContext {
-        Crawler(it).load(portalUrl, "-refresh")
+        val crawler = Crawler(it)
+        crawler.load(portalUrl, "-refresh")
+        "el-card__body"
     }
 }

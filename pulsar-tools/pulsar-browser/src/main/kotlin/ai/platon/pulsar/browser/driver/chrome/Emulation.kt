@@ -229,8 +229,16 @@ class Mouse(private val input: Input) {
 }
 
 class Keyboard(private val input: Input) {
-    fun type(key: String) {
 
+    suspend fun type(nodeId: Int, text: String, delayMillis: Long) {
+        text.forEach { char ->
+            if (Character.isISOControl(char)) {
+                // TODO:
+            } else {
+                input.insertText("$char")
+            }
+            delay(delayMillis)
+        }
     }
 
     suspend fun press(key: String, delayMillis: Long) {
