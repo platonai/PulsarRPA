@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.LoadEventHandler
-import ai.platon.pulsar.crawl.component.FetchEntry
+import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.firstTextOrNull
