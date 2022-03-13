@@ -246,9 +246,7 @@ class PageParser(
      * */
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
-        val newUrl = if (crawlFilters != null) {
-            crawlFilters.normalizeToNull(refreshHref, CrawlUrlNormalizers.SCOPE_FETCHER)?:return
-        } else refreshHref
+        val newUrl = crawlFilters.normalizeToNull(refreshHref, CrawlUrlNormalizers.SCOPE_FETCHER)?:return
 
         page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING

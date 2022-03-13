@@ -12,8 +12,8 @@ import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
+import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -28,7 +28,6 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong

@@ -29,7 +29,7 @@ import java.net.*
  * TODO: merge with ai.platon.pulsar.common.url.Urls
  */
 object URLUtil {
-    val LOG = LoggerFactory.getLogger(URLUtil::class.java)
+    private val logger = LoggerFactory.getLogger(URLUtil::class.java)
     private val IP_REGEX = Regex("(\\d{1,3}\\.){3}(\\d{1,3})")
 
     fun getHost(url: String): String? {
@@ -59,19 +59,19 @@ object URLUtil {
                 val addr = InetAddress.getByName(url.host)
                 addr.hostAddress
             } catch (e: UnknownHostException) { // unable to resolve it, so don't fall back to host name
-                LOG.warn("Unable to resolve: " + url.host + ", skipping.")
+                logger.warn("Unable to resolve: " + url.host + ", skipping.")
                 return ""
             }
         } else if (groupMode == GroupMode.BY_DOMAIN) {
             host = getDomainName(url)
             if (host == null) {
-                LOG.warn("Unknown domain for url: $url, using URL string as key")
+                logger.warn("Unknown domain for url: $url, using URL string as key")
                 host = url.toExternalForm()
             }
         } else {
             host = url.host
             if (host == null) {
-                LOG.warn("Unknown host for url: $url, using URL string as key")
+                logger.warn("Unknown host for url: $url, using URL string as key")
                 host = url.toExternalForm()
             }
         }

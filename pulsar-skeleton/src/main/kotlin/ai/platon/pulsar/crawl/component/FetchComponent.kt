@@ -18,58 +18,25 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.CoreMetrics
-import ai.platon.pulsar.persist.PageDatum
+import ai.platon.pulsar.crawl.common.FetchEntry
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.persist.CrawlStatus
+import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
-
-class FetchEntry(val page: WebPage, val options: LoadOptions) {
-
-    constructor(url: String, options: LoadOptions, href: String? = null) :
-            this(createPageShell(url, options, href), options)
-
-    companion object {
-
-        fun createPageShell(normUrl: NormUrl): WebPage {
-            return createPageShell(normUrl.spec, normUrl.options, normUrl.hrefSpec)
-        }
-
-        fun createPageShell(url: String, options: LoadOptions, href: String? = null): WebPage {
-            val page = WebPage.newWebPage(url, options.conf, href)
-
-            initWebPage(page, options, href)
-
-            return page
-        }
-
-        fun initWebPage(page: WebPage, options: LoadOptions, href: String? = null) {
-            page.also {
-                it.href = href
-                it.fetchMode = options.fetchMode
-                it.conf = options.conf
-                it.args = options.toString()
-
-                it.setVar(VAR_LOAD_OPTIONS, options)
-            }
-        }
-    }
-}
 
 /**
  * Created by vincent on 17-5-1.
