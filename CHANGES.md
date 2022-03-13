@@ -2,5 +2,5 @@
 =====
 
 * Support playwright
-* ChromeDevToolsDriver now supports mouse emulation
-* Refine code for pulsar-browser module
+* ChromeDevToolsDriver now supports input emulation
+* Refine code
