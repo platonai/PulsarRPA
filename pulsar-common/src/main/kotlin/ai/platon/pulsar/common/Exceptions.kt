@@ -22,6 +22,6 @@ open class NotSupportedException : RuntimeException {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-fun Throwable.stringify() = Strings.stringifyException(this)
+fun Throwable.stringify(prefix: String = "", postfix: String = "") = stringifyException(this, prefix, postfix)
 
-fun Throwable.simplify() = Strings.simplifyException(this)
+fun Throwable.simplify(prefix: String = "", postfix: String = "") = simplifyException(this, prefix, postfix)

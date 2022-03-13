@@ -1,10 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.EmulateEventHandler
@@ -98,13 +96,13 @@ open class BrowserEmulator(
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: NoSuchSessionException) {
-            logger.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
+            logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
-                logger.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
+                logger.warn("Web driver is disconnected - {}", e.simplify())
             } else {
                 logger.warn("Unexpected WebDriver exception", e)
             }

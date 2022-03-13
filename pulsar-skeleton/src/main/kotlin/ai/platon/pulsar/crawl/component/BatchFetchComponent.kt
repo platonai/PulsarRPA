@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.fetch.CoreMetrics
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory

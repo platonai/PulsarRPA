@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import ai.platon.pulsar.common.domain.DomainSuffixes
+import ai.platon.pulsar.common.stringify
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -79,7 +80,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
                 return url
             }
         } catch (e: Exception) {
-            LOG.error("Could not apply filter on url: " + url + "\n" + Strings.stringifyException(e))
+            LOG.error("Could not apply filter on url: " + url + "\n" + e.stringify())
         }
         return null
     }

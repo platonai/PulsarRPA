@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.common.*
@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
+import ai.platon.pulsar.crawl.fetch.UrlStat
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage

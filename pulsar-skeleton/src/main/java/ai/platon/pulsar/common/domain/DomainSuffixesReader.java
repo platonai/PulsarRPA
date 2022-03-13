@@ -65,8 +65,8 @@ class DomainSuffixesReader {
                 throw new IOException("xml file is not valid");
             }
         } catch (ParserConfigurationException | SAXException ex) {
-            LOG.warn(Strings.stringifyException(ex));
-            throw new IOException(ex.getMessage());
+            LOG.warn(ex.getMessage());
+            throw new IOException(ex);
         }
 
         return tldEntries;

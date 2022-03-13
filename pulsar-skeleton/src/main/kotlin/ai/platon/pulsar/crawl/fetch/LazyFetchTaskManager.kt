@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage

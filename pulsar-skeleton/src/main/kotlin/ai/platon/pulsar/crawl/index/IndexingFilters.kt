@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.index
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 
@@ -25,7 +26,7 @@ class IndexingFilters(
                     doc1 = indexingFilter.filter(doc1, url, page)
                 } else break
             } catch (e: IndexingException) {
-                LOG.error(Strings.stringifyException(e))
+                LOG.error(e.stringify())
                 return null
             }
         }

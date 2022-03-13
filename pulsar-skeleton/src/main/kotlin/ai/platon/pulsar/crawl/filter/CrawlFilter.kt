@@ -19,6 +19,7 @@ package ai.platon.pulsar.crawl.filter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.urls.Urls.reverseUrl
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.gson.GsonBuilder
@@ -72,7 +73,7 @@ class CrawlFilter(val conf: ImmutableConfig) {
                 reversedEndKey = reverseUrl(endKey!!)
             }
         } catch (e: RuntimeException) {
-            LOG.error(Strings.stringifyException(e))
+            LOG.error(e.stringify())
         }
     }
 

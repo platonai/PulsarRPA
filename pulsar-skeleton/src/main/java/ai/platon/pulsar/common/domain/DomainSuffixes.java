@@ -70,7 +70,7 @@ public class DomainSuffixes {
                 LOG.info("Total {} known domains", suffixes.domains.size());
             }
         } catch (Exception e) {
-            LOG.warn(Strings.stringifyException(e));
+            LOG.warn(e.getMessage());
         }
 
         return suffixes;

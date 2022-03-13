@@ -176,12 +176,12 @@ class FetchLoop(
             // the page is fetched and status are updated, write to the file system
             context.write(key, page.unbox())
         } catch (e: IOException) {
-            log.error("Failed to write to hdfs - {}", Strings.stringifyException(e))
+            log.error("Failed to write to hdfs - {}", e.stringify())
         } catch (e: InterruptedException) {
-            log.error("Interrupted - {}", Strings.stringifyException(e))
+            log.error("Interrupted - {}", e.stringify())
             Thread.currentThread().interrupt()
         } catch (e: Throwable) {
-            log.error(Strings.stringifyException(e))
+            log.error(e.stringify())
         }
     }
 

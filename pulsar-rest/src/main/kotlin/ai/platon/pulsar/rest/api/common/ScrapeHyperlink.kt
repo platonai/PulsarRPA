@@ -1,10 +1,8 @@
 package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.DefaultLoadEventHandler
 import ai.platon.pulsar.crawl.LoadEventPipelineHandler
@@ -116,10 +114,10 @@ open class ScrapeHyperlink(
             response.resultSet = resultSet
         } catch (e: JdbcSQLException) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}{}", Strings.simplifyException(e))
+            logger.warn("Failed to execute sql #${response.uuid}{}", e.simplify())
         } catch (e: Throwable) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}\n{}", Strings.stringifyException(e))
+            logger.warn("Failed to execute sql #${response.uuid}\n{}", e.simplify())
         }
 
         return rs
@@ -146,8 +144,7 @@ open class ScrapeHyperlink(
                         logger.warn("Syntax error in SQL statement #${response.uuid}>>>\n{}\n<<<", e.sql)
                     } else {
                         response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-                        logger.warn("Failed to execute scrape task #${response.uuid}\n{}",
-                            Strings.stringifyException(e))
+                        logger.warn("Failed to execute scrape task #${response.uuid}\n{}", e.stringify())
                     }
                 }
             }

@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.options.FetchOptions
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId

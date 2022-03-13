@@ -25,7 +25,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="coreMetrics" class="ai.platon.pulsar.crawl.fetch.CoreMetrics" destroy-method="close">
+    <bean id="coreMetrics" class="ai.platon.pulsar.crawl.CoreMetrics" destroy-method="close">
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>

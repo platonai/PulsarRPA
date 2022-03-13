@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.common.metrics.EnumCounterUtils
 import ai.platon.pulsar.common.measure.ByteUnitConverter
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId

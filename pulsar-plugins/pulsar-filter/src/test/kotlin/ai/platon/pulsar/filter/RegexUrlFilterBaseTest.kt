@@ -20,6 +20,7 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
 import org.junit.Assert
 import java.io.BufferedReader
@@ -71,7 +72,7 @@ abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testD
         try {
             test(getURLFilter(reader), readURLFile(urls))
         } catch (e: Exception) {
-            Assert.fail(Strings.stringifyException(e))
+            Assert.fail(e.stringify())
         }
     }
 

@@ -1,12 +1,8 @@
 package ai.platon.pulsar.crawl.index
 
-import ai.platon.pulsar.common.Strings
-import java.lang.AutoCloseable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.index.IndexDocument
-import java.util.ArrayList
-import java.util.stream.Collectors
+import ai.platon.pulsar.common.stringify
 
 /**
  * Creates [IndexWriter] implementing plugins.
@@ -24,7 +20,7 @@ class IndexWriters(
             try {
                 indexWriter.open(conf)
             } catch (e: Throwable) {
-                LOG.error("Failed to open indexer. " + Strings.stringifyException(e))
+                LOG.error("Failed to open indexer. " + e.stringify())
             }
         }
     }
@@ -34,7 +30,7 @@ class IndexWriters(
             try {
                 indexWriter.open(indexerUrl)
             } catch (e: Throwable) {
-                LOG.error("Failed to open indexer. " + Strings.stringifyException(e))
+                LOG.error("Failed to open indexer. " + e.stringify())
             }
         }
     }
@@ -44,7 +40,7 @@ class IndexWriters(
             try {
                 indexWriter.write(doc)
             } catch (e: Throwable) {
-                LOG.error("Failed to write indexer. " + Strings.stringifyException(e))
+                LOG.error("Failed to write indexer. " + e.stringify())
             }
         }
     }
@@ -54,7 +50,7 @@ class IndexWriters(
             try {
                 indexWriter.update(doc)
             } catch (e: Throwable) {
-                LOG.error("Failed to update indexer. " + Strings.stringifyException(e))
+                LOG.error("Failed to update indexer. " + e.stringify())
             }
         }
     }
@@ -64,7 +60,7 @@ class IndexWriters(
             try {
                 indexWriter.delete(key)
             } catch (e: Throwable) {
-                LOG.error("Failed to delete indexer. " + Strings.stringifyException(e))
+                LOG.error("Failed to delete indexer. " + e.stringify())
             }
         }
     }
@@ -76,7 +72,7 @@ class IndexWriters(
                 indexWriter.close()
             } catch (e: Throwable) {
                 LOG.error("Failed to close IndexWriter " + indexWriter.name)
-                LOG.error(Strings.stringifyException(e))
+                LOG.error(e.stringify())
             }
         }
         indexWriters.clear()
@@ -87,7 +83,7 @@ class IndexWriters(
             try {
                 indexWriter.commit()
             } catch (e: Throwable) {
-                LOG.error("Failed to commit indexer. " + Strings.stringifyException(e))
+                LOG.error("Failed to commit indexer. {}", e.stringify())
             }
         }
     }

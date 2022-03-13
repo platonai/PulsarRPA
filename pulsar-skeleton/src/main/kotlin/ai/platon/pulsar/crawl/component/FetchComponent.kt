@@ -26,7 +26,7 @@ import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.CoreMetrics
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound

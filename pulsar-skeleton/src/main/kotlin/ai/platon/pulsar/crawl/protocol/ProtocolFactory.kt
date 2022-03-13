@@ -21,6 +21,7 @@ package ai.platon.pulsar.crawl.protocol
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.commons.lang3.StringUtils
@@ -99,11 +100,11 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
             val className = config[1]
             return Class.forName(className).constructors.first().newInstance() as Protocol
         } catch (e: ClassNotFoundException) {
-            log.error(Strings.stringifyException(e))
+            log.error(e.stringify())
         } catch (e: InstantiationException) {
-            log.error(Strings.stringifyException(e))
+            log.error(e.stringify())
         } catch (e: IllegalAccessException) {
-            log.error(Strings.stringifyException(e))
+            log.error(e.stringify())
         }
         return null
     }

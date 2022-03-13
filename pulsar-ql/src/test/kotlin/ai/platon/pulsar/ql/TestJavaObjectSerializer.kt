@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2DbConfig
@@ -37,7 +38,7 @@ class TestJavaObjectSerializer: TestBase() {
             try {
                 initializeDatabase()
             } catch (e: Throwable) {
-                logger.info(Strings.stringifyException(e))
+                logger.info(e.stringify())
             }
         }
 

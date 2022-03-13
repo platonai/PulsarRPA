@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.fetch.JobFetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
@@ -154,16 +155,16 @@ class JITIndexer(
             val reverseUrl = Urls.reverseUrl(url)
             val page = fetchTask.page
 
-            val doc = indexDocumentBuilder!!.build(reverseUrl, page)
+            val doc = indexDocumentBuilder.build(reverseUrl, page)
             if (shouldIndex(doc)) {
                 synchronized(indexWriters) {
                     indexWriters.write(doc)
-                    page!!.putIndexTimeHistory(Instant.now())
+                    page.putIndexTimeHistory(Instant.now())
                 }
                 indexedPages.incrementAndGet()
             } // if
         } catch (e: Throwable) {
-            LOG.error("Failed to index a page " + Strings.stringifyException(e))
+            LOG.error("Failed to index a page " + e.stringify())
         }
 
     }

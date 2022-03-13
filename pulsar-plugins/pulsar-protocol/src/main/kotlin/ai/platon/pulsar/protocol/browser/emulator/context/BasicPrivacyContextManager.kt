@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.crawl.fetch.CoreMetrics
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver

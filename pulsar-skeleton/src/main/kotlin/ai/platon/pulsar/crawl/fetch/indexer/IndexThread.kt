@@ -15,15 +15,13 @@ class IndexThread(
 
     private val log = LoggerFactory.getLogger(IndexThread::class.java)
 
-    private val id: Int
+    private val id = instanceSequence.incrementAndGet()
     private val halt = AtomicBoolean(false)
 
     val isHalted: Boolean
         get() = halt.get()
 
     init {
-        this.id = instanceSequence.incrementAndGet()
-
         this.isDaemon = true
         this.name = "Indexer-$id"
     }

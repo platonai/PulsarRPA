@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizer
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Element
@@ -193,7 +194,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : CrawlUrlNormalizer
         try {
             getRulesReader(conf).use { reader -> rules = readConfiguration(reader) }
         } catch (e: IOException) {
-            LOG.error(Strings.stringifyException(e))
+            LOG.error(e.stringify())
         }
         defaultRules = rules
     }

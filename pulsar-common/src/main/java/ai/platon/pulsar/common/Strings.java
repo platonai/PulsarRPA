@@ -904,48 +904,6 @@ public final class Strings {
     }
 
     /**
-     * <p>stringifyException.</p>
-     *
-     * @param e a {@link java.lang.Throwable} object.
-     * @return a {@link java.lang.String} object.
-     */
-    public static String stringifyException(Throwable e) {
-        Objects.requireNonNull(e);
-        StringWriter stm = new StringWriter();
-        PrintWriter wrt = new PrintWriter(stm);
-        e.printStackTrace(wrt);
-        wrt.close();
-        return stm.toString();
-    }
-
-    /**
-     * <p>simplifyException.</p>
-     *
-     * @param e a {@link java.lang.Throwable} object.
-     * @return a {@link java.lang.String} object.
-     */
-    public static String simplifyException(@NotNull Throwable e) {
-        String message = e.getMessage();
-        if (message == null) {
-            message = e.toString();
-        }
-
-        List<String> lines = Arrays.stream(message.split("\n"))
-                .filter(StringUtils::isNotBlank)
-                .collect(Collectors.toList());
-        int n = lines.size();
-        if (n == 0) {
-            return "";
-        } else if (n == 1) {
-            return lines.get(0);
-        } else if (n == 2) {
-            return lines.get(0) + "\t" + lines.get(1);
-        } else {
-            return lines.get(0) + "\t" + lines.get(1) + " ...";
-        }
-    }
-
-    /**
      * <p>reverse.</p>
      *
      * @param s a {@link java.lang.String} object.

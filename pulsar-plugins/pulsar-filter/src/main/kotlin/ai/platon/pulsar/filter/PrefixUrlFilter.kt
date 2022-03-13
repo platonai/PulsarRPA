@@ -19,10 +19,7 @@
 // $Id: PrefixUrlFilter.java 823614 2009-10-09 17:02:32Z ab $
 package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.common.PrefixStringMatcher
-import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.TrieStringMatcher
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilter
@@ -49,7 +46,7 @@ class PrefixUrlFilter(conf: ImmutableConfig) : CrawlUrlFilter {
         try {
             getRulesReader(conf).use { reader -> trie = readConfiguration(reader) }
         } catch (e: IOException) {
-            LOG.error(Strings.stringifyException(e))
+            LOG.error(e.stringify())
             throw RuntimeException(e.message, e)
         }
     }

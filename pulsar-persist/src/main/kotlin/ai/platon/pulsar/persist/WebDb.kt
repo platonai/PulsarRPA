@@ -3,6 +3,7 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.urls.Urls.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
@@ -264,7 +265,7 @@ class WebDb(
         } catch (e: Throwable) {
             // TODO: Embedded MongoDB fails to shutdown gracefully #5487
             // see https://github.com/spring-projects/spring-boot/issues/5487
-            log.error(Strings.stringifyException(e))
+            log.error(e.stringify())
         }
     }
 

@@ -298,7 +298,7 @@ open class EventHandler(
 //        } catch (e: ScreenshotException) {
 //            logger.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
 //        } catch (e: Exception) {
-//            logger.warn(Strings.stringifyException(e))
+//            logger.warn(e.stringify())
 //        }
     }
 

@@ -46,8 +46,6 @@ class PlaywrightBrowserInstance(
     }
 
     private fun launch0() {
-        val vp = BrowserSettings.viewPort
-
         val executablePath = Browsers.searchChromeBinaryOrNull()
         // TODO: no way to disable inspector
 
@@ -55,6 +53,7 @@ class PlaywrightBrowserInstance(
         val options = BrowserType.LaunchPersistentContextOptions().apply {
             headless = launchOptions.headless
 //            headless = true
+            val vp = BrowserSettings.viewPort
             setViewportSize(vp.width, vp.height)
             // setChannel()
 //            setScreenSize(vp.width, vp.height)

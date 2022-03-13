@@ -25,6 +25,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -123,7 +124,7 @@ class PageParser(
 
             return parseResult
         } catch (e: Throwable) {
-            LOG.error(Strings.stringifyException(e))
+            LOG.error(e.stringify())
         }
 
         return ParseResult()
@@ -240,6 +241,9 @@ class PageParser(
         }
     }
 
+    /**
+     * Process redirect when the page is fetched with native http protocol rather than a browser
+     * */
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
         val newUrl = if (crawlFilters != null) {

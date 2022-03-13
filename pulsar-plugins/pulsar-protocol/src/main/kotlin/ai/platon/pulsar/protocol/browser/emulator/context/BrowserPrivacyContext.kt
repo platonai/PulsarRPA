@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.fetch.CoreMetrics
+import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
