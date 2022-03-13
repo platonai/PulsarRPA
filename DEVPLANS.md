@@ -3,7 +3,9 @@
 Plan:
 
     1. better preload javascript management
-    2. use playwright as the default web driver
+    2. playwright support
+    3. input emulation for ChromeDevToolsDriver
+    4. refine code
 
 ## 1.7.4
 
