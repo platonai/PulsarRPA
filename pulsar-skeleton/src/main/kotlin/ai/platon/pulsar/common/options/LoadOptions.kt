@@ -134,6 +134,13 @@ open class LoadOptions(
     var outLinkPattern = ".+"
 
     @ApiPublic
+    @Parameter(
+        names = ["-click", "-clickTarget", "--click-target"],
+        description = "The selector of the element to click for out links, if it's blank, no element should be clicked"
+    )
+    var clickTarget = ""
+
+    @ApiPublic
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
@@ -454,7 +461,7 @@ open class LoadOptions(
         browser = itemBrowser
     }
 
-    fun apply(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+    fun toConf(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         val emulateSettings = when (netCondition) {
             Condition.WORSE -> EmulateSettings.worseNetSettings
             Condition.WORST -> EmulateSettings.worstNetSettings
@@ -466,7 +473,7 @@ open class LoadOptions(
         if (!isDefault("scriptTimeout")) emulateSettings.scriptTimeout = scriptTimeout
         if (!isDefault("pageLoadTimeout")) emulateSettings.pageLoadTimeout = pageLoadTimeout
 
-        emulateSettings.apply(conf)
+        emulateSettings.toConf(conf)
 
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)

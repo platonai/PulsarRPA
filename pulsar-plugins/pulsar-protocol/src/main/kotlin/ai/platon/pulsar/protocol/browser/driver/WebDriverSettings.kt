@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2014 - 2022 platon.ai. <ivincent.zhang@gmail.com>
+ *
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserSettings
@@ -45,7 +60,7 @@ open class WebDriverSettings(
     config: ImmutableConfig
 ): BrowserSettings(parameters, jsDirectory, config) {
 
-    constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
+    constructor(config: ImmutableConfig): this(mapOf(), "js", config)
 
     // Special
     // var mobileEmulationEnabled = true

@@ -38,14 +38,14 @@ data class EmulateSettings(
         pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
     )
 
-    fun apply() {
+    fun toSystemProperties() {
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
-    fun apply(conf: MutableConfig) {
+    fun toConf(conf: MutableConfig) {
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
@@ -139,12 +139,12 @@ open class BrowserSettings(
         }
 
         fun withWorseNetwork(): Companion {
-            EmulateSettings.worseNetSettings.apply()
+            EmulateSettings.worseNetSettings.toSystemProperties()
             return BrowserSettings
         }
 
         fun withWorstNetwork(): Companion {
-            EmulateSettings.worstNetSettings.apply()
+            EmulateSettings.worstNetSettings.toSystemProperties()
             return BrowserSettings
         }
 

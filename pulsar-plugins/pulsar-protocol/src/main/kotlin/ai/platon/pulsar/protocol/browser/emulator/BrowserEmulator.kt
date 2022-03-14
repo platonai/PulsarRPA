@@ -244,6 +244,8 @@ open class BrowserEmulator(
             eventHandler?.onAfterComputeFeature(task.fetchTask.page, task.driver)
         }
 
+        // handle click to navigate
+
         return result
     }
 
