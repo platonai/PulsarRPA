@@ -4,6 +4,7 @@ import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
@@ -106,7 +107,7 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
-    // TODO: we can only check active before system calls
+    // TODO: we can only check active before critical calls, for example, IO operations
     val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
@@ -307,7 +308,7 @@ abstract class AbstractPulsarContext(
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
      *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
+     * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
      *
      * @param urls    The urls to load
      * @param options The options
@@ -325,7 +326,7 @@ abstract class AbstractPulsarContext(
      * Parse the WebPage using parseComponent
      */
     override fun parse(page: WebPage): FeaturedDocument? {
-        val parser = loadComponent.parseComponent ?: return null
+        val parser = loadComponent.parseComponent
         return parser.parse(page, noLinkFilter = true).document
     }
 
@@ -397,6 +398,10 @@ abstract class AbstractPulsarContext(
             closableObjects.forEach {
                 it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
+
+            kotlin.runCatching { crawlLoops.stop() }.onFailure { log.warn(it.message) }
+
+            applicationContext.close()
         }
 
         AppContext.terminate()

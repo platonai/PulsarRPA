@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.geometric.OffsetD
@@ -16,7 +17,6 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -97,31 +97,23 @@ class ChromeDevtoolsDriver(
 
     override suspend fun navigateTo(url: String) {
         initSpecialSiteBeforeVisit(url)
-
         browserInstance.navigateHistory.add(url)
         lastActiveTime = Instant.now()
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
-    }
-
-    /**
-     * TODO: use an event handler to do this stuff
-     * */
-    private fun initSpecialSiteBeforeVisit(url: String) {
-        if (isFirstLaunch) {
-            // the first visit to jd.com
-            val isFirstJdVisit = url.contains("jd.com")
-                    && browserInstance.navigateHistory.none { it.contains("jd.com") }
-            if (isFirstJdVisit) {
-                JdInitializer().init(page)
-            }
-        }
     }
 
     override suspend fun stopLoading() {
         if (!isActive) return
 
         try {
-            page.stopLoading()
+            if (browserInstance.isGUI) {
+                // in gui mode, just stop the loading, so we can make a diagnosis
+                page.stopLoading()
+            } else {
+                // go to about:blank, so the browser stops the previous page and release all resources
+                navigateTo(Chrome.ABOUT_BLANK_PAGE)
+            }
+            closeNonDesiredTabs()
         } catch (e: ChromeDevToolsInvocationException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to call stop loading, session is already closed, {}", e.message)
@@ -309,6 +301,20 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    /**
+     * TODO: use an event handler to do this stuff
+     * */
+    private fun initSpecialSiteBeforeVisit(url: String) {
+        if (isFirstLaunch) {
+            // the first visit to jd.com
+            val isFirstJdVisit = url.contains("jd.com")
+                    && browserInstance.navigateHistory.none { it.contains("jd.com") }
+            if (isFirstJdVisit) {
+                JdInitializer().init(page)
+            }
+        }
+    }
+
     @Throws(WebDriverException::class)
     private fun getNoInvaded(url: String) {
         if (!isActive) return
@@ -320,6 +326,17 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeDevToolsInvocationException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to navigate | {}", e.message)
+        }
+    }
+
+    // close tabs which are opened but not desired for content, they might be opened by javascript for humanization purpose
+    private fun closeNonDesiredTabs() {
+        browserInstance.listTab().forEach {
+            val tabUrl = it.url
+//            println("Tab url: $tabUrl")
+            if (tabUrl != null && tabUrl.startsWith("http") && tabUrl !in browserInstance.navigateHistory) {
+                browserInstance.closeTab(it)
+            }
         }
     }
 

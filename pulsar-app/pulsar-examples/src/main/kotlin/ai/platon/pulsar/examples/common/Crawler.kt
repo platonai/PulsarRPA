@@ -40,6 +40,7 @@ class AfterWebPageBatchHandler: WebPageBatchHandler() {
     }
 }
 
+@Deprecated("Use VerboseCrawler instead")
 open class Crawler(
         val context: PulsarContext,
         private var beforeBatchHandler: WebPageBatchHandler = BeforeWebPageBatchHandler(),
@@ -86,6 +87,10 @@ open class Crawler(
         document.stripScripts()
         val path = i.export(document)
         logger.info("Portal page is exported to: file://$path")
+
+        if (options.correctedOutLinkSelector.isBlank()) {
+            return
+        }
 
         val links = document.select(options.correctedOutLinkSelector) { it.attr("abs:href") }
                 .mapNotNullTo(mutableSetOf()) { i.normalizeOrNull(it)?.spec }

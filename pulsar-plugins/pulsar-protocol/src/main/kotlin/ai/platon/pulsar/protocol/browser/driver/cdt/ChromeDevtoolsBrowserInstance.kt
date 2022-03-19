@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -41,13 +42,18 @@ class ChromeDevtoolsBrowserInstance(
     fun createTab(): ChromeTab {
         lastActiveTime = Instant.now()
         tabCount.incrementAndGet()
-        return chrome.createTab("about:blank")
+        return chrome.createTab(Chrome.ABOUT_BLANK_PAGE)
     }
 
     @Synchronized
     fun closeTab(tab: ChromeTab) {
-        // TODO: anything to do?
         tabCount.decrementAndGet()
+        chrome.closeTab(tab)
+    }
+
+    @Synchronized
+    fun listTab(): Array<ChromeTab> {
+        return chrome.getTabs()
     }
 
     @Synchronized
@@ -73,10 +79,10 @@ class ChromeDevtoolsBrowserInstance(
                 }
             }
 
-            // chrome.close()
+            chrome.close()
             launcher.close()
 
-            logger.info("Launcher is closed | {}", id.display)
+            logger.info("Browser instance is closed | {}", id.display)
         }
     }
 }

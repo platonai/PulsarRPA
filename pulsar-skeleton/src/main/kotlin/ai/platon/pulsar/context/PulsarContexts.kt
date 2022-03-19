@@ -50,24 +50,18 @@ object PulsarContexts {
 
 fun withContext(block: (context: PulsarContext) -> Unit) {
     PulsarContexts.activate(StaticPulsarContext()).use {
-        it.crawlLoops.start()
         block(it)
-        it.crawlLoops.stop()
     }
 }
 
 fun withContext(contextLocation: String, block: (context: PulsarContext) -> Unit) {
     PulsarContexts.activate(ClassPathXmlPulsarContext(contextLocation)).use {
-        it.crawlLoops.start()
         block(it)
-        it.crawlLoops.stop()
     }
 }
 
 fun withContext(applicationContext: ApplicationContext, block: (context: PulsarContext) -> Unit) {
     PulsarContexts.activate(applicationContext).use {
-        it.crawlLoops.start()
         block(it)
-        it.crawlLoops.stop()
     }
 }

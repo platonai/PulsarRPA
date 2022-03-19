@@ -128,6 +128,15 @@ abstract class AbstractPulsarSession(
     override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
 
     /**
+     * Open a page with [url]
+     *
+     * @param url     The url of the page to open
+     * @return The web page
+     */
+    @Throws(Exception::class)
+    override fun open(url: String): WebPage = load(url, options("-refresh"))
+
+    /**
      * Load a url with specified options
      *
      * @param url     The url to load
@@ -198,8 +207,13 @@ abstract class AbstractPulsarSession(
         }
     }
 
+    /**
+     * Create page with cached core, but not metadata. If the page might be changed, it should be fetched again.
+     *
+     * If the loading is not a read-only-loading, which might modify the page status, or the loading have event handlers,
+     * in such cases, we must render the page in the browser again.
+     * */
     private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
-        // if the loading is not a read only loading, it might modify the page status, or have event handlers
         if (!normUrl.options.readonly) {
             return null
         }

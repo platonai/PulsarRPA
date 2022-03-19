@@ -121,13 +121,8 @@ open class BrowserEmulator(
         // TODO: avoid the hard coding
         emulateJd(task, driverSettings, driver)
 
-        if (driverSettings.isGUI) {
-            // in gui mode, just stop the loading, so we can make a diagnosis
-            driver.stopLoading()
-        } else {
-            // go to about:blank, so the browser stops the previous page and release all resources
-            driver.navigateTo("about:blank")
-        }
+        // TODO: use a better function, stopEmulate, for example
+        driver.stopLoading()
 
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }

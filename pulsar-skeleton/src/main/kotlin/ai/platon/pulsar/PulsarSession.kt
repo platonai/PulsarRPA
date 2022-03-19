@@ -85,6 +85,15 @@ interface PulsarSession : AutoCloseable {
     fun fetchState(page: WebPage, options: LoadOptions): CheckState
 
     /**
+     * Open a page with [url]
+     *
+     * @param url     The url of the page to open
+     * @return The web page
+     */
+    @Throws(Exception::class)
+    fun open(url: String): WebPage
+
+    /**
      * Load a url with specified options
      *
      * @param url     The url to load

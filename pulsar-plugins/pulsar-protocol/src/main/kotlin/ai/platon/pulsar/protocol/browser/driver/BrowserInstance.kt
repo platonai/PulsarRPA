@@ -23,7 +23,7 @@ abstract class BrowserInstance(
      * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
      * */
     val id = BrowserInstanceId(userDataDir, proxyServer)
-    val isGUI get() = launcherOptions.supervisorProcess == null && !launchOptions.headless
+    val isGUI get() = launcherOptions.browserSettings.isGUI
 
     var tabCount = AtomicInteger()
     val navigateHistory = mutableListOf<String>()

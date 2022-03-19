@@ -3,6 +3,8 @@
 Plan:
 
     1. bug fix
+    2. add a javascript encoder
+    3. documents
 
 ## 1.8.0
 

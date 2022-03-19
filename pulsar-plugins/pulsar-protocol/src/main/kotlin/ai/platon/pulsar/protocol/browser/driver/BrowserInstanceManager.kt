@@ -55,6 +55,8 @@ class BrowserInstanceManager: AutoCloseable {
         kotlin.runCatching {
             val unSynchronized = browserInstances.values.toList()
             browserInstances.clear()
+
+            getLogger(this).info("Closing {} browser instances", unSynchronized.size)
             unSynchronized.parallelStream().forEach { it.close() }
         }.onFailure {
             getLogger(this).warn("Failed to close | {}", it.message)

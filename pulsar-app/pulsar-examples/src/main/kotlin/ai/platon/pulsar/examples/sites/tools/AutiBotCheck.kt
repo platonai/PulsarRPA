@@ -15,7 +15,5 @@ https://arh.antoinevastel.com/bots/areyouheadless
             .filter { it.startsWith("http") }
             .filter { it.contains("sannysoft") }
             .forEach { crawler.open(it) }
-
-        readLine()
     }
 }
