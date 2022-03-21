@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.parse.html
+package ai.platon.pulsar.crawl.parse.html
 
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -26,7 +26,6 @@ import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -37,8 +36,8 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Html parser
  */
-class HtmlParser(
-    private val parseFilters: ParseFilters,
+class PrimerHtmlParser(
+    private val parseFilters: ParseFilters?,
     private val conf: ImmutableConfig,
 ) : Parser {
     companion object {
@@ -46,14 +45,16 @@ class HtmlParser(
         val numHtmlParsed = AtomicInteger()
     }
 
-    private val log = LoggerFactory.getLogger(HtmlParser::class.java)
-    private val tracer = log.takeIf { it.isDebugEnabled }
+    private val logger = LoggerFactory.getLogger(PrimerHtmlParser::class.java)
+    private val tracer = logger.takeIf { it.isDebugEnabled }
     private val defaultCharEncoding = conf.get(PARSE_DEFAULT_ENCODING, "utf-8")
     private val primerParser = PrimerParser(conf)
 
     init {
-        log.info(params.formatAsLine())
+        logger.info(params.formatAsLine())
     }
+
+    constructor(conf: ImmutableConfig): this(null, conf)
 
     override fun getParams(): Params {
         return Params.of(
@@ -69,7 +70,7 @@ class HtmlParser(
             beforeHtmlParse(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)
-            parseFilters.filter(parseContext)
+            parseFilters?.filter(parseContext)
 
             val document = parseContext.document
             if (document != null) {
@@ -93,7 +94,7 @@ class HtmlParser(
         try {
             page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
         } catch (e: Throwable) {
-            log.warn("Failed to invoke beforeHtmlParse | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke beforeHtmlParse | ${page.configuredUrl}", e)
         }
     }
 
@@ -104,7 +105,7 @@ class HtmlParser(
         try {
             page.loadEventHandler?.onAfterHtmlParse?.invoke(page, document)
         } catch (e: Throwable) {
-            log.warn("Failed to invoke afterHtmlParse | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke afterHtmlParse | ${page.configuredUrl}", e)
         }
 
         numHtmlParsed.incrementAndGet()

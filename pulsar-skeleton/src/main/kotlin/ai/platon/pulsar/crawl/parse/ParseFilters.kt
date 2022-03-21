@@ -34,6 +34,8 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     val parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
     private val closed = AtomicBoolean()
 
+    constructor(conf: ImmutableConfig): this(listOf(), conf)
+
     fun initialize() {
         parseFilters.forEach { it.initialize() }
     }

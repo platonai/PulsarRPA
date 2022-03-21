@@ -28,7 +28,7 @@ open class H2SQLContext(
     applicationContext: AbstractApplicationContext
 ) : AbstractSQLContext(applicationContext) {
 
-    private val log = LoggerFactory.getLogger(H2SQLContext::class.java)
+    private val logger = LoggerFactory.getLogger(H2SQLContext::class.java)
 
     private val db = H2MemoryDb()
 
@@ -39,7 +39,7 @@ open class H2SQLContext(
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
             H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
-        log.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
+        logger.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as H2SQLSession
     }
 

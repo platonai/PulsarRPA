@@ -30,6 +30,8 @@ import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser
+import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
@@ -194,7 +196,7 @@ class PageParser(
 
         for (parser in parsers) {
             // optimize for html content
-            // To parse non-html content, the parser might run into a endless loop,
+            // To parse non-html content, the parser might run into an endless loop,
             // run it in a separate coroutine to protect the process
             val timeout = if ("HtmlParser" in parser::class.java.name) Duration.ZERO else maxParseTime
 

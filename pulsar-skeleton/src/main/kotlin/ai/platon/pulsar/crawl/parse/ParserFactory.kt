@@ -21,6 +21,7 @@ package ai.platon.pulsar.crawl.parse
 import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -28,15 +29,19 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Creates [Parser].
  */
-class ParserFactory {
+class ParserFactory(private val conf: ImmutableConfig) {
     // Thread safe for both outer map and inner list
     private val mineType2Parsers = ConcurrentHashMap<String, List<Parser>>()
 
-    constructor(conf: ImmutableConfig) : this(listOf(), conf)
+    constructor(
+        availableParsers: List<Parser>, conf: ImmutableConfig
+    ) : this(ParserConfigReader().parse(conf), availableParsers, conf)
 
-    constructor(availableParsers: List<Parser>, conf: ImmutableConfig) : this(ParserConfigReader().parse(conf), availableParsers)
-
-    constructor(parserConfig: ParserConfig, availableParsers: List<Parser>) {
+    constructor(
+        parserConfig: ParserConfig,
+        availableParsers: List<Parser>,
+        conf: ImmutableConfig
+    ): this(conf) {
         val availableNamedParsers = availableParsers.associateBy { it.javaClass.name }
         parserConfig.parsers.forEach { (mimeType: String, parserClasses: List<String>) ->
             val parsers = parserClasses.mapNotNull { name -> availableNamedParsers[name] }
@@ -47,8 +52,17 @@ class ParserFactory {
                 .let { Params(it) }.withLogger(LOG).info("Active parsers: ", "", false)
     }
 
-    constructor(parses: Map<String, List<Parser>>) {
+    constructor(parses: Map<String, List<Parser>>, conf: ImmutableConfig): this(conf) {
         mineType2Parsers.putAll(parses)
+    }
+
+    init {
+        if (mineType2Parsers.isEmpty()) {
+            val htmlParsers = listOf(PrimerHtmlParser(conf))
+            listOf("text/html", "application/xhtml+xml").forEach {
+                mineType2Parsers[it] = htmlParsers
+            }
+        }
     }
 
     /**
@@ -67,7 +81,7 @@ class ParserFactory {
     @Throws(ParserNotFound::class)
     fun getParsers(contentType: String, url: String = ""): List<Parser> {
         val mimeType = MimeTypeResolver.cleanMimeType(contentType)
-        return mineType2Parsers[mimeType]?: mineType2Parsers[DEFAULT_MINE_TYPE]?: listOf()
+        return mineType2Parsers[mimeType]?: mineType2Parsers[DEFAULT_MINE_TYPE] ?: listOf()
     }
 
     private fun escapeContentType(contentType: String): String {

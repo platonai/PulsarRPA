@@ -153,7 +153,7 @@ class FetchLoop(
 
             val isCanceled = page.protocolStatus.isCanceled
             if (!isCanceled && taskScheduler.parse) {
-                val parseResult = parseComponent.parse(page, null, false, true)
+                val parseResult = parseComponent.parse(page, false, true)
                 if (log.isTraceEnabled) {
                     log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
                 }

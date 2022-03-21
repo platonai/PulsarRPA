@@ -19,10 +19,9 @@
 package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.crawl.parse.PageParser
+import ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.persist.metadata.Name
-import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +46,7 @@ class TestHtmlParser : HtmlParserTestBase() {
             val page = getPage(testPage[3], charset)
             assertNotNull(pageParser)
             val parser = pageParser.parserFactory.getParsers(page.contentType).first()
-            assertEquals(HtmlParser::class.java.name, parser::class.java.name, page.contentType)
+            assertEquals(PrimerHtmlParser::class.java.name, parser::class.java.name, page.contentType)
 
             val parseResult = pageParser.parse(page)
             LOG.debug(parseResult.toString())

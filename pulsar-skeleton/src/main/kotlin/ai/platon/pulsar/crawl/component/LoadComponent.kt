@@ -382,7 +382,7 @@ class LoadComponent(
 
     private fun parse(page: WebPage, options: LoadOptions): ParseResult? {
         val parser = parseComponent.takeIf { options.parse } ?: return null
-        val parseResult = parser.parse(page, null, options.reparseLinks, options.noFilter)
+        val parseResult = parser.parse(page, options.reparseLinks, options.noFilter)
         tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, parser.getTraceInfo())
 
         return parseResult

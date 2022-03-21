@@ -7,8 +7,8 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
     val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     /**
-     * Load [url] if it's not in the database or it's expired
-     * expire time: 1 day
+     * Load [url] if it's not in the database, or it's expired.
+     * The expire time is: 1 day
      * */
     fun load() = session.load(url, "-expires 1d")
 
@@ -61,12 +61,9 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
         println(scrapeOutPages().joinToString("\n") { it[".p-price"] + " | " + it[".sku-name"] })
         println("Scrape out pages - 2:")
         println(scrapeOutPages2().joinToString("\n") { it["price"] + " | " + it["name"] })
-
-        session.flush()
-        session.context.close()
     }
 }
 
 fun main() {
-    Manual().scrapeOutPages()
+    Manual().runAll()
 }

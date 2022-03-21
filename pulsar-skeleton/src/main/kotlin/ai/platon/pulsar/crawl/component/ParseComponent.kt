@@ -56,17 +56,13 @@ class ParseComponent(
     constructor(globalCacheFactory: GlobalCacheFactory, conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), globalCacheFactory, conf)
 
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = true): ParseResult {
-        return parse(page, "", reparseLinks, noLinkFilter)
-    }
-
-    fun parse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean): ParseResult {
-        beforeParse(page, query, reparseLinks, noLinkFilter)
+        beforeParse(page, reparseLinks, noLinkFilter)
         val result = pageParser.parse(page)
         afterParse(page, result)
         return result
     }
 
-    private fun beforeParse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean) {
+    private fun beforeParse(page: WebPage, reparseLinks: Boolean, noLinkFilter: Boolean) {
         numParses.incrementAndGet()
 
         if (reparseLinks) {

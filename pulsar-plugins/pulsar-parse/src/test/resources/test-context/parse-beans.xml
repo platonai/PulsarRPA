@@ -25,7 +25,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="htmlParser" class="ai.platon.pulsar.parse.html.HtmlParser">
+    <bean id="htmlParser" class="ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser">
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
