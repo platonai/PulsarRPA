@@ -87,6 +87,8 @@ class WebDriverAdapter(
         }
     }
 
+    override suspend fun cookies(): String = driver.cookies()
+
     override suspend fun bringToFront() {
         driver.takeIf { isWorking }?.runCatching { bringToFront() }
     }

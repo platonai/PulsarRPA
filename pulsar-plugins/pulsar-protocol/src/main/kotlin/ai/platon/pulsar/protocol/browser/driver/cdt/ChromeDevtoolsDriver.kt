@@ -102,6 +102,11 @@ class ChromeDevtoolsDriver(
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
 
+    override suspend fun cookies(): String {
+        network.enable()
+        return network.cookies.joinToString("\n")
+    }
+
     override suspend fun stopLoading() {
         if (!isActive) return
 
@@ -113,7 +118,8 @@ class ChromeDevtoolsDriver(
                 // go to about:blank, so the browser stops the previous page and release all resources
                 navigateTo(Chrome.ABOUT_BLANK_PAGE)
             }
-            closeNonDesiredTabs()
+
+            closeIrrelevantTabs()
         } catch (e: ChromeDevToolsInvocationException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to call stop loading, session is already closed, {}", e.message)
@@ -329,11 +335,10 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    // close tabs which are opened but not desired for content, they might be opened by javascript for humanization purpose
-    private fun closeNonDesiredTabs() {
+    // close irrelevant tabs, which might be opened for humanization purpose
+    private fun closeIrrelevantTabs() {
         browserInstance.listTab().forEach {
             val tabUrl = it.url
-//            println("Tab url: $tabUrl")
             if (tabUrl != null && tabUrl.startsWith("http") && tabUrl !in browserInstance.navigateHistory) {
                 browserInstance.closeTab(it)
             }

@@ -124,6 +124,7 @@ open class BrowserSettings(
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
 
         val preloadJavaScriptResources = """
+            stealth.js
             __pulsar_utils__.js
             configs.js
             node_ext.js

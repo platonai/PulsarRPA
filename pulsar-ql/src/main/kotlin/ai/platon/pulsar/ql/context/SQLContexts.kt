@@ -69,7 +69,7 @@ class StaticH2SQLContext(
      * */
     override val globalCacheFactory = getBeanOrNull() ?: GlobalCacheFactory(unmodifiedConfig)
     /**
-     * The inject component
+     * The injection component
      * */
     override val injectComponent = getBeanOrNull() ?: InjectComponent(webDb, unmodifiedConfig)
     /**

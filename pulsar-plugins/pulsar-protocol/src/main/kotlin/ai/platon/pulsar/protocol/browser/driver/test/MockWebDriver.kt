@@ -64,6 +64,10 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
+    override suspend fun cookies(): String {
+        return backupDriverOrNull?.cookies() ?: ""
+    }
+
     override suspend fun stopLoading() {
         backupDriverOrNull?.stopLoading()
     }

@@ -41,6 +41,7 @@ interface WebDriver: Closeable {
     suspend fun type(selector: String, text: String) {}
     suspend fun click(selector: String, count: Int = 1) {}
 
+    suspend fun cookies(): String
     suspend fun evaluate(expression: String): Any?
     suspend fun evaluateSilently(expression: String): Any?
 

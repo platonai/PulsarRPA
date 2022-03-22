@@ -8,7 +8,7 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
 
     /**
      * Load [url] if it's not in the database, or it's expired.
-     * The expire time is: 1 day
+     * The expiry time is: 1 day
      * */
     fun load() = session.load(url, "-expires 1d")
 

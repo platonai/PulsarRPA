@@ -112,6 +112,10 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun cookies(): String {
+        return page.context().cookies().joinToString("\n")
+    }
+
     /**
      * Simulate a session to the browser
      * */
