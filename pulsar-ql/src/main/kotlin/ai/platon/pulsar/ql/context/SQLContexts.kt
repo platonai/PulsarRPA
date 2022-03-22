@@ -23,6 +23,7 @@ import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
 import java.sql.Connection
+import kotlin.system.exitProcess
 
 open class H2SQLContext(
     applicationContext: AbstractApplicationContext
@@ -167,16 +168,25 @@ fun withSQLContext(block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(DefaultClassPathXmlSQLContext()).use {
         block(it)
     }
+
+    // TODO: the process hung up with unknown reason, we will fix this
+    exitProcess(0)
 }
 
 fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(ClassPathXmlSQLContext(contextLocation)).use {
         block(it)
     }
+
+    // TODO: the process hung up with unknown reason, we will fix this
+    exitProcess(0)
 }
 
 fun withSQLContext(applicationContext: ApplicationContext, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(applicationContext).use {
         block(it)
     }
+
+    // TODO: the process hung up with unknown reason, we will fix this
+    exitProcess(0)
 }
