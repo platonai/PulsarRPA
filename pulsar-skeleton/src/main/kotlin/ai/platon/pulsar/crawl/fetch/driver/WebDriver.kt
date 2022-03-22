@@ -45,7 +45,7 @@ interface WebDriver: Closeable {
     suspend fun evaluate(expression: String): Any?
     suspend fun evaluateSilently(expression: String): Any?
 
-    suspend fun stopLoading()
+    suspend fun stop()
 
     fun free()
     fun startWork()

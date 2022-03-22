@@ -85,7 +85,7 @@ class PlaywrightDriver(
         }
     }
 
-    override suspend fun stopLoading() {
+    override suspend fun stop() {
         if (!isActive) return
 
         try {

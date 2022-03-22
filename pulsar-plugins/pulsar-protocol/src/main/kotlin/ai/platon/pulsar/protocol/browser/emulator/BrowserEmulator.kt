@@ -121,8 +121,7 @@ open class BrowserEmulator(
         // TODO: avoid the hard coding
         emulateJd(task, driverSettings, driver)
 
-        // TODO: use a better function, stopEmulate, for example
-        driver.stopLoading()
+        driver.stop()
 
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }

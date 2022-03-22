@@ -68,7 +68,7 @@ abstract class AbstractWebDriver(
         }
 
         if (status.compareAndSet(Status.WORKING, Status.CANCELED)) {
-            runBlocking { stopLoading() }
+            runBlocking { stop() }
         }
     }
 

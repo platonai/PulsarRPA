@@ -68,8 +68,8 @@ class MockWebDriver(
         return backupDriverOrNull?.cookies() ?: ""
     }
 
-    override suspend fun stopLoading() {
-        backupDriverOrNull?.stopLoading()
+    override suspend fun stop() {
+        backupDriverOrNull?.stop()
     }
 
     override suspend fun evaluate(expression: String): Any? {

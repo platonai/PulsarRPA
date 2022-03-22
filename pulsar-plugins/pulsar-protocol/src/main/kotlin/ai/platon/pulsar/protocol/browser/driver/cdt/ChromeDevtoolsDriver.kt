@@ -107,7 +107,7 @@ class ChromeDevtoolsDriver(
         return network.cookies.joinToString("\n")
     }
 
-    override suspend fun stopLoading() {
+    override suspend fun stop() {
         if (!isActive) return
 
         try {

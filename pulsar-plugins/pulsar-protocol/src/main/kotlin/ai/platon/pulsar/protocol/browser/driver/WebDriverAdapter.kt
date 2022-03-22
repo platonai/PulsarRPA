@@ -4,8 +4,6 @@ import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
-import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -93,8 +91,8 @@ class WebDriverAdapter(
         driver.takeIf { isWorking }?.runCatching { bringToFront() }
     }
 
-    override suspend fun stopLoading() {
-        driver.takeIf { isWorking }?.runCatching { stopLoading() }
+    override suspend fun stop() {
+        driver.takeIf { isWorking }?.runCatching { stop() }
     }
 
     override suspend fun setTimeouts(driverConfig: BrowserSettings) {
