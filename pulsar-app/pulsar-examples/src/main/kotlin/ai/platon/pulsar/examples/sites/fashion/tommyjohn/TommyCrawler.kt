@@ -80,11 +80,9 @@ fun main() {
             "https://tommyjohn.com/collections/mens-undershirts?sort-by=relevance&sort-order=descending",
             "https://tommyjohn.com/collections/mens-underwear-all-styles",
         )
-        itemUrls.forEach { url ->
+        itemUrls.take(1).forEach { url ->
             val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
             executor.extract(itemsSQL, reviewsSQLTemplate)
         }
     }
-
-    exitProcess(0)
 }

@@ -18,6 +18,16 @@ import org.springframework.context.support.StaticApplicationContext
 class StaticPulsarContext(
     override val applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : BasicPulsarContext(applicationContext) {
+    companion object {
+        fun create(): StaticPulsarContext {
+            return StaticPulsarContext().also { it.crawlLoops.start() }
+        }
+
+        fun create(applicationContext: StaticApplicationContext): StaticPulsarContext {
+            return StaticPulsarContext(applicationContext).also { it.crawlLoops.start() }
+        }
+    }
+
     /**
      * The unmodified config
      * */
@@ -35,7 +45,7 @@ class StaticPulsarContext(
      * */
     override val globalCacheFactory = getBeanOrNull() ?: GlobalCacheFactory(unmodifiedConfig)
     /**
-     * The inject component
+     * The injection component
      * */
     override val injectComponent = getBeanOrNull() ?: InjectComponent(webDb, unmodifiedConfig)
     /**

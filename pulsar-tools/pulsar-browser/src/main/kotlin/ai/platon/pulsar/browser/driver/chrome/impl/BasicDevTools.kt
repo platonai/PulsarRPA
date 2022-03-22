@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
 import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.Transport
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
@@ -90,7 +90,7 @@ class EventDispatcher : Consumer<String> {
     @Throws(IOException::class)
     fun <T> deserialize(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
-            throw ChromeDevToolsInvocationException("Failed converting null response to clazz $parameterizedClazz")
+            throw ChromeRPCException("Failed converting null response to clazz $parameterizedClazz")
         }
 
         val typeFactory: TypeFactory = OBJECT_MAPPER.typeFactory
@@ -114,7 +114,7 @@ class EventDispatcher : Consumer<String> {
     @Throws(IOException::class)
     fun <T> deserialize(clazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
-            throw ChromeDevToolsInvocationException("Failed converting null response to clazz " + clazz.name)
+            throw ChromeRPCException("Failed converting null response to clazz " + clazz.name)
         }
         return OBJECT_MAPPER.readerFor(clazz).readValue(jsonNode)
     }
@@ -289,7 +289,7 @@ abstract class BasicDevTools(
 
             if (!responded) {
                 logger.warn("Timeout to wait for ws response #{}", numInvokes.count)
-                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #${numInvokes.count}")
+                throw ChromeRPCException("Timeout to wait for ws response #${numInvokes.count}")
             }
 
             if (future.isSuccess) {
@@ -308,15 +308,15 @@ abstract class BasicDevTools(
                 sb.append(error.data)
             }
 
-            throw ChromeDevToolsInvocationException(error.code, sb.toString())
+            throw ChromeRPCException(error.code, sb.toString())
         } catch (e: WebSocketServiceException) {
-            throw ChromeDevToolsInvocationException("Web socket connection lost", e)
+            throw ChromeRPCException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
             logger.warn("Interrupted while invoke ${method.method}")
             Thread.currentThread().interrupt()
             return null
         } catch (e: IOException) {
-            throw ChromeDevToolsInvocationException("Failed reading response message", e)
+            throw ChromeRPCException("Failed reading response message", e)
         }
     }
 

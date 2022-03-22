@@ -52,6 +52,17 @@ open class H2SQLContext(
 class StaticH2SQLContext(
     override val applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
+
+    companion object {
+        fun create(): StaticH2SQLContext {
+            return StaticH2SQLContext().also { it.crawlLoops.start() }
+        }
+
+        fun create(applicationContext: StaticApplicationContext): StaticH2SQLContext {
+            return StaticH2SQLContext(applicationContext).also { it.crawlLoops.start() }
+        }
+    }
+
     /**
      * The unmodified config
      * */
@@ -92,8 +103,7 @@ class StaticH2SQLContext(
     /**
      * The main loop
      * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(
-        mutableListOf(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)))
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(mutableListOf(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)))
 
     init {
         applicationContext.refresh()
@@ -103,10 +113,13 @@ class StaticH2SQLContext(
 open class ClassPathXmlSQLContext(configLocation: String) :
     AbstractSQLContext(ClassPathXmlApplicationContext(configLocation)) {
 
-    private val log = LoggerFactory.getLogger(ClassPathXmlSQLContext::class.java)
+    private val logger = LoggerFactory.getLogger(ClassPathXmlSQLContext::class.java)
 
     private val db = H2MemoryDb()
 
+    /**
+     * TODO: close the connections after use
+     * */
     override val randomConnection: Connection get() = db.getRandomConnection()
 
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
@@ -114,7 +127,7 @@ open class ClassPathXmlSQLContext(configLocation: String) :
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
             H2SQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, unmodifiedConfig))
         }
-        log.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
+        logger.info("SQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
         return session as H2SQLSession
     }
 

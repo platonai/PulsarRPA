@@ -273,11 +273,11 @@ class WebDb(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (dataStoreDelegate.isInitialized()) {
-                flush()
-                // MongoStore does not close actually
+                // flush()
+                // Note: mongo store does not close actually
                 dataStore.close()
             }
-            GoraStorage.close()
+            // GoraStorage.close()
         }
     }
 

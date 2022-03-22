@@ -15,7 +15,7 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
 
     /**
      * Open a database with a random named connection in admin mode.
-     * The default user name and password is used.
+     * The default username and password is used.
      *
      * @return the connection
      */
@@ -42,7 +42,7 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
     fun getConnection(name: String) = getConnection0(buildURL(name, true), conf.user, conf.password)
 
     /**
-     * Open a database connection in admin mode. The default user name and
+     * Open a database connection in admin mode. The default username and
      * password is used.
      *
      * @param name the database name

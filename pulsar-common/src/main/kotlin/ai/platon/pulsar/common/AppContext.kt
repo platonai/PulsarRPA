@@ -72,7 +72,7 @@ object AppContext {
     } else {
         Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
     }
-    // Special users such as tomcat do not have it's own home
+    // Special users such as tomcat do not have its own home
     val APP_DATA_DIR = listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
         .first { Files.isWritable(it) }.resolve(".$APP_NAME")
 
@@ -88,7 +88,7 @@ object AppContext {
         }
     }
 
-    fun terminate() = state.set(State.TERMINATED)
+    fun endTerminate() = state.set(State.TERMINATED)
 
     private fun sniffVersion(): String {
         var version = System.getProperty("app.version")

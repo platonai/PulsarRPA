@@ -317,10 +317,13 @@ open class BrowserSettings(
     }
 
     private fun loadExternalResource() {
-        AppPaths.get("browser", "js", "preload").listDirectoryEntries()
-            .filter { it.isReadable() }
-            .filter { it.toString().endsWith(".js") }
-            .associateTo(preloadJavaScripts) { it.toString() to Files.readString(it) }
+        val dir = AppPaths.BROWSER_DATA_DIR.resolve("browser/js/preload")
+        if (Files.isDirectory(dir)) {
+            dir.listDirectoryEntries()
+                .filter { it.isReadable() }
+                .filter { it.toString().endsWith(".js") }
+                .associateTo(preloadJavaScripts) { it.toString() to Files.readString(it) }
+        }
     }
 
     private fun reportPreloadJs() {

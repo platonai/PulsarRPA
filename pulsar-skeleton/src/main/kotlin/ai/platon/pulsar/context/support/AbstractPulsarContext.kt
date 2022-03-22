@@ -4,9 +4,7 @@ import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.StartStopRunnable
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -15,7 +13,6 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
@@ -388,6 +385,8 @@ abstract class AbstractPulsarContext(
     }
 
     private fun doClose() {
+        AppContext.beginTerminate()
+
         if (closed.compareAndSet(false, true)) {
             log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
@@ -404,6 +403,6 @@ abstract class AbstractPulsarContext(
             applicationContext.close()
         }
 
-        AppContext.terminate()
+        AppContext.endTerminate()
     }
 }

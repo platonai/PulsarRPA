@@ -14,7 +14,7 @@ object PulsarContexts {
         private set
 
     @Synchronized
-    fun activate() = activeContext ?: activate(StaticPulsarContext())
+    fun activate() = activeContext ?: activate(StaticPulsarContext.create())
 
     @Synchronized
     fun activate(context: PulsarContext): PulsarContext {
@@ -28,8 +28,6 @@ object PulsarContexts {
         activeContext = context
         context.registerShutdownHook()
         logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
-        // TODO: better place to do this?
-        context.crawlLoops.start()
         return context
     }
 

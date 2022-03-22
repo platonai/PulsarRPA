@@ -1,6 +1,11 @@
 package ai.platon.pulsar.browser.driver.chrome.util
 
-open class ChromeProcessException: RuntimeException {
+open class ChromeProtocolException: RuntimeException {
+    constructor(message: String): super(message)
+    constructor(message: String, cause: Throwable): super(message, cause)
+}
+
+open class ChromeProcessException: ChromeProtocolException {
     constructor(message: String): super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
@@ -15,12 +20,12 @@ open class ChromeLaunchException : RuntimeException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class WebSocketServiceException : Exception {
+open class WebSocketServiceException : ChromeProtocolException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class ChromeServiceException : RuntimeException {
+open class ChromeServiceException : ChromeProtocolException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
@@ -30,7 +35,7 @@ open class ScreenshotException : ChromeServiceException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class ChromeDevToolsInvocationException : RuntimeException {
+open class ChromeRPCException : ChromeProtocolException {
     var code = -1L
 
     constructor(message: String) : super(message)

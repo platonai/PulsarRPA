@@ -4,10 +4,12 @@ import ai.platon.pulsar.browser.driver.BlockRules
 import ai.platon.pulsar.browser.driver.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
@@ -104,7 +106,8 @@ class ChromeDevtoolsDriver(
 
     override suspend fun cookies(): String {
         network.enable()
-        return network.cookies.joinToString("\n")
+        val mapper = pulsarObjectMapper()
+        return network.cookies.joinToString("\n") { mapper.writeValueAsString(it) }
     }
 
     override suspend fun stop() {
@@ -119,8 +122,9 @@ class ChromeDevtoolsDriver(
                 navigateTo(Chrome.ABOUT_BLANK_PAGE)
             }
 
+            // dumpCookies()
             closeIrrelevantTabs()
-        } catch (e: ChromeDevToolsInvocationException) {
+        } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to call stop loading, session is already closed, {}", e.message)
         }
@@ -134,7 +138,7 @@ class ChromeDevtoolsDriver(
             val result = evaluate?.result
             // TODO: handle errors here
             return result?.value
-        } catch (e: ChromeDevToolsInvocationException) {
+        } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to evaluate, session might be closed, {}", e.message)
         }
@@ -146,7 +150,7 @@ class ChromeDevtoolsDriver(
         get() {
             lastSessionId = try {
                 if (!isActive) null else mainFrame.id
-            } catch (e: ChromeDevToolsInvocationException) {
+            } catch (e: ChromeRPCException) {
                 sessionLosts.incrementAndGet()
                 logger.warn("Failed to retrieve session id, session might be closed, {}", e.message)
                 null
@@ -157,7 +161,7 @@ class ChromeDevtoolsDriver(
     override suspend fun currentUrl(): String {
         navigateUrl = try {
             if (isActive) navigateUrl else mainFrame.url
-        } catch (e: ChromeDevToolsInvocationException) {
+        } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to retrieve current url, session might be closed, {}", e.message)
             ""
@@ -248,7 +252,7 @@ class ChromeDevtoolsDriver(
 
         try {
             return dom.getOuterHTML(dom.document.nodeId, null, null)
-        } catch (e: ChromeDevToolsInvocationException) {
+        } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to get page source | {}", e.message)
         }
@@ -262,7 +266,7 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    override fun toString() = "Devtools driver ($lastSessionId)"
+    override fun toString() = "DevTools driver ($lastSessionId)"
 
     /**
      * Quit the browser instance
@@ -277,8 +281,12 @@ class ChromeDevtoolsDriver(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            devTools.close()
-            browserInstance.closeTab(tab)
+            try {
+                browserInstance.closeTab(tab)
+                devTools.close()
+            } catch (e: ChromeProtocolException) {
+                // ignored
+            }
         }
     }
 
@@ -301,7 +309,7 @@ class ChromeDevtoolsDriver(
 
             navigateUrl = url
             page.navigate(url)
-        } catch (e: ChromeDevToolsInvocationException) {
+        } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to navigate | {}", e.message)
         }
@@ -329,10 +337,15 @@ class ChromeDevtoolsDriver(
             page.enable()
             navigateUrl = url
             page.navigate(url)
-        } catch (e: ChromeDevToolsInvocationException) {
+        } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to navigate | {}", e.message)
         }
+    }
+
+    private suspend fun dumpCookies() {
+        val cookies = cookies()
+        println(cookies)
     }
 
     // close irrelevant tabs, which might be opened for humanization purpose

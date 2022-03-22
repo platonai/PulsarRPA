@@ -31,7 +31,7 @@ abstract class AbstractSQLContext constructor(
     override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment(),
 ) : AbstractPulsarContext(applicationContext, pulsarEnvironment), SQLContext {
 
-    private val log = LoggerFactory.getLogger(AbstractSQLContext::class.java)
+    private val logger = LoggerFactory.getLogger(AbstractSQLContext::class.java)
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
 
@@ -40,7 +40,7 @@ abstract class AbstractSQLContext constructor(
     abstract val randomConnection: Connection
 
     val randomConnectionOrNull: Connection? get() = kotlin.runCatching { randomConnection }
-        .onFailure { log.warn(it.stringify()) }
+        .onFailure { logger.warn(it.stringify()) }
         .getOrNull()
 
     val connectionPool = ArrayBlockingQueue<Connection>(1000)
@@ -62,7 +62,7 @@ abstract class AbstractSQLContext constructor(
 
         status = Status.RUNNING
 
-        log.info("SQLContext is created | {}/{} | {}", id, sessions.size, this::class.java.simpleName)
+        logger.info("SQLContext is created | {}/{} | {}", id, sessions.size, this::class.java.simpleName)
     }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
@@ -98,7 +98,7 @@ abstract class AbstractSQLContext constructor(
         try {
             block(conn)
         } catch (t: Throwable) {
-            log.warn(t.stringify())
+            logger.warn(t.stringify())
         } finally {
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
@@ -134,7 +134,7 @@ abstract class AbstractSQLContext constructor(
                 "Session is already closed | #{0}/{1}",
                 sessionId, id
             )
-            log.warn(message)
+            logger.warn(message)
             throw DbException.get(ErrorCode.OBJECT_CLOSED, message)
         }
         return session
@@ -143,11 +143,11 @@ abstract class AbstractSQLContext constructor(
     override fun closeSession(sessionId: Int) {
         ensureRunning()
         sqlSessions.remove(sessionId)?.close()
-        log.info("SQLSession is closed | #{}/{}/{}", id, sessionId, sqlSessions.size)
+        logger.info("SQLSession is closed | #{}/{}/{}", id, sessionId, sqlSessions.size)
     }
 
     override fun close() {
-        log.info("Closing SQLContext #{}, sql sessions: {}", id, sqlSessions.keys.joinToString { "$it" })
+        logger.info("Closing SQLContext #{}, sql sessions: {}", id, sqlSessions.keys.joinToString { "$it" })
 
         if (closed.compareAndSet(false, true)) {
             status = Status.CLOSING
@@ -155,8 +155,11 @@ abstract class AbstractSQLContext constructor(
             // database engine will close the sessions
             sqlSessions.values.forEach { it.close() }
             sqlSessions.clear()
+            connectionPool.forEach { it.close() }
 
             status = Status.CLOSED
+
+            // H2SessionFactory.shutdown()
         }
 
         super.close()

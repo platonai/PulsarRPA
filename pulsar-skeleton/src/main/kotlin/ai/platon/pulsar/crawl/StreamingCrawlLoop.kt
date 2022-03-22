@@ -68,7 +68,11 @@ open class StreamingCrawlLoop(
         crawler = StreamingCrawler(urls, defaultOptions, session, globalCacheFactory, crawlEventHandler)
         crawler.proxyPool = session.context.getBeanOrNull()
 
-        crawlJob = GlobalScope.launch { crawler.run() }
+        crawlJob = GlobalScope.launch {
+            supervisorScope {
+                crawler.run(this)
+            }
+        }
     }
 
     @Synchronized

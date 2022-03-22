@@ -154,7 +154,7 @@ class Chrome(
                 inputStream = connection.errorStream
                 val responseBody = readString(inputStream)
                 val message = "Received error ($responseCode) - ${connection.responseMessage}\n$responseBody"
-                throw ChromeServiceException(message)
+                throw WebSocketServiceException(message)
             }
         } catch (ex: IOException) {
             throw ChromeServiceException("Failed sending HTTP request", ex)

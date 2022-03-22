@@ -104,8 +104,6 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun shutdown() {
-        getLogger(this).info("Shutting down the SQL context")
-        sqlContext.close()
         PulsarContexts.shutdown()
     }
 
@@ -114,8 +112,6 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
      * */
     @Synchronized
     fun shutdownNow() {
-        getLogger(this).info("Shutting down the SQL context")
-        sqlContext.close()
         PulsarContexts.shutdown()
     }
 }
