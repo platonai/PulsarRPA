@@ -161,32 +161,30 @@ object SQLContexts {
     fun activate(contextLocation: String): SQLContext = activate(ClassPathXmlSQLContext(contextLocation))
 
     @Synchronized
-    fun shutdown() = PulsarContexts.shutdown()
+    fun shutdown() {
+        PulsarContexts.shutdown()
+        // TODO: the process hung up with unknown reason, we will fix this
+        exitProcess(0)
+    }
 }
 
 fun withSQLContext(block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(DefaultClassPathXmlSQLContext()).use {
         block(it)
     }
-
-    // TODO: the process hung up with unknown reason, we will fix this
-    exitProcess(0)
+    SQLContexts.shutdown()
 }
 
 fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(ClassPathXmlSQLContext(contextLocation)).use {
         block(it)
     }
-
-    // TODO: the process hung up with unknown reason, we will fix this
-    exitProcess(0)
+    SQLContexts.shutdown()
 }
 
 fun withSQLContext(applicationContext: ApplicationContext, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(applicationContext).use {
         block(it)
     }
-
-    // TODO: the process hung up with unknown reason, we will fix this
-    exitProcess(0)
+    SQLContexts.shutdown()
 }

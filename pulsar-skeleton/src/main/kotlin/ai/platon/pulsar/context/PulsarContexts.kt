@@ -14,7 +14,14 @@ object PulsarContexts {
         private set
 
     @Synchronized
-    fun activate() = activeContext ?: activate(StaticPulsarContext.create())
+    fun activate(): PulsarContext {
+        if (activeContext == null) {
+            val context = activate(StaticPulsarContext())
+            // TODO: better way to start the crawl loop
+            context.crawlLoops.start()
+        }
+        return activeContext!!
+    }
 
     @Synchronized
     fun activate(context: PulsarContext): PulsarContext {

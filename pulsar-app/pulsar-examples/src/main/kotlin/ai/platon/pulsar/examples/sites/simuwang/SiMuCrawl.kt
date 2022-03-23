@@ -3,15 +3,14 @@ package ai.platon.pulsar.examples.sites.simuwang
 import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.test.VerboseSQLExecutor
 import kotlinx.coroutines.delay
 
 class LoginHandler: AbstractEmulateEventHandler() {
     override var verbose = true
 
-    override suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any? {
-        delay(5000)
-
+    override suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any? {
         if (!driver.exists(".comp-login-b2")) {
             return null
         }
@@ -53,4 +52,6 @@ from
         """.trimIndent()
 //    executor.executeQuery(sql)
 //    executor.loadOutPages(portal, args)
+
+    executor.close()
 }

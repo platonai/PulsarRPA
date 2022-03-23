@@ -82,7 +82,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
      *
      * @param url The url
      * @return The appropriate [Protocol] implementation for a given
-     * [URL].
+     * [url].
      */
     fun getProtocol(url: String): Protocol? {
         val protocolName = StringUtils.substringBefore(url, ":")

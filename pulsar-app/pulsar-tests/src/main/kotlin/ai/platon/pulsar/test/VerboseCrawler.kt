@@ -8,12 +8,13 @@ import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.EmulateEventHandler
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory
 import java.net.URL
 
 open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
-) {
+): AutoCloseable {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
     // trigger loop start
     val crawlLoop = session.context.crawlLoops
@@ -119,5 +120,9 @@ open class VerboseCrawler(
 
     fun truncate() {
         session.context.webDb.truncate()
+    }
+
+    override fun close() {
+        SQLContexts.shutdown()
     }
 }
