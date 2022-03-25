@@ -51,6 +51,7 @@ internal abstract class StructuralEvaluator : Evaluator() {
             if (root === element) return false
             var parent = element.parent()
             while (true) {
+                if (parent == null) break
                 if (evaluator.matches(root, parent)) return true
                 if (parent === root) break
                 parent = parent.parent()

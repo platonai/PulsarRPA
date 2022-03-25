@@ -6,8 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 abstract class LeafNode extends Node {
-    private static final List<Node> EmptyNodes = Collections.emptyList();
-
     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
 
     protected final boolean hasAttributes() {
@@ -92,7 +90,23 @@ abstract class LeafNode extends Node {
     }
 
     @Override
+    public Node empty() {
+        return this;
+    }
+
+    @Override
     protected List<Node> ensureChildNodes() {
         return EmptyNodes;
+    }
+
+    @Override
+    protected LeafNode doClone(Node parent) {
+        LeafNode clone = (LeafNode) super.doClone(parent);
+
+        // Object value could be plain string or attributes - need to clone
+        if (hasAttributes())
+            clone.value = ((Attributes) value).clone();
+
+        return clone;
     }
 }

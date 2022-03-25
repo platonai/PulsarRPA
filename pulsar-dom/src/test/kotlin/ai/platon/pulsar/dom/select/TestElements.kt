@@ -19,8 +19,8 @@ class TestElements {
         val doc = Jsoup.parse(h)
         val els = doc.select(".headline").select("p")
         assertEquals(2, els.size.toLong())
-        assertEquals("Hello", els[0].text())
-        assertEquals("There", els[1].text())
+        assertEquals("Hello", els[0]?.text())
+        assertEquals("There", els[1]?.text())
     }
 
     @Test
@@ -39,8 +39,8 @@ class TestElements {
 
         val ps = doc.select("p").attr("style", "classy")
         assertEquals(4, ps.size.toLong())
-        assertEquals("classy", ps.last().attr("style"))
-        assertEquals("bar", ps.last().attr("class"))
+        assertEquals("classy", ps.last()?.attr("style"))
+        assertEquals("bar", ps.last()?.attr("class"))
     }
 
     @Test
@@ -160,12 +160,12 @@ class TestElements {
         val els = doc.select("input, textarea")
         assertEquals(2, els.size.toLong())
         assertEquals("one", els.`val`())
-        assertEquals("two", els.last().`val`())
+        assertEquals("two", els.last()?.`val`())
 
         els.`val`("three")
-        assertEquals("three", els.first().`val`())
-        assertEquals("three", els.last().`val`())
-        assertEquals("<textarea>three</textarea>", els.last().outerHtml())
+        assertEquals("three", els.first()?.`val`())
+        assertEquals("three", els.last()?.`val`())
+        assertEquals("<textarea>three</textarea>", els.last()?.outerHtml())
     }
 
     @Test
@@ -275,11 +275,11 @@ class TestElements {
 
         val div1 = doc.select("div").not(":has(p > span)")
         assertEquals(1, div1.size.toLong())
-        assertEquals("1", div1.first().id())
+        assertEquals("1", div1.first()?.id())
 
         val div2 = doc.select("div").not("#1")
         assertEquals(1, div2.size.toLong())
-        assertEquals("2", div2.first().id())
+        assertEquals("2", div2.first()?.id())
     }
 
     @Test
@@ -299,8 +299,8 @@ class TestElements {
                 accum.append("<" + node.nodeName() + ">")
             }
 
-            override fun tail(node: Node?, depth: Int) {
-                accum.append("</" + node!!.nodeName() + ">")
+            override fun tail(node: Node, depth: Int) {
+                accum.append("</" + node.nodeName() + ">")
             }
         })
         assertEquals("<div><p><#text></#text></p></div><div><#text></#text></div>", accum.toString())
@@ -337,41 +337,41 @@ class TestElements {
 
         val next = els.next()
         assertEquals(2, next.size.toLong())
-        assertEquals("5", next.first().text())
-        assertEquals("11", next.last().text())
+        assertEquals("5", next.first()?.text())
+        assertEquals("11", next.last()?.text())
 
         assertEquals(0, els.next("p:contains(6)").size.toLong())
         val nextF = els.next("p:contains(5)")
         assertEquals(1, nextF.size.toLong())
-        assertEquals("5", nextF.first().text())
+        assertEquals("5", nextF.first()?.text())
 
         val nextA = els.nextAll()
         assertEquals(4, nextA.size.toLong())
-        assertEquals("5", nextA.first().text())
-        assertEquals("12", nextA.last().text())
+        assertEquals("5", nextA.first()?.text())
+        assertEquals("12", nextA.last()?.text())
 
         val nextAF = els.nextAll("p:contains(6)")
         assertEquals(1, nextAF.size.toLong())
-        assertEquals("6", nextAF.first().text())
+        assertEquals("6", nextAF.first()?.text())
 
         val prev = els.prev()
         assertEquals(2, prev.size.toLong())
-        assertEquals("3", prev.first().text())
-        assertEquals("9", prev.last().text())
+        assertEquals("3", prev.first()?.text())
+        assertEquals("9", prev.last()?.text())
 
         assertEquals(0, els.prev("p:contains(1)").size.toLong())
         val prevF = els.prev("p:contains(3)")
         assertEquals(1, prevF.size.toLong())
-        assertEquals("3", prevF.first().text())
+        assertEquals("3", prevF.first()?.text())
 
         val prevA = els.prevAll()
         assertEquals(6, prevA.size.toLong())
-        assertEquals("3", prevA.first().text())
-        assertEquals("7", prevA.last().text())
+        assertEquals("3", prevA.first()?.text())
+        assertEquals("7", prevA.last()?.text())
 
         val prevAF = els.prevAll("p:contains(1)")
         assertEquals(1, prevAF.size.toLong())
-        assertEquals("1", prevAF.first().text())
+        assertEquals("1", prevAF.first()?.text())
     }
 
     @Test

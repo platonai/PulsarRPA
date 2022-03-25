@@ -156,7 +156,7 @@ object Queries {
     }
 
     fun getFeatures(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<RealVector> {
-        return ele.select(restrictCss, offset, limit) { it.features }
+        return ele.select(restrictCss, offset, limit) { it.extension.features }
     }
 
     fun toValueArray(elements: Elements): ValueArray {
@@ -267,7 +267,7 @@ object Queries {
         val columnCount = 1 + registeredFeatures.size + 1
         val values = arrayOfNulls<Any>(columnCount)
         values[0] = ValueDom.get(ele)
-        val features = if (!ele.features.isEmpty) ele.features else return values
+        val features = if (!ele.extension.features.isEmpty) ele.extension.features else return values
 
         // TODO: configurable
         val base = 10f

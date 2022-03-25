@@ -1,6 +1,8 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
 import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.crawl.DefaultEmulateEventHandler
 import ai.platon.pulsar.dom.features.NodeFeature
@@ -134,7 +136,7 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun siblingSize(dom: ValueDom) = dom.element.siblingSize()
+    fun siblingSize(dom: ValueDom) = dom.element.siblingNodes().size
 
     @UDFunction
     @JvmStatic
@@ -154,7 +156,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun uri(dom: ValueDom): String {
-        return dom.element.ownerDocument().selectFirstOrNull("#PulsarMetaInformation")
+        return dom.element.ownerDocument()!!.selectFirstOrNull("#PulsarMetaInformation")
             ?.attr("normalizedUrl")
             ?.takeIf { Urls.isValidUrl(it) }
             ?: baseUri(dom)
@@ -177,8 +179,8 @@ object DomFunctions {
     fun absUrl(dom: ValueDom, attributeKey: String) = dom.element.absUrl(attributeKey)
 
     /**
-     * WebPage.url is the permanent internal address, it might not still available to access the target.
-     * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
+     * WebPage.url is the permanent internal address, it might not still available to access the target,
+     * while WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
      * or it might have additional random parameters.
      * WebPage.location may be different from url, it's generally normalized.
      *
@@ -228,7 +230,7 @@ object DomFunctions {
             return ele.title()
         }
 
-        return dom.element.ownerDocument().title()
+        return dom.element.ownerDocument()!!.title()
     }
 
     @UDFunction
@@ -327,21 +329,21 @@ object DomFunctions {
     @JvmStatic
     fun ownerDocument(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
-        return ValueDom.get(dom.element.ownerDocumentNode as Document)
+        return ValueDom.get(dom.element.extension.ownerDocumentNode as Document)
     }
 
     @UDFunction
     @JvmStatic
     fun ownerBody(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
-        return ValueDom.get(dom.element.ownerBody as Element)
+        return ValueDom.get(dom.element.extension.ownerBody as Element)
     }
 
     @UDFunction
     @JvmStatic
     fun documentVariables(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
-        val meta = dom.element.ownerBody.selectFirstOrNull("#PulsarMetaInformation") ?: return ValueDom.NIL
+        val meta = dom.element.extension.ownerBody.selectFirstOrNull(PULSAR_META_INFORMATION_SELECTOR) ?: return ValueDom.NIL
         return ValueDom.get(meta)
     }
 

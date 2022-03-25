@@ -1,12 +1,14 @@
 package org.jsoup;
 
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.Safelist;
 import org.jsoup.safety.Whitelist;
-import org.jsoup.helper.DataUtil;
-import org.jsoup.helper.HttpConnection;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.net.URL;
  The core public access point to the jsoup functionality.
 
  @author Jonathan Hedley */
+
 public class Jsoup {
     private Jsoup() {}
 
@@ -46,8 +49,22 @@ public class Jsoup {
     }
 
     /**
-     Parse HTML into a Document. As no base URI is specified, absolute URL detection relies on the HTML including a
-     {@code <base href>} tag.
+     Parse HTML into a Document, using the provided Parser. You can provide an alternate parser, such as a simple XML
+     (non-HTML) parser.  As no base URI is specified, absolute URL resolution, if required, relies on the HTML including
+     a {@code <base href>} tag.
+
+     @param html    HTML to parse
+     before the HTML declares a {@code <base href>} tag.
+     @param parser alternate {@link Parser#xmlParser() parser} to use.
+     @return sane HTML
+     */
+    public static Document parse(String html, Parser parser) {
+        return parser.parseInput(html, "");
+    }
+
+    /**
+     Parse HTML into a Document. As no base URI is specified, absolute URL resolution, if required, relies on the HTML
+     including a {@code <base href>} tag.
 
      @param html HTML to parse
      @return sane HTML
@@ -59,7 +76,7 @@ public class Jsoup {
     }
 
     /**
-     * Creates a new {@link Connection} to a URL. Use to fetch and parse a HTML page.
+     * Creates a new {@link Connection} (session), with the defined request URL. Use to fetch and parse a HTML page.
      * <p>
      * Use examples:
      * <ul>
@@ -68,15 +85,44 @@ public class Jsoup {
      * </ul>
      * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
      * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
+     * @see #newSession()
+     * @see Connection#newRequest()
      */
     public static Connection connect(String url) {
         return HttpConnection.connect(url);
     }
 
     /**
+     Creates a new {@link Connection} to use as a session. Connection settings (user-agent, timeouts, URL, etc), and
+     cookies will be maintained for the session. Use examples:
+<pre><code>
+Connection session = Jsoup.newSession()
+     .timeout(20 * 1000)
+     .userAgent("FooBar 2000");
+
+Document doc1 = session.newRequest()
+     .url("https://jsoup.org/").data("ref", "example")
+     .get();
+Document doc2 = session.newRequest()
+     .url("https://en.wikipedia.org/wiki/Main_Page")
+     .get();
+Connection con3 = session.newRequest();
+</code></pre>
+
+     <p>For multi-threaded requests, it is safe to use this session between threads, but take care to call {@link
+    Connection#newRequest()} per request and not share that instance between threads when executing or parsing.</p>
+
+     @return a connection
+     @since 1.14.1
+     */
+    public static Connection newSession() {
+        return new HttpConnection();
+    }
+
+    /**
      Parse the contents of a file as HTML.
 
-     @param in          file to load HTML from
+     @param file          file to load HTML from. Supports gzipped files (ending in .z or .gz).
      @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
      present, or fall back to {@code UTF-8} (which is often safe to do).
      @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
@@ -84,14 +130,14 @@ public class Jsoup {
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(File in, String charsetName, String baseUri) throws IOException {
-        return DataUtil.load(in, charsetName, baseUri);
+    public static Document parse(File file, @Nullable String charsetName, String baseUri) throws IOException {
+        return DataUtil.load(file, charsetName, baseUri);
     }
 
     /**
      Parse the contents of a file as HTML. The location of the file is used as the base URI to qualify relative URLs.
 
-     @param in          file to load HTML from
+     @param file        file to load HTML from. Supports gzipped files (ending in .z or .gz).
      @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
      present, or fall back to {@code UTF-8} (which is often safe to do).
      @return sane HTML
@@ -99,8 +145,25 @@ public class Jsoup {
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      @see #parse(File, String, String)
      */
-    public static Document parse(File in, String charsetName) throws IOException {
-        return DataUtil.load(in, charsetName, in.getAbsolutePath());
+    public static Document parse(File file, @Nullable String charsetName) throws IOException {
+        return DataUtil.load(file, charsetName, file.getAbsolutePath());
+    }
+
+    /**
+     Parse the contents of a file as HTML.
+
+     @param file          file to load HTML from. Supports gzipped files (ending in .z or .gz).
+     @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
+     present, or fall back to {@code UTF-8} (which is often safe to do).
+     @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
+     @param parser alternate {@link Parser#xmlParser() parser} to use.
+     @return sane HTML
+
+     @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
+     @since 1.14.2
+     */
+    public static Document parse(File file, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        return DataUtil.load(file, charsetName, baseUri, parser);
     }
 
      /**
@@ -114,7 +177,7 @@ public class Jsoup {
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(InputStream in, String charsetName, String baseUri) throws IOException {
+    public static Document parse(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
     }
 
@@ -131,7 +194,7 @@ public class Jsoup {
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
+    public static Document parse(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return DataUtil.load(in, charsetName, baseUri, parser);
     }
 
@@ -184,70 +247,110 @@ public class Jsoup {
     }
 
     /**
-     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through an allow-list of safe
      tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
-     @param whitelist white-list of permitted HTML elements
+     @param safelist  list of permitted HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
         return clean.body().html();
     }
 
     /**
-     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
-     tags and attributes.
-
-     @param bodyHtml  input untrusted HTML (body fragment)
-     @param whitelist white-list of permitted HTML elements
-     @return safe HTML (body fragment)
-
-     @see Cleaner#clean(Document)
+     Use {@link #clean(String, String, Safelist)} instead.
+     @deprecated as of 1.14.1.
      */
-    public static String clean(String bodyHtml, Whitelist whitelist) {
-        return clean(bodyHtml, "", whitelist);
+    @Deprecated
+    public static String clean(String bodyHtml, String baseUri, Whitelist safelist) {
+        return clean(bodyHtml, baseUri, (Safelist) safelist);
     }
 
     /**
-     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a safe-list of permitted
+     tags and attributes.
+
+     <p>Note that as this method does not take a base href URL to resolve attributes with relative URLs against, those
+     URLs will be removed, unless the input HTML contains a {@code <base href> tag}. If you wish to preserve those, use
+     the {@link Jsoup#clean(String html, String baseHref, Safelist)} method instead, and enable
+     {@link Safelist#preserveRelativeLinks(boolean)}.</p>
+
+     @param bodyHtml input untrusted HTML (body fragment)
+     @param safelist list of permitted HTML elements
+     @return safe HTML (body fragment)
+     @see Cleaner#clean(Document)
+     */
+    public static String clean(String bodyHtml, Safelist safelist) {
+        return clean(bodyHtml, "", safelist);
+    }
+
+    /**
+     Use {@link #clean(String, Safelist)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, Whitelist safelist) {
+        return clean(bodyHtml, (Safelist) safelist);
+    }
+
+    /**
+     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a safe-list of
      * permitted tags and attributes.
      * <p>The HTML is treated as a body fragment; it's expected the cleaned HTML will be used within the body of an
      * existing document. If you want to clean full documents, use {@link Cleaner#clean(Document)} instead, and add
-     * structural tags (<code>html, head, body</code> etc) to the whitelist.
+     * structural tags (<code>html, head, body</code> etc) to the safelist.
      *
      * @param bodyHtml input untrusted HTML (body fragment)
      * @param baseUri URL to resolve relative URLs against
-     * @param whitelist white-list of permitted HTML elements
+     * @param safelist list of permitted HTML elements
      * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
      * @return safe HTML (body fragment)
      * @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist, Document.OutputSettings outputSettings) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
         clean.outputSettings(outputSettings);
         return clean.body().html();
     }
 
     /**
-     Test if the input body HTML has only tags and attributes allowed by the Whitelist. Useful for form validation.
+     Use {@link #clean(String, String, Safelist, Document.OutputSettings)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, String baseUri, Whitelist safelist, Document.OutputSettings outputSettings) {
+        return clean(bodyHtml, baseUri, (Safelist) safelist, outputSettings);
+    }
+
+    /**
+     Test if the input body HTML has only tags and attributes allowed by the Safelist. Useful for form validation.
      <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
      @param bodyHtml HTML to test
-     @param whitelist whitelist to test against
+     @param safelist safelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, Whitelist)
+     @see #clean(String, Safelist)
      */
-    public static boolean isValid(String bodyHtml, Whitelist whitelist) {
-        return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
+    public static boolean isValid(String bodyHtml, Safelist safelist) {
+        return new Cleaner(safelist).isValidBodyHtml(bodyHtml);
+    }
+
+    /**
+     Use {@link #isValid(String, Safelist)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static boolean isValid(String bodyHtml, Whitelist safelist) {
+        return isValid(bodyHtml, (Safelist) safelist);
     }
     
 }

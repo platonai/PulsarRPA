@@ -2,6 +2,7 @@ package ai.platon.pulsar.dom
 
 import ai.platon.pulsar.common.FuzzyProbability
 import ai.platon.pulsar.common.math.vectors.get
+import ai.platon.pulsar.dom.DocumentFragments.Companion.globalSummaries
 import ai.platon.pulsar.dom.data.BlockPattern.Companion.DenseLinks
 import ai.platon.pulsar.dom.data.BlockPattern.Companion.Dl
 import ai.platon.pulsar.dom.data.BlockPattern.Companion.Table
@@ -81,9 +82,9 @@ class DocumentFragments(
     private fun accept(fragment: DocumentFragment): DocumentFragment {
         fragment.fragments = this
         summaries.computeIfAbsent(SEQ) { DoubleSummaryStatistics() }
-                .accept(fragment.element.features[SEQ])
-        DocumentFragments.Companion.globalSummaries.computeIfAbsent(SEQ) { SynchronizedSummaryStatistics() }
-                .addValue(fragment.element.features[SEQ])
+                .accept(fragment.element.extension.features[SEQ])
+        globalSummaries.computeIfAbsent(SEQ) { SynchronizedSummaryStatistics() }
+                .addValue(fragment.element.extension.features[SEQ])
         return fragment
     }
 }

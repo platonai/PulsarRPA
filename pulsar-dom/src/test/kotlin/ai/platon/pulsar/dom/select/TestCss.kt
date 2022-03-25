@@ -180,7 +180,7 @@ class TestCss {
     }
 
     companion object {
-        private var htmlString: String? = null
+        private val htmlString: String
 
         init {
             val sb = StringBuilder("<html><head></head><body>")

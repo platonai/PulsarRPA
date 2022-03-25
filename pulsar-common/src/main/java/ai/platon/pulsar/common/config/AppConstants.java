@@ -186,9 +186,6 @@ public interface AppConstants {
      * */
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
-    String DEFAULT_PULSAR_MASTER_HOST = "0.0.0.0";
-    int DEFAULT_PULSAR_MASTER_PORT = 8182;
-
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
     int DEFAULT_INDEX_SERVER_PORT = 8183;
 
@@ -203,7 +200,9 @@ public interface AppConstants {
 
     Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
+    String PULSAR_META_INFORMATION_SELECTOR = "#" + PULSAR_META_INFORMATION_ID;
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";
+    String PULSAR_SCRIPT_SECTION_SELECTOR = "#" + PULSAR_SCRIPT_SECTION_ID;
     String PULSAR_ATTR_HIDDEN = "_h";
     String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
@@ -217,11 +216,6 @@ public interface AppConstants {
      * text-overflow
      * */
     String CLIENT_JS_PROPERTY_NAMES = "font-size, color, background-color";
-
-    /**
-     * Proxy
-     * */
-    int PROXY_SERVER_PORT_BASE = 8584;
 
     /**
      * Metrics

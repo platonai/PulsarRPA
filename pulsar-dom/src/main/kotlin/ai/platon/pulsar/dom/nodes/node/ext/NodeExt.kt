@@ -30,36 +30,36 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KProperty
 
 class DoubleFeature(val name: Int) {
-    operator fun getValue(thisRef: Node, property: KProperty<*>): Double = thisRef.features[name]
+    operator fun getValue(thisRef: Node, property: KProperty<*>): Double = thisRef.extension.features[name]
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: Double) {
-        thisRef.features[name] = value
+        thisRef.extension.features[name] = value
     }
 }
 
 class IntFeature(val name: Int) {
-    operator fun getValue(thisRef: Node, property: KProperty<*>): Int = thisRef.features[name].toInt()
+    operator fun getValue(thisRef: Node, property: KProperty<*>): Int = thisRef.extension.features[name].toInt()
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: Int) {
-        thisRef.features[name] = value.toDouble()
+        thisRef.extension.features[name] = value.toDouble()
     }
 }
 
 class MapField<T>(val initializer: (Node) -> T) {
     operator fun getValue(thisRef: Node, property: KProperty<*>): T =
-            thisRef.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+            thisRef.extension.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: T): T {
-        thisRef.variables[property.name] = value
+        thisRef.extension.variables[property.name] = value
         return value
     }
 }
 
 class NullableMapField<T> {
-    operator fun getValue(thisRef: Node, property: KProperty<*>): T? = thisRef.variables[property.name] as T?
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T? = thisRef.extension.variables[property.name] as T?
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: T?) {
-        thisRef.variables[property.name] = value
+        thisRef.extension.variables[property.name] = value
     }
 }
 
@@ -101,7 +101,7 @@ val Document.pulsarMetaElement get() = getElementById("#${AppConstants.PULSAR_ME
 
 val Document.pulsarScriptElement get() = getElementById("#${AppConstants.PULSAR_SCRIPT_SECTION_ID}")
 
-val Document.pulsarScript get() = ownerDocument.pulsarScriptElement.text()
+val Document.pulsarScript get() = ownerDocument.pulsarScriptElement?.text()
 
 var Document.isInitialized by field { AtomicBoolean() }
 
@@ -178,7 +178,7 @@ fun Element.getStyle(styleKey: String): String {
 
 val Node.isNil get() = this === nilNode
 
-val Node.ownerDocument get() = Objects.requireNonNull(ownerDocumentNode) as Document
+val Node.ownerDocument get() = Objects.requireNonNull(extension.ownerDocumentNode) as Document
 
 /**
  * Get the URL this Document was parsed from. If the starting URL is a redirect,
@@ -358,7 +358,7 @@ val Node.captionOrSelector: String
  * */
 val Node?.cleanText: String get() =
     when (this) {
-        is TextNode -> immutableText.trim()
+        is TextNode -> extension.immutableText.trim()
         is Element -> accumulateText(this).trim()
         else -> ""
     }.trim()
@@ -422,7 +422,7 @@ val Node.name: String
                 nodeName()
             }
             is TextNode -> {
-                val postfix = if (siblingSize() > 1) {
+                val postfix = if (siblingNodes().size > 1) {
                     "~" + siblingIndex()
                 } else ""
                 return bestElement.name + postfix
@@ -454,7 +454,7 @@ val Node.canonicalName: String
                 return "${nodeName()}$id$classes"
             }
             is TextNode -> {
-                val postfix = if (siblingSize() > 1) {
+                val postfix = if (siblingNodes().size > 1) {
                     "~" + siblingIndex()
                 } else ""
                 return bestElement.canonicalName + postfix
@@ -487,27 +487,27 @@ val Node.caption get() = getCaptionWords().joinToString(";")
 
 fun Node.attrOrNull(attributeKey: String): String? = (this as? Element)?.attr(attributeKey)?.takeIf { it.isNotBlank() }
 
-fun Node.getFeature(key: Int): Double = features[key]
+fun Node.getFeature(key: Int): Double = extension.features[key]
 
-fun Node.getFeature(name: String): Double = features[NodeFeature.getKey(name)]
+fun Node.getFeature(name: String): Double = extension.features[NodeFeature.getKey(name)]
 
 fun Node.getFeatureEntry(key: Int): FeatureEntry = FeatureEntry(key, getFeature(key))
 
 fun Node.setFeature(key: Int, value: Double) {
-    features[key] = value
+    extension.features[key] = value
 }
 
 fun Node.setFeature(key: Int, value: Int) {
-    features[key] = value.toDouble()
+    extension.features[key] = value.toDouble()
 }
 
 fun Node.removeFeature(key: Int): Node {
-    features[key] = 0.0
+    extension.features[key] = 0.0
     return this
 }
 
 fun Node.clearFeatures(): Node {
-    features = ArrayRealVector()
+    extension.features = ArrayRealVector()
     return this
 }
 
@@ -515,40 +515,40 @@ fun Node.clearFeatures(): Node {
  * Temporary node variables
  * */
 inline fun <reified T> Node.getVariable(name: String): T? {
-    val v = variables[name]
+    val v = extension.variables[name]
     return if (v is T) v else null
 }
 
 inline fun <reified T> Node.getVariable(name: String, defaultValue: T): T {
-    val v = variables[name]
+    val v = extension.variables[name]
     return if (v is T) v else defaultValue
 }
 
 inline fun <reified T> Node.computeVariableIfAbsent(name: String, mappingFunction: (String) -> T): T {
-    var v = variables[name]
+    var v = extension.variables[name]
     if (v !is T) {
         v = mappingFunction(name)
-        variables[name] = v
+        extension.variables[name] = v
     }
     return v
 }
 
 fun Node.setVariable(name: String, value: Any) {
-    variables[name] = value
+    extension.variables[name] = value
 }
 
 fun Node.setVariableIfNotNull(name: String, value: Any?) {
     if (value != null) {
-        variables[name] = value
+        extension.variables[name] = value
     }
 }
 
 fun Node.hasVariable(name: String): Boolean {
-    return variables.containsKey(name)
+    return extension.variables.containsKey(name)
 }
 
 fun Node.removeVariable(name: String): Any? {
-    return variables.remove(name)
+    return extension.variables.remove(name)
 }
 
 /**
@@ -591,34 +591,34 @@ fun Node.appendAttr(attributeKey: String, attributeValue: String, separator: Str
  * Tuple data
  * */
 fun Node.addTupleItem(tupleName: String, item: Any): Boolean {
-    return tuples.computeIfAbsent(tupleName) { mutableListOf() }.add(item)
+    return extension.tuples.computeIfAbsent(tupleName) { mutableListOf() }.add(item)
 }
 
 /**
  *
  * */
 fun Node.removeTupleItem(tupleName: String, item: Any): Boolean {
-    return tuples[tupleName]?.remove(item)?:return false
+    return extension.tuples[tupleName]?.remove(item)?:return false
 }
 
 fun Node.getTuple(tupleName: String): List<Any> {
-    return tuples[tupleName]?:return listOf()
+    return extension.tuples[tupleName]?:return listOf()
 }
 
 fun Node.hasTupleItem(tupleName: String, item: String): Boolean {
-    return tuples[tupleName]?.contains(item)?:return false
+    return extension.tuples[tupleName]?.contains(item)?:return false
 }
 
 fun Node.hasTuple(tupleName: String): Boolean {
-    return tuples.containsKey(tupleName)
+    return extension.tuples.containsKey(tupleName)
 }
 
 fun Node.clearTuple(tupleName: String) {
-    tuples[tupleName]?.clear()
+    extension.tuples[tupleName]?.clear()
 }
 
 fun Node.removeTuple(tupleName: String) {
-    tuples.remove(tupleName)
+    extension.tuples.remove(tupleName)
 }
 
 /**
@@ -706,22 +706,22 @@ fun Node.removeAttrsIf(filter: (Attribute) -> Boolean) {
 
 fun Node.formatEachFeatures(vararg featureKeys: Int): String {
     val sb = StringBuilder()
-    NodeTraversor.traverse({ node, _ ->
-        FeatureFormatter.format(node.features, featureKeys.asIterable(), sb = sb)
+    NodeTraversor.traverse({ node: Node, _ ->
+        FeatureFormatter.format(node.extension.features, featureKeys.asIterable(), sb = sb)
         sb.append('\n')
     }, this)
     return sb.toString()
 }
 
 fun Node.formatFeatures(vararg featureKeys: Int): String {
-    return FeatureFormatter.format(features, featureKeys.asIterable()).toString()
+    return FeatureFormatter.format(extension.features, featureKeys.asIterable()).toString()
 }
 
 fun Node.formatNamedFeatures(): String {
     val sb = StringBuilder()
 
     NodeTraversor.traverse({ node, _ ->
-        FeatureFormatter.format(node.variables, sb)
+        FeatureFormatter.format(node.extension.variables, sb)
         sb.append('\n')
     }, this)
 
@@ -759,8 +759,8 @@ private fun accumulateText(root: Element): String {
     val sb = StringBuilder()
     NodeTraversor.traverse({ node, depth ->
         if (node is TextNode) {
-            if (node.immutableText.isNotBlank()) {
-                sb.append(node.immutableText)
+            if (node.extension.immutableText.isNotBlank()) {
+                sb.append(node.extension.immutableText)
             }
         } else if (node is Element) {
             if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
@@ -787,7 +787,7 @@ private fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<S
 
 private fun Node.calculateViewPort(): Dimension {
     val default = AppConstants.DEFAULT_VIEW_PORT
-    val parts = ownerBody.attr("view-port").split("x")
+    val parts = extension.ownerBody.attr("view-port").split("x")
     return if (parts.size == 2)
         Dimension(parts[0].toIntOrNull() ?: default.width, parts[1].toIntOrNull() ?: default.height)
     else default

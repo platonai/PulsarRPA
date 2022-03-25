@@ -13,5 +13,5 @@ fun domValue(ele: Element): ValueDom {
 }
 
 fun docValue(dom: ValueDom): FeaturedDocument {
-    return FeaturedDocument(dom.getElement().ownerDocument())
+    return FeaturedDocument(dom.element.ownerDocument()!!)
 }

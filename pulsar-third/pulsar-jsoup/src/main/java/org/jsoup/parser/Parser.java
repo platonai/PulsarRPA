@@ -9,7 +9,7 @@ import java.io.StringReader;
 import java.util.List;
 
 /**
- * Parses HTML into a {@link Document}. Generally best to use one of the  more convenient parse methods
+ * Parses HTML into a {@link org.jsoup.nodes.Document}. Generally best to use one of the  more convenient parse methods
  * in {@link org.jsoup.Jsoup}.
  */
 public class Parser {
@@ -25,6 +25,20 @@ public class Parser {
         this.treeBuilder = treeBuilder;
         settings = treeBuilder.defaultSettings();
         errors = ParseErrorList.noTracking();
+    }
+
+    /**
+     Creates a new Parser as a deep copy of this; including initializing a new TreeBuilder. Allows independent (multi-threaded) use.
+     @return a copied parser
+     */
+    public Parser newInstance() {
+        return new Parser(this);
+    }
+
+    private Parser(Parser copy) {
+        treeBuilder = copy.treeBuilder.newInstance(); // because extended
+        errors = new ParseErrorList(copy.errors); // only copies size, not contents
+        settings = new ParseSettings(copy.settings);
     }
     
     public Document parseInput(String html, String baseUri) {
@@ -79,6 +93,7 @@ public class Parser {
     /**
      * Retrieve the parse errors, if any, from the last parse.
      * @return list of parse errors, up to the size of the maximum errors tracked.
+     * @see #setTrackErrors(int)
      */
     public ParseErrorList getErrors() {
         return errors;
@@ -91,6 +106,14 @@ public class Parser {
 
     public ParseSettings settings() {
         return settings;
+    }
+
+    /**
+     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
+     Data Nodes).
+     */
+    public boolean isContentForTagData(String normalName) {
+        return getTreeBuilder().isContentForTagData(normalName);
     }
 
     // static parse functions below
@@ -185,17 +208,6 @@ public class Parser {
         return tokeniser.unescapeEntities(inAttribute);
     }
 
-    /**
-     * @param bodyHtml HTML to parse
-     * @param baseUri baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
-     *
-     * @return parsed Document
-     * @deprecated Use {@link #parseBodyFragment} or {@link #parseFragment} instead.
-     */
-    public static Document parseBodyFragmentRelaxed(String bodyHtml, String baseUri) {
-        return parse(bodyHtml, baseUri);
-    }
-    
     // builders
 
     /**

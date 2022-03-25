@@ -123,7 +123,7 @@ class JsoupExtractor(
             val elements = query(cssQuery, root)
             return if (elements.isEmpty()) {
                 ""
-            } else StringUtils.strip(elements.first().text())
+            } else StringUtils.strip(elements.first()!!.text())
         }
 
         /**

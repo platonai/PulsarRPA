@@ -79,26 +79,26 @@ class TestSelector {
 
         val dataName = doc.select("[data-name=\"with spaces\"]")
         assertEquals(1, dataName.size.toLong())
-        assertEquals("with spaces", dataName.first().attr("data-name"))
+        assertEquals("with spaces", dataName.first()?.attr("data-name"))
 
         val not = doc.select("div[title!=bar]")
         assertEquals(5, not.size.toLong())
-        assertEquals("Foo", not.first().attr("title"))
+        assertEquals("Foo", not.first()?.attr("title"))
 
         val starts = doc.select("[title^=ba]")
         assertEquals(2, starts.size.toLong())
-        assertEquals("Bar", starts.first().attr("title"))
-        assertEquals("Balim", starts.last().attr("title"))
+        assertEquals("Bar", starts.first()?.attr("title"))
+        assertEquals("Balim", starts.last()?.attr("title"))
 
         val ends = doc.select("[title$=im]")
         assertEquals(2, ends.size.toLong())
-        assertEquals("Balim", ends.first().attr("title"))
-        assertEquals("SLIM", ends.last().attr("title"))
+        assertEquals("Balim", ends.first()?.attr("title"))
+        assertEquals("SLIM", ends.last()?.attr("title"))
 
         val contains = doc.select("[title*=i]")
         assertEquals(2, contains.size.toLong())
-        assertEquals("Balim", contains.first().attr("title"))
-        assertEquals("SLIM", contains.last().attr("title"))
+        assertEquals("Balim", contains.first()?.attr("title"))
+        assertEquals("SLIM", contains.last()?.attr("title"))
     }
 
     @Test
@@ -106,21 +106,21 @@ class TestSelector {
         val doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>")
         val byTag = doc.select("abc|def")
         assertEquals(2, byTag.size.toLong())
-        assertEquals("1", byTag.first().id())
-        assertEquals("2", byTag.last().id())
+        assertEquals("1", byTag.first()?.id())
+        assertEquals("2", byTag.last()?.id())
 
         val byAttr = doc.select(".bold")
         assertEquals(1, byAttr.size.toLong())
-        assertEquals("2", byAttr.last().id())
+        assertEquals("2", byAttr.last()?.id())
 
         val byTagAttr = doc.select("abc|def.bold")
         assertEquals(1, byTagAttr.size.toLong())
-        assertEquals("2", byTagAttr.last().id())
+        assertEquals("2", byTagAttr.last()?.id())
 
         val byContains = doc.select("abc|def:contains(e)")
         assertEquals(2, byContains.size.toLong())
-        assertEquals("1", byContains.first().id())
-        assertEquals("2", byContains.last().id())
+        assertEquals("1", byContains.first()?.id())
+        assertEquals("2", byContains.last()?.id())
     }
 
     @Test
@@ -128,21 +128,21 @@ class TestSelector {
         val doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>")
         val byTag = doc.select("*|def")
         assertEquals(2, byTag.size.toLong())
-        assertEquals("1", byTag.first().id())
-        assertEquals("2", byTag.last().id())
+        assertEquals("1", byTag.first()?.id())
+        assertEquals("2", byTag.last()?.id())
 
         val byAttr = doc.select(".bold")
         assertEquals(1, byAttr.size.toLong())
-        assertEquals("2", byAttr.last().id())
+        assertEquals("2", byAttr.last()?.id())
 
         val byTagAttr = doc.select("*|def.bold")
         assertEquals(1, byTagAttr.size.toLong())
-        assertEquals("2", byTagAttr.last().id())
+        assertEquals("2", byTagAttr.last()?.id())
 
         val byContains = doc.select("*|def:contains(e)")
         assertEquals(2, byContains.size.toLong())
-        assertEquals("1", byContains.first().id())
-        assertEquals("2", byContains.last().id())
+        assertEquals("1", byContains.first()?.id())
+        assertEquals("2", byContains.last()?.id())
     }
 
     @Test
@@ -150,12 +150,12 @@ class TestSelector {
         val doc = Jsoup.parse("<div id=1 ATTRIBUTE data-name=dom>Hello</div><p data-val=5 id=2>There</p><p id=3>No</p>")
         var withData = doc.select("[^data-]")
         assertEquals(2, withData.size.toLong())
-        assertEquals("1", withData.first().id())
-        assertEquals("2", withData.last().id())
+        assertEquals("1", withData.first()?.id())
+        assertEquals("2", withData.last()?.id())
 
         withData = doc.select("p[^data-]")
         assertEquals(1, withData.size.toLong())
-        assertEquals("2", withData.first().id())
+        assertEquals("2", withData.first()?.id())
 
         assertEquals(1, doc.select("[^attrib]").size.toLong())
     }
@@ -193,7 +193,7 @@ class TestSelector {
         val els = doc.select("p#1 + :contains(+)")
         assertEquals(1, els.size.toLong())
         assertEquals("Two +", els.text())
-        assertEquals("p", els.first().tagName())
+        assertEquals("p", els.first()?.tagName())
     }
 
     @Test
@@ -204,7 +204,7 @@ class TestSelector {
         val allUnderDiv = doc.select("div *")
         assertEquals(8, allDoc.size.toLong())
         assertEquals(3, allUnderDiv.size.toLong())
-        assertEquals("p", allUnderDiv.first().tagName())
+        assertEquals("p", allUnderDiv.first()?.tagName())
     }
 
     @Test
@@ -248,7 +248,7 @@ class TestSelector {
     fun descendant() {
         val h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>"
         val doc = Jsoup.parse(h)
-        val root = doc.getElementsByClass("HEAD").first()
+        val root = doc.getElementsByClass("HEAD").first()!!
 
         val els = root.select(".head p")
         assertEquals(2, els.size.toLong())
@@ -273,31 +273,31 @@ class TestSelector {
 
         val div = doc.select("div.foo")
         assertEquals(1, div.size.toLong())
-        assertEquals("div", div.first().tagName())
+        assertEquals("div", div.first()?.tagName())
 
         val p = doc.select("div .foo") // space indicates like "div *.foo"
         assertEquals(1, p.size.toLong())
-        assertEquals("p", p.first().tagName())
+        assertEquals("p", p.first()?.tagName())
 
         val div2 = doc.select("div#1.foo.bar[title=bar][name=qux]") // very specific!
         assertEquals(1, div2.size.toLong())
-        assertEquals("div", div2.first().tagName())
+        assertEquals("div", div2.first()?.tagName())
 
         val p2 = doc.select("div *.foo") // space indicates like "div *.foo"
         assertEquals(1, p2.size.toLong())
-        assertEquals("p", p2.first().tagName())
+        assertEquals("p", p2.first()?.tagName())
     }
 
     @Test
     fun deeperDescendant() {
         val h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>"
         val doc = Jsoup.parse(h)
-        val root = doc.getElementsByClass("head").first()
+        val root = doc.getElementsByClass("head").first()!!
 
         val els = root.select("div p .first")
         assertEquals(1, els.size.toLong())
-        assertEquals("Hello", els.first().text())
-        assertEquals("span", els.first().tagName())
+        assertEquals("Hello", els.first()?.text())
+        assertEquals("span", els.first()?.tagName())
 
         val aboveRoot = root.select("body p .first")
         assertEquals(0, aboveRoot.size.toLong())
@@ -325,11 +325,11 @@ class TestSelector {
 
         val allAs = doc.select("h1 > a")
         assertEquals(3, allAs.size.toLong())
-        assertEquals("a", allAs.first().tagName())
+        assertEquals("a", allAs.first()?.tagName())
 
         val fooAs = doc.select("h1.foo > a")
         assertEquals(2, fooAs.size.toLong())
-        assertEquals("a", fooAs.first().tagName())
+        assertEquals("a", fooAs.first()?.tagName())
 
         val barAs = doc.select("h1.foo > a.bar")
         assertEquals(1, barAs.size.toLong())
@@ -352,7 +352,7 @@ class TestSelector {
         val doc = Jsoup.parse(h)
         val els = doc.select("div#foo > h1.bar > a[href*=example]")
         assertEquals(1, els.size.toLong())
-        assertEquals("a", els.first().tagName())
+        assertEquals("a", els.first()?.tagName())
     }
 
     @Test
@@ -422,7 +422,7 @@ class TestSelector {
         val doc = Jsoup.parse(h)
         val els = doc.select("#1 ~ #3")
         assertEquals(1, els.size.toLong())
-        assertEquals("Three", els.first().text())
+        assertEquals("Three", els.first()?.text())
     }
 
     // for http://github.com/jhy/jsoup/issues#issue/10
@@ -433,14 +433,14 @@ class TestSelector {
         val doc = Jsoup.parse(h)
 
         val el1 = doc.getElementById("a1-foo_bar")
-        assertEquals("One", el1.text())
+        assertEquals("One", el1?.text())
         val el2 = doc.getElementsByClass("b2-qux_bif").first()
-        assertEquals("Two", el2.text())
+        assertEquals("Two", el2?.text())
 
         val el3 = doc.select("#a1-foo_bar").first()
-        assertEquals("One", el3.text())
+        assertEquals("One", el3?.text())
         val el4 = doc.select(".b2-qux_bif").first()
-        assertEquals("Two", el4.text())
+        assertEquals("Two", el4?.text())
     }
 
     // for http://github.com/jhy/jsoup/issues#issue/13
@@ -449,16 +449,16 @@ class TestSelector {
         var h = "<div><p><span>One</span><span>Two</span></p></div>"
         var doc = Jsoup.parse(h)
 
-        val p = doc.select("div > p").first()
+        val p = doc.select("div > p").first()!!
         val spans = p.select("> span")
         assertEquals(2, spans.size.toLong())
-        assertEquals("One", spans.first().text())
+        assertEquals("One", spans.first()?.text())
 
         // make sure doesn't get nested
         h = "<div id=1><div id=2><div id=3></div></div></div>"
         doc = Jsoup.parse(h)
         val div = doc.select("div").select(" > div").first()
-        assertEquals("2", div.id())
+        assertEquals("2", div?.id())
     }
 
     @Test
@@ -531,7 +531,7 @@ class TestSelector {
 
         val els1 = doc.body().select(":has(p)")
         assertEquals(3, els1.size.toLong()) // body, div, dib
-        assertEquals("body", els1.first().tagName())
+        assertEquals("body", els1.first()?.tagName())
         assertEquals("0", els1[1].id())
         assertEquals("2", els1[2].id())
     }
@@ -541,19 +541,19 @@ class TestSelector {
         val doc = Jsoup.parse("<div><p><span>One</span></p></div> <div><p>Two</p></div>")
         var divs = doc.select("div:has(p:has(span))")
         assertEquals(1, divs.size.toLong())
-        assertEquals("One", divs.first().text())
+        assertEquals("One", divs.first()?.text())
 
         // test matches in has
         divs = doc.select("div:has(p:matches((?i)two))")
         assertEquals(1, divs.size.toLong())
-        assertEquals("div", divs.first().tagName())
-        assertEquals("Two", divs.first().text())
+        assertEquals("div", divs.first()?.tagName())
+        assertEquals("Two", divs.first()?.text())
 
         // test contains in has
         divs = doc.select("div:has(p:contains(two))")
         assertEquals(1, divs.size.toLong())
-        assertEquals("div", divs.first().tagName())
-        assertEquals("Two", divs.first().text())
+        assertEquals("div", divs.first()?.tagName())
+        assertEquals("Two", divs.first()?.text())
     }
 
     @Test
@@ -565,16 +565,16 @@ class TestSelector {
 
         val ps2 = doc.select("p:contains(the rain)")
         assertEquals(2, ps2.size.toLong())
-        assertEquals("The Rain.", ps2.first().html())
-        assertEquals("The <i>RAIN</i>.", ps2.last().html())
+        assertEquals("The Rain.", ps2.first()?.html())
+        assertEquals("The <i>RAIN</i>.", ps2.last()?.html())
 
         val ps3 = doc.select("p:contains(the Rain):has(i)")
         assertEquals(1, ps3.size.toLong())
-        assertEquals("light", ps3.first().className())
+        assertEquals("light", ps3.first()?.className())
 
         val ps4 = doc.select(".light:contains(rain)")
         assertEquals(1, ps4.size.toLong())
-        assertEquals("light", ps3.first().className())
+        assertEquals("light", ps3.first()?.className())
 
         val ps5 = doc.select(":contains(rain)")
         assertEquals(8, ps5.size.toLong()) // html, body, div,...
@@ -589,11 +589,11 @@ class TestSelector {
 
         val ps1 = doc.select("p:contains(this (is good))")
         assertEquals(1, ps1.size.toLong())
-        assertEquals("1", ps1.first().id())
+        assertEquals("1", ps1.first()?.id())
 
         val ps2 = doc.select("p:contains(this is bad\\))")
         assertEquals(1, ps2.size.toLong())
-        assertEquals("2", ps2.first().id())
+        assertEquals("2", ps2.first()?.id())
     }
 
     @Test
@@ -601,7 +601,7 @@ class TestSelector {
         val doc = Jsoup.parse("<p id=1>Hello <b>there</b> igor</p>")
         val ps = doc.select("p:containsOwn(Hello IGOR)")
         assertEquals(1, ps.size.toLong())
-        assertEquals("1", ps.first().id())
+        assertEquals("1", ps.first()?.id())
 
         assertEquals(0, doc.select("p:containsOwn(there)").size.toLong())
 
@@ -619,23 +619,23 @@ class TestSelector {
 
         val p2 = doc.select("p:matches((?i)the rain)") // case insense. should include root, html, body
         assertEquals(1, p2.size.toLong())
-        assertEquals("1", p2.first().id())
+        assertEquals("1", p2.first()?.id())
 
         val p4 = doc.select("p:matches((?i)^rain$)") // bounding
         assertEquals(1, p4.size.toLong())
-        assertEquals("4", p4.first().id())
+        assertEquals("4", p4.first()?.id())
 
         val p5 = doc.select("p:matches(\\d+)")
         assertEquals(1, p5.size.toLong())
-        assertEquals("2", p5.first().id())
+        assertEquals("2", p5.first()?.id())
 
         val p6 = doc.select("p:matches(\\w+\\s+\\(\\w+\\))") // test bracket matching
         assertEquals(1, p6.size.toLong())
-        assertEquals("3", p6.first().id())
+        assertEquals("3", p6.first()?.id())
 
         val p7 = doc.select("p:matches((?i)the):has(i)") // multi
         assertEquals(1, p7.size.toLong())
-        assertEquals("1", p7.first().id())
+        assertEquals("1", p7.first()?.id())
     }
 
     @Test
@@ -644,7 +644,7 @@ class TestSelector {
 
         val p1 = doc.select("p:matchesOwn((?i)hello now)")
         assertEquals(1, p1.size.toLong())
-        assertEquals("1", p1.first().id())
+        assertEquals("1", p1.first()?.id())
 
         assertEquals(0, doc.select("p:matchesOwn(there)").size.toLong())
     }
@@ -655,11 +655,11 @@ class TestSelector {
 
         val el1 = doc.select("abc_def")
         assertEquals(1, el1.size.toLong())
-        assertEquals("1", el1.first().id())
+        assertEquals("1", el1.first()?.id())
 
         val el2 = doc.select("abc-def")
         assertEquals(1, el2.size.toLong())
-        assertEquals("2", el2.first().id())
+        assertEquals("2", el2.first()?.id())
     }
 
     @Test
@@ -668,13 +668,13 @@ class TestSelector {
 
         val el1 = doc.select("p:not([id=1])")
         assertEquals(2, el1.size.toLong())
-        assertEquals("Two", el1.first().text())
-        assertEquals("Three", el1.last().text())
+        assertEquals("Two", el1.first()?.text())
+        assertEquals("Three", el1.last()?.text())
 
         val el2 = doc.select("p:not(:has(span))")
         assertEquals(2, el2.size.toLong())
-        assertEquals("One", el2.first().text())
-        assertEquals("Two", el2.last().text())
+        assertEquals("One", el2.first()?.text())
+        assertEquals("Two", el2.last()?.text())
     }
 
     @Test
@@ -683,8 +683,8 @@ class TestSelector {
 
         val el1 = doc.body().select(":not(p)") // should just be the span
         assertEquals(2, el1.size.toLong())
-        assertEquals("body", el1.first().tagName())
-        assertEquals("span", el1.last().tagName())
+        assertEquals("body", el1.first()?.tagName())
+        assertEquals("span", el1.last()?.tagName())
     }
 
     @Test
@@ -693,7 +693,7 @@ class TestSelector {
 
         val el1 = doc.select("div:not(.left)")
         assertEquals(1, el1.size.toLong())
-        assertEquals("1", el1.first().id())
+        assertEquals("1", el1.first()?.id())
     }
 
     @Test
@@ -714,8 +714,8 @@ class TestSelector {
     fun selectSupplementaryCharacter() {
         val s = String(Character.toChars(135361))
         val doc = Jsoup.parse("<div k$s='$s'>^$s$/div>")
-        assertEquals("div", doc.select("div[k$s]").first().tagName())
-        assertEquals("div", doc.select("div:containsOwn($s)").first().tagName())
+        assertEquals("div", doc.select("div[k$s]").first()?.tagName())
+        assertEquals("div", doc.select("div:containsOwn($s)").first()?.tagName())
     }
 
     @Test
@@ -754,10 +754,10 @@ class TestSelector {
     fun attributeWithBrackets() {
         val html = "<div data='End]'>One</div> <div data='[Another)]]'>Two</div>"
         val doc = Jsoup.parse(html)
-        assertEquals("One", doc.select("div[data='End]']").first().text())
-        assertEquals("Two", doc.select("div[data='[Another)]]']").first().text())
-        assertEquals("One", doc.select("div[data=\"End]\"]").first().text())
-        assertEquals("Two", doc.select("div[data=\"[Another)]]\"]").first().text())
+        assertEquals("One", doc.select("div[data='End]']").first()?.text())
+        assertEquals("Two", doc.select("div[data='[Another)]]']").first()?.text())
+        assertEquals("One", doc.select("div[data=\"End]\"]").first()?.text())
+        assertEquals("Two", doc.select("div[data=\"[Another)]]\"]").first()?.text())
     }
 
     @Test
@@ -777,9 +777,9 @@ class TestSelector {
         assertEquals(dataEls1.last(), dataEls2.first())
         assertEquals("<script>FUNCTION</script>", dataEls2.outerHtml())
         assertEquals(1, dataEls3.size.toLong())
-        assertEquals("span", dataEls3.first().tagName())
+        assertEquals("span", dataEls3.first()?.tagName())
         assertEquals(3, dataEls4.size.toLong())
-        assertEquals("body", dataEls4.first().tagName())
+        assertEquals("body", dataEls4.first()?.tagName())
         assertEquals("script", dataEls4[1].tagName())
         assertEquals("span", dataEls4[2].tagName())
         assertEquals(1, dataEls5.size.toLong())
@@ -798,20 +798,20 @@ class TestSelector {
     fun selectFirst() {
         val html = "<p>One<p>Two<p>Three"
         val doc = Jsoup.parse(html)
-        assertEquals("One", doc.selectFirst("p").text())
+        assertEquals("One", doc.selectFirst("p")?.text())
     }
 
     @Test
     fun selectFirstWithAnd() {
         val html = "<p>One<p class=foo>Two<p>Three"
         val doc = Jsoup.parse(html)
-        assertEquals("Two", doc.selectFirst("p.foo").text())
+        assertEquals("Two", doc.selectFirst("p.foo")?.text())
     }
 
     @Test
     fun selectFirstWithOr() {
         val html = "<p>One<p>Two<p>Three<div>Four"
         val doc = Jsoup.parse(html)
-        assertEquals("One", doc.selectFirst("p, div").text())
+        assertEquals("One", doc.selectFirst("p, div")?.text())
     }
 }

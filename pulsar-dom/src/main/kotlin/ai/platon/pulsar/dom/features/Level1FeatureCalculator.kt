@@ -55,10 +55,11 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
 
     // hit when the node is first seen
     override fun head(node: Node, depth: Int) {
-        node.features = ArrayRealVector(FeatureRegistry.registeredFeatures.size)
+        val extension = node.extension
+        extension.features = ArrayRealVector(FeatureRegistry.registeredFeatures.size)
 
-        node.features[DEP] = depth.toDouble()
-        node.features[SEQ] = sequence.toDouble()
+        extension.features[DEP] = depth.toDouble()
+        extension.features[SEQ] = sequence.toDouble()
 
         calcSelfIndicator(node)
         ++sequence
@@ -70,19 +71,20 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
             return
         }
 
+        val extension = node.extension
         val rect = getDOMRect(node)
         if (!rect.isEmpty) {
-            node.features[TOP] = rect.top
-            node.features[LEFT] = rect.left
-            node.features[WIDTH] = rect.width
-            node.features[HEIGHT] = rect.height
+            extension.features[TOP] = rect.top
+            extension.features[LEFT] = rect.left
+            extension.features[WIDTH] = rect.width
+            extension.features[HEIGHT] = rect.height
         }
 
         if (node is TextNode) {
             // Trim: remove all surrounding unicode white spaces, including all HT, VT, LF, FF, CR, ASCII space, etc
             // @see https://en.wikipedia.org/wiki/Whitespace_character
-            node.immutableText = node.text()
-            val text = node.immutableText
+            extension.immutableText = node.text()
+            val text = extension.immutableText
             val ch = text.length.toDouble()
 
             if (ch > 0) {
@@ -136,11 +138,12 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
         }
 
         if (node is TextNode) {
-            val parent = node.parent()
+            val parent = node.parent()!!
+            val extension = node.extension
 
             // no-blank own text node
-            val otn = if (node.features[CH] == 0.0) 0.0 else 1.0
-            val votn = if (otn > 0 && node.features[WIDTH] > 0 && node.features[HEIGHT] > 0) 1.0 else 0.0
+            val otn = if (extension.features[CH] == 0.0) 0.0 else 1.0
+            val votn = if (otn > 0 && extension.features[WIDTH] > 0 && extension.features[HEIGHT] > 0) 1.0 else 0.0
             accumulateFeatures(parent,
                     FeatureEntry(TN, otn),
                     node.getFeatureEntry(CH)
@@ -165,7 +168,7 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
             // count of element siblings
             node.childNodes().forEach {
                 if (it is Element) {
-                    it.features[SIB] = node.features[C]
+                    it.extension.features[SIB] = node.extension.features[C]
                 }
             }
         } // if
@@ -190,7 +193,7 @@ private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
     }
 
     private fun getDOMRectInternal(attrKey: String, node: TextNode): DOMRect {
-        val parent = node.parent()
+        val parent = node.parent()!!
         val i = node.siblingIndex()
         val vi = parent.attr("$attrKey$i")
         return DOMRect.parseDOMRect(vi)

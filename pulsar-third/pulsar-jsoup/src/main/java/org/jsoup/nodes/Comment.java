@@ -1,8 +1,9 @@
 package org.jsoup.nodes;
 
-import org.jsoup.Jsoup;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
@@ -10,24 +11,12 @@ import java.io.IOException;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Comment extends LeafNode {
-    private static final String COMMENT_KEY = "comment";
-
     /**
      Create a new comment node.
      @param data The contents of the comment
      */
     public Comment(String data) {
         value = data;
-    }
-
-    /**
-     Create a new comment node.
-     @param data The contents of the comment
-     @param baseUri base URI not used. This is a leaf node.
-     @deprecated
-     */
-    public Comment(String data, String baseUri) {
-        this(data);
     }
 
     public String nodeName() {
@@ -42,8 +31,13 @@ public class Comment extends LeafNode {
         return coreValue();
     }
 
+    public Comment setData(String data) {
+        coreValue(data);
+        return this;
+    }
+
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint())
+        if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock()) || (out.outline() )))
             indent(accum, depth, out);
         accum
                 .append("<!--")
@@ -58,25 +52,42 @@ public class Comment extends LeafNode {
         return outerHtml();
     }
 
+    @Override
+    public Comment clone() {
+        return (Comment) super.clone();
+    }
+
     /**
      * Check if this comment looks like an XML Declaration.
      * @return true if it looks like, maybe, it's an XML Declaration.
      */
     public boolean isXmlDeclaration() {
         String data = getData();
+        return isXmlDeclarationData(data);
+    }
+
+    private static boolean isXmlDeclarationData(String data) {
         return (data.length() > 1 && (data.startsWith("!") || data.startsWith("?")));
     }
 
     /**
-     * Attempt to cast this comment to an XML Declaration note.
+     * Attempt to cast this comment to an XML Declaration node.
      * @return an XML declaration if it could be parsed as one, null otherwise.
      */
-    public XmlDeclaration asXmlDeclaration() {
+    public @Nullable XmlDeclaration asXmlDeclaration() {
         String data = getData();
-        Document doc = Jsoup.parse("<" + data.substring(1, data.length() -1) + ">", baseUri(), Parser.xmlParser());
+
         XmlDeclaration decl = null;
-        if (doc.children().size() > 0) {
-            Element el = doc.child(0);
+        String declContent = data.substring(1, data.length() - 1);
+        // make sure this bogus comment is not immediately followed by another, treat as comment if so
+        if (isXmlDeclarationData(declContent))
+            return null;
+
+        String fragment = "<" + declContent + ">";
+        // use the HTML parser not XML, so we don't get into a recursive XML Declaration on contrived data
+        Document doc = Parser.htmlParser().settings(ParseSettings.preserveCase).parseInput(fragment, baseUri());
+        if (doc.body().children().size() > 0) {
+            Element el = doc.body().child(0);
             decl = new XmlDeclaration(NodeUtils.parser(doc).settings().normalizeTag(el.tagName()), data.startsWith("!"));
             decl.attributes().addAll(el.attributes());
         }

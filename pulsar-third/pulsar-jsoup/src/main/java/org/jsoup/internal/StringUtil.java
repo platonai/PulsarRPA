@@ -2,21 +2,25 @@ package org.jsoup.internal;
 
 import org.jsoup.helper.Validate;
 
+import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 /**
- * A minimal String utility class. Designed for internal jsoup use only.
+ A minimal String utility class. Designed for <b>internal</b> jsoup use only - the API and outcome may change without
+ notice.
  */
 public final class StringUtil {
     // memoised padding up to 21
     static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
         "         ", "          ", "           ", "            ", "             ", "              ", "               ",
         "                ", "                 ", "                  ", "                   ", "                    "};
+    private static final int maxPaddingWidth = 30; // so very deeply nested nodes don't get insane padding amounts
 
     /**
      * Join a collection of strings by a separator
@@ -24,7 +28,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Collection strings, String sep) {
+    public static String join(Collection<?> strings, String sep) {
         return join(strings.iterator(), sep);
     }
 
@@ -34,7 +38,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Iterator strings, String sep) {
+    public static String join(Iterator<?> strings, String sep) {
         if (!strings.hasNext())
             return "";
 
@@ -42,12 +46,12 @@ public final class StringUtil {
         if (!strings.hasNext()) // only one, avoid builder
             return start;
 
-        StringBuilder sb = StringUtil.borrowBuilder().append(start);
+        StringJoiner j = new StringJoiner(sep);
+        j.add(start);
         while (strings.hasNext()) {
-            sb.append(sep);
-            sb.append(strings.next());
+            j.add(strings.next());
         }
-        return StringUtil.releaseBuilder(sb);
+        return j.complete();
     }
 
     /**
@@ -61,7 +65,57 @@ public final class StringUtil {
     }
 
     /**
-     * Returns space padding
+     A StringJoiner allows incremental / filtered joining of a set of stringable objects.
+     @since 1.14.1
+     */
+    public static class StringJoiner {
+        @Nullable StringBuilder sb = borrowBuilder(); // sets null on builder release so can't accidentally be reused
+        final String separator;
+        boolean first = true;
+
+        /**
+         Create a new joiner, that uses the specified separator. MUST call {@link #complete()} or will leak a thread
+         local string builder.
+
+         @param separator the token to insert between strings
+         */
+        public StringJoiner(String separator) {
+            this.separator = separator;
+        }
+
+        /**
+         Add another item to the joiner, will be separated
+         */
+        public StringJoiner add(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            if (!first)
+                sb.append(separator);
+            sb.append(stringy);
+            first = false;
+            return this;
+        }
+
+        /**
+         Append content to the current item; not separated
+         */
+        public StringJoiner append(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            sb.append(stringy);
+            return this;
+        }
+
+        /**
+         Return the joined string, and release the builder back to the pool. This joiner cannot be reused.
+         */
+        public String complete() {
+            String string = releaseBuilder(sb);
+            sb = null;
+            return string;
+        }
+    }
+
+    /**
+     * Returns space padding (up to a max of 30).
      * @param width amount of padding desired
      * @return string of spaces * width
      */
@@ -71,6 +125,7 @@ public final class StringUtil {
 
         if (width < padding.length)
             return padding[width];
+        width = Math.min(width, maxPaddingWidth);
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';
@@ -132,13 +187,13 @@ public final class StringUtil {
     }
 
     public static boolean isInvisibleChar(int c) {
-        return Character.getType(c) == 16 && (c == 8203 || c == 8204 || c == 8205 || c == 173);
-        // zero width sp, zw non join, zw join, soft hyphen
+        return c == 8203 || c == 173; // zero width sp, soft hyphen
+        // previously also included zw non join, zw join - but removing those breaks semantic meaning of text
     }
 
     /**
      * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
-     * (e.g. newline, tab) convert to a simple space
+     * (e.g. newline, tab) convert to a simple space.
      * @param string content to normalise
      * @return normalised string
      */
@@ -190,6 +245,23 @@ public final class StringUtil {
     }
 
     /**
+     Tests that a String contains only ASCII characters.
+     @param string scanned string
+     @return true if all characters are in range 0 - 127
+     */
+    public static boolean isAscii(String string) {
+        Validate.notNull(string);
+        for (int i = 0; i < string.length(); i++) {
+            int c = string.charAt(i);
+            if (c > 127) { // ascii range
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static final Pattern extraDotSegmentsPattern = Pattern.compile("^/((\\.{1,2}/)+)");
+    /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
      * @param base the existing absolute base URL
      * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
@@ -201,10 +273,12 @@ public final class StringUtil {
         if (relUrl.startsWith("?"))
             relUrl = base.getPath() + relUrl;
         // workaround: //example.com + ./foo = //example.com/./foo, not //example.com/foo
-        if (relUrl.indexOf('.') == 0 && base.getFile().indexOf('/') != 0) {
-            base = new URL(base.getProtocol(), base.getHost(), base.getPort(), "/" + base.getFile());
+        URL url = new URL(base, relUrl);
+        String fixedFile = extraDotSegmentsPattern.matcher(url.getFile()).replaceFirst("/");
+        if (url.getRef() != null) {
+            fixedFile = fixedFile + "#" + url.getRef();
         }
-        return new URL(base, relUrl);
+        return new URL(url.getProtocol(), url.getHost(), url.getPort(), fixedFile);
     }
 
     /**
@@ -214,8 +288,8 @@ public final class StringUtil {
      * @return an absolute URL if one was able to be generated, or the empty string if not
      */
     public static String resolve(final String baseUrl, final String relUrl) {
-        URL base;
         try {
+            URL base;
             try {
                 base = new URL(baseUrl);
             } catch (MalformedURLException e) {
@@ -225,26 +299,32 @@ public final class StringUtil {
             }
             return resolve(base, relUrl).toExternalForm();
         } catch (MalformedURLException e) {
-            return "";
+            // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel
+            // we test here vs at start to normalize supported URLs (e.g. HTTP -> http)
+            return validUriScheme.matcher(relUrl).find() ? relUrl : "";
         }
     }
+    private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
 
-    private static final Stack<StringBuilder> builders = new Stack<>();
+    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = new ThreadLocal<Stack<StringBuilder>>() {
+        @Override
+        protected Stack<StringBuilder> initialValue() {
+            return new Stack<>();
+        }
+    };
 
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
      * prevented from growing too large.
      * <p>
-     * Care must be taken to release the builder once its work has been completed, with {@see #releaseBuilder}
+     * Care must be taken to release the builder once its work has been completed, with {@link #releaseBuilder}
      * @return an empty StringBuilder
-     * @
      */
     public static StringBuilder borrowBuilder() {
-        synchronized (builders) {
-            return builders.empty() ?
-                new StringBuilder(MaxCachedBuilderSize) :
-                builders.pop();
-        }
+        Stack<StringBuilder> builders = threadLocalBuilders.get();
+        return builders.empty() ?
+            new StringBuilder(MaxCachedBuilderSize) :
+            builders.pop();
     }
 
     /**
@@ -262,12 +342,11 @@ public final class StringUtil {
         else
             sb.delete(0, sb.length()); // make sure it's emptied on release
 
-        synchronized (builders) {
-            builders.push(sb);
+        Stack<StringBuilder> builders = threadLocalBuilders.get();
+        builders.push(sb);
 
-            while (builders.size() > MaxIdleBuilders) {
-                builders.pop();
-            }
+        while (builders.size() > MaxIdleBuilders) {
+            builders.pop();
         }
         return string;
     }

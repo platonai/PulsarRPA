@@ -39,8 +39,8 @@ class TestExtendedCss {
         val elements = doc.select("div:expr($expr)")
         assertEquals(1, elements.size)
         assertTrue { elements.select("img").isNotEmpty() }
-        assertTrue { elements.last().getFeature(WIDTH) > 400 }
-        assertTrue { elements.last().getFeature(HEIGHT) < 500 }
+        assertTrue { elements.last()!!.getFeature(WIDTH) > 400 }
+        assertTrue { elements.last()!!.getFeature(HEIGHT) < 500 }
     }
 
     @Test
@@ -48,8 +48,8 @@ class TestExtendedCss {
         val expr = "width > 400 && width < 500 && height > 400 && height < 500"
         val elements = doc.select("*:expr($expr)")
         assertEquals(3, elements.size)
-        assertTrue { elements.last().getFeature(WIDTH) > 400 }
-        assertTrue { elements.last().getFeature(HEIGHT) < 500 }
+        assertTrue { elements.last()!!.getFeature(WIDTH) > 400 }
+        assertTrue { elements.last()!!.getFeature(HEIGHT) < 500 }
         // elements.forEach { println("\n\n\n${it.uniqueName}\n$it") }
     }
 

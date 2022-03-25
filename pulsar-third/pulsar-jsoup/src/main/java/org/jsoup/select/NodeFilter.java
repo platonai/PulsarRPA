@@ -47,7 +47,7 @@ public interface NodeFilter {
      * @return Filter decision
      */
     default FilterResult head(Node node, int depth) {
-        return NodeFilter.FilterResult.CONTINUE;
+        return FilterResult.CONTINUE;
     }
 
     /**
@@ -57,6 +57,6 @@ public interface NodeFilter {
      * @return Filter decision
      */
     default FilterResult tail(Node node, int depth) {
-        return NodeFilter.FilterResult.CONTINUE;
+        return FilterResult.CONTINUE;
     }
 }

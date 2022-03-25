@@ -16,16 +16,6 @@ public class DataNode extends LeafNode {
         value = data;
     }
 
-    /**
-     Create a new DataNode.
-     @param data data contents
-     @param baseUri Unused, Leaf Nodes do not hold base URis
-     @deprecated use {@link #DataNode(String)} instead
-     */
-    public DataNode(String data, String baseUri) {
-        this(data);
-    }
-
     public String nodeName() {
         return "#data";
     }
@@ -59,12 +49,19 @@ public class DataNode extends LeafNode {
         return outerHtml();
     }
 
+    @Override
+    public DataNode clone() {
+        return (DataNode) super.clone();
+    }
+
     /**
      Create a new DataNode from HTML encoded data.
      @param encodedData encoded data
-     @param baseUri bass URI
+     @param baseUri base URI
      @return new DataNode
+     @deprecated Unused, and will be removed in 1.15.1.
      */
+    @Deprecated
     public static DataNode createFromEncoded(String encodedData, String baseUri) {
         String data = Entities.unescape(encodedData);
         return new DataNode(data);

@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
-import com.yahoo.platform.yui.compressor.JavaScriptCompressor
 import java.io.StringReader
 import java.io.StringWriter
 import java.nio.file.Files

@@ -16,6 +16,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
+import org.jsoup.select.NodeVisitor
 import java.awt.Dimension
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
@@ -44,7 +45,7 @@ open class FeaturedDocument(val document: Document) {
         }
 
         /**
-         * An node is Nil, if it's owner document is nil
+         * A node is Nil when it's owner document is nil
          * */
         fun isNil(doc: FeaturedDocument): Boolean {
             return doc == NIL || doc.location == NIL.location
@@ -133,9 +134,9 @@ open class FeaturedDocument(val document: Document) {
         }
 
     var features: RealVector
-        get() = document.features
+        get() = document.extension.features
         set(value) {
-            document.features = value
+            document.extension.features = value
         }
 
     fun unbox() = document
@@ -198,7 +199,7 @@ open class FeaturedDocument(val document: Document) {
     fun formatNamedFeatures() = document.formatNamedFeatures()
 
     fun removeAttrs(vararg attributeKeys: String) {
-        NodeTraversor.traverse({ node, _ ->  node.removeAttrs(*attributeKeys) }, document)
+        NodeTraversor.traverse({ node: Node, _ ->  node.extension.removeAttrs(*attributeKeys) }, document)
     }
 
     fun stripScripts() {

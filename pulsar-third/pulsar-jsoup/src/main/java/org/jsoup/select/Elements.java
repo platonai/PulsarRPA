@@ -1,11 +1,15 @@
 package org.jsoup.select;
 
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -180,7 +184,8 @@ public class Elements extends ArrayList<Element> {
      */
     public String val() {
         if (size() > 0)
-            return first().val();
+            //noinspection ConstantConditions
+            return first().val(); // first() != null as size() > 0
         else
             return "";
     }
@@ -289,8 +294,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Update the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
+     * Update (rename) the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
      * {@code doc.select("i").tagName("em");}
+     *
      * @param tagName the new tag name
      * @return this, for chaining
      * @see Element#tagName(String)
@@ -561,7 +567,7 @@ public class Elements extends ArrayList<Element> {
         return siblings(query, false, true);
     }
 
-    private Elements siblings(String query, boolean next, boolean all) {
+    private Elements siblings(@Nullable String query, boolean next, boolean all) {
         Elements els = new Elements();
         Evaluator eval = query != null? QueryParser.parse(query) : null;
         for (Element e : this) {
@@ -595,7 +601,7 @@ public class Elements extends ArrayList<Element> {
      Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty.
      */
-    public Element first() {
+    public @Nullable Element first() {
         return isEmpty() ? null : get(0);
     }
 
@@ -603,7 +609,7 @@ public class Elements extends ArrayList<Element> {
      Get the last matched element.
      @return The last matched element, or <code>null</code> if contents is empty.
      */
-    public Element last() {
+    public @Nullable Element last() {
         return isEmpty() ? null : get(size() - 1);
     }
 
@@ -638,6 +644,43 @@ public class Elements extends ArrayList<Element> {
             if (el instanceof FormElement)
                 forms.add((FormElement) el);
         return forms;
+    }
+
+    /**
+     * Get {@link Comment} nodes that are direct child nodes of the selected elements.
+     * @return Comment nodes, or an empty list if none.
+     */
+    public List<Comment> comments() {
+        return childNodesOfType(Comment.class);
+    }
+
+    /**
+     * Get {@link TextNode} nodes that are direct child nodes of the selected elements.
+     * @return TextNode nodes, or an empty list if none.
+     */
+    public List<TextNode> textNodes() {
+        return childNodesOfType(TextNode.class);
+    }
+
+    /**
+     * Get {@link DataNode} nodes that are direct child nodes of the selected elements. DataNode nodes contain the
+     * content of tags such as {@code script}, {@code style} etc and are distinct from {@link TextNode}s.
+     * @return Comment nodes, or an empty list if none.
+     */
+    public List<DataNode> dataNodes() {
+        return childNodesOfType(DataNode.class);
+    }
+
+    private <T extends Node> List<T> childNodesOfType(Class<T> tClass) {
+        ArrayList<T> nodes = new ArrayList<>();
+        for (Element el: this) {
+            for (int i = 0; i < el.childNodeSize(); i++) {
+                Node node = el.childNode(i);
+                if (tClass.isInstance(node))
+                    nodes.add(tClass.cast(node));
+            }
+        }
+        return nodes;
     }
 
 }

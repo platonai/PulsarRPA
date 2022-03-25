@@ -12,43 +12,33 @@ import org.jsoup.select.NodeFilter.FilterResult;
  * </p>
  */
 public class NodeTraversor {
-    private NodeVisitor visitor;
-
-    /**
-     * Create a new traversor.
-     * @param visitor a class implementing the {@link NodeVisitor} interface, to be called when visiting each node.
-     * @deprecated Just use the static {@link NodeTraversor#filter(NodeFilter, Node)} method.
-     */
-    public NodeTraversor(NodeVisitor visitor) {
-        this.visitor = visitor;
-    }
-
-    /**
-     * Start a depth-first traverse of the root and all of its descendants.
-     * @param root the root node point to traverse.
-     * @deprecated Just use the static {@link NodeTraversor#filter(NodeFilter, Node)} method.
-     */
-    public void traverse(Node root) {
-        traverse(visitor, root);
-    }
-
     /**
      * Start a depth-first traverse of the root and all of its descendants.
      * @param visitor Node visitor.
      * @param root the root node point to traverse.
      */
     public static void traverse(NodeVisitor visitor, Node root) {
+        Validate.notNull(visitor);
+        Validate.notNull(root);
+        
         Node node = root;
+        Node parent; // remember parent to find nodes that get replaced in .head
         int depth = 0;
-
+        
         while (node != null) {
-            visitor.head(node, depth);
-            if (node.childNodeSize() > 0) {
+            parent = node.parentNode();
+            visitor.head(node, depth); // visit current node
+            if (parent != null && !node.hasParent()) // must have been replaced; find replacement
+                node = parent.childNode(node.siblingIndex()); // replace ditches parent but keeps sibling index
+
+            if (node.childNodeSize() > 0) { // descend
                 node = node.childNode(0);
                 depth++;
             } else {
-                while (node.nextSibling() == null && depth > 0) {
-                    visitor.tail(node, depth);
+                while (true) {
+                    assert node != null; // as depth > 0, will have parent
+                    if (!(node.nextSibling() == null && depth > 0)) break;
+                    visitor.tail(node, depth); // when no more siblings, ascend
                     node = node.parentNode();
                     depth--;
                 }
@@ -93,7 +83,9 @@ public class NodeTraversor {
                 continue;
             }
             // No siblings, move upwards:
-            while (node.nextSibling() == null && depth > 0) {
+            while (true) {
+                assert node != null; // depth > 0, so has parent
+                if (!(node.nextSibling() == null && depth > 0)) break;
                 // 'tail' current node:
                 if (result == FilterResult.CONTINUE || result == FilterResult.SKIP_CHILDREN) {
                     result = filter.tail(node, depth);

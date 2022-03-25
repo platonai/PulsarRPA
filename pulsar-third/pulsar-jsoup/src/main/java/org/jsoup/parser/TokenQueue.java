@@ -38,7 +38,9 @@ public class TokenQueue {
     /**
      * Retrieves but does not remove the first character from the queue.
      * @return First character, or 0 if empty.
+     *@deprecated unused and will be removed in 1.15.x
      */
+    @Deprecated
     public char peek() {
         return isEmpty() ? 0 : queue.charAt(pos);
     }
@@ -46,7 +48,9 @@ public class TokenQueue {
     /**
      Add a character to the start of the queue (will be the next character retrieved).
      @param c character to add
+     @deprecated unused and will be removed in 1.15.x
      */
+    @Deprecated
     public void addFirst(Character c) {
         addFirst(c.toString());
     }
@@ -74,7 +78,9 @@ public class TokenQueue {
      * Case sensitive match test.
      * @param seq string to case sensitively check for
      * @return true if matched, false if not
+     * @deprecated unused and will be removed in 1.15.x
      */
+    @Deprecated
     public boolean matchesCS(String seq) {
         return queue.startsWith(seq, pos);
     }
@@ -104,6 +110,10 @@ public class TokenQueue {
         return false;
     }
 
+    /**
+     @deprecated unused and will be removed in 1.15.x
+     */
+    @Deprecated
     public boolean matchesStartTag() {
         // micro opt for matching "<x"
         return (remainingLength() >= 2 && queue.charAt(pos) == '<' && Character.isLetter(queue.charAt(pos+1)));
@@ -264,25 +274,32 @@ public class TokenQueue {
         char last = 0;
         boolean inSingleQuote = false;
         boolean inDoubleQuote = false;
+        boolean inRegexQE = false; // regex \Q .. \E escapes from Pattern.quote()
 
         do {
             if (isEmpty()) break;
-            Character c = consume();
-            if (last == 0 || last != ESC) {
-                if (c.equals('\'') && c != open && !inDoubleQuote)
+            char c = consume();
+            if (last != ESC) {
+                if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
-                else if (c.equals('"') && c != open && !inSingleQuote)
+                else if (c == '"' && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
-                if (inSingleQuote || inDoubleQuote)
+                if (inSingleQuote || inDoubleQuote || inRegexQE){
+                    last = c;
                     continue;
+                }
 
-                if (c.equals(open)) {
+                if (c == open) {
                     depth++;
                     if (start == -1)
                         start = pos;
                 }
-                else if (c.equals(close))
+                else if (c == close)
                     depth--;
+            } else if (c == 'Q') {
+                inRegexQE = true;
+            } else if (c == 'E') {
+                inRegexQE = false;
             }
 
             if (depth > 0 && last != 0)
@@ -306,7 +323,7 @@ public class TokenQueue {
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
-                if (last != 0 && last == ESC)
+                if (last == ESC)
                     out.append(c);
             }
             else 
@@ -344,7 +361,9 @@ public class TokenQueue {
      * Consume an tag name off the queue (word or :, _, -)
      * 
      * @return tag name
+     * @deprecated unused and will be removed in 1.15.x
      */
+    @Deprecated
     public String consumeTagName() {
         int start = pos;
         while (!isEmpty() && (matchesWord() || matchesAny(':', '_', '-')))
@@ -382,7 +401,9 @@ public class TokenQueue {
     /**
      Consume an attribute key off the queue (letter, digit, -, _, :")
      @return attribute key
+     @deprecated unused and will be removed in 1.15.x
      */
+    @Deprecated
     public String consumeAttributeKey() {
         int start = pos;
         while (!isEmpty() && (matchesWord() || matchesAny('-', '_', ':')))
@@ -396,7 +417,7 @@ public class TokenQueue {
      @return remained of queue.
      */
     public String remainder() {
-        final String remainder = queue.substring(pos, queue.length());
+        final String remainder = queue.substring(pos);
         pos = queue.length();
         return remainder;
     }

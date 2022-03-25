@@ -1,86 +1,136 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-<!--  <name>jsoup Java HTML Parser</name>-->
+    <modelVersion>4.0.0</modelVersion>
+<!--    <name>jsoup Java HTML Parser</name>-->
 
-<!--  <groupId>org.jsoup</groupId>-->
-<!--  <artifactId>jsoup</artifactId>-->
-<!--  <version>1.12.1</version>-->
+<!--    <groupId>org.jsoup</groupId>-->
+<!--    <artifactId>jsoup</artifactId>-->
+<!--    <version>1.14.3</version>-->
+    <!-- remember to update previous version below for japicmp -->
 
-  <parent>
-    <groupId>ai.platon.pulsar</groupId>
-    <artifactId>pulsar-third</artifactId>
-    <version>1.8.1-SNAPSHOT</version>
-  </parent>
+    <parent>
+        <groupId>ai.platon.pulsar</groupId>
+        <artifactId>pulsar-third</artifactId>
+        <version>1.8.1-SNAPSHOT</version>
+    </parent>
 
-  <name>Pulsar Jsoup</name>
-  <artifactId>pulsar-jsoup</artifactId>
+    <name>Pulsar Jsoup</name>
+    <artifactId>pulsar-jsoup</artifactId>
 
-  <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for extracting and manipulating data, using the best of DOM, CSS, and jquery-like methods. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers do.</description>
-  <url>https://jsoup.org/</url>
-  <inceptionYear>2009</inceptionYear>
-  <issueManagement>
-    <system>GitHub</system>
-    <url>https://github.com/jhy/jsoup/issues</url>
-  </issueManagement>
-  <licenses>
-    <license>
-      <name>The MIT License</name>
-      <url>https://jsoup.org/license</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-<!--  <scm>-->
-<!--    <url>https://github.com/jhy/jsoup</url>-->
-<!--    <connection>scm:git:https://github.com/jhy/jsoup.git</connection>-->
-<!--    &lt;!&ndash; <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> &ndash;&gt;-->
-<!--    <tag>jsoup-1.12.1</tag>-->
-<!--  </scm>-->
-  <organization>
-    <name>Jonathan Hedley</name>
-    <url>https://jhy.io/</url>
-  </organization>
+    <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for fetching URLs and extracting and manipulating data, using the best of HTML5 DOM methods and CSS selectors. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers do.</description>
+    <url>https://jsoup.org/</url>
+    <inceptionYear>2009</inceptionYear>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/jhy/jsoup/issues</url>
+    </issueManagement>
+    <licenses>
+        <license>
+            <name>The MIT License</name>
+            <url>https://jsoup.org/license</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+<!--    <scm>-->
+<!--        <url>https://github.com/jhy/jsoup</url>-->
+<!--        <connection>scm:git:https://github.com/jhy/jsoup.git</connection>-->
+<!--        &lt;!&ndash; <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> &ndash;&gt;-->
+<!--        <tag>jsoup-1.14.3</tag>-->
+<!--    </scm>-->
+    <organization>
+        <name>Jonathan Hedley</name>
+        <url>https://jhy.io/</url>
+    </organization>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-      </plugin>
-    </plugins>
-    <resources>
-      <resource>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src</directory>
-        <targetPath>META-INF/</targetPath>
-        <filtering>false</filtering>
-        <includes>
-          <include>LICENSE</include>
-          <include>README.md</include>
-          <include>CHANGES</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <artifactId>maven-compiler-plugin</artifactId>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--        <resources>-->
+<!--            <resource>-->
+<!--                <directory>src/main/java</directory>-->
+<!--                <includes>-->
+<!--                    <include>**/*.properties</include>-->
+<!--                </includes>-->
+<!--            </resource>-->
+<!--            <resource>-->
+<!--                <directory>src</directory>-->
+<!--                <targetPath>META-INF/</targetPath>-->
+<!--                <filtering>false</filtering>-->
+<!--                <includes>-->
+<!--                    <include>LICENSE</include>-->
+<!--                    <include>README.md</include>-->
+<!--                    <include>CHANGES</include>-->
+<!--                </includes>-->
+<!--            </resource>-->
+<!--        </resources>-->
+<!--    </build>-->
 
-<!--  <distributionManagement>-->
-<!--    <snapshotRepository>-->
-<!--      <id>sonatype-nexus-snapshots</id>-->
-<!--      <name>Sonatype Nexus Snapshots</name>-->
-<!--      <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
-<!--    </snapshotRepository>-->
-<!--    <repository>-->
-<!--      <id>sonatype-nexus-staging</id>-->
-<!--      <name>Nexus Release Repository</name>-->
-<!--      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
-<!--    </repository>-->
-<!--  </distributionManagement>-->
+<!--    <distributionManagement>-->
+<!--        <snapshotRepository>-->
+<!--            <id>sonatype-nexus-snapshots</id>-->
+<!--            <name>Sonatype Nexus Snapshots</name>-->
+<!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
+<!--        </snapshotRepository>-->
+<!--        <repository>-->
+<!--            <id>sonatype-nexus-staging</id>-->
+<!--            <name>Nexus Release Repository</name>-->
+<!--            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
+<!--        </repository>-->
+<!--    </distributionManagement>-->
 
-  <dependencies>
+<!--    <profiles>-->
+<!--        <profile>-->
+<!--            <id>release-sign-artifacts</id>-->
+<!--            <activation>-->
+<!--                <property>-->
+<!--                    <name>performRelease</name>-->
+<!--                    <value>true</value>-->
+<!--                </property>-->
+<!--            </activation>-->
+<!--            <build>-->
+<!--                <plugins>-->
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>sign-artifacts</id>-->
+<!--                                <phase>verify</phase>-->
+<!--                                <goals>-->
+<!--                                    <goal>sign</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+<!--                </plugins>-->
+<!--            </build>-->
+<!--        </profile>-->
+<!--        <profile>-->
+<!--            <id>failsafe</id>-->
+<!--            <build>-->
+<!--                <plugins>-->
+<!--                    <plugin>-->
+<!--                        <artifactId>maven-failsafe-plugin</artifactId>-->
+<!--                        <version>3.0.0-M5</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <goals>-->
+<!--                                    <goal>integration-test</goal>-->
+<!--                                    <goal>verify</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+<!--                </plugins>-->
+<!--            </build>-->
+<!--        </profile>-->
+<!--    </profiles>-->
+
+    <dependencies>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
@@ -103,30 +153,25 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-        <!-- gson, to fetch entities from w3.org -->
+
+        <!-- junit -->
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+<!--            <version>5.8.1</version>-->
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <!-- gson, to fetch entities from w3.org -->
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+<!--            <version>2.8.8</version>-->
             <scope>test</scope>
         </dependency>
 
-        <!--
-        Evaluate simple mathematical and boolean expressions.
-        https://github.com/uklimaschewski/EvalEx
-        -->
         <dependency>
-            <groupId>com.udojava</groupId>
-            <artifactId>EvalEx</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- jetty for webserver integration tests. 9.2 is last with Java7 support -->
-        <dependency>
+            <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty.version}</version>
@@ -134,6 +179,7 @@
         </dependency>
 
         <dependency>
+            <!-- jetty for webserver integration tests -->
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <version>${jetty.version}</version>
@@ -141,22 +187,29 @@
         </dependency>
 
         <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-common</artifactId>
+            <!-- javax.annotations.nonnull, with Apache 2 (not GPL) license. Build time only. -->
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+            <scope>provided</scope>
         </dependency>
-
     </dependencies>
 
-  <developers>
-    <developer>
-      <id>jhy</id>
-      <name>Jonathan Hedley</name>
-      <email>jonathan@hedley.net</email>
-      <roles>
-        <role>Lead Developer</role>
-      </roles>
-      <timezone>+11</timezone>
-    </developer>
-  </developers>
+    <dependencyManagement>
+        <dependencies>
+        </dependencies>
+    </dependencyManagement>
+
+    <developers>
+        <developer>
+            <id>jhy</id>
+            <name>Jonathan Hedley</name>
+            <email>jonathan@hedley.net</email>
+            <roles>
+                <role>Lead Developer</role>
+            </roles>
+            <timezone>+11</timezone>
+        </developer>
+    </developers>
 
 </project>

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.dom.nodes.node.ext.isAncestorOf
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.*
@@ -20,23 +19,6 @@ object PowerCollector {
     }
 
     fun findFirst(eval: Evaluator, root: Element): Element? {
-        val finder = FirstFinder(root, eval)
-        NodeTraversor.filter(finder, root)
-        return finder.match
-    }
-
-    fun findFirstAccelerated(eval: Evaluator, root: Element): Element? {
-        if (eval is CombiningEvaluator) {
-            val first = eval.evaluators[0]
-            if (first is Evaluator.Id) {
-                val node = root.ownerDocument().variables[first.toString()]
-                if (node is Element && root.isAncestorOf(node)) {
-                    val eval0 = CombiningEvaluator.And(eval.evaluators.drop(0))
-                    return findFirstAccelerated(eval0, node)
-                }
-            }
-        }
-
         val finder = FirstFinder(root, eval)
         NodeTraversor.filter(finder, root)
         return finder.match
