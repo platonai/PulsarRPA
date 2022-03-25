@@ -1,25 +1,19 @@
 package ai.platon.pulsar.protocol.browser.driver.playwright
 
-import ai.platon.pulsar.browser.driver.BlockRules
-import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.browser.common.BlockRules
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
-import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
-import com.github.kklisura.cdt.protocol.types.page.Viewport
 import com.microsoft.playwright.Locator
-import com.microsoft.playwright.Mouse
 import com.microsoft.playwright.Page
-import com.microsoft.playwright.PlaywrightException
 import com.microsoft.playwright.options.Position
 import com.microsoft.playwright.options.WaitUntilState
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger

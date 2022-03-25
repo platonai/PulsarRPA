@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver
+package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
@@ -7,12 +7,16 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
+import com.yahoo.platform.yui.compressor.JavaScriptCompressor
+import java.io.StringReader
+import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import kotlin.io.path.isReadable
 import kotlin.io.path.listDirectoryEntries
 import kotlin.random.Random
+
 
 /**
  * The chrome display mode
@@ -249,17 +253,7 @@ open class BrowserSettings(
         }
 
         if (preloadJs.isEmpty()) {
-            val sb = StringBuilder()
-
-            val jsVariables = generatePredefinedJsVariables()
-            sb.appendLine(jsVariables).appendLine("\n\n\n")
-
-            loadExternalResource()
-            loadDefaultResource()
-            preloadJavaScripts.values.joinTo(sb, ";\n")
-            preloadJs = sb.toString()
-
-            reportPreloadJs()
+            loadJs()
         }
 
         return preloadJs
@@ -313,7 +307,22 @@ open class BrowserSettings(
 
     open fun loadDefaultResource() {
         preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
-            ResourceLoader.readAllLines(it).joinToString("\n") { it } }
+            ResourceLoader.readAllLines(it).joinToString("\n") { it }
+        }
+    }
+
+    private fun loadJs() {
+        val sb = StringBuilder()
+
+        val jsVariables = generatePredefinedJsVariables()
+        sb.appendLine(jsVariables).appendLine("\n\n\n")
+
+        loadExternalResource()
+        loadDefaultResource()
+        preloadJavaScripts.values.joinTo(sb, ";\n")
+
+        preloadJs = sb.toString()
+        reportPreloadJs(preloadJs)
     }
 
     private fun loadExternalResource() {
@@ -326,12 +335,13 @@ open class BrowserSettings(
         }
     }
 
-    private fun reportPreloadJs() {
-        val report = AppPaths.REPORT_DIR.resolve("browser/js/preload.js")
-        if (!Files.exists(report)) {
-            Files.createDirectories(report.parent)
+    private fun reportPreloadJs(script: String) {
+        val dir = AppPaths.REPORT_DIR.resolve("browser/js")
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir)
         }
-        Files.writeString(report, preloadJs)
+
+        val report = Files.writeString(dir.resolve("preload.js"), script)
         logger.info("Generated js: file://$report")
     }
 }

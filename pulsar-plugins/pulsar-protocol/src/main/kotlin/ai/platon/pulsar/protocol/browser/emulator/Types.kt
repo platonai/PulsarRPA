@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.EmulateSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask

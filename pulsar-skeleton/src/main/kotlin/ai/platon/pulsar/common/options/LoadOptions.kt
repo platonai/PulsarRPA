@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.browser.driver.EmulateSettings
+import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params

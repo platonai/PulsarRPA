@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
-import ai.platon.pulsar.browser.driver.BlockRules
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BlockRules
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException

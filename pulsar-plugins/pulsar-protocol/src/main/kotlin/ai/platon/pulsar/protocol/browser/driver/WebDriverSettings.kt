@@ -15,7 +15,7 @@
 
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 

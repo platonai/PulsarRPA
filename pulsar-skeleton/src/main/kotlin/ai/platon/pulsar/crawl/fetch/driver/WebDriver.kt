@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import java.io.Closeable

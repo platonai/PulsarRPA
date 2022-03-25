@@ -1,37 +1,5 @@
 "use strict";
 
-const fineHeight = 4000;
-const fineNumAnchor = 100;
-const fineNumImage = 20;
-
-class MultiStatus {
-    /**
-     * n: check count
-     * scroll: scroll count
-     * idl: idle count
-     * st: document state
-     * r: complete reason
-     * ec: error code
-     * */
-    status =   { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" };
-    initStat = null;
-    lastStat = { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
-    lastD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
-    initD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
-}
-
-class ActiveUrls {
-    URL = document.URL;
-    baseURI = document.baseURI;
-    location = "";
-    documentURI = document.documentURI
-}
-
-class ActiveDomMessage {
-    multiStatus = new MultiStatus();
-    urls = new ActiveUrls()
-}
-
 let __pulsar_utils__ = function () {};
 
 /**
@@ -549,7 +517,7 @@ __pulsar_utils__.formatDOMRect = function(rect) {
  * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
  *
  * @param node {Node|Element|Text}
- * @return {DOMRect|Boolean}
+ * @return {DOMRect|Boolean|null}
  * */
 __pulsar_utils__.getClientRect = function(node) {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -566,7 +534,7 @@ __pulsar_utils__.getClientRect = function(node) {
  *
  * @param node {Node|Element|Text}
  * @param propertyNames {Array}
- * @return {Object|Boolean}
+ * @return {Object|Boolean|null}
  * */
 __pulsar_utils__.getComputedStyle = function(node, propertyNames) {
     if (node.nodeType === Node.ELEMENT_NODE) {

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.ImmutableConfig

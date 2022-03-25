@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.common
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
 import java.time.Duration
 
 /**

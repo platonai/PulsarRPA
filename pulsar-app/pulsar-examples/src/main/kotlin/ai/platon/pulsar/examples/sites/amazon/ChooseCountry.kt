@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.amazon
 
 import ai.platon.pulsar.amazon.environment.ChooseCountry
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.withContext

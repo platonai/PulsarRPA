@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.driver.EmulateSettings
+import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY

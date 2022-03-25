@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.hotfix.sites.amazon
 
-import ai.platon.pulsar.browser.driver.BlockRules
+import ai.platon.pulsar.browser.common.BlockRules
 
 class AmazonBlockRules: BlockRules() {
     /**

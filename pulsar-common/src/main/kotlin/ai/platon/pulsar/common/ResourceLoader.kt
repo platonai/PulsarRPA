@@ -104,8 +104,25 @@ object ResourceLoader {
     }
 
     fun readAllLines(fileResource: String): List<String> {
+        return readAllLines(fileResource, true)
+    }
+
+    fun readAllLines(fileResource: String, filter: Boolean): List<String> {
+        if (!filter) {
+            return readAllLinesNoFilter(fileResource)
+        }
+
         return getResourceAsReader(fileResource)?.useLines {
-            it.filter { it.isNotBlank() }.filter { !it.startsWith("#") }.toList()
+            it.filter { it.isNotBlank() }
+                .filter { !it.startsWith("# ") }
+                .filter { !it.startsWith("-- ") }
+                .toList()
+        } ?: listOf()
+    }
+
+    fun readAllLinesNoFilter(fileResource: String): List<String> {
+        return getResourceAsReader(fileResource)?.useLines {
+            it.toList()
         } ?: listOf()
     }
 

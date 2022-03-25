@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.test
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -18,7 +18,7 @@ class MockWebDriver(
     browserInstanceId: BrowserInstanceId,
     backupDriverCreator: () -> ChromeDevtoolsDriver,
 ) : AbstractWebDriver(browserInstanceId) {
-    private val log = LoggerFactory.getLogger(MockWebDriver::class.java)!!
+    private val logger = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
     private val backupDriver by lazy { backupDriverCreator() }
 
@@ -50,7 +50,7 @@ class MockWebDriver(
     }
 
     override suspend fun navigateTo(url: String) {
-        log.info("Mock navigate to {}", url)
+        logger.info("Mock navigate to {}", url)
 
         if (lastSessionId == null) {
             lastSessionId = UUID.randomUUID().toString()
@@ -58,7 +58,7 @@ class MockWebDriver(
         navigateUrl = url
         mockPageSource = loadMockPageSourceOrNull(url)
         if (mockPageSource == null) {
-            log.info("Resource does not exist, fallback to PlaywrightDriver | {}", url)
+            logger.info("Resource does not exist, fallback to PlaywrightDriver | {}", url)
         }
 
         backupDriverOrNull?.navigateTo(url)
@@ -117,7 +117,7 @@ class MockWebDriver(
             }
         }
 
-        log.info("Loading from path: \n{}", mockPath)
+        logger.info("Loading from path: \n{}", mockPath)
         return mockPath.takeIf { Files.exists(it) }?.let { Files.readString(it) }
     }
 

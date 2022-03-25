@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.driver.BrowserSettings
-import ai.platon.pulsar.browser.driver.EmulateSettings
+import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -13,12 +13,10 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.dom.nodes.node.ext.ExportPaths
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
