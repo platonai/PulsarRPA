@@ -19,10 +19,12 @@ abstract class PrivacyContextMonitor(
 ): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
 
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
-    protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
+    private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
+    private val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
 
-    val privacyContextIdGenerator get() = PrivacyContextIdGeneratorFactory(conf).generator
+    open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
+
     val isActive get() = !closed.get() && AppContext.isActive
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
@@ -70,13 +72,13 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing privacy contexts")
+            logger.info("Closing privacy contexts")
 
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
 
             zombieContexts.toList().parallelStream().forEach {
-                kotlin.runCatching { it.close() }.onFailure { log.warn(it.stringify()) }
+                kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) }
             }
         }
     }
@@ -87,7 +89,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             val postfix = " (success/sec)"
             zombieContexts.take(15)
                     .joinToString(", ", prefix, postfix) { String.format("%.2f", it.meterSuccesses.meanRate) }
-                    .let { log.info(it) }
+                    .let { logger.info(it) }
         }
     }
 }

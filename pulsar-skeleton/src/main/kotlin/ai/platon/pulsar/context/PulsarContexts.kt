@@ -16,9 +16,7 @@ object PulsarContexts {
     @Synchronized
     fun activate(): PulsarContext {
         if (activeContext == null) {
-            val context = activate(StaticPulsarContext())
-            // TODO: better way to start the crawl loop
-            context.crawlLoops.start()
+            activeContext = activate(StaticPulsarContext())
         }
         return activeContext!!
     }
@@ -35,6 +33,11 @@ object PulsarContexts {
         activeContext = context
         context.registerShutdownHook()
         logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
+
+        if (!context.crawlLoops.isStarted) {
+            context.crawlLoops.start()
+        }
+
         return context
     }
 

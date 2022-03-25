@@ -1,12 +1,17 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.StartStopRunnable
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Predicate
 
 class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
     companion object {
         val filters = mutableListOf<Predicate<CrawlLoop>>()
     }
+
+    private val started = AtomicBoolean()
+
+    val isStarted get() = started.get()
 
     fun first() = loops.first()
 
@@ -17,12 +22,16 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
     inline fun <reified T: CrawlLoop> lastIsInstance() = loops.filterIsInstance<T>().last()
 
     override fun start() {
-        loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
-            .forEach { it.start() }
+        if (started.compareAndSet(false, true)) {
+            loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
+                .forEach { it.start() }
+        }
     }
 
     override fun stop() {
-        loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
-            .forEach { it.stop() }
+        if (started.compareAndSet(true, false)) {
+            loops.filter { loop -> filters.isEmpty() || filters.all { it.test(loop) } }
+                .forEach { it.stop() }
+        }
     }
 }

@@ -79,7 +79,7 @@ class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
 }
 
 class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
-    private val log = LoggerFactory.getLogger(PrivacyContextIdGeneratorFactory::class.java)
+    private val logger = LoggerFactory.getLogger(PrivacyContextIdGeneratorFactory::class.java)
     val generator by lazy { createIfAbsent(conf) }
 
     private fun createIfAbsent(conf: ImmutableConfig): PrivacyContextIdGenerator {
@@ -87,10 +87,13 @@ class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
         val clazz = try {
             conf.getClass(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, defaultClazz)
         } catch (e: Exception) {
-            log.warn("Configured proxy loader {}({}) is not found, use default ({})",
+            logger.warn("Configured proxy loader {}({}) is not found, use default ({})",
                     CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, conf.get(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS), defaultClazz.simpleName)
             defaultClazz
         }
+
+        logger.info("Using id generator {}", clazz)
+
         return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyContextIdGenerator
     }
 }

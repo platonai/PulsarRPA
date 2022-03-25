@@ -10,23 +10,26 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import org.slf4j.LoggerFactory
 
 class BasicPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
     val proxyPoolManager: ProxyPoolManager? = null,
     val coreMetrics: CoreMetrics? = null,
-    immutableConfig: ImmutableConfig
-): PrivacyManager(immutableConfig) {
-    constructor(driverPoolManager: WebDriverPoolManager, immutableConfig: ImmutableConfig)
-            : this(driverPoolManager, null, null, immutableConfig)
+    config: ImmutableConfig
+): PrivacyManager(config) {
+    private val logger = LoggerFactory.getLogger(BasicPrivacyContextManager::class.java)
+
+    constructor(driverPoolManager: WebDriverPoolManager, config: ImmutableConfig)
+            : this(driverPoolManager, null, null, config)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
-        return run0(computeIfAbsent(privacyContextIdGenerator()), task, fetchFun)
+        return run0(computeNextContext(), task, fetchFun)
     }
 
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, id)
-        log.info("Privacy context is created #{} | {}", context.display, this::class.java.name)
+        logger.info("Privacy context is created #{} | {}", context.display, this::class.java.name)
         return context
     }
 
