@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
- * Main entry point for Pulsar functionality.
+ * The main entry point for pulsar functionality.
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
@@ -45,7 +45,7 @@ abstract class AbstractPulsarContext(
         val instanceSequencer = AtomicInteger()
     }
 
-    private val log = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
+    private val logger = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
 
     override val id = instanceSequencer.incrementAndGet()
 
@@ -146,7 +146,7 @@ abstract class AbstractPulsarContext(
 
     override fun closeSession(session: PulsarSession) {
         session.close()
-        log.info("Removing PulsarSession #{}", session.id)
+        logger.info("Removing PulsarSession #{}", session.id)
         sessions.remove(session.id)
     }
 
@@ -388,17 +388,17 @@ abstract class AbstractPulsarContext(
         AppContext.beginTerminate()
 
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
+            logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
             sessions.values.forEach {
-                it.runCatching { it.close() }.onFailure { log.warn(it.message) }
+                it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
             }
 
             closableObjects.forEach {
-                it.runCatching { it.close() }.onFailure { log.warn(it.message) }
+                it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
             }
 
-            kotlin.runCatching { crawlLoops.stop() }.onFailure { log.warn(it.message) }
+            kotlin.runCatching { crawlLoops.stop() }.onFailure { logger.warn(it.message) }
 
             applicationContext.close()
         }

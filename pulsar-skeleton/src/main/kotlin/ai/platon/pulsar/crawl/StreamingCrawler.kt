@@ -88,6 +88,10 @@ open class StreamingCrawler<T : UrlAware>(
      * */
     val name: String = "StreamingCrawler",
     /**
+     * Do not use proxy
+     * */
+    val noProxy: Boolean = true,
+    /**
      * Auto close or not
      * */
     autoClose: Boolean = true,
@@ -155,6 +159,7 @@ open class StreamingCrawler<T : UrlAware>(
     val isIdle get() = idleTime > idleTimeout
     val defaultArgs = defaultOptions.toString()
 
+    private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull()
     private var proxyOutOfService = 0
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
@@ -164,8 +169,6 @@ open class StreamingCrawler<T : UrlAware>(
     private var flowState = FlowState.CONTINUE
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
-
-    var proxyPool: ProxyPool? = null
 
     val id = instanceSequencer.incrementAndGet()
 

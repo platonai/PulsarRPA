@@ -116,6 +116,14 @@
         </profile>
 
         <profile>
+            <id>lib-bundle</id>
+
+            <modules>
+                <module>pulsar-lib-bundle</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>platon-release</id>
             <properties>
                 <platon-release-active>true</platon-release-active>

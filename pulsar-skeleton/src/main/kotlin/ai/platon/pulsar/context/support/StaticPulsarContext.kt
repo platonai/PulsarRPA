@@ -3,18 +3,12 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.StreamingCrawlLoop
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import org.springframework.context.support.StaticApplicationContext
 
-/**
- * Main entry point for Pulsar functionality.
- *
- * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
- */
 class StaticPulsarContext(
     override val applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : BasicPulsarContext(applicationContext) {

@@ -3,7 +3,6 @@ package ai.platon.pulsar.app.crawler
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -30,11 +29,6 @@ class PulsarCrawler(
         LinkExtractors.fromResource(resource)
             .map { Hyperlink(it, args = "-i 1s") }
             .toCollection(fetchCache.nReentrantQueue)
-    }
-
-    @Bean(initMethod = "start", destroyMethod = "stop")
-    fun fetch(): StreamingCrawlLoop {
-        return StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)
     }
 }
 

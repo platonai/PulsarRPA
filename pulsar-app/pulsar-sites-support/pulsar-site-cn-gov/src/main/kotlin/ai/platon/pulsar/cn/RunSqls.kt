@@ -30,6 +30,4 @@ from
         .filter { "loadOutPagesAndExtractArticles" in it.sql }
 
     VerboseSQLRunner(cx).executeAll(sqls)
-
-    exitProcess(0)
 }

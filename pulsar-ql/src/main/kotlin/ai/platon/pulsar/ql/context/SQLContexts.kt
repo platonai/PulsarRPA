@@ -54,16 +54,6 @@ class StaticH2SQLContext(
     override val applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
 
-    companion object {
-        fun create(): StaticH2SQLContext {
-            return StaticH2SQLContext().also { it.crawlLoops.start() }
-        }
-
-        fun create(applicationContext: StaticApplicationContext): StaticH2SQLContext {
-            return StaticH2SQLContext(applicationContext).also { it.crawlLoops.start() }
-        }
-    }
-
     /**
      * The unmodified config
      * */

@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger
 interface CrawlLoop: StartStopRunnable {
     val id: Int
     val name: String
-    val unmodifiedConfig: ImmutableConfig
+    val config: ImmutableConfig
     val defaultOptions: LoadOptions
-    val fetchIterable: Iterable<UrlAware>
+    val fetchTaskIterable: Iterable<UrlAware>
     val collectors: List<out DataCollector<UrlAware>>
     val crawler: Crawler
     val abstract: String
@@ -23,7 +23,7 @@ interface CrawlLoop: StartStopRunnable {
 
 abstract class AbstractCrawlLoop(
     override val name: String,
-    override val unmodifiedConfig: ImmutableConfig
+    override val config: ImmutableConfig
 ) : CrawlLoop {
     companion object {
         val idGen = AtomicInteger()
@@ -34,21 +34,21 @@ abstract class AbstractCrawlLoop(
     /**
      * Data collector lower capacity
      * */
-    override var defaultOptions: LoadOptions = LoadOptions.create(unmodifiedConfig.toVolatileConfig())
+    override var defaultOptions: LoadOptions = LoadOptions.create(config.toVolatileConfig())
 
     /**
      * The fetch iterable from which all fetch tasks are taken
      * */
-    abstract override val fetchIterable: MultiSourceHyperlinkIterable
+    abstract override val fetchTaskIterable: MultiSourceHyperlinkIterable
     /**
      * The shortcut for all collectors
      * */
     override val collectors: List<PriorityDataCollector<UrlAware>>
-        get() = fetchIterable.collectors
+        get() = fetchTaskIterable.collectors
 
     abstract override val crawler: AbstractCrawler
 
-    override val abstract: String get() = fetchIterable.abstract
+    override val abstract: String get() = fetchTaskIterable.abstract
 
-    override val report: String get() = fetchIterable.report
+    override val report: String get() = fetchTaskIterable.report
 }

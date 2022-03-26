@@ -4,7 +4,7 @@ import ai.platon.pulsar.BasicPulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 
 /**
- * Main entry point for Pulsar functionality.
+ * The main entry point for pulsar functionality.
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */

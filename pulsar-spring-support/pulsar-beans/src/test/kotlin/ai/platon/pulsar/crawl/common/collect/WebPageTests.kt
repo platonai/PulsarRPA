@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.common.collect
 
 import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds

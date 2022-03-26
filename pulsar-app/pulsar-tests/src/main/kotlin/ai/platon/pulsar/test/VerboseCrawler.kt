@@ -16,8 +16,6 @@ open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
 ): AutoCloseable {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
-    // trigger loop start
-    val crawlLoop = session.context.crawlLoops
 
     var eventHandler: EmulateEventHandler? = null
 
