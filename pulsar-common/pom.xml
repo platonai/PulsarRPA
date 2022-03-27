@@ -42,6 +42,7 @@
         </dependency>
 
         <!-- For ai.platon.pulsar.common.EncodingDetector -->
+        <!-- TODO: use tika -->
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
@@ -70,28 +71,25 @@
             <artifactId>commons-collections4</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sf.trove4j</groupId>
-            <artifactId>trove4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
 
-        <!-- DOM process -->
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>xerces</groupId>-->
+<!--            <artifactId>xercesImpl</artifactId>-->
+<!--        </dependency>-->
+
+        <!--
+            Woodstox is required by KConfiguration to parse xml files.
+            Woodstox is a high-performance XML processor that implements Stax (JSR-173), SAX2 and Stax2 APIs
+         -->
         <dependency>
             <groupId>org.codehaus.woodstox</groupId>
             <artifactId>stax2-api</artifactId>
             <version>3.1.4</version>
             <scope>compile</scope>
         </dependency>
-        <!--
-            Woodstox is a high-performance XML processor that implements Stax (JSR-173), SAX2 and Stax2 APIs
-         -->
         <dependency>
             <groupId>com.fasterxml.woodstox</groupId>
             <artifactId>woodstox-core</artifactId>

@@ -18,14 +18,11 @@ package ai.platon.pulsar.common;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.xerces.parsers.DOMParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -33,7 +30,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 /**
@@ -45,38 +44,6 @@ import java.util.Set;
 public class DomUtil {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomUtil.class);
-
-    /**
-     * Returns parsed dom tree or null if any error
-     *
-     * @param is a {@link java.io.InputStream} object.
-     * @return A parsed DOM tree from the given {@link java.io.InputStream}.
-     */
-    public static Element getDom(InputStream is) {
-
-        Element element = null;
-
-        DOMParser parser = new DOMParser();
-
-        InputSource input;
-        try {
-            input = new InputSource(is);
-            input.setEncoding("UTF-8");
-            parser.parse(input);
-            int i = 0;
-            while (!(parser.getDocument().getChildNodes().item(i) instanceof Element)) {
-                i++;
-            }
-            element = (Element) parser.getDocument().getChildNodes().item(i);
-        } catch (FileNotFoundException e) {
-            LOG.error("Failed to find file: ", e);
-        } catch (SAXException e) {
-            LOG.error("Failed with the following SAX exception: ", e);
-        } catch (IOException e) {
-            LOG.error("Failed with the following IOException", e);
-        }
-        return element;
-    }
 
     /**
      * save dom into ouputstream

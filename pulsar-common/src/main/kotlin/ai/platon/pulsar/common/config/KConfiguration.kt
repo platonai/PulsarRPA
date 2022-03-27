@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.config
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.AbstractConfiguration.Companion.APPLICATION_SPECIFIED_RESOURCES
 import ai.platon.pulsar.common.stringify
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
