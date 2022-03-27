@@ -207,7 +207,7 @@ class ProxyContext(
         }
     }
 
-    private val log = LoggerFactory.getLogger(ProxyContext::class.java)!!
+    private val logger = LoggerFactory.getLogger(ProxyContext::class.java)!!
     /**
      * If the number of success exceeds [maxFetchSuccess], emit a PrivacyRetry result
      * */
@@ -261,17 +261,17 @@ class ProxyContext(
                 throw e
             }
             is ProxyRetiredException -> {
-                log.warn("{}, context reset will be triggered | {}", e.message, task.proxyEntry?:"<no proxy>")
+                logger.warn("{}, context reset will be triggered | {}", e.message, task.proxyEntry?:"<no proxy>")
                 FetchResult.privacyRetry(task, reason = e)
             }
             is NoProxyException -> {
                 numProxyAbsence.incrementAndGet()
                 checkProxyAbsence()
-                log.warn("No proxy available temporary the {}th times, cause: {}", numProxyAbsence, e.message)
+                logger.warn("No proxy available temporary the {}th times, cause: {}", numProxyAbsence, e.message)
                 FetchResult.crawlRetry(task)
             }
             else -> {
-                log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
+                logger.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
                 FetchResult.privacyRetry(task)
             }
         }
@@ -299,7 +299,7 @@ class ProxyContext(
             if (successPages > limit) {
                 // If a proxy served to many pages, the target site may track the finger print of the crawler
                 // and also maxFetchSuccess can be used for test purpose
-                log.info("Served too many pages ($successPages/$maxFetchSuccess) | {}", it)
+                logger.info("Served too many pages ($successPages/$maxFetchSuccess) | {}", it)
                 if (closing.compareAndSet(false, true)) {
                     throw ProxyRetiredException("Served too many pages")
                 }
@@ -326,7 +326,7 @@ class ProxyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyPoolManager.activeProxyEntries.remove(driverContext.browserId.dataDir)
+            proxyPoolManager.activeProxyEntries.remove(driverContext.browserId.contextDir)
         }
     }
 }

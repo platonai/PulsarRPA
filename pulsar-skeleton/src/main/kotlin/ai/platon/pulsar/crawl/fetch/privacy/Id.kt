@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.persist.metadata.BrowserType
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -28,23 +29,23 @@ data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
 }
 
 data class BrowserInstanceId(
-        val dataDir: Path,
-        var proxyServer: String? = null
+    val contextDir: Path,
+    var browserType: BrowserType,
+    var proxyServer: String? = null
 ): Comparable<BrowserInstanceId> {
 
-    val contextDir = dataDir.parent
-    val ident = contextDir.last().toString()
+    val userDataDir = contextDir.resolve(browserType.name.lowercase())
+    val ident = contextDir.last().toString() + browserType.ordinal
     val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
-    override fun hashCode() = dataDir.hashCode()
-    override fun equals(other: Any?) = other is BrowserInstanceId && dataDir == other.dataDir
-    override fun compareTo(other: BrowserInstanceId) = dataDir.compareTo(other.dataDir)
-    override fun toString() = "$dataDir"
+    override fun hashCode() = userDataDir.hashCode()
+    override fun equals(other: Any?): Boolean {
+        return other is BrowserInstanceId && browserType == other.browserType && userDataDir == other.userDataDir
+    }
+    override fun compareTo(other: BrowserInstanceId) = userDataDir.compareTo(other.userDataDir)
+    override fun toString() = "$userDataDir"
 
     companion object {
-        val DIR_NAME = "browser"
-        val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
-
-        fun resolve(baseDir: Path) = BrowserInstanceId(baseDir.resolve(DIR_NAME))
+        val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, BrowserType.CHROME)
     }
 }
 

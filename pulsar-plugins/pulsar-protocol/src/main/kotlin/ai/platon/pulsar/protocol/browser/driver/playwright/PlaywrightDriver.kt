@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
@@ -60,7 +61,7 @@ class PlaywrightDriver(
 
         initSpecialSiteBeforeVisit(url)
 
-        browserInstance.navigateHistory.add(url)
+        browserInstance.navigateHistory.add(NavigateEntry(url))
         lastActiveTime = Instant.now()
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
@@ -72,7 +73,7 @@ class PlaywrightDriver(
         if (isFirstLaunch) {
             // the first visit to jd.com
             val isFirstJdVisit = url.contains("jd.com")
-                    && browserInstance.navigateHistory.none { it.contains("jd.com") }
+                    && browserInstance.navigateHistory.none { it.url.contains("jd.com") }
             if (isFirstJdVisit) {
                 // JdInitializer().init(page)
             }

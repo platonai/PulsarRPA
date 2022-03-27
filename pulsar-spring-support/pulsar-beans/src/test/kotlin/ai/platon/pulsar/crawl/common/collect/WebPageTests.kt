@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.common.collect
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.message.LoadedPageFormatter
@@ -30,11 +31,11 @@ class WebPageTests {
 
     @Test
     fun testFetchTime() {
+        // BrowserSettings.withBrowser(BrowserType.PLAYWRIGHT_CHROME.name)
+
         val args = "-i 5s -njr 3"
         val normalizedArgs = "-expires PT5S -nJitRetry 3"
         val option = session.options(args)
-
-//        option.browser = BrowserType.PLAYWRIGHT_CHROME
 
         // expired, so the page should be fetched
         var page = session.load(url, option)

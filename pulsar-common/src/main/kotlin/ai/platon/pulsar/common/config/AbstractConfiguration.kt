@@ -45,7 +45,8 @@ abstract class AbstractConfiguration {
     val mode get() = if (isDistributedFs) "cluster" else "local"
 
     /**
-     * we will remove dependency on [KConfiguration] later
+     * Hadoop compatible configuration
+     * TODO: we will remove dependency on [KConfiguration] later
      */
     protected val conf: KConfiguration
 

@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory
 typealias HadoopConfiguration = org.apache.hadoop.conf.Configuration
 
 object HadoopUtils {
-    private val LOG = LoggerFactory.getLogger(HadoopUtils::class.java)
 
     fun toHadoopConfiguration(conf: ImmutableConfig): HadoopConfiguration {
         val hadoopConfiguration = HadoopConfiguration()
@@ -37,17 +36,5 @@ object HadoopUtils {
         }
 
         return hadoopConfiguration
-    }
-
-    /**
-     * TODO: use a wrapper to HadoopConfiguration
-     * */
-    fun toMutableConfig(conf: HadoopConfiguration): MutableConfig {
-        val config = MutableConfig()
-        // TODO: read all resources from conf
-        conf.forEach { (k, v) ->
-            config[k] = v
-        }
-        return config
     }
 }

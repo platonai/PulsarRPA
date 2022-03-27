@@ -1,5 +1,37 @@
 "use strict";
 
+const fineHeight = 4000;
+const fineNumAnchor = 100;
+const fineNumImage = 20;
+
+class MultiStatus {
+    /**
+     * n: check count
+     * scroll: scroll count
+     * idl: idle count
+     * st: document state
+     * r: complete reason
+     * ec: error code
+     * */
+    status =   { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" };
+    initStat = null;
+    lastStat = { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
+    lastD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
+    initD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
+}
+
+class ActiveUrls {
+    URL = document.URL;
+    baseURI = document.baseURI;
+    location = "";
+    documentURI = document.documentURI
+}
+
+class ActiveDomMessage {
+    multiStatus = new MultiStatus();
+    urls = new ActiveUrls()
+}
+
 let __pulsar_utils__ = function () {};
 
 /**
@@ -24,13 +56,13 @@ __pulsar_utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
         return false
     }
 
-    if (!document.pulsarData) {
+    if (!document.__pulsar__Data) {
         // initialization
         __pulsar_utils__.createPulsarDataIfAbsent();
         __pulsar_utils__.updatePulsarStat(true);
     }
 
-    let status = document.pulsarData.multiStatus.status;
+    let status = document.__pulsar__Data.multiStatus.status;
     status.n += 1;
 
     // start count down latch
@@ -49,15 +81,15 @@ __pulsar_utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
     }
 
     if (__pulsar_utils__.isBrowserError()) {
-        document.pulsarData.multiStatus.status.ec = document.querySelector(".error-code").textContent
+        document.__pulsar__Data.multiStatus.status.ec = document.querySelector(".error-code").textContent
     }
 
     // The document is ready
-    return JSON.stringify(document.pulsarData)
+    return JSON.stringify(document.__pulsar__Data)
 };
 
 __pulsar_utils__.createPulsarDataIfAbsent = function() {
-    if (!document.pulsarData) {
+    if (!document.__pulsar__Data) {
         let location = "";
         if (window.location instanceof Location) {
             location = window.location.href
@@ -65,7 +97,7 @@ __pulsar_utils__.createPulsarDataIfAbsent = function() {
             location = window.location
         }
 
-        document.pulsarData = {
+        document.__pulsar__Data = {
             multiStatus: {
                 status: { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" },
                 initStat: null,
@@ -97,8 +129,8 @@ __pulsar_utils__.writePulsarData = function() {
     script.id = SCRIPT_SECTION_ID;
     script.type = 'text/javascript';
 
-    let pulsarData = JSON.stringify(document.pulsarData, null, 3);
-    script.textContent = "\n" + `;let pulsarData = ${pulsarData};\n`;
+    let pulsarData = JSON.stringify(document.__pulsar__Data, null, 3);
+    script.textContent = "\n" + `;let __pulsar__Data = ${pulsarData};\n`;
 
     document.body.appendChild(script);
 };
@@ -115,12 +147,12 @@ __pulsar_utils__.isActuallyReady = function() {
 
     __pulsar_utils__.updatePulsarStat();
 
-    if (!document.pulsarData) {
+    if (!document.__pulsar__Data) {
         return false
     }
 
     let ready = false;
-    let multiStatus = document.pulsarData.multiStatus;
+    let multiStatus = document.__pulsar__Data.multiStatus;
     let status = multiStatus.status;
     let d = multiStatus.lastD;
 
@@ -150,7 +182,7 @@ __pulsar_utils__.isActuallyReady = function() {
 
 __pulsar_utils__.isIdle = function(init = false) {
     let idle = false;
-    let multiStatus = document.pulsarData.multiStatus;
+    let multiStatus = document.__pulsar__Data.multiStatus;
     let status = multiStatus.status;
     let d = multiStatus.lastD;
     if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
@@ -222,11 +254,11 @@ __pulsar_utils__.updatePulsarStat = function(init = false) {
     }
 
     // unexpected but occurs when do performance test to parallel harvest Web sites
-    if (!document.pulsarData) {
+    if (!document.__pulsar__Data) {
         return
     }
 
-    let multiStatus = document.pulsarData.multiStatus;
+    let multiStatus = document.__pulsar__Data.multiStatus;
     let initStat = multiStatus.initStat;
     if (!initStat) {
         initStat = { w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm };
@@ -258,7 +290,7 @@ __pulsar_utils__.updatePulsarStat = function(init = false) {
         }
     };
 
-    document.pulsarData.multiStatus = Object.assign(multiStatus, newMultiStatus)
+    document.__pulsar__Data.multiStatus = Object.assign(multiStatus, newMultiStatus)
 };
 
 /**
@@ -305,7 +337,7 @@ __pulsar_utils__.scrollToTop = function() {
 };
 
 __pulsar_utils__.scrollDown = function() {
-    if (!document.pulsarData) {
+    if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
         return false
     }
@@ -314,12 +346,12 @@ __pulsar_utils__.scrollDown = function() {
 };
 
 __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
-    if (!document.pulsarData) {
+    if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
         return false
     }
 
-    let status = document.pulsarData.multiStatus.status;
+    let status = document.__pulsar__Data.multiStatus.status;
 
     window.scrollBy(0, 500);
     status.scroll += 1;
@@ -712,6 +744,7 @@ __pulsar_utils__.generateMetadata = function() {
 
     let config = PULSAR_CONFIGS || {};
 
+    // TODO: remove the attributes
     document.body.setAttribute("data-url", document.URL);
     let date = new Date();
 
@@ -774,7 +807,7 @@ __pulsar_utils__.compute = function() {
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute(DATA_ERROR, '0');
 
-    return JSON.stringify(document.pulsarData)
+    return JSON.stringify(document.__pulsar__Data)
 };
 
 __pulsar_utils__.addProjectSpecifiedData = function() {

@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.readable
@@ -12,6 +13,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.slf4j.LoggerFactory
 
@@ -25,11 +27,13 @@ open class BrowserPrivacyContext(
     conf: ImmutableConfig,
     id: PrivacyContextId
 ): PrivacyContext(id, conf) {
-    private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
-    private val browserInstanceId = BrowserInstanceId.resolve(id.dataDir)
+    private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
+    var proxyEntry: ProxyEntry? = null
+    private val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
+    // TODO: properly handle proxy entry
+    private val browserInstanceId = BrowserInstanceId(id.dataDir, browserType, proxyEntry?.hostPort)
     private val driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
-    var proxyEntry: ProxyEntry? = null
     val numFreeDrivers get() = driverPoolManager.numFreeDrivers
     val numWorkingDrivers get() = driverPoolManager.numWorkingDrivers
     val numAvailableDrivers get() = driverPoolManager.numAvailableDrivers
@@ -45,7 +49,7 @@ open class BrowserPrivacyContext(
 
     override fun report() {
         val isIdle = proxyContext?.proxyEntry?.isIdle == true
-        log.info("Privacy context #{}{}{} has lived for {}" +
+        logger.info("Privacy context #{}{}{} has lived for {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
@@ -57,13 +61,13 @@ open class BrowserPrivacyContext(
         )
 
         if (smallPageRate > 0.5) {
-            log.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
+            logger.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
                     sequence, meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
         }
 
         // 0 to disable
         if (meterSuccesses.meanRate < 0) {
-            log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
+            logger.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
         }
     }
@@ -78,6 +82,12 @@ open class BrowserPrivacyContext(
             proxyContext?.close()
         }
     }
+
+//    private fun getBrowserType(volatileConfig: VolatileConfig?): BrowserType {
+//        val defaultType = BrowserType.CHROME
+//        return volatileConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
+//            ?: conf.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
+//    }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         return when {

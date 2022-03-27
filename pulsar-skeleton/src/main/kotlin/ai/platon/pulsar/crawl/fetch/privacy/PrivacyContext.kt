@@ -49,7 +49,7 @@ abstract class PrivacyContext(
         val globalMetrics = PrivacyContextMetrics()
     }
 
-    private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
+    private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
     val sequence = instanceSequencer.incrementAndGet()
     val display get() = id.display
 
@@ -155,6 +155,6 @@ abstract class PrivacyContext(
     }
 
     open fun report() {
-        log.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())
+        logger.info("Privacy context #{} has lived for {}", sequence, elapsedTime.readable())
     }
 }

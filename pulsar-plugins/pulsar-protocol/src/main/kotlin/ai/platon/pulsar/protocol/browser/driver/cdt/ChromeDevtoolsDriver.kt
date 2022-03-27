@@ -12,6 +12,7 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
@@ -19,6 +20,7 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -43,6 +45,7 @@ class ChromeDevtoolsDriver(
     }
 
     val openSequence = 1 + browserInstance.devToolsCount
+    val tabTimeout = Duration.ofMinutes(3)
     val userAgent get() = browserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
 
@@ -55,6 +58,7 @@ class ChromeDevtoolsDriver(
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
     private val browser get() = devTools.browser
+    private var navigateEntry: NavigateEntry? = null
     private var navigateUrl = ""
     private val page get() = devTools.page
     private val dom get() = devTools.dom
@@ -99,7 +103,9 @@ class ChromeDevtoolsDriver(
 
     override suspend fun navigateTo(url: String) {
         initSpecialSiteBeforeVisit(url)
-        browserInstance.navigateHistory.add(url)
+        val entry = NavigateEntry(url)
+        navigateEntry = entry
+        browserInstance.navigateHistory.add(entry)
         lastActiveTime = Instant.now()
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
@@ -114,6 +120,8 @@ class ChromeDevtoolsDriver(
         if (!isActive) return
 
         try {
+            navigateEntry?.stopped = true
+
             if (browserInstance.isGUI) {
                 // in gui mode, just stop the loading, so we can make a diagnosis
                 page.stopLoading()
@@ -122,8 +130,10 @@ class ChromeDevtoolsDriver(
                 navigateTo(Chrome.ABOUT_BLANK_PAGE)
             }
 
+            handleRedirect()
             // dumpCookies()
-            closeIrrelevantTabs()
+            // TODO: it might be better to do this using a scheduled task
+            cleanTabs()
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to call stop loading, session is already closed, {}", e.message)
@@ -135,8 +145,15 @@ class ChromeDevtoolsDriver(
 
         try {
             val evaluate = runtime.evaluate(expression)
+
+            val exception = evaluate?.exceptionDetails?.exception
+            if (exception != null) {
+//                logger.warn(exception.value?.toString())
+//                logger.warn(exception.unserializableValue)
+                logger.warn(exception.description)
+            }
+
             val result = evaluate?.result
-            // TODO: handle errors here
             return result?.value
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
@@ -322,7 +339,7 @@ class ChromeDevtoolsDriver(
         if (isFirstLaunch) {
             // the first visit to jd.com
             val isFirstJdVisit = url.contains("jd.com")
-                    && browserInstance.navigateHistory.none { it.contains("jd.com") }
+                    && browserInstance.navigateHistory.none { it.url.contains("jd.com") }
             if (isFirstJdVisit) {
                 JdInitializer().init(page)
             }
@@ -348,12 +365,47 @@ class ChromeDevtoolsDriver(
         println(cookies)
     }
 
+    private suspend fun handleRedirect() {
+        val finalUrl = currentUrl()
+        // redirect
+        if (finalUrl.isNotBlank() && finalUrl != navigateUrl) {
+            browserInstance.navigateHistory.add(NavigateEntry(finalUrl))
+        }
+    }
+
     // close irrelevant tabs, which might be opened for humanization purpose
-    private fun closeIrrelevantTabs() {
-        browserInstance.listTab().forEach {
-            val tabUrl = it.url
-            if (tabUrl != null && tabUrl.startsWith("http") && tabUrl !in browserInstance.navigateHistory) {
-                browserInstance.closeTab(it)
+    private fun cleanTabs() {
+        val tabs = browserInstance.listTab()
+        closeTimeoutTabs(tabs)
+        closeIrrelevantTabs(tabs)
+    }
+
+    // close timeout tabs
+    private fun closeTimeoutTabs(tabs: Array<ChromeTab>) {
+        tabs.forEach { tab ->
+            val tabUrl = tab.url
+
+            if (tabUrl != null && tabUrl.startsWith("http")) {
+                val now = Instant.now()
+                val entries = browserInstance.navigateHistory.asSequence()
+                    .filter { it.url == tabUrl }
+                    .filter { it.stopped }
+                    .filter { it.createTime + tabTimeout < now }
+                    .toList()
+                if (entries.isNotEmpty()) {
+                    browserInstance.navigateHistory.removeAll(entries)
+                    browserInstance.closeTab(tab)
+                }
+            }
+        }
+    }
+
+    private fun closeIrrelevantTabs(tabs: Array<ChromeTab>) {
+        tabs.forEach { tab ->
+            val tabUrl = tab.url
+
+            if (tabUrl != null && tabUrl.startsWith("http")) {
+                // close tabs open for humanization purpose
             }
         }
     }

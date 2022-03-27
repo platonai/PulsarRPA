@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import java.nio.file.Path
@@ -25,7 +26,7 @@ class BrowserInstanceManager: AutoCloseable {
     fun launchIfAbsent(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): BrowserInstance {
-        val userDataDir = instanceId.dataDir
+        val userDataDir = instanceId.contextDir
         return browserInstances.computeIfAbsent(userDataDir.toString()) {
             createAndLaunch(instanceId, launcherOptions, launchOptions)
         }
@@ -43,11 +44,12 @@ class BrowserInstanceManager: AutoCloseable {
         }
     }
 
-    private fun createAndLaunch(instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions): BrowserInstance {
-        val userDataDir = instanceId.dataDir
-        return when(launcherOptions.browserType.uppercase()) {
-            "PLAYWRIGHT_CHROME" -> PlaywrightBrowserInstance(userDataDir, launchOptions.proxyServer, launcherOptions, launchOptions)
-            else -> ChromeDevtoolsBrowserInstance(userDataDir, launchOptions.proxyServer, launcherOptions, launchOptions)
+    private fun createAndLaunch(
+        instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+    ): BrowserInstance {
+        return when(instanceId.browserType) {
+            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
+            else -> ChromeDevtoolsBrowserInstance(instanceId, launcherOptions, launchOptions)
         }.apply { launch() }
     }
 

@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.simplify
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import com.microsoft.playwright.*
 import org.slf4j.LoggerFactory
@@ -15,11 +16,10 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
 class PlaywrightBrowserInstance(
-    userDataDir: Path,
-    proxyServer: String?,
+    id: BrowserInstanceId,
     launcherOptions: LauncherOptions,
     launchOptions: ChromeOptions
-): BrowserInstance(userDataDir, proxyServer, launcherOptions, launchOptions) {
+): BrowserInstance(id, launcherOptions, launchOptions) {
     companion object {
         private val createOptions = Playwright.CreateOptions().setEnv(mutableMapOf("PWDEBUG" to "0"))
         private val playwright = Playwright.create(createOptions)
@@ -57,8 +57,8 @@ class PlaywrightBrowserInstance(
             setViewportSize(vp.width, vp.height)
             // setChannel()
 //            setScreenSize(vp.width, vp.height)
-            if (proxyServer != null) {
-                setProxy(proxyServer)
+            if (id.proxyServer != null) {
+                setProxy(id.proxyServer)
             }
             // userAgent = browserSettings.randomUserAgent()
             this.executablePath = executablePath
@@ -73,7 +73,7 @@ class PlaywrightBrowserInstance(
         }
 
         logger.info(options.args.joinToString(" "))
-        context = browserType.launchPersistentContext(userDataDir, options)
+        context = browserType.launchPersistentContext(id.userDataDir, options)
         instanceCount.incrementAndGet()
 
         if (preloadJs.isNotBlank()) {

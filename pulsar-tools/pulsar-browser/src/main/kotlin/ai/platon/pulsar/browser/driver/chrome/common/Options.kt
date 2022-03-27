@@ -7,7 +7,6 @@ import java.time.Duration
  * The launch config
  * */
 class LauncherOptions(
-    val browserType: String = "CHROME",
     val browserSettings: BrowserSettings = BrowserSettings(),
     var supervisorProcess: String? = null,
     val supervisorProcessArgs: MutableList<String> = mutableListOf()

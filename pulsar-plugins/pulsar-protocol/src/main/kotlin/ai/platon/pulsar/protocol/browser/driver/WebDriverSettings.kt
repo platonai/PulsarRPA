@@ -87,7 +87,7 @@ open class WebDriverSettings(
 
         chromeOptions.addArgument("window-size", formatViewPort())
             .addArgument("pageLoadStrategy", pageLoadStrategy)
-            .addArgument("throwExceptionOnScriptError", "false")
+            .addArgument("throwExceptionOnScriptError", "true")
 
         return chromeOptions
     }

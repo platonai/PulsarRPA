@@ -75,11 +75,6 @@
             <artifactId>gson</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>xerces</groupId>-->
-<!--            <artifactId>xercesImpl</artifactId>-->
-<!--        </dependency>-->
-
         <!--
             Woodstox is required by KConfiguration to parse xml files.
             Woodstox is a high-performance XML processor that implements Stax (JSR-173), SAX2 and Stax2 APIs

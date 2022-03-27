@@ -182,6 +182,9 @@ open class LoadOptions(
             description = "The fetch mode")
     var fetchMode = FetchMode.BROWSER
 
+    /**
+     * TODO: session scope browser choice is not support by now
+     * */
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
     var browser = LoadOptionDefaults.browser
@@ -202,6 +205,9 @@ open class LoadOptions(
             description = "The maximum time to wait for a page to finish from the first http request start")
     var pageLoadTimeout = EmulateSettings.DEFAULT.pageLoadTimeout
 
+    /**
+     * TODO: session scope browser choice is not support by now
+     * */
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
             description = "The browser used to visit the item pages, CHROME and NATIVE are supported")

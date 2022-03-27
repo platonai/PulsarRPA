@@ -138,6 +138,11 @@ open class BrowserSettings(
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
+        fun withBrowser(browserType: String): Companion {
+            System.setProperty(BROWSER_TYPE, browserType)
+            return BrowserSettings
+        }
+
         fun withGoodNetwork(): Companion {
             return BrowserSettings
         }

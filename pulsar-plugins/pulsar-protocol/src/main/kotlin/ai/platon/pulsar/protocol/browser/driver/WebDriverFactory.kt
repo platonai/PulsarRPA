@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
@@ -37,7 +36,7 @@ open class WebDriverFactory(
         browserInstanceId.proxyServer?.let { setProxy(capabilities, it) }
 
         // Choose the WebDriver
-        val browserType = getBrowserType(conf)
+        val browserType = browserInstanceId.browserType
         val driver = kotlin.runCatching {
             when (browserType) {
                 BrowserType.CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
@@ -54,31 +53,30 @@ open class WebDriverFactory(
         return WebDriverAdapter(browserInstanceId, driver, priority)
     }
 
-    private fun createChromeDevtoolsDriver(
-        browserInstanceId: BrowserInstanceId, capabilities: Map<String, Any>,
-    ): ChromeDevtoolsDriver {
-        val launcherOptions = LauncherOptions(BrowserType.CHROME.name, driverSettings)
+    private fun createBrowserInstance(
+        instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
+    ): BrowserInstance {
+        val launcherOptions = LauncherOptions(driverSettings)
         if (driverSettings.isSupervised) {
             launcherOptions.supervisorProcess = driverSettings.supervisorProcess
             launcherOptions.supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
         }
 
         val launchOptions = driverSettings.createChromeOptions(capabilities)
-        val browserInstance = browserInstanceManager.launchIfAbsent(browserInstanceId, launcherOptions, launchOptions)
+        return browserInstanceManager.launchIfAbsent(instanceId, launcherOptions, launchOptions)
+    }
+
+    private fun createChromeDevtoolsDriver(
+        instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
+    ): ChromeDevtoolsDriver {
+        val browserInstance = createBrowserInstance(instanceId, capabilities)
         return ChromeDevtoolsDriver(driverSettings, browserInstance as ChromeDevtoolsBrowserInstance)
     }
 
     private fun createPlaywrightDriver(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): PlaywrightDriver {
-        val launcherOptions = LauncherOptions(BrowserType.PLAYWRIGHT_CHROME.name, driverSettings)
-        if (driverSettings.isSupervised) {
-            launcherOptions.supervisorProcess = driverSettings.supervisorProcess
-            launcherOptions.supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
-        }
-
-        val launchOptions = driverSettings.createChromeOptions(capabilities)
-        val browserInstance = browserInstanceManager.launchIfAbsent(instanceId, launcherOptions, launchOptions)
+        val browserInstance = createBrowserInstance(instanceId, capabilities)
         return PlaywrightDriver(driverSettings, browserInstance as PlaywrightBrowserInstance)
     }
 
@@ -96,14 +94,5 @@ open class WebDriverFactory(
 //            ftpProxy = proxyServer
 //        }
         capabilities["proxy"] = proxyServer
-    }
-
-    /**
-     *
-     */
-    private fun getBrowserType(volatileConfig: VolatileConfig?): BrowserType {
-        val defaultType = BrowserType.CHROME
-        return volatileConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
-            ?: immutableConfig.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
     }
 }

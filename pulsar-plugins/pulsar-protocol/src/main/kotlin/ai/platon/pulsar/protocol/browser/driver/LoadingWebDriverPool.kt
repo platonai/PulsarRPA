@@ -41,7 +41,7 @@ class LoadingWebDriverPool(
         val instanceSequencer = AtomicInteger()
     }
 
-    private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
+    private val logger = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
     val id = instanceSequencer.incrementAndGet()
     val capacity get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val onlineDrivers = ConcurrentSkipListSet<WebDriver>()
@@ -87,7 +87,7 @@ class LoadingWebDriverPool(
     fun allocate(volatileConfig: VolatileConfig) {
         repeat(capacity) {
             runCatching { put(poll(priority, volatileConfig, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)) }.onFailure {
-                log.warn("Unexpected exception", it)
+                logger.warn("Unexpected exception", it)
             }
         }
     }
@@ -147,7 +147,7 @@ class LoadingWebDriverPool(
             try {
                 doClose(CLOSE_ALL_TIMEOUT)
             } catch (e: InterruptedException) {
-                log.warn("Thread interrupted when closing | {}", this)
+                logger.warn("Thread interrupted when closing | {}", this)
                 Thread.currentThread().interrupt()
             }
         }
@@ -188,7 +188,7 @@ class LoadingWebDriverPool(
         counterRetired.inc()
         freeDrivers.remove(driver.apply { retire() })
         driver.runCatching { quit().also { counterQuit.inc() } }.onFailure {
-            log.warn("Unexpected exception quit $driver", it)
+            logger.warn("Unexpected exception quit $driver", it)
         }
         onlineDrivers.remove(driver)
     }
@@ -249,7 +249,7 @@ class LoadingWebDriverPool(
         val total = drivers.size
         drivers.parallelStream().forEach { driver ->
             driver.quit().also { counterQuit.inc() }
-            log.debug("Quit driver {}/{} | {}", i.incrementAndGet(), total, driver)
+            logger.debug("Quit driver {}/{} | {}", i.incrementAndGet(), total, driver)
         }
     }
 
@@ -261,7 +261,7 @@ class LoadingWebDriverPool(
             try {
                 while (isActive && numWorking.get() > 0 && ++i < ttl) {
                     notBusy.await(1, TimeUnit.SECONDS)
-                    log.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
+                    logger.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
                 }
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
@@ -270,9 +270,9 @@ class LoadingWebDriverPool(
     }
 
     private fun logDriverOnline(driver: WebDriver) {
-        if (log.isTraceEnabled) {
+        if (logger.isTraceEnabled) {
             val driverSettings = driverFactory.driverSettings
-            log.trace("The {}th web driver is online, browser: {} pageLoadStrategy: {} capacity: {}",
+            logger.trace("The {}th web driver is online, browser: {} pageLoadStrategy: {} capacity: {}",
                     numOnline, driver.name,
                 driverSettings.pageLoadStrategy, capacity)
         }
