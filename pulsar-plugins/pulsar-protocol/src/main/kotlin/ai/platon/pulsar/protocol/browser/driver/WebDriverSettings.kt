@@ -17,7 +17,9 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_TASK_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
+import java.time.Duration
 
 /**
  * A general chrome option set:
@@ -57,10 +59,17 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 open class WebDriverSettings(
     parameters: Map<String, Any> = mapOf(),
     jsDirectory: String = "js",
-    config: ImmutableConfig
-): BrowserSettings(parameters, jsDirectory, config) {
+    conf: ImmutableConfig
+): BrowserSettings(parameters, jsDirectory, conf) {
+
+    companion object {
+        val POLLING_DRIVER_TIMEOUT = Duration.ofSeconds(60)
+    }
 
     constructor(config: ImmutableConfig): this(mapOf(), "js", config)
+
+    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(6))
+    val pollingDriverTimeout get() = conf.getDuration("polling.driver.timeout", POLLING_DRIVER_TIMEOUT)
 
     // Special
     // var mobileEmulationEnabled = true

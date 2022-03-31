@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -42,8 +41,6 @@ open class WebDriverPoolManager(
     private val closed = AtomicBoolean()
 
     val driverSettings get() = driverFactory.driverSettings
-    val taskTimeout = Duration.ofMinutes(6)
-    val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
     val idleTimeout = Duration.ofMinutes(18)
 
     val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
@@ -200,9 +197,11 @@ open class WebDriverPoolManager(
             var driver: WebDriver? = null
             try {
                 checkState()
+                val fetchTaskTimeout = driverSettings.fetchTaskTimeout
+                val pollingDriverTimeout = driverSettings.pollingDriverTimeout
                 driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
                 driverPool.numTasks.incrementAndGet()
-                result = withTimeoutOrNull(taskTimeout.toMillis()) {
+                result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
                     checkState()
                     task.action(driver)
                 }
@@ -214,7 +213,7 @@ open class WebDriverPoolManager(
 
                     // This should not happen since the task itself should handle the timeout event
                     logger.warn("Web driver task timeout({}) | {} | {}",
-                            taskTimeout.readable(), formatStatus(browserId), browserId)
+                        fetchTaskTimeout.readable(), formatStatus(browserId), browserId)
                 } else {
                     driverPool.numSuccess.incrementAndGet()
                     driverPool.numDismissWarnings.decrementAndGet()

@@ -36,8 +36,8 @@ class LoadingWebDriverPool(
 ): Parameterized, AutoCloseable {
 
     companion object {
-        val CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
-        val POLLING_TIMEOUT = Duration.ofSeconds(60)
+        var CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
+        var POLLING_TIMEOUT = Duration.ofSeconds(60)
         val instanceSequencer = AtomicInteger()
     }
 

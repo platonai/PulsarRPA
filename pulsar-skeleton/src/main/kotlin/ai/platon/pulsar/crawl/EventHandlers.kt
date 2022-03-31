@@ -443,9 +443,9 @@ abstract class AbstractEmulateEventHandler: EmulateEventHandler {
         return null
     }
 
-    protected suspend fun delay() = delay(delayPolicy(""))
+    protected suspend fun smartDelay() = delay(delayPolicy(""))
 
-    protected suspend fun delay(type: String) = delay(delayPolicy(type))
+    protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
 
     protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
         var value: Any? = null

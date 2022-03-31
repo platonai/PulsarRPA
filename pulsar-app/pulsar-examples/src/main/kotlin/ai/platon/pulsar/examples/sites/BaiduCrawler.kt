@@ -1,14 +1,14 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.examples.common.Crawler
+import ai.platon.pulsar.test.VerboseCrawler
 
 fun main() {
-    val portalUrl = "https://antispider8.scrape.center/"
+    val url = "https://www.baidu.com/"
 
     withContext {
-        val crawler = Crawler(it)
-        crawler.load(portalUrl, "-refresh")
-        "el-card__body"
+        val crawler = VerboseCrawler(it)
+        crawler.open(url)
+        readLine()
     }
 }

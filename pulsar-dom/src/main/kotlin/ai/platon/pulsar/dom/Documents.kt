@@ -10,6 +10,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
+import java.nio.file.Path
 import java.time.Duration
 
 object Documents {
@@ -82,6 +83,10 @@ object Documents {
         return FeaturedDocument(DataUtil.load(file, charsetName, baseUri))
     }
 
+    fun parse(path: Path, charsetName: String, baseUri: String): FeaturedDocument {
+        return parse(path.toFile(), charsetName, baseUri)
+    }
+
     /**
      * Parse the contents of a file as HTML. The location of the file is used as the base PAGE to qualify relative URLs.
      *
@@ -94,6 +99,10 @@ object Documents {
      */
     fun parse(file: File, charsetName: String): FeaturedDocument {
         return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath))
+    }
+
+    fun parse(path: Path, charsetName: String): FeaturedDocument {
+        return parse(path.toFile(), charsetName)
     }
 
     // TODO: check the logic whether to support ignoring script

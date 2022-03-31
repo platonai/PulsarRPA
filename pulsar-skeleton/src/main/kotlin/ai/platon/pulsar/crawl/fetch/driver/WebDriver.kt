@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
+import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
 import java.time.Instant
@@ -35,15 +36,26 @@ interface WebDriver: Closeable {
     suspend fun setTimeouts(driverConfig: BrowserSettings)
 
     suspend fun bringToFront()
-    suspend fun waitFor(selector: String): Long = 0
-    suspend fun waitFor(selector: String, timeoutMillis: Long): Long = 0
-    suspend fun exists(selector: String): Boolean = false
-    suspend fun type(selector: String, text: String) {}
-    suspend fun click(selector: String, count: Int = 1) {}
+    suspend fun waitFor(selector: String): Long
+    suspend fun waitFor(selector: String, timeoutMillis: Long): Long
+    suspend fun exists(selector: String): Boolean
+    suspend fun type(selector: String, text: String)
+    suspend fun click(selector: String, count: Int = 1)
+    suspend fun scrollTo(selector: String)
+    suspend fun scrollDown(count: Int = 1)
+    suspend fun scrollUp(count: Int = 1)
 
-    suspend fun cookies(): String
+    suspend fun outerHTML(selector: String): String?
+    suspend fun firstText(selector: String): String?
+    suspend fun allTexts(selector: String): String?
+    suspend fun firstAttr(selector: String, attrName: String): String?
+    suspend fun allAttrs(selector: String, attrName: String): String?
+
+    suspend fun getCookies(): List<Map<String, String>>
     suspend fun evaluate(expression: String): Any?
     suspend fun evaluateSilently(expression: String): Any?
+
+    suspend fun newSession(): Connection
 
     suspend fun stop()
 

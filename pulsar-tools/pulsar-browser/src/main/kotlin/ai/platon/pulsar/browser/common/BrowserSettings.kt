@@ -32,6 +32,7 @@ data class EmulateSettings(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
+    // TODO: use fetch task timeout instead
     var pageLoadTimeout: Duration = Duration.ofMinutes(3)
 ) {
     constructor(conf: ImmutableConfig) : this(
@@ -126,6 +127,9 @@ open class BrowserSettings(
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
 
+        // Available user agents
+        val userAgents = mutableListOf<String>()
+
         val preloadJavaScriptResources = """
             stealth.js
             __pulsar_utils__.js
@@ -170,6 +174,14 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Single page application
+         * */
+        fun withSPA() {
+            System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
+            System.setProperty(BROWSER_SPA_MODE, "true")
+        }
+
         fun enableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
             return BrowserSettings
@@ -187,6 +199,36 @@ open class BrowserSettings(
         }
 
         fun defaultUserDataDir() = AppPaths.CHROME_TMP_DIR
+
+        fun randomUserAgent(): String {
+            if (userAgents.isEmpty()) {
+                generateUserAgents()
+            }
+
+            if (userAgents.isNotEmpty()) {
+                return userAgents[Random.nextInt(userAgents.size)]
+            }
+
+            return ""
+        }
+
+        // also see https://github.com/arouel/uadetector
+        fun generateUserAgents() {
+            if (userAgents.isNotEmpty()) return
+
+            ResourceLoader.readAllLines("ua/chrome-user-agents-linux.txt")
+                .filter { it.startsWith("Mozilla/5.0") }
+                .toCollection(userAgents)
+        }
+
+        fun buildChromeUserAgent(
+            mozilla: String = "5.0",
+            appleWebKit: String = "537.36",
+            chrome: String = "70.0.3538.77",
+            safari: String = "537.36"
+        ): String {
+            return "Mozilla/$mozilla (X11; Linux x86_64) AppleWebKit/$appleWebKit (KHTML, like Gecko) Chrome/$chrome Safari/$safari"
+        }
 
         fun generateUserDataDir(): Path {
             val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
@@ -216,6 +258,7 @@ open class BrowserSettings(
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
     val isHeadless get() = displayMode == DisplayMode.HEADLESS
     val isGUI get() = displayMode == DisplayMode.GUI
+    val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
 
     val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     val userDataDir get() = conf.getPathOrNull(BROWSER_DATA_DIR) ?: generateUserDataDir()
@@ -229,9 +272,6 @@ open class BrowserSettings(
         get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
     var clientJsVersion = "0.2.3"
-
-    // Available user agents
-    val userAgents = mutableListOf<String>()
 
     /**
      * The js to inject to the browser
@@ -261,36 +301,6 @@ open class BrowserSettings(
         }
 
         return preloadJs
-    }
-
-    open fun randomUserAgent(): String {
-        if (userAgents.isEmpty()) {
-            generateUserAgents()
-        }
-
-        if (userAgents.isNotEmpty()) {
-            return userAgents[Random.nextInt(userAgents.size)]
-        }
-
-        return ""
-    }
-
-    // also see https://github.com/arouel/uadetector
-    open fun generateUserAgents() {
-        if (userAgents.isNotEmpty()) return
-
-        ResourceLoader.readAllLines("ua/chrome-user-agents-linux.txt")
-            .filter { it.startsWith("Mozilla/5.0") }
-            .toCollection(userAgents)
-    }
-
-    open fun buildChromeUserAgent(
-        mozilla: String = "5.0",
-        appleWebKit: String = "537.36",
-        chrome: String = "70.0.3538.77",
-        safari: String = "537.36"
-    ): String {
-        return "Mozilla/$mozilla (X11; Linux x86_64) AppleWebKit/$appleWebKit (KHTML, like Gecko) Chrome/$chrome Safari/$safari"
     }
 
     open fun generatePredefinedJsVariables(): String {

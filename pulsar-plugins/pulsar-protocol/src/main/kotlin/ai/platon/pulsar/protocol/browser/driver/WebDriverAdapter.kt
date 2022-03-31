@@ -76,6 +76,8 @@ class WebDriverAdapter(
 
     override suspend fun click(selector: String, count: Int) = driver.click(selector, count)
 
+    override suspend fun scrollTo(selector: String) = driver.scrollTo(selector)
+
     override suspend fun type(selector: String, text: String) = driver.type(selector, text)
 
     override suspend fun evaluate(expression: String): Any? {
@@ -85,7 +87,7 @@ class WebDriverAdapter(
         }
     }
 
-    override suspend fun cookies(): String = driver.cookies()
+    override suspend fun getCookies() = driver.getCookies()
 
     override suspend fun bringToFront() {
         driver.takeIf { isWorking }?.runCatching { bringToFront() }

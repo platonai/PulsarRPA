@@ -332,6 +332,15 @@ __pulsar_utils__.scrollToBottom = function() {
     window.scrollTo(x, y)
 };
 
+__pulsar_utils__.scrollUp = function() {
+    if (!document.__pulsar__Data) {
+        // TODO: this occurs when do performance test, but the reason is not investigated
+        return false
+    }
+
+    window.scrollBy(0, -500);
+};
+
 __pulsar_utils__.scrollToTop = function() {
     window.scrollTo(0, 0)
 };
@@ -357,6 +366,73 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
     status.scroll += 1;
 
     return status.scroll >= scrollCount
+};
+
+/**
+ * Select the first element and extract the text
+ *
+ * @param  {String} selector
+ * @return {String}
+ */
+__pulsar_utils__.outerHTML = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element.outerHTML
+    }
+    return null
+};
+
+/**
+ * Select the first element and extract the text
+ *
+ * @param  {String} selector
+ * @return {String}
+ */
+__pulsar_utils__.firstText = function(selector) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element.textContent
+    }
+    return null
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @return {String}
+ */
+__pulsar_utils__.allTexts = function(selector, attrName) {
+    let elements = document.querySelectorAll(selector)
+    return elements.map(e => e.textContent)
+};
+
+/**
+ * Select the first element and extract the text
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @return {String}
+ */
+__pulsar_utils__.firstAttr = function(selector, attrName) {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element.getAttribute(attrName)
+    }
+    return null
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @return {String}
+ */
+__pulsar_utils__.allAttrs = function(selector, attrName) {
+    let elements = document.querySelectorAll(selector)
+    return elements.map(e => e.getAttribute(attrName))
 };
 
 /**

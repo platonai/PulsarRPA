@@ -18,9 +18,9 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -45,12 +45,13 @@ class ChromeDevtoolsDriver(
     }
 
     val openSequence = 1 + browserInstance.devToolsCount
-    val tabTimeout = Duration.ofMinutes(3)
-    val userAgent get() = browserSettings.randomUserAgent()
+    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(10)
+    val userAgent get() = BrowserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
+    val isSPA get() = browserSettings.isSPA
 
-    private val config = DevToolsConfig()
-    private val tab: ChromeTab
+    private val toolsConfig = DevToolsConfig()
+    private val chromeTab: ChromeTab
     private val devTools: RemoteDevTools
     private val mouse: Mouse
     private val keyboard: Keyboard
@@ -81,10 +82,10 @@ class ChromeDevtoolsDriver(
     init {
         try {
             // In chrome every tab is a separate process
-            tab = browserInstance.createTab()
-            navigateUrl = tab.url ?: ""
+            chromeTab = browserInstance.createTab()
+            navigateUrl = chromeTab.url ?: ""
 
-            devTools = browserInstance.createDevTools(tab, config)
+            devTools = browserInstance.createDevTools(chromeTab, toolsConfig)
             mouse = Mouse(input)
             keyboard = Keyboard(input)
 
@@ -110,15 +111,21 @@ class ChromeDevtoolsDriver(
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
 
-    override suspend fun cookies(): String {
+    override suspend fun getCookies(): List<Map<String, String>> {
+        refreshState()
         network.enable()
         val mapper = pulsarObjectMapper()
-        return network.cookies.joinToString("\n") { mapper.writeValueAsString(it) }
+        return network.cookies.map {
+            val json = mapper.writeValueAsString(it)
+            val map: Map<String, String?> = mapper.readValue(json)
+            map.filterValues { it != null }.mapValues { it.toString() }
+        }
     }
 
     override suspend fun stop() {
         if (!isActive) return
 
+        refreshState()
         try {
             navigateEntry?.stopped = true
 
@@ -143,6 +150,7 @@ class ChromeDevtoolsDriver(
     override suspend fun evaluate(expression: String): Any? {
         if (!isActive) return null
 
+        refreshState()
         try {
             val evaluate = runtime.evaluate(expression)
 
@@ -165,6 +173,7 @@ class ChromeDevtoolsDriver(
 
     override val sessionId: String?
         get() {
+            refreshState()
             lastSessionId = try {
                 if (!isActive) null else mainFrame.id
             } catch (e: ChromeRPCException) {
@@ -176,6 +185,7 @@ class ChromeDevtoolsDriver(
         }
 
     override suspend fun currentUrl(): String {
+        refreshState()
         navigateUrl = try {
             if (isActive) navigateUrl else mainFrame.url
         } catch (e: ChromeRPCException) {
@@ -187,11 +197,13 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun exists(selector: String): Boolean {
+        refreshState()
         val nodeId = querySelector(selector)
         return nodeId != null && nodeId > 0
     }
 
     override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
+        refreshState()
         val nodeId = querySelector(selector)
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
@@ -205,6 +217,7 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun click(selector: String, count: Int) {
+        refreshState()
         val nodeId = scrollIntoViewIfNeeded(selector) ?: return
         val offset = OffsetD(4.0, 4.0)
         val point = ClickableDOM(page, dom, nodeId, offset).clickablePoint() ?: return
@@ -214,9 +227,20 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun type(selector: String, text: String) {
+        refreshState()
         val nodeId = focus(selector) ?: return
         keyboard.type(nodeId, text, delayPolicy("type"))
         gap()
+    }
+
+    override suspend fun scrollTo(selector: String) {
+        refreshState()
+        val nodeId = focus(selector) ?: return
+        dom.scrollIntoViewIfNeeded(nodeId, null, null, null)
+    }
+
+    private fun refreshState() {
+        navigateEntry?.refresh()
     }
 
     private suspend fun gap() = delay(delayPolicy("gap"))
@@ -239,7 +263,7 @@ class ChromeDevtoolsDriver(
     }
 
     private fun querySelector(selector: String): Int? {
-        val rootId = dom.document.nodeId
+        val rootId = dom?.document?.nodeId ?: return null
         return kotlin.runCatching { dom.querySelector(rootId, selector) }.onFailure {
             logger.warn("Failed to query selector {} | {}", selector, it.message)
         }.getOrNull()
@@ -299,7 +323,7 @@ class ChromeDevtoolsDriver(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                browserInstance.closeTab(tab)
+                browserInstance.closeTab(chromeTab)
                 devTools.close()
             } catch (e: ChromeProtocolException) {
                 // ignored
@@ -313,6 +337,7 @@ class ChromeDevtoolsDriver(
         page.enable()
         dom.enable()
         runtime.enable()
+        network.enable()
 
         try {
             val preloadJs = browserSettings.generatePreloadJs(false)
@@ -322,7 +347,20 @@ class ChromeDevtoolsDriver(
                 network.enable()
                 setupUrlBlocking(url)
             }
-//            fetch.enable()
+
+            network.onRequestWillBeSent {
+                // it.request.headers
+                // it.request.url = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx?page=300&pagesize=20"
+            }
+
+            network.onResponseReceived {
+                val responseUrl = it.response.url
+                if (responseUrl.contains("scopi.wemixnetwork.com") && responseUrl.contains("pagesize")) {
+                    val body = network.getResponseBody(it.requestId)
+                    println(responseUrl)
+                    println(body.body)
+                }
+            }
 
             navigateUrl = url
             page.navigate(url)
@@ -360,11 +398,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private suspend fun dumpCookies() {
-        val cookies = cookies()
-        println(cookies)
-    }
-
     private suspend fun handleRedirect() {
         val finalUrl = currentUrl()
         // redirect
@@ -382,31 +415,36 @@ class ChromeDevtoolsDriver(
 
     // close timeout tabs
     private fun closeTimeoutTabs(tabs: Array<ChromeTab>) {
-        tabs.forEach { tab ->
-            val tabUrl = tab.url
+        if (isSPA) {
+            return
+        }
 
-            if (tabUrl != null && tabUrl.startsWith("http")) {
-                val now = Instant.now()
-                val entries = browserInstance.navigateHistory.asSequence()
-                    .filter { it.url == tabUrl }
-                    .filter { it.stopped }
-                    .filter { it.createTime + tabTimeout < now }
-                    .toList()
-                if (entries.isNotEmpty()) {
-                    browserInstance.navigateHistory.removeAll(entries)
-                    browserInstance.closeTab(tab)
-                }
-            }
+        tabs.forEach { oldTab ->
+            oldTab.url?.let { closeTabsIfTimeout(it, oldTab) }
+        }
+    }
+
+    private fun closeTabsIfTimeout(tabUrl: String, oldTab: ChromeTab) {
+        val now = Instant.now()
+        val entries = browserInstance.navigateHistory.asSequence()
+            .filter { it.url == tabUrl }
+            .filter { it.stopped }
+            .filter { it.activeTime + chromeTabTimeout < now }
+            .toList()
+
+        if (entries.isNotEmpty()) {
+            browserInstance.navigateHistory.removeAll(entries)
+            browserInstance.closeTab(oldTab)
         }
     }
 
     private fun closeIrrelevantTabs(tabs: Array<ChromeTab>) {
-        tabs.forEach { tab ->
-            val tabUrl = tab.url
-
-            if (tabUrl != null && tabUrl.startsWith("http")) {
-                // close tabs open for humanization purpose
-            }
+        val irrelevantTabs = tabs
+            .filter { it.url?.matches("about:".toRegex()) == true }
+            .filter { oldTab -> browserInstance.navigateHistory.none { it.url == oldTab.url } }
+        if (irrelevantTabs.isNotEmpty()) {
+            // TODO: might close a tab open just now
+            // irrelevantTabs.forEach { browserInstance.closeTab(it) }
         }
     }
 

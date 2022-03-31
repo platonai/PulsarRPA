@@ -28,6 +28,9 @@ data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
     }
 }
 
+/**
+ * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
+ * */
 data class BrowserInstanceId(
     val contextDir: Path,
     var browserType: BrowserType,

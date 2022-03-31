@@ -356,6 +356,21 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.1.1</version>
             </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>7.0.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
             <!-- unit test support -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -628,10 +643,15 @@
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-        <autolink.version>0.10.0</autolink.version>
         <dokka.version>1.4.32</dokka.version>
-
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
+
+        <commons-io.version>2.11.0</commons-io.version>
+        <spring.version>5.3.17</spring.version>
+        <!-- spring-data-mongo -->
+        <spring-data.version>3.1.15</spring-data.version>
+        <spring-boot.version>2.4.13</spring-boot.version>
+        <autolink.version>0.10.0</autolink.version>
     </properties>
 
 </project>

@@ -1,8 +1,13 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
+import org.jsoup.Connection
+import org.jsoup.Jsoup
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
@@ -74,8 +79,60 @@ abstract class AbstractWebDriver(
 
     override suspend fun waitFor(selector: String): Long = waitFor(selector, waitForTimeout.toMillis())
 
+    override suspend fun getCookies(): List<Map<String, String>> {
+        return listOf()
+    }
+
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
+
+    override suspend fun scrollDown(count: Int) {
+        evaluate("__pulsar_utils__.scrollDown()")
+    }
+
+    override suspend fun scrollUp(count: Int) {
+        evaluate("__pulsar_utils__.scrollUp()")
+    }
+
+    override suspend fun outerHTML(selector: String): String? {
+        val result = evaluate("__pulsar_utils__.outerHTML('$selector')")
+        return result?.toString()
+    }
+
+    override suspend fun firstText(selector: String): String? {
+        val result = evaluate("__pulsar_utils__.firstText('$selector')")
+        return result?.toString()
+    }
+
+    override suspend fun allTexts(selector: String): String? {
+        val result = evaluate("__pulsar_utils__.allTexts('$selector')")
+        return result?.toString()
+    }
+
+    override suspend fun firstAttr(selector: String, attrName: String): String? {
+        val result = evaluate("__pulsar_utils__.firstAttr('$selector', '$attrName')")
+        return result?.toString()
+    }
+
+    override suspend fun allAttrs(selector: String, attrName: String): String? {
+        val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
+        return result?.toString()
+    }
+
+    override suspend fun newSession(): Connection {
+        val headers = mapOf<String, String>()
+        val userAgent = BrowserSettings.randomUserAgent()
+
+        val session = Jsoup.newSession()
+            .timeout(20 * 1000)
+            .userAgent(userAgent)
+            .cookies(getCookies().first())
+            .headers(headers)
+            .ignoreHttpErrors(true)
+        // .proxy("127.0.0.1", 33857)
+
+        return session
+    }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
 

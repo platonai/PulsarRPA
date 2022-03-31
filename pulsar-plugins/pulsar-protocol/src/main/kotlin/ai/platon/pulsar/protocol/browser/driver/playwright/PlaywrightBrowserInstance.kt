@@ -10,7 +10,6 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import com.microsoft.playwright.*
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -60,7 +59,7 @@ class PlaywrightBrowserInstance(
             if (id.proxyServer != null) {
                 setProxy(id.proxyServer)
             }
-            // userAgent = browserSettings.randomUserAgent()
+            // userAgent = BrowserSettings.randomUserAgent()
             this.executablePath = executablePath
             ignoreHTTPSErrors = true
 
@@ -86,7 +85,7 @@ class PlaywrightBrowserInstance(
 
     @Synchronized
     fun createTab(): Page {
-        lastActiveTime = Instant.now()
+        activeTime = Instant.now()
         tabCount.incrementAndGet()
 
         val page = context.newPage()

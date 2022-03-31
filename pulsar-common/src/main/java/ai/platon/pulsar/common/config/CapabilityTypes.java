@@ -339,6 +339,7 @@ public interface CapabilityTypes {
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
+    String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_DATA_DIR = "browser.data.dir";
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";

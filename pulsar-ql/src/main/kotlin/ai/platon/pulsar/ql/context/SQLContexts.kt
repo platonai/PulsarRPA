@@ -154,7 +154,7 @@ object SQLContexts {
     fun shutdown() {
         PulsarContexts.shutdown()
         // TODO: the process hung up with unknown reason, we will fix this
-        exitProcess(0)
+        // exitProcess(0)
     }
 }
 

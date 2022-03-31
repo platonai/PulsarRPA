@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
@@ -13,7 +12,6 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,8 +40,9 @@ open class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     fun fetchContent(page: WebPage) = runBlocking {
-        val pageLoadTimeout = EmulateSettings(page.conf).pageLoadTimeout.toMillis()
-        withTimeout(pageLoadTimeout) { fetchContentDeferred(page) }
+        // val pageLoadTimeout = EmulateSettings(page.conf).pageLoadTimeout.toMillis()
+//        withTimeout(pageLoadTimeout) { fetchContentDeferred(page) }
+        fetchContentDeferred(page)
     }
 
     suspend fun fetchDeferred(url: String) =

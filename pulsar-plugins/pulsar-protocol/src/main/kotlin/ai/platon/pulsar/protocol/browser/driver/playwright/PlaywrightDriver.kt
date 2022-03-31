@@ -4,11 +4,13 @@ import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.playwright.Locator
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.options.Position
@@ -107,8 +109,13 @@ class PlaywrightDriver(
         }
     }
 
-    override suspend fun cookies(): String {
-        return page.context().cookies().joinToString("\n")
+    override suspend fun getCookies(): List<Map<String, String>> {
+        val mapper = pulsarObjectMapper()
+        return page.context().cookies().map {
+            val json = mapper.writeValueAsString(it)
+            val map: Map<String, String?> = mapper.readValue(json)
+            map.filterValues { it != null }.mapValues { it.toString() }
+        }
     }
 
     /**
@@ -176,6 +183,15 @@ class PlaywrightDriver(
                 .setPosition(position)
                 .setClickCount(count)
             locator.click(options)
+        } catch (e: Exception) {
+            logger.warn("Failed to click | {}", e.message)
+        }
+    }
+
+    override suspend fun scrollTo(selector: String) {
+        try {
+            val locator = page.locator(selector)
+            locator.scrollIntoViewIfNeeded()
         } catch (e: Exception) {
             logger.warn("Failed to click | {}", e.message)
         }

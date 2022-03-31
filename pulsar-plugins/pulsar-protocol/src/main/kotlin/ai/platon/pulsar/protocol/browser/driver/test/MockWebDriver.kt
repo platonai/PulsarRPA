@@ -46,6 +46,10 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
+    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
+        return backupDriverOrNull?.waitFor(selector, timeoutMillis) ?: 0
+    }
+
     override suspend fun setTimeouts(driverConfig: BrowserSettings) {
     }
 
@@ -64,8 +68,8 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
-    override suspend fun cookies(): String {
-        return backupDriverOrNull?.cookies() ?: ""
+    override suspend fun getCookies(): List<Map<String, String>> {
+        return backupDriverOrNull?.getCookies() ?: listOf()
     }
 
     override suspend fun stop() {
@@ -76,6 +80,10 @@ class MockWebDriver(
         return backupDriverOrNull?.evaluate(expression)
     }
 
+    override suspend fun scrollTo(selector: String) {
+        backupDriverOrNull?.scrollTo(selector)
+    }
+
     override val sessionId: String?
         get() = backupDriverOrNull?.sessionId
 
@@ -84,7 +92,18 @@ class MockWebDriver(
     override suspend fun pageSource(): String = mockPageSource ?: (backupDriverOrNull?.pageSource()) ?: ""
 
     override suspend fun bringToFront() {
-        backupDriverOrNull?.bringToFront()
+    }
+
+    override suspend fun exists(selector: String): Boolean {
+        return backupDriverOrNull?.exists(selector) ?: false
+    }
+
+    override suspend fun type(selector: String, text: String) {
+        backupDriverOrNull?.type(selector, text)
+    }
+
+    override suspend fun click(selector: String, count: Int) {
+        backupDriverOrNull?.click(selector, count)
     }
 
 //    @Throws(ScreenshotException::class, NoSuchSessionException::class)

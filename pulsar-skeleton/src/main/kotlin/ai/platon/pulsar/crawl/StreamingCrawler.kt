@@ -154,6 +154,8 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     val idleTimeout = Duration.ofMinutes(10)
+    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(10))
+
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isIdle get() = idleTime > idleTimeout
@@ -163,7 +165,6 @@ open class StreamingCrawler<T : UrlAware>(
     private var proxyOutOfService = 0
     private var quit = false
     override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
-    private val taskTimeout = Duration.ofMinutes(10)
 
     @Volatile
     private var flowState = FlowState.CONTINUE
@@ -387,13 +388,14 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun loadUrl(url: UrlAware): WebPage? {
         var page: WebPage? = null
         try {
-            page = withTimeout(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
+            val timeout = 20_000 + fetchTaskTimeout.toMillis()
+            page = withTimeout(timeout) { loadWithEventHandlers(url) }
             if (page != null) {
                 collectStatAfterLoad(page)
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
-            logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, taskTimeout, url)
+            logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, fetchTaskTimeout, url)
         } catch (e: Throwable) {
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {

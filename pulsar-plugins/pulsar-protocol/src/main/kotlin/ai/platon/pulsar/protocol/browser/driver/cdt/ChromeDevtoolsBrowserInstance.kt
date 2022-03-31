@@ -7,7 +7,6 @@ import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -40,7 +39,7 @@ class ChromeDevtoolsBrowserInstance(
     @Synchronized
     @Throws(Exception::class)
     fun createTab(): ChromeTab {
-        lastActiveTime = Instant.now()
+        activeTime = Instant.now()
         tabCount.incrementAndGet()
         return chrome.createTab(Chrome.ABOUT_BLANK_PAGE)
     }

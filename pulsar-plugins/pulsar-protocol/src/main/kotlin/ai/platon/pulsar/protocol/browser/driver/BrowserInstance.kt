@@ -11,8 +11,13 @@ import java.util.concurrent.atomic.AtomicInteger
 data class NavigateEntry(
     val url: String,
     var stopped: Boolean = false,
+    var activeTime: Instant = Instant.now(),
     val createTime: Instant = Instant.now(),
-)
+) {
+    fun refresh() {
+        activeTime = Instant.now()
+    }
+}
 
 /**
  * Created by vincent on 18-1-1.
@@ -23,19 +28,14 @@ abstract class BrowserInstance(
     val launcherOptions: LauncherOptions,
     val launchOptions: ChromeOptions
 ): AutoCloseable {
-    /**
-     * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
-     * */
-//    val browserType = BrowserType.valueOf(launcherOptions.browserType)
-//    val id = BrowserInstanceId(userDataDir, browserType, proxyServer)
     val isGUI get() = launcherOptions.browserSettings.isGUI
 
     var tabCount = AtomicInteger()
     // remember, navigate history is small, so search is very fast for a list
     val navigateHistory = mutableListOf<NavigateEntry>()
-    var lastActiveTime = Instant.now()
+    var activeTime = Instant.now()
     val idleTimeout = Duration.ofMinutes(10)
-    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+    val isIdle get() = Duration.between(activeTime, Instant.now()) > idleTimeout
 
     protected val launched = AtomicBoolean()
     protected val closed = AtomicBoolean()

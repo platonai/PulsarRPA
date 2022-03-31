@@ -409,16 +409,16 @@ open class LoadOptions(
         return b
     }
 
-    @Beta
-    open fun setEventHandler(eventHandler: EmulateEventHandler? = null) {
+    fun addEventHandler(eventHandler: EmulateEventHandler?) {
         if (eventHandler != null) {
+            // jsEventHandlers.add(eventHandler)
             conf.putBean(eventHandler)
         }
     }
 
-    @Beta
-    open fun clearEventHandler(eventHandler: EmulateEventHandler? = null) {
+    fun removeEventHandler(eventHandler: EmulateEventHandler?) {
         if (eventHandler != null) {
+            // jsEventHandlers.remove(eventHandler)
             conf.removeBean(eventHandler)
         }
     }
@@ -498,20 +498,6 @@ open class LoadOptions(
                 .associate { "-${it.name}" to it.get(this) }
                 .filter { it.value != null }
                 .let { Params.of(it).withRowFormat(rowFormat) }
-    }
-
-    fun addEventHandler(eventHandler: EmulateEventHandler?) {
-        if (eventHandler != null) {
-            // jsEventHandlers.add(eventHandler)
-            conf.putBean(eventHandler)
-        }
-    }
-
-    fun removeEventHandler(eventHandler: EmulateEventHandler?) {
-        if (eventHandler != null) {
-            // jsEventHandlers.remove(eventHandler)
-            conf.removeBean(eventHandler)
-        }
     }
 
     override fun toString(): String {
