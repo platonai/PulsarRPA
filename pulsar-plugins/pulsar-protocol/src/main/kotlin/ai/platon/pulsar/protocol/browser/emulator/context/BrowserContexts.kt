@@ -326,7 +326,7 @@ class ProxyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyPoolManager.activeProxyEntries.remove(driverContext.browserId.contextDir)
+            proxyPoolManager.activeProxyEntries.remove(driverContext.browserId.userDataDir)
         }
     }
 }

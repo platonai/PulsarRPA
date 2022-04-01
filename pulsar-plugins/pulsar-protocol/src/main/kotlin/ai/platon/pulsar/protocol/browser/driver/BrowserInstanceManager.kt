@@ -26,15 +26,15 @@ class BrowserInstanceManager: AutoCloseable {
     fun launchIfAbsent(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): BrowserInstance {
-        val userDataDir = instanceId.contextDir
+        val userDataDir = instanceId.userDataDir
         return browserInstances.computeIfAbsent(userDataDir.toString()) {
             createAndLaunch(instanceId, launcherOptions, launchOptions)
         }
     }
 
     @Synchronized
-    fun closeIfPresent(dataDir: Path) {
-        browserInstances.remove(dataDir.toString())?.close()
+    fun closeIfPresent(userDataDir: Path) {
+        browserInstances.remove(userDataDir.toString())?.close()
     }
 
     @Synchronized

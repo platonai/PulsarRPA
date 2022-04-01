@@ -28,8 +28,6 @@ abstract class AbstractWebDriver(
         val isQuit get() = this == QUIT
     }
 
-    var proxyEntry: ProxyEntry? = null
-
     var waitForTimeout = Duration.ofMinutes(1)
 
     override var lastActiveTime: Instant = Instant.now()
@@ -128,6 +126,7 @@ abstract class AbstractWebDriver(
             .userAgent(userAgent)
             .cookies(getCookies().first())
             .headers(headers)
+            .ignoreContentType(true)
             .ignoreHttpErrors(true)
         // .proxy("127.0.0.1", 33857)
 

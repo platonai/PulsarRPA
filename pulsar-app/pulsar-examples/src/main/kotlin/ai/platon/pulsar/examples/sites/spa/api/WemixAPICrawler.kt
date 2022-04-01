@@ -52,7 +52,6 @@ private class APIFetcherHandler(
             .map { it.split(": ") }.associate { it[0] to it[1] }
 
         val session = driver.newSession()
-            .ignoreContentType(true)
             .headers(headers)
             .proxy("127.0.0.1", 33857)
 
