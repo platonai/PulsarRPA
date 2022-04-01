@@ -40,6 +40,4 @@ fun main() {
             executor.extract(itemsSQL)
         }
     }
-
-    exitProcess(0)
 }

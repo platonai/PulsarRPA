@@ -95,31 +95,6 @@ open class VerboseCrawler(
         return pages
     }
 
-    fun loadAllNews(portalUrl: String, options: LoadOptions) {
-        val portal = session.load(portalUrl, options)
-        val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = session.loadAll(links, session.options("--parse"))
-        pages.forEach { println("${it.url} ${it.contentTitle}") }
-    }
-
-    fun extractAds() {
-        val url = "https://wuhan.baixing.com/xianhualipin/a1100414743.html"
-        val doc = session.loadDocument(url, "")
-        doc.select("a[href~=mssp.baidu]").map { }
-    }
-
-    fun scan(baseUri: String) {
-        // val contractBaseUri = "http://www.ccgp-hubei.gov.cn:8040/fcontractAction!download.action?path="
-        session.context.scan(baseUri).iterator().forEachRemaining {
-            val size = it.content?.array()?.size ?: 0
-            println(size)
-        }
-    }
-
-    fun truncate() {
-        session.context.webDb.truncate()
-    }
-
     override fun close() {
         SQLContexts.shutdown()
     }

@@ -1,11 +1,10 @@
 package ai.platon.pulsar.examples.sites.amazon
 
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.examples.common.Crawler
+import ai.platon.pulsar.test.VerboseCrawler
 
-class AmazonCrawler(context: PulsarContext): Crawler(context) {
+class AmazonCrawler(context: PulsarContext): VerboseCrawler(context) {
     private val url = "https://www.amazon.com/"
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol a[href~=/dp/]"
 
@@ -18,7 +17,7 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 
     fun bestSeller() {
         val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs -refresh"
-        val document = i.loadDocument(portalUrl)
+        val document = session.loadDocument(portalUrl)
         document.select("a[href~=/dp/]").forEach {
             println(it.attr("abs:href"))
         }
@@ -30,7 +29,7 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 
     fun jp() {
         val portalUrl = "https://www.amazon.co.jp/ -i 1s"
-        i.load(portalUrl)
+        session.load(portalUrl)
     }
 
     fun laptops() {

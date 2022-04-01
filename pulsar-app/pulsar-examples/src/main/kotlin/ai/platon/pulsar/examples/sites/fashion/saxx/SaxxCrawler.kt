@@ -79,6 +79,4 @@ fun main() {
             executor.extract(itemsSQL, reviewsSQLTemplate)
         }
     }
-
-    exitProcess(0)
 }

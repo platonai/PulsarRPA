@@ -23,9 +23,5 @@ fun main(args: Array<String>) {
         System.setProperty(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator")
 
         ChooseCountry(portalUrl, loadArguments, cx.createSession()).choose()
-
-        println("All done.")
-
-        exitProcess(0)
     }
 }

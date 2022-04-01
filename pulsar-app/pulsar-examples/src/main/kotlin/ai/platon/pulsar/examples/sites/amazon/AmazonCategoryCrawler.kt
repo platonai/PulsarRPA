@@ -1,21 +1,20 @@
 package ai.platon.pulsar.examples.sites.amazon
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.dom.Documents
-import ai.platon.pulsar.examples.common.Crawler
+import ai.platon.pulsar.test.VerboseCrawler
 
-class AmazonCategoryCrawler(context: PulsarContext): Crawler(context) {
+class AmazonCategoryCrawler(context: PulsarContext): VerboseCrawler(context) {
     private val url = "https://www.amazon.com/"
     private val siteDirectory = "https://www.amazon.com/gp/site-directory?ref_=nav_em_T1_0_2_2_35__fullstore"
-    private val loadOptions = i.options("-i 1s")
+    private val loadOptions = session.options("-i 1s")
     private var j = 0
 
     fun collectFromSiteDirectory() {
-        val page = i.load(siteDirectory, loadOptions)
-        val document = i.parse(page)
+        val page = session.load(siteDirectory, loadOptions)
+        val document = session.parse(page)
         document.absoluteLinks()
         var j = 0
         document.body.select(".fsdDeptBox").forEach {

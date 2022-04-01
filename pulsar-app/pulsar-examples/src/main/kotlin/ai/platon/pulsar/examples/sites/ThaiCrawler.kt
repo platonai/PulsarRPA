@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.examples.common.Crawler
+import ai.platon.pulsar.test.VerboseCrawler
 
 private val portalUrl = "https://shopee.co.th/กระเป๋าเป้ผู้ชาย-cat.49.1037.10297?page=1"
 
@@ -12,5 +12,5 @@ private val args = """
 
 fun main() = withContext {
     BrowserSettings.withGUI()
-    Crawler(it).loadOutPages(portalUrl, args)
+    VerboseCrawler(it).loadOutPages(portalUrl, args)
 }

@@ -11,7 +11,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-private class PaginateHandler(
+private class APIFetcherHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
 ): AbstractEmulateEventHandler() {
@@ -114,7 +114,7 @@ private class WemixCrawler(
             return
         }
 
-        val eventHandler = PaginateHandler(initPageNumber, reportDirectory)
+        val eventHandler = APIFetcherHandler(initPageNumber, reportDirectory)
         val options = session.options("-refresh").apply { addEventHandler(eventHandler) }
         try {
             session.load(url, options)
