@@ -30,7 +30,7 @@ abstract class BrowserEmulatorBase(
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     val closed = AtomicBoolean(false)
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     val meterNavigates by lazy { AppMetrics.reg.meter(this,"navigates") }
     val counterRequests by lazy { AppMetrics.reg.counter(this,"requests") }
     val counterJsEvaluates by lazy { AppMetrics.reg.counter(this,"jsEvaluates") }
@@ -54,11 +54,11 @@ abstract class BrowserEmulatorBase(
         }
     }
 
-    @Throws(IllegalApplicationContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class)
     protected fun checkState() {
         if (!isActive) {
             AppContext.shouldTerminate()
-            throw IllegalApplicationContextStateException("Emulator is closed")
+            throw NavigateTaskCancellationException("Emulator is closed")
         }
     }
 
@@ -66,7 +66,7 @@ abstract class BrowserEmulatorBase(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class)
     protected fun checkState(driver: WebDriver) {
         checkState()
 

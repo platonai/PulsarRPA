@@ -182,15 +182,14 @@ open class BrowserEmulator(
             withContext(Dispatchers.IO) {
                 counterRequests.inc()
 
-                checkState(interactTask.driver)
-                checkState(interactTask.fetchTask)
-                pageSource = interactTask.driver.pageSource() ?: ""
-
-                if (pageSource.length < 20_000) {
-                    delay(1000)
+                if (isActive) {
+                    pageSource = interactTask.driver.pageSource() ?: ""
+                    if (pageSource.length < 20_000) {
+                        delay(1000)
+                    }
                 }
             }
-        } while (i++ < 45 && pageSource.length < 20_000)
+        } while (i++ < 45 && pageSource.length < 20_000 && isActive)
 
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
@@ -258,7 +257,7 @@ open class BrowserEmulator(
         var message: Any? = null
         try {
             var msg: Any? = null
-            while ((msg == null || msg == false) && i++ < maxRound) {
+            while ((msg == null || msg == false) && i++ < maxRound && isActive) {
                 msg = evaluate(interactTask, expression)
 
                 if (msg == null || msg == false) {
@@ -384,6 +383,10 @@ open class BrowserEmulator(
     }
 
     private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
+        if (!isActive) {
+            return null
+        }
+
         counterRequests.inc()
         counterJsEvaluates.inc()
         checkState(interactTask.driver)
