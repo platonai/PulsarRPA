@@ -1,16 +1,21 @@
 Pulsar README
 ===================
-** Network As A Database **
 
-Turn the Web into tables and charts using simple SQLs.
+Pulsar is an open source solution to scrape web data at scale.
+
+Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, pulsar is an open source solution to fix such issues.
+
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs.
 
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
+- Web spider: browser rendering, ajax, scheduling, distributed, highly optimized
+- Bot stealth: never get banned
+- Simple API
+- SPA crawling
 - X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-- Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
-- Big data: large scale, various backend storage support: HBase/MongoDB
-- Complete amazon web data model
+- Big data: designed for large scale crawling, various backend storage support: HBase/MongoDB
 
 For more information check [platon.ai](http://platon.ai)
 
