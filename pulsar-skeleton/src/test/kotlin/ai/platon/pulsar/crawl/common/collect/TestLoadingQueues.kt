@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common.collect
 
-import ai.platon.pulsar.common.collect.LoadingFetchCache
-import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
+import ai.platon.pulsar.common.collect.LoadingUrlCache
+import ai.platon.pulsar.common.collect.collector.UrlCacheCollector
 import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantLoadingQueue
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
@@ -14,7 +14,7 @@ class TestLoadingQueues : TestBase() {
 
     @Test
     fun `When create a LoadingFetchCache then the first page is loaded`() {
-        val fetchCache = LoadingFetchCache("", group.priority, urlLoader)
+        val fetchCache = LoadingUrlCache("", group.priority, urlLoader)
         // not loaded
         assertEquals(0, fetchCache.size)
         fetchCache.load()
@@ -23,13 +23,13 @@ class TestLoadingQueues : TestBase() {
 
     @Test
     fun `When collect from collector with loading fetch cache then sink has items`() {
-        val source = LoadingFetchCache("", group.priority, urlLoader)
+        val source = LoadingUrlCache("", group.priority, urlLoader)
         val sink = mutableListOf<UrlAware>()
 
         assertEquals(0, source.size)
         assertTrue { sink.isEmpty() }
 
-        val collector = FetchCacheCollector(source)
+        val collector = UrlCacheCollector(source)
         source.loadNow()
         collector.collectTo(sink)
 

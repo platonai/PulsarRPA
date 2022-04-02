@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.StartStopRunnable
-import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
+import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.collect.collector.DataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -14,7 +14,7 @@ interface CrawlLoop: StartStopRunnable {
     val name: String
     val config: ImmutableConfig
     val defaultOptions: LoadOptions
-    val fetchTaskIterable: Iterable<UrlAware>
+    val urlFeeder: Iterable<UrlAware>
     val collectors: List<out DataCollector<UrlAware>>
     val crawler: Crawler
     val abstract: String
@@ -39,16 +39,16 @@ abstract class AbstractCrawlLoop(
     /**
      * The fetch iterable from which all fetch tasks are taken
      * */
-    abstract override val fetchTaskIterable: MultiSourceHyperlinkIterable
+    override abstract val urlFeeder: UrlFeeder
     /**
      * The shortcut for all collectors
      * */
     override val collectors: List<PriorityDataCollector<UrlAware>>
-        get() = fetchTaskIterable.collectors
+        get() = urlFeeder.collectors
 
     abstract override val crawler: AbstractCrawler
 
-    override val abstract: String get() = fetchTaskIterable.abstract
+    override val abstract: String get() = urlFeeder.abstract
 
-    override val report: String get() = fetchTaskIterable.report
+    override val report: String get() = urlFeeder.report
 }

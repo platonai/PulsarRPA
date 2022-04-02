@@ -1,6 +1,6 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.dom.nodes.TraverseState
 import ai.platon.pulsar.dom.nodes.node.ext.cleanText
@@ -253,7 +253,7 @@ fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
 fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<GeoAnchor> {
     val cssQuery = appendSelectorIfMissing(restrictCss, "a")
     return select(cssQuery, offset, limit).mapNotNull {
-        it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
+        it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
                 ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
     }
 }
@@ -261,6 +261,6 @@ fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MA
 fun Element.getImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<String> {
     val cssQuery = appendSelectorIfMissing(restrictCss, "img")
     return select(cssQuery, offset, limit) {
-        it.absUrl("src").takeIf { Urls.isValidUrl(it) }
+        it.absUrl("src").takeIf { UrlUtils.isValidUrl(it) }
     }.filterNotNull()
 }

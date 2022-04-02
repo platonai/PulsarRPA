@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.LoadEventPipelineHandler
@@ -31,7 +31,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
      * but default values in LoadOptions are ignored.
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val (spec, args0) = Urls.splitUrlArgs(url.url)
+        val (spec, args0) = UrlUtils.splitUrlArgs(url.url)
         val args1 = url.args ?: ""
         val args2 = options.toString()
         // the later on overwriting the ones before
@@ -49,7 +49,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
             normalizedUrl = eventHandler.onNormalize(spec) ?: return NormUrl.NIL
         } else {
             val ignoreQuery = options.shortenKey || options.ignoreQuery
-            normalizedUrl = Urls.normalizeOrNull(spec, ignoreQuery) ?: return NormUrl.NIL
+            normalizedUrl = UrlUtils.normalizeOrNull(spec, ignoreQuery) ?: return NormUrl.NIL
             val normalizers = urlNormalizers
             if (!options.noNorm && normalizers != null) {
                 normalizedUrl = normalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
@@ -58,7 +58,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
 
         finalOptions.toConf(finalOptions.conf)
 
-        val href = url.href?.takeIf { Urls.isValidUrl(it) }
+        val href = url.href?.takeIf { UrlUtils.isValidUrl(it) }
         return NormUrl(normalizedUrl, finalOptions, href, url)
     }
 

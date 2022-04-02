@@ -16,8 +16,8 @@
  */
 package ai.platon.pulsar.common.urls
 
-import ai.platon.pulsar.common.urls.Urls.reverseUrl
-import ai.platon.pulsar.common.urls.Urls.unreverseUrl
+import ai.platon.pulsar.common.urls.UrlUtils.reverseUrl
+import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
 import org.junit.Assert
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 
 typealias uc = UrlCommon
 
-class TestUrls {
+class TestUrlUtils {
     @Test
     @Throws(Exception::class)
     fun testReverseUrl() {
@@ -62,10 +62,10 @@ class TestUrls {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
 
-        assertTrue { "10329849011" !in Urls.removeQueryParameters(url, "bbn") }
-        assertTrue { "page" !in Urls.removeQueryParameters(url, "page") }
+        assertTrue { "10329849011" !in UrlUtils.removeQueryParameters(url, "bbn") }
+        assertTrue { "page" !in UrlUtils.removeQueryParameters(url, "page") }
 
-        assertEquals(stripedUrl, Urls.removeQueryParameters(url, "bbn", "page", "ref", "qid"))
+        assertEquals(stripedUrl, UrlUtils.removeQueryParameters(url, "bbn", "page", "ref", "qid"))
     }
 
     @Test
@@ -74,12 +74,12 @@ class TestUrls {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
 
-        assertTrue { "10329849011" in Urls.keepQueryParameters(url, "bbn") }
+        assertTrue { "10329849011" in UrlUtils.keepQueryParameters(url, "bbn") }
 
-        assertTrue { "page" in Urls.keepQueryParameters(url, "page") }
-        assertTrue { "bbn" !in Urls.keepQueryParameters(url, "page") }
+        assertTrue { "page" in UrlUtils.keepQueryParameters(url, "page") }
+        assertTrue { "bbn" !in UrlUtils.keepQueryParameters(url, "page") }
 
-        assertEquals(stripedUrl, Urls.keepQueryParameters(url, "k", "i"))
+        assertEquals(stripedUrl, UrlUtils.keepQueryParameters(url, "k", "i"))
     }
 
     companion object {

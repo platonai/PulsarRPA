@@ -1,11 +1,10 @@
 package ai.platon.pulsar.rest.api.common
 
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.nibor.autolink.LinkExtractor
 import org.nibor.autolink.LinkType
-import java.lang.IllegalArgumentException
 import java.util.*
 
 object ScrapeAPIUtils {
@@ -20,7 +19,7 @@ object ScrapeAPIUtils {
         }
         val configuredUrl = extractUrl(rawSql) ?: throw IllegalArgumentException("No url found in sql: >>>$rawSql<<<")
 
-        val (url, args) = Urls.splitUrlArgs(configuredUrl)
+        val (url, args) = UrlUtils.splitUrlArgs(configuredUrl)
         val sql = eraseExpireOptions(rawSql)
 
         return NormXSQL(url, args, sql)

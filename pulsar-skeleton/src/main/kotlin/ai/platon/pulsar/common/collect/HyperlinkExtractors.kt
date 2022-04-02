@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.StatefulHyperlink
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.bestElement
@@ -31,7 +31,7 @@ open class HyperlinkExtractor(
 
         var i = 0
         val parsedUrls = document.select(selector).mapNotNull { element ->
-            element.attr("abs:href").takeIf { Urls.isValidUrl(it) }
+            element.attr("abs:href").takeIf { UrlUtils.isValidUrl(it) }
                 ?.let { Pair(it, normalizer?.invoke(it) ?: it) }
                 ?.let { Hyperlink(it.second, element.text(), i++, referer = page.url, href = it.first) }
         }
@@ -75,7 +75,7 @@ open class RegexHyperlinkExtractor(
         var i = 0
         val parsedUrls = restrictedSection.collectNotNull { node ->
             node.takeIf { it.isAnchor }?.attr("abs:href")
-                ?.takeIf { Urls.isValidUrl(it) && it.matches(urlRegex) }
+                ?.takeIf { UrlUtils.isValidUrl(it) && it.matches(urlRegex) }
                 ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, referer = page.url) }
         }
         parsedUrls.toCollection(fetchUrls)

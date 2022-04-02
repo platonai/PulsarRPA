@@ -18,13 +18,15 @@
  */
 package ai.platon.pulsar.crawl.parse.html
 
-import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.DomUtil
+import ai.platon.pulsar.common.EncodingDetector
+import ai.platon.pulsar.common.NodeWalker
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.CACHING_FORBIDDEN_CONTENT
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
-import ai.platon.pulsar.common.urls.Urls.resolveURL
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.urls.UrlUtils.resolveURL
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.Parser
@@ -39,7 +41,6 @@ import org.w3c.dom.Node
 import org.w3c.dom.NodeList
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.*
 
 /**
  * A very simple DOM parser

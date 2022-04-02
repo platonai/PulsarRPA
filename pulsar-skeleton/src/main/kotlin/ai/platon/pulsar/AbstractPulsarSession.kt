@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
@@ -439,7 +439,7 @@ abstract class AbstractPulsarSession(
             link = normalizeOrNull(link)?.spec ?: return null
         }
 
-        return link.takeUnless { ignoreQuery } ?: Urls.getUrlWithoutParameters(link)
+        return link.takeUnless { ignoreQuery } ?: UrlUtils.getUrlWithoutParameters(link)
     }
 
     private fun ensureActive() {

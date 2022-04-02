@@ -3,7 +3,7 @@ package ai.platon.pulsar.rest.integration
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.apache.http.HttpStatus
@@ -84,7 +84,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
                 assertTrue { records.isNotEmpty() }
 
                 if (site == "jd") {
-                    assertEquals(Urls.splitUrlArgs(url).first, records[0]["url"])
+                    assertEquals(UrlUtils.splitUrlArgs(url).first, records[0]["url"])
                 }
             }
         }

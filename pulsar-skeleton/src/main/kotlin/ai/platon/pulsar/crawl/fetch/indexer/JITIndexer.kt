@@ -2,11 +2,10 @@ package ai.platon.pulsar.crawl.fetch.indexer
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.fetch.JobFetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
@@ -152,7 +151,7 @@ class JITIndexer(
             }
 
             val url = fetchTask.urlString
-            val reverseUrl = Urls.reverseUrl(url)
+            val reverseUrl = UrlUtils.reverseUrl(url)
             val page = fetchTask.page
 
             val doc = indexDocumentBuilder.build(reverseUrl, page)

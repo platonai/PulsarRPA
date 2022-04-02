@@ -4,11 +4,9 @@ import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.collect.*
-import ai.platon.pulsar.common.collect.LoadingFetchCache
-import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
 import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
-import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
+import ai.platon.pulsar.common.collect.collector.UrlCacheCollector
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -26,12 +24,12 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun `When add a item to queue then queue is not empty`() {
-        val source = LoadingFetchCache("", 0, TemporaryLocalFileUrlLoader())
+        val source = LoadingUrlCache("", 0, TemporaryLocalFileUrlLoader())
         val sink = mutableListOf<UrlAware>()
 
         source.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { source.size == 1 }
-        val collector = FetchCacheCollector(source)
+        val collector = UrlCacheCollector(source)
         assertTrue { collector.hasMore() }
         collector.collectTo(sink)
 
@@ -40,12 +38,12 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun `When add an item to LoadingFetchCache then LoadingIterable has next`() {
-        val fetchCache = LoadingFetchCache("", 0, TemporaryLocalFileUrlLoader())
+        val fetchCache = LoadingUrlCache("", 0, TemporaryLocalFileUrlLoader())
         fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertEquals(1, fetchCache.size)
 
         val collectors: MutableList<PriorityDataCollector<UrlAware>> = Collections.synchronizedList(LinkedList())
-        collectors += FetchCacheCollector(fetchCache)
+        collectors += UrlCacheCollector(fetchCache)
         val fetchQueueIterable = ConcurrentLoadingIterable(CombinedDataCollector(collectors), null, null, 10)
 
         assertTrue { fetchQueueIterable.regularCollector.hasMore() }
@@ -58,7 +56,7 @@ class TestDataCollectors : TestBase() {
         // Object information is erased
         val collectors = mutableListOf<AbstractPriorityDataCollector<UrlAware>>()
         fetchCaches.orderedCaches.forEach { (priority, fetchCache) ->
-            collectors += FetchCacheCollector(fetchCache)
+            collectors += UrlCacheCollector(fetchCache)
         }
         assertEquals(fetchCaches.orderedCaches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
@@ -66,7 +64,7 @@ class TestDataCollectors : TestBase() {
 
         println("Adding another normal collector ...")
         val priority = Priority13.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCaches.normalCache)
+        val normalCollector = UrlCacheCollector(fetchCaches.normalCache)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
 //        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
@@ -82,7 +80,7 @@ class TestDataCollectors : TestBase() {
         val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<UrlAware>>()
 
         globalCache.fetchCaches.orderedCaches.forEach { (priority, fetchCache) ->
-            collectors[priority] = FetchCacheCollector(fetchCache)
+            collectors[priority] = UrlCacheCollector(fetchCache)
         }
         assertEquals(fetchCaches.orderedCaches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
@@ -90,7 +88,7 @@ class TestDataCollectors : TestBase() {
 
         println("Adding 2nd normal collector ...")
         val priority = Priority13.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCaches.normalCache)
+        val normalCollector = UrlCacheCollector(fetchCaches.normalCache)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
@@ -104,7 +102,7 @@ class TestDataCollectors : TestBase() {
 
     @Test
     fun `When iterate through fetch iterable then items are correct`() {
-        val fetchIterable = MultiSourceHyperlinkIterable(fetchCaches, lowerCacheSize)
+        val fetchIterable = UrlFeeder(fetchCaches, lowerCacheSize)
         val resourceURI = ResourceLoader.getResource("seeds/head100/best-sellers.txt")!!.toURI()
         val collector = LocalFileHyperlinkCollector(Paths.get(resourceURI), Priority13.NORMAL)
         fetchIterable.addDefaultCollectors()

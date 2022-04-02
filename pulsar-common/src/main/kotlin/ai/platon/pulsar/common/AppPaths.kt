@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import java.nio.file.Files
@@ -160,7 +160,7 @@ object AppPaths {
     }
 
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
-        val u = Urls.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
+        val u = UrlUtils.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
 
         var host = u.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(u.host).topPrivateDomain().toString()
         host = host.replace('.', '-')

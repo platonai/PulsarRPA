@@ -1,8 +1,8 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.urls.Urls
-import ai.platon.pulsar.common.urls.Urls.reverseUrl
+import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.UrlUtils.reverseUrl
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import org.junit.Before
 import org.junit.Ignore
@@ -58,7 +58,7 @@ class TestCrawlFilter {
         println(keyRange[0].toString() + ", " + keyRange[1])
         assertEquals(65438, '\uFFFF' - 'a')
         for (url in detailUrls) {
-            val reversedUrl = Urls.reverseUrl(url)
+            val reversedUrl = UrlUtils.reverseUrl(url)
             assertTrue("com.jumei.lancome:http/search.html" < reversedUrl)
             assertTrue("com.jumei.mall:http/\uFFFF" > reversedUrl)
             // Note : \uFFFF, not \\uFFFF
@@ -66,7 +66,7 @@ class TestCrawlFilter {
         }
 
         for (url in detailUrls) {
-            val reversedUrl = Urls.reverseUrl(url)
+            val reversedUrl = UrlUtils.reverseUrl(url)
             println(reversedUrl)
             assertTrue(keyRange[0] < reversedUrl)
             assertTrue(keyRange[1] > reversedUrl)

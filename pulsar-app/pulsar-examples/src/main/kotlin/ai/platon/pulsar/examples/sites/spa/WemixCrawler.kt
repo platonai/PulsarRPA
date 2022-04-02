@@ -4,7 +4,7 @@ import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.context.withContext
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
@@ -114,8 +114,8 @@ private class WemixCrawler(
     }
 }
 
-fun main() = withContext {
-    val session = it.createSession()
+fun main() {
+    val session = PulsarContexts.createSession()
 
     IntRange(1, 80).forEach { i ->
         val crawler = WemixCrawler(100 * i, session)

@@ -1,18 +1,13 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
-import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantQueue
-import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantQueue
-import ai.platon.pulsar.common.collect.queue.ConcurrentLoadingQueue
-import ai.platon.pulsar.common.collect.queue.ConcurrentNEntrantLoadingQueue
-import ai.platon.pulsar.common.collect.queue.ConcurrentNonReentrantLoadingQueue
-import ai.platon.pulsar.common.collect.queue.LoadingQueue
+import ai.platon.pulsar.common.collect.queue.*
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-interface FetchCache {
+interface UrlCache {
     val name: String
     /**
      * The priority
@@ -33,10 +28,10 @@ interface FetchCache {
     fun deepClear() = clear()
 }
 
-abstract class AbstractFetchCache(
+abstract class AbstractUrlCache(
     override val name: String,
     override val priority: Int
-) : FetchCache {
+) : UrlCache {
     override fun removeDeceased() {
         val now = Instant.now()
         queues.forEach { it.removeIf { it.deadTime < now } }
@@ -47,16 +42,16 @@ abstract class AbstractFetchCache(
     }
 }
 
-open class ConcurrentFetchCache(
+open class ConcurrentUrlCache(
     name: String = "",
     priority: Int = Priority13.NORMAL.value
-) : AbstractFetchCache(name, priority) {
+) : AbstractUrlCache(name, priority) {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
     override val nReentrantQueue = ConcurrentNEntrantQueue<UrlAware>(3)
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
 }
 
-class LoadingFetchCache constructor(
+class LoadingUrlCache constructor(
     /**
      * The cache name, a loading fetch cache requires a unique name
      * */
@@ -73,7 +68,7 @@ class LoadingFetchCache constructor(
      * The cache capacity
      * */
     val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
-) : AbstractFetchCache(name, priority), Loadable<UrlAware> {
+) : AbstractUrlCache(name, priority), Loadable<UrlAware> {
 
     companion object {
         const val G_NON_REENTRANT = 1

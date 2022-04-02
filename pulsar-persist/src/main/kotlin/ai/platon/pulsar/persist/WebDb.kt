@@ -2,11 +2,9 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.urls.Urls
-import ai.platon.pulsar.common.urls.Urls.reverseUrlOrNull
-import ai.platon.pulsar.persist.gora.GoraStorage
+import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -66,7 +64,7 @@ class WebDb(
      *
      */
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
-        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
+        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
 
@@ -142,7 +140,7 @@ class WebDb(
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
-        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, norm)
+        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         return if (key.isNotEmpty()) {
             dataStore.delete(key)

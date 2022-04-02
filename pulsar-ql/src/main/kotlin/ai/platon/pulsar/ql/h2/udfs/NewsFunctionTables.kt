@@ -6,7 +6,7 @@ import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.BoiConstants.*
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.node.ext.location
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.H2Context
@@ -103,7 +103,7 @@ object NewsFunctionTables {
         }
 
         val ss = H2SessionFactory.getSession(conn)
-        val (url, args) = Urls.splitUrlArgs(portalUrl)
+        val (url, args) = UrlUtils.splitUrlArgs(portalUrl)
         ss.load(url, ss.options(args))
 
         val docs = Queries.loadOutPages(

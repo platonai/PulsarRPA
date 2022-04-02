@@ -1,13 +1,13 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.Queries
-import ai.platon.pulsar.ql.annotation.H2Context
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Duration
@@ -29,7 +29,7 @@ object MetadataFunctionTables {
             "return the fields of the page as key-value pairs")
     @JvmStatic
     fun fetch(@H2Context conn: Connection, configuredUrl: String): ResultSet {
-        val (url, args) = Urls.splitUrlArgs(configuredUrl)
+        val (url, args) = UrlUtils.splitUrlArgs(configuredUrl)
         val loadOptions = LoadOptions.parse(args, volatileConfig)
         loadOptions.expires = Duration.ZERO
 

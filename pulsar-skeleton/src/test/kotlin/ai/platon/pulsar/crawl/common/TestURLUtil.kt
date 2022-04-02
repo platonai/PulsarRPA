@@ -18,16 +18,16 @@
  */
 package ai.platon.pulsar.crawl.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.domain.DomainSuffixes
+import ai.platon.pulsar.common.urls.UrlUtils.resolveURL
 import ai.platon.pulsar.crawl.common.URLUtil.chooseRepr
 import ai.platon.pulsar.crawl.common.URLUtil.getDomainName
 import ai.platon.pulsar.crawl.common.URLUtil.getDomainSuffix
 import ai.platon.pulsar.crawl.common.URLUtil.getHostBatches
 import ai.platon.pulsar.crawl.common.URLUtil.toASCII
 import ai.platon.pulsar.crawl.common.URLUtil.toUNICODE
-import ai.platon.pulsar.common.urls.Urls.resolveURL
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.domain.DomainSuffixes
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test

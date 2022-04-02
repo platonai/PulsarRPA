@@ -20,7 +20,7 @@ package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.KConfigurable
-import ai.platon.pulsar.common.urls.Urls.getURLOrNull
+import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizer
 import org.apache.oro.text.regex.*
 import org.slf4j.LoggerFactory

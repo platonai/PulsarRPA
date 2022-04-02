@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
@@ -58,7 +58,7 @@ class JobFetchTask(
          * address pair or protocol+domain pair.
          */
         fun create(jobId: Int, priority: Int, url: String, page: WebPage, groupMode: URLUtil.GroupMode): JobFetchTask? {
-            val u = Urls.getURLOrNull(url) ?: return null
+            val u = UrlUtils.getURLOrNull(url) ?: return null
 
             val proto = u.protocol
             val host = URLUtil.getHost(u, groupMode)

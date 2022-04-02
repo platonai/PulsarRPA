@@ -17,21 +17,17 @@
 package ai.platon.pulsar.indexer.solr;
 
 import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.common.urls.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.common.urls.UrlUtils;
 import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.crawl.index.IndexingException;
 import ai.platon.pulsar.crawl.index.IndexingFilters;
 import ai.platon.pulsar.persist.WebPage;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static org.junit.Assert.assertNull;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(locations = {"classpath:/test-context/index-beans.xml"})
@@ -67,7 +63,7 @@ public class TestIndexingFilters {
         page.setPageText("text");
         page.setPageTitle("title");
 
-        String key = Urls.reverseUrlOrEmpty(url);
+        String key = UrlUtils.reverseUrlOrEmpty(url);
         filters.filter(new IndexDocument(key), url, page);
     }
 }

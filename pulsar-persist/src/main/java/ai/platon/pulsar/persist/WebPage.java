@@ -21,7 +21,7 @@ import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.common.urls.Urls;
+import ai.platon.pulsar.common.urls.UrlUtils;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
@@ -149,8 +149,8 @@ final public class WebPage implements Comparable<WebPage> {
     private WebPage(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
     ) {
-        this.url = urlReversed ? Urls.unreverseUrl(url) : url;
-        this.reversedUrl = urlReversed ? url : Urls.reverseUrlOrEmpty(url);
+        this.url = urlReversed ? UrlUtils.unreverseUrl(url) : url;
+        this.reversedUrl = urlReversed ? url : UrlUtils.reverseUrlOrEmpty(url);
         this.conf = conf;
         this.page = page;
 

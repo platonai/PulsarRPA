@@ -1,27 +1,19 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.urls.Urls
-import ai.platon.pulsar.crawl.WebPageBatchHandler
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import com.google.common.collect.Iterables
-import kotlinx.coroutines.Deferred
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.max
 
 /**
  * Created by vincent on 16-10-15.
@@ -44,8 +36,8 @@ data class UrlStat(
 ) : Comparable<UrlStat> {
 
     override fun compareTo(other: UrlStat): Int {
-        val reverseHost = Urls.reverseHost(hostName)
-        val reverseHost2 = Urls.reverseHost(other.hostName)
+        val reverseHost = UrlUtils.reverseHost(hostName)
+        val reverseHost2 = UrlUtils.reverseHost(other.hostName)
 
         return reverseHost.compareTo(reverseHost2)
     }

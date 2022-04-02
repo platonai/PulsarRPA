@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.parse.html
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
@@ -57,8 +57,8 @@ class JsoupParser(
         // TODO: use a json variable
         val metadata = document.document.selectFirstOrNull("#${AppConstants.PULSAR_META_INFORMATION_ID}") ?: return
 
-        page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
-        page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
+        page.href?.takeIf { UrlUtils.isValidUrl(it) }?.let { metadata.attr("href", it) }
+        page.referrer.takeIf { UrlUtils.isValidUrl(it) }?.let { metadata.attr("referer", it) }
 
         val options = page.options
 

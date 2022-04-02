@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -15,7 +15,6 @@ import org.apache.gora.store.DataStore
 import org.junit.*
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

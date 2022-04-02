@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.urls.LabeledHyperlink
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.PageCounters.Self
@@ -18,7 +18,6 @@ import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.DomStatistics
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -155,7 +154,7 @@ class MiscMessageWriter(
     fun reportGeneratedHosts(hostNames: Set<String>) {
         val report = StringBuilder("# Total " + hostNames.size + " hosts generated : \n")
         hostNames.asSequence()
-            .map { Urls.reverseHost(it) }.sorted().map { Urls.unreverseHost(it) }
+            .map { UrlUtils.reverseHost(it) }.sorted().map { UrlUtils.unreverseHost(it) }
             .joinTo(report, "\n") { String.format("%40s", it) }
         write(report.toString(), "generate-hosts.txt")
     }

@@ -21,37 +21,19 @@
     <name>Pulsar Master</name>
 
     <dependencies>
-        <!-- Internal Dependencies -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-beans</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-boot</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-ql</artifactId>
+            <artifactId>pulsar-all</artifactId>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-rest</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-h2</artifactId>
         </dependency>
 
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-app-common-resources</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-core</artifactId>
         </dependency>
 
         <dependency>

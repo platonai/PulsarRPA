@@ -2,7 +2,7 @@ package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -35,7 +34,7 @@ class FileBackendPageStore(
     override fun put(reversedUrl: String, page: GWebPage) {
         super.put(reversedUrl, page)
 
-        Urls.unreverseUrlOrNull(reversedUrl)?.let {
+        UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
             write(WebPage.box(it, page, unsafeConf))
         }
     }
@@ -45,7 +44,7 @@ class FileBackendPageStore(
     override fun getFields(): Array<String> = GWebPage._ALL_FIELDS
 
     private fun read(reversedUrl: String): GWebPage? {
-        val url = Urls.unreverseUrlOrNull(reversedUrl) ?: return null
+        val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".htm")
         val path = persistDirectory.resolve(filename)
 

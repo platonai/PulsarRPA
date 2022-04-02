@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.urls.Urls
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -8,6 +7,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.options.FetchOptions
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -446,9 +446,9 @@ class TaskMonitor(
     private fun reportServedThreads() {
         val report = StringBuilder()
         poolServedThreads.keySet()
-                .map { Urls.reverseHost(it) }
+                .map { UrlUtils.reverseHost(it) }
                 .sorted()
-                .map { Urls.unreverseHost(it) }
+                .map { UrlUtils.unreverseHost(it) }
                 .forEach { poolId ->
                     val threads = "#" + StringUtils.join(poolServedThreads.get(poolId), ", #")
                     val line = String.format("%1$40s -> %2\$s\n", poolId, threads)

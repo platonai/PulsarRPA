@@ -21,7 +21,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.MEM_STORE_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
@@ -34,7 +34,6 @@ import org.junit.Before
 import org.junit.Test
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.test.assertEquals
@@ -78,7 +77,7 @@ class TestGoraStorageInMemory {
         webDb.delete(exampleUrl)
         webDb.flush()
         webDb.close()
-        LOG.debug("get '{}', '{}'", store.schemaName, Urls.reverseUrlOrEmpty(exampleUrl))
+        LOG.debug("get '{}', '{}'", store.schemaName, UrlUtils.reverseUrlOrEmpty(exampleUrl))
     }
 
     /**

@@ -1,7 +1,10 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -207,7 +210,7 @@ class ProxyEntry(
         val TEST_URLS = mutableListOf<URL>()
 
         init {
-            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { Urls.getURLOrNull(it) }
+            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { UrlUtils.getURLOrNull(it) }
         }
 
         /**

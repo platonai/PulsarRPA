@@ -16,18 +16,17 @@
  */
 package ai.platon.pulsar.persist.model.experimental
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.HtmlIntegrity.Companion.fromString
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.urls.Urls.normalize
-import ai.platon.pulsar.common.urls.Urls.reverseUrlOrEmpty
-import ai.platon.pulsar.common.urls.Urls.unreverseUrl
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.urls.UrlUtils.normalize
+import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
+import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GParseStatus

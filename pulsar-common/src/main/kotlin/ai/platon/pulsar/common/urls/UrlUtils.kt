@@ -9,7 +9,7 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
 
-object Urls {
+object UrlUtils {
 
     fun isInternal(url: String) = url.startsWith(INTERNAL_URL_PREFIX)
 

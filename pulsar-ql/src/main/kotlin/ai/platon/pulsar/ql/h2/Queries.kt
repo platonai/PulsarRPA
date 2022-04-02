@@ -3,7 +3,7 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
@@ -112,7 +112,7 @@ object Queries {
 
         val normUrl = session.normalize(portalUrl)
         val document = session.loadDocument(normUrl)
-        var links = transformer(document.document, restrictCss, offset, limit).filter { !Urls.isInternal(it) }
+        var links = transformer(document.document, restrictCss, offset, limit).filter { !UrlUtils.isInternal(it) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
@@ -151,7 +151,7 @@ object Queries {
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit) {
-            it.absUrl("href").takeIf { Urls.isValidUrl(it) }?.substringBefore("?")
+            it.absUrl("href").takeIf { UrlUtils.isValidUrl(it) }?.substringBefore("?")
         }.filterNotNull()
     }
 

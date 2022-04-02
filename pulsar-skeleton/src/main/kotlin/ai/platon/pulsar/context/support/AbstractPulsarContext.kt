@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -230,7 +230,7 @@ abstract class AbstractPulsarContext(
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
-        return abnormalPage ?: injectComponent.inject(Urls.splitUrlArgs(url))
+        return abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
     }
 
     override fun inject(url: NormUrl): WebPage {

@@ -2,7 +2,6 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.rest.api.common.DegenerateScrapeHyperlink
@@ -31,7 +30,7 @@ class ScrapeService(
      * */
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
         val hyperlink = createScrapeHyperlink(request)
-        fetchCaches.highestCache.reentrantQueue.add(hyperlink)
+        fetchCaches.higher3Cache.reentrantQueue.add(hyperlink)
         return hyperlink.get(3, TimeUnit.MINUTES)
     }
 

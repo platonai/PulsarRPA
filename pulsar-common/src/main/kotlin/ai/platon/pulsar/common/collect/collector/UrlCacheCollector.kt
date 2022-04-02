@@ -1,33 +1,33 @@
 package ai.platon.pulsar.common.collect.collector
 
-import ai.platon.pulsar.common.collect.FetchCache
 import ai.platon.pulsar.common.collect.Loadable
+import ai.platon.pulsar.common.collect.UrlCache
 import ai.platon.pulsar.common.collect.queue.LoadingQueue
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Instant
 import java.util.*
 
-open class FetchCacheCollector constructor(
-    val fetchCache: FetchCache
-) : AbstractPriorityDataCollector<UrlAware>(fetchCache.priority) {
+open class UrlCacheCollector constructor(
+    val urlCache: UrlCache
+) : AbstractPriorityDataCollector<UrlAware>(urlCache.priority) {
     private val logger = getLogger(this)
 
-    private val queues get() = fetchCache.queues
+    private val queues get() = urlCache.queues
 
     override var name: String = "FCC"
 
     override val size: Int
-        get() = fetchCache.size
+        get() = urlCache.size
 
     override val externalSize: Int
-        get() = fetchCache.externalSize
+        get() = urlCache.externalSize
 
     override val estimatedExternalSize: Int
-        get() = fetchCache.estimatedExternalSize
+        get() = urlCache.estimatedExternalSize
 
     override val estimatedSize: Int
-        get() = fetchCache.estimatedSize
+        get() = urlCache.estimatedSize
 
     /**
      * If the fetch cache is a LoadingFetchCache, the items can be both in memory or in external source,
@@ -46,9 +46,9 @@ open class FetchCacheCollector constructor(
         // size is 0, estimatedSize > 0, there are items in the database
         // estimatedSize is updated at least every 5 seconds
         // load actually performed at least every 5 seconds
-        if (estimatedSize > 0 && fetchCache is Loadable<*>) {
+        if (estimatedSize > 0 && urlCache is Loadable<*>) {
             logger.debug("Loading tasks with estimatedSize be {}", estimatedSize)
-            fetchCache.loadNow()
+            urlCache.loadNow()
         }
 
         return size > 0
@@ -82,10 +82,10 @@ open class FetchCacheCollector constructor(
     }
 
     @Synchronized
-    override fun clear() = fetchCache.clear()
+    override fun clear() = urlCache.clear()
 
     @Synchronized
     override fun deepClear() {
-        fetchCache.deepClear()
+        urlCache.deepClear()
     }
 }

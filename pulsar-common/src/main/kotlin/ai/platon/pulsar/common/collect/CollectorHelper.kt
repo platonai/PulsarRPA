@@ -2,26 +2,26 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.collector.DataCollector
-import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.QueueCollector
+import ai.platon.pulsar.common.collect.collector.UrlCacheCollector
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
+class CollectorHelper(val feeder: UrlFeeder) {
     private val dcLogger = getLogger(DataCollector::class)
-    private val fetchCaches get() = fetchIterable.fetchCaches
+    private val fetchCaches get() = feeder.fetchCaches
 
-    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> = fetchIterable.getCollectors(name)
+    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> = feeder.getCollectors(name)
 
     fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> =
-        fetchIterable.getCollectors(names)
+        feeder.getCollectors(names)
 
-    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> = fetchIterable.getCollectors(regex)
+    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> = feeder.getCollectors(regex)
 
-    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> = fetchIterable.getCollectorsLike(name)
+    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> = feeder.getCollectorsLike(name)
 
     fun contains(name: String): Boolean = getCollectors(name).isNotEmpty()
 
@@ -32,7 +32,7 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     fun containsLike(name: String): Boolean = getCollectorsLike(name).isNotEmpty()
 
     fun addDefaults() {
-        fetchIterable.addDefaultCollectors()
+        feeder.addDefaultCollectors()
     }
 
     fun add(collector: PriorityDataCollector<UrlAware>) {
@@ -40,38 +40,38 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     }
 
     fun addAll(collectors: Iterable<PriorityDataCollector<UrlAware>>) {
-        collectors.filterIsInstance<FetchCacheCollector>().forEach {
-            fetchCaches.unorderedCaches.add(it.fetchCache)
+        collectors.filterIsInstance<UrlCacheCollector>().forEach {
+            fetchCaches.unorderedCaches.add(it.urlCache)
         }
         collectors.forEach { report(it) }
-        fetchIterable.addCollectors(collectors)
+        feeder.addCollectors(collectors)
     }
 
-    fun addFetchCacheCollector(priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
+    fun addFetchCacheCollector(priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
         return addFetchCacheCollector("", priority, urlLoader).also { it.name = "LFC@" + it.id }
     }
 
-    fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): FetchCacheCollector {
-        val fetchCache = LoadingFetchCache(name, priority, urlLoader)
+    fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
+        val fetchCache = LoadingUrlCache(name, priority, urlLoader)
         fetchCaches.unorderedCaches.add(fetchCache)
-        val collector = FetchCacheCollector(fetchCache).also { it.name = name }
+        val collector = UrlCacheCollector(fetchCache).also { it.name = name }
 
         report(collector)
-        fetchIterable.addCollector(collector)
+        feeder.addCollector(collector)
 
         return collector
     }
 
-    fun addFetchCacheCollector(priority: Int): FetchCacheCollector {
+    fun addFetchCacheCollector(priority: Int): UrlCacheCollector {
         return addFetchCacheCollector("", priority).also { it.name = "FC@" + it.id }
     }
 
-    fun addFetchCacheCollector(name: String, priority: Int): FetchCacheCollector {
-        val fetchCache = ConcurrentFetchCache(name)
+    fun addFetchCacheCollector(name: String, priority: Int): UrlCacheCollector {
+        val fetchCache = ConcurrentUrlCache(name)
         fetchCaches.unorderedCaches.add(fetchCache)
-        val collector = FetchCacheCollector(fetchCache).also { it.name = name }
+        val collector = UrlCacheCollector(fetchCache).also { it.name = name }
 
-        fetchIterable.addCollector(collector)
+        feeder.addCollector(collector)
         report(collector)
 
         return collector
@@ -84,7 +84,7 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     ): QueueCollector {
         val collector = QueueCollector(queue, priority).also { it.name = name }
 
-        fetchIterable.addCollector(collector)
+        feeder.addCollector(collector)
         report(collector)
 
         return collector
@@ -95,12 +95,12 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     }
 
     fun removeAll(names: Iterable<String>): Collection<DataCollector<UrlAware>> {
-        val collectors = fetchIterable.getCollectors(names)
+        val collectors = feeder.getCollectors(names)
         return removeAll(collectors)
     }
 
     fun removeAll(regex: Regex): Collection<DataCollector<UrlAware>> {
-        val collectors = fetchIterable.getCollectors(regex)
+        val collectors = feeder.getCollectors(regex)
         return removeAll(collectors)
     }
 
@@ -109,8 +109,8 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
     }
 
     fun removeAll(collectors: Collection<DataCollector<UrlAware>>): Collection<DataCollector<UrlAware>> {
-        fetchIterable.removeAll(collectors)
-        collectors.filterIsInstance<FetchCacheCollector>().map { it.fetchCache }
+        feeder.removeAll(collectors)
+        collectors.filterIsInstance<UrlCacheCollector>().map { it.urlCache }
             .let { fetchCaches.unorderedCaches.removeAll(it) }
 
         if (collectors.isNotEmpty()) {
@@ -126,8 +126,8 @@ class CollectorHelper(val fetchIterable: MultiSourceHyperlinkIterable) {
 
         dcLogger.info("Task <{}> has {}/{} items{}, adding to {}@{}",
             collector.name, collector.size, collector.estimatedSize, msg,
-            fetchIterable.openCollectors.javaClass.simpleName,
-            fetchIterable.openCollectors.hashCode())
+            feeder.openCollectors.javaClass.simpleName,
+            feeder.openCollectors.hashCode())
         dcLogger.info("{}", collector)
     }
 }

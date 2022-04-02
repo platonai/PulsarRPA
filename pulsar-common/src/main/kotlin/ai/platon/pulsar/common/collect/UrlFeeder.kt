@@ -2,21 +2,21 @@ package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.collector.DataCollector
-import ai.platon.pulsar.common.collect.collector.FetchCacheCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollectorsFormatter
+import ai.platon.pulsar.common.collect.collector.UrlCacheCollector
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 
-class MultiSourceHyperlinkIterable(
-    val fetchCaches: FetchCacheManager,
+class UrlFeeder(
+    val fetchCaches: UrlPool,
     val lowerCacheSize: Int = 100,
     val enableDefaults: Boolean = false
 ) : Iterable<UrlAware> {
     private val logger = getLogger(this)
 
-    private val realTimeCollector = FetchCacheCollector(fetchCaches.realTimeCache)
+    private val realTimeCollector = UrlCacheCollector(fetchCaches.realTimeCache)
         .apply { name = "FCC#RealTime" }
     private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCC#Delay" }
@@ -88,20 +88,20 @@ class MultiSourceHyperlinkIterable(
         return priorCount + delayQueueCount + competitorCount / competitorCollectors.size
     }
 
-    fun addDefaultCollectors(): MultiSourceHyperlinkIterable {
-        combinedDataCollector.collectors.removeIf { it is FetchCacheCollector }
+    fun addDefaultCollectors(): UrlFeeder {
+        combinedDataCollector.collectors.removeIf { it is UrlCacheCollector }
         fetchCaches.orderedCaches.values.forEach { fetchCache ->
-            addCollector(FetchCacheCollector(fetchCache).apply { name = "FCC.$id" })
+            addCollector(UrlCacheCollector(fetchCache).apply { name = "FCC.$id" })
         }
         return this
     }
 
-    fun addCollector(collector: PriorityDataCollector<UrlAware>): MultiSourceHyperlinkIterable {
+    fun addCollector(collector: PriorityDataCollector<UrlAware>): UrlFeeder {
         combinedDataCollector.collectors += collector
         return this
     }
 
-    fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): MultiSourceHyperlinkIterable {
+    fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): UrlFeeder {
         combinedDataCollector.collectors += collectors
         return this
     }
@@ -132,7 +132,7 @@ class MultiSourceHyperlinkIterable(
 
     fun clear() {
         loadingIterable.clear()
-        realTimeCollector.fetchCache.clear()
+        realTimeCollector.urlCache.clear()
         delayCollector.queue.clear()
         combinedDataCollector.clear()
     }

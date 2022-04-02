@@ -18,7 +18,7 @@ import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
@@ -250,7 +250,7 @@ open class StreamingCrawler<T : UrlAware>(
                 }
 
                 // disabled, might be slow
-                val urlSpec = Urls.splitUrlArgs(url.url).first
+                val urlSpec = UrlUtils.splitUrlArgs(url.url).first
                 if (alwaysFalse() && doLaterIfProcessing(urlSpec, url, Duration.ofSeconds(10))) {
                     return@forEachIndexed
                 }
@@ -344,7 +344,7 @@ open class StreamingCrawler<T : UrlAware>(
         criticalWarning = null
 
         val context = Dispatchers.Default + CoroutineName("w")
-        val urlSpec = Urls.splitUrlArgs(url.url).first
+        val urlSpec = UrlUtils.splitUrlArgs(url.url).first
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {

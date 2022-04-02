@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.Urls.splitUrlArgs
+import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState

@@ -3,9 +3,7 @@ package ai.platon.pulsar.examples.sites.simuwang
 import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.test.VerboseSQLExecutor
-import kotlinx.coroutines.delay
 
 class LoginHandler: AbstractEmulateEventHandler() {
     override var verbose = true
@@ -34,7 +32,6 @@ fun main() {
     val executor = VerboseSQLExecutor()
     executor.eventHandler = LoginHandler()
     executor.open(portal, "-scrollCount 1")
-//    executor.open("https://bot.sannysoft.com/", "-scrollCount 1")
 
     val sql = """
 select
@@ -50,8 +47,8 @@ select
 from
     load_and_select('$portal', '.ranking-table-tbody .ranking-table-tbody-tr')
         """.trimIndent()
-//    executor.executeQuery(sql)
-//    executor.loadOutPages(portal, args)
+    executor.executeQuery(sql)
+    executor.loadOutPages(portal, args)
 
     executor.close()
 }

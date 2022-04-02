@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.collect.MultiSourceHyperlinkIterable
+import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
@@ -35,7 +35,7 @@ open class StreamingCrawlLoop(
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
-    override val fetchTaskIterable by lazy { createFetchTasks() }
+    override val urlFeeder by lazy { createHyperlinkFeeder() }
 
     override lateinit var crawler: StreamingCrawler<UrlAware>
         protected set
@@ -71,14 +71,14 @@ open class StreamingCrawlLoop(
     }
 
     private fun start0() {
-        logger.info("Registered {} hyperlink collectors | #{} @{}", fetchTaskIterable.collectors.size, id, hashCode())
+        logger.info("Registered {} hyperlink collectors | #{} @{}", urlFeeder.collectors.size, id, hashCode())
 
         /**
          * The pulsar session
          * */
         val session = PulsarContexts.activate().createSession()
 
-        val urls = fetchTaskIterable.asSequence()
+        val urls = urlFeeder.asSequence()
         crawler = StreamingCrawler(urls,
             defaultOptions, session, globalCacheFactory, crawlEventHandler,
             noProxy = false
@@ -91,8 +91,8 @@ open class StreamingCrawlLoop(
         }
     }
 
-    private fun createFetchTasks(): MultiSourceHyperlinkIterable {
+    private fun createHyperlinkFeeder(): UrlFeeder {
         val enableDefaults = config.getBoolean(ENABLE_DEFAULT_DATA_COLLECTORS, true)
-        return MultiSourceHyperlinkIterable(globalCache.fetchCaches, enableDefaults = enableDefaults)
+        return UrlFeeder(globalCache.fetchCaches, enableDefaults = enableDefaults)
     }
 }

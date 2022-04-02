@@ -18,7 +18,7 @@ package ai.platon.pulsar.crawl.index
 
 import ai.platon.pulsar.common.DateTimes.isoInstantFormat
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.Urls.unreverseUrl
+import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebPage
 import org.apache.commons.lang3.StringUtils

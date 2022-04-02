@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.Urls
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
@@ -69,7 +69,7 @@ class InjectComponent(
     }
 
     fun injectAll(vararg configuredUrls: String): List<WebPage> {
-        return configuredUrls.map { inject(Urls.splitUrlArgs(it)) }
+        return configuredUrls.map { inject(UrlUtils.splitUrlArgs(it)) }
     }
 
     fun injectAll(pages: Collection<WebPage>): List<WebPage> {

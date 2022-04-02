@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.collect.ConcurrentFetchCacheManager
-import ai.platon.pulsar.common.collect.FetchCacheManager
+import ai.platon.pulsar.common.collect.ConcurrentUrlPool
+import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.CACHE_CAPACITY
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -58,7 +58,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * The fetch cache manager, hold on queues of fetch items
      * */
-    open var fetchCaches: FetchCacheManager = ConcurrentFetchCacheManager(conf).apply { initialize() }
+    open var fetchCaches: UrlPool = ConcurrentUrlPool(conf).apply { initialize() }
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */
@@ -74,7 +74,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
         fetchingUrlQueue.clear()
         pageCache.clear()
         documentCache.clear()
-        fetchCaches = ConcurrentFetchCacheManager(conf).apply { initialize() }
+        fetchCaches = ConcurrentUrlPool(conf).apply { initialize() }
     }
 
     fun clearCaches() {
@@ -103,7 +103,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
 }
 
 class GlobalCacheFactory(val immutableConfig: ImmutableConfig) {
-    val defaultGlobalCache: GlobalCache by lazy {
+    val reflectedGlobalCache: GlobalCache by lazy {
         val clazz = immutableConfig.getClass(
             CapabilityTypes.GLOBAL_CACHE_CLASS, GlobalCache::class.java)
         clazz.constructors.first { it.parameters.size == 1 }
@@ -112,5 +112,5 @@ class GlobalCacheFactory(val immutableConfig: ImmutableConfig) {
 
     var specifiedGlobalCache: GlobalCache? = null
 
-    val globalCache get() = specifiedGlobalCache ?: defaultGlobalCache
+    val globalCache get() = specifiedGlobalCache ?: reflectedGlobalCache
 }
