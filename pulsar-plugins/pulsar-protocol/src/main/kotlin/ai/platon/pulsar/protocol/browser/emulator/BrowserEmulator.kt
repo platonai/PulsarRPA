@@ -1,13 +1,10 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.crawl.EmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -21,9 +18,7 @@ import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
@@ -69,14 +64,10 @@ open class BrowserEmulator(
     open suspend fun cancel(task: FetchTask) {
         counterCancels.inc()
         task.cancel()
-        withContext(Dispatchers.IO) {
-            driverManager.cancel(task.url)
-        }
+        driverManager.cancel(task.url)
     }
 
-    @Throws(IllegalApplicationContextStateException::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
-        checkState()
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         task.page.lastBrowser = driver.browserType
 
@@ -89,11 +80,7 @@ open class BrowserEmulator(
         var response: Response?
 
         try {
-            response = browseWithMinorExceptionsHandled(task, driver)
-        } catch (e: NavigateTaskCancellationException) {
-            exception = e
-            logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)", task.page.id, task.id, task.batchId)
-            response = ForwardingResponse.privacyRetry(task.page)
+            response = browseWithCancellationHandled(task, driver)
         } catch (e: NoSuchSessionException) {
             logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
             driver.retire()
@@ -109,20 +96,43 @@ open class BrowserEmulator(
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
-        } catch (e: org.apache.http.conn.HttpHostConnectException) {
-            logger.takeIf { isActive }?.warn("Web driver is disconnected", e)
-            driver.retire()
-            exception = e
+        } catch (e: Exception) {
+            when {
+                e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
+                    AppContext.shouldTerminate()
+                    logger.warn("Coroutine was cancelled")
+                }
+                else -> {
+                    logger.warn("Unexpected exception", e)
+                }
+            }
             response = ForwardingResponse.crawlRetry(task.page)
         } finally {
         }
 
-        // TODO: avoid the hard coding
-        emulateJd(task, driverSettings, driver)
-
-        driver.stop()
-
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
+    }
+
+    private suspend fun browseWithCancellationHandled(task: FetchTask, driver: WebDriver): Response? {
+        var response: Response?
+
+        try {
+            response = browseWithMinorExceptionsHandled(task, driver)
+
+            emulateAfterFetch(task, driverSettings, driver)
+
+            driver.stop()
+        } catch (e: NavigateTaskCancellationException) {
+            logger.info(
+                "{}. Try canceled task {}/{} again later (privacy scope suggested)",
+                task.page.id,
+                task.id,
+                task.batchId
+            )
+            response = ForwardingResponse.privacyRetry(task.page)
+        }
+
+        return response
     }
 
     @Throws(NavigateTaskCancellationException::class)
@@ -147,7 +157,6 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class,
-            IllegalApplicationContextStateException::class,
             WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
         eventHandler.logBeforeNavigate(task, driverConfig)
@@ -174,19 +183,14 @@ open class BrowserEmulator(
         }
     }
 
-    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
         var pageSource = ""
         var i = 0
         do {
-            withContext(Dispatchers.IO) {
-                counterRequests.inc()
-
-                if (isActive) {
-                    pageSource = interactTask.driver.pageSource() ?: ""
-                    if (pageSource.length < 20_000) {
-                        delay(1000)
-                    }
+            if (isActive) {
+                pageSource = interactTask.driver.pageSource() ?: ""
+                if (pageSource.length < 20_000) {
+                    delay(1000)
                 }
             }
         } while (i++ < 45 && pageSource.length < 20_000 && isActive)
@@ -194,7 +198,7 @@ open class BrowserEmulator(
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
 
-    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
@@ -338,6 +342,10 @@ open class BrowserEmulator(
         }
     }
 
+    protected suspend fun emulateAfterFetch(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
+        emulateJd(task, driverSettings, driver)
+    }
+
     protected suspend fun emulateJd(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
         val isJd = task.url.contains("item.jd.com")
         if (!isJd) return
@@ -383,9 +391,7 @@ open class BrowserEmulator(
     }
 
     private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
-        if (!isActive) {
-            return null
-        }
+        if (!isActive) return null
 
         counterRequests.inc()
         counterJsEvaluates.inc()

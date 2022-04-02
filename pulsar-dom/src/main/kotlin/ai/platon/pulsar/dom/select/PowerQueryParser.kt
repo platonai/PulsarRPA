@@ -8,7 +8,6 @@ import org.jsoup.internal.StringUtil
 import org.jsoup.parser.TokenQueue
 import org.jsoup.select.Evaluator
 import org.jsoup.select.Evaluator.*
-import java.util.*
 import java.util.regex.Pattern
 
 /**
@@ -327,7 +326,6 @@ class PowerQueryParser(private val query: String) {
     private fun byBox1() {
 
         val s = tq.remainder()
-        println(s)
 
         val args = normalize(s)
                 .split('x', 'X')

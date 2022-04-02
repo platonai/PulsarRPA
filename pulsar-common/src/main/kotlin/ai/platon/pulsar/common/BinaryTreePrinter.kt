@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common
 
-import java.util.*
-
 object BTreePrinter {
 
     const val maxFloor = 1
@@ -39,7 +37,6 @@ object BTreePrinter {
             }
             // printWhitespaces(betweenSpaces)
         }
-        println("")
 
         for (i in 1..edgeLines) {
             for (j in nodes.indices) {
@@ -67,8 +64,6 @@ object BTreePrinter {
 
                 // printWhitespaces(edgeLines + edgeLines - i)
             }
-
-            println("")
         }
 
         ai.platon.pulsar.common.BTreePrinter.printBinaryTreeNodeInternal(newBinaryTreeNodes, level + 1, depth)

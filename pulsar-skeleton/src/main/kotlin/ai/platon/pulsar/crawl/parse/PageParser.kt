@@ -19,7 +19,6 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -30,8 +29,6 @@ import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
-import ai.platon.pulsar.crawl.parse.html.PrimerHtmlParser
-import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable

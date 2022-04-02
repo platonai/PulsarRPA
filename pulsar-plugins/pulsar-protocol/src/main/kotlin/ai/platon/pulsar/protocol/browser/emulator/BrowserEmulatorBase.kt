@@ -3,7 +3,6 @@ package ai.platon.pulsar.protocol.browser.emulator
 import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -81,7 +80,7 @@ abstract class BrowserEmulatorBase(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class)
     protected fun checkState(task: FetchTask) {
         checkState()
 

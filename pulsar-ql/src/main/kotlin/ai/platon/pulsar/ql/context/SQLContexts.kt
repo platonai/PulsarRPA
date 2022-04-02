@@ -158,8 +158,6 @@ object SQLContexts {
     @Synchronized
     fun shutdown() {
         PulsarContexts.shutdown()
-        // TODO: the process hung up with unknown reason, we will fix this
-        // exitProcess(0)
     }
 }
 

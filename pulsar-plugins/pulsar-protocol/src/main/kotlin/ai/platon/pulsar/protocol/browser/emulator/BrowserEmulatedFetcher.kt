@@ -40,8 +40,6 @@ open class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     fun fetchContent(page: WebPage) = runBlocking {
-        // val pageLoadTimeout = EmulateSettings(page.conf).pageLoadTimeout.toMillis()
-//        withTimeout(pageLoadTimeout) { fetchContentDeferred(page) }
         fetchContentDeferred(page)
     }
 
