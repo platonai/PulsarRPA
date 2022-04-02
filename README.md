@@ -33,19 +33,19 @@ val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val session: PulsarSession = PulsarContexts.createSession()
 ```
 
-Load a page if it's not in the database, or it's expired
+Load a page, fetch it from the internet if it's not in the local storage, or it's expired
 
 ```kotlin
 session.load(url, "-expires 1d")
 ```
 
-Load a page if it's not in the database, or it's expired, and then load out pages specified by -outLink, or they are expired
+Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then load out pages specified by -outLink, or they are expired
 
 ```kotlin
 session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 ```
 
-Load a page if it's not in the database, or it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector
+Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector
 
 ```kotlin
 session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
@@ -87,7 +87,6 @@ from
 Execute the X-SQL:
 
 ```kotlin
-val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val context: SQLContext = SQLContexts.activate()
 context.executeQuery(sql)
 ```
