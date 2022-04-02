@@ -68,6 +68,7 @@ class FileBackendPageStore(
 
         log.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
 
+        // TODO: serialize with the metadata
         page.content?.let { Files.write(path, it.array()) }
     }
 

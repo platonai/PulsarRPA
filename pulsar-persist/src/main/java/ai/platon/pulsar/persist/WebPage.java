@@ -564,7 +564,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public int getMaxRetries() {
-        return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 1);
+        return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3);
     }
 
     @NotNull

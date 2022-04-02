@@ -470,7 +470,12 @@ open class StreamingCrawler<T : UrlAware>(
             crawlEventHandler.onAfterLoad(url, page)
         }
 
+        if (conf.getBoolean("crawl.retry.enabled", false)) {
+            return
+        }
+
         when {
+            !isActive -> return
             page == null -> handleRetry(url, page)
             page.protocolStatus.isRetry -> handleRetry(url, page)
             page.crawlStatus.isRetry -> handleRetry(url, page)
