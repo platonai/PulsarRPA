@@ -7,15 +7,18 @@ Extracting web data at scale is extremely hard. Websites change frequently and a
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs.
 
+We also have a plan to develop an advanced AI to extract every field in webpages with notable accuracy.
+
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- Web spider: browser rendering, ajax, scheduling, distributed, highly optimized
-- Bot stealth: never get banned
-- Simple API
-- SPA crawling
+- Web spider: browser rendering, ajax data crawling, scheduling, distributed, highly optimized
 - X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-- Big data: designed for large scale crawling, various backend storage support: HBase/MongoDB
+- Bot stealth: never get banned
+- Simple API: one line of code to scrape, or one SQL to turn a website into a table
+- RPA: imitating human behavior for stealth, SPA crawling, or do something awesome
+- Data quantity assurance: smart retry, accurate scheduling
+- Big data: designed for large scale crawling, various backend storage support: HBase/MongoDB/Gora
 
 For more information check [platon.ai](http://platon.ai)
 
@@ -32,44 +35,36 @@ Maven:
 ```
 
 Create a pulsar session:
-
 ```kotlin
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val session: PulsarSession = PulsarContexts.createSession()
 ```
-
-Load a page, fetch it from the internet if it's not in the local storage, or it's expired
-
+Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then parse it into a Jsoup document
 ```kotlin
-session.load(url, "-expires 1d")
+val page = session.load(url, "-expires 1d")
+val document = session.parse(page)
 ```
-
+or
+```kotlin
+val document = session.loadDocument(url, "-expires 1d")
+```
 Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then load out pages specified by -outLink, or they are expired
-
 ```kotlin
 session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 ```
-
 Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector
-
 ```kotlin
 session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 ```
-
 or
-
 ```kotlin
 session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
 ```
-
 Scrape fields from the out pages:
-
 ```kotlin
 session.scrapeOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]", ".product-intro", listOf(".sku-name", ".p-price"))
 ```
-
 or
-
 ```kotlin
 session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ```
