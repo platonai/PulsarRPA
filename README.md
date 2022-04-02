@@ -39,7 +39,7 @@ Create a pulsar session:
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val session: PulsarSession = PulsarContexts.createSession()
 ```
-Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then parse it into a Jsoup document
+Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then parse it into a Jsoup document
 ```kotlin
 val page = session.load(url, "-expires 1d")
 val document = session.parse(page)
@@ -48,11 +48,11 @@ or
 ```kotlin
 val document = session.loadDocument(url, "-expires 1d")
 ```
-Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then load out pages specified by -outLink, or they are expired
+Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then load out pages specified by -outLink, or they are expired
 ```kotlin
 session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 ```
-Load a page, fetch it from the internet if it's not in the local storage, or it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector
+Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector
 ```kotlin
 session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 ```
@@ -111,7 +111,7 @@ The result set is as follows:
     git clone https://github.com/platonai/pulsar.git
     cd pulsar && bin/build.sh
 
-## Start pulsar server if not started
+## Start the pulsar server if not started
 
 ```shell
 bin/pulsar
