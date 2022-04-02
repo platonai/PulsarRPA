@@ -390,6 +390,9 @@ abstract class AbstractPulsarContext(
         if (closed.compareAndSet(false, true)) {
             logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
+            // TODO: properly cancel the fetching tasks
+            globalCacheFactory.globalCache.clearCaches()
+
             sessions.values.forEach {
                 it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
             }

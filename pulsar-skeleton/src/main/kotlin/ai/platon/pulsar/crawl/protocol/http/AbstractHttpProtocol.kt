@@ -39,7 +39,10 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import crawlercommons.robots.BaseRobotRules
 import org.apache.http.HttpStatus
 import org.slf4j.LoggerFactory
-import java.net.*
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.URL
+import java.net.UnknownHostException
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -119,7 +122,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 retry = response == null || shouldRetry(response)
             } catch (e: IllegalApplicationContextStateException) {
                 // TODO: we may not handle this exception here
-                AppContext.beginTerminate()
+                AppContext.shouldTerminate()
                 log.warn(e.message)
                 response = null
                 lastThrowable = e

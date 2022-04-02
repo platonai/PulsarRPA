@@ -24,7 +24,6 @@ package ai.platon.pulsar.common.config;
  * @author vincent
  * @version $Id: $Id
  */
-@SuppressWarnings("unused")
 public interface CapabilityTypes {
 
     /**
@@ -33,14 +32,6 @@ public interface CapabilityTypes {
     String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
 
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
-
-    String PARAM_OUTPUT_DIR = "pulsar.output.dir";
-
-    String PARAM_REPORT_DIR = "pulsar.report.dir";
-
-    String PARAM_IDENT_STR = "pulsar.id.str";
-
-    String PULSAR_CLUSTER_SLAVES = "pulsar.cluster.slaves";
 
     String DRY_RUN = "pulsar.dry.run";
 
@@ -225,13 +216,7 @@ public interface CapabilityTypes {
      */
     String FETCH_MODE = "fetch.fetch.mode";
 
-    String FETCH_WORKER_NAME_PREFIX = "fetch.worker.name.prefix";
-    // In browser fetch mode, the fetch concurrency depends on the number of process of browsers which is the most critical resource
-
     String FETCH_CONCURRENCY = "fetch.concurrency";
-
-
-    String FETCH_CRAWL_PATH_STRATEGY = "fetch.crawl.path.strategy";
 
     String FETCH_JOB_TIMEOUT = "fetch.job.timeout";
 
@@ -239,14 +224,9 @@ public interface CapabilityTypes {
 
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
 
-    String FETCH_SERVER_REQUIRED = "fetch.fetch.server.required";
-    // TODO: name "queue" has changed to be "pool"
-
     String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
 
     String FETCH_QUEUE_MODE = "fetch.queue.mode";
-
-    String FETCH_QUEUE_USE_HOST_SETTINGS = "fetch.queue.use.host.settings";
 
     String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
 
@@ -266,25 +246,19 @@ public interface CapabilityTypes {
 
     String FETCH_QUEUE_MIN_DELAY = "fetch.queue.min.delay";
 
-    String FETCH_MIN_INTERVAL = "db.fetch.interval.min";
+    String FETCH_MIN_INTERVAL = "fetch.interval.min";
 
-    String FETCH_MAX_INTERVAL = "db.fetch.interval.max";
+    String FETCH_MAX_INTERVAL = "fetch.interval.max";
 
     String FETCH_INTERVAL = "fetch.fetch.interval";
 
-    String FETCH_DEFAULT_INTERVAL = "db.fetch.interval.default";
+    String FETCH_DEFAULT_INTERVAL = "fetch.interval.default";
 
-    String FETCH_MAX_RETRY = "db.fetch.retry.max";
+    String FETCH_MAX_RETRY = "fetch.retry.max";
 
     String FETCH_STORE_CONTENT = "fetch.store.content";
 
-    String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
-
     String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
-
-    String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
-    String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
-    String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
 
     /**
      * Browser
@@ -293,17 +267,6 @@ public interface CapabilityTypes {
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
-
-    String FETCH_BROWSER_EVENT_HANDLER = "fetch.browser.event.handler";
-
-    String FETCH_CLIENT_JS = "fetch.browser.client.js";
-    /**
-     * If log the result of expressions
-     * */
-    @Deprecated
-    String FETCH_CLIENT_JS_SHOW_EXPRESSION_RESULT = "fetch.browser.client.js.show.expression.result";
-
-    String FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE = "fetch.browser.client.js.after.feature.compute";
 
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
@@ -415,14 +378,12 @@ public interface CapabilityTypes {
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
     String PARSE_TIKA_HTML_MAPPER_NAME = "tika.htmlmapper.classname";
 
-    // TODO: not used, may be caused by a git merge problem
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
     /**
      * DbUpdater parameters
      */
     String UPDATE_MAX_INLINKS = "update.max.inlinks";
-
     String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
 
     String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
@@ -444,17 +405,11 @@ public interface CapabilityTypes {
      * Indexing parameters
      */
     String INDEXER_JIT = "indexer.just.in.time";
-
     String INDEXER_HOSTNAME = "index.server.hostname";
-
     String INDEXER_PORT = "index.server.port";
-
     String INDEXER_URL = "indexer.url";
-
     String INDEXER_ZK = "indexer.zookeeper.hosts";
-
     String INDEXER_COLLECTION = "indexer.collection";
-
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
     /**
@@ -471,98 +426,60 @@ public interface CapabilityTypes {
     String GLOBAL_DOCUMENT_CACHE_SIZE = "global.document.cache.size";
 
     /**
-     * Stat
-     */
-    String STAT_INDEX_HOME_URL = "stat.index.home.url";
-    /**
-     * Service
-     */
-    String MASTER_PORT = "master.port";
-    /**
      * Sites may request that search engines don't provide access to cached
      * documents.
      */
     String CACHING_FORBIDDEN_KEY = "caching.forbidden";
-
     /**
      * Show both original forbidden content and summaries (default).
      */
     String CACHING_FORBIDDEN_NONE = "none";
-
     /**
      * Don't show either original forbidden content or summaries.
      */
     String CACHING_FORBIDDEN_ALL = "all";
 
-
     String PULSAR_DOMAIN = "pulsar.domain";
 
     String SCENT_TASK_IDENT = "scent.task.ident";
-
     String SCENT_FILE_SERVER_HOST = "scent.file.server.host";
-
     String SCENT_FILE_SERVER_PORT = "scent.file.server.port";
-
-
     String SCENT_DIAGNOSTOR_ENABLED = "scent.diagnostor.enabled";
 
     // FEATURE
-
     String SCENT_OUT_DIR_FEATURE = "scent.out.dir.feature";
 
     // NLP
-
     String SCENT_NLP_WORD_NET_CONCEPT = "scent.nlp.word.net.concept";
-
     String SCENT_NLP_SEMANTIC_SIMILARITY_ENABLED = "scent.nlp.semantic.similarity.enabled";
 
     // SEGMENT
-
     String SCENT_CHILDREN_SUMMARY_ITEM_MIN = "scent.children.summary.item.min";
-
     String SCENT_CHILDREN_SUMMARY_SAMPLE_MAX = "scent.children.summary.sample.max";
-
     String SCENT_CHILDREN_SUMMARY_FEATURES = "scent.children.summary.features";
-
     String SCENT_CHILDREN_SUMMARY_THRESHOLD = "scent.children.summary.threshold";
-
     String SCENT_CHILDREN_SUMMARY_REPORT = "scent.children.summary.report";
 
     // CLASSIFY
-
     String SCENT_CLASSIFIER_BLOCK_LABELS = "scent.classifier.block.labels";
-
     String SCENT_DIAGNOSE_CLASSIFIER_BLOCK_LABELS = "scent.diagnose.classifier.block.labels";
-
     String SCENT_CLASSIFIER_BLOCK_INHERITABLE_LABLES = "scent.classifier.block.inheritable.labels";
-
     String SCENT_CLASSIFIER_WEIGHT_CODE_STRUCTURE = "scent.classifier.weight.code.structure";
-
     String SCENT_CLASSIFIER_WEIGHT_BLOCK_TEXT = "scent.classifier.weight.block.text";
-
     String SCENT_CLASSIFIER_WEIGHT_BLOCK_TITLE = "scent.classifier.weight.block.title";
 
     // EXTRACT
-
     String SCENT_EXTRACT_EXTRACT_FOR_LABEL = "scent.extract.extractor.for.label";
-
     String SCENT_EXTRACT_REFRESH_FEATURE = "scent.extract.refresh.feature";
-
     String SCENT_EXTRACT_GREEDY = "scent.extract.greedy";
-
     String SCENT_EXTRACT_KEEP_ELEMENT_METADATA = "scent.extract.keep.element.metadata";
-
     String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
 
     // BUILD
-
     String SCENT_WIKI_DOMAIN = "scent.wiki.domain";
-
     String SCENT_WIKI_USERNAME = "scent.wiki.username";
-
     String SCENT_WIKI_PASSWORD = "scent.wiki.password";
 
     // H2
-
     String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
 }

@@ -16,7 +16,9 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.*;
+import ai.platon.pulsar.common.DateTimes;
+import ai.platon.pulsar.common.HtmlIntegrity;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.urls.Urls;
@@ -40,7 +42,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -560,7 +564,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public int getMaxRetries() {
-        return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3);
+        return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 1);
     }
 
     @NotNull

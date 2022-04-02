@@ -4,9 +4,10 @@ import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
@@ -75,8 +76,8 @@ class ChromeDevtoolsDriver(
 
     val sessionLosts = AtomicInteger()
     override var lastActiveTime = Instant.now()
-    // TODO: collect application status from IO operations
-    val isGone get() = closed.get() || !devTools.isOpen || sessionLosts.get() > 0
+    // TODO: collect application state from IO operations
+    val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen || sessionLosts.get() > 0
     val isActive get() = !isGone
 
     init {
@@ -155,10 +156,10 @@ class ChromeDevtoolsDriver(
             val evaluate = runtime.evaluate(expression)
 
             val exception = evaluate?.exceptionDetails?.exception
-            if (exception != null) {
+            if (isActive && exception != null) {
 //                logger.warn(exception.value?.toString())
 //                logger.warn(exception.unserializableValue)
-                logger.warn(exception.description)
+                logger.debug(exception.description + "\n>>>$expression<<<")
             }
 
             val result = evaluate?.result

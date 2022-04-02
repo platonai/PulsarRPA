@@ -65,6 +65,7 @@ interface FetchCacheManager {
 
     fun initialize()
     fun removeDeceased()
+    fun clear()
 }
 
 /**
@@ -94,6 +95,13 @@ abstract class AbstractFetchCacheManager(val conf: ImmutableConfig) : FetchCache
         unorderedCaches.forEach { it.removeDeceased() }
         val now = Instant.now()
         delayCache.removeIf { it.url.deadTime < now }
+    }
+
+    override fun clear() {
+        orderedCaches.clear()
+        unorderedCaches.clear()
+        realTimeCache.clear()
+        delayCache.clear()
     }
 
     private fun ensureInitialized(): AbstractFetchCacheManager {

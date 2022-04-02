@@ -1,10 +1,13 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.crawl.EmulateEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -76,10 +79,6 @@ open class BrowserEmulator(
         checkState()
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         task.page.lastBrowser = driver.browserType
-
-        if (task.nRetries > fetchMaxRetry) {
-            return FetchResult.crawlRetry(task).also { logger.info("Too many task retries, emit crawl retry | {}", task.url) }
-        }
 
         if (task.page.options.isDead()) {
             taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)

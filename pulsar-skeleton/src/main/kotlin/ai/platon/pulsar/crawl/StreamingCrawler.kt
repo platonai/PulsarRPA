@@ -400,8 +400,8 @@ open class StreamingCrawler<T : UrlAware>(
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
                     if (isIllegalApplicationState.compareAndSet(false, true)) {
-                        AppContext.beginTerminate()
-                        logger.warn("Streaming crawler coroutine was cancelled, quit ...", e)
+                        AppContext.shouldTerminate()
+                        logger.warn("Coroutine was cancelled, quit")
                     }
                     flowState = FlowState.BREAK
                 }
@@ -501,10 +501,15 @@ open class StreamingCrawler<T : UrlAware>(
             return flowState
         }
 
+        if (!isActive) {
+            logger.info("Process is closing")
+            return FlowState.BREAK
+        }
+
         when (e) {
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.beginTerminate()
+                    AppContext.shouldTerminate()
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
@@ -529,7 +534,7 @@ open class StreamingCrawler<T : UrlAware>(
             is CancellationException -> {
                 // Comes after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.beginTerminate()
+                    AppContext.shouldTerminate()
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK

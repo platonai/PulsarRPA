@@ -46,7 +46,6 @@ class WebDriverContext(
     }
 
     private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
-    private val fetchMaxRetry = conf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
@@ -136,12 +135,6 @@ class WebDriverContext(
 
         if (driverPoolManager.isRetiredPool(browserId)) {
             return FetchResult.privacyRetry(task)
-        }
-
-        if (++task.nRetries > fetchMaxRetry) {
-            return FetchResult.crawlRetry(task).also {
-                log.info("Too many task retries, upgrade to crawl retry | {}", task.url)
-            }
         }
 
         return null

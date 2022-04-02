@@ -88,7 +88,7 @@ class FetchLoop(
                     try {
                         schedule()?.let { fetch(it) }
                     } catch (e: IllegalApplicationContextStateException) {
-                        AppContext.beginTerminate()
+                        AppContext.shouldTerminate()
                         illegalState.set(true)
                         log.warn("Illegal context state | {}", e.message)
                     } catch (e: TimeoutCancellationException) {

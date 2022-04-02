@@ -156,6 +156,7 @@ abstract class AbstractSQLContext constructor(
             sqlSessions.values.forEach { it.close() }
             sqlSessions.clear()
             connectionPool.forEach { it.close() }
+            connectionPool.clear()
 
             status = Status.CLOSED
 

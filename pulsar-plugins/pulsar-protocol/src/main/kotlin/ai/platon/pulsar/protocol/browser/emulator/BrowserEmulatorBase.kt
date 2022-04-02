@@ -20,7 +20,6 @@ abstract class BrowserEmulatorBase(
     val driverSettings: WebDriverSettings,
     /**
      * The event handler to handle page content
-     * TODO: use a pipeline
      * */
     val eventHandler: EventHandler,
     val immutableConfig: ImmutableConfig
@@ -30,7 +29,6 @@ abstract class BrowserEmulatorBase(
     val emulateSettings get() = EmulateSettings(immutableConfig)
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
     val isActive get() = !closed.get()
     val meterNavigates by lazy { AppMetrics.reg.meter(this,"navigates") }
@@ -59,7 +57,7 @@ abstract class BrowserEmulatorBase(
     @Throws(IllegalApplicationContextStateException::class)
     protected fun checkState() {
         if (!isActive) {
-            AppContext.beginTerminate()
+            AppContext.shouldTerminate()
             throw IllegalApplicationContextStateException("Emulator is closed")
         }
     }

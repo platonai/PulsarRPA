@@ -87,6 +87,8 @@
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
+                <module>pulsar-all</module>
+
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
@@ -112,14 +114,6 @@
 
                 <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>lib-bundle</id>
-
-            <modules>
-                <module>pulsar-lib-bundle</module>
             </modules>
         </profile>
 
@@ -524,6 +518,12 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-boot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-all</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

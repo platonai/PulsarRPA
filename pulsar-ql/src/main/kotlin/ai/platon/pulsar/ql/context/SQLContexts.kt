@@ -23,7 +23,6 @@ import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.StaticApplicationContext
 import java.sql.Connection
-import kotlin.system.exitProcess
 
 open class H2SQLContext(
     applicationContext: AbstractApplicationContext
@@ -108,10 +107,8 @@ open class ClassPathXmlSQLContext(configLocation: String) :
 
     private val db = H2MemoryDb()
 
-    /**
-     * TODO: close the connections after use
-     * */
-    override val randomConnection: Connection get() = db.getRandomConnection()
+    override val randomConnection: Connection
+        get() = db.getRandomConnection()
 
     override fun createSession(sessionDelegate: SessionDelegate): AbstractSQLSession {
         require(sessionDelegate is H2SessionDelegate)
@@ -125,6 +122,11 @@ open class ClassPathXmlSQLContext(configLocation: String) :
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }
+    }
+
+    override fun close() {
+        super.close()
+        db.close()
     }
 }
 
@@ -151,6 +153,9 @@ object SQLContexts {
     fun activate(contextLocation: String): SQLContext = activate(ClassPathXmlSQLContext(contextLocation))
 
     @Synchronized
+    fun createSession() = activate().createSession()
+
+    @Synchronized
     fun shutdown() {
         PulsarContexts.shutdown()
         // TODO: the process hung up with unknown reason, we will fix this
@@ -162,19 +167,16 @@ fun withSQLContext(block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(DefaultClassPathXmlSQLContext()).use {
         block(it)
     }
-    SQLContexts.shutdown()
 }
 
 fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(ClassPathXmlSQLContext(contextLocation)).use {
         block(it)
     }
-    SQLContexts.shutdown()
 }
 
 fun withSQLContext(applicationContext: ApplicationContext, block: (context: SQLContext) -> Unit) {
     SQLContexts.activate(applicationContext).use {
         block(it)
     }
-    SQLContexts.shutdown()
 }

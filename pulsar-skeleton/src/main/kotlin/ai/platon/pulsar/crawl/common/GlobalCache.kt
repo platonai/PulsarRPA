@@ -77,6 +77,13 @@ open class GlobalCache(val conf: ImmutableConfig) {
         fetchCaches = ConcurrentFetchCacheManager(conf).apply { initialize() }
     }
 
+    fun clearCaches() {
+        fetchingUrlQueue.clear()
+        pageCache.clear()
+        documentCache.clear()
+        fetchCaches.clear()
+    }
+
     /**
      * Put page and document to cache
      * */

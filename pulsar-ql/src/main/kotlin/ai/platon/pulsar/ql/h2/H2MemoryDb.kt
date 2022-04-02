@@ -6,12 +6,15 @@ import org.h2.jdbc.JdbcSQLException
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 
 /**
  * The H2 memory DB
  */
-class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
+class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()): AutoCloseable {
+
+    private val connections = ConcurrentHashMap<String, Connection>()
 
     /**
      * Open a database with a random named connection in admin mode.
@@ -53,13 +56,18 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
             .onFailure { getLogger(H2MemoryDb::class).warn(it.simplify()) }
             .getOrNull()
 
+    override fun close() {
+        connections.values.forEach { it.close() }
+        connections.clear()
+    }
+
     private fun generateTempDbName(): String {
         return "" + System.currentTimeMillis() + "_" + abs(Random().nextInt());
     }
 
     /**
      * Get the database URL for the given database name using the current
-     * confuration options.
+     * configuration options.
      *
      * @param name the database name
      * @param admin true if the current user is an admin
@@ -71,6 +79,9 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
 
     private fun getConnection0(url: String, user: String, password: String): Connection {
         org.h2.Driver.load()
-        return DriverManager.getConnection(url, user, password)
+        val connection = DriverManager.getConnection(url, user, password)
+        val key = "$url$user$password"
+        connections[key] = connection
+        return connection
     }
 }

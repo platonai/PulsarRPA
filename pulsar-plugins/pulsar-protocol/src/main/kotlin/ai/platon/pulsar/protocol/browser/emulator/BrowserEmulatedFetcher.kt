@@ -30,7 +30,7 @@ open class BrowserEmulatedFetcher(
 
     private val closed = AtomicBoolean()
     private val illegalState = AtomicBoolean()
-    private val isActive get() = !illegalState.get() && !closed.get()
+    private val isActive get() = !illegalState.get() && !closed.get() && AppContext.isActive
 
     fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
@@ -77,7 +77,7 @@ open class BrowserEmulatedFetcher(
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
-                    AppContext.beginTerminate()
+                    AppContext.shouldTerminate()
                     logger.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
                 }
                 throw e

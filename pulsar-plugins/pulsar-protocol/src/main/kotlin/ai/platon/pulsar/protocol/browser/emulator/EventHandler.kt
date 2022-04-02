@@ -3,7 +3,8 @@ package ai.platon.pulsar.protocol.browser.emulator
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_TAKE_SCREENSHOT
+import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -38,7 +39,6 @@ open class EventHandler(
     protected val logger = LoggerFactory.getLogger(EventHandler::class.java)!!
     protected val tracer = logger.takeIf { it.isTraceEnabled }
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
-    protected val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     protected val takeScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
@@ -238,8 +238,6 @@ open class EventHandler(
             htmlIntegrity.isBanned -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
             htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
-            task.nRetries > fetchMaxRetry -> ProtocolStatus.retry(RetryScope.CRAWL)
-                    .also { logger.info("Retry task ${task.id} in the next crawl round") }
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
             htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also {
                 smallPages.mark()

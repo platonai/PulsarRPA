@@ -23,15 +23,7 @@
   <dependencies>
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-skeleton</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-ql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-beans</artifactId>
+      <artifactId>pulsar-all</artifactId>
     </dependency>
 
     <dependency>
