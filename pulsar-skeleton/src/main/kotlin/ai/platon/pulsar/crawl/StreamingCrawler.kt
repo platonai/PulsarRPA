@@ -458,9 +458,6 @@ open class StreamingCrawler<T : UrlAware>(
         return url
     }
 
-    /**
-     * TODO: keep consistent with protocolStatus.isRetry and crawlStatus.isRetry
-     * */
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         if (url is ListenableHyperlink) {
             url.crawlEventHandler.onAfterLoad(url, page)
@@ -470,15 +467,17 @@ open class StreamingCrawler<T : UrlAware>(
             crawlEventHandler.onAfterLoad(url, page)
         }
 
-        if (conf.getBoolean("crawl.retry.enabled", false)) {
-            return
+        if (conf.getBoolean(CRAWL_SMART_RETRY, false)) {
+            handleRetry(url, page)
         }
+    }
 
+    private fun handleRetry(url: UrlAware, page: WebPage?) {
         when {
             !isActive -> return
-            page == null -> handleRetry(url, page)
-            page.protocolStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isRetry -> handleRetry(url, page)
+            page == null -> handleRetry0(url, page)
+            page.protocolStatus.isRetry -> handleRetry0(url, page)
+            page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
                 globalMetrics.gone.mark()
                 taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
@@ -563,7 +562,7 @@ open class StreamingCrawler<T : UrlAware>(
         return false
     }
 
-    private fun handleRetry(url: UrlAware, page: WebPage?) {
+    private fun handleRetry0(url: UrlAware, page: WebPage?) {
         val nextRetryNumber = 1L + (page?.fetchRetries ?: 0)
 
         if (page != null && nextRetryNumber > page.maxRetries) {
