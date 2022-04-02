@@ -1,14 +1,12 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.test.VerboseCrawler
+import ai.platon.pulsar.context.PulsarContexts
 
 fun main() {
     val url = "https://www.baidu.com/"
 
-    withContext {
-        val crawler = VerboseCrawler(it)
-        crawler.open(url)
-        readLine()
-    }
+    val session = PulsarContexts.createSession()
+    session.open(url)
+
+    readLine()
 }

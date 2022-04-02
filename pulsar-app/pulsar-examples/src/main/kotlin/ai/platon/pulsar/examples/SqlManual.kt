@@ -2,10 +2,10 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.context.SQLContext
-import ai.platon.pulsar.ql.context.withSQLContext
+import ai.platon.pulsar.ql.context.SQLContexts
 import java.util.*
 
-class SqlManual(val context: SQLContext) {
+class SqlManual(val context: SQLContext = SQLContexts.activate()) {
     private val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     /**
@@ -50,4 +50,6 @@ class SqlManual(val context: SQLContext) {
     }
 }
 
-fun main() = withSQLContext { SqlManual(it).runAll() }
+fun main() {
+    SqlManual().runAll()
+}
