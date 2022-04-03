@@ -98,9 +98,9 @@ abstract class AbstractWebDriver(
         return result?.toString()
     }
 
-    override suspend fun allTexts(selector: String): String? {
+    override suspend fun allTexts(selector: String): List<String> {
         val result = evaluate("__pulsar_utils__.allTexts('$selector')")
-        return result?.toString()
+        return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
     override suspend fun firstAttr(selector: String, attrName: String): String? {
@@ -108,9 +108,9 @@ abstract class AbstractWebDriver(
         return result?.toString()
     }
 
-    override suspend fun allAttrs(selector: String, attrName: String): String? {
+    override suspend fun allAttrs(selector: String, attrName: String): List<String> {
         val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
-        return result?.toString()
+        return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
     override suspend fun newSession(): Connection {

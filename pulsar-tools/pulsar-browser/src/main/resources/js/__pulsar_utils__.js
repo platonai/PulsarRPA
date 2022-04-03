@@ -218,24 +218,24 @@ __pulsar_utils__.updatePulsarStat = function(init = false) {
     let nnm = 0; // number like text in first screen
 
     if (!__pulsar_utils__.isBrowserError()) {
-        document.body.forEach((node) => {
-            if (node.isIFrame()) {
+        document.body.__pulsar_forEach((node) => {
+            if (node.__pulsar_isIFrame()) {
                 return
             }
 
-            if (node.isAnchor()) ++na;
-            if (node.isImage() && !node.isSmallImage()) ++ni;
+            if (node.__pulsar_isAnchor()) ++na;
+            if (node.__pulsar_isImage() && !node.__pulsar_isSmallImage()) ++ni;
 
-            if (node.isText() && node.nScreen() <= 20) {
-                let isShortText = node.isShortText();
-                let isNumberLike = isShortText && node.isNumberLike();
+            if (node.__pulsar_isText() && node.__pulsar_nScreen() <= 20) {
+                let isShortText = node.__pulsar_isShortText();
+                let isNumberLike = isShortText && node.__pulsar_isNumberLike();
                 if (isShortText) {
                     ++nst;
                     if (isNumberLike) {
                         ++nnm;
                     }
 
-                    let ele = node.bestElement();
+                    let ele = node.__pulsar_bestElement();
                     if (ele != null && !init && !ele.hasAttribute("_ps_tp")) {
                         // not set at initialization, it's lazy loaded
                         ele.setAttribute("_ps_lazy", "1")
@@ -248,8 +248,8 @@ __pulsar_utils__.updatePulsarStat = function(init = false) {
                 }
             }
 
-            if (node.isDiv() && node.scrollWidth > width && node.scrollWidth < maxWidth) width = node.scrollWidth;
-            if (node.isDiv() && node.scrollWidth >= fineWidth && node.scrollHeight > height) height = node.scrollHeight;
+            if (node.__pulsar_isDiv() && node.scrollWidth > width && node.scrollWidth < maxWidth) width = node.scrollWidth;
+            if (node.__pulsar_isDiv() && node.scrollWidth >= fineWidth && node.scrollHeight > height) height = node.scrollHeight;
         });
     }
 
@@ -369,6 +369,19 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
 };
 
 /**
+ * Select the first element and click it
+ *
+ * @param  {String} selector
+ * @return
+ */
+__pulsar_utils__.click = function(selector) {
+    let ele = document.querySelector(selector)
+    if (ele != null) {
+        ele.click()
+    }
+}
+
+/**
  * Select the first element and extract the text
  *
  * @param  {String} selector
@@ -401,7 +414,7 @@ __pulsar_utils__.firstText = function(selector) {
  *
  * @param  {String} selector
  * @param  {String} attrName
- * @return {String}
+ * @return {Array}
  */
 __pulsar_utils__.allTexts = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
@@ -428,7 +441,7 @@ __pulsar_utils__.firstAttr = function(selector, attrName) {
  *
  * @param  {String} selector
  * @param  {String} attrName
- * @return {String}
+ * @return {Array}
  */
 __pulsar_utils__.allAttrs = function(selector, attrName) {
     let elements = document.querySelectorAll(selector)
@@ -478,7 +491,7 @@ __pulsar_utils__.increaseIntAttribute = function(node, attrName, add) {
     }
 
     value = parseInt(value) + add;
-    node.setAttribute(attrName, value)
+    node.setAttribute(attrName, value.toString())
 };
 
 /**
@@ -869,7 +882,7 @@ __pulsar_utils__.compute = function() {
     // humanize(document.body);
 
     // remove temporary flags
-    document.body.forEachElement(ele => {
+    document.body.__pulsar_forEachElement(ele => {
         ele.removeAttribute("_ps_tp")
     });
 

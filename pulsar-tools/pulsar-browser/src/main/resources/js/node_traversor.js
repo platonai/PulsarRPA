@@ -9,7 +9,7 @@
  *
  * @param visitor {Object} a class implementing the {@link NodeFeatureCalculator} interface, to be called when visiting each node.
  */
-function PulsarNodeTraversor(visitor) {
+function __pulsar_NodeTraversor(visitor) {
     this.visitor = visitor;
     this.options = {
         diagnosis : false
@@ -24,7 +24,7 @@ function PulsarNodeTraversor(visitor) {
  * Start a depth-first traverse of the root and all of its descendants.
  * @param root {Node} the root node point to traverse.
  */
-PulsarNodeTraversor.prototype.traverse = function(root) {
+__pulsar_NodeTraversor.prototype.traverse = function(root) {
     let node = root;
     let depth = 0;
     let visitor = this.visitor;

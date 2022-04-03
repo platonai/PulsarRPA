@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -70,6 +71,10 @@ open class StreamingCrawlLoop(
         }
     }
 
+    fun waitForAll() {
+
+    }
+
     private fun start0() {
         logger.info("Registered {} hyperlink collectors | #{} @{}", urlFeeder.collectors.size, id, hashCode())
 
@@ -93,6 +98,6 @@ open class StreamingCrawlLoop(
 
     private fun createHyperlinkFeeder(): UrlFeeder {
         val enableDefaults = config.getBoolean(CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS, true)
-        return UrlFeeder(globalCache.fetchCaches, enableDefaults = enableDefaults)
+        return UrlFeeder(globalCache.urlPool, enableDefaults = enableDefaults)
     }
 }

@@ -574,7 +574,7 @@ open class StreamingCrawler<T : UrlAware>(
 
         // TODO: use a retry strategy
         val delay = Duration.ofMinutes(1L + 2 * nextRetryNumber)
-//        val delayCache = globalCache.fetchCaches.delayCache
+//        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
 //        delayCache.add(DelayUrl(url, delay))
@@ -590,7 +590,7 @@ open class StreamingCrawler<T : UrlAware>(
     private fun fetchDelayed(url: UrlAware, delay: Duration) {
         val globalCache = globalCacheFactory?.globalCache ?: return
 
-        val delayCache = globalCache.fetchCaches.delayCache
+        val delayCache = globalCache.urlPool.delayCache
         // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
         url.args = url.args?.let { LoadOptions.eraseOptions(it, "refresh") }

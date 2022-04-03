@@ -4,6 +4,7 @@ import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
@@ -93,6 +94,11 @@ abstract class AbstractPulsarContext(
      * The load component
      * */
     open val loadComponent: LoadComponent get() = getBean()
+
+    /**
+     * The url pool to fetch
+     * */
+    override val crawlPool: UrlPool get() = globalCacheFactory.globalCache.urlPool
 
     /**
      * The main loop

@@ -122,7 +122,6 @@ public interface CapabilityTypes {
      */
     String STAT_COUNTERS = "counters";
 
-
     String COUNTER_GROUP_STATUS = "Runtime Status";
 
     /**
@@ -140,21 +139,12 @@ public interface CapabilityTypes {
     String GENERATE_COUNT_VALUE_IP = "ip";
 
     /**
-     * Thread pool/ExecuteService
-     */
-    String GLOBAL_EXECUTOR_CONCURRENCY_HINT = "global.executor.concurrency.hint";
-
-    String GLOBAL_EXECUTOR_AUTO_CONCURRENCY_FACTOR = "global.executor.auto.concurrency.factor";
-    /**
      * Distribution
      */
     String PULSAR_MASTER_HOST = "pulsar.master.host";
 
     String PULSAR_MASTER_PORT = "pulsar.master.port";
 
-    String UPSTREAM_PUSH_URL = "pulsar.upstream.push.url";
-
-    String UPSTREAM_PULL_URL = "pulsar.upstream.pull.url";
     /**
      * Storage
      */
@@ -170,19 +160,10 @@ public interface CapabilityTypes {
 
     String STORAGE_EMBED_MONGO = "storage.embed.mongo";
 
-
-    String GORA_MONGODB_SERVERS = "gora.mongodb.servers";
-    // String GORA_MONGODB_EMBED_SERVERS = "gora.mongodb.embed.servers";
     /**
      * Spring
      */
     String APPLICATION_CONTEXT_CONFIG_LOCATION = "application.context.config.location";
-    /**
-     * Session
-     */
-    String SESSION_MAX_WAIT_TIME = "session.max.wait.time";
-
-    String SESSION_MIN_ACCEPTABLE_RESPONSE_SIZE = "session.min.acceptable.response.size";
 
     /**
      * Inject parameters
@@ -299,6 +280,7 @@ public interface CapabilityTypes {
     String BROWSER_DISPLAY_MODE = "browser.display.mode";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
+
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
@@ -313,6 +295,7 @@ public interface CapabilityTypes {
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+    String BROWSER_JS_NAME_MANGLING_MAGIC = "browser.js.name.mangling.magic";
 
     /**
      * Proxy
@@ -434,17 +417,11 @@ public interface CapabilityTypes {
      * documents.
      */
     String CACHING_FORBIDDEN_KEY = "caching.forbidden";
-    /**
-     * Show both original forbidden content and summaries (default).
-     */
-    String CACHING_FORBIDDEN_NONE = "none";
-    /**
-     * Don't show either original forbidden content or summaries.
-     */
-    String CACHING_FORBIDDEN_ALL = "all";
 
     String PULSAR_DOMAIN = "pulsar.domain";
 
     // H2
     String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
+
+    String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
 }

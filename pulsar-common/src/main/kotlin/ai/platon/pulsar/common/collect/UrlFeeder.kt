@@ -10,15 +10,15 @@ import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 
 class UrlFeeder(
-    val fetchCaches: UrlPool,
+    val urlPool: UrlPool,
     val lowerCacheSize: Int = 100,
     val enableDefaults: Boolean = false
 ) : Iterable<UrlAware> {
     private val logger = getLogger(this)
 
-    private val realTimeCollector = UrlCacheCollector(fetchCaches.realTimeCache)
+    private val realTimeCollector = UrlCacheCollector(urlPool.realTimeCache)
         .apply { name = "FCC#RealTime" }
-    private val delayCollector = DelayCacheCollector(fetchCaches.delayCache, Priority13.HIGHER5)
+    private val delayCollector = DelayCacheCollector(urlPool.delayCache, Priority13.HIGHER5)
         .apply { name = "DelayCC#Delay" }
 
     val loadingIterable =
@@ -90,7 +90,7 @@ class UrlFeeder(
 
     fun addDefaultCollectors(): UrlFeeder {
         combinedDataCollector.collectors.removeIf { it is UrlCacheCollector }
-        fetchCaches.orderedCaches.values.forEach { fetchCache ->
+        urlPool.orderedCaches.values.forEach { fetchCache ->
             addCollector(UrlCacheCollector(fetchCache).apply { name = "FCC.$id" })
         }
         return this

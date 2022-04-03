@@ -368,8 +368,8 @@ open class BrowserEmulator(
         expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
         expressions.asSequence()
             .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
-            .filterNot { it.startsWith("// ") }
-            .filterNot { it.startsWith("# ") }
+            .filterNot { it.startsWith("//") }
+            .filterNot { it.startsWith("#") }
             .forEach { expression ->
                 evaluate(interactTask, expression, verbose)
                 delay(delayMillis)

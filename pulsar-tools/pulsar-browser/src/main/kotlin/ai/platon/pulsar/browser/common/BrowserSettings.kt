@@ -7,15 +7,12 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
-import java.io.StringReader
-import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import kotlin.io.path.isReadable
 import kotlin.io.path.listDirectoryEntries
 import kotlin.random.Random
-
 
 /**
  * The chrome display mode
@@ -239,6 +236,7 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+    val jsNameManglingMagic = conf.get(BROWSER_JS_NAME_MANGLING_MAGIC, "__exotic_")
 
     /**
      * Chrome has to run without sandbox in a virtual machine
@@ -321,8 +319,15 @@ open class BrowserSettings(
 
     open fun loadDefaultResource() {
         preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
-            ResourceLoader.readAllLines(it).joinToString("\n") { it }
+            ResourceLoader.readAllLines(it).joinToString("\n") { nameMangling(it) }
         }
+    }
+
+    /**
+     * A simple name mangling policy
+     * */
+    open fun nameMangling(script: String): String {
+        return script.replace("__pulsar_", jsNameManglingMagic)
     }
 
     private fun loadJs() {
