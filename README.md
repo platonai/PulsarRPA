@@ -72,10 +72,10 @@ session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", 
 ```
 Scrape a massive url collection:
 ```kotlin
-val urls = listOf()
-val session = SQLContexts.createSession()
-val urlPool = session.globalCacheFactory.globalCache.urlPool
-urlPool.normalCache.nReentrantQueue.add(Hyperlink(portalUrl))
+val context = SQLContexts.activate()
+val urls = LinkExtractors.fromResource("seeds.txt")
+context.crawlPool.addAll(urls)
+readLine()
 ```
 ## X-SQL
 
