@@ -31,7 +31,7 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.8.2</version>
 </dependency>
 ```
 
