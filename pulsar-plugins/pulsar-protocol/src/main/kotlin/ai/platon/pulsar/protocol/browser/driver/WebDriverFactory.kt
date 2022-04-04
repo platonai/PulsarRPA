@@ -19,7 +19,7 @@ open class WebDriverFactory(
     val driverSettings: WebDriverSettings,
     val browserInstanceManager: BrowserInstanceManager,
     val immutableConfig: ImmutableConfig,
-) {
+): AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
     val numDrivers = AtomicInteger()
 
@@ -51,6 +51,10 @@ open class WebDriverFactory(
         }
 
         return WebDriverAdapter(browserInstanceId, driver, priority)
+    }
+
+    override fun close() {
+        browserInstanceManager.close()
     }
 
     private fun createBrowserInstance(

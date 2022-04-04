@@ -242,6 +242,8 @@ class LoadingWebDriverPool(
         waitUntilIdleOrTimeout(timeToWait)
 
         closeAllDrivers(nonSynchronized)
+
+        driverFactory.close()
     }
 
     private fun closeAllDrivers(drivers: List<WebDriver>) {

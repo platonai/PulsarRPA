@@ -7,7 +7,7 @@ Extracting web data at scale is extremely hard. Websites change frequently and a
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, and we can query the web data using SQL directly.
 
-We also have a plan to develop an advanced AI to extract every field in webpages with notable accuracy automatically.
+We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
@@ -21,6 +21,7 @@ We also have a plan to develop an advanced AI to extract every field in webpages
 - Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
 - Large scale: designed for large scale crawling
 - Big data: various backend storage support: HBase/MongoDB/Gora
+- Logs & metrics: monitored closely and every event is recorded
 
 For more information check [platon.ai](http://platon.ai)
 
@@ -39,7 +40,7 @@ Maven:
 Create a pulsar session:
 ```kotlin
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-val session: PulsarSession = PulsarContexts.createSession()
+val session = PulsarContexts.createSession()
 ```
 Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then parse it into a Jsoup document
 ```kotlin
@@ -50,7 +51,7 @@ or
 ```kotlin
 val document = session.loadDocument(url, "-expires 1d")
 ```
-Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then load out pages specified by -outLink, or they are expired:
+Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then load out pages specified by -outLink:
 ```kotlin
 session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 ```
@@ -75,7 +76,7 @@ Scrape a massive url collection:
 val context = SQLContexts.activate()
 val urls = LinkExtractors.fromResource("seeds.txt")
 context.crawlPool.addAll(urls)
-readLine()
+context.await()
 ```
 ## X-SQL
 
@@ -95,7 +96,7 @@ from
 Execute the X-SQL:
 
 ```kotlin
-val context: SQLContext = SQLContexts.activate()
+val context = SQLContexts.activate()
 context.executeQuery(sql)
 ```
 

@@ -9,7 +9,10 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 open class StreamingCrawlLoop(
     /**
@@ -28,7 +31,9 @@ open class StreamingCrawlLoop(
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private var running = AtomicBoolean()
+    private val scope = CoroutineScope(Dispatchers.Default)
     private var crawlJob: Job? = null
+    private val started = CountDownLatch(1)
 
     val globalCache get() = globalCacheFactory.globalCache
 
@@ -60,7 +65,6 @@ open class StreamingCrawlLoop(
     @Synchronized
     override fun stop() {
         if (running.compareAndSet(true, false)) {
-            // fetchIterable.clear()
             crawler.quit()
             runBlocking {
                 crawlJob?.cancelAndJoin()
@@ -71,8 +75,9 @@ open class StreamingCrawlLoop(
         }
     }
 
-    fun waitForAll() {
-
+    override fun await() {
+        started.await()
+        crawler.await()
     }
 
     private fun start0() {
@@ -81,7 +86,7 @@ open class StreamingCrawlLoop(
         /**
          * The pulsar session
          * */
-        val session = PulsarContexts.activate().createSession()
+        val session = PulsarContexts.createSession()
 
         val urls = urlFeeder.asSequence()
         crawler = StreamingCrawler(urls,
@@ -89,8 +94,9 @@ open class StreamingCrawlLoop(
             noProxy = false
         )
 
-        crawlJob = GlobalScope.launch {
+        crawlJob = scope.launch {
             supervisorScope {
+                started.countDown()
                 crawler.run(this)
             }
         }

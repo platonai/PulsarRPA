@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
@@ -349,6 +350,12 @@ abstract class AbstractPulsarContext(
         webDbOrNull?.flush()
     }
 
+    override fun await() {
+        if (isActive) {
+            crawlLoops.await()
+        }
+    }
+
     /**
      * Register a shutdown hook with the JVM runtime, closing this context
      * on JVM shutdown unless it has already been closed at that time.
@@ -400,16 +407,23 @@ abstract class AbstractPulsarContext(
             globalCacheFactory.globalCache.clearCaches()
 
             sessions.values.forEach {
-                it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
+                kotlin.runCatching { it.close() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
             }
+            sessions.clear()
 
             closableObjects.forEach {
-                it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
+                kotlin.runCatching { it.close() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
             }
+            closableObjects.clear()
 
-            kotlin.runCatching { crawlLoops.stop() }.onFailure { logger.warn(it.message) }
+            if (applicationContext.isActive) {
+                kotlin.runCatching { crawlLoops.stop() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
 
-            applicationContext.close()
+                applicationContext.close()
+            }
         }
 
         AppContext.endTerminate()

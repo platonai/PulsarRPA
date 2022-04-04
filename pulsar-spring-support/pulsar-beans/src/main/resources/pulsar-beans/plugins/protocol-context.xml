@@ -12,7 +12,9 @@
     </bean>
 
     <bean id="browserInstancePool" class="ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager"
-          destroy-method="close"/>
+          destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
 
     <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
         <constructor-arg ref="webDriverSettings"/>

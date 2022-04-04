@@ -5,7 +5,7 @@ import ai.platon.pulsar.ql.context.SQLContexts
 
 fun main() {
     val context = SQLContexts.activate()
-    val urls = LinkExtractors.fromResource("seeds.txt")
+    val urls = LinkExtractors.fromResource("seeds.txt").take(10).map { "$it -refresh" }
     context.crawlPool.addAll(urls)
-    readLine()
+    context.await()
 }

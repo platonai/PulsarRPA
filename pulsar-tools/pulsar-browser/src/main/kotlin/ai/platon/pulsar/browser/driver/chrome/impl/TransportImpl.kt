@@ -119,7 +119,7 @@ class TransportImpl : Transport {
 
     private fun onClose(session: Session, closeReason: CloseReason) {
         logger.info(
-            "Web socket connection closed {}, {}",
+            "Web socket connection closed {} {}",
             closeReason.closeCode,
             closeReason.reasonPhrase
         )

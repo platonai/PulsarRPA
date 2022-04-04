@@ -167,8 +167,12 @@ open class WebDriverPoolManager(
             driverPools.clear()
             logger.info("Web driver pool manager is closed")
             if (gauges?.entries?.isEmpty() == false || driverPools.isNotEmpty()) {
-                logger.info(formatStatus(true))
+                val s = formatStatus(true)
+                if (s.isNotEmpty()) {
+                    logger.info(s)
+                }
             }
+            driverFactory.close()
         }
     }
 
@@ -228,7 +232,7 @@ open class WebDriverPoolManager(
 
             val isGUI = driverSettings.isGUI
             val displayMode = driverSettings.displayMode
-            logger.info("Web drivers are in {} mode with {} ", displayMode, browserId)
+            logger.info("Web drivers are in {} mode | {} ", displayMode, browserId)
 
             val driverPool = when {
                 !isGUI -> driverPools.remove(browserId)
@@ -241,10 +245,11 @@ open class WebDriverPoolManager(
             if (driverPool != null) {
                 driverPool.isRetired = true
                 logger.info(driverPool.formatStatus(verbose = true))
-
-                logger.info("Closing driver pool in {} mode with {}", displayMode, browserId)
+                logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
                 driverPool.close()
             }
+
+            driverFactory.browserInstanceManager.closeIfPresent(browserId)
         }
     }
 

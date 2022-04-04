@@ -6,7 +6,9 @@ import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
 import java.util.concurrent.atomic.AtomicBoolean
 
-interface Crawler: AutoCloseable
+interface Crawler: AutoCloseable {
+    fun await()
+}
 
 abstract class AbstractCrawler(
     val session: PulsarSession = PulsarContexts.createSession(),

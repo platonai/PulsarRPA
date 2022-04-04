@@ -31,8 +31,12 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
 
     // TODO: better initialization
     private val browserEmulator by lazy {
-        pulsarContext.runCatching { getBean<BrowserEmulatedFetcher>() }.getOrNull()
-            ?: DefaultBrowserEmulatedFetcher(pulsarContext.unmodifiedConfig)
+        val conf = pulsarContext.unmodifiedConfig
+        val emulator = pulsarContext.getBeanOrNull<BrowserEmulatedFetcher>() ?: DefaultBrowserEmulatedFetcher(conf)
+        if (emulator is DefaultBrowserEmulatedFetcher) {
+            pulsarContext.registerClosable(emulator)
+        }
+        emulator
     }
 
     override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {

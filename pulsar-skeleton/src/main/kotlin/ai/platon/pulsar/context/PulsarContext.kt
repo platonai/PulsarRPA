@@ -136,5 +136,7 @@ interface PulsarContext: AutoCloseable {
 
     fun flush()
 
+    fun await()
+
     fun registerShutdownHook()
 }

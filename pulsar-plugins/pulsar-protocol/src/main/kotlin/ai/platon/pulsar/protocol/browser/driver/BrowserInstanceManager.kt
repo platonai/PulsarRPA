@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -11,7 +12,9 @@ import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-class BrowserInstanceManager: AutoCloseable {
+open class BrowserInstanceManager(
+    val conf: ImmutableConfig
+): AutoCloseable {
     private val closed = AtomicBoolean()
     private val browserInstances = ConcurrentHashMap<String, BrowserInstance>()
 
@@ -33,8 +36,8 @@ class BrowserInstanceManager: AutoCloseable {
     }
 
     @Synchronized
-    fun closeIfPresent(userDataDir: Path) {
-        browserInstances.remove(userDataDir.toString())?.close()
+    fun closeIfPresent(instanceId: BrowserInstanceId) {
+        browserInstances.remove(instanceId.userDataDir.toString())?.close()
     }
 
     @Synchronized
