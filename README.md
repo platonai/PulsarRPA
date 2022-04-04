@@ -79,7 +79,7 @@ val parseHandler = { _: WebPage, document: Document ->
 }
 val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, parseHandler) }
 val context = PulsarContexts.create().asyncLoadAll(urls)
-// feel free to load any amount of urls here using async loading methods
+// feel free to add a huge amount of urls to the crawl queue here using async loading methods
 // ...
 context.await()
 ```
