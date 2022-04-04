@@ -326,6 +326,16 @@ abstract class AbstractPulsarContext(
         return if (isActive) loadComponent.loadAll(urls, options) else listOf()
     }
 
+    override fun asyncLoad(url: UrlAware): AbstractPulsarContext {
+        crawlPool.add(url)
+        return this
+    }
+
+    override fun asyncLoadAll(urls: Collection<UrlAware>): AbstractPulsarContext {
+        crawlPool.addAll(urls)
+        return this
+    }
+
     /**
      * Parse the WebPage using parseComponent
      */

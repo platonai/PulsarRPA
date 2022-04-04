@@ -232,8 +232,6 @@ open class WebDriverPoolManager(
 
             val isGUI = driverSettings.isGUI
             val displayMode = driverSettings.displayMode
-            logger.info("Web drivers are in {} mode | {} ", displayMode, browserId)
-
             val driverPool = when {
                 !isGUI -> driverPools.remove(browserId)
                 isGUI && driverPools.size > 10 -> {
@@ -247,6 +245,8 @@ open class WebDriverPoolManager(
                 logger.info(driverPool.formatStatus(verbose = true))
                 logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
                 driverPool.close()
+            } else {
+                logger.info("Web drivers are in {} mode, please close it manually | {} ", displayMode, browserId)
             }
 
             driverFactory.browserInstanceManager.closeIfPresent(browserId)

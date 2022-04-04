@@ -42,7 +42,7 @@ Create a pulsar session:
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val session = PulsarContexts.createSession()
 ```
-Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then parse it into a Jsoup document
+Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then parse it into a Jsoup document:
 ```kotlin
 val page = session.load(url, "-expires 1d")
 val document = session.parse(page)
@@ -73,9 +73,14 @@ session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", 
 ```
 Scrape a massive url collection:
 ```kotlin
-val context = SQLContexts.activate()
-val urls = LinkExtractors.fromResource("seeds.txt")
-context.crawlPool.addAll(urls)
+val parseHandler = { _: WebPage, document: Document ->
+    // do something wonderful with the document
+    println(document.title() + "\t|\t" + document.baseUri())
+}
+val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, parseHandler) }
+val context = PulsarContexts.create().asyncLoadAll(urls)
+// feel free to load any amount of urls here using async loading methods
+// ...
 context.await()
 ```
 ## X-SQL

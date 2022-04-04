@@ -5,7 +5,7 @@ import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import java.util.*
 
-class SqlManual(val context: SQLContext = SQLContexts.activate()) {
+class SqlManual(val context: SQLContext = SQLContexts.create()) {
     private val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     /**

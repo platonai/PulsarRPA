@@ -14,15 +14,15 @@ object PulsarContexts {
         private set
 
     @Synchronized
-    fun activate(): PulsarContext {
+    fun create(): PulsarContext {
         if (activeContext == null) {
-            activeContext = activate(StaticPulsarContext())
+            activeContext = create(StaticPulsarContext())
         }
         return activeContext!!
     }
 
     @Synchronized
-    fun activate(context: PulsarContext): PulsarContext {
+    fun create(context: PulsarContext): PulsarContext {
         val activated = activeContext
         if (activated != null && activated::class == context::class) {
             logger.info("Context is already activated | {}", activated::class)
@@ -42,14 +42,14 @@ object PulsarContexts {
     }
 
     @Synchronized
-    fun activate(contextLocation: String) = activate(ClassPathXmlPulsarContext(contextLocation))
+    fun create(contextLocation: String) = create(ClassPathXmlPulsarContext(contextLocation))
 
     @Synchronized
-    fun activate(applicationContext: ApplicationContext) =
-        activate(BasicPulsarContext(applicationContext as AbstractApplicationContext))
+    fun create(applicationContext: ApplicationContext) =
+        create(BasicPulsarContext(applicationContext as AbstractApplicationContext))
 
     @Synchronized
-    fun createSession() = activate().createSession()
+    fun createSession() = create().createSession()
 
     @Synchronized
     fun shutdown() {
@@ -59,19 +59,19 @@ object PulsarContexts {
 }
 
 fun withContext(block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.activate(StaticPulsarContext()).use {
+    PulsarContexts.create(StaticPulsarContext()).use {
         block(it)
     }
 }
 
 fun withContext(contextLocation: String, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.activate(ClassPathXmlPulsarContext(contextLocation)).use {
+    PulsarContexts.create(ClassPathXmlPulsarContext(contextLocation)).use {
         block(it)
     }
 }
 
 fun withContext(applicationContext: ApplicationContext, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.activate(applicationContext).use {
+    PulsarContexts.create(applicationContext).use {
         block(it)
     }
 }

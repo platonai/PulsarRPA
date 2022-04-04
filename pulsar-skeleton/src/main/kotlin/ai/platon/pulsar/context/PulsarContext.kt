@@ -123,6 +123,10 @@ interface PulsarContext: AutoCloseable {
 
     fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage>
 
+    fun asyncLoad(url: UrlAware): PulsarContext
+
+    fun asyncLoadAll(urls: Collection<UrlAware>): PulsarContext
+
     /**
      * Parse the WebPage using Jsoup
      */
@@ -136,6 +140,9 @@ interface PulsarContext: AutoCloseable {
 
     fun flush()
 
+    /**
+     * Wait until all tasks are done.
+     * */
     fun await()
 
     fun registerShutdownHook()

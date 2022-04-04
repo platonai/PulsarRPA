@@ -36,6 +36,11 @@ interface UrlAware {
     var href: String?
 
     /**
+     * The priority
+     * */
+    var priority: Int
+
+    /**
      * The configured url, always be "$url $args"
      * */
     val configuredUrl: String
@@ -98,7 +103,8 @@ abstract class AbstractUrl(
     override var url: String,
     override var args: String? = null,
     override var referer: String? = null,
-    override var href: String? = null
+    override var href: String? = null,
+    override var priority: Int = 0
 ) : UrlAware, ComparableUrlAware {
 
     override val configuredUrl get() = if (args != null) "$url $args" else url
