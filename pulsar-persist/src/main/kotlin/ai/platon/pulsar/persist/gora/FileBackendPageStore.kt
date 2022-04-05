@@ -7,6 +7,12 @@ import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.apache.avro.file.DataFileReader
+import org.apache.avro.file.DataFileWriter
+import org.apache.avro.io.DatumReader
+import org.apache.avro.io.DatumWriter
+import org.apache.avro.specific.SpecificDatumReader
+import org.apache.avro.specific.SpecificDatumWriter
 import org.apache.gora.memory.store.MemStore
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
@@ -26,8 +32,10 @@ class FileBackendPageStore(
     private val unsafeConf = VolatileConfig.UNSAFE
 
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
-        val page = map[reversedUrl] as? GWebPage ?: read(reversedUrl)
-        // return getPersistent(page, getFieldsToQuery(fields))
+        var page = map[reversedUrl] as? GWebPage
+        if (page == null) {
+            page = readAvro(reversedUrl) ?: read(reversedUrl)
+        }
         return page
     }
 
@@ -35,7 +43,9 @@ class FileBackendPageStore(
         super.put(reversedUrl, page)
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
-            write(WebPage.box(it, page, unsafeConf))
+            val p = WebPage.box(it, page, unsafeConf)
+            write(p)
+            writeAvro(p)
         }
     }
 
@@ -62,6 +72,29 @@ class FileBackendPageStore(
         return null
     }
 
+    private fun readAvro(reversedUrl: String): GWebPage? {
+        val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
+        val filename = AppPaths.fromUri(url, "", ".avro")
+        val path = persistDirectory.resolve(filename)
+
+        log.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl $filename " + Files.exists(path))
+        return readAvro(path)
+    }
+
+    private fun readAvro(path: Path): GWebPage? {
+        if (!Files.exists(path)) {
+            return null
+        }
+
+        val datumReader: DatumReader<GWebPage> = SpecificDatumReader(GWebPage::class.java)
+        val dataFileReader: DataFileReader<GWebPage> = DataFileReader(path.toFile(), datumReader)
+        var page: GWebPage? = null
+        while (dataFileReader.hasNext()) {
+            page = dataFileReader.next(page)
+        }
+        return page
+    }
+
     private fun write(page: WebPage) {
         val filename = AppPaths.fromUri(page.url, "", ".htm")
         val path = persistDirectory.resolve(filename)
@@ -72,19 +105,39 @@ class FileBackendPageStore(
         page.content?.let { Files.write(path, it.array()) }
     }
 
+    private fun writeAvro(page: WebPage) {
+        val filename = AppPaths.fromUri(page.url, "", ".avro")
+        val path = persistDirectory.resolve(filename)
+
+        log.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
+
+        Files.deleteIfExists(path)
+        writeAvro0(page.unbox(), path)
+    }
+
+    private fun writeAvro0(page: GWebPage, path: Path) {
+        val datumWriter: DatumWriter<GWebPage> = SpecificDatumWriter(GWebPage::class.java)
+        val dataFileWriter: DataFileWriter<GWebPage> = DataFileWriter(datumWriter)
+        dataFileWriter.create(page.schema, path.toFile())
+        dataFileWriter.append(page)
+        dataFileWriter.close()
+    }
+
     private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): WebPage {
         val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE)
         page.also {
             it.location = url
             it.fetchCount = 1
             it.prevFetchTime = lastModified
-            it.fetchTime = lastModified
             it.fetchInterval = ChronoUnit.DECADES.duration
+            it.fetchTime = lastModified + it.fetchInterval
             it.crawlStatus = CrawlStatus.STATUS_FETCHED
             it.protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }
 
         page.content = ByteBuffer.wrap(content)
+        require(page.contentLength == content.size.toLong())
+        require(page.persistContentLength == content.size.toLong())
 
         return page
     }
