@@ -272,9 +272,9 @@ class LoadComponent(
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
 
-        require(normUrl.options.eventHandler != null)
-        require(page.conf == normUrl.options.conf)
-        require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
+//        require(normUrl.options.eventHandler != null)
+//        require(page.conf == normUrl.options.conf)
+//        require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -457,9 +457,9 @@ class LoadComponent(
         try {
             beforeFetch(page, normUrl.options)
 
-            require(normUrl.options.eventHandler != null)
             require(page.conf == normUrl.options.conf)
-            require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
+//            require(normUrl.options.eventHandler != null)
+//            require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
 
             fetchComponent.fetchContent(page)
         } finally {

@@ -10,10 +10,10 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
-import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
@@ -29,8 +29,8 @@ import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
     private val browserSettings: WebDriverSettings,
-    private val browserInstance: ChromeDevtoolsBrowserInstance,
-) : AbstractWebDriver(browserInstance.id) {
+    override val browserInstance: ChromeDevtoolsBrowserInstance,
+) : AbstractWebDriver(browserInstance) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
@@ -213,15 +213,18 @@ class ChromeDevtoolsDriver(
     /**
      * Wait until [selector] for [timeoutMillis] milliseconds at most
      * */
-    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long {
         refreshState()
-        val nodeId = querySelector(selector)
+        var nodeId = querySelector(selector)
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
 
         while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
             gap()
             elapsedTime = System.currentTimeMillis() - startTime
+            nodeId = querySelector(selector)
+
+            println("$selector $nodeId")
         }
 
         return timeoutMillis - elapsedTime
@@ -390,6 +393,8 @@ class ChromeDevtoolsDriver(
                     && browserInstance.navigateHistory.none { it.url.contains("jd.com") }
             if (isFirstJdVisit) {
                 JdInitializer().init(page)
+            } else {
+
             }
         }
     }

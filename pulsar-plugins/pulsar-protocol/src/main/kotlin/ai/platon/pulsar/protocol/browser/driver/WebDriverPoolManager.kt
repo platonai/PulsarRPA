@@ -7,6 +7,8 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -17,13 +19,16 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class WebDriverTask<R> (
         val browserId: BrowserInstanceId,
         val priority: Int,
         val volatileConfig: VolatileConfig,
-        val action: suspend (driver: WebDriver) -> R
+        val runWith: suspend (driver: WebDriver) -> R
 )
 
 /**
@@ -73,6 +78,8 @@ open class WebDriverPoolManager(
     val numWorkingDrivers get() = driverPools.values.sumOf { it.numWorking.get() }
     val numAvailableDrivers get() = driverPools.values.sumOf { it.numAvailable }
     val numOnline get() = driverPools.values.sumOf { it.onlineDrivers.size }
+
+    private val launchLock = ReentrantLock()
 
     init {
         gauges?.let { AppMetrics.reg.registerAll(this, it) }
@@ -195,10 +202,18 @@ open class WebDriverPoolManager(
             try {
                 val fetchTaskTimeout = driverSettings.fetchTaskTimeout
                 val pollingDriverTimeout = driverSettings.pollingDriverTimeout
-                driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
-                driverPool.numTasks.incrementAndGet()
+                driver = launchLock.withLock {
+                    val isFirstLaunch = driverPool.numTasks.get() == 0
+                    driverPool.numTasks.incrementAndGet()
+                    if (isFirstLaunch) {
+                        firstLaunch(driverPool, task)
+                    } else {
+                        driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
+                    }
+                }
+
                 result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
-                    task.action(driver)
+                    task.runWith(driver)
                 }
 
                 if (result == null) {
@@ -219,6 +234,41 @@ open class WebDriverPoolManager(
         }
 
         return result
+    }
+
+    private fun <R> firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+        val pollingDriverTimeout = driverSettings.pollingDriverTimeout
+
+        onBeforeBrowserLaunch(task.volatileConfig)
+
+        val driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout)
+        driver.startWork()
+
+        onAfterBrowserLaunch(driver, task.volatileConfig)
+
+        return driver
+    }
+
+    private fun onBeforeBrowserLaunch(volatileConfig: VolatileConfig) {
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventPipelineHandler::class)
+        try {
+            eventHandler?.loadEventHandler?.onBeforeBrowserLaunch?.invoke()
+        } catch (t: Throwable) {
+            logger.warn(t.stringify("Unexpected exception in onBeforeBrowserLaunch - "))
+        }
+    }
+
+    private fun onAfterBrowserLaunch(driver: WebDriver, volatileConfig: VolatileConfig) {
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventPipelineHandler::class)
+
+//        println(eventHandler?.loadEventHandler?.onAfterBrowserLaunch)
+//        println(eventHandler?.loadEventPipelineHandler?.onAfterBrowserLaunchPipeline)
+//        require(eventHandler?.loadEventHandler == eventHandler?.loadEventPipelineHandler)
+        try {
+            eventHandler?.loadEventHandler?.onAfterBrowserLaunch?.invoke(driver)
+        } catch (t: Throwable) {
+            logger.warn(t.stringify("Unexpected exception in onAfterBrowserLaunch - "))
+        }
     }
 
     @Synchronized

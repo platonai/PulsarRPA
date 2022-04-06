@@ -4,12 +4,12 @@ import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
-import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.playwright.Locator
 import com.microsoft.playwright.Page
@@ -24,8 +24,8 @@ import kotlin.random.Random
 
 class PlaywrightDriver(
     private val browserSettings: WebDriverSettings,
-    private val browserInstance: PlaywrightBrowserInstance,
-) : AbstractWebDriver(browserInstance.id) {
+    override val browserInstance: PlaywrightBrowserInstance,
+) : AbstractWebDriver(browserInstance) {
     companion object {
         val sessionIdGenerator = AtomicInteger()
     }
@@ -143,7 +143,7 @@ class PlaywrightDriver(
         return false
     }
 
-    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long {
         try {
             val startTime = System.currentTimeMillis()
             page.waitForSelector(selector)

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.sites.amazon
 
-import ai.platon.pulsar.crawl.AbstractWebDriverHandler
+import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.WebPage
@@ -15,14 +15,9 @@ data class AmazonSuggestion(
 class AmazonSearcherJsEventHandler(
     val keyword: String,
     val suggestions: MutableList<AmazonSuggestion> = mutableListOf()
-): AbstractWebDriverHandler() {
+): AbstractWebPageWebDriverHandler() {
 
-    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
-        onBeforeComputeFeature(page, driver)
-        return null
-    }
-
-    private suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         if (!page.url.matches(".+amazon.+".toRegex())) {
             return null
         }

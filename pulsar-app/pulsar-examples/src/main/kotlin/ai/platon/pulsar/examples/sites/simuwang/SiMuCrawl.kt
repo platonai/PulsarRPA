@@ -1,34 +1,51 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.AbstractWebDriverHandler
+import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
+import java.time.Duration
 
-class LoginHandler: AbstractWebDriverHandler() {
-    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
-println("login ...")
-        login(page, driver)
-        return null
-    }
+class LoginHandler : AbstractWebDriverHandler() {
+    val loginUrl = "https://dc.simuwang.com/"
+    val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
+    val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
 
-    private suspend fun login(page: WebPage, driver: WebDriver): Any? {
-        val time = driver.waitFor(".comp-login-b2")
+    override suspend fun invokeDeferred(driver: WebDriver): Any? {
+        println("Navigating... | $loginUrl")
+        driver.navigateTo(loginUrl)
+
+        println("Waiting... | $loginUrl")
+        val time = driver.waitForSelector(".comp-login-b2", Duration.ofMinutes(3))
         if (time <= 0) {
+            println("time: $time")
             return null
         }
 
-        val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
-        val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
+        println("Login...")
 
         driver.bringToFront()
         driver.click("button.comp-login-b2")
         driver.type("input[name=username]", username)
         driver.type("input[type=password]", password)
+        driver.bringToFront()
         driver.click("button.comp-login-btn", count = 2)
 
+        // TODO: wait for navigation
+        println(driver.getCookies())
+        sleepSeconds(10)
+        println(driver.getCookies())
+
+        return null
+    }
+}
+
+class ClosePopupHandler : AbstractWebPageWebDriverHandler() {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+        driver.click(".comp-alert-btn")
         return null
     }
 }
@@ -42,9 +59,9 @@ fun main() {
     val loginHandler = LoginHandler()
     val options = session.options(args)
     options.eventHandler = DefaultPulsarEventPipelineHandler().also {
-        it.simulateEventPipelineHandler.onBeforeComputeFeaturePipeline.addLast(loginHandler)
+        it.loadEventPipelineHandler.onAfterBrowserLaunchPipeline.addLast(loginHandler)
+        it.simulateEventPipelineHandler.onAfterCheckDOMStatePipeline.addLast(ClosePopupHandler())
     }
-    // open the portal page and login
     session.load(portalUrl, options)
 
     val sql = """

@@ -4,8 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -14,7 +14,7 @@ class ChromeDevtoolsBrowserInstance(
     id: BrowserInstanceId,
     launcherOptions: LauncherOptions,
     launchOptions: ChromeOptions
-): BrowserInstance(id, launcherOptions, launchOptions) {
+): AbstractBrowserInstance(id, launcherOptions, launchOptions) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowserInstance::class.java)
 

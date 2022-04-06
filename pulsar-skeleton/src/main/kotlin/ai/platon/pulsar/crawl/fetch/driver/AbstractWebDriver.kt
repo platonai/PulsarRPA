@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.time.Duration
@@ -9,8 +8,8 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
 abstract class AbstractWebDriver(
-        override val browserInstanceId: BrowserInstanceId,
-        override val id: Int = 0
+    override val browserInstance: AbstractBrowserInstance,
+    override val id: Int = 0
 ): Comparable<AbstractWebDriver>, WebDriver {
 
     enum class Status {
@@ -71,7 +70,8 @@ abstract class AbstractWebDriver(
         }
     }
 
-    override suspend fun waitFor(selector: String): Long = waitFor(selector, waitForTimeout.toMillis())
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long = waitForSelector(selector, timeout.toMillis())
+    override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForTimeout)
 
     override suspend fun getCookies(): List<Map<String, String>> {
         return listOf()

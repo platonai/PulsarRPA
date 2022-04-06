@@ -6,9 +6,8 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.AbstractWebDriverHandler
+import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import java.nio.file.Files
@@ -18,7 +17,7 @@ import java.nio.file.StandardOpenOption
 private class APIFetcherHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
-): AbstractWebDriverHandler() {
+): AbstractWebPageWebDriverHandler() {
     private val logger = getLogger(this)
 
     val headersString = """
@@ -36,7 +35,7 @@ private class APIFetcherHandler(
             user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36
         """.trimIndent()
 
-    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         ajaxFetch(driver)
         return null
     }

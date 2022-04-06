@@ -8,20 +8,20 @@ import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-class ChooseLanguageJsEventHandler: AbstractWebDriverHandler() {
+class ChooseLanguageJsEventHandler: AbstractWebPageWebDriverHandler() {
     override var verbose = true
 
-    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         val expressions = "document.querySelector(\"input[value=en_US]\").click();\n" +
                 "document.querySelector(\"span#icp-btn-save input[type=submit]\").click();"
         return evaluate(driver, expressions.split(";"))
     }
 }
 
-class ChooseCountryJsEventHandler: AbstractWebDriverHandler() {
+class ChooseCountryJsEventHandler: AbstractWebPageWebDriverHandler() {
     override var verbose = true
 
-    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         // New York City
         val zipcode = listOf("10001", "10001", "10002", "10002").shuffled().first()
         val resource = "sites/amazon/js/choose-district.js"

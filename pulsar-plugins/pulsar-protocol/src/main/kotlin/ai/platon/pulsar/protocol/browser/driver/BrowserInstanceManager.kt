@@ -4,10 +4,12 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
+import ai.platon.pulsar.protocol.browser.driver.test.MockBrowserInstance
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -16,7 +18,7 @@ open class BrowserInstanceManager(
     val conf: ImmutableConfig
 ): AutoCloseable {
     private val closed = AtomicBoolean()
-    private val browserInstances = ConcurrentHashMap<String, BrowserInstance>()
+    private val browserInstances = ConcurrentHashMap<String, AbstractBrowserInstance>()
 
     val instanceCount get() = browserInstances.size
 
@@ -28,7 +30,7 @@ open class BrowserInstanceManager(
     @Synchronized
     fun launchIfAbsent(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): BrowserInstance {
+    ): AbstractBrowserInstance {
         val userDataDir = instanceId.userDataDir
         return browserInstances.computeIfAbsent(userDataDir.toString()) {
             createAndLaunch(instanceId, launcherOptions, launchOptions)
@@ -49,8 +51,9 @@ open class BrowserInstanceManager(
 
     private fun createAndLaunch(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): BrowserInstance {
+    ): AbstractBrowserInstance {
         return when(instanceId.browserType) {
+            BrowserType.MOCK_CHROME -> MockBrowserInstance(instanceId, launcherOptions, launchOptions)
             BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
             else -> ChromeDevtoolsBrowserInstance(instanceId, launcherOptions, launchOptions)
         }.apply { launch() }

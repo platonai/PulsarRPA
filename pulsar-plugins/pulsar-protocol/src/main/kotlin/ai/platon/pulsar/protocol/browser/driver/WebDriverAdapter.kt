@@ -3,16 +3,15 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 class WebDriverAdapter(
-    browserInstanceId: BrowserInstanceId,
     val driver: WebDriver,
     val priority: Int = 1000,
-) : AbstractWebDriver(browserInstanceId, instanceSequencer.incrementAndGet()) {
+) : AbstractWebDriver(driver.browserInstance, instanceSequencer.incrementAndGet()) {
     companion object {
         val instanceSequencer = AtomicInteger()
     }
@@ -68,9 +67,11 @@ class WebDriverAdapter(
         }
     }
 
-    override suspend fun waitFor(selector: String) = driver.waitFor(selector)
+    override suspend fun waitForSelector(selector: String) = driver.waitForSelector(selector)
 
-    override suspend fun waitFor(selector: String, timeoutMillis: Long) = driver.waitFor(selector, timeoutMillis)
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long) = driver.waitForSelector(selector, timeoutMillis)
+
+    override suspend fun waitForSelector(selector: String, timeout: Duration) = driver.waitForSelector(selector, timeout)
 
     override suspend fun exists(selector: String) = driver.exists(selector)
 

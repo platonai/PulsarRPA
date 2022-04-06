@@ -157,8 +157,7 @@ open class BrowserEmulator(
         return emulateEventHandler.onAfterNavigate(navigateTask)
     }
 
-    @Throws(NavigateTaskCancellationException::class,
-            WebDriverException::class)
+    @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
         emulateEventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
