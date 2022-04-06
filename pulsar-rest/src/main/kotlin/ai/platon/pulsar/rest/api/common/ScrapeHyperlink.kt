@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.DefaultLoadEventHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
@@ -65,8 +66,8 @@ open class ScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler(
-        loadEventHandler = ScrapeLoadEventHandler(this, response)
+    override var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler(
+        loadEventPipelineHandler = ScrapeLoadEventHandler(this, response)
     )
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)

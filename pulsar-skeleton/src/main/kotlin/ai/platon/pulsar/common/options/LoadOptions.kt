@@ -54,11 +54,12 @@ object LoadOptionDefaults {
  *
  * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
  *
- * TODO: consider make LoadOptions to be seen in all modules
+ * TODO: consider make LoadOptions be visible by all modules
  */
 open class LoadOptions(
     argv: Array<String>,
-    val conf: VolatileConfig
+    val conf: VolatileConfig,
+    var eventHandler: PulsarEventPipelineHandler? = null
 ): CommonOptions(argv) {
 
     @ApiPublic
@@ -367,8 +368,6 @@ open class LoadOptions(
     // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
     val correctedOutLinkSelector get() = outLinkSelector.trim('"')
 
-    var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
-
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"
@@ -389,9 +388,9 @@ open class LoadOptions(
                     .associate { it.name to it.get(this) }
         }
 
-//    private val jsEventHandlers = mutableListOf<JsEventHandler>()
-
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
+
+    protected constructor(args: String, options: LoadOptions) : this(split(args), options.conf, options.eventHandler)
 
     /**
      * Parse with parameter overwriting fix
@@ -411,7 +410,7 @@ open class LoadOptions(
         return b
     }
 
-    open fun createItemOptions(conf: VolatileConfig? = null): LoadOptions {
+    open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
 
@@ -456,6 +455,8 @@ open class LoadOptions(
         browser = itemBrowser
     }
 
+    fun toConf() = toConf(this.conf)
+
     fun toConf(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         val emulateSettings = when (netCondition) {
             Condition.WORSE -> EmulateSettings.worseNetSettings
@@ -470,6 +471,7 @@ open class LoadOptions(
 
         emulateSettings.toConf(conf)
 
+        eventHandler?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
         setInt(CapabilityTypes.FETCH_MAX_RETRY, nMaxRetry)
@@ -512,7 +514,7 @@ open class LoadOptions(
     /**
      * Create a new LoadOptions
      * */
-    open fun clone() = parse(toString(), conf)
+    open fun clone() = parse(toString(), this)
 
     companion object {
         val default = LoadOptions("", VolatileConfig())
@@ -596,12 +598,14 @@ open class LoadOptions(
 
         fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
 
+        fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply { parse() }
+
         /**
          * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
          * */
-        fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o1.conf)
+        fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o2)
 
-        fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1.conf)
+        fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1)
 
         fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
 

@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.LoadEventHandler
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
@@ -91,7 +92,9 @@ abstract class AbstractPulsarSession(
     /**
      * Create a new options, with a new volatile config
      * */
-    override fun options(args: String) = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
+    override fun options(args: String, eventHandler: PulsarEventPipelineHandler?): LoadOptions {
+        return LoadOptions.parse(args, sessionConfig.toVolatileConfig()).also { it.eventHandler = eventHandler }
+    }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(url, options, toItemOption)

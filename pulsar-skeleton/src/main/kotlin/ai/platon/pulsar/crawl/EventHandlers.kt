@@ -453,7 +453,7 @@ abstract class AbstractWebDriverHandler: WebDriverHandler {
     }
 }
 
-open class EmptyDriverHandler: AbstractWebDriverHandler() {
+open class EmptyWebDriverHandler: AbstractWebDriverHandler() {
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         return null
     }
@@ -467,10 +467,10 @@ interface SimulateEventHandler {
 }
 
 interface SimulateEventPipelineHandler: SimulateEventHandler {
-    val onBeforeCheckDOMStatePipeline: SimulateEventHandlerPipeline
-    val onAfterCheckDOMStatePipeline: SimulateEventHandlerPipeline
-    val onBeforeComputeFeaturePipeline: SimulateEventHandlerPipeline
-    val onAfterComputeFeaturePipeline: SimulateEventHandlerPipeline
+    val onBeforeCheckDOMStatePipeline: WebDriverHandlerPipeline
+    val onAfterCheckDOMStatePipeline: WebDriverHandlerPipeline
+    val onBeforeComputeFeaturePipeline: WebDriverHandlerPipeline
+    val onAfterComputeFeaturePipeline: WebDriverHandlerPipeline
 }
 
 abstract class AbstractSimulateEventHandler: SimulateEventHandler {
@@ -484,38 +484,37 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
 
     open var verbose = false
 
-    override val onBeforeCheckDOMState: AbstractWebDriverHandler = EmptyDriverHandler()
-
-    override val onAfterCheckDOMState: AbstractWebDriverHandler = EmptyDriverHandler()
-
-    override val onBeforeComputeFeature: AbstractWebDriverHandler = EmptyDriverHandler()
-
-    override val onAfterComputeFeature: AbstractWebDriverHandler = EmptyDriverHandler()
-
     protected suspend fun smartDelay() = delay(delayPolicy(""))
 
     protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
 }
 
-class SimulateEventHandlerPipeline: AbstractWebDriverHandler() {
+abstract class AbstractSimulateEventPipelineHandler: AbstractSimulateEventHandler(), SimulateEventPipelineHandler {
+    override val onBeforeCheckDOMState: AbstractWebDriverHandler get() = onBeforeCheckDOMStatePipeline
+    override val onAfterCheckDOMState: AbstractWebDriverHandler get() = onAfterCheckDOMStatePipeline
+    override val onBeforeComputeFeature: AbstractWebDriverHandler get() = onBeforeComputeFeaturePipeline
+    override val onAfterComputeFeature: AbstractWebDriverHandler get() = onAfterComputeFeaturePipeline
+}
+
+class WebDriverHandlerPipeline: AbstractWebDriverHandler() {
     private val registeredHandlers = mutableListOf<AbstractWebDriverHandler>()
 
-    fun addFirst(handler: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+    fun addFirst(handler: AbstractWebDriverHandler): WebDriverHandlerPipeline {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addFirst(vararg handlers: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+    fun addFirst(vararg handlers: AbstractWebDriverHandler): WebDriverHandlerPipeline {
         handlers.forEach { addFirst(it) }
         return this
     }
 
-    fun addLast(handler: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+    fun addLast(handler: AbstractWebDriverHandler): WebDriverHandlerPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+    fun addLast(vararg handlers: AbstractWebDriverHandler): WebDriverHandlerPipeline {
         handlers.toCollection(registeredHandlers)
         return this
     }
@@ -525,9 +524,12 @@ class SimulateEventHandlerPipeline: AbstractWebDriverHandler() {
     }
 }
 
-class EmptySimulateEventHandler: AbstractSimulateEventHandler(
-
-)
+class EmptySimulateEventHandler: AbstractSimulateEventHandler() {
+    override val onBeforeCheckDOMState: AbstractWebDriverHandler get() = EmptyWebDriverHandler()
+    override val onAfterCheckDOMState: AbstractWebDriverHandler get() = EmptyWebDriverHandler()
+    override val onBeforeComputeFeature: AbstractWebDriverHandler get() = EmptyWebDriverHandler()
+    override val onAfterComputeFeature: AbstractWebDriverHandler get() = EmptyWebDriverHandler()
+}
 
 class ExpressionSimulateEventHandler(
     val beforeComputeExpressions: Iterable<String> = listOf(),
@@ -547,14 +549,20 @@ class ExpressionSimulateEventHandler(
             return evaluate(driver, afterComputeExpressions)
         }
     }
+
+    override val onBeforeCheckDOMState: AbstractWebDriverHandler
+        get() = TODO("Not yet implemented")
+
+    override val onAfterCheckDOMState: AbstractWebDriverHandler
+        get() = TODO("Not yet implemented")
 }
 
 class DefaultSimulateEventHandler(
-    override val onBeforeCheckDOMStatePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
-    override val onAfterCheckDOMStatePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
-    override val onBeforeComputeFeaturePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
-    override val onAfterComputeFeaturePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
-): AbstractSimulateEventHandler(), SimulateEventPipelineHandler
+    override val onBeforeCheckDOMStatePipeline: WebDriverHandlerPipeline = WebDriverHandlerPipeline(),
+    override val onAfterCheckDOMStatePipeline: WebDriverHandlerPipeline = WebDriverHandlerPipeline(),
+    override val onBeforeComputeFeaturePipeline: WebDriverHandlerPipeline = WebDriverHandlerPipeline(),
+    override val onAfterComputeFeaturePipeline: WebDriverHandlerPipeline = WebDriverHandlerPipeline(),
+): AbstractSimulateEventPipelineHandler()
 
 interface CrawlEventHandler {
     val onFilter: (UrlAware) -> UrlAware?
@@ -580,6 +588,20 @@ interface CrawlEventPipelineHandler: CrawlEventHandler {
     val onAfterLoadPipeline: UrlAwareWebPageHandlerPipeline
 }
 
+abstract class AbstractCrawlEventPipelineHandler(
+    override val onFilterPipeline: UrlAwareFilterPipeline,
+    override val onNormalizePipeline: UrlAwareFilterPipeline,
+    override val onBeforeLoadPipeline: UrlAwareHandlerPipeline,
+    override val onLoadPipeline: UrlAwareHandlerPipeline,
+    override val onAfterLoadPipeline: UrlAwareWebPageHandlerPipeline
+): CrawlEventPipelineHandler {
+    override val onFilter: (UrlAware) -> UrlAware? = { url -> onFilterPipeline(url) }
+    override val onNormalize: (UrlAware) -> UrlAware? = { url -> onNormalizePipeline(url) }
+    override val onBeforeLoad: (UrlAware) -> Unit = { url -> onBeforeLoadPipeline(url) }
+    override val onLoad: (UrlAware) -> Unit = { url -> onLoadPipeline(url) }
+    override val onAfterLoad: (UrlAware, WebPage?) -> Unit = { url, page -> onAfterLoadPipeline(url, page) }
+}
+
 class EmptyCrawlEventHandler(
     override val onFilter: UrlAwareFilter = UrlAwareFilterPipeline(),
     override val onNormalize: UrlAwareFilter = UrlAwareFilterPipeline(),
@@ -594,13 +616,19 @@ class DefaultCrawlEventHandler(
     override val onBeforeLoadPipeline: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
     override val onLoadPipeline: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
     override val onAfterLoadPipeline: UrlAwareWebPageHandlerPipeline = UrlAwareWebPageHandlerPipeline()
-): AbstractCrawlEventHandler(onFilterPipeline,
-    onNormalizePipeline, onBeforeLoadPipeline, onLoadPipeline, onAfterLoadPipeline), CrawlEventPipelineHandler
+): AbstractCrawlEventPipelineHandler(onFilterPipeline,
+    onNormalizePipeline, onBeforeLoadPipeline, onLoadPipeline, onAfterLoadPipeline)
 
 interface PulsarEventHandler {
     val loadEventHandler: LoadEventHandler
     val simulateEventHandler: SimulateEventHandler
     val crawlEventHandler: CrawlEventHandler
+}
+
+interface PulsarEventPipelineHandler: PulsarEventHandler {
+    val loadEventPipelineHandler: LoadEventPipelineHandler
+    val simulateEventPipelineHandler: SimulateEventPipelineHandler
+    val crawlEventPipelineHandler: CrawlEventPipelineHandler
 }
 
 abstract class AbstractPulsarEventHandler(
@@ -609,8 +637,18 @@ abstract class AbstractPulsarEventHandler(
     override val crawlEventHandler: AbstractCrawlEventHandler
 ): PulsarEventHandler
 
-open class PulsarEventPipelineHandler(
-    override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler(),
-    override val simulateEventHandler: SimulateEventPipelineHandler = DefaultSimulateEventHandler(),
-    override val crawlEventHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
-): PulsarEventHandler
+abstract class AbstractPulsarEventPipelineHandler(
+    override val loadEventPipelineHandler: LoadEventPipelineHandler,
+    override val simulateEventPipelineHandler: SimulateEventPipelineHandler,
+    override val crawlEventPipelineHandler: CrawlEventPipelineHandler
+): PulsarEventPipelineHandler {
+    override val loadEventHandler: LoadEventHandler get() = loadEventPipelineHandler
+    override val simulateEventHandler: SimulateEventHandler get() = simulateEventPipelineHandler
+    override val crawlEventHandler: CrawlEventHandler get() = crawlEventPipelineHandler
+}
+
+open class DefaultPulsarEventPipelineHandler(
+    loadEventPipelineHandler: LoadEventPipelineHandler = DefaultLoadEventHandler(),
+    simulateEventPipelineHandler: SimulateEventPipelineHandler = DefaultSimulateEventHandler(),
+    crawlEventPipelineHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
+): AbstractPulsarEventPipelineHandler(loadEventPipelineHandler, simulateEventPipelineHandler, crawlEventPipelineHandler)

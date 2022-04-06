@@ -11,10 +11,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
-import ai.platon.pulsar.crawl.CrawlEventPipelineHandler
-import ai.platon.pulsar.crawl.CrawlLoop
-import ai.platon.pulsar.crawl.DefaultCrawlEventHandler
-import ai.platon.pulsar.crawl.SimulateEventPipelineHandler
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -191,6 +188,9 @@ class LoadComponent(
         return page
     }
 
+    /**
+     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * */
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val queue = globalCache.urlPool.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
@@ -198,7 +198,7 @@ class LoadComponent(
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
-            .onEach { it.eventHandler = options.eventHandler }
+            .onEach { url -> options.eventHandler?.let { url.eventHandler = it } }
             .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
 
@@ -271,6 +271,10 @@ class LoadComponent(
     private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
+
+        require(normUrl.options.eventHandler != null)
+        require(page.conf == normUrl.options.conf)
+        require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -452,6 +456,11 @@ class LoadComponent(
     private fun fetchContent(page: WebPage, normUrl: NormUrl) {
         try {
             beforeFetch(page, normUrl.options)
+
+            require(normUrl.options.eventHandler != null)
+            require(page.conf == normUrl.options.conf)
+            require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
+
             fetchComponent.fetchContent(page)
         } finally {
             afterFetch(page, normUrl.options)

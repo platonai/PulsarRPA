@@ -1,13 +1,15 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
 import ai.platon.pulsar.crawl.AbstractWebDriverHandler
-import ai.platon.pulsar.crawl.SimulateEventPipelineHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 
 class LoginHandler: AbstractWebDriverHandler() {
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+println("login ...")
         login(page, driver)
         return null
     }
@@ -21,6 +23,7 @@ class LoginHandler: AbstractWebDriverHandler() {
         val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
         val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
 
+        driver.bringToFront()
         driver.click("button.comp-login-b2")
         driver.type("input[name=username]", username)
         driver.type("input[type=password]", password)
@@ -38,7 +41,9 @@ fun main() {
     val session = context.createSession()
     val loginHandler = LoginHandler()
     val options = session.options(args)
-    options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(loginHandler)
+    options.eventHandler = DefaultPulsarEventPipelineHandler().also {
+        it.simulateEventPipelineHandler.onBeforeComputeFeaturePipeline.addLast(loginHandler)
+    }
     // open the portal page and login
     session.load(portalUrl, options)
 
@@ -57,7 +62,7 @@ from
     load_and_select('$portalUrl', '.ranking-table-tbody .ranking-table-tbody-tr')
         """.trimIndent()
     // extract fields from the portal page
-    context.executeQuery(sql)
+    // context.executeQuery(sql)
     // load out pages
     session.loadOutPages(portalUrl, options)
     // wait for all done

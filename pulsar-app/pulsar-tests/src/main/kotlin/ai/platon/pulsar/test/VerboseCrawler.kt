@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
@@ -17,7 +18,7 @@ open class VerboseCrawler(
 ): AutoCloseable {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
 
-    var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
+    var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler()
 
     constructor(context: PulsarContext) : this(context.createSession())
 
@@ -85,7 +86,7 @@ open class VerboseCrawler(
             .take(options.topLinks).map { it.spec }
         logger.info("Total {} items to load", links.size)
 
-        val itemOptions = options.createItemOptions(session.sessionConfig).apply { parse = true }
+        val itemOptions = options.createItemOptions().apply { parse = true }
         itemOptions.eventHandler = eventHandler
         val pages = session.loadAll(links, itemOptions)
 

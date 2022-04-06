@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.support.AbstractPulsarContext
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
@@ -53,7 +54,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Create a new options, with a new volatile config
      * */
-    fun options(args: String = ""): LoadOptions
+    fun options(args: String = "", eventHandler: PulsarEventPipelineHandler? = null): LoadOptions
     fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     fun normalize(

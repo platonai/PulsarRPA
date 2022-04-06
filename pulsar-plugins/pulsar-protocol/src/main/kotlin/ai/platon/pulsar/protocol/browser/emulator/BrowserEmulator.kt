@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.PulsarEventHandler
-import ai.platon.pulsar.crawl.SimulateEventHandler
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -30,10 +30,10 @@ import kotlin.random.Random
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulator(
-        val driverManager: WebDriverPoolManager,
-        eventHandler: EventHandler,
-        immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, eventHandler, immutableConfig) {
+    val driverManager: WebDriverPoolManager,
+    emulateEventHandler: EmulateEventHandler,
+    immutableConfig: ImmutableConfig
+): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, emulateEventHandler, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
@@ -154,13 +154,13 @@ open class BrowserEmulator(
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
-        return eventHandler.onAfterNavigate(navigateTask)
+        return emulateEventHandler.onAfterNavigate(navigateTask)
     }
 
     @Throws(NavigateTaskCancellationException::class,
             WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
-        eventHandler.logBeforeNavigate(task, driverConfig)
+        emulateEventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -203,7 +203,7 @@ open class BrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
-        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventPipelineHandler::class)?.simulateEventHandler
 
         tracer?.trace("{}", task.emulateSettings)
 
@@ -280,7 +280,7 @@ open class BrowserEmulator(
             } else if (message == "timeout") {
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val browserError = eventHandler.handleChromeErrorPage(message)
+                val browserError = emulateEventHandler.handleChromeErrorPage(message)
                 status = browserError.status
                 result.activeDomMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK

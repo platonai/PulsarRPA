@@ -31,12 +31,12 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
-open class EventHandler(
+open class EmulateEventHandler(
         private val driverPoolManager: WebDriverPoolManager,
         private val messageWriter: MiscMessageWriter? = null,
         private val immutableConfig: ImmutableConfig
 ) {
-    protected val logger = LoggerFactory.getLogger(EventHandler::class.java)!!
+    protected val logger = LoggerFactory.getLogger(EmulateEventHandler::class.java)!!
     protected val tracer = logger.takeIf { it.isTraceEnabled }
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val takeScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)

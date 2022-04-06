@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.persist.WebPage
 
 class FetchEntry(val page: WebPage, val options: LoadOptions) {

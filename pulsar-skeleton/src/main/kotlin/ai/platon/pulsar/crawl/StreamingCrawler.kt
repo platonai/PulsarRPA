@@ -514,6 +514,10 @@ open class StreamingCrawler<T : UrlAware>(
             return null
         }
 
+        if (url is ListenableHyperlink) {
+            options.eventHandler = url.eventHandler
+        }
+
         return session.runCatching { loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()

@@ -37,7 +37,7 @@ class TestEvents : TestBase() {
         val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
 
         val firedEvents = mutableListOf<String>()
-        val eventHandler = hyperlink.eventHandler.loadEventHandler
+        val eventHandler = hyperlink.eventHandler.loadEventPipelineHandler
         eventHandler.apply {
             onBeforeLoadPipeline.addLast { url ->
                 firedEvents.add("onBeforeLoad")

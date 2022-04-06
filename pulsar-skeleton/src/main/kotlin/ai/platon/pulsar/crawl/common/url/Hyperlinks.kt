@@ -53,7 +53,7 @@ open class StatefulListenableHyperlink(
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
-    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
+    override var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler()
 }
 
 open class ParsableHyperlink(
@@ -63,8 +63,8 @@ open class ParsableHyperlink(
     url: String,
     val onParse: (WebPage, Document) -> Unit
 ): Hyperlink(url, args = "-parse"), ListenableHyperlink {
-    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler().also {
-        it.loadEventHandler.onAfterHtmlParsePipeline.addLast(object: HtmlDocumentHandler() {
+    override var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler().also {
+        it.loadEventPipelineHandler.onAfterHtmlParsePipeline.addLast(object: HtmlDocumentHandler() {
             override fun invoke(page: WebPage, document: FeaturedDocument) = onParse(page, document.document)
         })
     }
@@ -197,5 +197,5 @@ open class CompletableListenableHyperlink<T>(
 ): UrlAware, Comparable<UrlAware>, ListenableHyperlink,
     CompletableHyperlink<T>(url, text, order, referer, args, href)
 {
-    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
+    override var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler()
 }
