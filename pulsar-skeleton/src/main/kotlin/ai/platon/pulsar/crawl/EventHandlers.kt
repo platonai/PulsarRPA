@@ -407,15 +407,12 @@ open class DefaultLoadEventHandler(
     onAfterLoadPipeline
 ), LoadEventPipelineHandler
 
-interface EmulateEventHandler {
-    suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any?
-    suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any?
-    suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any?
-    suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any?
+interface WebDriverHandler: EventHandler {
+    suspend operator fun invoke(page: WebPage, driver: WebDriver): Any?
 }
 
-abstract class AbstractEmulateEventHandler: EmulateEventHandler {
-    private val log = getLogger(AbstractEmulateEventHandler::class)
+abstract class AbstractWebDriverHandler: WebDriverHandler {
+    private val logger = getLogger(AbstractWebDriverHandler::class)
 
     open val delayPolicy: (String) -> Long get() = { type ->
         when (type) {
@@ -427,25 +424,9 @@ abstract class AbstractEmulateEventHandler: EmulateEventHandler {
 
     open var verbose = false
 
-    override suspend fun onBeforeCheckDOMState(page: WebPage, driver: WebDriver): Any? {
-        return null
-    }
+    override val name: String = ""
 
-    override suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any? {
-        return null
-    }
-
-    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
-        return null
-    }
-
-    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
-        return null
-    }
-
-    protected suspend fun smartDelay() = delay(delayPolicy(""))
-
-    protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
+    abstract override suspend operator fun invoke(page: WebPage, driver: WebDriver): Any?
 
     protected suspend fun evaluate(driver: WebDriver, expressions: Iterable<String>): Any? {
         var value: Any? = null
@@ -453,13 +434,13 @@ abstract class AbstractEmulateEventHandler: EmulateEventHandler {
             .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
             .filterNot { it.startsWith("// ") }
         validExpressions.forEach {
-            log.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
+            logger.takeIf { verbose }?.info("Evaluate expression >>>$it<<<")
             val v = evaluate(driver, it)
             if (v is String) {
                 val s = Strings.stripNonPrintableChar(v)
-                log.takeIf { verbose }?.info("Result >>>$s<<<")
+                logger.takeIf { verbose }?.info("Result >>>$s<<<")
             } else if (v is Int || v is Long) {
-                log.takeIf { verbose }?.info("Result >>>$v<<<")
+                logger.takeIf { verbose }?.info("Result >>>$v<<<")
             }
             value = v
         }
@@ -472,23 +453,108 @@ abstract class AbstractEmulateEventHandler: EmulateEventHandler {
     }
 }
 
-class EmptyEmulateEventHandler: AbstractEmulateEventHandler()
+open class EmptyDriverHandler: AbstractWebDriverHandler() {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+        return null
+    }
+}
 
-class DefaultEmulateEventHandler(
+interface SimulateEventHandler {
+    val onBeforeCheckDOMState: AbstractWebDriverHandler
+    val onAfterCheckDOMState: AbstractWebDriverHandler
+    val onBeforeComputeFeature: AbstractWebDriverHandler
+    val onAfterComputeFeature: AbstractWebDriverHandler
+}
+
+interface SimulateEventPipelineHandler: SimulateEventHandler {
+    val onBeforeCheckDOMStatePipeline: SimulateEventHandlerPipeline
+    val onAfterCheckDOMStatePipeline: SimulateEventHandlerPipeline
+    val onBeforeComputeFeaturePipeline: SimulateEventHandlerPipeline
+    val onAfterComputeFeaturePipeline: SimulateEventHandlerPipeline
+}
+
+abstract class AbstractSimulateEventHandler: SimulateEventHandler {
+    open val delayPolicy: (String) -> Long get() = { type ->
+        when (type) {
+            "click" -> 500L + Random.nextInt(500)
+            "type" -> 500L + Random.nextInt(500)
+            else -> 100L + Random.nextInt(500)
+        }
+    }
+
+    open var verbose = false
+
+    override val onBeforeCheckDOMState: AbstractWebDriverHandler = EmptyDriverHandler()
+
+    override val onAfterCheckDOMState: AbstractWebDriverHandler = EmptyDriverHandler()
+
+    override val onBeforeComputeFeature: AbstractWebDriverHandler = EmptyDriverHandler()
+
+    override val onAfterComputeFeature: AbstractWebDriverHandler = EmptyDriverHandler()
+
+    protected suspend fun smartDelay() = delay(delayPolicy(""))
+
+    protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
+}
+
+class SimulateEventHandlerPipeline: AbstractWebDriverHandler() {
+    private val registeredHandlers = mutableListOf<AbstractWebDriverHandler>()
+
+    fun addFirst(handler: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addFirst(vararg handlers: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: AbstractWebDriverHandler): SimulateEventHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
+        return this
+    }
+
+    override suspend operator fun invoke(page: WebPage, driver: WebDriver) {
+        registeredHandlers.forEach { it(page, driver) }
+    }
+}
+
+class EmptySimulateEventHandler: AbstractSimulateEventHandler(
+
+)
+
+class ExpressionSimulateEventHandler(
     val beforeComputeExpressions: Iterable<String> = listOf(),
     val afterComputeExpressions: Iterable<String> = listOf()
-): AbstractEmulateEventHandler() {
+): AbstractSimulateEventHandler() {
     constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
         bcExpressions.split(delimiters), acExpressions2.split(delimiters))
 
-    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
-        return evaluate(driver, beforeComputeExpressions)
+    override val onBeforeComputeFeature: AbstractWebDriverHandler = object: AbstractWebDriverHandler() {
+        override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+            return evaluate(driver, beforeComputeExpressions)
+        }
     }
 
-    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
-        return evaluate(driver, afterComputeExpressions)
+    override val onAfterComputeFeature: AbstractWebDriverHandler = object: AbstractWebDriverHandler() {
+        override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+            return evaluate(driver, afterComputeExpressions)
+        }
     }
 }
+
+class DefaultSimulateEventHandler(
+    override val onBeforeCheckDOMStatePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
+    override val onAfterCheckDOMStatePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
+    override val onBeforeComputeFeaturePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
+    override val onAfterComputeFeaturePipeline: SimulateEventHandlerPipeline = SimulateEventHandlerPipeline(),
+): AbstractSimulateEventHandler(), SimulateEventPipelineHandler
 
 interface CrawlEventHandler {
     val onFilter: (UrlAware) -> UrlAware?
@@ -530,3 +596,21 @@ class DefaultCrawlEventHandler(
     override val onAfterLoadPipeline: UrlAwareWebPageHandlerPipeline = UrlAwareWebPageHandlerPipeline()
 ): AbstractCrawlEventHandler(onFilterPipeline,
     onNormalizePipeline, onBeforeLoadPipeline, onLoadPipeline, onAfterLoadPipeline), CrawlEventPipelineHandler
+
+interface PulsarEventHandler {
+    val loadEventHandler: LoadEventHandler
+    val simulateEventHandler: SimulateEventHandler
+    val crawlEventHandler: CrawlEventHandler
+}
+
+abstract class AbstractPulsarEventHandler(
+    override val loadEventHandler: AbstractLoadEventHandler,
+    override val simulateEventHandler: AbstractSimulateEventHandler,
+    override val crawlEventHandler: AbstractCrawlEventHandler
+): PulsarEventHandler
+
+open class PulsarEventPipelineHandler(
+    override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler(),
+    override val simulateEventHandler: SimulateEventPipelineHandler = DefaultSimulateEventHandler(),
+    override val crawlEventHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
+): PulsarEventHandler

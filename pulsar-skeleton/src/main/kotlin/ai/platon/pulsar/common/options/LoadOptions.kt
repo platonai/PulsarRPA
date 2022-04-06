@@ -5,11 +5,11 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.EmulateEventHandler
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
-import com.google.common.annotations.Beta
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
@@ -367,6 +367,8 @@ open class LoadOptions(
     // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
     val correctedOutLinkSelector get() = outLinkSelector.trim('"')
 
+    var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
+
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"
@@ -409,20 +411,6 @@ open class LoadOptions(
         return b
     }
 
-    fun addEventHandler(eventHandler: EmulateEventHandler?) {
-        if (eventHandler != null) {
-            // jsEventHandlers.add(eventHandler)
-            conf.putBean(eventHandler)
-        }
-    }
-
-    fun removeEventHandler(eventHandler: EmulateEventHandler?) {
-        if (eventHandler != null) {
-            // jsEventHandlers.remove(eventHandler)
-            conf.removeBean(eventHandler)
-        }
-    }
-
     open fun createItemOptions(conf: VolatileConfig? = null): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
@@ -430,6 +418,7 @@ open class LoadOptions(
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
+        itemOptions.eventHandler = eventHandler
 
         return itemOptions
     }

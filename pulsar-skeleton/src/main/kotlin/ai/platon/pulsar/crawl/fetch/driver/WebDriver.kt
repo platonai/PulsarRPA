@@ -36,7 +36,14 @@ interface WebDriver: Closeable {
     suspend fun setTimeouts(driverConfig: BrowserSettings)
 
     suspend fun bringToFront()
+    /**
+     * Returns when element specified by selector satisfies {@code state} option.
+     * */
     suspend fun waitFor(selector: String): Long
+    /**
+     * Returns when element specified by selector satisfies {@code state} option.
+     * Returns the time remaining until timeout
+     * */
     suspend fun waitFor(selector: String, timeoutMillis: Long): Long
     suspend fun exists(selector: String): Boolean
     suspend fun type(selector: String, text: String)

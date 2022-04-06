@@ -11,7 +11,10 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
+import ai.platon.pulsar.crawl.CrawlEventPipelineHandler
 import ai.platon.pulsar.crawl.CrawlLoop
+import ai.platon.pulsar.crawl.DefaultCrawlEventHandler
+import ai.platon.pulsar.crawl.SimulateEventPipelineHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -195,11 +198,7 @@ class LoadComponent(
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
-            .onEach {
-                it.crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
-                    (url as? CompletableListenableHyperlink<WebPage>)?.complete(page)
-                }
-            }
+            .onEach { it.eventHandler = options.eventHandler }
             .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
 

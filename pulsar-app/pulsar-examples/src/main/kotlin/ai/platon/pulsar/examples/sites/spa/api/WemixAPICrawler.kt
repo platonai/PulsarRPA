@@ -1,12 +1,12 @@
 package ai.platon.pulsar.examples.sites.spa.api
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
+import ai.platon.pulsar.crawl.AbstractWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import java.nio.file.Files
@@ -16,10 +16,8 @@ import java.nio.file.StandardOpenOption
 private class APIFetcherHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
-): AbstractEmulateEventHandler() {
+): AbstractWebDriverHandler() {
     private val logger = getLogger(this)
-
-    override var verbose = true
 
     val headersString = """
             accept: application/json, text/plain, */*
@@ -36,8 +34,8 @@ private class APIFetcherHandler(
             user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36
         """.trimIndent()
 
-    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
-         ajaxFetch(driver)
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+        ajaxFetch(driver)
         return null
     }
 
@@ -115,8 +113,11 @@ private class WemixCrawler(
             return
         }
 
-        val eventHandler = APIFetcherHandler(initPageNumber, reportDirectory)
-        val options = session.options("-refresh").apply { addEventHandler(eventHandler) }
+        val apiFetcherHandler = APIFetcherHandler(initPageNumber, reportDirectory)
+        val options = session.options("-refresh")
+//        options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(apiFetcherHandler)
+        options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(apiFetcherHandler)
+
         try {
             session.load(url, options)
         } catch (e: Exception) {

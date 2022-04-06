@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.context.SQLContext

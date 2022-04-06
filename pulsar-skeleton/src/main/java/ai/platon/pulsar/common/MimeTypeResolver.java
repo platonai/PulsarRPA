@@ -176,7 +176,7 @@ public final class MimeTypeResolver {
             String magicType = null;
             // pass URL (file name) and (cleansed) content type from protocol to Tika
             Metadata tikaMeta = new Metadata();
-            tikaMeta.add(Metadata.RESOURCE_NAME_KEY, url);
+            // tikaMeta.add(Metadata.RESOURCE_NAME_KEY, url);
             tikaMeta.add(Metadata.CONTENT_TYPE, (cleanedMimeType != null ? cleanedMimeType : typeName));
             try (InputStream stream = TikaInputStream.get(data)) {
                 magicType = tika.detect(stream, tikaMeta);

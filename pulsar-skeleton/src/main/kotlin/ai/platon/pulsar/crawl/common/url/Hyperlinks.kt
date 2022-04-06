@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.common.url
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.findOption
@@ -19,9 +18,7 @@ import java.time.Instant
 import java.util.concurrent.CompletableFuture
 
 interface ListenableHyperlink: UrlAware {
-    val loadEventHandler: LoadEventHandler
-    val emulateEventHandler: EmulateEventHandler
-    val crawlEventHandler: CrawlEventHandler
+    val eventHandler: PulsarEventPipelineHandler
 }
 
 open class StatefulListenableHyperlink(
@@ -56,9 +53,7 @@ open class StatefulListenableHyperlink(
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
-    override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler()
-    override val emulateEventHandler: EmulateEventHandler = DefaultEmulateEventHandler()
-    override val crawlEventHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
+    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
 }
 
 open class ParsableHyperlink(
@@ -68,14 +63,11 @@ open class ParsableHyperlink(
     url: String,
     val onParse: (WebPage, Document) -> Unit
 ): Hyperlink(url, args = "-parse"), ListenableHyperlink {
-    override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler().also {
-        val htmlDocumentHandler = object: HtmlDocumentHandler() {
+    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler().also {
+        it.loadEventHandler.onAfterHtmlParsePipeline.addLast(object: HtmlDocumentHandler() {
             override fun invoke(page: WebPage, document: FeaturedDocument) = onParse(page, document.document)
-        }
-        it.onAfterHtmlParsePipeline.addLast(htmlDocumentHandler)
+        })
     }
-    override val emulateEventHandler: EmulateEventHandler = DefaultEmulateEventHandler()
-    override val crawlEventHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
 }
 
 open class CompletableHyperlink<T>(
@@ -205,9 +197,5 @@ open class CompletableListenableHyperlink<T>(
 ): UrlAware, Comparable<UrlAware>, ListenableHyperlink,
     CompletableHyperlink<T>(url, text, order, referer, args, href)
 {
-    override val crawlEventHandler: CrawlEventPipelineHandler = DefaultCrawlEventHandler()
-
-    override val loadEventHandler: LoadEventPipelineHandler = DefaultLoadEventHandler()
-
-    override val emulateEventHandler: EmulateEventHandler = DefaultEmulateEventHandler()
+    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler()
 }

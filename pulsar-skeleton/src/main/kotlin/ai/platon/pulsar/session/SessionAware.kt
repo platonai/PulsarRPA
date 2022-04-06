@@ -1,4 +1,4 @@
-package ai.platon.pulsar
+package ai.platon.pulsar.session
 
 interface SessionAware {
     val session: PulsarSession

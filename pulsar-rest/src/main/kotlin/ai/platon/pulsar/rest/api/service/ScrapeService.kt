@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest.api.service
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes

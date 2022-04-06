@@ -1,4 +1,4 @@
-package ai.platon.pulsar
+package ai.platon.pulsar.session
 
 import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.CheckState
@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.common.DocumentCatch
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.dom.FeaturedDocument

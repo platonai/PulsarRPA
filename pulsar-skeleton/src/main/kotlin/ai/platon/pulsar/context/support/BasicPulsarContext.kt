@@ -1,6 +1,6 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.BasicPulsarSession
+import ai.platon.pulsar.session.BasicPulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 
 /**

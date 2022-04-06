@@ -12,15 +12,13 @@ import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
     companion object {
         fun registerEventHandlers(url: ListenableHyperlink, options: LoadOptions) {
-            val handler = url.loadEventHandler
-            if (handler is LoadEventPipelineHandler) {
-                handler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))
+            val loadEventHandler = url.eventHandler.loadEventHandler
+            if (loadEventHandler is LoadEventPipelineHandler) {
+                loadEventHandler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))
             }
+            options.eventHandler = url.eventHandler
 
             options.conf.name = options.label
-
-            // register the handler
-            options.conf.putBean(handler)
         }
     }
 
@@ -44,7 +42,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
 
         // TODO: the normalization order might not be the best
         var normalizedUrl: String
-        val eventHandler = finalOptions.conf.getBean(LoadEventHandler::class)
+        val eventHandler = finalOptions.conf.getBeanOrNull(LoadEventHandler::class)
         if (eventHandler?.onNormalize != null) {
             normalizedUrl = eventHandler.onNormalize(spec) ?: return NormUrl.NIL
         } else {

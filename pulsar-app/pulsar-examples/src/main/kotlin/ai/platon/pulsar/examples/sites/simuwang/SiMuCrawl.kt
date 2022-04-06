@@ -1,15 +1,20 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
+import ai.platon.pulsar.crawl.AbstractWebDriverHandler
+import ai.platon.pulsar.crawl.SimulateEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.test.VerboseSQLExecutor
+import ai.platon.pulsar.ql.context.SQLContexts
 
-class LoginHandler: AbstractEmulateEventHandler() {
-    override var verbose = true
+class LoginHandler: AbstractWebDriverHandler() {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+        login(page, driver)
+        return null
+    }
 
-    override suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any? {
-        if (!driver.exists(".comp-login-b2")) {
+    private suspend fun login(page: WebPage, driver: WebDriver): Any? {
+        val time = driver.waitFor(".comp-login-b2")
+        if (time <= 0) {
             return null
         }
 
@@ -26,12 +31,16 @@ class LoginHandler: AbstractEmulateEventHandler() {
 }
 
 fun main() {
-    val portal = "https://dc.simuwang.com/"
+    val portalUrl = "https://dc.simuwang.com/"
     val args = "-i 30s -ii 30s -ol a[href~=product] -tl 10"
 
-    val executor = VerboseSQLExecutor()
-    executor.eventHandler = LoginHandler()
-    executor.open(portal, "-scrollCount 1")
+    val context = SQLContexts.create()
+    val session = context.createSession()
+    val loginHandler = LoginHandler()
+    val options = session.options(args)
+    options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(loginHandler)
+    // open the portal page and login
+    session.load(portalUrl, options)
 
     val sql = """
 select
@@ -45,10 +54,12 @@ select
     dom_first_text(dom, 'div div.nav.dc-home-333 ~ .price-date') as dateOfLatestWorth,
     dom_first_text(dom, 'div .ranking-table-profit-tbody') as profit
 from
-    load_and_select('$portal', '.ranking-table-tbody .ranking-table-tbody-tr')
+    load_and_select('$portalUrl', '.ranking-table-tbody .ranking-table-tbody-tr')
         """.trimIndent()
-    executor.executeQuery(sql)
-    executor.loadOutPages(portal, args)
-
-    executor.close()
+    // extract fields from the portal page
+    context.executeQuery(sql)
+    // load out pages
+    session.loadOutPages(portalUrl, options)
+    // wait for all done
+    context.await()
 }

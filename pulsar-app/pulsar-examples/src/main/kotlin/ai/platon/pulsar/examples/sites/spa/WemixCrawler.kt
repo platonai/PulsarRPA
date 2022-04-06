@@ -1,11 +1,11 @@
 package ai.platon.pulsar.examples.sites.spa
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
+import ai.platon.pulsar.crawl.AbstractWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
@@ -17,12 +17,14 @@ import kotlin.random.Random
 private class PaginateHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
-): AbstractEmulateEventHandler() {
+) : AbstractWebDriverHandler() {
     private val logger = getLogger(this)
 
-    override var verbose = true
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+        return onAfterCheckDOMState0(page, driver)
+    }
 
-    override suspend fun onAfterCheckDOMState(page: WebPage, driver: WebDriver): Any? {
+    private suspend fun onAfterCheckDOMState0(page: WebPage, driver: WebDriver): Any? {
         driver.waitFor("#tab-transactions")
         driver.click("#tab-transactions")
 
@@ -104,8 +106,10 @@ private class WemixCrawler(
             return
         }
 
-        val eventHandler = PaginateHandler(initPageNumber, reportDirectory)
-        val options = session.options("-refresh").apply { addEventHandler(eventHandler) }
+        val paginateHandler = PaginateHandler(initPageNumber, reportDirectory)
+        val options = session.options("-refresh")
+//        options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(paginateHandler)
+        options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(paginateHandler)
         try {
             session.load(url, options)
         } catch (e: Exception) {

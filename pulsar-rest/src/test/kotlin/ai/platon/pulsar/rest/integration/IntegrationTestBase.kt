@@ -1,14 +1,10 @@
 package ai.platon.pulsar.rest.integration
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCache
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired

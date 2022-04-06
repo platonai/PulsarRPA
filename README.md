@@ -5,7 +5,7 @@ Pulsar is an open source solution to scrape web data at scale.
 
 Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, pulsar is an open source solution to address such issues.
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, and we can query the web data using SQL directly.
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, and we can query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
@@ -101,7 +101,7 @@ from
 Execute the X-SQL:
 
 ```kotlin
-val context = SQLContexts.activate()
+val context = SQLContexts.create()
 context.executeQuery(sql)
 ```
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.AbstractPulsarSession
+import ai.platon.pulsar.session.AbstractPulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -172,9 +172,7 @@ class CoreMetrics(
 
     override fun getParams(): Params {
         return Params.of(
-            "unreachableHosts", unreachableHosts.size,
             "maxUrlLength", maxUrlLength,
-            "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
             "timeoutUrls", timeoutUrls.size,
             "failedUrls", failedUrls.size,
             "deadUrls", deadUrls.size

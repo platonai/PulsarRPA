@@ -5,7 +5,8 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.EmulateEventHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.SimulateEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -202,15 +203,15 @@ open class BrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
-        val eventHandler = volatileConfig.getBean(EmulateEventHandler::class)
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
 
         tracer?.trace("{}", task.emulateSettings)
 
-        eventHandler?.onBeforeCheckDOMState(task.fetchTask.page, task.driver)
+        eventHandler?.onBeforeCheckDOMState?.invoke(task.fetchTask.page, task.driver)
 
         jsCheckDOMState(task, result)
 
-        eventHandler?.onAfterCheckDOMState(task.fetchTask.page, task.driver)
+        eventHandler?.onAfterCheckDOMState?.invoke(task.fetchTask.page, task.driver)
 
         // task.driver.bringToFront()
 
@@ -229,7 +230,7 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            eventHandler?.onBeforeComputeFeature(task.fetchTask.page, task.driver)
+            eventHandler?.onBeforeComputeFeature?.invoke(task.fetchTask.page, task.driver)
         }
 
         if (result.state.isContinue) {
@@ -237,7 +238,7 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            eventHandler?.onAfterComputeFeature(task.fetchTask.page, task.driver)
+            eventHandler?.onAfterComputeFeature?.invoke(task.fetchTask.page, task.driver)
         }
 
         // handle click to navigate

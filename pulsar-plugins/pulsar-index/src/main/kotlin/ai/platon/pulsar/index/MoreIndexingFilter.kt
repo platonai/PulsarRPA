@@ -137,7 +137,7 @@ class MoreIndexingFilter(
         doc.add("mime_type", mimeType)
 
         // Check if we need to split the content type in sub parts
-        if (conf!!.getBoolean("moreIndexingFilter.indexMimeTypeParts", true)) {
+        if (conf.getBoolean("moreIndexingFilter.indexMimeTypeParts", true)) {
             val parts = getParts(mimeType)
             for (part in parts) {
                 doc.add("mime_type", part)

@@ -1,4 +1,4 @@
-package ai.platon.pulsar
+package ai.platon.pulsar.session
 
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.context.support.AbstractPulsarContext

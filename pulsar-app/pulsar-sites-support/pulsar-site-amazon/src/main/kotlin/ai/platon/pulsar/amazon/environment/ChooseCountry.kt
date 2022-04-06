@@ -1,27 +1,27 @@
 package ai.platon.pulsar.amazon.environment
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
-class ChooseLanguageJsEventHandler: AbstractEmulateEventHandler() {
+class ChooseLanguageJsEventHandler: AbstractWebDriverHandler() {
     override var verbose = true
 
-    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         val expressions = "document.querySelector(\"input[value=en_US]\").click();\n" +
                 "document.querySelector(\"span#icp-btn-save input[type=submit]\").click();"
         return evaluate(driver, expressions.split(";"))
     }
 }
 
-class ChooseCountryJsEventHandler: AbstractEmulateEventHandler() {
+class ChooseCountryJsEventHandler: AbstractWebDriverHandler() {
     override var verbose = true
 
-    override suspend fun onAfterComputeFeature(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         // New York City
         val zipcode = listOf("10001", "10001", "10002", "10002").shuffled().first()
         val resource = "sites/amazon/js/choose-district.js"
@@ -64,9 +64,8 @@ class ChooseCountry(
 
         // 3. choose district
         val jsEventHandler = ChooseCountryJsEventHandler()
-        options.conf.putBean(jsEventHandler)
+        options.eventHandler.simulateEventHandler.onAfterCheckDOMStatePipeline.addLast(jsEventHandler)
         session.load(portalUrl, options)
-        options.conf.removeBean(jsEventHandler)
 
         // 4. check the result
         document = session.loadDocument(portalUrl, options)

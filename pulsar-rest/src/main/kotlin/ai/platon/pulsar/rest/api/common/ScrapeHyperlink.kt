@@ -1,15 +1,13 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.crawl.DefaultLoadEventHandler
-import ai.platon.pulsar.crawl.LoadEventPipelineHandler
-import ai.platon.pulsar.crawl.common.GlobalCache
+import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.AbstractSQLContext
@@ -22,10 +20,6 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.measureTimeMillis
 
 class ScrapeLoadEventHandler(
@@ -71,7 +65,9 @@ open class ScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override val loadEventHandler: LoadEventPipelineHandler = ScrapeLoadEventHandler(this, response)
+    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler(
+        loadEventHandler = ScrapeLoadEventHandler(this, response)
+    )
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
 

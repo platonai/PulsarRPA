@@ -126,7 +126,9 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun stop() {
-        if (!isActive) return
+        if (!isActive) {
+            return
+        }
 
         refreshState()
         try {
@@ -208,6 +210,9 @@ class ChromeDevtoolsDriver(
         return nodeId != null && nodeId > 0
     }
 
+    /**
+     * Wait until [selector] for [timeoutMillis] milliseconds at most
+     * */
     override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
         refreshState()
         val nodeId = querySelector(selector)

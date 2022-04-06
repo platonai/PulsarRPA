@@ -1,14 +1,15 @@
 package ai.platon.pulsar.examples.sites.amazon
 
 import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.crawl.AbstractEmulateEventHandler
+import ai.platon.pulsar.crawl.AbstractSimulateEventHandler
+import ai.platon.pulsar.crawl.AbstractWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.WebPage
 
-class AmazonSearcherJsEventHandler: AbstractEmulateEventHandler() {
+class AmazonSearcherJsEventHandler: AbstractWebDriverHandler() {
 
-    override suspend fun onBeforeComputeFeature(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         val selector = "input#twotabsearchtextbox"
         val expressions = "document.querySelector('$selector').value = 'cup';" +
                 "document.querySelector('$selector').click();" +

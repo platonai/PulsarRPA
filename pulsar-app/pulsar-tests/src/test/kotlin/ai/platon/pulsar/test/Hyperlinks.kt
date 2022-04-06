@@ -61,7 +61,9 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     }
 
     override var args: String? = "-cacheContent true -storeContent false -parse"
-    override var loadEventHandler: LoadEventPipelineHandler = MockLoadEventHandler(this)
+    override var eventHandler: PulsarEventPipelineHandler = PulsarEventPipelineHandler(
+        loadEventHandler = MockLoadEventHandler(this)
+    )
 
     init {
         registerEventHandler()
@@ -74,7 +76,7 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     fun await() = isDone.await()
 
     private fun registerEventHandler() {
-        crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
+        eventHandler.crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
             if (page == null) {
                 return@addFirst
             }

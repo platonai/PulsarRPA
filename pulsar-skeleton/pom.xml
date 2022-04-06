@@ -55,11 +55,10 @@
             <artifactId>pulsar-ql-common</artifactId>
         </dependency>
 
-        <!-- For parsers -->
         <dependency>
             <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers</artifactId>
-            <version>${tika.version}</version>
+            <artifactId>tika-parsers-standard-package</artifactId>
+            <type>pom</type>
         </dependency>
 
         <!-- apache common -->

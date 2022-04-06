@@ -1,4 +1,4 @@
-package ai.platon.pulsar
+package ai.platon.pulsar.session
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
@@ -218,7 +218,7 @@ abstract class AbstractPulsarSession(
             return null
         }
 
-        if (normUrl.options.conf.getBean(LoadEventHandler::class.java) != null) {
+        if (normUrl.options.conf.getBeanOrNull(LoadEventHandler::class.java) != null) {
             return null
         }
 
