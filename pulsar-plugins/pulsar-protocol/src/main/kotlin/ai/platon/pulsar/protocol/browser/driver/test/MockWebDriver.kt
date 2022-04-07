@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import java.time.Duration
 import java.util.*
 
 class MockBrowserInstance(
@@ -58,8 +59,12 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long {
-        return backupDriverOrNull?.waitForSelector(selector, timeoutMillis) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
+        return backupDriverOrNull?.waitForSelector(selector, timeout) ?: 0
+    }
+
+    override suspend fun waitForNavigation(timeout: Duration): Long {
+        return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
     }
 
     override suspend fun setTimeouts(driverConfig: BrowserSettings) {

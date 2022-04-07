@@ -13,7 +13,7 @@ fun main() {
     }
     val urls = LinkExtractors.fromResource("seeds10.txt").map { ParsableHyperlink(it, parseHandler) }
     val context = PulsarContexts.create().asyncLoadAll(urls)
-    // feel free to fetch/load any amount of urls here using async loading methods
+    // feel free to fetch/load a huge number of urls here using async loading
     // ...
     context.await()
 }

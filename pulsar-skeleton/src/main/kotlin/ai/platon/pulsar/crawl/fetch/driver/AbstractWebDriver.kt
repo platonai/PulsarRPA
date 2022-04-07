@@ -70,8 +70,12 @@ abstract class AbstractWebDriver(
         }
     }
 
-    override suspend fun waitForSelector(selector: String, timeout: Duration): Long = waitForSelector(selector, timeout.toMillis())
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =
+        waitForSelector(selector, Duration.ofMillis(timeoutMillis))
     override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForTimeout)
+
+    override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))
+    override suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis))
 
     override suspend fun getCookies(): List<Map<String, String>> {
         return listOf()

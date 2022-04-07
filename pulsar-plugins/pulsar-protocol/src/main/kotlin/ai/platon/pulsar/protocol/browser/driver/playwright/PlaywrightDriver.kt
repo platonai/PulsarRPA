@@ -17,6 +17,7 @@ import com.microsoft.playwright.options.Position
 import com.microsoft.playwright.options.WaitUntilState
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -143,16 +144,27 @@ class PlaywrightDriver(
         return false
     }
 
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long {
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         try {
             val startTime = System.currentTimeMillis()
             page.waitForSelector(selector)
-            return timeoutMillis - (System.currentTimeMillis() - startTime)
+            return timeout.toMillis() - (System.currentTimeMillis() - startTime)
         } catch (e: Exception) {
             logger.warn("Failed to wait | {}", e.message)
         }
 
         return 0
+    }
+
+    override suspend fun waitForNavigation(timeout: Duration): Long {
+        val startTime = System.currentTimeMillis()
+
+        // TODO: fix this
+        page.waitForNavigation {  }
+
+        val elapsedTime = System.currentTimeMillis() - startTime
+
+        return timeout.toMillis() - elapsedTime
     }
 
     override suspend fun type(selector: String, text: String) {

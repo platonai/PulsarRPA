@@ -100,6 +100,9 @@ interface WebDriver: Closeable {
      * */
     suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long
     suspend fun waitForSelector(selector: String, timeout: Duration): Long
+    suspend fun waitForNavigation(): Long
+    suspend fun waitForNavigation(timeoutMillis: Long): Long
+    suspend fun waitForNavigation(timeout: Duration): Long
     suspend fun exists(selector: String): Boolean
     suspend fun type(selector: String, text: String)
     suspend fun click(selector: String, count: Int = 1)

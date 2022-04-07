@@ -22,6 +22,7 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -211,23 +212,49 @@ class ChromeDevtoolsDriver(
     }
 
     /**
-     * Wait until [selector] for [timeoutMillis] milliseconds at most
+     * Wait until [selector] for [timeout] at most
      * */
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long {
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         refreshState()
         var nodeId = querySelector(selector)
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
 
+        val timeoutMillis = timeout.toMillis()
         while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
             gap()
             elapsedTime = System.currentTimeMillis() - startTime
             nodeId = querySelector(selector)
-
-            println("$selector $nodeId")
         }
 
         return timeoutMillis - elapsedTime
+    }
+
+    override suspend fun waitForNavigation(timeout: Duration): Long {
+        refreshState()
+        val oldUrl = currentUrl()
+        var navigated = isNavigated(oldUrl)
+        val startTime = System.currentTimeMillis()
+        var elapsedTime = 0L
+
+        val timeoutMillis = timeout.toMillis()
+        while (elapsedTime < timeoutMillis && !navigated) {
+            gap()
+            elapsedTime = System.currentTimeMillis() - startTime
+            navigated = isNavigated(oldUrl)
+        }
+
+        return timeoutMillis - elapsedTime
+    }
+
+    private suspend fun isNavigated(oldUrl: String): Boolean {
+        if (oldUrl != currentUrl()) {
+            return true
+        }
+
+        // TODO: other signals
+
+        return false
     }
 
     override suspend fun click(selector: String, count: Int) {

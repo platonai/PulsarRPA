@@ -53,23 +53,24 @@ val document = session.loadDocument(url, "-expires 1d")
 ```
 Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then load out pages specified by -outLink:
 ```kotlin
-session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+val documents = pages.map { session.parse(it) }
 ```
 Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector:
 ```kotlin
-session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
+val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 ```
 or
 ```kotlin
-session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+val fields = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
 ```
 Scrape fields from the out pages:
 ```kotlin
-session.scrapeOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]", ".product-intro", listOf(".sku-name", ".p-price"))
+val fields = session.scrapeOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]", ".product-intro", listOf(".sku-name", ".p-price"))
 ```
 or
 ```kotlin
-session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", mapOf("name" to ".sku-name", "price" to ".p-price"))
+val fields = session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ```
 Scrape a massive url collection:
 ```kotlin
@@ -79,7 +80,7 @@ val parseHandler = { _: WebPage, document: Document ->
 }
 val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, parseHandler) }
 val context = PulsarContexts.create().asyncLoadAll(urls)
-// feel free to add a huge amount of urls to the crawl queue here using async loading methods
+// feel free to add a huge number of urls to the crawl queue here using async loading
 // ...
 context.await()
 ```
@@ -105,7 +106,7 @@ val context = SQLContexts.create()
 context.executeQuery(sql)
 ```
 
-The result set is as follows:
+The result is as follows:
 
     TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
     Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926

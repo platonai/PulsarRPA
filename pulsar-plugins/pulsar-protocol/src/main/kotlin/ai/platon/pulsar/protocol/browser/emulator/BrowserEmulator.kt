@@ -206,11 +206,15 @@ open class BrowserEmulator(
 
         tracer?.trace("{}", task.emulateSettings)
 
-        eventHandler?.onBeforeCheckDOMState?.invoke(task.fetchTask.page, task.driver)
+        eventHandler?.runCatching { onBeforeCheckDOMState(task.fetchTask.page, task.driver) }?.onFailure {
+            logger.warn(it.simplify("Failed to call onBeforeCheckDOMState - "))
+        }
 
         jsCheckDOMState(task, result)
 
-        eventHandler?.onAfterCheckDOMState?.invoke(task.fetchTask.page, task.driver)
+        eventHandler?.runCatching { onAfterCheckDOMState(task.fetchTask.page, task.driver) }?.onFailure {
+            logger.warn(it.simplify("Failed to call onAfterCheckDOMState - "))
+        }
 
         // task.driver.bringToFront()
 
@@ -229,7 +233,9 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            eventHandler?.onBeforeComputeFeature?.invoke(task.fetchTask.page, task.driver)
+            eventHandler?.runCatching { onBeforeComputeFeature(task.fetchTask.page, task.driver) }?.onFailure {
+                logger.warn(it.simplify("Failed to call onBeforeComputeFeature - "))
+            }
         }
 
         if (result.state.isContinue) {
@@ -237,7 +243,9 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            eventHandler?.onAfterComputeFeature?.invoke(task.fetchTask.page, task.driver)
+            eventHandler?.runCatching { onAfterComputeFeature(task.fetchTask.page, task.driver) }?.onFailure {
+                logger.warn(it.simplify("Failed to call onAfterComputeFeature - "))
+            }
         }
 
         // handle click to navigate

@@ -73,6 +73,12 @@ class WebDriverAdapter(
 
     override suspend fun waitForSelector(selector: String, timeout: Duration) = driver.waitForSelector(selector, timeout)
 
+    override suspend fun waitForNavigation() = driver.waitForNavigation()
+
+    override suspend fun waitForNavigation(timeoutMillis: Long) = driver.waitForNavigation(timeoutMillis)
+
+    override suspend fun waitForNavigation(timeout: Duration) = driver.waitForNavigation(timeout)
+
     override suspend fun exists(selector: String) = driver.exists(selector)
 
     override suspend fun click(selector: String, count: Int) = driver.click(selector, count)
