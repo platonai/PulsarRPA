@@ -291,6 +291,7 @@ class LoadComponent(
         var page = FetchEntry.createPageShell(normUrl)
         // the page is a resource, do not render it in a browser
         page.isResource = normUrl.options.isResource
+//        page.referrer = normUrl.options.referrer
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()

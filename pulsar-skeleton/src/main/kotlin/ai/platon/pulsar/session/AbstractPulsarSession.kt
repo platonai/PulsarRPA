@@ -311,9 +311,11 @@ abstract class AbstractPulsarSession(
     }
 
     @Throws(Exception::class)
-    override fun loadResource(url: String, referer: String): WebPage {
-        val opts = options().also { it.isResource = true }
-        // TODO: use referer to find out the correct browser instance
+    override fun loadResource(url: String, args: String) = loadResource(url, options(args))
+
+    @Throws(Exception::class)
+    override fun loadResource(url: String, opts: LoadOptions): WebPage {
+        opts.isResource = true
         return load(url, opts)
     }
 

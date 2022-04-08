@@ -1895,9 +1895,9 @@ final public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
-    @NotNull
+    @Nullable
     public String getReferrer() {
-        return page.getReferrer() == null ? "" : page.getReferrer().toString();
+        return page.getReferrer() == null ? null : page.getReferrer().toString();
     }
 
     /**
@@ -1905,7 +1905,7 @@ final public class WebPage implements Comparable<WebPage> {
      *
      * @param referrer a {@link java.lang.String} object.
      */
-    public void setReferrer(String referrer) {
+    public void setReferrer(@Nullable String referrer) {
         if (referrer != null && referrer.length() > SHORTEST_VALID_URL_LENGTH) {
             page.setReferrer(referrer);
         }

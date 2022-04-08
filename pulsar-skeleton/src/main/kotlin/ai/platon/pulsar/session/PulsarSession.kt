@@ -166,17 +166,24 @@ interface PulsarSession : AutoCloseable {
      * @return The web pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = options()): Collection<WebPage>
-
     /**
-     * Load a url with specified options
+     * Load an url as a resource without browser rendering in the browser context
      *
      * @param url     The url to load
-     * @param referer The referer url
      * @param args The load args
      * @return The web page
      */
     @Throws(Exception::class)
-    fun loadResource(url: String, referer: String): WebPage
+    fun loadResource(url: String, args: String): WebPage
+    /**
+     * Load an url as a resource without browser rendering in the browser context
+     *
+     * @param url     The url to load
+     * @param opts The load options
+     * @return The web page
+     */
+    @Throws(Exception::class)
+    fun loadResource(url: String, opts: LoadOptions = options()): WebPage
 
     /**
      * Parse the Web page into DOM.
