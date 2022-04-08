@@ -216,11 +216,12 @@ class ChromeDevtoolsDriver(
      * */
     override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         refreshState()
-        var nodeId = querySelector(selector)
+
+        val timeoutMillis = timeout.toMillis()
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
 
-        val timeoutMillis = timeout.toMillis()
+        var nodeId = querySelector(selector)
         while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
             gap()
             elapsedTime = System.currentTimeMillis() - startTime
@@ -269,14 +270,16 @@ class ChromeDevtoolsDriver(
 
     override suspend fun type(selector: String, text: String) {
         refreshState()
-        val nodeId = focus(selector) ?: return
+        val nodeId = focus(selector)
+        if (nodeId == 0) return
         keyboard.type(nodeId, text, delayPolicy("type"))
         gap()
     }
 
     override suspend fun scrollTo(selector: String) {
         refreshState()
-        val nodeId = focus(selector) ?: return
+        val nodeId = focus(selector)
+        if (nodeId == 0) return
         dom.scrollIntoViewIfNeeded(nodeId, null, null, null)
     }
 
@@ -286,25 +289,25 @@ class ChromeDevtoolsDriver(
 
     private suspend fun gap() = delay(delayPolicy("gap"))
 
-    private fun focus(selector: String): Int? {
+    private fun focus(selector: String): Int {
         val rootId = dom.document.nodeId
         val nodeId = dom.querySelector(rootId, selector)
-        if (nodeId == null) {
+        if (nodeId == 0) {
             logger.warn("No node found for selector: $selector")
-            return null
+            return 0
         }
 
         try {
             dom.focus(nodeId, null, null)
         } catch (e: Exception) {
-            logger.warn("Failed to focus | {}", e.message)
+            logger.warn("Failed to focus #$nodeId | {}", e.message)
         }
 
         return nodeId
     }
 
     private fun querySelector(selector: String): Int? {
-        val rootId = dom?.document?.nodeId ?: return null
+        val rootId = dom.document.nodeId ?: return null
         return kotlin.runCatching { dom.querySelector(rootId, selector) }.onFailure {
             logger.warn("Failed to query selector {} | {}", selector, it.message)
         }.getOrNull()

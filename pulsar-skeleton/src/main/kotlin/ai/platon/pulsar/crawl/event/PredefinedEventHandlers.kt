@@ -10,8 +10,11 @@ import java.time.Duration
 
 class LoginHandler(
     val loginUrl: String,
+    val usernameSelector: String,
     val username: String,
+    val passwordSelector: String,
     val password: String,
+    val submitSelector: String,
     val activateSelector: String? = null,
     val activateTimeout: Duration = Duration.ofMinutes(3),
 ) : AbstractWebDriverHandler() {
@@ -22,21 +25,22 @@ class LoginHandler(
 
         driver.navigateTo(loginUrl)
 
-        logger.info("Waiting for login panel ... | {}", activateSelector)
-
         if (activateSelector != null) {
+            logger.info("Waiting for login panel ... | {}", activateSelector)
+
             val time = driver.waitForSelector(activateSelector, activateTimeout)
             if (time <= 0) {
                 logger.info("Can not active login panel in {}", activateTimeout)
                 return null
             }
+            driver.bringToFront()
+            driver.click(activateSelector)
         }
 
         driver.bringToFront()
-        driver.click("button.comp-login-b2")
-        driver.type("input[name=username]", username)
-        driver.type("input[type=password]", password)
-        driver.click("button.comp-login-btn", count = 2)
+        driver.type(usernameSelector, username)
+        driver.type(passwordSelector, password)
+        driver.click(submitSelector, count = 2)
 
         // TODO: wait for navigation
         logger.info("Cookies before login: {}", driver.getCookies())
