@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
@@ -76,6 +75,9 @@ class ChromeDevtoolsDriver(
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
 
+    private var mainRequestId = ""
+    private var mainRequestHeaders = mapOf<String, Any>()
+
     private val enableBlockingReport = false
     private val closed = AtomicBoolean()
 
@@ -115,6 +117,10 @@ class ChromeDevtoolsDriver(
         browserInstance.navigateHistory.add(entry)
         lastActiveTime = Instant.now()
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
+    }
+
+    override suspend fun mainRequestHeaders(): Map<String, Any> {
+        return mainRequestHeaders
     }
 
     override suspend fun getCookies(): List<Map<String, String>> {
@@ -396,8 +402,10 @@ class ChromeDevtoolsDriver(
             }
 
             network.onRequestWillBeSent {
-                // it.request.headers
-                // it.request.url = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx?page=300&pagesize=20"
+                if (mainRequestId.isBlank()) {
+                    mainRequestId = it.requestId
+                    mainRequestHeaders = it.request.headers
+                }
             }
 
             network.onResponseReceived {

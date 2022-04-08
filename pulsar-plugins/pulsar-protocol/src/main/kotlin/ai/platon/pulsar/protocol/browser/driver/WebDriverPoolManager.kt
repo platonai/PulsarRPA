@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -250,7 +250,7 @@ open class WebDriverPoolManager(
     }
 
     private fun onBeforeBrowserLaunch(volatileConfig: VolatileConfig) {
-        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventPipelineHandler::class)
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)
         try {
             eventHandler?.loadEventHandler?.onBeforeBrowserLaunch?.invoke()
         } catch (t: Throwable) {
@@ -259,7 +259,7 @@ open class WebDriverPoolManager(
     }
 
     private fun onAfterBrowserLaunch(driver: WebDriver, volatileConfig: VolatileConfig) {
-        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventPipelineHandler::class)
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)
 
 //        println(eventHandler?.loadEventHandler?.onAfterBrowserLaunch)
 //        println(eventHandler?.loadEventPipelineHandler?.onAfterBrowserLaunchPipeline)

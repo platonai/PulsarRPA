@@ -4,16 +4,13 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
-import ai.platon.pulsar.crawl.LoadEventHandler
-import ai.platon.pulsar.crawl.LoadEventPipelineHandler
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
     companion object {
         fun registerEventHandlers(url: ListenableHyperlink, options: LoadOptions) {
-            url.eventHandler.loadEventPipelineHandler.onAfterFetchPipeline.addFirst(AddRefererAfterFetchHandler(url))
+            url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
             options.eventHandler = url.eventHandler
             options.conf.name = options.label
         }

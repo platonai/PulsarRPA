@@ -72,15 +72,7 @@ open class BrowserEmulatedFetcher(
      * */
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
         return privacyManager.run(task) { _, driver ->
-            try {
-                browserEmulator.fetch(task, driver)
-            } catch (e: IllegalApplicationContextStateException) {
-                if (illegalState.compareAndSet(false, true)) {
-                    AppContext.shouldTerminate()
-                    logger.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
-                }
-                throw e
-            }
+            browserEmulator.fetch(task, driver)
         }.response
     }
 

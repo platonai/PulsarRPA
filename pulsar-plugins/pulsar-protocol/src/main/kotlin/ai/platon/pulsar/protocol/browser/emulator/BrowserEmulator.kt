@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.PulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -21,6 +20,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
@@ -81,7 +81,9 @@ open class BrowserEmulator(
         var response: Response?
 
         try {
-            response = browseWithCancellationHandled(task, driver)
+            response = if (task.page.isResource) {
+                loadResourceWithoutRendering(task, driver)
+            } else browseWithCancellationHandled(task, driver)
         } catch (e: NoSuchSessionException) {
             logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
             driver.retire()
@@ -112,6 +114,18 @@ open class BrowserEmulator(
         }
 
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
+    }
+
+    private suspend fun loadResourceWithoutRendering(task: FetchTask, driver: WebDriver): Response {
+        val navigateTask = NavigateTask(task, driver, driverSettings)
+
+        try {
+            navigateTask.pageSource = driver.loadResource(task.url)
+        } catch (e: IOException) {
+            logger.warn(e.stringify())
+        }
+
+        return emulateEventHandler.createResponse(navigateTask, navigateTask.pageDatum)
     }
 
     private suspend fun browseWithCancellationHandled(task: FetchTask, driver: WebDriver): Response? {
@@ -202,7 +216,7 @@ open class BrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
-        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventPipelineHandler::class)?.simulateEventHandler
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
 
         tracer?.trace("{}", task.emulateSettings)
 

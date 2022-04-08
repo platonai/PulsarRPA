@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.LoadEventHandler
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
@@ -92,8 +92,16 @@ abstract class AbstractPulsarSession(
     /**
      * Create a new options, with a new volatile config
      * */
-    override fun options(args: String, eventHandler: PulsarEventPipelineHandler?): LoadOptions {
+    override fun options(args: String, eventHandler: PulsarEventHandler?): LoadOptions {
         return LoadOptions.parse(args, sessionConfig.toVolatileConfig()).also { it.eventHandler = eventHandler }
+    }
+
+    override fun property(name: String): String? {
+        return sessionConfig[name] ?: unmodifiedConfig[name]
+    }
+
+    override fun property(name: String, value: String) {
+        sessionConfig[name] = value
     }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
@@ -300,6 +308,13 @@ abstract class AbstractPulsarSession(
         }.mapNotNullTo(mutableSetOf()) { it }.take(opts.topLinks)
 
         return loadAll(links, normUrl.options.createItemOptions())
+    }
+
+    @Throws(Exception::class)
+    override fun loadResource(url: String, referer: String): WebPage {
+        val opts = options().also { it.isResource = true }
+        // TODO: use referer to find out the correct browser instance
+        return load(url, opts)
     }
 
     /**

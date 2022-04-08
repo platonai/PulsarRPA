@@ -1,11 +1,15 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
+import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.jvm.Throws
 
 abstract class AbstractWebDriver(
     override val browserInstance: AbstractBrowserInstance,
@@ -57,6 +61,8 @@ abstract class AbstractWebDriver(
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
 
+    private var jsoupSession: Connection? = null
+
     override fun free() = status.set(Status.FREE)
     override fun startWork() = status.set(Status.WORKING)
     override fun retire() = status.set(Status.RETIRED)
@@ -76,10 +82,6 @@ abstract class AbstractWebDriver(
 
     override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))
     override suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis))
-
-    override suspend fun getCookies(): List<Map<String, String>> {
-        return listOf()
-    }
 
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
@@ -118,19 +120,31 @@ abstract class AbstractWebDriver(
     }
 
     override suspend fun newSession(): Connection {
-        val headers = mapOf<String, String>()
+        val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
+        val cookies = getCookies().first()
         val userAgent = BrowserSettings.randomUserAgent()
 
         val session = Jsoup.newSession()
             .timeout(20 * 1000)
             .userAgent(userAgent)
-            .cookies(getCookies().first())
+            .cookies(cookies)
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
         // .proxy("127.0.0.1", 33857)
 
         return session
+    }
+
+    @Throws(IOException::class)
+    override suspend fun loadResource(url: String): String {
+        if (jsoupSession == null) {
+            jsoupSession = newSession()
+        }
+
+        return withContext(Dispatchers.IO) {
+            jsoupSession?.newRequest()?.url(url)?.execute()?.body() ?: ""
+        }
     }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id

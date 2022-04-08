@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -59,7 +58,7 @@ object LoadOptionDefaults {
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var eventHandler: PulsarEventPipelineHandler? = null
+    var eventHandler: PulsarEventHandler? = null
 ): CommonOptions(argv) {
 
     @ApiPublic
@@ -92,6 +91,10 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-readonly"], description = "The task does not change the status of the web page")
     var readonly = false
+
+    @ApiPublic
+    @Parameter(names = ["-resource", "-isResource"], description = "Fetch the page without browser rendering if true")
+    var isResource = false
 
     /**
      * Web page expiry time

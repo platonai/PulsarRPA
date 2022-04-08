@@ -18,51 +18,51 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     class MockLoadEventHandler(hyperlink: MockListenableHyperlink) : DefaultLoadEventHandler() {
         private val thisHandler = this
 
-        override var onBeforeLoad = object: UrlHandler() {
-            override fun invoke(url: String) {
+        init {
+            onBeforeLoad.addFirst {
                 println("............onBeforeLoad")
             }
-        }
-        override var onBeforeParse = object: WebPageHandler() {
-            override fun invoke(page: WebPage) {
-                println("............onBeforeParse " + page.id)
-                println("$this " + page.loadEventHandler)
-                assertSame(thisHandler, page.loadEventHandler)
-                page.variables[VAR_IS_SCRAPE] = true
-            }
-        }
-        override var onBeforeHtmlParse = object: WebPageHandler() {
-            override fun invoke(page: WebPage) {
-                assertSame(thisHandler, page.loadEventHandler)
-                println("............onBeforeHtmlParse " + page.id)
-            }
-        }
-        override var onAfterHtmlParse = object: HtmlDocumentHandler() {
-            override fun invoke(page: WebPage, document: FeaturedDocument) {
-                println("............onAfterHtmlParse " + page.id)
-                assertSame(thisHandler, page.loadEventHandler)
-                assertTrue(page.hasVar(VAR_IS_SCRAPE))
-            }
-        }
-        override var onAfterParse = object: WebPageHandler() {
-            override fun invoke(page: WebPage) {
-                println("............onAfterParse " + page.id)
-                println("$thisHandler " + page.loadEventHandler)
-                assertSame(thisHandler, page.loadEventHandler)
-            }
-        }
-        override var onAfterLoad = object: WebPageHandler() {
-            override fun invoke(page: WebPage) {
-                assertSame(thisHandler, page.loadEventHandler)
-                hyperlink.page = page
-                hyperlink.isDone.countDown()
-            }
+            onBeforeParse.addFirst(object: WebPageHandler() {
+                override fun invoke(page: WebPage) {
+                    println("............onBeforeParse " + page.id)
+                    println("$this " + page.loadEventHandler)
+                    assertSame(thisHandler, page.loadEventHandler)
+                    page.variables[VAR_IS_SCRAPE] = true
+                }
+            })
+            onBeforeHtmlParse.addFirst(object: WebPageHandler() {
+                override fun invoke(page: WebPage) {
+                    assertSame(thisHandler, page.loadEventHandler)
+                    println("............onBeforeHtmlParse " + page.id)
+                }
+            })
+            onAfterHtmlParse.addFirst(object: HtmlDocumentHandler() {
+                override fun invoke(page: WebPage, document: FeaturedDocument) {
+                    println("............onAfterHtmlParse " + page.id)
+                    assertSame(thisHandler, page.loadEventHandler)
+                    assertTrue(page.hasVar(VAR_IS_SCRAPE))
+                }
+            })
+            onAfterParse.addFirst(object: WebPageHandler() {
+                override fun invoke(page: WebPage) {
+                    println("............onAfterParse " + page.id)
+                    println("$thisHandler " + page.loadEventHandler)
+                    assertSame(thisHandler, page.loadEventHandler)
+                }
+            })
+            onAfterLoad.addFirst(object: WebPageHandler() {
+                override fun invoke(page: WebPage) {
+                    assertSame(thisHandler, page.loadEventHandler)
+                    hyperlink.page = page
+                    hyperlink.isDone.countDown()
+                }
+            })
         }
     }
 
     override var args: String? = "-cacheContent true -storeContent false -parse"
-    override var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler(
-        loadEventPipelineHandler = MockLoadEventHandler(this)
+    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler(
+        loadEventHandler = MockLoadEventHandler(this)
     )
 
     init {
@@ -76,7 +76,7 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     fun await() = isDone.await()
 
     private fun registerEventHandler() {
-        eventHandler.crawlEventPipelineHandler.onAfterLoadPipeline.addFirst { url, page ->
+        eventHandler.crawlEventHandler.onAfterLoad.addFirst { url, page ->
             if (page == null) {
                 return@addFirst
             }

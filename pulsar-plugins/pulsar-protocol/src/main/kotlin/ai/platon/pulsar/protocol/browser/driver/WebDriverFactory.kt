@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.WebPage

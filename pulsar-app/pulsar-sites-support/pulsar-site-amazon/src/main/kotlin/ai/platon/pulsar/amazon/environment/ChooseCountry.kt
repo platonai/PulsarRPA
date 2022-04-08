@@ -64,8 +64,8 @@ class ChooseCountry(
 
         // 3. choose district
         val jsEventHandler = ChooseCountryJsEventHandler()
-        options.eventHandler = DefaultPulsarEventPipelineHandler().also {
-            it.simulateEventPipelineHandler.onBeforeComputeFeaturePipeline.addLast(jsEventHandler)
+        options.eventHandler = DefaultPulsarEventHandler().also {
+            it.simulateEventHandler.onBeforeComputeFeature.addLast(jsEventHandler)
         }
         session.load(portalUrl, options)
 

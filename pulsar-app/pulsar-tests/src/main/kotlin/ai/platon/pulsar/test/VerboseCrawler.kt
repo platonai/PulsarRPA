@@ -6,8 +6,8 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
-import ai.platon.pulsar.crawl.PulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory
@@ -18,7 +18,7 @@ open class VerboseCrawler(
 ): AutoCloseable {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
 
-    var eventHandler: PulsarEventPipelineHandler = DefaultPulsarEventPipelineHandler()
+    var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
 
     constructor(context: PulsarContext) : this(context.createSession())
 

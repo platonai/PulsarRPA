@@ -110,6 +110,10 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun mainRequestHeaders(): Map<String, Any> {
+        TODO()
+    }
+
     override suspend fun getCookies(): List<Map<String, String>> {
         val mapper = pulsarObjectMapper()
         return page.context().cookies().map {

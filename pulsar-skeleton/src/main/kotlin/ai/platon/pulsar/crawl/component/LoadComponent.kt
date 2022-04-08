@@ -231,7 +231,10 @@ class LoadComponent(
 
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
+        return load1(normUrl, page)
+    }
 
+    private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
         beforeLoad(normUrl, page)
 
         fetchContentIfNecessary(normUrl, page)
@@ -243,7 +246,10 @@ class LoadComponent(
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
+        return loadDeferred1(normUrl, page)
+    }
 
+    private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
         beforeLoad(normUrl, page)
 
         fetchContentIfNecessaryDeferred(normUrl, page)
@@ -252,6 +258,18 @@ class LoadComponent(
 
         return page
     }
+
+//    private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
+//        val page = createPageShell(normUrl)
+//
+//        beforeLoad(normUrl, page)
+//
+//        fetchContentIfNecessaryDeferred(normUrl, page)
+//
+//        afterLoad(page, normUrl)
+//
+//        return page
+//    }
 
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
@@ -271,10 +289,8 @@ class LoadComponent(
     private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
-
-//        require(normUrl.options.eventHandler != null)
-//        require(page.conf == normUrl.options.conf)
-//        require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
+        // the page is a resource, do not render it in a browser
+        page.isResource = normUrl.options.isResource
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -459,7 +475,7 @@ class LoadComponent(
 
             require(page.conf == normUrl.options.conf)
 //            require(normUrl.options.eventHandler != null)
-//            require(page.conf.getBeanOrNull(PulsarEventPipelineHandler::class) != null)
+//            require(page.conf.getBeanOrNull(PulsarEventHandler::class) != null)
 
             fetchComponent.fetchContent(page)
         } finally {

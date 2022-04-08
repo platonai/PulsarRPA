@@ -703,6 +703,16 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.BROWSER, browser.name());
     }
 
+    public boolean isResource() {
+        return getMetadata().getBoolean(Name.IS_RESOURCE, false);
+    }
+
+    public void setResource(boolean resource) {
+        if (resource) {
+            getMetadata().set(Name.IS_RESOURCE, "true");
+        }
+    }
+
     @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
         return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));

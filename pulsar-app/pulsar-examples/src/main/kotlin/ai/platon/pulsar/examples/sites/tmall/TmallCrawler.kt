@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.tmall
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
 
 fun main() {
@@ -21,8 +21,8 @@ fun main() {
     val eventHandler = if (username != null && password != null) {
         val loginHandler = LoginHandler(loginUrl,
             usernameSelector, username, passwordSelector, password, submitSelector, activateSelector)
-        DefaultPulsarEventPipelineHandler().also {
-            it.loadEventPipelineHandler.onAfterBrowserLaunchPipeline.addLast(loginHandler)
+        DefaultPulsarEventHandler().also {
+            it.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
         }
     } else null
 

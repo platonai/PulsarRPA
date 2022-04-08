@@ -108,7 +108,7 @@ private class WemixCrawler(
 
         val paginateHandler = PaginateHandler(initPageNumber, reportDirectory)
         val options = session.options("-refresh")
-        options.eventHandler?.simulateEventPipelineHandler?.onAfterCheckDOMStatePipeline?.addLast(paginateHandler)
+        options.eventHandler?.simulateEventHandler?.onAfterCheckDOMStatePipeline?.addLast(paginateHandler)
         try {
             session.load(url, options)
         } catch (e: Exception) {

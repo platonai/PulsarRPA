@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.CloseMaskLayerHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
 import ai.platon.pulsar.ql.context.SQLContexts
@@ -22,13 +22,13 @@ open class SiMuCrawler {
 
     val context = SQLContexts.create()
     val session = context.createSession()
-    val eventHandler = DefaultPulsarEventPipelineHandler().also {
+    val eventHandler = DefaultPulsarEventHandler().also {
         val loginHandler = LoginHandler(loginUrl,
             usernameSelector, username, passwordSelector, password, submitSelector, activateSelector)
-        it.loadEventPipelineHandler.onAfterBrowserLaunchPipeline.addLast(loginHandler)
+        it.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
 
         val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
-        it.simulateEventPipelineHandler.onAfterCheckDOMStatePipeline.addLast(closeMaskLayerHandler)
+        it.simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
     }
     val options = session.options(args, eventHandler)
 

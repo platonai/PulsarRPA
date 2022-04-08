@@ -85,6 +85,8 @@ interface WebDriver: Closeable {
 
     suspend fun currentUrl(): String
     suspend fun pageSource(): String?
+    suspend fun mainRequestHeaders(): Map<String, Any>
+    suspend fun getCookies(): List<Map<String, String>>
 
     suspend fun navigateTo(url: String)
     suspend fun setTimeouts(driverConfig: BrowserSettings)
@@ -116,11 +118,11 @@ interface WebDriver: Closeable {
     suspend fun firstAttr(selector: String, attrName: String): String?
     suspend fun allAttrs(selector: String, attrName: String): List<String>
 
-    suspend fun getCookies(): List<Map<String, String>>
     suspend fun evaluate(expression: String): Any?
     suspend fun evaluateSilently(expression: String): Any?
 
     suspend fun newSession(): Connection
+    suspend fun loadResource(url: String): String
 
     suspend fun stop()
 

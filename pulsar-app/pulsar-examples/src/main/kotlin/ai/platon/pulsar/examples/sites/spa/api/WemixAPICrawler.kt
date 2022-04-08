@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
-import ai.platon.pulsar.crawl.DefaultPulsarEventPipelineHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import java.nio.file.Files
@@ -116,8 +116,8 @@ private class WemixCrawler(
 
         val apiFetcherHandler = APIFetcherHandler(initPageNumber, reportDirectory)
         val options = session.options("-refresh")
-        options.eventHandler = DefaultPulsarEventPipelineHandler().also {
-            it.simulateEventPipelineHandler.onBeforeComputeFeaturePipeline.addLast(apiFetcherHandler)
+        options.eventHandler = DefaultPulsarEventHandler().also {
+            it.simulateEventHandler.onBeforeComputeFeature.addLast(apiFetcherHandler)
         }
 
         try {
