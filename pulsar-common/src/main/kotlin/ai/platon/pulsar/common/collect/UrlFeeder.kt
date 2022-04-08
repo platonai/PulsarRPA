@@ -90,8 +90,8 @@ class UrlFeeder(
 
     fun addDefaultCollectors(): UrlFeeder {
         combinedDataCollector.collectors.removeIf { it is UrlCacheCollector }
-        urlPool.orderedCaches.values.forEach { fetchCache ->
-            addCollector(UrlCacheCollector(fetchCache).apply { name = "FCC.$id" })
+        urlPool.orderedCaches.values.forEach { urlCache ->
+            addCollector(UrlCacheCollector(urlCache).apply { name = "FCC.$id" })
         }
         return this
     }

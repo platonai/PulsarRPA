@@ -19,7 +19,9 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kklisura.cdt.protocol.types.network.Cookie
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -118,12 +120,14 @@ class ChromeDevtoolsDriver(
     override suspend fun getCookies(): List<Map<String, String>> {
         refreshState()
         network.enable()
-        val mapper = pulsarObjectMapper()
-        return network.cookies.map {
-            val json = mapper.writeValueAsString(it)
-            val map: Map<String, String?> = mapper.readValue(json)
-            map.filterValues { it != null }.mapValues { it.toString() }
-        }
+        return network.cookies?.map { serialize(it) }?: listOf()
+    }
+
+    private fun serialize(cookie: Cookie): Map<String, String> {
+        val mapper = jacksonObjectMapper()
+        val json = mapper.writeValueAsString(cookie)
+        val map: Map<String, String?> = mapper.readValue(json)
+        return map.filterValues { it != null }.mapValues { it.toString() }
     }
 
     override suspend fun stop() {

@@ -13,14 +13,14 @@ We also have a plan to release an advanced AI to automatically extract every fie
 
 # Features
 - Web spider: browser rendering, ajax data crawling
-- Performance: highly optimized, distributed
+- Performance: highly optimized, rendering hundreds of pages in parallel on a single machine
+- Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
+- Large scale: fully distributed, designed for large scale crawling
+- Simple API: single line of code to scrape, or single SQL to turn a website into a table
 - X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 - Bot stealth: IP rotation, web driver stealth, never get banned
-- Simple API: single line of code to scrape, or single SQL to turn a website into a table
 - RPA: imitating human behavior, SPA crawling, or do something else awesome
-- Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
-- Large scale: designed for large scale crawling
-- Big data: various backend storage support: HBase/MongoDB/Gora
+- Big data: various backend storage support: MongoDB/HBase/Gora
 - Logs & metrics: monitored closely and every event is recorded
 
 For more information check [platon.ai](http://platon.ai)

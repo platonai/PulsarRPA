@@ -37,13 +37,13 @@ class TestDataCollectors : TestBase() {
     }
 
     @Test
-    fun `When add an item to LoadingFetchCache then LoadingIterable has next`() {
-        val fetchCache = LoadingUrlCache("", 0, TemporaryLocalFileUrlLoader())
-        fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
-        assertEquals(1, fetchCache.size)
+    fun `When add an item to LoadingurlCache then LoadingIterable has next`() {
+        val urlCache = LoadingUrlCache("", 0, TemporaryLocalFileUrlLoader())
+        urlCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
+        assertEquals(1, urlCache.size)
 
         val collectors: MutableList<PriorityDataCollector<UrlAware>> = Collections.synchronizedList(LinkedList())
-        collectors += UrlCacheCollector(fetchCache)
+        collectors += UrlCacheCollector(urlCache)
         val fetchQueueIterable = ConcurrentLoadingIterable(CombinedDataCollector(collectors), null, null, 10)
 
         assertTrue { fetchQueueIterable.regularCollector.hasMore() }
@@ -55,8 +55,8 @@ class TestDataCollectors : TestBase() {
     fun testDataCollectorSorting() {
         // Object information is erased
         val collectors = mutableListOf<AbstractPriorityDataCollector<UrlAware>>()
-        urlPool.orderedCaches.forEach { (priority, fetchCache) ->
-            collectors += UrlCacheCollector(fetchCache)
+        urlPool.orderedCaches.forEach { (priority, urlCache) ->
+            collectors += UrlCacheCollector(urlCache)
         }
         assertEquals(urlPool.orderedCaches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
@@ -79,8 +79,8 @@ class TestDataCollectors : TestBase() {
     fun testDataCollectorSorting2() {
         val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<UrlAware>>()
 
-        globalCache.urlPool.orderedCaches.forEach { (priority, fetchCache) ->
-            collectors[priority] = UrlCacheCollector(fetchCache)
+        globalCache.urlPool.orderedCaches.forEach { (priority, urlCache) ->
+            collectors[priority] = UrlCacheCollector(urlCache)
         }
         assertEquals(urlPool.orderedCaches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }

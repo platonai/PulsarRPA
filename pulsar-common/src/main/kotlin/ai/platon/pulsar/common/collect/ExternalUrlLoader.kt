@@ -8,7 +8,7 @@ import java.time.Instant
 
 data class UrlTopic constructor(
     /**
-     * The job id
+     * The topic name
      * */
     val name: String,
     /**
