@@ -46,7 +46,7 @@ interface PulsarSession : AutoCloseable {
     val globalCacheFactory: GlobalCacheFactory
 
     /**
-     * Close objects when sessions closes
+     * Close objects when sessions close
      * */
     fun registerClosable(closable: AutoCloseable): Boolean
     fun disableCache()

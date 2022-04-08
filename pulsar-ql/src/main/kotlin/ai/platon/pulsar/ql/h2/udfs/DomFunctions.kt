@@ -328,21 +328,24 @@ object DomFunctions {
     @JvmStatic
     fun ownerDocument(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
-        return ValueDom.get(dom.element.extension.ownerDocumentNode as Document)
+        val documentNode = dom.element.extension.ownerDocumentNode ?: return ValueDom.NIL
+        return ValueDom.get(documentNode as Document)
     }
 
     @UDFunction
     @JvmStatic
     fun ownerBody(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
-        return ValueDom.get(dom.element.extension.ownerBody as Element)
+        val ownerBody = dom.element.extension.ownerBody ?: return ValueDom.NIL
+        return ValueDom.get(ownerBody as Element)
     }
 
     @UDFunction
     @JvmStatic
     fun documentVariables(dom: ValueDom): ValueDom {
         if (dom.isNil) return ValueDom.NIL
-        val meta = dom.element.extension.ownerBody.selectFirstOrNull(PULSAR_META_INFORMATION_SELECTOR) ?: return ValueDom.NIL
+        val ownerBody = dom.element.extension.ownerBody ?: return ValueDom.NIL
+        val meta = ownerBody.selectFirstOrNull(PULSAR_META_INFORMATION_SELECTOR) ?: return ValueDom.NIL
         return ValueDom.get(meta)
     }
 
