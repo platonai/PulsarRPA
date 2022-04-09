@@ -18,41 +18,8 @@ private class AjaxFetchHandler(
 ): AbstractWebPageWebDriverHandler() {
     private val logger = getLogger(this)
 
-    val headersString = """
-            accept: application/json, text/plain, */*
-            accept-encoding: gzip, deflate, br
-            accept-language: zh-CN,zh;q=0.9,en;q=0.8
-            origin: https://scope.wemixnetwork.com
-            referer: https://scope.wemixnetwork.com/
-            sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="100", "Google Chrome";v="100"
-            sec-ch-ua-mobile: ?0
-            sec-ch-ua-platform: "Linux"
-            sec-fetch-dest: empty
-            sec-fetch-mode: cors
-            sec-fetch-site: same-site
-            user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36
-        """.trimIndent()
-
     override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
-        ajaxFetch(driver)
-        return null
-    }
-
-    private suspend fun ajaxFetch(driver: WebDriver) {
-        try {
-            ajaxFetch0(driver)
-        } catch (e: Exception) {
-            logger.warn(e.stringify())
-        }
-    }
-
-    private suspend fun ajaxFetch0(driver: WebDriver) {
-        val headers = headersString.split("\n").map { it.trim() }
-            .map { it.split(": ") }.associate { it[0] to it[1] }
-
         val session = driver.newSession()
-            .headers(headers)
-            .proxy("127.0.0.1", 33857)
 
         val u = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx"
         IntRange(1, 100).forEach { i ->
@@ -71,6 +38,8 @@ private class AjaxFetchHandler(
                 logger.warn(e.stringify("$i.\t"))
             }
         }
+
+        return null
     }
 
     private fun prepareFiles(path: Path) {

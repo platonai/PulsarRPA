@@ -1,36 +1,22 @@
 package ai.platon.pulsar.examples.sites.spa.wemix
 
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardOpenOption
 import kotlin.random.Random
 
-private class RPAPaginateHandler(
-    val initPageNumber: Int,
-    val exportDirectory: Path
-) : AbstractWebPageWebDriverHandler() {
-    private val logger = getLogger(this)
+private class RPAPaginateHandler(val initPageNumber: Int) : AbstractWebPageWebDriverHandler() {
 
     override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
-        return onAfterCheckDOMState0(page, driver)
-    }
-
-    private suspend fun onAfterCheckDOMState0(page: WebPage, driver: WebDriver): Any? {
         driver.waitForSelector("#tab-transactions")
         driver.click("#tab-transactions")
 
         pageDownTo(driver)
 
-        logger.info("Report to: file://$exportDirectory")
         IntRange(1, 100).forEach { i ->
             roundGap(i)
 
@@ -41,7 +27,6 @@ private class RPAPaginateHandler(
             }
 
             text = driver.outerHTML(".table__list table.table__list-set") ?: ""
-            export(i, text)
 
             val nthChild = if (initPageNumber == 1 || i <= 6) i else 6
             val nextPageSelector = "ul.el-pager li:nth-child($nthChild)"
@@ -58,22 +43,6 @@ private class RPAPaginateHandler(
         }
     }
 
-    private fun prepareFiles(path: Path) {
-        if (!Files.exists(path)) {
-            Files.createDirectories(path.parent)
-            Files.createFile(path)
-        }
-    }
-
-    private fun export(i: Int, text: String, isJson: Boolean = false) {
-        val postfix = if (isJson) ".json" else ".html"
-        val timestamp = System.currentTimeMillis()
-        val fileName = "transaction.b${initPageNumber}.t$timestamp.p$i$postfix"
-        val file = exportDirectory.resolve(fileName)
-        prepareFiles(file)
-        Files.writeString(file, text, StandardOpenOption.APPEND)
-    }
-
     private suspend fun roundGap(i: Int) {
         val delaySeconds = when {
             i % 20 == 0 -> 20 + Random.nextInt(10)
@@ -84,17 +53,10 @@ private class RPAPaginateHandler(
     }
 }
 
-private class RPACrawler(
-    var initPageNumber: Int = 1,
-    val session: PulsarSession
-) {
+private class RPACrawler {
     private val logger = getLogger(this)
-
+    private val session = PulsarContexts.createSession()
     private val url = "https://scope.wemixnetwork.com/1003/token/0xcb7615cb4322cddc518f670b4da042dbefc69500"
-
-    val reportDirectory = AppPaths.REPORT_DIR
-        .resolve("wemix")
-        .resolve("b$initPageNumber")
 
     /**
      * Crawl a single page application
@@ -102,11 +64,7 @@ private class RPACrawler(
     fun crawlSPA() {
         BrowserSettings.withSPA()
 
-        if (Files.exists(reportDirectory)) {
-            return
-        }
-
-        val paginateHandler = RPAPaginateHandler(initPageNumber, reportDirectory)
+        val paginateHandler = RPAPaginateHandler(1)
         val options = session.options("-refresh")
         options.eventHandler.simulateEventHandler.onAfterCheckDOMState.addLast(paginateHandler)
         try {
@@ -117,11 +75,4 @@ private class RPACrawler(
     }
 }
 
-fun main() {
-    val session = PulsarContexts.createSession()
-
-    IntRange(1, 80).forEach { i ->
-        val crawler = RPACrawler(100 * i, session)
-        crawler.crawlSPA()
-    }
-}
+fun main() = RPACrawler().crawlSPA()

@@ -123,13 +123,18 @@ abstract class AbstractWebDriver(
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
+    /**
+     * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
+     * The browser should be initialized by opening a page before the session is created.
+     * */
     override suspend fun newSession(): Connection {
         val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
         val cookies = getCookies()
         val userAgent = BrowserSettings.randomUserAgent()
 
+        val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
-            .timeout(20 * 1000)
+            .timeout(httpTimeout.toMillis().toInt())
             .userAgent(userAgent)
             .headers(headers)
             .ignoreContentType(true)

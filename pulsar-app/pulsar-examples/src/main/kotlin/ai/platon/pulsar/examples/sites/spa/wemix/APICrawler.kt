@@ -19,7 +19,7 @@ private class APICrawler {
     private val mainUrl = "https://scope.wemixnetwork.com/1003/token/0xcb7615cb4322cddc518f670b4da042dbefc69500"
     private val apiTemplate = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx"
 
-    private val session: PulsarSession = PulsarContexts.createSession()
+    private val session = PulsarContexts.createSession()
 
     /**
      * Crawl with api with a single page application
@@ -38,6 +38,4 @@ private class APICrawler {
     }
 }
 
-fun main() {
-    runBlocking { APICrawler().crawl() }
-}
+fun main() = runBlocking { APICrawler().crawl() }

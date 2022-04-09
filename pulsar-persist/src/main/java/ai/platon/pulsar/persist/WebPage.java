@@ -1208,13 +1208,12 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * TODO: Encoding is always UTF-8?
-     * <p>
      * Get the page content as a string
      */
     @NotNull
     public String getContentAsString() {
-        return ByteUtils.toString(getContentAsBytes());
+        ByteBuffer buffer = getContent();
+        return ByteUtils.toString(buffer.array());
     }
 
     /**
