@@ -1,20 +1,18 @@
-package ai.platon.pulsar.examples.sites.spa.api
+package ai.platon.pulsar.examples.sites.spa.wemix
 
-import ai.platon.pulsar.session.PulsarSession
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.session.PulsarSession
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-private class APIFetcherHandler(
+private class AjaxFetchHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
 ): AbstractWebPageWebDriverHandler() {
@@ -92,7 +90,7 @@ private class APIFetcherHandler(
     }
 }
 
-private class WemixCrawler(
+private class AjaxCrawler(
     var initPageNumber: Int = 1,
     val session: PulsarSession
 ) {
@@ -105,20 +103,16 @@ private class WemixCrawler(
         .resolve("b$initPageNumber")
 
     /**
-     * Crawl a single page application
+     * Crawl with api with a single page application
      * */
-    fun crawlSPA() {
-        BrowserSettings.withSPA()
-
+    fun crawl() {
         if (Files.exists(reportDirectory)) {
             return
         }
 
-        val apiFetcherHandler = APIFetcherHandler(initPageNumber, reportDirectory)
+        val apiFetcherHandler = AjaxFetchHandler(initPageNumber, reportDirectory)
         val options = session.options("-refresh")
-        options.eventHandler = DefaultPulsarEventHandler().also {
-            it.simulateEventHandler.onBeforeComputeFeature.addLast(apiFetcherHandler)
-        }
+        options.eventHandler.simulateEventHandler.onBeforeComputeFeature.addLast(apiFetcherHandler)
 
         try {
             session.load(url, options)
@@ -132,7 +126,7 @@ fun main() {
     val session = PulsarContexts.createSession()
 
     IntRange(1, 80).forEach { i ->
-        val crawler = WemixCrawler(100 * i, session)
-        crawler.crawlSPA()
+        val crawler = AjaxCrawler(100 * i, session)
+        crawler.crawl()
     }
 }

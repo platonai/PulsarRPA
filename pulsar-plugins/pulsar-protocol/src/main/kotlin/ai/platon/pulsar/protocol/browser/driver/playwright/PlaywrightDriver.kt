@@ -111,7 +111,11 @@ class PlaywrightDriver(
     }
 
     override suspend fun mainRequestHeaders(): Map<String, Any> {
-        TODO()
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getCookies(): List<Map<String, String>> {

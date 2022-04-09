@@ -76,7 +76,8 @@ class ChromeDevtoolsDriver(
     private val emulation get() = devTools.emulation
 
     private var mainRequestId = ""
-    private var mainRequestHeaders = mapOf<String, Any>()
+    private var mainRequestHeaders: Map<String, Any> = mapOf()
+    private var mainRequestCookies: List<Map<String, String>> = listOf()
 
     private val enableBlockingReport = false
     private val closed = AtomicBoolean()
@@ -123,7 +124,15 @@ class ChromeDevtoolsDriver(
         return mainRequestHeaders
     }
 
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        return mainRequestCookies
+    }
+
     override suspend fun getCookies(): List<Map<String, String>> {
+        return getCookies0()
+    }
+
+    private fun getCookies0(): List<Map<String, String>> {
         refreshState()
         network.enable()
         return network.cookies?.map { serialize(it) }?: listOf()
@@ -415,6 +424,10 @@ class ChromeDevtoolsDriver(
                     println(responseUrl)
                     println(body.body)
                 }
+            }
+
+            page.onDocumentOpened {
+                mainRequestCookies = getCookies0()
             }
 
             navigateUrl = url

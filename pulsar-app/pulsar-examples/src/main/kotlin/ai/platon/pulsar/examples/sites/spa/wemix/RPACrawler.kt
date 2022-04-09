@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.spa
+package ai.platon.pulsar.examples.sites.spa.wemix
 
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.browser.common.BrowserSettings
@@ -14,7 +14,7 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import kotlin.random.Random
 
-private class PaginateHandler(
+private class RPAPaginateHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
 ) : AbstractWebPageWebDriverHandler() {
@@ -84,7 +84,7 @@ private class PaginateHandler(
     }
 }
 
-private class WemixCrawler(
+private class RPACrawler(
     var initPageNumber: Int = 1,
     val session: PulsarSession
 ) {
@@ -106,9 +106,9 @@ private class WemixCrawler(
             return
         }
 
-        val paginateHandler = PaginateHandler(initPageNumber, reportDirectory)
+        val paginateHandler = RPAPaginateHandler(initPageNumber, reportDirectory)
         val options = session.options("-refresh")
-        options.eventHandler?.simulateEventHandler?.onAfterCheckDOMStatePipeline?.addLast(paginateHandler)
+        options.eventHandler.simulateEventHandler.onAfterCheckDOMState.addLast(paginateHandler)
         try {
             session.load(url, options)
         } catch (e: Exception) {
@@ -121,7 +121,7 @@ fun main() {
     val session = PulsarContexts.createSession()
 
     IntRange(1, 80).forEach { i ->
-        val crawler = WemixCrawler(100 * i, session)
+        val crawler = RPACrawler(100 * i, session)
         crawler.crawlSPA()
     }
 }

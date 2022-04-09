@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  */
 public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
 
-    
+
     public static final String META_TMP = "TMP_";
 
     /**
@@ -53,6 +53,10 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
      */
     public MultiMetadata() {
 
+    }
+
+    public MultiMetadata(Map<String, String> kvs) {
+        kvs.forEach(this::put);
     }
 
     /**

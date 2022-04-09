@@ -20,6 +20,17 @@ abstract class AbstractEventHandler: EventHandler {
     override val name: String = ""
 }
 
+interface Pipeline {
+    val size: Int
+    val isEmpty: Boolean
+    val isNotEmpty: Boolean
+}
+
+interface AbstractPipeline: Pipeline {
+    override val isEmpty: Boolean get() = size == 0
+    override val isNotEmpty: Boolean get() = !isEmpty
+}
+
 abstract class VoidEventHandler: AbstractEventHandler() {
     abstract operator fun invoke()
 }
@@ -76,8 +87,11 @@ abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractEv
     abstract override operator fun invoke(page: WebPage, driver: WebDriver): Any?
 }
 
-class VoidEventHandlerPipeline: VoidEventHandler() {
+class VoidEventHandlerPipeline: VoidEventHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<VoidEventHandler>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: VoidEventHandler): VoidEventHandlerPipeline {
         registeredHandlers.add(0, handler)
@@ -104,8 +118,11 @@ class VoidEventHandlerPipeline: VoidEventHandler() {
     }
 }
 
-class UrlAwareHandlerPipeline: UrlAwareHandler() {
+class UrlAwareHandlerPipeline: UrlAwareHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<(UrlAware) -> Unit>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: (UrlAware) -> Unit): UrlAwareHandlerPipeline {
         registeredHandlers.add(0, handler)
@@ -132,8 +149,11 @@ class UrlAwareHandlerPipeline: UrlAwareHandler() {
     }
 }
 
-class UrlAwareFilterPipeline: UrlAwareFilter() {
+class UrlAwareFilterPipeline: UrlAwareFilter(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<(UrlAware) -> UrlAware?>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
         registeredHandlers.add(0, handler)
@@ -164,8 +184,11 @@ class UrlAwareFilterPipeline: UrlAwareFilter() {
     }
 }
 
-class UrlFilterPipeline: UrlFilter() {
+class UrlFilterPipeline: UrlFilter(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<UrlFilter>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: UrlFilter): UrlFilterPipeline {
         registeredHandlers.add(0, handler)
@@ -210,8 +233,11 @@ class UrlFilterPipeline: UrlFilter() {
     }
 }
 
-class UrlHandlerPipeline: UrlHandler() {
+class UrlHandlerPipeline: UrlHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<(String) -> Unit>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: UrlHandler): UrlHandlerPipeline {
         registeredHandlers.add(0, handler)
@@ -252,8 +278,11 @@ class UrlHandlerPipeline: UrlHandler() {
     }
 }
 
-class WebPageHandlerPipeline: WebPageHandler() {
+class WebPageHandlerPipeline: WebPageHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<WebPageHandler>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: WebPageHandler): WebPageHandlerPipeline {
         registeredHandlers.add(0, handler)
@@ -294,8 +323,11 @@ class WebPageHandlerPipeline: WebPageHandler() {
     }
 }
 
-class UrlAwareWebPageHandlerPipeline: UrlAwareWebPageHandler() {
+class UrlAwareWebPageHandlerPipeline: UrlAwareWebPageHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<(UrlAware, WebPage?) -> Unit>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: (UrlAware, WebPage?) -> Unit): UrlAwareWebPageHandlerPipeline {
         registeredHandlers.add(0, handler)
@@ -322,8 +354,11 @@ class UrlAwareWebPageHandlerPipeline: UrlAwareWebPageHandler() {
     }
 }
 
-class HtmlDocumentHandlerPipeline: HtmlDocumentHandler(), EventHandler {
+class HtmlDocumentHandlerPipeline: HtmlDocumentHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<HtmlDocumentHandler>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: HtmlDocumentHandler): HtmlDocumentHandlerPipeline {
         registeredHandlers.add(0, handler)
@@ -364,8 +399,11 @@ class HtmlDocumentHandlerPipeline: HtmlDocumentHandler(), EventHandler {
     }
 }
 
-class WebDriverHandlerPipeline: WebDriverHandler(), EventHandler {
+class WebDriverHandlerPipeline: WebDriverHandler(), AbstractPipeline {
     private val registeredHandlers = mutableListOf<WebDriverHandler>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: WebDriverHandler): WebDriverHandlerPipeline {
         registeredHandlers.add(0, handler)

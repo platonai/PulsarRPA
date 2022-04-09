@@ -40,7 +40,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         // TODO: the normalization order might not be the best
         var normalizedUrl: String
         val eventHandler = finalOptions.eventHandler
-        if (eventHandler?.loadEventHandler?.onNormalize != null) {
+        if (eventHandler.loadEventHandler.onNormalize.isNotEmpty) {
             normalizedUrl = eventHandler.loadEventHandler.onNormalize(spec) ?: return NormUrl.NIL
         } else {
             val ignoreQuery = options.shortenKey || options.ignoreQuery

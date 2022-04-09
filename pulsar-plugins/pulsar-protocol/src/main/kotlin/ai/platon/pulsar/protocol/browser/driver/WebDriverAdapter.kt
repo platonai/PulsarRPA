@@ -96,6 +96,8 @@ class WebDriverAdapter(
 
     override suspend fun mainRequestHeaders() = driver.mainRequestHeaders()
 
+    override suspend fun mainRequestCookies() = driver.mainRequestCookies()
+
     override suspend fun getCookies() = driver.getCookies()
 
     override suspend fun bringToFront() {

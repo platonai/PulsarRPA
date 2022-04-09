@@ -1,11 +1,15 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.crawl.common.URLUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.IOException
+import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
@@ -121,30 +125,42 @@ abstract class AbstractWebDriver(
 
     override suspend fun newSession(): Connection {
         val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
-        val cookies = getCookies().first()
+        val cookies = getCookies()
         val userAgent = BrowserSettings.randomUserAgent()
 
         val session = Jsoup.newSession()
             .timeout(20 * 1000)
             .userAgent(userAgent)
-            .cookies(cookies)
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
-        // .proxy("127.0.0.1", 33857)
+
+        if (cookies.isNotEmpty()) {
+            session.cookies(cookies.first())
+        }
+
+        // Since the browser uses the system proxy (by default),
+        // so the http connection should also use the system proxy
+        val proxy = browserInstance.id.proxyServer ?: System.getenv("http_proxy")
+        if (proxy != null && UrlUtils.isValidUrl(proxy)) {
+            val u = URL(proxy)
+            session.proxy(u.host, u.port)
+        }
 
         return session
     }
 
     @Throws(IOException::class)
-    override suspend fun loadResource(url: String): String {
+    override suspend fun loadResource(url: String): Connection.Response? {
         if (jsoupSession == null) {
             jsoupSession = newSession()
         }
 
-        return withContext(Dispatchers.IO) {
-            jsoupSession?.newRequest()?.url(url)?.execute()?.body() ?: ""
+        val response = withContext(Dispatchers.IO) {
+            jsoupSession?.newRequest()?.url(url)?.execute()
         }
+
+        return response
     }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id

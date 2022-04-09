@@ -89,6 +89,10 @@ class MockWebDriver(
         return backupDriverOrNull?.mainRequestHeaders() ?: mapOf()
     }
 
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        return backupDriverOrNull?.mainRequestCookies() ?: listOf()
+    }
+
     override suspend fun getCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.getCookies() ?: listOf()
     }

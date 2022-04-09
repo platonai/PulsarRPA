@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
@@ -21,6 +22,8 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
@@ -120,7 +123,14 @@ open class BrowserEmulator(
         val navigateTask = NavigateTask(task, driver, driverSettings)
 
         try {
-            navigateTask.pageSource = driver.loadResource(task.url)
+            val response = driver.loadResource(task.url)
+                ?: return ForwardingResponse.failed(task.page, NoSuchSessionException("null response"))
+
+            navigateTask.pageSource = response.body()
+            navigateTask.pageDatum.headers.putAll(response.headers())
+            navigateTask.pageDatum.contentType = response.contentType()
+            navigateTask.pageDatum.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
+            navigateTask.pageDatum.protocolStatus = ProtocolStatus.STATUS_SUCCESS
         } catch (e: IOException) {
             logger.warn(e.stringify())
         }

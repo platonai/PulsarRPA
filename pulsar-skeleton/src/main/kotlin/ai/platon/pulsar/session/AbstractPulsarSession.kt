@@ -93,7 +93,11 @@ abstract class AbstractPulsarSession(
      * Create a new options, with a new volatile config
      * */
     override fun options(args: String, eventHandler: PulsarEventHandler?): LoadOptions {
-        return LoadOptions.parse(args, sessionConfig.toVolatileConfig()).also { it.eventHandler = eventHandler }
+        val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
+        if (eventHandler != null) {
+            opts.eventHandler = eventHandler
+        }
+        return opts
     }
 
     override fun property(name: String): String? {
@@ -311,12 +315,13 @@ abstract class AbstractPulsarSession(
     }
 
     @Throws(Exception::class)
-    override fun loadResource(url: String, args: String) = loadResource(url, options(args))
+    override suspend fun loadResource(url: String, referer: String, args: String) = loadResource(url, referer, options(args))
 
     @Throws(Exception::class)
-    override fun loadResource(url: String, opts: LoadOptions): WebPage {
+    override suspend fun loadResource(url: String, referer: String, opts: LoadOptions): WebPage {
         opts.isResource = true
-        return load(url, opts)
+        opts.referrer = referer
+        return loadDeferred(url, opts)
     }
 
     /**

@@ -198,7 +198,7 @@ class LoadComponent(
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
-            .onEach { url -> options.eventHandler?.let { url.eventHandler = it } }
+            .onEach { url -> url.eventHandler = options.eventHandler }
             .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
 
@@ -291,7 +291,7 @@ class LoadComponent(
         var page = FetchEntry.createPageShell(normUrl)
         // the page is a resource, do not render it in a browser
         page.isResource = normUrl.options.isResource
-//        page.referrer = normUrl.options.referrer
+        page.referrer = normUrl.options.referrer
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()

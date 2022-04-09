@@ -261,9 +261,6 @@ open class WebDriverPoolManager(
     private fun onAfterBrowserLaunch(driver: WebDriver, volatileConfig: VolatileConfig) {
         val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)
 
-//        println(eventHandler?.loadEventHandler?.onAfterBrowserLaunch)
-//        println(eventHandler?.loadEventPipelineHandler?.onAfterBrowserLaunchPipeline)
-//        require(eventHandler?.loadEventHandler == eventHandler?.loadEventPipelineHandler)
         try {
             eventHandler?.loadEventHandler?.onAfterBrowserLaunch?.invoke(driver)
         } catch (t: Throwable) {

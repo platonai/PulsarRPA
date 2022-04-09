@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -58,7 +59,7 @@ object LoadOptionDefaults {
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var eventHandler: PulsarEventHandler? = null
+    var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
 ): CommonOptions(argv) {
 
     @ApiPublic
@@ -371,6 +372,8 @@ open class LoadOptions(
     // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
     val correctedOutLinkSelector get() = outLinkSelector.trim('"')
 
+    var referrer: String? = null
+
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"
@@ -474,7 +477,7 @@ open class LoadOptions(
 
         emulateSettings.toConf(conf)
 
-        eventHandler?.let { putBean(it) }
+        putBean(eventHandler)
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
         setInt(CapabilityTypes.FETCH_MAX_RETRY, nMaxRetry)

@@ -174,7 +174,7 @@ interface PulsarSession : AutoCloseable {
      * @return The web page
      */
     @Throws(Exception::class)
-    fun loadResource(url: String, args: String): WebPage
+    suspend fun loadResource(url: String, referer: String, args: String): WebPage
     /**
      * Load an url as a resource without browser rendering in the browser context
      *
@@ -183,7 +183,7 @@ interface PulsarSession : AutoCloseable {
      * @return The web page
      */
     @Throws(Exception::class)
-    fun loadResource(url: String, opts: LoadOptions = options()): WebPage
+    suspend fun loadResource(url: String, referer: String, opts: LoadOptions = options()): WebPage
 
     /**
      * Parse the Web page into DOM.

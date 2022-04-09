@@ -86,6 +86,7 @@ interface WebDriver: Closeable {
     suspend fun currentUrl(): String
     suspend fun pageSource(): String?
     suspend fun mainRequestHeaders(): Map<String, Any>
+    suspend fun mainRequestCookies(): List<Map<String, String>>
     suspend fun getCookies(): List<Map<String, String>>
 
     suspend fun navigateTo(url: String)
@@ -122,7 +123,7 @@ interface WebDriver: Closeable {
     suspend fun evaluateSilently(expression: String): Any?
 
     suspend fun newSession(): Connection
-    suspend fun loadResource(url: String): String
+    suspend fun loadResource(url: String): Connection.Response?
 
     suspend fun stop()
 

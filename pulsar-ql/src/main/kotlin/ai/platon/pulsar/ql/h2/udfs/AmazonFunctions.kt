@@ -40,9 +40,7 @@ object AmazonFunctions {
 
         val amazonSearcher = AmazonSearcherJsEventHandler(keyword)
         val options = session.options("-i 0s")
-        options.eventHandler = DefaultPulsarEventHandler().also {
-            it.simulateEventHandler.onBeforeComputeFeature.addLast(amazonSearcher)
-        }
+        options.eventHandler.simulateEventHandler.onBeforeComputeFeature.addLast(amazonSearcher)
         session.load(url, options)
 
         val rs = ResultSets.newSimpleResultSet("alias", "keyword", "isfb", "crid")
