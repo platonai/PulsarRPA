@@ -6,8 +6,8 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.simplify
+import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import com.microsoft.playwright.*
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -18,7 +18,7 @@ class PlaywrightBrowserInstance(
     id: BrowserInstanceId,
     launcherOptions: LauncherOptions,
     launchOptions: ChromeOptions
-): BrowserInstance(id, launcherOptions, launchOptions) {
+): AbstractBrowserInstance(id, launcherOptions, launchOptions) {
     companion object {
         private val createOptions = Playwright.CreateOptions().setEnv(mutableMapOf("PWDEBUG" to "0"))
         private val playwright = Playwright.create(createOptions)

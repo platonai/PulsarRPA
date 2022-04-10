@@ -1,7 +1,7 @@
 package ai.platon.pulsar.context
 
-import ai.platon.pulsar.PulsarEnvironment
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarEnvironment
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -113,7 +113,7 @@ interface PulsarContext: AutoCloseable {
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
      *
-     * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
+     * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
      *
      * @param urls    The urls to load
      * @param options The options

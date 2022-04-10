@@ -17,9 +17,11 @@ package ai.platon.pulsar.jsoup.ext;
 
 import org.apache.commons.math3.linear.OpenMapRealVector;
 import org.apache.commons.math3.linear.RealVector;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +54,11 @@ public class NodeExt {
         }
     }
 
+    @Nullable
     public Node getOwnerDocumentNode() {
+        if (ownerDocumentNode == null) {
+            ownerDocumentNode = node.ownerDocument();
+        }
         return ownerDocumentNode;
     }
 
@@ -60,7 +66,14 @@ public class NodeExt {
         this.ownerDocumentNode = ownerDocumentNode;
     }
 
+    @Nullable
     public Node getOwnerBody() {
+        if (ownerBody == null) {
+            Document doc = node.ownerDocument();
+            if (doc != null) {
+                return doc.body();
+            }
+        }
         return ownerBody;
     }
 

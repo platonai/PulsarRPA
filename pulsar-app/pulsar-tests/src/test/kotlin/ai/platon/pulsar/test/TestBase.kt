@@ -1,10 +1,8 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import org.junit.Test
 import org.junit.runner.RunWith

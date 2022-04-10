@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.AbstractPulsarSession
+import ai.platon.pulsar.session.AbstractPulsarSession
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.types.ValueDom

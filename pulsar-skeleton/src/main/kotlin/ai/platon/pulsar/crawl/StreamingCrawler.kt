@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
@@ -392,7 +392,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private suspend fun runUrlTask(url: UrlAware) {
         if (url is ListenableHyperlink && url is DegenerateUrl) {
-            val eventHandler = url.crawlEventHandler
+            val eventHandler = url.eventHandler.crawlEventHandler
             eventHandler.onBeforeLoad(url)
             eventHandler.onLoad(url)
             eventHandler.onAfterLoad(url, WebPage.NIL)
@@ -464,7 +464,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
         if (url is ListenableHyperlink) {
-            url.loadEventHandler.onFilter(url.url) ?: return null
+            url.eventHandler.loadEventHandler.onFilter(url.url) ?: return null
         }
 
         crawlEventHandler.onFilter(url) ?: return null
@@ -472,7 +472,7 @@ open class StreamingCrawler<T : UrlAware>(
         crawlEventHandler.onBeforeLoad(url)
 
         if (url is ListenableHyperlink) {
-            url.crawlEventHandler.onBeforeLoad(url)
+            url.eventHandler.crawlEventHandler.onBeforeLoad(url)
         }
 
         return url
@@ -480,7 +480,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         if (url is ListenableHyperlink) {
-            url.crawlEventHandler.onAfterLoad(url, page)
+            url.eventHandler.crawlEventHandler.onAfterLoad(url, page)
         }
 
         if (page != null) {
@@ -512,6 +512,10 @@ open class StreamingCrawler<T : UrlAware>(
         if (options.isDead()) {
             globalKilledTasks.incrementAndGet()
             return null
+        }
+
+        if (url is ListenableHyperlink) {
+            options.eventHandler = url.eventHandler
         }
 
         return session.runCatching { loadDeferred(url, options) }

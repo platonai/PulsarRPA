@@ -5,11 +5,11 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.EmulateEventHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
-import com.google.common.annotations.Beta
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
@@ -54,11 +54,12 @@ object LoadOptionDefaults {
  *
  * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
  *
- * TODO: consider make LoadOptions to be seen in all modules
+ * TODO: consider make LoadOptions be visible by all modules
  */
 open class LoadOptions(
     argv: Array<String>,
-    val conf: VolatileConfig
+    val conf: VolatileConfig,
+    var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
 ): CommonOptions(argv) {
 
     @ApiPublic
@@ -91,6 +92,10 @@ open class LoadOptions(
     @ApiPublic
     @Parameter(names = ["-readonly"], description = "The task does not change the status of the web page")
     var readonly = false
+
+    @ApiPublic
+    @Parameter(names = ["-resource", "-isResource"], description = "Fetch the page without browser rendering if true")
+    var isResource = false
 
     /**
      * Web page expiry time
@@ -367,6 +372,8 @@ open class LoadOptions(
     // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
     val correctedOutLinkSelector get() = outLinkSelector.trim('"')
 
+    var referrer: String? = null
+
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"
@@ -387,9 +394,9 @@ open class LoadOptions(
                     .associate { it.name to it.get(this) }
         }
 
-//    private val jsEventHandlers = mutableListOf<JsEventHandler>()
-
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
+
+    protected constructor(args: String, options: LoadOptions) : this(split(args), options.conf, options.eventHandler)
 
     /**
      * Parse with parameter overwriting fix
@@ -409,27 +416,14 @@ open class LoadOptions(
         return b
     }
 
-    fun addEventHandler(eventHandler: EmulateEventHandler?) {
-        if (eventHandler != null) {
-            // jsEventHandlers.add(eventHandler)
-            conf.putBean(eventHandler)
-        }
-    }
-
-    fun removeEventHandler(eventHandler: EmulateEventHandler?) {
-        if (eventHandler != null) {
-            // jsEventHandlers.remove(eventHandler)
-            conf.removeBean(eventHandler)
-        }
-    }
-
-    open fun createItemOptions(conf: VolatileConfig? = null): LoadOptions {
+    open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
 
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
+        itemOptions.eventHandler = eventHandler
 
         return itemOptions
     }
@@ -467,6 +461,8 @@ open class LoadOptions(
         browser = itemBrowser
     }
 
+    fun toConf() = toConf(this.conf)
+
     fun toConf(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         val emulateSettings = when (netCondition) {
             Condition.WORSE -> EmulateSettings.worseNetSettings
@@ -481,6 +477,7 @@ open class LoadOptions(
 
         emulateSettings.toConf(conf)
 
+        putBean(eventHandler)
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
         setInt(CapabilityTypes.FETCH_MAX_RETRY, nMaxRetry)
@@ -523,7 +520,7 @@ open class LoadOptions(
     /**
      * Create a new LoadOptions
      * */
-    open fun clone() = parse(toString(), conf)
+    open fun clone() = parse(toString(), this)
 
     companion object {
         val default = LoadOptions("", VolatileConfig())
@@ -609,12 +606,14 @@ open class LoadOptions(
 
         fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
 
+        fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply { parse() }
+
         /**
          * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
          * */
-        fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o1.conf)
+        fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o2)
 
-        fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1.conf)
+        fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1)
 
         fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
 

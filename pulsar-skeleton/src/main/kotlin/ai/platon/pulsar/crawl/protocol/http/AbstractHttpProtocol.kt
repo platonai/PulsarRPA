@@ -121,8 +121,6 @@ abstract class AbstractHttpProtocol: Protocol {
                 response = getResponse(page, false)
                 retry = response == null || shouldRetry(response)
             } catch (e: IllegalApplicationContextStateException) {
-                // TODO: we may not handle this exception here
-                AppContext.shouldTerminate()
                 log.warn(e.message)
                 response = null
                 lastThrowable = e

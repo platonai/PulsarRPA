@@ -2,6 +2,8 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
+import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -10,6 +12,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
@@ -72,15 +75,7 @@ open class BrowserEmulatedFetcher(
      * */
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
         return privacyManager.run(task) { _, driver ->
-            try {
-                browserEmulator.fetch(task, driver)
-            } catch (e: IllegalApplicationContextStateException) {
-                if (illegalState.compareAndSet(false, true)) {
-                    AppContext.shouldTerminate()
-                    logger.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
-                }
-                throw e
-            }
+            browserEmulator.fetch(task, driver)
         }.response
     }
 
@@ -99,7 +94,9 @@ open class BrowserEmulatedFetcher(
     private fun createFetchTask(page: WebPage): FetchTask {
         val conf = page.conf
         val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
-        return FetchTask(0, priority, page, conf)
+        val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
+        val fingerprint = Fingerprint(browserType.name)
+        return FetchTask(0, priority, page, conf, fingerprint = fingerprint)
     }
 
     override fun close() {

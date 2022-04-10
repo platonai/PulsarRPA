@@ -7,7 +7,7 @@ import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
 
 val WebPage.loadEventHandler: LoadEventHandler?
-    get() = this.conf.getBean(LoadEventHandler::class.java)
+    get() = this.conf.getBeanOrNull(LoadEventHandler::class.java)
 
 /**
  * Get or create a LoadOptions from the args

@@ -10,18 +10,20 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
-import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kklisura.cdt.protocol.types.network.Cookie
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -29,8 +31,8 @@ import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
     private val browserSettings: WebDriverSettings,
-    private val browserInstance: ChromeDevtoolsBrowserInstance,
-) : AbstractWebDriver(browserInstance.id) {
+    override val browserInstance: ChromeDevtoolsBrowserInstance,
+) : AbstractWebDriver(browserInstance) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
@@ -73,6 +75,10 @@ class ChromeDevtoolsDriver(
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
 
+    private var mainRequestId = ""
+    private var mainRequestHeaders: Map<String, Any> = mapOf()
+    private var mainRequestCookies: List<Map<String, String>> = listOf()
+
     private val enableBlockingReport = false
     private val closed = AtomicBoolean()
 
@@ -114,19 +120,35 @@ class ChromeDevtoolsDriver(
         takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
     }
 
+    override suspend fun mainRequestHeaders(): Map<String, Any> {
+        return mainRequestHeaders
+    }
+
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        return mainRequestCookies
+    }
+
     override suspend fun getCookies(): List<Map<String, String>> {
+        return getCookies0()
+    }
+
+    private fun getCookies0(): List<Map<String, String>> {
         refreshState()
         network.enable()
-        val mapper = pulsarObjectMapper()
-        return network.cookies.map {
-            val json = mapper.writeValueAsString(it)
-            val map: Map<String, String?> = mapper.readValue(json)
-            map.filterValues { it != null }.mapValues { it.toString() }
-        }
+        return network.cookies?.map { serialize(it) }?: listOf()
+    }
+
+    private fun serialize(cookie: Cookie): Map<String, String> {
+        val mapper = jacksonObjectMapper()
+        val json = mapper.writeValueAsString(cookie)
+        val map: Map<String, String?> = mapper.readValue(json)
+        return map.filterValues { it != null }.mapValues { it.toString() }
     }
 
     override suspend fun stop() {
-        if (!isActive) return
+        if (!isActive) {
+            return
+        }
 
         refreshState()
         try {
@@ -193,7 +215,7 @@ class ChromeDevtoolsDriver(
     override suspend fun currentUrl(): String {
         refreshState()
         navigateUrl = try {
-            if (isActive) navigateUrl else mainFrame.url
+            if (!isActive) navigateUrl else mainFrame.url
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to retrieve current url, session might be closed, {}", e.message)
@@ -208,18 +230,51 @@ class ChromeDevtoolsDriver(
         return nodeId != null && nodeId > 0
     }
 
-    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
+    /**
+     * Wait until [selector] for [timeout] at most
+     * */
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         refreshState()
-        val nodeId = querySelector(selector)
+
+        val timeoutMillis = timeout.toMillis()
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
 
+        var nodeId = querySelector(selector)
         while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
             gap()
             elapsedTime = System.currentTimeMillis() - startTime
+            nodeId = querySelector(selector)
         }
 
         return timeoutMillis - elapsedTime
+    }
+
+    override suspend fun waitForNavigation(timeout: Duration): Long {
+        refreshState()
+        val oldUrl = currentUrl()
+        var navigated = isNavigated(oldUrl)
+        val startTime = System.currentTimeMillis()
+        var elapsedTime = 0L
+
+        val timeoutMillis = timeout.toMillis()
+        while (elapsedTime < timeoutMillis && !navigated) {
+            gap()
+            elapsedTime = System.currentTimeMillis() - startTime
+            navigated = isNavigated(oldUrl)
+        }
+
+        return timeoutMillis - elapsedTime
+    }
+
+    private suspend fun isNavigated(oldUrl: String): Boolean {
+        if (oldUrl != currentUrl()) {
+            return true
+        }
+
+        // TODO: other signals
+
+        return false
     }
 
     override suspend fun click(selector: String, count: Int) {
@@ -234,14 +289,16 @@ class ChromeDevtoolsDriver(
 
     override suspend fun type(selector: String, text: String) {
         refreshState()
-        val nodeId = focus(selector) ?: return
+        val nodeId = focus(selector)
+        if (nodeId == 0) return
         keyboard.type(nodeId, text, delayPolicy("type"))
         gap()
     }
 
     override suspend fun scrollTo(selector: String) {
         refreshState()
-        val nodeId = focus(selector) ?: return
+        val nodeId = focus(selector)
+        if (nodeId == 0) return
         dom.scrollIntoViewIfNeeded(nodeId, null, null, null)
     }
 
@@ -251,25 +308,25 @@ class ChromeDevtoolsDriver(
 
     private suspend fun gap() = delay(delayPolicy("gap"))
 
-    private fun focus(selector: String): Int? {
+    private fun focus(selector: String): Int {
         val rootId = dom.document.nodeId
         val nodeId = dom.querySelector(rootId, selector)
-        if (nodeId == null) {
+        if (nodeId == 0) {
             logger.warn("No node found for selector: $selector")
-            return null
+            return 0
         }
 
         try {
             dom.focus(nodeId, null, null)
         } catch (e: Exception) {
-            logger.warn("Failed to focus | {}", e.message)
+            logger.warn("Failed to focus #$nodeId | {}", e.message)
         }
 
         return nodeId
     }
 
     private fun querySelector(selector: String): Int? {
-        val rootId = dom?.document?.nodeId ?: return null
+        val rootId = dom.document.nodeId ?: return null
         return kotlin.runCatching { dom.querySelector(rootId, selector) }.onFailure {
             logger.warn("Failed to query selector {} | {}", selector, it.message)
         }.getOrNull()
@@ -354,8 +411,10 @@ class ChromeDevtoolsDriver(
             }
 
             network.onRequestWillBeSent {
-                // it.request.headers
-                // it.request.url = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx?page=300&pagesize=20"
+                if (mainRequestId.isBlank()) {
+                    mainRequestId = it.requestId
+                    mainRequestHeaders = it.request.headers
+                }
             }
 
             network.onResponseReceived {
@@ -365,6 +424,10 @@ class ChromeDevtoolsDriver(
                     println(responseUrl)
                     println(body.body)
                 }
+            }
+
+            page.onDocumentOpened {
+                mainRequestCookies = getCookies0()
             }
 
             navigateUrl = url
@@ -385,6 +448,8 @@ class ChromeDevtoolsDriver(
                     && browserInstance.navigateHistory.none { it.url.contains("jd.com") }
             if (isFirstJdVisit) {
                 JdInitializer().init(page)
+            } else {
+
             }
         }
     }

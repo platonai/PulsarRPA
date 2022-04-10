@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ObjectConverter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.message.LoadedPageFormatter

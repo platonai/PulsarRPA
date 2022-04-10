@@ -5,7 +5,7 @@ Pulsar is an open source solution to scrape web data at scale.
 
 Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, pulsar is an open source solution to address such issues.
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, and we can query the web data using SQL directly.
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, and we can query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
@@ -13,14 +13,14 @@ We also have a plan to release an advanced AI to automatically extract every fie
 
 # Features
 - Web spider: browser rendering, ajax data crawling
-- Performance: highly optimized, distributed
+- Performance: highly optimized, rendering hundreds of pages in parallel on a single machine
+- Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
+- Large scale: fully distributed, designed for large scale crawling
+- Simple API: single line of code to scrape, or single SQL to turn a website into a table
 - X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 - Bot stealth: IP rotation, web driver stealth, never get banned
-- Simple API: single line of code to scrape, or single SQL to turn a website into a table
 - RPA: imitating human behavior, SPA crawling, or do something else awesome
-- Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
-- Large scale: designed for large scale crawling
-- Big data: various backend storage support: HBase/MongoDB/Gora
+- Big data: various backend storage support: MongoDB/HBase/Gora
 - Logs & metrics: monitored closely and every event is recorded
 
 For more information check [platon.ai](http://platon.ai)
@@ -33,7 +33,7 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.8.3</version>
+  <version>1.8.4</version>
 </dependency>
 ```
 
@@ -53,23 +53,24 @@ val document = session.loadDocument(url, "-expires 1d")
 ```
 Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then load out pages specified by -outLink:
 ```kotlin
-session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+val documents = pages.map { session.parse(it) }
 ```
 Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector:
 ```kotlin
-session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
+val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 ```
 or
 ```kotlin
-session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+val fields = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
 ```
 Scrape fields from the out pages:
 ```kotlin
-session.scrapeOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]", ".product-intro", listOf(".sku-name", ".p-price"))
+val fields = session.scrapeOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]", ".product-intro", listOf(".sku-name", ".p-price"))
 ```
 or
 ```kotlin
-session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", mapOf("name" to ".sku-name", "price" to ".p-price"))
+val fields = session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ```
 Scrape a massive url collection:
 ```kotlin
@@ -79,7 +80,7 @@ val parseHandler = { _: WebPage, document: Document ->
 }
 val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, parseHandler) }
 val context = PulsarContexts.create().asyncLoadAll(urls)
-// feel free to add a huge amount of urls to the crawl queue here using async loading methods
+// feel free to add a huge number of urls to the crawl queue here using async loading
 // ...
 context.await()
 ```
@@ -101,11 +102,11 @@ from
 Execute the X-SQL:
 
 ```kotlin
-val context = SQLContexts.activate()
+val context = SQLContexts.create()
 context.executeQuery(sql)
 ```
 
-The result set is as follows:
+The result is as follows:
 
     TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
     Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926

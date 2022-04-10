@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.crawl.CoreMetrics
@@ -24,7 +25,7 @@ class BasicPrivacyContextManager(
             : this(driverPoolManager, null, null, config)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
-        return run0(computeNextContext(), task, fetchFun)
+        return run0(computeNextContext(task.fingerprint), task, fetchFun)
     }
 
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
@@ -33,13 +34,13 @@ class BasicPrivacyContextManager(
         return context
     }
 
-    override fun computeNextContext(): PrivacyContext {
-        val context = computeIfNecessary()
-        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyContextIdGenerator()) }
+    override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
+        val context = computeIfNecessary(fingerprint)
+        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyContextIdGenerator(fingerprint)) }
     }
 
-    override fun computeIfNecessary(): PrivacyContext {
-        return activeContexts.values.firstOrNull() ?: computeIfAbsent(privacyContextIdGenerator())
+    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
+        return activeContexts.values.firstOrNull() ?: computeIfAbsent(privacyContextIdGenerator(fingerprint))
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }

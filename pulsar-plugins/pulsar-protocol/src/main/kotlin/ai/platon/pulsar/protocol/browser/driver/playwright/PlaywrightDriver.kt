@@ -4,12 +4,12 @@ import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.protocol.browser.driver.NavigateEntry
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
-import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.playwright.Locator
 import com.microsoft.playwright.Page
@@ -17,6 +17,7 @@ import com.microsoft.playwright.options.Position
 import com.microsoft.playwright.options.WaitUntilState
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -24,8 +25,8 @@ import kotlin.random.Random
 
 class PlaywrightDriver(
     private val browserSettings: WebDriverSettings,
-    private val browserInstance: PlaywrightBrowserInstance,
-) : AbstractWebDriver(browserInstance.id) {
+    override val browserInstance: PlaywrightBrowserInstance,
+) : AbstractWebDriver(browserInstance) {
     companion object {
         val sessionIdGenerator = AtomicInteger()
     }
@@ -109,6 +110,14 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun mainRequestHeaders(): Map<String, Any> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getCookies(): List<Map<String, String>> {
         val mapper = pulsarObjectMapper()
         return page.context().cookies().map {
@@ -143,16 +152,27 @@ class PlaywrightDriver(
         return false
     }
 
-    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         try {
             val startTime = System.currentTimeMillis()
             page.waitForSelector(selector)
-            return timeoutMillis - (System.currentTimeMillis() - startTime)
+            return timeout.toMillis() - (System.currentTimeMillis() - startTime)
         } catch (e: Exception) {
             logger.warn("Failed to wait | {}", e.message)
         }
 
         return 0
+    }
+
+    override suspend fun waitForNavigation(timeout: Duration): Long {
+        val startTime = System.currentTimeMillis()
+
+        // TODO: fix this
+        page.waitForNavigation {  }
+
+        val elapsedTime = System.currentTimeMillis() - startTime
+
+        return timeout.toMillis() - elapsedTime
     }
 
     override suspend fun type(selector: String, text: String) {

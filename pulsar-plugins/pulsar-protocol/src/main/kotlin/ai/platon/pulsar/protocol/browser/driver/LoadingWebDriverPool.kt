@@ -8,6 +8,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -212,12 +214,13 @@ class LoadingWebDriverPool(
         return driver?:throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + formatStatus() + ")")
     }
 
-    private fun createDriverIfNecessary(priority: Int, conf: VolatileConfig) {
+    private fun createDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
         if (shouldCreateDriver()) {
             synchronized(driverFactory) {
                 if (shouldCreateDriver()) {
                     // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
-                    val driver = driverFactory.create(browserInstanceId, priority, conf)
+                    val driver = driverFactory.create(browserInstanceId, priority, volatileConfig)
+
                     lock.withLock {
                         freeDrivers.add(driver)
                         notEmpty.signalAll()

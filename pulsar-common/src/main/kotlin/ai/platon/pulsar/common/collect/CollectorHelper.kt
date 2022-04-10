@@ -52,9 +52,9 @@ class CollectorHelper(val feeder: UrlFeeder) {
     }
 
     fun addUrlPoolCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
-        val fetchCache = LoadingUrlCache(name, priority, urlLoader)
-        urlPool.unorderedCaches.add(fetchCache)
-        val collector = UrlCacheCollector(fetchCache).also { it.name = name }
+        val urlCache = LoadingUrlCache(name, priority, urlLoader)
+        urlPool.unorderedCaches.add(urlCache)
+        val collector = UrlCacheCollector(urlCache).also { it.name = name }
 
         report(collector)
         feeder.addCollector(collector)
@@ -67,9 +67,9 @@ class CollectorHelper(val feeder: UrlFeeder) {
     }
 
     fun addUrlPoolCollector(name: String, priority: Int): UrlCacheCollector {
-        val fetchCache = ConcurrentUrlCache(name)
-        urlPool.unorderedCaches.add(fetchCache)
-        val collector = UrlCacheCollector(fetchCache).also { it.name = name }
+        val urlCache = ConcurrentUrlCache(name)
+        urlPool.unorderedCaches.add(urlCache)
+        val collector = UrlCacheCollector(urlCache).also { it.name = name }
 
         feeder.addCollector(collector)
         report(collector)

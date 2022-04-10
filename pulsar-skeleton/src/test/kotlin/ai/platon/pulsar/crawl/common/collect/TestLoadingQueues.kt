@@ -13,12 +13,12 @@ import kotlin.test.assertTrue
 class TestLoadingQueues : TestBase() {
 
     @Test
-    fun `When create a LoadingFetchCache then the first page is loaded`() {
-        val fetchCache = LoadingUrlCache("", group.priority, urlLoader)
+    fun `When create a LoadingurlCache then the first page is loaded`() {
+        val urlCache = LoadingUrlCache("", group.priority, urlLoader)
         // not loaded
-        assertEquals(0, fetchCache.size)
-        fetchCache.load()
-        assertTrue { fetchCache.size > 0 }
+        assertEquals(0, urlCache.size)
+        urlCache.load()
+        assertTrue { urlCache.size > 0 }
     }
 
     @Test

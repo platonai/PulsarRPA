@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -10,6 +11,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.BrowserType
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -61,6 +63,7 @@ class FetchTask constructor(
         val priority: Int,
         val page: WebPage,
         val volatileConfig: VolatileConfig,
+        val fingerprint: Fingerprint,
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
         var batchStat: BatchStat? = null,
@@ -95,13 +98,14 @@ class FetchTask constructor(
 
     fun clone(): FetchTask {
         return FetchTask(
-                batchId = batchId,
-                batchTaskId = batchTaskId,
-                batchSize = batchSize,
-                priority = priority,
-                page = page,
-                volatileConfig = volatileConfig,
-                nRetries = nRetries
+            batchId = batchId,
+            batchTaskId = batchTaskId,
+            batchSize = batchSize,
+            priority = priority,
+            page = page,
+            volatileConfig = volatileConfig,
+            fingerprint = fingerprint,
+            nRetries = nRetries
         )
     }
 
@@ -114,7 +118,8 @@ class FetchTask constructor(
     override fun toString(): String = "$id"
 
     companion object {
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id = 0)
+        val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.CHROME.name)
+        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
     }
 }

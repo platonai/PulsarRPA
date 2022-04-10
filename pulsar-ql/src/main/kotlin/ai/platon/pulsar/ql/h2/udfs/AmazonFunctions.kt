@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.sites.amazon.AmazonSearcherJsEventHandler
 import ai.platon.pulsar.common.urls.sites.amazon.AmazonUrls
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -39,7 +40,7 @@ object AmazonFunctions {
 
         val amazonSearcher = AmazonSearcherJsEventHandler(keyword)
         val options = session.options("-i 0s")
-        options.conf.putBean(amazonSearcher)
+        options.eventHandler.simulateEventHandler.onBeforeComputeFeature.addLast(amazonSearcher)
         session.load(url, options)
 
         val rs = ResultSets.newSimpleResultSet("alias", "keyword", "isfb", "crid")

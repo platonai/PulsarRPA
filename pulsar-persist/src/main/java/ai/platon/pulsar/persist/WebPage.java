@@ -703,6 +703,16 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.BROWSER, browser.name());
     }
 
+    public boolean isResource() {
+        return getMetadata().getBoolean(Name.IS_RESOURCE, false);
+    }
+
+    public void setResource(boolean resource) {
+        if (resource) {
+            getMetadata().set(Name.IS_RESOURCE, "true");
+        }
+    }
+
     @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
         return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
@@ -1198,13 +1208,12 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * TODO: Encoding is always UTF-8?
-     * <p>
      * Get the page content as a string
      */
     @NotNull
     public String getContentAsString() {
-        return ByteUtils.toString(getContentAsBytes());
+        ByteBuffer buffer = getContent();
+        return ByteUtils.toString(buffer.array());
     }
 
     /**
@@ -1885,9 +1894,9 @@ final public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
-    @NotNull
+    @Nullable
     public String getReferrer() {
-        return page.getReferrer() == null ? "" : page.getReferrer().toString();
+        return page.getReferrer() == null ? null : page.getReferrer().toString();
     }
 
     /**
@@ -1895,7 +1904,7 @@ final public class WebPage implements Comparable<WebPage> {
      *
      * @param referrer a {@link java.lang.String} object.
      */
-    public void setReferrer(String referrer) {
+    public void setReferrer(@Nullable String referrer) {
         if (referrer != null && referrer.length() > SHORTEST_VALID_URL_LENGTH) {
             page.setReferrer(referrer);
         }

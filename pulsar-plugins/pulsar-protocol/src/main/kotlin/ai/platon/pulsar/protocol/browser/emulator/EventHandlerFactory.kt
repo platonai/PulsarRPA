@@ -12,8 +12,8 @@ class EventHandlerFactory(
 ) {
     val eventHandler by lazy {
         val clazz = immutableConfig.getClass(
-                CapabilityTypes.BROWSER_EMULATOR_EVENT_HANDLER, EventHandler::class.java)
+                CapabilityTypes.BROWSER_EMULATOR_EVENT_HANDLER, EmulateEventHandler::class.java)
         clazz.constructors.first { it.parameters.size == 3 }
-                .newInstance(driverPoolManager, messageWriter, immutableConfig) as EventHandler
+                .newInstance(driverPoolManager, messageWriter, immutableConfig) as EmulateEventHandler
     }
 }

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.context
 
-import ai.platon.pulsar.BasicPulsarSession
+import ai.platon.pulsar.session.BasicPulsarSession
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig

@@ -787,8 +787,9 @@ private fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<S
 
 private fun Node.calculateViewPort(): Dimension {
     val default = AppConstants.DEFAULT_VIEW_PORT
-    val parts = extension.ownerBody.attr("view-port").split("x")
-    return if (parts.size == 2)
+    val ob = extension.ownerBody ?: return default
+    val parts = ob.attr("view-port").split("x")
+    return if (parts.size == 2) {
         Dimension(parts[0].toIntOrNull() ?: default.width, parts[1].toIntOrNull() ?: default.height)
-    else default
+    } else default
 }
