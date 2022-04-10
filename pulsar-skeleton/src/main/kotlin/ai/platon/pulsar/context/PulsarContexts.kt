@@ -51,6 +51,8 @@ object PulsarContexts {
     @Synchronized
     fun createSession() = create().createSession()
 
+    fun await() = create().await()
+
     @Synchronized
     fun shutdown() {
         contexts.forEach { it.close() }

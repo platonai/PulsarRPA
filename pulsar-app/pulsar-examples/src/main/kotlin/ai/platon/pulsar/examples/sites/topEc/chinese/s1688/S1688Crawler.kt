@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples.sites.topEc.chinese.s1688
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
+import ai.platon.pulsar.examples.sites.topEc.chinese.jd.JdCrawler
 import ai.platon.pulsar.session.PulsarSession
 
 class S1688Crawler(
@@ -30,4 +31,7 @@ class S1688Crawler(
     }
 }
 
-fun main() = S1688Crawler().crawl()
+fun main() {
+    S1688Crawler().crawl()
+    PulsarContexts.await()
+}

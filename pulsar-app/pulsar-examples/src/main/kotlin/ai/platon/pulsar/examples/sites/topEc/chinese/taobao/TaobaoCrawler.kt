@@ -4,6 +4,7 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
 import ai.platon.pulsar.examples.sites.topEc.chinese.gome.GomeCrawler
+import ai.platon.pulsar.examples.sites.topEc.chinese.s1688.S1688Crawler
 import ai.platon.pulsar.session.PulsarSession
 
 class TaobaoLoginHandler(
@@ -38,4 +39,7 @@ class TaobaoCrawler(
     }
 }
 
-fun main() = TaobaoCrawler().crawl()
+fun main() {
+    TaobaoCrawler().crawl()
+    PulsarContexts.await()
+}

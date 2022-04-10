@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.gome
 
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.examples.sites.topEc.chinese.dangdang.DangdangCrawler
 import ai.platon.pulsar.session.PulsarSession
 
 class GomeCrawler(
@@ -13,4 +14,7 @@ class GomeCrawler(
     }
 }
 
-fun main() = GomeCrawler().crawl()
+fun main() {
+    GomeCrawler().crawl()
+    PulsarContexts.await()
+}

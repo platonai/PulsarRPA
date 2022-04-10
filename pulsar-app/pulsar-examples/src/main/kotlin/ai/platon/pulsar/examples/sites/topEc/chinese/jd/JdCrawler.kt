@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.jd
 
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.examples.sites.topEc.chinese.gome.GomeCrawler
 import ai.platon.pulsar.session.PulsarSession
 
 class JdCrawler(
@@ -13,4 +14,7 @@ class JdCrawler(
     }
 }
 
-fun main() = JdCrawler().crawl()
+fun main() {
+    JdCrawler().crawl()
+    PulsarContexts.await()
+}

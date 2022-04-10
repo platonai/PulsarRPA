@@ -319,7 +319,7 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.loadAll(normalize(urls, options), options) else listOf()
+        return if (isActive) { loadComponent.loadAll(normalize(urls, options), options) } else listOf()
     }
 
     override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {

@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples.sites.topEc.chinese.tmall
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
+import ai.platon.pulsar.examples.sites.topEc.chinese.taobao.TaobaoCrawler
 import ai.platon.pulsar.examples.sites.topEc.chinese.taobao.TaobaoLoginHandler
 import ai.platon.pulsar.session.PulsarSession
 
@@ -25,4 +26,7 @@ class TmallCrawler(
     }
 }
 
-fun main() = TmallCrawler().crawl()
+fun main() {
+    TmallCrawler().crawl()
+    PulsarContexts.await()
+}

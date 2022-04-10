@@ -13,4 +13,7 @@ class SuningCrawler(
     }
 }
 
-fun main() = SuningCrawler().crawl()
+fun main() {
+    SuningCrawler().crawl()
+    PulsarContexts.await()
+}

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.dangdang
 
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.examples.sites.topEc.chinese.suning.SuningCrawler
 import ai.platon.pulsar.session.PulsarSession
 
 class DangdangCrawler(
@@ -13,4 +14,7 @@ class DangdangCrawler(
     }
 }
 
-fun main() = DangdangCrawler().crawl()
+fun main() {
+    DangdangCrawler().crawl()
+    PulsarContexts.await()
+}
