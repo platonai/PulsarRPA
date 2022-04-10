@@ -24,7 +24,8 @@ open class BrowserEmulatedFetcher(
         private val privacyManager: PrivacyManager,
         private val driverManager: WebDriverPoolManager,
         private val browserEmulator: BrowserEmulator,
-        private val immutableConfig: ImmutableConfig
+        private val immutableConfig: ImmutableConfig,
+        private val closeCascaded: Boolean = false
 ): AutoCloseable {
     private val logger = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
@@ -40,8 +41,6 @@ open class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     fun fetchContent(page: WebPage) = runBlocking {
-        // val pageLoadTimeout = EmulateSettings(page.conf).pageLoadTimeout.toMillis()
-//        withTimeout(pageLoadTimeout) { fetchContentDeferred(page) }
         fetchContentDeferred(page)
     }
 
@@ -105,6 +104,11 @@ open class BrowserEmulatedFetcher(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            if (closeCascaded) {
+                browserEmulator.close()
+                driverManager.close()
+                privacyManager.close()
+            }
         }
     }
 

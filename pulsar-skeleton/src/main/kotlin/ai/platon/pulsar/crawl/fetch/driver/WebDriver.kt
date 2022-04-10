@@ -47,9 +47,9 @@ interface WebDriver: Closeable {
 
     suspend fun outerHTML(selector: String): String?
     suspend fun firstText(selector: String): String?
-    suspend fun allTexts(selector: String): String?
+    suspend fun allTexts(selector: String): List<String>
     suspend fun firstAttr(selector: String, attrName: String): String?
-    suspend fun allAttrs(selector: String, attrName: String): String?
+    suspend fun allAttrs(selector: String, attrName: String): List<String>
 
     suspend fun getCookies(): List<Map<String, String>>
     suspend fun evaluate(expression: String): Any?

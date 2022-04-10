@@ -122,7 +122,6 @@ public interface CapabilityTypes {
      */
     String STAT_COUNTERS = "counters";
 
-
     String COUNTER_GROUP_STATUS = "Runtime Status";
 
     /**
@@ -140,21 +139,12 @@ public interface CapabilityTypes {
     String GENERATE_COUNT_VALUE_IP = "ip";
 
     /**
-     * Thread pool/ExecuteService
-     */
-    String GLOBAL_EXECUTOR_CONCURRENCY_HINT = "global.executor.concurrency.hint";
-
-    String GLOBAL_EXECUTOR_AUTO_CONCURRENCY_FACTOR = "global.executor.auto.concurrency.factor";
-    /**
      * Distribution
      */
     String PULSAR_MASTER_HOST = "pulsar.master.host";
 
     String PULSAR_MASTER_PORT = "pulsar.master.port";
 
-    String UPSTREAM_PUSH_URL = "pulsar.upstream.push.url";
-
-    String UPSTREAM_PULL_URL = "pulsar.upstream.pull.url";
     /**
      * Storage
      */
@@ -170,19 +160,10 @@ public interface CapabilityTypes {
 
     String STORAGE_EMBED_MONGO = "storage.embed.mongo";
 
-
-    String GORA_MONGODB_SERVERS = "gora.mongodb.servers";
-    // String GORA_MONGODB_EMBED_SERVERS = "gora.mongodb.embed.servers";
     /**
      * Spring
      */
     String APPLICATION_CONTEXT_CONFIG_LOCATION = "application.context.config.location";
-    /**
-     * Session
-     */
-    String SESSION_MAX_WAIT_TIME = "session.max.wait.time";
-
-    String SESSION_MIN_ACCEPTABLE_RESPONSE_SIZE = "session.min.acceptable.response.size";
 
     /**
      * Inject parameters
@@ -299,6 +280,7 @@ public interface CapabilityTypes {
     String BROWSER_DISPLAY_MODE = "browser.display.mode";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
+
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
@@ -313,6 +295,7 @@ public interface CapabilityTypes {
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+    String BROWSER_JS_NAME_MANGLING_MAGIC = "browser.js.name.mangling.magic";
 
     /**
      * Proxy
@@ -415,7 +398,11 @@ public interface CapabilityTypes {
     /**
      * Create default data collectors or not
      * */
-    String ENABLE_DEFAULT_DATA_COLLECTORS = "crawl.create.default.data.collectors";
+    String CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS = "crawl.enable.default.data.collectors";
+    /**
+     * Create default data collectors or not
+     * */
+    String CRAWL_SMART_RETRY = "crawl.smart.retry";
     /**
      * The size of global page cache
      * */
@@ -430,56 +417,11 @@ public interface CapabilityTypes {
      * documents.
      */
     String CACHING_FORBIDDEN_KEY = "caching.forbidden";
-    /**
-     * Show both original forbidden content and summaries (default).
-     */
-    String CACHING_FORBIDDEN_NONE = "none";
-    /**
-     * Don't show either original forbidden content or summaries.
-     */
-    String CACHING_FORBIDDEN_ALL = "all";
 
     String PULSAR_DOMAIN = "pulsar.domain";
 
-    String SCENT_TASK_IDENT = "scent.task.ident";
-    String SCENT_FILE_SERVER_HOST = "scent.file.server.host";
-    String SCENT_FILE_SERVER_PORT = "scent.file.server.port";
-    String SCENT_DIAGNOSTOR_ENABLED = "scent.diagnostor.enabled";
-
-    // FEATURE
-    String SCENT_OUT_DIR_FEATURE = "scent.out.dir.feature";
-
-    // NLP
-    String SCENT_NLP_WORD_NET_CONCEPT = "scent.nlp.word.net.concept";
-    String SCENT_NLP_SEMANTIC_SIMILARITY_ENABLED = "scent.nlp.semantic.similarity.enabled";
-
-    // SEGMENT
-    String SCENT_CHILDREN_SUMMARY_ITEM_MIN = "scent.children.summary.item.min";
-    String SCENT_CHILDREN_SUMMARY_SAMPLE_MAX = "scent.children.summary.sample.max";
-    String SCENT_CHILDREN_SUMMARY_FEATURES = "scent.children.summary.features";
-    String SCENT_CHILDREN_SUMMARY_THRESHOLD = "scent.children.summary.threshold";
-    String SCENT_CHILDREN_SUMMARY_REPORT = "scent.children.summary.report";
-
-    // CLASSIFY
-    String SCENT_CLASSIFIER_BLOCK_LABELS = "scent.classifier.block.labels";
-    String SCENT_DIAGNOSE_CLASSIFIER_BLOCK_LABELS = "scent.diagnose.classifier.block.labels";
-    String SCENT_CLASSIFIER_BLOCK_INHERITABLE_LABLES = "scent.classifier.block.inheritable.labels";
-    String SCENT_CLASSIFIER_WEIGHT_CODE_STRUCTURE = "scent.classifier.weight.code.structure";
-    String SCENT_CLASSIFIER_WEIGHT_BLOCK_TEXT = "scent.classifier.weight.block.text";
-    String SCENT_CLASSIFIER_WEIGHT_BLOCK_TITLE = "scent.classifier.weight.block.title";
-
-    // EXTRACT
-    String SCENT_EXTRACT_EXTRACT_FOR_LABEL = "scent.extract.extractor.for.label";
-    String SCENT_EXTRACT_REFRESH_FEATURE = "scent.extract.refresh.feature";
-    String SCENT_EXTRACT_GREEDY = "scent.extract.greedy";
-    String SCENT_EXTRACT_KEEP_ELEMENT_METADATA = "scent.extract.keep.element.metadata";
-    String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
-
-    // BUILD
-    String SCENT_WIKI_DOMAIN = "scent.wiki.domain";
-    String SCENT_WIKI_USERNAME = "scent.wiki.username";
-    String SCENT_WIKI_PASSWORD = "scent.wiki.password";
-
     // H2
     String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
+
+    String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
 }

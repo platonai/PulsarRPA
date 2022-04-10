@@ -14,6 +14,6 @@ class PulsarContextAutoConfiguration(
     @Bean
     @Scope("prototype")
     fun getPulsarSession(): PulsarSession {
-        return SQLContexts.activate(applicationContext).createSession()
+        return SQLContexts.create(applicationContext).createSession()
     }
 }

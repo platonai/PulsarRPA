@@ -6,6 +6,6 @@ import org.springframework.context.support.AbstractApplicationContext
 
 class PulsarContextInitializer: ApplicationContextInitializer<AbstractApplicationContext> {
     override fun initialize(applicationContext: AbstractApplicationContext) {
-        PulsarContexts.activate(applicationContext)
+        PulsarContexts.create(applicationContext)
     }
 }

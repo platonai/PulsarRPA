@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.withSQLContext
 import ai.platon.pulsar.test.ProductExtractor
-import kotlin.system.exitProcess
 
 fun main() {
     val itemsSQLTemplate = """
@@ -22,7 +21,7 @@ fun main() {
             dom_base_uri(dom) as `baseUri`
         from
             load_out_pages(
-                '{{url}} -refresh -netCond worse', 
+                '{{url}} -refresh -netCond worse',
                 '.product.details a.product-item-link'
             )
         """

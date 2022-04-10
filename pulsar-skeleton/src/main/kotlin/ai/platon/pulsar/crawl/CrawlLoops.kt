@@ -34,4 +34,8 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
                 .forEach { it.stop() }
         }
     }
+
+    override fun await() {
+        loops.forEach { it.await() }
+    }
 }

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.*
 import ai.platon.pulsar.ql.context.SQLContexts
@@ -20,7 +19,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
 
-    private val sqlContext get() = SQLContexts.activate()
+    private val sqlContext get() = SQLContexts.create()
 
     init {
         H2Config.config()

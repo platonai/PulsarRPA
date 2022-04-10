@@ -103,6 +103,7 @@ interface StartStopRunnable {
         stop()
         start()
     }
+    fun await() {}
 }
 
 class StartStopRunner(val runnable: StartStopRunnable) {

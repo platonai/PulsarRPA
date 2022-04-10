@@ -5,8 +5,8 @@
  * @param attrName {String}
  * @param attrValue {String}
  * */
-Node.prototype.setAttributeIfNotBlank = function(attrName, attrValue) {
-    if (this.isElement() && attrValue && attrValue.trim().length > 0) {
+Node.prototype.__pulsar_setAttributeIfNotBlank = function(attrName, attrValue) {
+    if (this.__pulsar_isElement() && attrValue && attrValue.trim().length > 0) {
         this.setAttribute(attrName, attrValue.trim())
     }
 };
@@ -14,7 +14,7 @@ Node.prototype.setAttributeIfNotBlank = function(attrName, attrValue) {
 /**
  * @param predicate The predicate
  * */
-Node.prototype.count = function(predicate) {
+Node.prototype.__pulsar_count = function(predicate) {
     let c = 0;
     let visitor = function () {};
     visitor.head = function (node, depth) {
@@ -23,45 +23,45 @@ Node.prototype.count = function(predicate) {
         }
     };
 
-    new PulsarNodeTraversor(visitor).traverse(this);
+    new __pulsar_NodeTraversor(visitor).traverse(this);
     return c;
 };
 
 /**
  * @param action The action applied to each node
  * */
-Node.prototype.forEach = function(action) {
+Node.prototype.__pulsar_forEach = function(action) {
     let visitor = {};
     visitor.head = function (node, depth) {
         action(node)
     };
-    new PulsarNodeTraversor(visitor).traverse(this);
+    new __pulsar_NodeTraversor(visitor).traverse(this);
 };
 
 /**
  * @param action The action applied to each node
  * */
-Node.prototype.forEachElement = function(action) {
+Node.prototype.__pulsar_forEachElement = function(action) {
     let visitor = {};
     visitor.head = function (node, depth) {
         if (node.nodeType === Node.ELEMENT_NODE) {
             action(node)
         }
     };
-    new PulsarNodeTraversor(visitor).traverse(this);
+    new __pulsar_NodeTraversor(visitor).traverse(this);
 };
 
 /**
  * @return {boolean}
  * */
-Node.prototype.isText = function() {
+Node.prototype.__pulsar_isText = function() {
     return this.nodeType === Node.TEXT_NODE;
 };
 
 /**
  * @return {string}
  * */
-Node.prototype.cleanText = function() {
+Node.prototype.__pulsar_cleanText = function() {
     let text = this.textContent.replace(/\s+/g, ' ');
     // remove &nbsp;
     text = text.replace(/\u00A0/g, ' ');
@@ -71,20 +71,20 @@ Node.prototype.cleanText = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isShortText = function() {
-    if (!this.isText()) return false;
+Node.prototype.__pulsar_isShortText = function() {
+    if (!this.__pulsar_isText()) return false;
 
-    let text = this.cleanText();
+    let text = this.__pulsar_cleanText();
     return text.length >= 1 && text.length <= 9;
 };
 
 /**
  * @return {boolean}
  * */
-Node.prototype.isNumberLike = function() {
-    if (!this.isShortText()) return false;
+Node.prototype.__pulsar_isNumberLike = function() {
+    if (!this.__pulsar_isShortText()) return false;
 
-    let text = this.cleanText().replace(/\s+/g, '');
+    let text = this.__pulsar_cleanText().replace(/\s+/g, '');
     // matches ￥3,412.25, ￥3,412.25, 3,412.25, 3412.25, etc
     return /.{0,4}((\d+),?)*(\d+)\.?\d+.{0,3}/.test(text);
 };
@@ -92,29 +92,29 @@ Node.prototype.isNumberLike = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isElement = function() {
+Node.prototype.__pulsar_isElement = function() {
     return this.nodeType === Node.ELEMENT_NODE;
 };
 
 /**
  * @return {Element}
  * */
-Node.prototype.bestElement = function() {
-    if (this.isElement()) return this;
+Node.prototype.__pulsar_bestElement = function() {
+    if (this.__pulsar_isElement()) return this;
     else return this.parentElement;
 };
 
 /**
  * @return {boolean}
  * */
-Node.prototype.isTextOrElement = function() {
-    return this.isText() || this.isElement();
+Node.prototype.__pulsar_isTextOrElement = function() {
+    return this.__pulsar_isText() || this.__pulsar_isElement();
 };
 
 /**
  * @return {boolean}
  * */
-Node.prototype.isDiv = function() {
+Node.prototype.__pulsar_isDiv = function() {
     // HTML-uppercased qualified name
     return this.nodeName === "DIV";
 };
@@ -122,7 +122,7 @@ Node.prototype.isDiv = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isImage = function() {
+Node.prototype.__pulsar_isImage = function() {
     // HTML-uppercased qualified name
     return this.nodeName === "IMG";
 };
@@ -130,8 +130,8 @@ Node.prototype.isImage = function() {
 /**
  * @return {Number}
  * */
-Node.prototype.nScreen = function() {
-    let rect = this.getRect();
+Node.prototype.__pulsar_nScreen = function() {
+    let rect = this.__pulsar_getRect();
     const config = PULSAR_CONFIGS;
     const viewPortHeight = config.viewPortHeight;
     let ns = rect.y / viewPortHeight;
@@ -141,24 +141,24 @@ Node.prototype.nScreen = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isSmallImage = function() {
-    if (!this.isImage()) {
+Node.prototype.__pulsar_isSmallImage = function() {
+    if (!this.__pulsar_isImage()) {
         return false
     }
 
-    let rect = this.getRect();
+    let rect = this.__pulsar_getRect();
     return rect.width <= 50 || rect.height <= 50;
 };
 
 /**
  * @return {boolean}
  * */
-Node.prototype.isMediumImage = function() {
-    if (!this.isImage()) {
+Node.prototype.__pulsar_isMediumImage = function() {
+    if (!this.__pulsar_isImage()) {
         return false
     }
 
-    let rect = this.getRect();
+    let rect = this.__pulsar_getRect();
     let area = rect.width * rect.height;
     return rect.width > 50 && rect.height > 50 && area < 300 * 300;
 };
@@ -166,12 +166,12 @@ Node.prototype.isMediumImage = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isLargeImage = function() {
-    if (!this.isImage()) {
+Node.prototype.__pulsar_isLargeImage = function() {
+    if (!this.__pulsar_isImage()) {
         return false
     }
 
-    let rect = this.getRect();
+    let rect = this.__pulsar_getRect();
     let area = rect.width * rect.height;
     return area > 300 * 300;
 };
@@ -179,7 +179,7 @@ Node.prototype.isLargeImage = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isAnchor = function() {
+Node.prototype.__pulsar_isAnchor = function() {
     // HTML-uppercased qualified name
     return this.nodeName === "A";
 };
@@ -187,14 +187,14 @@ Node.prototype.isAnchor = function() {
 /**
  * @return {boolean}
  * */
-Node.prototype.isTile = function() {
-    return this.isImage() || this.isText();
+Node.prototype.__pulsar_isTile = function() {
+    return this.__pulsar_isImage() || this.__pulsar_isText();
 };
 
 /**
  * @return {boolean}
  * */
-Node.prototype.isIFrame = function() {
+Node.prototype.__pulsar_isIFrame = function() {
     return this.nodeName === "IFRAME";
 };
 
@@ -202,15 +202,15 @@ Node.prototype.isIFrame = function() {
  * Get the estimated rect of this node, if the node is not an element, return it's parent element's rect
  * @return {DOMRect|null}
  * */
-Node.prototype.getRect = function() {
-    let element = this.bestElement();
+Node.prototype.__pulsar_getRect = function() {
+    let element = this.__pulsar_bestElement();
     if (element == null) {
         return null
     }
 
     let rect = __pulsar_utils__.getClientRect(element);
 
-    if (element.isImage()) {
+    if (element.__pulsar_isImage()) {
         if (!rect) {
             rect = new DOMRect(0, 0, 0, 0)
         }
@@ -233,7 +233,7 @@ Node.prototype.getRect = function() {
     return rect
 };
 
-let NodeExt = function (node, config) {
+let __pulsar_NodeExt = function (node, config) {
     /**
      * The config
      * */
@@ -278,7 +278,7 @@ let NodeExt = function (node, config) {
  * https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
  * @return {boolean}
  * */
-NodeExt.prototype.isVisible = function() {
+__pulsar_NodeExt.prototype.isVisible = function() {
     let hidden = this.node.offsetParent === null;
 
     if (hidden) {
@@ -288,21 +288,21 @@ NodeExt.prototype.isVisible = function() {
     return !this.isOverflowHidden()
 };
 
-NodeExt.prototype.isHidden = function() {
+__pulsar_NodeExt.prototype.isHidden = function() {
     return !this.isVisible();
 };
 
 /**
  * @return {boolean}
  * */
-NodeExt.prototype.isOverflown = function() {
+__pulsar_NodeExt.prototype.isOverflown = function() {
     return this.node.scrollHeight > this.node.clientHeight || this.node.scrollWidth > this.node.clientWidth;
 };
 
 /**
  * @return {boolean}
  * */
-NodeExt.prototype.isOverflowHidden = function() {
+__pulsar_NodeExt.prototype.isOverflowHidden = function() {
     let p = this.parent();
     let maxWidth = this.config.viewPortWidth;
     return p != null && p.maxWidth < maxWidth && (this.left() >= p.right() || this.right() <= p.left());
@@ -312,70 +312,70 @@ NodeExt.prototype.isOverflowHidden = function() {
 /**
  * @return {boolean}
  * */
-NodeExt.prototype.hasOverflowHidden = function() {
+__pulsar_NodeExt.prototype.hasOverflowHidden = function() {
     return this.styles["overflow"] === "hidden";
 };
 
 /**
  * @return {boolean}
  * */
-NodeExt.prototype.hasParent = function() {
+__pulsar_NodeExt.prototype.hasParent = function() {
     return this.node.parentElement != null && this.parent() != null;
 };
 
 /**
- * @return {NodeExt}
+ * @return {__pulsar_NodeExt}
  * */
-NodeExt.prototype.parent = function() {
+__pulsar_NodeExt.prototype.parent = function() {
     return this.node.parentElement.nodeExt;
 };
 
 /**
  * Get left
  * */
-NodeExt.prototype.left = function() {
+__pulsar_NodeExt.prototype.left = function() {
     return this.rect.left
 };
 
 /**
  * Get right
  * */
-NodeExt.prototype.right = function() {
+__pulsar_NodeExt.prototype.right = function() {
     return this.left() + this.width()
 };
 
 /**
  * Get top
  * */
-NodeExt.prototype.top = function() {
+__pulsar_NodeExt.prototype.top = function() {
     return this.rect.top
 };
 
 /**
  * Get bottom
  * */
-NodeExt.prototype.bottom = function() {
+__pulsar_NodeExt.prototype.bottom = function() {
     return this.top() + this.height()
 };
 
 /**
  * Get width
  * */
-NodeExt.prototype.width = function() {
+__pulsar_NodeExt.prototype.width = function() {
     return this.rect.width
 };
 
 /**
  * Get height
  * */
-NodeExt.prototype.height = function() {
+__pulsar_NodeExt.prototype.height = function() {
     return this.rect.height
 };
 
 /**
  * @param width {Number|null}
  * */
-NodeExt.prototype.updateMaxWidth = function(width) {
+__pulsar_NodeExt.prototype.updateMaxWidth = function(width) {
     if (this.hasParent()) {
         this.maxWidth = Math.min(this.parent().maxWidth, width);
     }
@@ -386,7 +386,7 @@ NodeExt.prototype.updateMaxWidth = function(width) {
  * @param attrName {String}
  * @return {String|null}
  * */
-NodeExt.prototype.attr = function(attrName) {
+__pulsar_NodeExt.prototype.attr = function(attrName) {
     if (this.node.isElement()) {
         return this.node.getAttribute(attrName)
     }
@@ -396,7 +396,7 @@ NodeExt.prototype.attr = function(attrName) {
 /**
  * Get the formatted rect
  * */
-NodeExt.prototype.formatDOMRect = function() {
+__pulsar_NodeExt.prototype.formatDOMRect = function() {
     return __pulsar_utils__.formatDOMRect(this.rect)
 };
 
@@ -404,7 +404,7 @@ NodeExt.prototype.formatDOMRect = function() {
  * Get the formatted rect
  * @return string
  * */
-NodeExt.prototype.formatStyles = function() {
+__pulsar_NodeExt.prototype.formatStyles = function() {
     return this.propertyNames.map(propertyName => this.styles[propertyName]).join(", ")
 };
 
@@ -413,7 +413,7 @@ NodeExt.prototype.formatStyles = function() {
  * If the child element larger than the parent and the parent have overflow:hidden style,
  * the child element's DOMRect should be adjusted
  * */
-NodeExt.prototype.adjustDOMRect = function() {
+__pulsar_NodeExt.prototype.adjustDOMRect = function() {
     if (this.rect) {
         this.rect.width = Math.min(this.rect.width, this.maxWidth);
     }

@@ -17,7 +17,7 @@ class PulsarCrawler(
 ) {
     val globalCache get() = globalCacheFactory.globalCache
 
-    private val fetchCache get() = globalCache.fetchCaches.normalCache
+    private val fetchCache get() = globalCache.urlPool.normalCache
 
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig

@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 class CollectorHelper(val feeder: UrlFeeder) {
     private val dcLogger = getLogger(DataCollector::class)
-    private val fetchCaches get() = feeder.fetchCaches
+    private val urlPool get() = feeder.urlPool
 
     fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> = feeder.getCollectors(name)
 
@@ -41,19 +41,19 @@ class CollectorHelper(val feeder: UrlFeeder) {
 
     fun addAll(collectors: Iterable<PriorityDataCollector<UrlAware>>) {
         collectors.filterIsInstance<UrlCacheCollector>().forEach {
-            fetchCaches.unorderedCaches.add(it.urlCache)
+            urlPool.unorderedCaches.add(it.urlCache)
         }
         collectors.forEach { report(it) }
         feeder.addCollectors(collectors)
     }
 
-    fun addFetchCacheCollector(priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
-        return addFetchCacheCollector("", priority, urlLoader).also { it.name = "LFC@" + it.id }
+    fun addUrlPoolCollector(priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
+        return addUrlPoolCollector("", priority, urlLoader).also { it.name = "LFC@" + it.id }
     }
 
-    fun addFetchCacheCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
+    fun addUrlPoolCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
         val fetchCache = LoadingUrlCache(name, priority, urlLoader)
-        fetchCaches.unorderedCaches.add(fetchCache)
+        urlPool.unorderedCaches.add(fetchCache)
         val collector = UrlCacheCollector(fetchCache).also { it.name = name }
 
         report(collector)
@@ -62,13 +62,13 @@ class CollectorHelper(val feeder: UrlFeeder) {
         return collector
     }
 
-    fun addFetchCacheCollector(priority: Int): UrlCacheCollector {
-        return addFetchCacheCollector("", priority).also { it.name = "FC@" + it.id }
+    fun addUrlPoolCollector(priority: Int): UrlCacheCollector {
+        return addUrlPoolCollector("", priority).also { it.name = "FC@" + it.id }
     }
 
-    fun addFetchCacheCollector(name: String, priority: Int): UrlCacheCollector {
+    fun addUrlPoolCollector(name: String, priority: Int): UrlCacheCollector {
         val fetchCache = ConcurrentUrlCache(name)
-        fetchCaches.unorderedCaches.add(fetchCache)
+        urlPool.unorderedCaches.add(fetchCache)
         val collector = UrlCacheCollector(fetchCache).also { it.name = name }
 
         feeder.addCollector(collector)
@@ -111,7 +111,7 @@ class CollectorHelper(val feeder: UrlFeeder) {
     fun removeAll(collectors: Collection<DataCollector<UrlAware>>): Collection<DataCollector<UrlAware>> {
         feeder.removeAll(collectors)
         collectors.filterIsInstance<UrlCacheCollector>().map { it.urlCache }
-            .let { fetchCaches.unorderedCaches.removeAll(it) }
+            .let { urlPool.unorderedCaches.removeAll(it) }
 
         if (collectors.isNotEmpty()) {
             dcLogger.info("Removed collectors: " + collectors.joinToString { it.name })

@@ -15,7 +15,7 @@ open class TestBase {
     protected lateinit var urlLoader: TemporaryLocalFileUrlLoader
 
     protected val globalCache = GlobalCache(conf)
-    protected val fetchCaches get() = globalCache.fetchCaches
+    protected val urlPool get() = globalCache.urlPool
 
     @Before
     fun setUp() {

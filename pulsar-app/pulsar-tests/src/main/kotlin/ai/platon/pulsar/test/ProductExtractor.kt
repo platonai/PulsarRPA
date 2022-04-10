@@ -10,7 +10,7 @@ import java.nio.file.Path
 
 open class ProductExtractor(
     val exportDirectory: Path,
-    val context: SQLContext = SQLContexts.activate(),
+    val context: SQLContext = SQLContexts.create(),
 ) {
     val executor = VerboseSQLExecutor(context)
 

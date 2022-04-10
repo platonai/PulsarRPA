@@ -11,7 +11,7 @@ import java.sql.ResultSet
 import java.util.*
 
 open class VerboseSQLExecutor(
-    val context: SQLContext = SQLContexts.activate(),
+    val context: SQLContext = SQLContexts.create(),
 ) : VerboseCrawler(context) {
 
     fun execute(sql: String, printResult: Boolean = true, withHeader: Boolean = true, formatAsList: Boolean = false) {

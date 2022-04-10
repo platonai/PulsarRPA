@@ -11,7 +11,7 @@ class NewsCrawler(
     val portalUrl: String,
     val outLinkCss: String,
     val navigationCss: String,
-    val context: SQLContext = SQLContexts.activate(PULSAR_CONTEXT_CONFIG_LOCATION)
+    val context: SQLContext = SQLContexts.create(PULSAR_CONTEXT_CONFIG_LOCATION)
 ) {
     val sqlRunner = VerboseSQLRunner(context)
 

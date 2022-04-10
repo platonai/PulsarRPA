@@ -3,16 +3,10 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.ql.context.DefaultClassPathXmlSQLContext
-import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.ql.context.StaticH2SQLContext
-import org.junit.After
-import org.junit.Before
 import org.slf4j.LoggerFactory
-import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Instant
 import java.util.*
@@ -25,7 +19,7 @@ abstract class TestBase {
 
     companion object {
         init {
-            PulsarContexts.activate(DefaultClassPathXmlSQLContext())
+            PulsarContexts.create(DefaultClassPathXmlSQLContext())
 
             /**
              * Load options are in webpage scope, so it should be initialized after PulsarContextInitializer
@@ -45,7 +39,7 @@ abstract class TestBase {
         val startTime = Instant.now()
     }
 
-    val context = SQLContexts.activate(DefaultClassPathXmlSQLContext())
+    val context = SQLContexts.create(DefaultClassPathXmlSQLContext())
     val session = context.createSession()
 
     fun execute(sql: String, printResult: Boolean = true) {

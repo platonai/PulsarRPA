@@ -37,6 +37,8 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class StreamingCrawlerMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
@@ -153,18 +155,26 @@ open class StreamingCrawler<T : UrlAware>(
         else -> BROWSER_TAB_REQUIRED_MEMORY
     }
 
-    val idleTimeout = Duration.ofMinutes(10)
+    val defaultArgs = defaultOptions.toString()
+    private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull()
+    private var proxyOutOfService = 0
+
+    val outOfWorkTimeout = Duration.ofMinutes(10)
     val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(10))
 
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    val isIdle get() = idleTime > idleTimeout
-    val defaultArgs = defaultOptions.toString()
-
-    private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull()
-    private var proxyOutOfService = 0
-    private var quit = false
-    override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
+    val isOutOfWork get() = idleTime > outOfWorkTimeout
+    private val isIdle: Boolean
+        get() {
+            return !urls.iterator().hasNext()
+                    && globalLoadingUrls.isEmpty()
+                    && idleTime > Duration.ofSeconds(5)
+        }
+    private val lock = ReentrantLock()
+    private val notBusy = lock.newCondition()
+    private var forceQuit = false
+    override val isActive get() = super.isActive && !forceQuit && !isIllegalApplicationState.get()
 
     @Volatile
     private var flowState = FlowState.CONTINUE
@@ -207,8 +217,12 @@ open class StreamingCrawler<T : UrlAware>(
         startCrawlLoop(scope)
     }
 
+    override fun await() {
+        lock.withLock { notBusy.await() }
+    }
+
     fun quit() {
-        quit = true
+        forceQuit = true
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
@@ -278,18 +292,24 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun checkEmptyUrlSequence(idleSeconds: Int) {
+        if (urls.iterator().hasNext()) {
+            return
+        }
+
         val reportPeriod = when {
             idleSeconds < 1000 -> 120
             idleSeconds < 10000 -> 300
             else -> 6000
         }
 
-        if (!urls.iterator().hasNext()) {
-            if (idleSeconds % reportPeriod == 0) {
-                logger.debug("The url sequence is empty")
-            }
+        if (idleSeconds % reportPeriod == 0) {
+            logger.debug("The url sequence is empty")
+        }
 
-            sleepSeconds(1)
+        sleepSeconds(1)
+
+        if (isIdle) {
+            lock.withLock { notBusy.signalAll() }
         }
     }
 
@@ -458,9 +478,6 @@ open class StreamingCrawler<T : UrlAware>(
         return url
     }
 
-    /**
-     * TODO: keep consistent with protocolStatus.isRetry and crawlStatus.isRetry
-     * */
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         if (url is ListenableHyperlink) {
             url.crawlEventHandler.onAfterLoad(url, page)
@@ -470,10 +487,17 @@ open class StreamingCrawler<T : UrlAware>(
             crawlEventHandler.onAfterLoad(url, page)
         }
 
+        if (conf.getBoolean(CRAWL_SMART_RETRY, false)) {
+            handleRetry(url, page)
+        }
+    }
+
+    private fun handleRetry(url: UrlAware, page: WebPage?) {
         when {
-            page == null -> handleRetry(url, page)
-            page.protocolStatus.isRetry -> handleRetry(url, page)
-            page.crawlStatus.isRetry -> handleRetry(url, page)
+            !isActive -> return
+            page == null -> handleRetry0(url, page)
+            page.protocolStatus.isRetry -> handleRetry0(url, page)
+            page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
                 globalMetrics.gone.mark()
                 taskLogger.info("{}", LoadedPageFormatter(page, prefix = "Gone"))
@@ -558,7 +582,7 @@ open class StreamingCrawler<T : UrlAware>(
         return false
     }
 
-    private fun handleRetry(url: UrlAware, page: WebPage?) {
+    private fun handleRetry0(url: UrlAware, page: WebPage?) {
         val nextRetryNumber = 1L + (page?.fetchRetries ?: 0)
 
         if (page != null && nextRetryNumber > page.maxRetries) {
@@ -570,7 +594,7 @@ open class StreamingCrawler<T : UrlAware>(
 
         // TODO: use a retry strategy
         val delay = Duration.ofMinutes(1L + 2 * nextRetryNumber)
-//        val delayCache = globalCache.fetchCaches.delayCache
+//        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
 //        delayCache.add(DelayUrl(url, delay))
@@ -586,7 +610,7 @@ open class StreamingCrawler<T : UrlAware>(
     private fun fetchDelayed(url: UrlAware, delay: Duration) {
         val globalCache = globalCacheFactory?.globalCache ?: return
 
-        val delayCache = globalCache.fetchCaches.delayCache
+        val delayCache = globalCache.urlPool.delayCache
         // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
         url.args = url.args?.let { LoadOptions.eraseOptions(it, "refresh") }

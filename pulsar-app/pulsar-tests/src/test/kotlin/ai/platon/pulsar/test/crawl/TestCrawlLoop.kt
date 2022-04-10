@@ -9,12 +9,12 @@ import kotlin.test.assertTrue
 
 class TestCrawlLoop : TestBase() {
 
-    private val fetchQueue get() = globalCache.fetchCaches.normalCache.nReentrantQueue
+    private val fetchQueue get() = globalCache.urlPool.normalCache.nReentrantQueue
 
     @Before
     fun setup() {
         // active CrawlLoop bean
-        PulsarContexts.activate().crawlLoops.start()
+        PulsarContexts.create().crawlLoops.start()
     }
 
     @Test

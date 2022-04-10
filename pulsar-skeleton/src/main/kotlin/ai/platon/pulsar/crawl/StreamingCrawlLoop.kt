@@ -1,14 +1,18 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.collect.UrlFeeder
-import ai.platon.pulsar.common.config.CapabilityTypes.ENABLE_DEFAULT_DATA_COLLECTORS
+import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 open class StreamingCrawlLoop(
     /**
@@ -27,7 +31,9 @@ open class StreamingCrawlLoop(
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private var running = AtomicBoolean()
+    private val scope = CoroutineScope(Dispatchers.Default)
     private var crawlJob: Job? = null
+    private val started = CountDownLatch(1)
 
     val globalCache get() = globalCacheFactory.globalCache
 
@@ -59,7 +65,6 @@ open class StreamingCrawlLoop(
     @Synchronized
     override fun stop() {
         if (running.compareAndSet(true, false)) {
-            // fetchIterable.clear()
             crawler.quit()
             runBlocking {
                 crawlJob?.cancelAndJoin()
@@ -70,13 +75,18 @@ open class StreamingCrawlLoop(
         }
     }
 
+    override fun await() {
+        started.await()
+        crawler.await()
+    }
+
     private fun start0() {
         logger.info("Registered {} hyperlink collectors | #{} @{}", urlFeeder.collectors.size, id, hashCode())
 
         /**
          * The pulsar session
          * */
-        val session = PulsarContexts.activate().createSession()
+        val session = PulsarContexts.createSession()
 
         val urls = urlFeeder.asSequence()
         crawler = StreamingCrawler(urls,
@@ -84,15 +94,16 @@ open class StreamingCrawlLoop(
             noProxy = false
         )
 
-        crawlJob = GlobalScope.launch {
+        crawlJob = scope.launch {
             supervisorScope {
+                started.countDown()
                 crawler.run(this)
             }
         }
     }
 
     private fun createHyperlinkFeeder(): UrlFeeder {
-        val enableDefaults = config.getBoolean(ENABLE_DEFAULT_DATA_COLLECTORS, true)
-        return UrlFeeder(globalCache.fetchCaches, enableDefaults = enableDefaults)
+        val enableDefaults = config.getBoolean(CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS, true)
+        return UrlFeeder(globalCache.urlPool, enableDefaults = enableDefaults)
     }
 }

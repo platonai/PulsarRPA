@@ -32,7 +32,7 @@ object CommonFunctions {
 
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
-    private val sqlContext get() = SQLContexts.activate()
+    private val sqlContext get() = SQLContexts.create()
     private val unmodifiedConfig get() = sqlContext.unmodifiedConfig
 
     /**

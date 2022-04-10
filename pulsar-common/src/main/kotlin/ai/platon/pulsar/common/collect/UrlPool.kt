@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.UrlPool.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlAware
 import com.google.common.primitives.Ints
 import org.apache.commons.collections4.queue.SynchronizedQueue
@@ -64,8 +65,13 @@ interface UrlPool {
     val highestCache: UrlCache
 
     fun initialize()
+    fun add(url: String, priority: Priority13 = Priority13.NORMAL): Boolean
+    fun add(url: UrlAware): Boolean
+    fun addAll(urls: Iterable<String>, priority: Priority13 = Priority13.NORMAL): Boolean
+    fun addAll(urls: Collection<UrlAware>): Boolean
     fun removeDeceased()
     fun clear()
+    fun hasMore(): Boolean
 }
 
 /**
@@ -89,6 +95,28 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override val higher5Cache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER5.value]!!
     override val highestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHEST.value]!!
 
+    override fun add(url: String, priority: Priority13) = add(Hyperlink(url))
+
+    override fun add(url: UrlAware): Boolean {
+        val added = orderedCaches[url.priority]?.nReentrantQueue?.add(url)
+        return added == true
+    }
+
+    override fun addAll(urls: Iterable<String>, priority: Priority13): Boolean {
+        return addAll(urls.map { Hyperlink(it) })
+    }
+
+    override fun addAll(urls: Collection<UrlAware>): Boolean {
+        var count = 0
+        urls.forEach {
+            val added = orderedCaches[it.priority]?.nReentrantQueue?.add(it)
+            if (added == true) {
+                ++count
+            }
+        }
+        return count > 0
+    }
+
     override fun removeDeceased() {
         ensureInitialized()
         orderedCaches.values.forEach { it.removeDeceased() }
@@ -102,6 +130,10 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
         unorderedCaches.clear()
         realTimeCache.clear()
         delayCache.clear()
+    }
+
+    override fun hasMore(): Boolean {
+        return totalItems > 0
     }
 
     private fun ensureInitialized(): AbstractUrlPool {

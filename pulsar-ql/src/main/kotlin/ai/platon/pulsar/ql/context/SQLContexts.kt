@@ -139,44 +139,42 @@ open class DefaultClassPathXmlSQLContext() : ClassPathXmlSQLContext(
 
 object SQLContexts {
     @Synchronized
-    fun activate(): SQLContext = (PulsarContexts.activeContext as? SQLContext)
-        ?: activate(DefaultClassPathXmlSQLContext())
+    fun create(): SQLContext = (PulsarContexts.activeContext as? SQLContext)
+        ?: create(DefaultClassPathXmlSQLContext())
 
     @Synchronized
-    fun activate(context: SQLContext): SQLContext = context.also { PulsarContexts.activate(it) }
+    fun create(context: SQLContext): SQLContext = context.also { PulsarContexts.create(it) }
 
     @Synchronized
-    fun activate(context: ApplicationContext): SQLContext =
-        activate(H2SQLContext(context as AbstractApplicationContext))
+    fun create(context: ApplicationContext): SQLContext =
+        create(H2SQLContext(context as AbstractApplicationContext))
 
     @Synchronized
-    fun activate(contextLocation: String): SQLContext = activate(ClassPathXmlSQLContext(contextLocation))
+    fun create(contextLocation: String): SQLContext = create(ClassPathXmlSQLContext(contextLocation))
 
     @Synchronized
-    fun createSession() = activate().createSession()
+    fun createSession() = create().createSession()
 
     @Synchronized
     fun shutdown() {
         PulsarContexts.shutdown()
-        // TODO: the process hung up with unknown reason, we will fix this
-        // exitProcess(0)
     }
 }
 
 fun withSQLContext(block: (context: SQLContext) -> Unit) {
-    SQLContexts.activate(DefaultClassPathXmlSQLContext()).use {
+    SQLContexts.create(DefaultClassPathXmlSQLContext()).use {
         block(it)
     }
 }
 
 fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit) {
-    SQLContexts.activate(ClassPathXmlSQLContext(contextLocation)).use {
+    SQLContexts.create(ClassPathXmlSQLContext(contextLocation)).use {
         block(it)
     }
 }
 
 fun withSQLContext(applicationContext: ApplicationContext, block: (context: SQLContext) -> Unit) {
-    SQLContexts.activate(applicationContext).use {
+    SQLContexts.create(applicationContext).use {
         block(it)
     }
 }

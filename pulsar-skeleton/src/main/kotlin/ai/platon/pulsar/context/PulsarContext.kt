@@ -3,6 +3,7 @@ package ai.platon.pulsar.context
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
@@ -27,6 +28,8 @@ interface PulsarContext: AutoCloseable {
     val applicationContext: ApplicationContext
 
     val unmodifiedConfig: ImmutableConfig
+
+    val crawlPool: UrlPool
 
     val crawlLoops: CrawlLoops
 
@@ -120,6 +123,10 @@ interface PulsarContext: AutoCloseable {
 
     fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage>
 
+    fun asyncLoad(url: UrlAware): PulsarContext
+
+    fun asyncLoadAll(urls: Collection<UrlAware>): PulsarContext
+
     /**
      * Parse the WebPage using Jsoup
      */
@@ -132,6 +139,11 @@ interface PulsarContext: AutoCloseable {
     fun delete(page: WebPage)
 
     fun flush()
+
+    /**
+     * Wait until all tasks are done.
+     * */
+    fun await()
 
     fun registerShutdownHook()
 }

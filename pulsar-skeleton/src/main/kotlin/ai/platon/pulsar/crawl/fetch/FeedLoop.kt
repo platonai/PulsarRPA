@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.ReducerContext
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized

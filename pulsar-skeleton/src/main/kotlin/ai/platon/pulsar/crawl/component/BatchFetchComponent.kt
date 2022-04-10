@@ -25,7 +25,7 @@ class BatchFetchComponent(
     protocolFactory: ProtocolFactory,
     immutableConfig: ImmutableConfig
 ) : FetchComponent(coreMetrics, protocolFactory, immutableConfig) {
-    private final val logger = LoggerFactory.getLogger(BatchFetchComponent::class.java)
+    private val logger = LoggerFactory.getLogger(BatchFetchComponent::class.java)
 
     constructor(webDb: WebDb, immutableConfig: ImmutableConfig)
             : this(webDb, null, null, ProtocolFactory(immutableConfig), immutableConfig)

@@ -51,6 +51,8 @@ class ChromeDevtoolsDriver(
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
+//    private val preloadJs by lazy { generatePreloadJs() }
+    private val preloadJs get() = generatePreloadJs()
     private val toolsConfig = DevToolsConfig()
     private val chromeTab: ChromeTab
     private val devTools: RemoteDevTools
@@ -148,18 +150,21 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    /**
+     * The expression should be a single line
+     * */
     override suspend fun evaluate(expression: String): Any? {
         if (!isActive) return null
 
         refreshState()
         try {
-            val evaluate = runtime.evaluate(expression)
+            val evaluate = runtime.evaluate(browserSettings.nameMangling(expression))
 
             val exception = evaluate?.exceptionDetails?.exception
             if (isActive && exception != null) {
 //                logger.warn(exception.value?.toString())
 //                logger.warn(exception.unserializableValue)
-                logger.debug(exception.description + "\n>>>$expression<<<")
+                logger.info(exception.description + "\n>>>$expression<<<")
             }
 
             val result = evaluate?.result
@@ -341,7 +346,6 @@ class ChromeDevtoolsDriver(
         network.enable()
 
         try {
-            val preloadJs = browserSettings.generatePreloadJs(false)
             page.addScriptToEvaluateOnNewDocument(preloadJs)
 
             if (enableUrlBlocking) {
@@ -478,6 +482,11 @@ class ChromeDevtoolsDriver(
                 // fetch.fulfillRequest(it.requestId, 200, listOf())
             }
         }
+    }
+
+    private fun generatePreloadJs(): String {
+        val js = browserSettings.generatePreloadJs(false)
+        return browserSettings.nameMangling(js)
     }
 
     @Throws(WebDriverException::class)

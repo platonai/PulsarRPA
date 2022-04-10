@@ -1,11 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import kotlinx.coroutines.runBlocking
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.time.Duration
@@ -71,7 +67,7 @@ abstract class AbstractWebDriver(
         }
 
         if (status.compareAndSet(Status.WORKING, Status.CANCELED)) {
-            runBlocking { stop() }
+            // stop()
         }
     }
 
@@ -102,9 +98,9 @@ abstract class AbstractWebDriver(
         return result?.toString()
     }
 
-    override suspend fun allTexts(selector: String): String? {
+    override suspend fun allTexts(selector: String): List<String> {
         val result = evaluate("__pulsar_utils__.allTexts('$selector')")
-        return result?.toString()
+        return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
     override suspend fun firstAttr(selector: String, attrName: String): String? {
@@ -112,9 +108,9 @@ abstract class AbstractWebDriver(
         return result?.toString()
     }
 
-    override suspend fun allAttrs(selector: String, attrName: String): String? {
+    override suspend fun allAttrs(selector: String, attrName: String): List<String> {
         val result = evaluate("__pulsar_utils__.allAttrs('$selector', '$attrName')")
-        return result?.toString()
+        return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
     override suspend fun newSession(): Connection {

@@ -9,8 +9,6 @@ import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.protocol.ProtocolFactory
-import org.junit.Before
 import org.junit.Test
 import java.lang.IllegalArgumentException
 import java.nio.file.Paths
@@ -21,7 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class HyperlinkCollectorTests {
-    private val context = PulsarContexts.activate(PULSAR_CONTEXT_CONFIG_LOCATION)
+    private val context = PulsarContexts.create(PULSAR_CONTEXT_CONFIG_LOCATION)
     private val session = context.createSession()
 
     @Test

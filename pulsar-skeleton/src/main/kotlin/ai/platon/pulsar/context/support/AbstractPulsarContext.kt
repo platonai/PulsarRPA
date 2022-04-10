@@ -4,9 +4,11 @@ import ai.platon.pulsar.AbstractPulsarSession
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
@@ -93,6 +95,11 @@ abstract class AbstractPulsarContext(
      * The load component
      * */
     open val loadComponent: LoadComponent get() = getBean()
+
+    /**
+     * The url pool to fetch
+     * */
+    override val crawlPool: UrlPool get() = globalCacheFactory.globalCache.urlPool
 
     /**
      * The main loop
@@ -319,6 +326,16 @@ abstract class AbstractPulsarContext(
         return if (isActive) loadComponent.loadAll(urls, options) else listOf()
     }
 
+    override fun asyncLoad(url: UrlAware): AbstractPulsarContext {
+        crawlPool.add(url)
+        return this
+    }
+
+    override fun asyncLoadAll(urls: Collection<UrlAware>): AbstractPulsarContext {
+        crawlPool.addAll(urls)
+        return this
+    }
+
     /**
      * Parse the WebPage using parseComponent
      */
@@ -341,6 +358,12 @@ abstract class AbstractPulsarContext(
 
     override fun flush() {
         webDbOrNull?.flush()
+    }
+
+    override fun await() {
+        if (isActive) {
+            crawlLoops.await()
+        }
     }
 
     /**
@@ -394,16 +417,23 @@ abstract class AbstractPulsarContext(
             globalCacheFactory.globalCache.clearCaches()
 
             sessions.values.forEach {
-                it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
+                kotlin.runCatching { it.close() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
             }
+            sessions.clear()
 
             closableObjects.forEach {
-                it.runCatching { it.close() }.onFailure { logger.warn(it.message) }
+                kotlin.runCatching { it.close() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
             }
+            closableObjects.clear()
 
-            kotlin.runCatching { crawlLoops.stop() }.onFailure { logger.warn(it.message) }
+            if (applicationContext.isActive) {
+                kotlin.runCatching { crawlLoops.stop() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
 
-            applicationContext.close()
+                applicationContext.close()
+            }
         }
 
         AppContext.endTerminate()

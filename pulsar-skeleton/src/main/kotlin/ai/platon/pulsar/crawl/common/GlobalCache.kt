@@ -58,7 +58,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * The fetch cache manager, hold on queues of fetch items
      * */
-    open var fetchCaches: UrlPool = ConcurrentUrlPool(conf).apply { initialize() }
+    open var urlPool: UrlPool = ConcurrentUrlPool(conf).apply { initialize() }
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */
@@ -74,14 +74,14 @@ open class GlobalCache(val conf: ImmutableConfig) {
         fetchingUrlQueue.clear()
         pageCache.clear()
         documentCache.clear()
-        fetchCaches = ConcurrentUrlPool(conf).apply { initialize() }
+        urlPool = ConcurrentUrlPool(conf).apply { initialize() }
     }
 
     fun clearCaches() {
         fetchingUrlQueue.clear()
         pageCache.clear()
         documentCache.clear()
-        fetchCaches.clear()
+        urlPool.clear()
     }
 
     /**

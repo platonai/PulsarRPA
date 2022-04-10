@@ -26,7 +26,7 @@ class TestWebDriver {
             System.setProperty(PROXY_USE_PROXY, "no")
         }
 
-        val context = PulsarContexts.activate()
+        val context = PulsarContexts.create()
         val conf = context.unmodifiedConfig
         val driverControl = WebDriverSettings(conf)
         val driverPoolManager = DefaultWebDriverPoolManager(conf)

@@ -27,12 +27,16 @@ import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
-    private val pulsarContext get() = PulsarContexts.activate() as AbstractPulsarContext
+    private val pulsarContext get() = PulsarContexts.create() as AbstractPulsarContext
 
     // TODO: better initialization
     private val browserEmulator by lazy {
-        pulsarContext.runCatching { getBean<BrowserEmulatedFetcher>() }.getOrNull()
-            ?: DefaultBrowserEmulatedFetcher(pulsarContext.unmodifiedConfig)
+        val conf = pulsarContext.unmodifiedConfig
+        val emulator = pulsarContext.getBeanOrNull<BrowserEmulatedFetcher>() ?: DefaultBrowserEmulatedFetcher(conf)
+        if (emulator is DefaultBrowserEmulatedFetcher) {
+            pulsarContext.registerClosable(emulator)
+        }
+        emulator
     }
 
     override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {

@@ -22,7 +22,7 @@ class ScrapeService(
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
     private val responseCache = ConcurrentSkipListMap<String, ScrapeResponse>()
-    private val fetchCaches get() = globalCacheFactory.globalCache.fetchCaches
+    private val urlPool get() = globalCacheFactory.globalCache.urlPool
 
     /**
      * Execute a scrape task and wait until the execution is done,
@@ -30,7 +30,7 @@ class ScrapeService(
      * */
     fun executeQuery(request: ScrapeRequest): ScrapeResponse {
         val hyperlink = createScrapeHyperlink(request)
-        fetchCaches.higher3Cache.reentrantQueue.add(hyperlink)
+        urlPool.higher3Cache.reentrantQueue.add(hyperlink)
         return hyperlink.get(3, TimeUnit.MINUTES)
     }
 
@@ -40,7 +40,7 @@ class ScrapeService(
     fun submitJob(request: ScrapeRequest): String {
         val hyperlink = createScrapeHyperlink(request)
         responseCache[hyperlink.uuid] = hyperlink.response
-        fetchCaches.normalCache.reentrantQueue.add(hyperlink)
+        urlPool.normalCache.reentrantQueue.add(hyperlink)
         return hyperlink.uuid
     }
 
