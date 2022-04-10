@@ -173,7 +173,7 @@ class ProxyContext(
 
             if (proxy != null) {
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
-                val proxyEntry0 = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.dataDir) { proxy }
+                val proxyEntry0 = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.contextDir) { proxy }
                 proxyEntry0.startWork()
                 return ProxyContext(proxyEntry0, proxyPoolManager, driverContext, conf)
             } else {

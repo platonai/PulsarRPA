@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
@@ -40,12 +41,12 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Create a new context or return an exist one
      * */
-    abstract fun computeNextContext(): PrivacyContext
+    abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
 
     /**
      * Create a new context or return an exist one
      * */
-    abstract fun computeIfNecessary(): PrivacyContext
+    abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext
 
     /**
      * Create a context with [id] and add to active context list if not absent

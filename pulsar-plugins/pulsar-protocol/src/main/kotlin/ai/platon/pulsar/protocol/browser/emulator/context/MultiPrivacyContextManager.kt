@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -45,7 +46,7 @@ class MultiPrivacyContextManager(
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         metrics.tasks.mark()
-        return run(computeNextContext(), task, fetchFun).also { metrics.finishes.mark() }
+        return run(computeNextContext(task.fingerprint), task, fetchFun).also { metrics.finishes.mark() }
     }
 
     @Throws(ProxyException::class)
@@ -59,22 +60,22 @@ class MultiPrivacyContextManager(
     }
 
     @Throws(ProxyException::class)
-    override fun computeNextContext(): PrivacyContext {
-        val context = computeIfNecessary()
+    override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
+        val context = computeIfNecessary(fingerprint)
         if (context.isActive) {
             return context
         }
 
         close(context)
 
-        return computeIfAbsent(privacyContextIdGenerator())
+        return computeIfAbsent(privacyContextIdGenerator(fingerprint))
     }
 
-    override fun computeIfNecessary(): PrivacyContext {
+    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         if (activeContexts.size < numPrivacyContexts) {
             synchronized(activeContexts) {
                 if (activeContexts.size < numPrivacyContexts) {
-                    computeIfAbsent(privacyContextIdGenerator())
+                    computeIfAbsent(privacyContextIdGenerator(fingerprint))
                 }
             }
         }
