@@ -30,7 +30,7 @@ open class NormUrl constructor(
     val spec = url.toString()
     val hrefSpec = href?.toString()
     val args = options.toString()
-    val configuredUrl = "$spec $args"
+    val configuredUrl = "$spec $args".trim()
 
     val isEmpty get() = spec.isEmpty()
     val isNotEmpty get() = !isEmpty

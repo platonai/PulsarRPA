@@ -605,6 +605,8 @@ open class LoadOptions(
 
         fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }
 
+        fun normalize(args: String) = parse(args, VolatileConfig.UNSAFE).toString()
+
         fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
 
         /**
