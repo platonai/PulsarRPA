@@ -215,7 +215,7 @@ class ChromeDevtoolsDriver(
     override suspend fun currentUrl(): String {
         refreshState()
         navigateUrl = try {
-            if (isActive) navigateUrl else mainFrame.url
+            if (!isActive) navigateUrl else mainFrame.url
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to retrieve current url, session might be closed, {}", e.message)

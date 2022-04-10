@@ -18,8 +18,6 @@ open class VerboseCrawler(
 ): AutoCloseable {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
 
-    var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
-
     constructor(context: PulsarContext) : this(context.createSession())
 
     fun open(url: String) {
@@ -37,7 +35,6 @@ open class VerboseCrawler(
     }
 
     fun load(url: String, options: LoadOptions) {
-        options.eventHandler = eventHandler
         val page = session.load(url, options)
         val doc = session.parse(page)
         doc.absoluteLinks()
@@ -67,7 +64,6 @@ open class VerboseCrawler(
     }
 
     fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
-        options.eventHandler = eventHandler
         val page = session.load(portalUrl, options)
 
 //        val page = session.load(portalUrl, options)
@@ -87,7 +83,6 @@ open class VerboseCrawler(
         logger.info("Total {} items to load", links.size)
 
         val itemOptions = options.createItemOptions().apply { parse = true }
-        itemOptions.eventHandler = eventHandler
         val pages = session.loadAll(links, itemOptions)
 
         return pages

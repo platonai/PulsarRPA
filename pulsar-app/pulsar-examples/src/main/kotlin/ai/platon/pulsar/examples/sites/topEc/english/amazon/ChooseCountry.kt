@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.amazon
+package ai.platon.pulsar.examples.sites.topEc.english.amazon
 
 import ai.platon.pulsar.amazon.environment.ChooseCountry
 import ai.platon.pulsar.browser.common.BrowserSettings

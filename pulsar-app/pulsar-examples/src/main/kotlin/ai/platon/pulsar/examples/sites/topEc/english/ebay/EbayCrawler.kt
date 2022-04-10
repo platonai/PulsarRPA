@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.ebay
+package ai.platon.pulsar.examples.sites.topEc.english.ebay
 
 import ai.platon.pulsar.context.PulsarContexts
 

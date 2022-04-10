@@ -13,21 +13,20 @@ open class SiMuCrawler {
     val loginUrl = portalUrl
     val activateSelector = "button.comp-login-b2"
     val usernameSelector = "input[name=username]"
-    val username = System.getenv("EXOTIC_SIMUWANG_USERNAME")
+    val username = System.getenv("EXOTIC_SIMUWANG_USERNAME") ?: "MustFallUsername"
     val passwordSelector = "input[type=password]"
-    val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD")
+    val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD") ?: "MustFallPassword"
     val submitSelector = "button.comp-login-btn"
     // mask layer handling
     val closeMaskLayerSelector = ".comp-alert-btn"
 
     val context = SQLContexts.create()
     val session = context.createSession()
+    val loginHandler = LoginHandler(loginUrl,
+        usernameSelector, username, passwordSelector, password, submitSelector, activateSelector)
+    val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
     val eventHandler = DefaultPulsarEventHandler().also {
-        val loginHandler = LoginHandler(loginUrl,
-            usernameSelector, username, passwordSelector, password, submitSelector, activateSelector)
         it.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
-
-        val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
         it.simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
     }
     val options = session.options(args, eventHandler)

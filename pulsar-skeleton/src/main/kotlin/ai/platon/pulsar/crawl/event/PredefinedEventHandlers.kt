@@ -8,20 +8,27 @@ import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
 import java.time.Duration
 
-class LoginHandler(
+open class LoginHandler(
     val loginUrl: String,
     val usernameSelector: String,
     val username: String,
     val passwordSelector: String,
     val password: String,
     val submitSelector: String,
+    val warnUpUrl: String? = null,
     val activateSelector: String? = null,
     val activateTimeout: Duration = Duration.ofMinutes(3),
 ) : AbstractWebDriverHandler() {
+
     private val logger = getLogger(this)
 
     override suspend fun invokeDeferred(driver: WebDriver): Any? {
         logger.info("Navigating to login page ... | {}", loginUrl)
+
+        warnUpUrl?.let {
+            driver.navigateTo(it)
+            delay(5_000)
+        }
 
         driver.navigateTo(loginUrl)
 
@@ -42,9 +49,8 @@ class LoginHandler(
         driver.type(passwordSelector, password)
         driver.click(submitSelector, count = 2)
 
-        // TODO: wait for navigation
         logger.info("Cookies before login: {}", driver.getCookies())
-        delay(10_000)
+        driver.waitForNavigation()
         logger.info("Cookies after login: {}", driver.getCookies())
 
         return null

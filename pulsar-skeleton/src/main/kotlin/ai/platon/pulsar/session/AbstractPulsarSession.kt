@@ -65,8 +65,7 @@ abstract class AbstractPulsarSession(
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
     /**
-     * The scoped bean factory: for each volatileConfig object, there is a bean factory
-     * TODO: session scoped?
+     * The session scoped bean factory
      * */
     override val sessionBeanFactory = BeanFactory(sessionConfig)
 
@@ -179,7 +178,6 @@ abstract class AbstractPulsarSession(
 
     @Throws(Exception::class)
     override fun load(normUrl: NormUrl): WebPage {
-        ensureActive()
         if (!enableCache) {
             return context.load(normUrl)
         }
@@ -200,7 +198,6 @@ abstract class AbstractPulsarSession(
 
     @Throws(Exception::class)
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        ensureActive()
         if (!enableCache) {
             return context.loadDeferred(normUrl)
         }
@@ -209,14 +206,12 @@ abstract class AbstractPulsarSession(
     }
 
     private fun loadAndCache(normUrl: NormUrl): WebPage {
-        ensureActive()
         return context.load(normUrl).also {
             pageCache.putDatum(it.url, it)
         }
     }
 
     private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
-        ensureActive()
         return context.loadDeferred(normUrl).also {
             pageCache.putDatum(it.url, it)
         }
@@ -280,7 +275,6 @@ abstract class AbstractPulsarSession(
      * @return The web pages
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): Collection<WebPage> {
-        ensureActive()
         val normUrls = normalize(urls, options, areItems)
         return context.loadAll(normUrls, options)
     }
@@ -333,7 +327,6 @@ abstract class AbstractPulsarSession(
     override fun loadDocument(url: String, args: String) = loadDocument(url, options(args))
 
     override fun loadDocument(url: String, options: LoadOptions): FeaturedDocument {
-        ensureActive()
         val normUrl = normalize(url, options)
         return parse(load(normUrl))
     }
@@ -405,21 +398,18 @@ abstract class AbstractPulsarSession(
     override fun persist(page: WebPage) = ensureActive { context.webDb.put(page) }
 
     override fun export(page: WebPage, ident: String): Path {
-        ensureActive()
         val filename = AppPaths.fromUri(page.url, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(page.contentAsString, path, true)
     }
 
     override fun export(doc: FeaturedDocument, ident: String): Path {
-        ensureActive()
         val filename = AppPaths.fromUri(doc.baseUri, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(doc.prettyHtml, path, true)
     }
 
     override fun exportTo(doc: FeaturedDocument, path: Path): Path {
-        ensureActive()
         return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
     }
 
@@ -437,8 +427,6 @@ abstract class AbstractPulsarSession(
     }
 
     private fun parse0(page: WebPage, noCache: Boolean = false): FeaturedDocument {
-        ensureActive()
-
         val nil = FeaturedDocument.NIL
 
         if (page.isNil) {
@@ -465,12 +453,6 @@ abstract class AbstractPulsarSession(
         }
 
         return link.takeUnless { ignoreQuery } ?: UrlUtils.getUrlWithoutParameters(link)
-    }
-
-    private fun ensureActive() {
-        if (!isActive) {
-            throw IllegalApplicationContextStateException("Pulsar session $this is not active")
-        }
     }
 
     private fun <T> ensureActive(action: () -> T): T =
