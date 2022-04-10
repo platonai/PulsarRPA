@@ -1,12 +1,13 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.EmulateEventHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory
@@ -16,8 +17,6 @@ open class VerboseCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
 ): AutoCloseable {
     val logger = LoggerFactory.getLogger(VerboseCrawler::class.java)
-
-    var eventHandler: EmulateEventHandler? = null
 
     constructor(context: PulsarContext) : this(context.createSession())
 
@@ -36,9 +35,7 @@ open class VerboseCrawler(
     }
 
     fun load(url: String, options: LoadOptions) {
-        options.addEventHandler(eventHandler)
         val page = session.load(url, options)
-        options.removeEventHandler(eventHandler)
         val doc = session.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
@@ -67,9 +64,7 @@ open class VerboseCrawler(
     }
 
     fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
-        options.addEventHandler(eventHandler)
         val page = session.load(portalUrl, options)
-        options.removeEventHandler(eventHandler)
 
 //        val page = session.load(portalUrl, options)
         if (!page.protocolStatus.isSuccess) {
@@ -87,10 +82,8 @@ open class VerboseCrawler(
             .take(options.topLinks).map { it.spec }
         logger.info("Total {} items to load", links.size)
 
-        val itemOptions = options.createItemOptions(session.sessionConfig).apply { parse = true }
-        options.addEventHandler(eventHandler)
+        val itemOptions = options.createItemOptions().apply { parse = true }
         val pages = session.loadAll(links, itemOptions)
-        options.removeEventHandler(eventHandler)
 
         return pages
     }

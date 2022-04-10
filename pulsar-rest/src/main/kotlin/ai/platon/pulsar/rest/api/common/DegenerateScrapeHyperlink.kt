@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest.api.common
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -21,9 +21,6 @@ open class DegenerateScrapeHyperlink(
     private val logger = LoggerFactory.getLogger(DegenerateScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
 
-//    override val loadEventHandler: LoadEventHandler = EmptyLoadEventHandler()
-//    override val jsEventHandler: JsEventHandler = EmptyJsEventHandler()
-
     init {
         registerEventHandler()
     }
@@ -41,7 +38,7 @@ open class DegenerateScrapeHyperlink(
     }
 
     private fun registerEventHandler() {
-        crawlEventHandler.onAfterLoadPipeline.addLast { url, page ->
+        eventHandler.crawlEventHandler.onAfterLoad.addLast { url, page ->
             try {
                 executeQuery()
             } catch (t: Throwable) {

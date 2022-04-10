@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration scan="true" scanPeriod="30 seconds" debug="false">
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
     <property name="logging.dir" value="${logging.dir:-logs}" />
     <property name="logging.file" value="${logging.file:-pulsar.log}" />
     <property name="logging.c.file" value="${logging.c.file:-pulsar.c.log}" />
@@ -17,9 +17,9 @@
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%.10t]){faint} %clr(%c{2}){cyan} %clr(-){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
 
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
+        <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-        </layout>
+        </encoder>
     </appender>
     <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>${logging.dir}/${logging.file}</File>
@@ -80,17 +80,30 @@
         <appender-ref ref="SQL"/>
     </logger>
 
+    <logger name="org.apache.gora" level="ERROR"/>
+    <logger name="org.apache.zookeeper" level="ERROR"/>
+    <logger name="org.apache.solr" level="INFO"/>
+    <logger name="org.apache.hadoop" level="WARN"/>
+
+    <logger name="org.springframework.context" level="INFO"/>
+    <logger name="org.springframework.core" level="INFO"/>
+    <logger name="org.springframework.core.env" level="INFO"/>
+
     <logger name="ai.platon.pulsar" level="INFO"/>
+    <logger name="ai.platon.pulsar.common" level="WARN"/>
+    <logger name="ai.platon.pulsar.context" level="WARN"/>
+    <logger name="ai.platon.pulsar.session" level="WARN"/>
     <logger name="ai.platon.pulsar.ql" level="INFO"/>
+    <logger name="ai.platon.pulsar.ql.context" level="WARN"/>
+
     <logger name="ai.platon.pulsar.net" level="INFO"/>
-    <logger name="ai.platon.pulsar.browser" level="INFO"/>
+    <logger name="ai.platon.pulsar.browser" level="WARN"/>
     <logger name="ai.platon.pulsar.parse.html" level="INFO"/>
     <logger name="ai.platon.pulsar.crawl.parse" level="INFO"/>
-    <logger name="ai.platon.pulsar.cli.shell" level="INFO"/>
     <logger name="ai.platon.pulsar.crawl" level="INFO"/>
     <logger name="ai.platon.pulsar.crawl.protocol" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser.driver" level="INFO"/>
+    <logger name="ai.platon.pulsar.protocol.browser" level="WARN"/>
+    <logger name="ai.platon.pulsar.protocol.browser.driver" level="WARN"/>
 
     <logger name="ai.platon.pulsar.crawl.component" level="INFO"/>
     <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler" level="INFO"/>
@@ -99,14 +112,5 @@
 <!--    <logger name="ai.platon.pulsar.browser.driver.chrome" level="TRACE"/>-->
 
     <logger name="ai.platon.pulsar.examples" level="INFO"/>
-
-    <logger name="org.springframework.context" level="DEBUG"/>
-    <logger name="org.springframework.core" level="DEBUG"/>
-    <logger name="org.springframework.core.env" level="INFO"/>
-
-    <logger name="org.apache.gora" level="ERROR"/>
-    <logger name="org.apache.zookeeper" level="ERROR"/>
-    <logger name="org.apache.solr" level="INFO"/>
-    <logger name="org.apache.hadoop" level="WARN"/>
 
 </configuration>

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.urls.UrlUtils

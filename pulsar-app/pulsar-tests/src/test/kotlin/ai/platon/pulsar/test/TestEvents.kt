@@ -1,7 +1,6 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.crawl.LoadEventPipelineHandler
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.crawl.component.FetchComponent
 import org.junit.Before
@@ -13,7 +12,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class TestEvents : TestBase() {
-    private val log = LoggerFactory.getLogger(TestEvents::class.java)
+    private val logger = LoggerFactory.getLogger(TestEvents::class.java)
 
     @Autowired
     lateinit var fetchComponent: FetchComponent
@@ -36,14 +35,14 @@ class TestEvents : TestBase() {
         val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
 
         val firedEvents = mutableListOf<String>()
-        val eventHandler = hyperlink.crawlEventHandler as LoadEventPipelineHandler
+        val eventHandler = hyperlink.eventHandler.loadEventHandler
         eventHandler.apply {
-            onBeforeLoadPipeline.addLast { url ->
+            onBeforeLoad.addLast { url ->
                 firedEvents.add("onBeforeLoad")
                 assertEquals(0, metrics.tasks.count)
             }
 
-            onAfterFetchPipeline.addLast { page ->
+            onAfterFetch.addLast { page ->
                 firedEvents.add("onAfterFetch")
                 assertTrue { page.crawlStatus.isFetched }
                 assertEquals(1, metrics.tasks.count)
@@ -51,7 +50,7 @@ class TestEvents : TestBase() {
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
 
-            onAfterLoadPipeline.addLast { page ->
+            onAfterLoad.addLast { page ->
                 firedEvents.add("onAfterLoad")
 
                 assertTrue { page.protocolStatus.isSuccess }

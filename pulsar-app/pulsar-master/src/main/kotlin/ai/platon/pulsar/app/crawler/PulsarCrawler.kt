@@ -17,7 +17,7 @@ class PulsarCrawler(
 ) {
     val globalCache get() = globalCacheFactory.globalCache
 
-    private val fetchCache get() = globalCache.urlPool.normalCache
+    private val urlCache get() = globalCache.urlPool.normalCache
 
     @Autowired
     lateinit var unmodifiedConfig: ImmutableConfig
@@ -28,7 +28,7 @@ class PulsarCrawler(
 
         LinkExtractors.fromResource(resource)
             .map { Hyperlink(it, args = "-i 1s") }
-            .toCollection(fetchCache.nReentrantQueue)
+            .toCollection(urlCache.nReentrantQueue)
     }
 }
 

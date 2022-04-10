@@ -108,27 +108,27 @@ open class VolatileConfig : MutableConfig {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> getBean(bean: Class<T>): T? {
+    fun <T> getBeanOrNull(bean: Class<T>): T? {
         val obj = variables.values.firstOrNull { bean.isAssignableFrom(it.javaClass) }
         return obj as? T
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> getBean(bean: KClass<T>): T? {
+    fun <T : Any> getBeanOrNull(bean: KClass<T>): T? {
         val obj = variables.values.firstOrNull { bean.java.isAssignableFrom(it.javaClass) }
         return obj as? T
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> getBean(name: String, bean: Class<T>): T? {
+    fun <T> getBeanOrNull(name: String, bean: Class<T>): T? {
         val obj = variables[name]
         return if (obj != null && bean.isAssignableFrom(obj.javaClass)) {
             obj as T
         } else null
     }
 
-    fun <T : Any> getBean(name: String, bean: KClass<T>): T? {
-        return getBean(name, bean.java)
+    fun <T : Any> getBeanOrNull(name: String, bean: KClass<T>): T? {
+        return getBeanOrNull(name, bean.java)
     }
 
     fun <T : Any> removeBean(bean: T): Any? {

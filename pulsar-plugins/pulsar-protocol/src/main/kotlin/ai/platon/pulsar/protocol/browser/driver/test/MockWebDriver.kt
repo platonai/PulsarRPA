@@ -1,8 +1,11 @@
 package ai.platon.pulsar.protocol.browser.driver.test
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -12,12 +15,22 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import java.time.Duration
 import java.util.*
 
+class MockBrowserInstance(
+    id: BrowserInstanceId,
+    launcherOptions: LauncherOptions,
+    launchOptions: ChromeOptions
+): AbstractBrowserInstance(id, launcherOptions, launchOptions) {
+    override fun launch() {}
+    override fun close() {}
+}
+
 class MockWebDriver(
-    browserInstanceId: BrowserInstanceId,
+    browserInstance: MockBrowserInstance,
     backupDriverCreator: () -> ChromeDevtoolsDriver,
-) : AbstractWebDriver(browserInstanceId) {
+) : AbstractWebDriver(browserInstance) {
     private val logger = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
     private val backupDriver by lazy { backupDriverCreator() }
@@ -46,8 +59,12 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
-    override suspend fun waitFor(selector: String, timeoutMillis: Long): Long {
-        return backupDriverOrNull?.waitFor(selector, timeoutMillis) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
+        return backupDriverOrNull?.waitForSelector(selector, timeout) ?: 0
+    }
+
+    override suspend fun waitForNavigation(timeout: Duration): Long {
+        return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
     }
 
     override suspend fun setTimeouts(driverConfig: BrowserSettings) {
@@ -66,6 +83,14 @@ class MockWebDriver(
         }
 
         backupDriverOrNull?.navigateTo(url)
+    }
+
+    override suspend fun mainRequestHeaders(): Map<String, Any> {
+        return backupDriverOrNull?.mainRequestHeaders() ?: mapOf()
+    }
+
+    override suspend fun mainRequestCookies(): List<Map<String, String>> {
+        return backupDriverOrNull?.mainRequestCookies() ?: listOf()
     }
 
     override suspend fun getCookies(): List<Map<String, String>> {

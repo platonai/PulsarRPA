@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.context
 
-import ai.platon.pulsar.PulsarEnvironment
+import ai.platon.pulsar.session.PulsarEnvironment
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions

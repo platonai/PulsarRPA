@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.8.3-SNAPSHOT</version>
+        <version>1.8.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-skeleton</artifactId>
@@ -55,11 +55,10 @@
             <artifactId>pulsar-ql-common</artifactId>
         </dependency>
 
-        <!-- For parsers -->
         <dependency>
             <groupId>org.apache.tika</groupId>
-            <artifactId>tika-parsers</artifactId>
-            <version>${tika.version}</version>
+            <artifactId>tika-parsers-standard-package</artifactId>
+            <type>pom</type>
         </dependency>
 
         <!-- apache common -->

@@ -1,8 +1,8 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.AbstractPulsarSession
-import ai.platon.pulsar.PulsarEnvironment
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.AbstractPulsarSession
+import ai.platon.pulsar.session.PulsarEnvironment
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -319,7 +319,7 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.loadAll(normalize(urls, options), options) else listOf()
+        return if (isActive) { loadComponent.loadAll(normalize(urls, options), options) } else listOf()
     }
 
     override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
@@ -418,19 +418,19 @@ abstract class AbstractPulsarContext(
 
             sessions.values.forEach {
                 kotlin.runCatching { it.close() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
             }
             sessions.clear()
 
             closableObjects.forEach {
                 kotlin.runCatching { it.close() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
             }
             closableObjects.clear()
 
             if (applicationContext.isActive) {
                 kotlin.runCatching { crawlLoops.stop() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception")) }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
 
                 applicationContext.close()
             }

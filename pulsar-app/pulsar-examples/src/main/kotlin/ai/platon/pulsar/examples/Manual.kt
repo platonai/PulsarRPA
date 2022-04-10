@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.context.PulsarContexts
 
 class Manual(val session: PulsarSession = PulsarContexts.createSession()) {

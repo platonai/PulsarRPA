@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
@@ -29,9 +30,7 @@ open class BrowserPrivacyContext(
 ): PrivacyContext(id, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
     var proxyEntry: ProxyEntry? = null
-    private val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
-    // TODO: properly handle proxy entry
-    private val browserInstanceId = BrowserInstanceId(id.dataDir, browserType, proxyEntry?.hostPort)
+    private val browserInstanceId = BrowserInstanceId(id.contextDir, id.fingerprint)
     private val driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
     val numFreeDrivers get() = driverPoolManager.numFreeDrivers
@@ -83,12 +82,6 @@ open class BrowserPrivacyContext(
         }
     }
 
-//    private fun getBrowserType(volatileConfig: VolatileConfig?): BrowserType {
-//        val defaultType = BrowserType.CHROME
-//        return volatileConfig?.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
-//            ?: conf.getEnum(CapabilityTypes.BROWSER_TYPE, defaultType)
-//    }
-
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         return when {
             !isActive -> FetchResult.privacyRetry(task)
@@ -102,7 +95,8 @@ open class BrowserPrivacyContext(
         if (proxyEntry == null && proxyPoolManager != null && proxyPoolManager.isEnabled) {
             val pc = ProxyContext.create(id, driverContext, proxyPoolManager, conf)
             proxyEntry = pc.proxyEntry
-            browserInstanceId.proxyServer = proxyEntry?.hostPort
+            // TODO: better initialize fingerprint.proxyServer
+            browserInstanceId.fingerprint.proxyServer = proxyEntry?.hostPort
             proxyContext = pc
         }
         task.page.variables[VAR_PRIVACY_CONTEXT_NAME] = display

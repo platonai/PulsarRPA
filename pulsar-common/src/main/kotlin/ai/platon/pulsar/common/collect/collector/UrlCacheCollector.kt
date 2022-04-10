@@ -30,7 +30,7 @@ open class UrlCacheCollector constructor(
         get() = urlCache.estimatedSize
 
     /**
-     * If the fetch cache is a LoadingFetchCache, the items can be both in memory or in external source,
+     * If the fetch cache is a LoadingurlCache, the items can be both in memory or in external source,
      * so even if all queues are empty, hasMore can return true
      * */
     @Synchronized

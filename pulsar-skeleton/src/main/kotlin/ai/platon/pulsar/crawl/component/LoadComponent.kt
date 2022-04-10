@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
-import ai.platon.pulsar.crawl.CrawlLoop
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -188,6 +188,9 @@ class LoadComponent(
         return page
     }
 
+    /**
+     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * */
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val queue = globalCache.urlPool.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
@@ -195,11 +198,7 @@ class LoadComponent(
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.maxRetry = 0 }
-            .onEach {
-                it.crawlEventHandler.onAfterLoadPipeline.addFirst { url, page ->
-                    (url as? CompletableListenableHyperlink<WebPage>)?.complete(page)
-                }
-            }
+            .onEach { url -> url.eventHandler = options.eventHandler }
             .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
 
@@ -232,7 +231,10 @@ class LoadComponent(
 
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
+        return load1(normUrl, page)
+    }
 
+    private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
         beforeLoad(normUrl, page)
 
         fetchContentIfNecessary(normUrl, page)
@@ -244,7 +246,10 @@ class LoadComponent(
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
+        return loadDeferred1(normUrl, page)
+    }
 
+    private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
         beforeLoad(normUrl, page)
 
         fetchContentIfNecessaryDeferred(normUrl, page)
@@ -253,6 +258,18 @@ class LoadComponent(
 
         return page
     }
+
+//    private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
+//        val page = createPageShell(normUrl)
+//
+//        beforeLoad(normUrl, page)
+//
+//        fetchContentIfNecessaryDeferred(normUrl, page)
+//
+//        afterLoad(page, normUrl)
+//
+//        return page
+//    }
 
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
@@ -272,6 +289,9 @@ class LoadComponent(
     private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
+        // the page is a resource, do not render it in a browser
+        page.isResource = normUrl.options.isResource
+        page.referrer = normUrl.options.referrer
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -453,6 +473,11 @@ class LoadComponent(
     private fun fetchContent(page: WebPage, normUrl: NormUrl) {
         try {
             beforeFetch(page, normUrl.options)
+
+            require(page.conf == normUrl.options.conf)
+//            require(normUrl.options.eventHandler != null)
+//            require(page.conf.getBeanOrNull(PulsarEventHandler::class) != null)
+
             fetchComponent.fetchContent(page)
         } finally {
             afterFetch(page, normUrl.options)

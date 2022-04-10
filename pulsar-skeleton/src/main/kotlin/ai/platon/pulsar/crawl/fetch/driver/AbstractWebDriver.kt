@@ -1,16 +1,23 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.crawl.common.URLUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
+import java.io.IOException
+import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.jvm.Throws
 
 abstract class AbstractWebDriver(
-        override val browserInstanceId: BrowserInstanceId,
-        override val id: Int = 0
+    override val browserInstance: AbstractBrowserInstance,
+    override val id: Int = 0
 ): Comparable<AbstractWebDriver>, WebDriver {
 
     enum class Status {
@@ -58,6 +65,8 @@ abstract class AbstractWebDriver(
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
 
+    private var jsoupSession: Connection? = null
+
     override fun free() = status.set(Status.FREE)
     override fun startWork() = status.set(Status.WORKING)
     override fun retire() = status.set(Status.RETIRED)
@@ -71,11 +80,12 @@ abstract class AbstractWebDriver(
         }
     }
 
-    override suspend fun waitFor(selector: String): Long = waitFor(selector, waitForTimeout.toMillis())
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =
+        waitForSelector(selector, Duration.ofMillis(timeoutMillis))
+    override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForTimeout)
 
-    override suspend fun getCookies(): List<Map<String, String>> {
-        return listOf()
-    }
+    override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))
+    override suspend fun waitForNavigation(timeoutMillis: Long): Long = waitForNavigation(Duration.ofMillis(timeoutMillis))
 
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
@@ -113,20 +123,49 @@ abstract class AbstractWebDriver(
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
+    /**
+     * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
+     * The browser should be initialized by opening a page before the session is created.
+     * */
     override suspend fun newSession(): Connection {
-        val headers = mapOf<String, String>()
+        val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
+        val cookies = getCookies()
         val userAgent = BrowserSettings.randomUserAgent()
 
+        val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
-            .timeout(20 * 1000)
+            .timeout(httpTimeout.toMillis().toInt())
             .userAgent(userAgent)
-            .cookies(getCookies().first())
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
-        // .proxy("127.0.0.1", 33857)
+
+        if (cookies.isNotEmpty()) {
+            session.cookies(cookies.first())
+        }
+
+        // Since the browser uses the system proxy (by default),
+        // so the http connection should also use the system proxy
+        val proxy = browserInstance.id.proxyServer ?: System.getenv("http_proxy")
+        if (proxy != null && UrlUtils.isValidUrl(proxy)) {
+            val u = URL(proxy)
+            session.proxy(u.host, u.port)
+        }
 
         return session
+    }
+
+    @Throws(IOException::class)
+    override suspend fun loadResource(url: String): Connection.Response? {
+        if (jsoupSession == null) {
+            jsoupSession = newSession()
+        }
+
+        val response = withContext(Dispatchers.IO) {
+            jsoupSession?.newRequest()?.url(url)?.execute()
+        }
+
+        return response
     }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id

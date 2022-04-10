@@ -74,6 +74,8 @@ abstract class PrivacyContext(
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     val numRunningTasks = AtomicInteger()
 
+    val historyUrl = mutableSetOf<String>()
+
     val closed = AtomicBoolean()
     val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
@@ -131,6 +133,7 @@ abstract class PrivacyContext(
 
     protected fun afterRun(result: FetchResult) {
         numRunningTasks.decrementAndGet()
+        historyUrl.add(result.task.url)
 
         lastActiveTime = Instant.now()
         meterFinishes.mark()
