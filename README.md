@@ -9,8 +9,6 @@ Pulsar supports the Network As A Database paradigm, so we can turn the Web into 
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
-![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
-
 # Features
 - Web spider: browser rendering, ajax data crawling
 - Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
@@ -19,7 +17,7 @@ We also have a plan to release an advanced AI to automatically extract every fie
 - Simple API: single line of code to scrape, or single SQL to turn a website into a table
 - X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 - Bot stealth: IP rotation, web driver stealth, never get banned
-- RPA: imitating human behavior, SPA crawling, or do something else awesome
+- RPA: imitating human behaviors, SPA crawling, or do something else awesome
 - Big data: various backend storage support: MongoDB/HBase/Gora
 - Logs & metrics: monitored closely and every event is recorded
 
@@ -38,19 +36,29 @@ Maven:
 ```kotlin
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val session = PulsarContexts.createSession()
-// load a page, fetch it from the website if expired or doesn't exist
+// load a page, fetch it from the web if it has expired or if it's being fetched for the first time
 val page = session.load(url, "-expires 1d")
-// parse the page into a Jsoup document
+// parse the page content into a Jsoup document
 val document = session.parse(page)
 // do something with the document
 // ...
-// load all pages with link specified by -outLink
+// load and parse
+val document2 = session.loadDocument(url, "-expires 1d")
+// do something with the document
+// ...
+// load all pages with links specified by -outLink
 val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/]")
-// load or fetch, parse and scrape fields
+// load, parse and scrape fields
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
-// load or fetch, parse and scrape fields
-val fields2 = session.scrape(url, "-i 1d", "li[data-sku]",
-    mapOf("name" to ".p-name em", "price" to ".p-price"))
+// load, parse and scrape named fields
+val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+```
+## Extract data from documents:
+Pulsar uses jsoup to extract data from html documents, please check [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) for all possible selectors.
+### Kotlin
+```kotlin
+val document = session.loadDocument(url, "-expires 1d")
+val price = document.selectFirst('.price')
 ```
 ## Scrape a massive url collection:
 ### Kotlin
@@ -68,8 +76,10 @@ fun main() {
     }
     val urls = LinkExtractors.fromResource("seeds.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    val context = PulsarContexts.create().asyncLoadAll(urls)
-    // feel free to fetch/load a huge number of urls here using async loading
+    val context = PulsarContexts.create()
+    context.asyncLoadAll(urls)
+    // feel free to fetch another millions of urls here
+    context.asyncLoadAll(urls)
     // ...
     context.await()
 }
@@ -88,8 +98,10 @@ public class MassiveCrawler {
                 .stream()
                 .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
                 .collect(Collectors.toList());
-        PulsarContext context = PulsarContexts.create().asyncLoadAll(urls);
-        // feel free to fetch/load a huge number of urls here using async loading
+        PulsarContext context = PulsarContexts.create();
+        context.asyncLoadAll(urls);
+        // feel free to fetch another millions of urls here
+        context.asyncLoadAll(urls);
         // ...
         context.await();
     }
@@ -122,7 +134,7 @@ The result is as follows:
     TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
     Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926
 
-# Use pulsar as a server
+# Use pulsar as a REST service
 
 ## Requirements
 
@@ -171,8 +183,24 @@ The response is as follows:
 }
 ```
 # Advanced topics:
-- How to scrape a single page application (SPA)
-- How to download resources without browser rendering
-- How to scrape page by page
-- How to simulate human behavior
-- How to scrape amazon.com to match industrial needs
+- How to scrape pages behind a login?
+- How to download resources directly within a browser context?
+- How to scrape a single page application (SPA)?
+  - Resource mode
+  - RPA mode
+- How to scrape page by page?
+- How to crawl newly discovered links?
+- How to crawl the entire website?
+- How to simulate human behaviors?
+- How to schedule priority tasks?
+- How to drop a scheduled task?
+- How to know the status of task?
+- How to scrape amazon.com to match industrial needs?
+# Compare with other solutions
+- Pulsar vs selenium/puppeteer/playwright
+- Pulsar vs nutch
+- Pulsar vs scrapy+splash
+# Technical details
+- how to hide my bot from being detected?
+- why to simulate human behaviors?
+- how to render as many page as possible on a single machine?
