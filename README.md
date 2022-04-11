@@ -13,7 +13,7 @@ We also have a plan to release an advanced AI to automatically extract every fie
 
 # Features
 - Web spider: browser rendering, ajax data crawling
-- Performance: highly optimized, rendering hundreds of pages in parallel on a single machine
+- Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
 - Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
 - Large scale: fully distributed, designed for large scale crawling
 - Simple API: single line of code to scrape, or single SQL to turn a website into a table
@@ -30,10 +30,30 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.8.4</version>
+  <version>1.9.0</version>
 </dependency>
 ```
-Scrape a massive url collection:
+## Basic usage:
+### Kotlin
+```kotlin
+val url = "https://list.jd.com/list.html?cat=652,12345,12349"
+val session = PulsarContexts.createSession()
+// load a page, fetch it from the website if expired or doesn't exist
+val page = session.load(url, "-expires 1d")
+// parse the page into a Jsoup document
+val document = session.parse(page)
+// do something with the document
+// ...
+// load all pages with link specified by -outLink
+val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/]")
+// load or fetch, parse and scrape fields
+val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
+// load or fetch, parse and scrape fields
+val fields2 = session.scrape(url, "-i 1d", "li[data-sku]",
+    mapOf("name" to ".p-name em", "price" to ".p-price"))
+```
+## Scrape a massive url collection:
+### Kotlin
 ```kotlin
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.context.PulsarContexts
@@ -41,17 +61,41 @@ import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
 
-val parseHandler = { _: WebPage, document: Document ->
-    // do something wonderful with the document
-    println(document.title() + "\t|\t" + document.baseUri())
+fun main() {
+    val parseHandler = { _: WebPage, document: Document ->
+        // do something wonderful with the document
+        println(document.title() + "\t|\t" + document.baseUri())
+    }
+    val urls = LinkExtractors.fromResource("seeds.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    val context = PulsarContexts.create().asyncLoadAll(urls)
+    // feel free to fetch/load a huge number of urls here using async loading
+    // ...
+    context.await()
 }
-val urls = LinkExtractors.fromResource("seeds.txt").map { ParsableHyperlink(it, parseHandler) }
-val context = PulsarContexts.create().asyncLoadAll(urls)
-// feel free to add a huge number of urls to the crawl queue here using async loading
-// ...
-context.await()
 ```
-## X-SQL
+### Java
+```java
+public class MassiveCrawler {
+
+    private static void onParse(WebPage page, Document document) {
+        // do something wonderful with the document
+        System.out.println(document.title() + "\t|\t" + document.baseUri());
+    }
+
+    public static void main(String[] args) {
+        List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
+                .stream()
+                .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
+                .collect(Collectors.toList());
+        PulsarContext context = PulsarContexts.create().asyncLoadAll(urls);
+        // feel free to fetch/load a huge number of urls here using async loading
+        // ...
+        context.await();
+    }
+}
+```
+## Use X-SQL to query the web
 
 Scrape a single page:
 
@@ -126,5 +170,9 @@ The response is as follows:
     "status": "OK"
 }
 ```
-
-Here are X-SQLs for [The Complete Amazon Data Model](pulsar-app/pulsar-sites-support/pulsar-site-amazon/src/main/resources/config/sites/amazon/crawl/parse/sql).
+# Advanced topics:
+- How to scrape a single page application (SPA)
+- How to download resources without browser rendering
+- How to scrape page by page
+- How to simulate human behavior
+- How to scrape amazon.com to match industrial needs

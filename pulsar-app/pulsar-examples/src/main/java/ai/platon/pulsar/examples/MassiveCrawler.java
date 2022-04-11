@@ -19,11 +19,11 @@ public class MassiveCrawler {
     }
 
     public static void main(String[] args) {
-        List<Hyperlink> urls = LinkExtractors.INSTANCE.fromResource("seeds10.txt")
+        List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
                 .stream()
                 .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
                 .collect(Collectors.toList());
-        PulsarContext context = PulsarContexts.INSTANCE.create().asyncLoadAll(urls);
+        PulsarContext context = PulsarContexts.create().asyncLoadAll(urls);
         // feel free to fetch/load a huge number of urls here using async loading
         // ...
         context.await();

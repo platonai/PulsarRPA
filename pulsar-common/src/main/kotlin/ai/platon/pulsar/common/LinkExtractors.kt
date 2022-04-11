@@ -62,7 +62,10 @@ internal class DirectoryExtractor(val baseDir: Path): UrlExtractor() {
 }
 
 object LinkExtractors {
+    @JvmStatic
     fun fromResource(resource: String) = ResourceExtractor(resource).extract()
+    @JvmStatic
     fun fromFile(path: Path) = FileExtractor(path).extract()
+    @JvmStatic
     fun fromDirectory(baseDir: Path) = DirectoryExtractor(baseDir).extract()
 }

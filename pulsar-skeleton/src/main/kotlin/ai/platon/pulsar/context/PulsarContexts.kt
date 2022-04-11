@@ -14,6 +14,7 @@ object PulsarContexts {
         private set
 
     @Synchronized
+    @JvmStatic
     fun create(): PulsarContext {
         if (activeContext == null) {
             activeContext = create(StaticPulsarContext())
@@ -22,6 +23,7 @@ object PulsarContexts {
     }
 
     @Synchronized
+    @JvmStatic
     fun create(context: PulsarContext): PulsarContext {
         val activated = activeContext
         if (activated != null && activated::class == context::class) {
@@ -42,18 +44,23 @@ object PulsarContexts {
     }
 
     @Synchronized
+    @JvmStatic
     fun create(contextLocation: String) = create(ClassPathXmlPulsarContext(contextLocation))
 
     @Synchronized
+    @JvmStatic
     fun create(applicationContext: ApplicationContext) =
         create(BasicPulsarContext(applicationContext as AbstractApplicationContext))
 
     @Synchronized
+    @JvmStatic
     fun createSession() = create().createSession()
 
+    @JvmStatic
     fun await() = create().await()
 
     @Synchronized
+    @JvmStatic
     fun shutdown() {
         contexts.forEach { it.close() }
         activeContext = null
