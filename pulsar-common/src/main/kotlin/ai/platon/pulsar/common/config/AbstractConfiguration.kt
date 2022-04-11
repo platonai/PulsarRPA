@@ -72,9 +72,7 @@ abstract class AbstractConfiguration {
     }
 
     /**
-     *
      * Constructor for AbstractConfiguration.
-     *
      */
     constructor(conf: KConfiguration) {
         this.conf = KConfiguration(conf)
@@ -142,13 +140,11 @@ abstract class AbstractConfiguration {
         }
 
     /**
-     *
-     * unbox.
+     * Return the boxed KConfiguration
      */
     fun unbox() = conf
 
     /**
-     *
      * The configured item size.
      *
      * @return a int.
@@ -157,14 +153,10 @@ abstract class AbstractConfiguration {
 
     /**
      * Get the value of the `name` property, `null` if
-     * no such property exists. If the key is deprecated, it returns the value of
-     * the first key which replaces the deprecated key and is not null.
-     *
-     * Values are processed for [variable expansion](#VariableExpansion)
-     * before being returned.
+     * no such property exists.
      *
      * @param name the property name, will be trimmed before get value.
-     * @return the value of the `name` or its replacing property,
+     * @return the value of the `name`,
      * or null if no such property exists.
      */
     open operator fun get(name: String): String? {

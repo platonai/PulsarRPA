@@ -11,6 +11,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 
 class BasicPrivacyContextManager(
@@ -20,6 +21,8 @@ class BasicPrivacyContextManager(
     config: ImmutableConfig
 ): PrivacyManager(config) {
     private val logger = LoggerFactory.getLogger(BasicPrivacyContextManager::class.java)
+
+    private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
     constructor(driverPoolManager: WebDriverPoolManager, config: ImmutableConfig)
             : this(driverPoolManager, null, null, config)
@@ -40,7 +43,9 @@ class BasicPrivacyContextManager(
     }
 
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
-        return activeContexts.values.firstOrNull() ?: computeIfAbsent(privacyContextIdGenerator(fingerprint))
+        return if (iterator.hasNext()) {
+            iterator.next()
+        } else computeIfAbsent(privacyContextIdGenerator(fingerprint))
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }

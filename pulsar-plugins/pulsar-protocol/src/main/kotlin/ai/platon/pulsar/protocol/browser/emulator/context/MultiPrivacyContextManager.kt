@@ -62,6 +62,7 @@ class MultiPrivacyContextManager(
     @Throws(ProxyException::class)
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
         val context = computeIfNecessary(fingerprint)
+
         if (context.isActive) {
             return context
         }

@@ -16,6 +16,7 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
+import java.util.function.BiConsumer
 
 interface ListenableHyperlink: UrlAware {
     val eventHandler: PulsarEventHandler
@@ -63,6 +64,13 @@ open class ParsableHyperlink(
     url: String,
     val onParse: (WebPage, Document) -> Unit
 ): Hyperlink(url, args = "-parse"), ListenableHyperlink {
+
+    /**
+     * Java compatible constructor
+     * */
+    constructor(url: String, onParse: BiConsumer<WebPage, Document>):
+            this(url, { page, document -> onParse.accept(page, document) })
+
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler().also {
         it.loadEventHandler.onAfterHtmlParse.addLast(object: HtmlDocumentHandler() {
             override fun invoke(page: WebPage, document: FeaturedDocument) = onParse(page, document.document)

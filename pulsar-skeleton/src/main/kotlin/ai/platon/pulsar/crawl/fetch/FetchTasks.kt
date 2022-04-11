@@ -11,7 +11,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -118,7 +118,7 @@ class FetchTask constructor(
     override fun toString(): String = "$id"
 
     companion object {
-        val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.CHROME.name)
+        val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.CHROME)
         val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
     }

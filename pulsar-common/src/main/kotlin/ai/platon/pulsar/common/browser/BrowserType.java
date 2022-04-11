@@ -1,4 +1,4 @@
-package ai.platon.pulsar.persist.metadata;
+package ai.platon.pulsar.common.browser;
 
 /**
  * The browser type
@@ -10,7 +10,7 @@ public enum BrowserType {
      * Create a browser type from a string
      *
      * @param s a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.metadata.BrowserType} object.
+     * @return a {@link BrowserType} object.
      */
     public static BrowserType fromString(String s) {
         if (s == null || s.isEmpty()) {

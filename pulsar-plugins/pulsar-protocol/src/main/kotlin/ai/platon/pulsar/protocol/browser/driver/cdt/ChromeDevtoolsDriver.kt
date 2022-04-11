@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings

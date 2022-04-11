@@ -1,35 +1,42 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.CloseMaskLayerHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
 import ai.platon.pulsar.ql.context.SQLContexts
+
+class SiMuLoginHandler(
+    loginUrl: String,
+    username: String,
+    password: String,
+    usernameSelector: String = "input[name=username]",
+    passwordSelector: String = "input[type=password]",
+    submitSelector: String = "button.comp-login-btn",
+    warnUpUrl: String? = null,
+    activateSelector: String = "button.comp-login-b2",
+): LoginHandler(loginUrl,
+    usernameSelector, username, passwordSelector, password,
+    submitSelector, warnUpUrl, activateSelector
+)
 
 open class SiMuCrawler {
     // general parameters
     val portalUrl = "https://dc.simuwang.com/"
     val args = "-i 30s -ii 30s -ol a[href~=product] -tl 10"
     // login parameters
-    val loginUrl = portalUrl
-    val activateSelector = "button.comp-login-b2"
-    val usernameSelector = "input[name=username]"
     val username = System.getenv("EXOTIC_SIMUWANG_USERNAME") ?: "MustFallUsername"
-    val passwordSelector = "input[type=password]"
     val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD") ?: "MustFallPassword"
-    val submitSelector = "button.comp-login-btn"
     // mask layer handling
     val closeMaskLayerSelector = ".comp-alert-btn"
 
     val context = SQLContexts.create()
     val session = context.createSession()
-    val loginHandler = LoginHandler(loginUrl,
-        usernameSelector, username, passwordSelector, password, submitSelector, activateSelector)
+
+    val loginHandler = SiMuLoginHandler(portalUrl, username, password)
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
-    val eventHandler = DefaultPulsarEventHandler().also {
-        it.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
-        it.simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
+    val options = session.options(args).also {
+        it.eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
+        it.eventHandler.simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
     }
-    val options = session.options(args, eventHandler)
 
     open fun crawl() {
         // load out pages

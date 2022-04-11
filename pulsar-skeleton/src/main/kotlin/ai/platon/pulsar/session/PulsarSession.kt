@@ -74,18 +74,41 @@ interface PulsarSession : AutoCloseable {
     ): List<NormUrl>
 
     /**
-     * Inject a url
+     * Inject an url to fetch later
      *
      * @param url The url followed by options
      * @return The web page created
      */
     fun inject(url: String): WebPage
+    /**
+     * Get a page from database if exists
+     *
+     * @param url The url
+     * @return The webpage
+     */
     fun get(url: String): WebPage
+    /**
+     * Get a page from database if exists
+     *
+     * @param url The url
+     * @return The webpage
+     */
     fun getOrNull(url: String): WebPage?
+    /**
+     * Check if a page exists in the database
+     *
+     * @param url The url
+     * @return true if the page exists in the database
+     */
     fun exists(url: String): Boolean
-
+    /**
+     * Return the fetch state of the page
+     *
+     * @param page The webpage
+     * @param options The load options
+     * @return The fetch state of the page
+     */
     fun fetchState(page: WebPage, options: LoadOptions): CheckState
-
     /**
      * Open a page with [url]
      *
@@ -94,9 +117,8 @@ interface PulsarSession : AutoCloseable {
      */
     @Throws(Exception::class)
     fun open(url: String): WebPage
-
     /**
-     * Load a url with specified options
+     * Load an url with specified options
      *
      * @param url     The url to load
      * @param args The load args
@@ -104,9 +126,8 @@ interface PulsarSession : AutoCloseable {
      */
     @Throws(Exception::class)
     fun load(url: String, args: String): WebPage
-
     /**
-     * Load a url with specified options
+     * Load an url with specified options
      *
      * @param url     The url to load
      * @param options The load options
@@ -148,7 +169,6 @@ interface PulsarSession : AutoCloseable {
         options: LoadOptions = options(),
         areItems: Boolean = false
     ): Collection<WebPage>
-
     /**
      * Load all out pages in a portal page
      *
@@ -157,7 +177,6 @@ interface PulsarSession : AutoCloseable {
      * @return The web pages
      */
     fun loadOutPages(portalUrl: String, args: String): Collection<WebPage>
-
     /**
      * Load all out pages in a portal page
      *

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
@@ -12,7 +11,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
@@ -95,7 +94,7 @@ open class BrowserEmulatedFetcher(
         val conf = page.conf
         val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
         val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
-        val fingerprint = Fingerprint(browserType.name)
+        val fingerprint = Fingerprint(browserType)
         return FetchTask(0, priority, page, conf, fingerprint = fingerprint)
     }
 

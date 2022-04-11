@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Instant

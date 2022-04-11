@@ -27,10 +27,11 @@ open class LoginHandler(
 
         warnUpUrl?.let {
             driver.navigateTo(it)
-            delay(5_000)
+            driver.waitForNavigation(Duration.ofSeconds(10))
         }
 
         driver.navigateTo(loginUrl)
+        driver.waitForNavigation(Duration.ofSeconds(10))
 
         if (activateSelector != null) {
             logger.info("Waiting for login panel ... | {}", activateSelector)

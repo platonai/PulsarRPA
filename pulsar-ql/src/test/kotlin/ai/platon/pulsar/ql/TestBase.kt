@@ -3,7 +3,7 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.ql.context.DefaultClassPathXmlSQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory

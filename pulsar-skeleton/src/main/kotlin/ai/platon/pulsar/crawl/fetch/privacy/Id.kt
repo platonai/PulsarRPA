@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -18,10 +18,13 @@ data class PrivacyContextId(
     val contextDir: Path,
     var fingerprint: Fingerprint
 ): Comparable<PrivacyContextId> {
+
     val ident = contextDir.last().toString()
     val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
     val isDefault get() = this == DEFAULT
     val isPrototype get() = this == PROTOTYPE
+
+    constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
 //    override fun hashCode() = /** AUTO GENERATED **/
 //    override fun equals(other: Any?) = /** AUTO GENERATED **/
@@ -30,8 +33,8 @@ data class PrivacyContextId(
     override fun compareTo(other: PrivacyContextId) = toString().compareTo(other.toString())
 
     companion object {
-        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR, Fingerprint(BrowserType.CHROME.name))
-        val PROTOTYPE = PrivacyContextId(PrivacyContext.PROTOTYPE_DIR, Fingerprint(BrowserType.CHROME.name))
+        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR, BrowserType.CHROME)
+        val PROTOTYPE = PrivacyContextId(PrivacyContext.PROTOTYPE_DIR, BrowserType.CHROME)
     }
 }
 
@@ -43,14 +46,14 @@ data class BrowserInstanceId constructor(
     val fingerprint: Fingerprint,
 ): Comparable<BrowserInstanceId> {
 
-    val browserType: BrowserType get() = BrowserType.valueOf(fingerprint.browserType)
+    val browserType: BrowserType get() = fingerprint.browserType
     val proxyServer: String? get() = fingerprint.proxyServer
 
     val userDataDir get() = contextDir.resolve(browserType.name.lowercase())
     val ident get() = contextDir.last().toString() + browserType.ordinal
     val display get() = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
 
-    constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType.name))
+    constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     override fun compareTo(other: BrowserInstanceId) = toString().compareTo(other.toString())
 
@@ -59,7 +62,7 @@ data class BrowserInstanceId constructor(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
-        val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.CHROME.name))
+        val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.CHROME))
     }
 }
 

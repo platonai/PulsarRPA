@@ -1,8 +1,6 @@
 package ai.platon.pulsar.qa
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
-import ai.platon.pulsar.common.options.LoadOptionDefaults
-import ai.platon.pulsar.persist.metadata.BrowserType
 import org.junit.Before
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest

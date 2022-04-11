@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.context.SQLContexts

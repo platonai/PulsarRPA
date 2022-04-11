@@ -19,7 +19,7 @@ import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.charset.Charset
@@ -102,17 +102,19 @@ open class BrowserEmulator(
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
+        } catch (e: TimeoutCancellationException) {
+            logger.warn("Coroutine was cancelled because of timeout", e)
+            response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: Exception) {
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    AppContext.shouldTerminate()
                     logger.warn("Coroutine was cancelled")
                 }
                 else -> {
                     logger.warn("Unexpected exception", e)
                 }
             }
-            response = ForwardingResponse.crawlRetry(task.page)
+            response = ForwardingResponse.crawlRetry(task.page, e)
         } finally {
         }
 
@@ -201,7 +203,7 @@ open class BrowserEmulator(
 
         val interactTask = InteractTask(task, driverConfig, driver)
         return if (driver.supportJavascript) {
-            takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
+            takeIf { driverConfig.jsInvadingEnabled }?.interactWithTimeout(interactTask)?: interactNoJsInvaded(interactTask)
         } else {
             InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
@@ -220,6 +222,22 @@ open class BrowserEmulator(
         } while (i++ < 45 && pageSource.length < 20_000 && isActive)
 
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+    }
+
+    @Throws(NavigateTaskCancellationException::class)
+    protected open suspend fun interactWithTimeout(task: InteractTask): InteractResult? {
+        val interactTimeout = Duration.ofMinutes(3)
+        val result = withContext(Dispatchers.IO) {
+            withTimeoutOrNull(interactTimeout.toMillis()) {
+                interact(task)
+            }
+        }
+
+        if (result == null) {
+            logger.warn("Interact timeout in {}", interactTimeout)
+        }
+
+        return result
     }
 
     @Throws(NavigateTaskCancellationException::class)

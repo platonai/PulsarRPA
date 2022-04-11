@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.IStringConverter
 import org.apache.commons.lang3.StringUtils

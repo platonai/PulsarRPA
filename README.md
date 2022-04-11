@@ -24,11 +24,8 @@ We also have a plan to release an advanced AI to automatically extract every fie
 - Logs & metrics: monitored closely and every event is recorded
 
 For more information check [platon.ai](http://platon.ai)
-
 # Use pulsar as a library
-
 Maven:
-
 ```
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
@@ -36,44 +33,14 @@ Maven:
   <version>1.8.4</version>
 </dependency>
 ```
-
-Create a pulsar session:
-```kotlin
-val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-val session = PulsarContexts.createSession()
-```
-Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then parse it into a Jsoup document:
-```kotlin
-val page = session.load(url, "-expires 1d")
-val document = session.parse(page)
-```
-or
-```kotlin
-val document = session.loadDocument(url, "-expires 1d")
-```
-Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then load out pages specified by -outLink:
-```kotlin
-val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
-val documents = pages.map { session.parse(it) }
-```
-Load a page, fetch it from the internet if it's not in the local storage, or if it's expired, and then scrape the fields in the page, all fields are restricted in a page section specified by restrictCss, each field is specified by a css selector:
-```kotlin
-val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
-```
-or
-```kotlin
-val fields = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
-```
-Scrape fields from the out pages:
-```kotlin
-val fields = session.scrapeOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]", ".product-intro", listOf(".sku-name", ".p-price"))
-```
-or
-```kotlin
-val fields = session.scrapeOutPages(url, "-i 1d -ii 7d -ol a[href~=item]", ".product-intro", mapOf("name" to ".sku-name", "price" to ".p-price"))
-```
 Scrape a massive url collection:
 ```kotlin
+import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.persist.WebPage
+import org.jsoup.nodes.Document
+
 val parseHandler = { _: WebPage, document: Document ->
     // do something wonderful with the document
     println(document.title() + "\t|\t" + document.baseUri())

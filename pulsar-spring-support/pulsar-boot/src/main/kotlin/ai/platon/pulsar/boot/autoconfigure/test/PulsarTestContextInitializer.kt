@@ -2,7 +2,7 @@ package ai.platon.pulsar.boot.autoconfigure.test
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
 import ai.platon.pulsar.common.options.LoadOptionDefaults
-import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.common.browser.BrowserType
 import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.support.AbstractApplicationContext
 
