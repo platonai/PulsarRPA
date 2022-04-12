@@ -409,7 +409,8 @@ open class StreamingCrawler<T : UrlAware>(
         var page: WebPage? = null
         try {
             val timeout = 20_000 + fetchTaskTimeout.toMillis()
-            page = withTimeout(timeout) { loadWithEventHandlers(url) }
+//            page = withTimeout(timeout) { loadWithEventHandlers(url) }
+            page = loadWithEventHandlers(url)
             if (page != null) {
                 collectStatAfterLoad(page)
             }

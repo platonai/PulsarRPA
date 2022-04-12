@@ -13,6 +13,8 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -79,7 +81,8 @@ open class WebDriverPoolManager(
     val numAvailableDrivers get() = driverPools.values.sumOf { it.numAvailable }
     val numOnline get() = driverPools.values.sumOf { it.onlineDrivers.size }
 
-    private val launchLock = ReentrantLock()
+//    private val launchLock = ReentrantLock()
+    private val launchMutex = Mutex()
 
     init {
         gauges?.let { AppMetrics.reg.registerAll(this, it) }
@@ -200,18 +203,19 @@ open class WebDriverPoolManager(
 
             var driver: WebDriver? = null
             try {
-                val fetchTaskTimeout = driverSettings.fetchTaskTimeout
-                val pollingDriverTimeout = driverSettings.pollingDriverTimeout
-                driver = launchLock.withLock {
+                // Mutual exclusion for coroutines.
+                driver = launchMutex.withLock {
                     val isFirstLaunch = driverPool.numTasks.get() == 0
                     driverPool.numTasks.incrementAndGet()
                     if (isFirstLaunch) {
                         firstLaunch(driverPool, task)
                     } else {
-                        driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
+                        poll(driverPool, task)
                     }
                 }
 
+                // do not take up too much time on this driver
+                val fetchTaskTimeout = driverSettings.fetchTaskTimeout
                 result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
                     task.runWith(driver)
                 }
@@ -234,6 +238,13 @@ open class WebDriverPoolManager(
         }
 
         return result
+    }
+
+    private fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+        val pollingDriverTimeout = driverSettings.pollingDriverTimeout
+        val driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout)
+        driver.startWork()
+        return driver
     }
 
     private fun <R> firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {

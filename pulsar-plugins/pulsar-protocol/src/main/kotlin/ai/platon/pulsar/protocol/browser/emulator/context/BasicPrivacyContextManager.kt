@@ -33,7 +33,7 @@ class BasicPrivacyContextManager(
 
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, id)
-        logger.info("Privacy context is created #{} | {}", context.display, this::class.java.name)
+        logger.info("Privacy context is created #{}", context.display)
         return context
     }
 

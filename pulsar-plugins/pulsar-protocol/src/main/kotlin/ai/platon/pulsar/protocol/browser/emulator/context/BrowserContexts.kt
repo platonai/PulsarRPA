@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -48,7 +49,7 @@ class WebDriverContext(
     private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
-    private val isActive get() = !closed.get()
+    private val isActive get() = !closed.get() && AppContext.isActive
     private val isShutdown = AtomicBoolean()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
@@ -130,11 +131,11 @@ class WebDriverContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.privacyRetry(task)
+            return FetchResult.crawlRetry(task)
         }
 
         if (driverPoolManager.isRetiredPool(browserId)) {
-            return FetchResult.privacyRetry(task)
+            return FetchResult.crawlRetry(task)
         }
 
         return null

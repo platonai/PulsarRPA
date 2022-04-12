@@ -85,6 +85,13 @@
             <artifactId>pulsar-beans</artifactId>
         </dependency>
 
+        <!-- for excel support -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers-standard-package</artifactId>
+            <type>pom</type>
+        </dependency>
+
         <!-- Spring support -->
         <dependency>
             <groupId>org.springframework</groupId>

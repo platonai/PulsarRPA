@@ -30,41 +30,10 @@ data class NavigateEntry(
     }
 }
 
-abstract class AbstractBrowserInstance(
-    val id: BrowserInstanceId,
-    val launcherOptions: LauncherOptions,
-    val launchOptions: ChromeOptions
-): AutoCloseable {
-    val isGUI get() = launcherOptions.browserSettings.isGUI
-
-    var tabCount = AtomicInteger()
-    // remember, navigate history is small, so search is very fast for a list
-    val navigateHistory = mutableListOf<NavigateEntry>()
-    var activeTime = Instant.now()
-    val idleTimeout = Duration.ofMinutes(10)
-    val isIdle get() = Duration.between(activeTime, Instant.now()) > idleTimeout
-
-    private val initializedLock = ReentrantLock()
-    private val initialized = initializedLock.newCondition()
-
-    protected val launched = AtomicBoolean()
-    protected val closed = AtomicBoolean()
-
-    abstract fun launch()
-
-    fun await() {
-        initializedLock.withLock { initialized.await() }
-    }
-
-    fun signalAll() {
-        initializedLock.withLock { initialized.signalAll() }
-    }
-}
-
 interface WebDriver: Closeable {
     val id: Int
     val url: String
-    val browserInstance: AbstractBrowserInstance
+    val browserInstance: BrowserInstance
     val browserInstanceId: BrowserInstanceId get() = browserInstance.id
 
     val lastActiveTime: Instant

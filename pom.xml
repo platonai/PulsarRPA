@@ -566,6 +566,14 @@
                 <version>${autolink.version}</version>
             </dependency>
 
+            <!-- For parsers -->
+            <!-- https://mvnrepository.com/artifact/org.apache.tika/tika-parsers -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parsers-standard-package</artifactId>
+                <version>${tika.version}</version>
+                <type>pom</type>
+            </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
@@ -651,6 +659,7 @@
         <!-- spring-data-mongo -->
         <spring-data.version>3.1.15</spring-data.version>
         <spring-boot.version>2.4.13</spring-boot.version>
+        <tika.version>2.3.0</tika.version>
         <autolink.version>0.10.0</autolink.version>
     </properties>
 

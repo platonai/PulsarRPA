@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.jvm.Throws
 
 abstract class AbstractWebDriver(
-    override val browserInstance: AbstractBrowserInstance,
+    override val browserInstance: BrowserInstance,
     override val id: Int = 0
 ): Comparable<AbstractWebDriver>, WebDriver {
 

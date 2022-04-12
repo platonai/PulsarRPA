@@ -12,8 +12,4 @@ import org.springframework.test.context.junit4.SpringRunner
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class QABase {
 
-    @Before
-    fun `Choose desired language and delivery district for amazon`() {
-        // ChooseCountry(portalUrl, loadArguments, cx.createSession()).choose()
-    }
 }

@@ -21,7 +21,9 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -173,14 +175,17 @@ class ChromeDevtoolsDriver(
     }
 
     /**
-     * The expression should be a single line
+     * Evaluate a javascript expression in the browser.
+     * The expression should be a single line.
      * */
     override suspend fun evaluate(expression: String): Any? {
-        if (!isActive) return null
-
         refreshState()
         try {
-            val evaluate = runtime.evaluate(browserSettings.nameMangling(expression))
+            val evaluate = withContext(Dispatchers.IO) {
+                if (!isActive) null else {
+                    runtime.evaluate(browserSettings.nameMangling(expression))
+                }
+            }
 
             val exception = evaluate?.exceptionDetails?.exception
             if (isActive && exception != null) {
@@ -215,7 +220,13 @@ class ChromeDevtoolsDriver(
     override suspend fun currentUrl(): String {
         refreshState()
         navigateUrl = try {
-            if (!isActive) navigateUrl else mainFrame.url
+            if (!isActive) {
+                return navigateUrl
+            }
+
+            return withContext(Dispatchers.IO) {
+                mainFrame.url
+            }
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to retrieve current url, session might be closed, {}", e.message)
@@ -355,7 +366,9 @@ class ChromeDevtoolsDriver(
         if (!isActive) return null
 
         try {
-            return dom.getOuterHTML(dom.document.nodeId, null, null)
+            return withContext(Dispatchers.IO) {
+                dom.getOuterHTML(dom.document.nodeId, null, null)
+            }
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to get page source | {}", e.message)
@@ -366,7 +379,9 @@ class ChromeDevtoolsDriver(
 
     override suspend fun bringToFront() {
         if (isActive) {
-            page.bringToFront()
+            withContext(Dispatchers.IO) {
+                page.bringToFront()
+            }
         }
     }
 
@@ -394,7 +409,7 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun getInvaded(url: String) {
+    private suspend fun getInvaded(url: String) {
         if (!isActive) return
 
         page.enable()
@@ -431,7 +446,9 @@ class ChromeDevtoolsDriver(
             }
 
             navigateUrl = url
-            page.navigate(url)
+            withContext(Dispatchers.IO) {
+                page.navigate(url)
+            }
         } catch (e: ChromeRPCException) {
             sessionLosts.incrementAndGet()
             logger.warn("Failed to navigate | {}", e.message)

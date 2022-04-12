@@ -201,11 +201,15 @@ open class BrowserEmulator(
         val location = task.href ?: task.url
         driver.navigateTo(location)
 
+        if (!driver.supportJavascript) {
+            return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+        }
+
         val interactTask = InteractTask(task, driverConfig, driver)
-        return if (driver.supportJavascript) {
-            takeIf { driverConfig.jsInvadingEnabled }?.interactWithTimeout(interactTask)?: interactNoJsInvaded(interactTask)
+        return if (driverConfig.jsInvadingEnabled) {
+            interact(interactTask)
         } else {
-            InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
+            interactNoJsInvaded(interactTask)
         }
     }
 
@@ -227,10 +231,8 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun interactWithTimeout(task: InteractTask): InteractResult? {
         val interactTimeout = Duration.ofMinutes(3)
-        val result = withContext(Dispatchers.IO) {
-            withTimeoutOrNull(interactTimeout.toMillis()) {
-                interact(task)
-            }
+        val result = withTimeoutOrNull(interactTimeout.toMillis()) {
+            interact(task)
         }
 
         if (result == null) {

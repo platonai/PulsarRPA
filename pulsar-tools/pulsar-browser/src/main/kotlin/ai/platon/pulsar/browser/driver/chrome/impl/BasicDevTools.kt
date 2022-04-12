@@ -254,11 +254,24 @@ abstract class BasicDevTools(
         client.addMessageHandler(dispatcher)
     }
 
-    open operator fun <T> invoke(returnProperty: String, clazz: Class<T>, methodInvocation: MethodInvocation): T? {
-        return invoke(returnProperty, clazz, null, methodInvocation)
+    open operator fun <T> invoke(
+        returnProperty: String,
+        clazz: Class<T>,
+        methodInvocation: MethodInvocation
+    ): T? {
+        return invoke0(returnProperty, clazz, null, methodInvocation)
     }
 
     override operator fun <T> invoke(
+        returnProperty: String?,
+        clazz: Class<T>,
+        returnTypeClasses: Array<Class<out Any>>?,
+        method: MethodInvocation
+    ): T? {
+        return invoke0(returnProperty, clazz, returnTypeClasses, method)
+    }
+
+    private fun <T> invoke0(
         returnProperty: String?,
         clazz: Class<T>,
         returnTypeClasses: Array<Class<out Any>>?,

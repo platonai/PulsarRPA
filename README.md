@@ -194,13 +194,14 @@ The response is as follows:
 - How to simulate human behaviors?
 - How to schedule priority tasks?
 - How to drop a scheduled task?
-- How to know the status of task?
+- How to know the status of a task?
+- How to know what is happening in the system?
 - How to scrape amazon.com to match industrial needs?
 # Compare with other solutions
 - Pulsar vs selenium/puppeteer/playwright
 - Pulsar vs nutch
 - Pulsar vs scrapy+splash
 # Technical details
-- how to hide my bot from being detected?
-- why to simulate human behaviors?
-- how to render as many page as possible on a single machine?
+- How to hide my bot from being detected?
+- Why to simulate human behaviors?
+- How to render as many pages as possible on a single machine?

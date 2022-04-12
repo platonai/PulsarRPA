@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
@@ -61,7 +62,7 @@ open class WebDriverFactory(
 
     private fun createBrowserInstance(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
-    ): AbstractBrowserInstance {
+    ): BrowserInstance {
         val launcherOptions = LauncherOptions(driverSettings)
         if (driverSettings.isSupervised) {
             launcherOptions.supervisorProcess = driverSettings.supervisorProcess

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowserInstance
@@ -17,7 +18,7 @@ open class BrowserInstanceManager(
     val conf: ImmutableConfig
 ): AutoCloseable {
     private val closed = AtomicBoolean()
-    private val browserInstances = ConcurrentHashMap<String, AbstractBrowserInstance>()
+    private val browserInstances = ConcurrentHashMap<String, BrowserInstance>()
 
     val instanceCount get() = browserInstances.size
 
@@ -29,7 +30,7 @@ open class BrowserInstanceManager(
     @Synchronized
     fun launchIfAbsent(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
-    ): AbstractBrowserInstance {
+    ): BrowserInstance {
         val userDataDir = instanceId.userDataDir
         return browserInstances.computeIfAbsent(userDataDir.toString()) {
             createAndLaunch(instanceId, launcherOptions, launchOptions)

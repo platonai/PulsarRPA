@@ -14,6 +14,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
+import kotlinx.coroutines.channels.Channel
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -47,10 +48,12 @@ class LoadingWebDriverPool(
     val id = instanceSequencer.incrementAndGet()
     val capacity get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val onlineDrivers = ConcurrentSkipListSet<WebDriver>()
-    val freeDrivers = ArrayBlockingQueue<WebDriver>(2 * capacity)
 
+    val freeDrivers = ArrayBlockingQueue<WebDriver>(2 * capacity)
+//    val freeDrivers = Channel<WebDriver>(2 * capacity)
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
+    // TODO: never wait for notEmpty
     private val notEmpty = lock.newCondition()
 
     private val driverSettings get() = driverFactory.driverSettings
@@ -206,6 +209,7 @@ class LoadingWebDriverPool(
             freeDrivers.poll(timeout, unit)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
+            // TODO: handle progress shutdown
             throw WebDriverPoolException(e)
         } finally {
             numWaiting.decrementAndGet()
