@@ -108,7 +108,7 @@ class WebDriverContext(
         }
 
         if (runningTasks.isNotEmpty()) {
-            log.warn("Still {} running tasks after context close | {}",
+            log.info("Still {} running tasks after context close | {}",
                     runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
         } else {
             log.info("Web driver context is closed successfully | {}", browserId)

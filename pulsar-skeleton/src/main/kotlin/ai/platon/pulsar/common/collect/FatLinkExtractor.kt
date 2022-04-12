@@ -173,6 +173,10 @@ class FatLinkExtractor(
         val selector = options.correctedOutLinkSelector
         val urlRegex = options.outLinkPattern.toRegex()
 
+        if (selector.isBlank()) {
+            return listOf()
+        }
+
         return HyperlinkExtractor(page, document, selector, normalizer).extract()
             .asSequence()
             .onEach { ++counters.unfilteredLinks; ++globalCounters.unfilteredLinks }

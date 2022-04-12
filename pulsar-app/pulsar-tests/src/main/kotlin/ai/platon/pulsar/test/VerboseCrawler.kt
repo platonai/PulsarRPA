@@ -40,11 +40,11 @@ open class VerboseCrawler(
         doc.absoluteLinks()
         doc.stripScripts()
 
-        if (options.outLinkSelector.isBlank()) {
+        if (options.correctedOutLinkSelector.isBlank()) {
             return
         }
 
-        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
+        doc.select(options.correctedOutLinkSelector) { it.attr("abs:href") }.asSequence()
             .filter { UrlUtils.isValidUrl(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()

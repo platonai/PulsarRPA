@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.crawl.CoreMetrics
@@ -21,6 +22,7 @@ class BasicPrivacyContextManager(
     config: ImmutableConfig
 ): PrivacyManager(config) {
     private val logger = LoggerFactory.getLogger(BasicPrivacyContextManager::class.java)
+    private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
 
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
@@ -43,9 +45,15 @@ class BasicPrivacyContextManager(
     }
 
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
-        return if (iterator.hasNext()) {
-            iterator.next()
-        } else computeIfAbsent(privacyContextIdGenerator(fingerprint))
+        if (activeContexts.size < numPrivacyContexts) {
+            synchronized(activeContexts) {
+                if (activeContexts.size < numPrivacyContexts) {
+                    computeIfAbsent(privacyContextIdGenerator(fingerprint))
+                }
+            }
+        }
+
+        return synchronized(activeContexts) { iterator.next() }
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }

@@ -11,4 +11,7 @@ data class Fingerprint(
     var userAgent: String? = null,
 ): Comparable<Fingerprint> {
     override fun compareTo(other: Fingerprint) = toString().compareTo(other.toString())
+    override fun toString(): String = listOfNotNull(
+        browserType, proxyServer, username, password, userAgent
+    ).joinToString()
 }

@@ -250,7 +250,7 @@ open class Hyperlink(
      * */
     referer: String? = null,
     /**
-     * The url arguments
+     * The additional url arguments
      * */
     args: String? = null,
     /**

@@ -165,10 +165,13 @@ interface PulsarSession : AutoCloseable {
      * @return The web pages
      */
     fun loadAll(
-        urls: Iterable<String>,
-        options: LoadOptions = options(),
-        areItems: Boolean = false
+        urls: Iterable<String>, options: LoadOptions = options(), areItems: Boolean = false
     ): Collection<WebPage>
+
+    fun loadAll(normUrls: Collection<NormUrl>, options: LoadOptions = options()): Collection<WebPage>
+
+    fun asyncLoadAll(urls: Collection<UrlAware>): PulsarSession
+
     /**
      * Load all out pages in a portal page
      *
@@ -185,6 +188,8 @@ interface PulsarSession : AutoCloseable {
      * @return The web pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = options()): Collection<WebPage>
+
+    fun asyncLoadOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
     /**
      * Load an url as a resource without browser rendering in the browser context
      *

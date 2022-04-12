@@ -594,7 +594,7 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-        val delay = page?.retryDelay ?: defaultDelayPolicy(nextRetryNumber)
+        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: defaultDelayPolicy(nextRetryNumber)
 //        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")

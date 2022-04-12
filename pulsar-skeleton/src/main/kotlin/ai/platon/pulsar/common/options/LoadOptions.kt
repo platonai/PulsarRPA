@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Instant
@@ -370,7 +371,13 @@ open class LoadOptions(
     var version = "20210321"
 
     // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-    val correctedOutLinkSelector get() = outLinkSelector.trim('"')
+    val outLinkSelectorOrNull
+        get() = outLinkSelector.trim('"')
+            .takeIf { it.isNotBlank() }
+            ?.let { appendSelectorIfMissing(it, "a") }
+
+    val correctedOutLinkSelector
+        get() = outLinkSelectorOrNull ?: ""
 
     var referrer: String? = null
 

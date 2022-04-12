@@ -7,15 +7,13 @@ import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
+import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
@@ -279,6 +277,15 @@ abstract class AbstractPulsarSession(
         return context.loadAll(normUrls, options)
     }
 
+    override fun loadAll(normUrls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        return context.loadAll(normUrls, options)
+    }
+
+    override fun asyncLoadAll(urls: Collection<UrlAware>): AbstractPulsarSession {
+        context.asyncLoadAll(urls)
+        return this
+    }
+
     /**
      * Load all out pages in a portal page
      *
@@ -296,16 +303,35 @@ abstract class AbstractPulsarSession(
      * @return The web pages
      */
     override fun loadOutPages(portalUrl: String, options: LoadOptions): Collection<WebPage> {
-        val outlinkSelector = appendSelectorIfMissing(options.correctedOutLinkSelector, "a")
-
         val normUrl = normalize(portalUrl, options)
-
         val opts = normUrl.options
-        val links = loadDocument(normUrl).select(outlinkSelector) {
-            parseLink(it, !opts.noNorm, opts.ignoreUrlQuery)?.substringBeforeLast("#")
-        }.mapNotNullTo(mutableSetOf()) { it }.take(opts.topLinks)
+        val itemOpts = normUrl.options.createItemOptions()
+        val selector = opts.outLinkSelectorOrNull ?: return listOf()
 
-        return loadAll(links, normUrl.options.createItemOptions())
+        val links = loadDocument(normUrl)
+            .select(selector) { parseLinkStripFragment(it, !opts.noNorm, opts.ignoreUrlQuery) }
+            .mapNotNullTo(mutableSetOf()) { it }
+            .take(opts.topLinks)
+
+        return loadAll(links, itemOpts)
+    }
+
+    override fun asyncLoadOutPages(portalUrl: String, options: LoadOptions): AbstractPulsarSession {
+        val normUrl = normalize(portalUrl, options)
+        val opts = normUrl.options
+        val itemOpts = normUrl.options.createItemOptions()
+        val selector = opts.outLinkSelectorOrNull ?: return this
+
+        val outLinks = loadDocument(normUrl)
+            .select(selector) { parseLinkStripFragment(it, !opts.noNorm, opts.ignoreUrlQuery) }
+            .mapNotNullTo(mutableSetOf()) { it }
+            .take(opts.topLinks)
+            .map { StatefulListenableHyperlink("$it $itemOpts") }
+            .onEach { it.eventHandler = itemOpts.eventHandler }
+
+        asyncLoadAll(outLinks)
+
+        return this
     }
 
     @Throws(Exception::class)
@@ -453,6 +479,10 @@ abstract class AbstractPulsarSession(
         }
 
         return link.takeUnless { ignoreQuery } ?: UrlUtils.getUrlWithoutParameters(link)
+    }
+
+    private fun parseLinkStripFragment(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
+        return parseLink(ele, normalize, ignoreQuery)?.substringBeforeLast("#")
     }
 
     private fun <T> ensureActive(action: () -> T): T =

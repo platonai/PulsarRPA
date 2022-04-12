@@ -12,7 +12,9 @@ import com.github.kklisura.cdt.protocol.commands.Page
 import com.github.kklisura.cdt.protocol.types.input.DispatchKeyEventType
 import com.github.kklisura.cdt.protocol.types.input.DispatchMouseEventType
 import com.github.kklisura.cdt.protocol.types.input.MouseButton
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
 import kotlin.math.abs
 import kotlin.math.max
@@ -154,7 +156,7 @@ class Mouse(private val input: Input) {
         up(x, y, clickCount)
     }
 
-    fun move(x: Double, y: Double, steps: Int = 5, delayMillis: Long = 50) {
+    suspend fun move(x: Double, y: Double, steps: Int = 5, delayMillis: Long = 50) {
         val fromX = currentX
         val fromY = currentY
 
@@ -166,21 +168,23 @@ class Mouse(private val input: Input) {
             val x1 = fromX + (currentX - fromX) * (i.toDouble() / steps)
             val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
 
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_MOVED, x1, y1,
-                null, null,
-                null, // button
-                null, // buttons
-                null,
-                null, // force
-                null,
-                null,
-                null,
-                null, // twist
-                null,
-                null,
-                null
-            )
+            withContext(Dispatchers.IO) {
+                input.dispatchMouseEvent(
+                    DispatchMouseEventType.MOUSE_MOVED, x1, y1,
+                    null, null,
+                    null, // button
+                    null, // buttons
+                    null,
+                    null, // force
+                    null,
+                    null,
+                    null,
+                    null, // twist
+                    null,
+                    null,
+                    null
+                )
+            }
 
             if (delayMillis > 0) {
 //                runBlocking { delay(delayMillis) }
@@ -191,40 +195,44 @@ class Mouse(private val input: Input) {
         }
     }
 
-    fun down(x: Double, y: Double, clickCount: Int = 1) {
-        input.dispatchMouseEvent(
-            DispatchMouseEventType.MOUSE_PRESSED, x, y,
-            null, null,
-            MouseButton.LEFT,
-            null, // buttons
-            clickCount,
-            0.5, // force
-            null,
-            null,
-            null,
-            null, // twist
-            null,
-            null,
-            null
-        )
+    suspend fun down(x: Double, y: Double, clickCount: Int = 1) {
+        withContext(Dispatchers.IO) {
+            input.dispatchMouseEvent(
+                DispatchMouseEventType.MOUSE_PRESSED, x, y,
+                null, null,
+                MouseButton.LEFT,
+                null, // buttons
+                clickCount,
+                0.5, // force
+                null,
+                null,
+                null,
+                null, // twist
+                null,
+                null,
+                null
+            )
+        }
     }
 
-    fun up(x: Double, y: Double, clickCount: Int = 1) {
-        input.dispatchMouseEvent(
-            DispatchMouseEventType.MOUSE_RELEASED, x, y,
-            null, null,
-            MouseButton.LEFT,
-            null, // buttons
-            clickCount,
-            null, // force
-            null,
-            null,
-            null,
-            null, // twist
-            null,
-            null,
-            null
-        )
+    suspend fun up(x: Double, y: Double, clickCount: Int = 1) {
+        withContext(Dispatchers.IO) {
+            input.dispatchMouseEvent(
+                DispatchMouseEventType.MOUSE_RELEASED, x, y,
+                null, null,
+                MouseButton.LEFT,
+                null, // buttons
+                clickCount,
+                null, // force
+                null,
+                null,
+                null,
+                null, // twist
+                null,
+                null,
+                null
+            )
+        }
     }
 }
 
@@ -235,7 +243,9 @@ class Keyboard(private val input: Input) {
             if (Character.isISOControl(char)) {
                 // TODO:
             } else {
-                input.insertText("$char")
+                withContext(Dispatchers.IO) {
+                    input.insertText("$char")
+                }
             }
             delay(delayMillis)
         }
@@ -247,12 +257,20 @@ class Keyboard(private val input: Input) {
         up(key)
     }
 
-    fun down(key: String) {
-        input.dispatchKeyEvent(DispatchKeyEventType.KEY_DOWN)
+    suspend fun down(key: String) {
+        withContext(Dispatchers.IO) {
+            input.dispatchKeyEvent(
+                DispatchKeyEventType.KEY_DOWN
+            )
+        }
     }
 
-    fun up(key: String) {
-        input.dispatchKeyEvent(DispatchKeyEventType.KEY_UP)
+    suspend fun up(key: String) {
+        withContext(Dispatchers.IO) {
+            input.dispatchKeyEvent(
+                DispatchKeyEventType.KEY_UP
+            )
+        }
     }
 }
 

@@ -4,33 +4,40 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.FetchEntry
-import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
-import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import java.util.*
-import java.util.concurrent.*
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class BatchFetchComponent(
     val webDb: WebDb,
+    val globalCacheFactory: GlobalCacheFactory,
     coreMetrics: CoreMetrics? = null,
-    val lazyFetchTaskManager: LazyFetchTaskManager? = null,
     protocolFactory: ProtocolFactory,
     immutableConfig: ImmutableConfig
 ) : FetchComponent(coreMetrics, protocolFactory, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BatchFetchComponent::class.java)
 
-    constructor(webDb: WebDb, immutableConfig: ImmutableConfig)
-            : this(webDb, null, null, ProtocolFactory(immutableConfig), immutableConfig)
+    constructor(webDb: WebDb, immutableConfig: ImmutableConfig) : this(
+        webDb, GlobalCacheFactory(immutableConfig), null, ProtocolFactory(immutableConfig), immutableConfig)
 
-    val fetchTaskExecutor by lazy { MoreExecutors.newDirectExecutorService() }
+    val globalCache get() = globalCacheFactory.globalCache
 
     /**
      * Fetch all the urls, config property 'fetch.concurrency' controls the concurrency level.
@@ -127,7 +134,8 @@ class BatchFetchComponent(
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
         coreMetrics?.markTaskStart(size)
-        return urls.map { fetchTaskExecutor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
+
+        return runBlocking { urls.asFlow().map { fetch(it, options) }.toList(mutableListOf()) }
     }
 
     /**
@@ -170,12 +178,13 @@ class BatchFetchComponent(
 
         if (lazyTasks.isNotEmpty()) {
             val mode = options.fetchMode
-            // TODO: save url with options
-            lazyFetchTaskManager?.commitLazyTasks(mode, lazyTasks, conf)
+            val links = lazyTasks.map { NormUrl(it, options) }.map { Hyperlink(it.spec, args = it.args) }
+            globalCache.urlPool.normalCache.nReentrantQueue.addAll(links)
             if (logger.isDebugEnabled) {
                 logger.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
             }
         }
+
         return eagerTasks
     }
 

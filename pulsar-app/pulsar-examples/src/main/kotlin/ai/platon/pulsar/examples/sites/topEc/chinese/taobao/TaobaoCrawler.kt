@@ -1,10 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.taobao
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.event.LoginHandler
-import ai.platon.pulsar.examples.sites.topEc.chinese.gome.GomeCrawler
-import ai.platon.pulsar.examples.sites.topEc.chinese.s1688.S1688Crawler
 import ai.platon.pulsar.session.PulsarSession
 
 class TaobaoLoginHandler(
@@ -16,13 +13,14 @@ class TaobaoLoginHandler(
     passwordSelector: String = "input#fm-login-password",
     submitSelector: String = "button[type=submit]",
     warnUpUrl: String? = null,
-): LoginHandler(loginUrl,
+) : LoginHandler(
+    loginUrl,
     usernameSelector, username, passwordSelector, password,
     submitSelector, warnUpUrl, activateSelector
 )
 
 class TaobaoCrawler(
-    val portalUrl: String = "https://s.taobao.com/search?spm=a21bo.jianhua.201867-main.24.5af911d9wFOWsc&q=%E6%94%B6%E7%BA%B3",
+    val portalUrl: String = "https://s.taobao.com/search?spm=a21bo.jianhua.201867-main.24.5af911d9wFOWsc&q=收纳",
     val args: String = "-i 1s -ii 5m -ol a[href~=detail] -ignoreFailure",
     val session: PulsarSession = PulsarContexts.createSession()
 ) {
