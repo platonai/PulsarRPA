@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.*
@@ -14,7 +14,7 @@ import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.data.PoolId
+import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.persist.*

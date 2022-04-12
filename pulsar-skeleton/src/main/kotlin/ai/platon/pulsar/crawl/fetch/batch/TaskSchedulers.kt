@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -14,7 +14,8 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
     private val fetchSchedulerIds = Lists.newLinkedList<Int>()
 
     @get:Synchronized
-    val first: TaskScheduler get() = fetchSchedulers.values.iterator().next()
+    val first: TaskScheduler
+        get() = fetchSchedulers.values.iterator().next()
 
     constructor(taskSchedulers: List<TaskScheduler>, conf: ImmutableConfig) : this(conf) {
         taskSchedulers.forEach { t -> put(t.id, t) }

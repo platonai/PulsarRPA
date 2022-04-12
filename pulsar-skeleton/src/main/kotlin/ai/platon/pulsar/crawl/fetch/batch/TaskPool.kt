@@ -1,10 +1,10 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.data.PoolId
+import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import org.slf4j.LoggerFactory
 import java.text.DecimalFormat

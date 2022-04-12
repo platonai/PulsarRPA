@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.ReducerContext
@@ -22,11 +22,11 @@ import java.util.concurrent.atomic.AtomicInteger
  * items are consumed by FetcherThread-s.
  */
 class FeedLoop(
-        private val fetchMonitor: FetchMonitor,
-        private val taskScheduler: TaskScheduler,
-        private val tasksMonitor: TaskMonitor,
-        private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
-        private val conf: ImmutableConfig
+    private val fetchMonitor: FetchMonitor,
+    private val taskScheduler: TaskScheduler,
+    private val tasksMonitor: TaskMonitor,
+    private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
+    private val conf: ImmutableConfig
 ) : Comparable<FeedLoop>, Parameterized, AutoCloseable {
     private val LOG = LoggerFactory.getLogger(FeedLoop::class.java)
 

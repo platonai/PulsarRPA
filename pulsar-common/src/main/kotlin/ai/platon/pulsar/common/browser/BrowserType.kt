@@ -1,32 +1,33 @@
-package ai.platon.pulsar.common.browser;
+package ai.platon.pulsar.common.browser
+
+import java.util.*
 
 /**
- * The browser type
+ * The supported browser types
  */
-public enum BrowserType {
-    NATIVE, CHROME, MOCK_CHROME, SELENIUM_CHROME, PLAYWRIGHT_CHROME, PHANTOMJS;
+enum class BrowserType {
+    NATIVE, CHROME, MOCK_CHROME, PLAYWRIGHT_CHROME;
 
-    /**
-     * Create a browser type from a string
-     *
-     * @param s a {@link java.lang.String} object.
-     * @return a {@link BrowserType} object.
-     */
-    public static BrowserType fromString(String s) {
-        if (s == null || s.isEmpty()) {
-            return CHROME;
-        }
-
-        try {
-            return valueOf(s.toUpperCase());
-        } catch (Throwable e) {
-            return CHROME;
-        }
+    override fun toString(): String {
+        return name.lowercase(Locale.getDefault())
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return name().toLowerCase();
+    companion object {
+        /**
+         * Create a browser type from a string
+         *
+         * @param s the name of the browser type.
+         * @return the BrowserType.
+         */
+        @JvmStatic
+        fun fromString(name: String?): BrowserType {
+            return if (name == null || name.isEmpty()) {
+                CHROME
+            } else try {
+                valueOf(name.uppercase(Locale.getDefault()))
+            } catch (e: Throwable) {
+                CHROME
+            }
+        }
     }
 }

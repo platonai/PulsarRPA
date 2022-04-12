@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
@@ -26,12 +26,12 @@ import kotlin.math.abs
  * This class picks items from queues and fetches the pages
  */
 class FetchLoop(
-        private val fetchMonitor: FetchMonitor,
-        private val fetchComponent: FetchComponent,
-        private val parseComponent: ParseComponent,
-        private val taskScheduler: TaskScheduler,
-        private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
-        private val immutableConfig: ImmutableConfig
+    private val fetchMonitor: FetchMonitor,
+    private val fetchComponent: FetchComponent,
+    private val parseComponent: ParseComponent,
+    private val taskScheduler: TaskScheduler,
+    private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
+    private val immutableConfig: ImmutableConfig
 ): AutoCloseable, Comparable<FetchLoop> {
     companion object {
         val instanceSequencer = AtomicInteger()
@@ -88,7 +88,6 @@ class FetchLoop(
                     try {
                         schedule()?.let { fetch(it) }
                     } catch (e: IllegalApplicationContextStateException) {
-                        AppContext.shouldTerminate()
                         illegalState.set(true)
                         log.warn("Illegal context state | {}", e.message)
                     } catch (e: TimeoutCancellationException) {

@@ -420,7 +420,6 @@ open class StreamingCrawler<T : UrlAware>(
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
                     if (isIllegalApplicationState.compareAndSet(false, true)) {
-                        AppContext.shouldTerminate()
                         logger.warn("Coroutine was cancelled, quit")
                     }
                     flowState = FlowState.BREAK
@@ -487,7 +486,7 @@ open class StreamingCrawler<T : UrlAware>(
             crawlEventHandler.onAfterLoad(url, page)
         }
 
-        if (conf.getBoolean(CRAWL_SMART_RETRY, false)) {
+        if (conf.getBoolean(CRAWL_SMART_RETRY, true)) {
             handleRetry(url, page)
         }
     }
@@ -537,7 +536,6 @@ open class StreamingCrawler<T : UrlAware>(
         when (e) {
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.shouldTerminate()
                     logger.warn("\n!!!Illegal application context, quit ... | {}", e.message)
                 }
                 return FlowState.BREAK
@@ -562,7 +560,6 @@ open class StreamingCrawler<T : UrlAware>(
             is CancellationException -> {
                 // Comes after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.shouldTerminate()
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
@@ -587,7 +584,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry0(url: UrlAware, page: WebPage?) {
-        val nextRetryNumber = 1L + (page?.fetchRetries ?: 0)
+        val nextRetryNumber = 1 + (page?.fetchRetries ?: 0)
 
         if (page != null && nextRetryNumber > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
@@ -596,8 +593,7 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-        // TODO: use a retry strategy
-        val delay = Duration.ofMinutes(1L + 2 * nextRetryNumber)
+        val delay = page?.retryDelay ?: defaultDelayPolicy(nextRetryNumber)
 //        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
@@ -609,6 +605,10 @@ open class StreamingCrawler<T : UrlAware>(
             val prefix = "Trying ${nextRetryNumber}th ${delay.readable()} later"
             taskLogger.info("{}", LoadedPageFormatter(page, prefix = prefix))
         }
+    }
+
+    private fun defaultDelayPolicy(nextRetryNumber: Int): Duration {
+        return Duration.ofMinutes(1L + 2 * nextRetryNumber)
     }
 
     private fun fetchDelayed(url: UrlAware, delay: Duration) {

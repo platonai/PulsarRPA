@@ -1,6 +1,6 @@
-package ai.platon.pulsar.crawl.fetch.data
+package ai.platon.pulsar.crawl.fetch.batch.data
 
-import ai.platon.pulsar.crawl.fetch.TaskPool
+import ai.platon.pulsar.crawl.fetch.batch.TaskPool
 import org.slf4j.LoggerFactory
 import java.util.*
 

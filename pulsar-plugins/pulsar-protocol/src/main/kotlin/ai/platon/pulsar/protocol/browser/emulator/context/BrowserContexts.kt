@@ -61,7 +61,7 @@ class WebDriverContext(
             }?:FetchResult.crawlRetry(task)
         } catch (e: WebDriverPoolExhaustedException) {
             log.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task)
+            FetchResult.crawlRetry(task, Duration.ofSeconds(20))
         } catch (e: WebDriverPoolException) {
             log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)

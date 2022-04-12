@@ -75,13 +75,13 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="taskMonitor" class="ai.platon.pulsar.crawl.fetch.TaskMonitor" destroy-method="close">
+    <bean id="taskMonitor" class="ai.platon.pulsar.crawl.fetch.batch.TaskMonitor" destroy-method="close">
         <constructor-arg ref="coreMetrics"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="taskScheduler" class="ai.platon.pulsar.crawl.fetch.TaskScheduler" destroy-method="close">
+    <bean id="taskScheduler" class="ai.platon.pulsar.crawl.fetch.batch.TaskScheduler" destroy-method="close">
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="jitIndexer"/>
         <constructor-arg ref="taskMonitor"/>
@@ -90,7 +90,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="taskSchedulers" class="ai.platon.pulsar.crawl.fetch.TaskSchedulers" destroy-method="close">
+    <bean id="taskSchedulers" class="ai.platon.pulsar.crawl.fetch.batch.TaskSchedulers" destroy-method="close">
         <constructor-arg>
             <list>
                 <ref bean="taskScheduler"/>
@@ -99,7 +99,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.FetchMonitor" destroy-method="close">
+    <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.batch.FetchMonitor" destroy-method="close">
         <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="taskMonitor"/>

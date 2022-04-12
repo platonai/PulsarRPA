@@ -1,8 +1,8 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.data.PoolId
+import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
 import java.net.URL
 import java.time.Instant

@@ -147,6 +147,11 @@ final public class WebPage implements Comparable<WebPage> {
      */
     private String args = null;
 
+    /**
+     * The delay time to retry if a retry is needed
+     */
+    private Duration retryDelay = Duration.ZERO;
+
     private WebPage(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
     ) {
@@ -615,6 +620,15 @@ final public class WebPage implements Comparable<WebPage> {
         variables.remove(VAR_LOAD_OPTIONS);
         this.args = args;
         page.setOptions(args);
+    }
+
+    @NotNull
+    public Duration getRetryDelay() {
+        return retryDelay;
+    }
+
+    public void setRetryDelay(@NotNull Duration retryDelay) {
+        this.retryDelay = retryDelay;
     }
 
     /**

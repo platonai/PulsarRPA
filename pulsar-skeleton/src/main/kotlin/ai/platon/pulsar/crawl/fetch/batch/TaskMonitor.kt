@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -11,8 +11,8 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.data.PoolId
-import ai.platon.pulsar.crawl.fetch.data.PoolQueue
+import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
+import ai.platon.pulsar.crawl.fetch.batch.data.PoolQueue
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.TreeMultimap
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap

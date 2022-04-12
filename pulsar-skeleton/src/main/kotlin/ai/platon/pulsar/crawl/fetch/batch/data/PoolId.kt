@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch.data
+package ai.platon.pulsar.crawl.fetch.batch.data
 
 import java.net.URL
 

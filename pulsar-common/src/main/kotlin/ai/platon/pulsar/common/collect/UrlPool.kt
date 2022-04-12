@@ -34,20 +34,20 @@ open class DelayUrl(
 }
 
 /**
- * The fetch pool
+ * The url pool
  * */
 interface UrlPool {
     companion object {
         val REAL_TIME_PRIORITY = Priority13.HIGHEST.value
     }
 
+    val realTimeCache: UrlCache
+    val delayCache: Queue<DelayUrl>
     /**
      * The priority fetch caches
      * */
     val orderedCaches: MutableMap<Int, UrlCache>
     val unorderedCaches: MutableList<UrlCache>
-    val realTimeCache: UrlCache
-    val delayCache: Queue<DelayUrl>
     val totalItems: Int
 
     val lowestCache: UrlCache

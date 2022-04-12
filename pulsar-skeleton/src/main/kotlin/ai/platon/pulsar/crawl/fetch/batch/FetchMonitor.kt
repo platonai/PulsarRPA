@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.batch
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
@@ -36,12 +36,12 @@ import java.util.concurrent.atomic.AtomicInteger
  * The fetch monitor
  */
 class FetchMonitor(
-        private val fetchComponent: FetchComponent,
-        private val parseComponent: ParseComponent,
-        private val taskMonitor: TaskMonitor,
-        private val taskSchedulers: TaskSchedulers,
-        private val jitIndexer: JITIndexer,
-        private val conf: ImmutableConfig
+    private val fetchComponent: FetchComponent,
+    private val parseComponent: ParseComponent,
+    private val taskMonitor: TaskMonitor,
+    private val taskSchedulers: TaskSchedulers,
+    private val jitIndexer: JITIndexer,
+    private val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger(0)

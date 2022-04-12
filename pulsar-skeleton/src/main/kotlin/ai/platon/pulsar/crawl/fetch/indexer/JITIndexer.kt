@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.JobInitialized
-import ai.platon.pulsar.crawl.fetch.JobFetchTask
+import ai.platon.pulsar.crawl.fetch.batch.JobFetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.index.IndexWriters
 import ai.platon.pulsar.crawl.index.IndexingFilters
