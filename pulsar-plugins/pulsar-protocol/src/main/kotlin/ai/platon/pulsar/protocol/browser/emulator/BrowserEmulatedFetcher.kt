@@ -107,9 +107,4 @@ open class BrowserEmulatedFetcher(
             }
         }
     }
-
-    companion object {
-        private val batchIdGen = AtomicInteger(0)
-        val nextBatchId get() = batchIdGen.incrementAndGet()
-    }
 }

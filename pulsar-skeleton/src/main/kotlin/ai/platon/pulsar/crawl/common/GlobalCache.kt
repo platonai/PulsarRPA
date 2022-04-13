@@ -56,29 +56,31 @@ open class GlobalCache(val conf: ImmutableConfig) {
      * */
     private val documentCacheCapacity = conf.getUint(GLOBAL_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY)
     /**
-     * The fetch cache manager, hold on queues of fetch items
+     * The url pool, hold on queues of urls to fetch
      * */
     open var urlPool: UrlPool = ConcurrentUrlPool(conf).apply { initialize() }
     /**
-     * The global page cache, a page might be removed if it's expired or the cache is full
+     * The fetching cache, an url is added to the cache before fetching and removed from it after fetching
+     * */
+    open val fetchingCache = FetchingCache()
+    /**
+     * The global page cache, a page will be removed if it's expired or the cache is full
      * */
     open val pageCache = PageCatch(capacity = pageCacheCapacity)
     /**
-     * The global document cache, a document might be removed if it's expired or the cache is full
+     * The global document cache, a document will be removed if it's expired or the cache is full
      * */
     open val documentCache = DocumentCatch(capacity = documentCacheCapacity)
 
-    open val fetchingUrlQueue = FetchingCache()
-
     fun resetCaches() {
-        fetchingUrlQueue.clear()
+        fetchingCache.clear()
         pageCache.clear()
         documentCache.clear()
         urlPool = ConcurrentUrlPool(conf).apply { initialize() }
     }
 
     fun clearCaches() {
-        fetchingUrlQueue.clear()
+        fetchingCache.clear()
         pageCache.clear()
         documentCache.clear()
         urlPool.clear()

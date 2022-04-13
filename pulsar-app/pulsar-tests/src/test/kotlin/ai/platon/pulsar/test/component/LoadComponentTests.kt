@@ -23,7 +23,6 @@ class LoadComponentTests {
     @Test
     fun testNormalize() {
         val args = "-i 5s"
-        loadComponent.load("")
     }
 
 }

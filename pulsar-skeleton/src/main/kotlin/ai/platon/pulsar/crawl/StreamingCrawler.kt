@@ -576,7 +576,7 @@ open class StreamingCrawler<T : UrlAware>(
     private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {
         val globalCache = globalCacheFactory?.globalCache ?: return false
 
-        if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingUrlQueue) {
+        if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingCache) {
             // process later, hope the page is fetched
             logger.debug("Task is in process, do it {} later | {}", delay.readable(), url.configuredUrl)
             fetchDelayed(url, delay)

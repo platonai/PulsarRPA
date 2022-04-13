@@ -129,10 +129,12 @@ open class BrowserEmulator(
                 ?: return ForwardingResponse.failed(task.page, NoSuchSessionException("null response"))
 
             navigateTask.pageSource = response.body()
-            navigateTask.pageDatum.headers.putAll(response.headers())
-            navigateTask.pageDatum.contentType = response.contentType()
-            navigateTask.pageDatum.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
-            navigateTask.pageDatum.protocolStatus = ProtocolStatus.STATUS_SUCCESS
+            navigateTask.pageDatum.apply {
+                headers.putAll(response.headers())
+                contentType = response.contentType()
+                content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
+                protocolStatus = ProtocolStatus.STATUS_SUCCESS
+            }
         } catch (e: IOException) {
             logger.warn(e.stringify())
         }
@@ -150,13 +152,9 @@ open class BrowserEmulator(
 
             driver.stop()
         } catch (e: NavigateTaskCancellationException) {
-            logger.info(
-                "{}. Try canceled task {}/{} again later (privacy scope suggested)",
-                task.page.id,
-                task.id,
-                task.batchId
-            )
-            response = ForwardingResponse.privacyRetry(task.page)
+            logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
+                task.page.id, task.id, task.batchId)
+            response = ForwardingResponse.crawlRetry(task.page)
         }
 
         return response
@@ -229,20 +227,6 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class)
-    protected open suspend fun interactWithTimeout(task: InteractTask): InteractResult? {
-        val interactTimeout = Duration.ofMinutes(3)
-        val result = withTimeoutOrNull(interactTimeout.toMillis()) {
-            interact(task)
-        }
-
-        if (result == null) {
-            logger.warn("Interact timeout in {}", interactTimeout)
-        }
-
-        return result
-    }
-
-    @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val volatileConfig = task.fetchTask.page.conf
@@ -256,24 +240,14 @@ open class BrowserEmulator(
 
         jsCheckDOMState(task, result)
 
-        eventHandler?.runCatching { onAfterCheckDOMState(task.fetchTask.page, task.driver) }?.onFailure {
-            logger.warn(it.simplify("Failed to call onAfterCheckDOMState - "))
+        if (result.state.isContinue) {
+            eventHandler?.runCatching { onAfterCheckDOMState(task.fetchTask.page, task.driver) }?.onFailure {
+                logger.warn(it.simplify("Failed to call onAfterCheckDOMState - "))
+            }
         }
-
-        // task.driver.bringToFront()
 
         if (result.state.isContinue) {
             jsScrollDown(task, result)
-        }
-
-        // TODO: move to the session config
-        val isJd = task.url.contains("item.jd.com")
-        val requiredElements = if (isJd) {
-            listOf(".itemInfo-wrap .summary-price .p-price .price")
-        } else listOf()
-
-        if (result.state.isContinue && requiredElements.isNotEmpty()) {
-            jsWaitForElement(task, requiredElements)
         }
 
         if (result.state.isContinue) {
@@ -291,8 +265,6 @@ open class BrowserEmulator(
                 logger.warn(it.simplify("Failed to call onAfterComputeFeature - "))
             }
         }
-
-        // handle click to navigate
 
         return result
     }

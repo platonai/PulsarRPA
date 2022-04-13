@@ -28,10 +28,6 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     val runtime get() = devTools.runtime
     val emulation get() = devTools.emulation
 
-    init {
-        ChromeLauncher.enableDebugChromeOutput()
-    }
-
     abstract fun run()
 
     val pageSource: String

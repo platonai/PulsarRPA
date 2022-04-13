@@ -286,7 +286,6 @@ public interface CapabilityTypes {
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
-    String BROWSER_DATA_DIR = "browser.data.dir";
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,

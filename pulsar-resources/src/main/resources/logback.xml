@@ -89,6 +89,9 @@
     <logger name="org.springframework.core" level="INFO"/>
     <logger name="org.springframework.core.env" level="INFO"/>
 
+    <!-- Debug chrome. Be sure to remove or turn the logger off, when done. -->
+    <logger name="com.github.kklisura.cdt.launch.chrome.output" level="DEBUG"/>
+
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.common" level="WARN"/>
     <logger name="ai.platon.pulsar.context" level="WARN"/>

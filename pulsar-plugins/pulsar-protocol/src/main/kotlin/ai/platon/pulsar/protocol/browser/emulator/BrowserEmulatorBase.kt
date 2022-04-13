@@ -25,7 +25,6 @@ abstract class BrowserEmulatorBase(
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
     private val tracer = log.takeIf { it.isTraceEnabled }
-    val emulateSettings get() = EmulateSettings(immutableConfig)
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     val closed = AtomicBoolean(false)
@@ -37,13 +36,13 @@ abstract class BrowserEmulatorBase(
     val counterCancels by lazy { AppMetrics.reg.counter(this,"cancels") }
 
     override fun getParams(): Params {
+        val emulateSettings = EmulateSettings(immutableConfig)
         return Params.of(
                 "pageLoadTimeout", emulateSettings.pageLoadTimeout,
                 "scriptTimeout", emulateSettings.scriptTimeout,
                 "scrollDownCount", emulateSettings.scrollCount,
                 "scrollInterval", emulateSettings.scrollInterval,
-                "jsInvadingEnabled", driverSettings.jsInvadingEnabled,
-                "emulatorEventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATOR_EVENT_HANDLER)
+                "jsInvadingEnabled", driverSettings.jsInvadingEnabled
         )
     }
 

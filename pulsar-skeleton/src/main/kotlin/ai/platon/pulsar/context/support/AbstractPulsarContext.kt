@@ -111,7 +111,6 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
-    // TODO: we can only check active before critical calls, for example, IO operations
     val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
@@ -136,17 +135,17 @@ abstract class AbstractPulsarContext(
 
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
+    private val abnormalPages: Collection<WebPage>? get() = if (isActive) null else listOf()
+
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
 
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
 
-    @Throws(BeansException::class)
     fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
         kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
 
-    @Throws(BeansException::class)
     inline fun <reified T : Any> getBeanOrNull(): T? = getBeanOrNull(T::class)
 
     abstract override fun createSession(): AbstractPulsarSession
@@ -165,19 +164,18 @@ abstract class AbstractPulsarContext(
     }
 
     fun clearCaches() {
-        if (!isActive) return
-
         globalCacheFactory.globalCache.pageCache.clear()
         globalCacheFactory.globalCache.documentCache.clear()
     }
 
     /**
      * Normalize an url, the url can be one of the following:
-     * 1. a configured url
-     * 2. a base64 encoded url
-     * 3. a base64 encoded configured url
+     * 1. an normal url
+     * 2. a configured url
+     * 3. a base64 encoded url
+     * 4. a base64 encoded configured url
      *
-     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      * */
@@ -192,7 +190,7 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Normalize urls, remove invalid urls
+     * Normalize urls, remove invalid ones
      *
      * @param urls The urls to normalize
      * @param options The LoadOptions applied to each url
@@ -219,7 +217,7 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Normalize urls, remove invalid urls
+     * Normalize urls, remove invalid ones
      *
      * @param urls The urls to normalize
      * @param options The LoadOptions applied to each url
@@ -233,7 +231,7 @@ abstract class AbstractPulsarContext(
     /**
      * Inject an url
      *
-     * @param url The url followed by config options
+     * @param url The url followed by options
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
@@ -243,33 +241,53 @@ abstract class AbstractPulsarContext(
     override fun inject(url: NormUrl): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
-
+    /**
+     * Get a webpage from the storage
+     * */
     override fun get(url: String): WebPage {
         return webDbOrNull?.get(url, false)?: WebPage.NIL
     }
 
+    /**
+     * Get a webpage from the storage
+     * */
     override fun getOrNull(url: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false)
     }
 
+    /**
+     * Check if a page exists in the storage
+     * */
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
 
+    /**
+     * Check the fetch state of a page
+     * */
     override fun fetchState(page: WebPage, options: LoadOptions) = loadComponent.fetchState(page, options)
 
+    /**
+     * Scan pages in the storage
+     * */
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
 
+    /**
+     * Scan pages in the storage
+     * */
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
+    /**
+     * Scan pages in the storage
+     * */
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     /**
-     * Load a url with specified options, see [LoadOptions] for all options
+     * Load an page with specified options, see [LoadOptions] for all options
      *
      * @param url     The url followed by options
      * @param options The options
@@ -319,11 +337,11 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) { loadComponent.loadAll(normalize(urls, options), options) } else listOf()
+        return abnormalPages ?: loadComponent.loadAll(normalize(urls, options), options)
     }
 
     override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return if (isActive) loadComponent.loadAll(urls, options) else listOf()
+        return abnormalPages ?: loadComponent.loadAll(urls, options)
     }
 
     override fun asyncLoad(url: UrlAware): AbstractPulsarContext {
@@ -344,22 +362,37 @@ abstract class AbstractPulsarContext(
         return parser.parse(page, noLinkFilter = true).document
     }
 
+    /**
+     * Persist the page into the storage
+     * */
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
     }
 
+    /**
+     * Delete the page from the storage
+     * */
     override fun delete(url: String) {
         webDbOrNull?.delete(url)
     }
 
+    /**
+     * Delete the page from the storage
+     * */
     override fun delete(page: WebPage) {
         webDbOrNull?.delete(page.url)
     }
 
+    /**
+     * Flush the storage
+     * */
     override fun flush() {
         webDbOrNull?.flush()
     }
 
+    /**
+     * Wait until there is no tasks in the main loop
+     * */
     override fun await() {
         if (isActive) {
             crawlLoops.await()
@@ -385,7 +418,7 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Close this pulsar context, destroying all beans in its bean factory.
+     * Close this pulsar context
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
@@ -413,7 +446,6 @@ abstract class AbstractPulsarContext(
         if (closed.compareAndSet(false, true)) {
             logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
 
-            // TODO: properly cancel the fetching tasks
             globalCacheFactory.globalCache.clearCaches()
 
             sessions.values.forEach {

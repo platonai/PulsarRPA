@@ -57,7 +57,9 @@ object PulsarContexts {
     fun createSession() = create().createSession()
 
     @JvmStatic
-    fun await() = create().await()
+    fun await() {
+        activeContext?.await()
+    }
 
     @Synchronized
     @JvmStatic

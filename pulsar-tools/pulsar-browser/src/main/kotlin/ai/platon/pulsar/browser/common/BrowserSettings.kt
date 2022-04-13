@@ -236,7 +236,7 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    val jsNameManglingMagic = conf.get(BROWSER_JS_NAME_MANGLING_MAGIC, "__exotic_")
+    val jsNameManglingCipher = conf.get(BROWSER_JS_NAME_MANGLING_MAGIC, "__exotic_")
 
     /**
      * Chrome has to run without sandbox in a virtual machine
@@ -259,7 +259,6 @@ open class BrowserSettings(
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
 
     val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
-    val userDataDir get() = conf.getPathOrNull(BROWSER_DATA_DIR) ?: generateUserDataDir()
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
 
     // We will wait for document ready manually using javascript
@@ -306,6 +305,7 @@ open class BrowserSettings(
         val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
+        // TODO: avoid global variables, all variables should be put in configs
         return """
             ;
             let META_INFORMATION_ID = "${AppConstants.PULSAR_META_INFORMATION_ID}";
@@ -327,7 +327,7 @@ open class BrowserSettings(
      * A simple name mangling policy
      * */
     open fun nameMangling(script: String): String {
-        return script.replace("__pulsar_", jsNameManglingMagic)
+        return script.replace("__pulsar_", jsNameManglingCipher)
     }
 
     private fun loadJs() {

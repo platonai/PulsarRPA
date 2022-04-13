@@ -145,7 +145,6 @@ abstract class AbstractPulsarSession(
      * @param url     The url of the page to open
      * @return The web page
      */
-    @Throws(Exception::class)
     override fun open(url: String): WebPage = load(url, options("-refresh"))
 
     /**
@@ -155,7 +154,6 @@ abstract class AbstractPulsarSession(
      * @param args The load args
      * @return The web page
      */
-    @Throws(Exception::class)
     override fun load(url: String, args: String): WebPage = load(url, options(args))
 
     /**
@@ -165,16 +163,12 @@ abstract class AbstractPulsarSession(
      * @param options The load options
      * @return The web page
      */
-    @Throws(Exception::class)
     override fun load(url: String, options: LoadOptions): WebPage = load(normalize(url, options))
 
-    @Throws(Exception::class)
     override fun load(url: UrlAware, args: String): WebPage = load(normalize(url, options(args)))
 
-    @Throws(Exception::class)
     override fun load(url: UrlAware, options: LoadOptions): WebPage = load(normalize(url, options))
 
-    @Throws(Exception::class)
     override fun load(normUrl: NormUrl): WebPage {
         if (!enableCache) {
             return context.load(normUrl)
@@ -183,18 +177,14 @@ abstract class AbstractPulsarSession(
         return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCache(normUrl)
     }
 
-    @Throws(Exception::class)
     override suspend fun loadDeferred(url: String, options: LoadOptions) = loadDeferred(normalize(url, options))
 
-    @Throws(Exception::class)
     override suspend fun loadDeferred(url: UrlAware, args: String): WebPage =
         loadDeferred(normalize(url, options(args)))
 
-    @Throws(Exception::class)
     override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage =
         loadDeferred(normalize(url, options))
 
-    @Throws(Exception::class)
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
         if (!enableCache) {
             return context.loadDeferred(normUrl)
@@ -334,10 +324,8 @@ abstract class AbstractPulsarSession(
         return this
     }
 
-    @Throws(Exception::class)
     override suspend fun loadResource(url: String, referer: String, args: String) = loadResource(url, referer, options(args))
 
-    @Throws(Exception::class)
     override suspend fun loadResource(url: String, referer: String, opts: LoadOptions): WebPage {
         opts.isResource = true
         opts.referrer = referer

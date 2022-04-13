@@ -1,9 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
@@ -34,11 +34,6 @@ class ChromeLauncher(
 
     companion object {
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
-
-        fun enableDebugChromeOutput() {
-//            val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
-//            loggerContext.getLogger("com.github.kklisura.cdt.launch.chrome.output").level = Level.DEBUG
-        }
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)

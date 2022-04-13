@@ -28,6 +28,7 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -63,16 +64,6 @@ class LoadComponent(
     val pageCache get() = globalCache.pageCache
     val documentCache get() = globalCache.documentCache
 
-    private val nonMetadataFields = listOf(
-        GWebPage.Field.CONTENT,
-        GWebPage.Field.PAGE_TEXT,
-        GWebPage.Field.PAGE_MODEL
-    )
-    val metadataFields = GWebPage.Field.values()
-        .filterNot { it in nonMetadataFields }
-        .map { it.getName() }
-        .toTypedArray()
-
     private val coreMetrics get() = fetchComponent.coreMetrics
     private val closed = AtomicBoolean()
 
@@ -81,10 +72,6 @@ class LoadComponent(
     @Volatile
     private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
-
-    @Volatile
-    var lastPageReport: String? = null
-        protected set
 
     constructor(
         webDb: WebDb,
@@ -108,55 +95,8 @@ class LoadComponent(
         }
     }
 
-    /**
-     * Load an url, options can be specified following the url, see [LoadOptions] for all options
-     *
-     * @param configuredUrl The url followed by options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    fun load(configuredUrl: String): WebPage {
-        val (first, second) = splitUrlArgs(configuredUrl)
-        val options = LoadOptions.parse(second, immutableConfig.toVolatileConfig())
-        return load(first, options)
-    }
-
-    /**
-     * Load an url with specified options, see [LoadOptions] for all options
-     *
-     * @param url The url to load
-     * @param options The options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    fun load(url: String, args: String): WebPage {
-        return load(url, LoadOptions.parse(args, immutableConfig.toVolatileConfig()))
-    }
-
-    /**
-     * Load an url with specified options
-     * If there is no page in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param url The url to load
-     * @param options The options
-     * @return The WebPage.
-     */
-    fun load(url: String, options: LoadOptions): WebPage {
-        return abnormalPage ?: loadWithRetry(NormUrl(url, options))
-    }
-
     fun load(url: URL, options: LoadOptions): WebPage {
         return abnormalPage ?: loadWithRetry(NormUrl(url, options))
-    }
-
-    /**
-     * Load an url in [GHypeLink] format
-     * If there is no page in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param link    The url in [GHypeLink] format to load
-     * @param options The options
-     * @return The WebPage.
-     */
-    fun load(link: GHypeLink, options: LoadOptions): WebPage {
-        return abnormalPage ?: load(link.url.toString(), options).also { it.anchor = link.anchor.toString() }
     }
 
     fun load(normUrl: NormUrl): WebPage {
@@ -224,6 +164,25 @@ class LoadComponent(
 //        future.join()
 
         return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
+    }
+
+    /**
+     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * */
+    fun loadAllAsync(normUrls: Iterable<NormUrl>, options: LoadOptions): List<CompletableFuture<WebPage>> {
+        val queue = globalCache.urlPool.higher3Cache.reentrantQueue
+        val timeoutSeconds = options.pageLoadTimeout.seconds + 1
+        val links = normUrls
+            .asSequence()
+            .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
+            .onEach { it.nMaxRetry = 0 }
+            .onEach { url -> url.eventHandler = options.eventHandler }
+            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
+            .toList()
+
+        queue.addAll(links)
+
+        return links
     }
 
     private fun load0(normUrl: NormUrl): WebPage {
@@ -451,7 +410,7 @@ class LoadComponent(
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         // require(page.options == options)
         page.setVar(VAR_PREV_FETCH_TIME_BEFORE_UPDATE, page.prevFetchTime)
-        globalCache.fetchingUrlQueue.add(page.url)
+        globalCache.fetchingCache.add(page.url)
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
 
@@ -482,7 +441,7 @@ class LoadComponent(
         // the metadata of the page is loaded from database but the content is not cached,
         // so load the content again
         update(page, options)
-        globalCache.fetchingUrlQueue.remove(page.url)
+        globalCache.fetchingCache.remove(page.url)
     }
 
     /**
