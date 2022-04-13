@@ -144,8 +144,8 @@ open class PulsarOptions(
         fun normalize(args: String, seps: String = ","): String {
             var args1 = StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length))
             // in old version, -cacheContent has arity 0, but current version is 1, we need a convert
-            args1 = arity0ToArity1(args1, "-cacheContent")
-            args1 = arity0ToArity1(args1, "-storeContent")
+            args1 = OptionUtils.arity0ToArity1(args1, "-cacheContent")
+            args1 = OptionUtils.arity0ToArity1(args1, "-storeContent")
 
             return args1
         }

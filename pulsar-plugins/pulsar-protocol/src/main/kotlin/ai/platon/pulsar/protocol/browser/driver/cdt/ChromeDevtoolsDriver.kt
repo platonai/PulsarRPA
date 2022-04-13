@@ -50,7 +50,7 @@ class ChromeDevtoolsDriver(
     }
 
     val openSequence = 1 + browserInstance.devToolsCount
-    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(10)
+    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val userAgent get() = BrowserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
@@ -90,8 +90,7 @@ class ChromeDevtoolsDriver(
 
     val sessionLosts = AtomicInteger()
     override var lastActiveTime = Instant.now()
-    // TODO: collect application state from IO operations
-    val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen || sessionLosts.get() > 0
+    val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
 
     init {

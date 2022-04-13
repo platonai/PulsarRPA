@@ -3,12 +3,11 @@ package ai.platon.pulsar.crawl.common.url
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.options.findOption
-import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.common.urls.StatefulHyperlink
-import ai.platon.pulsar.common.urls.StatefulUrl
-import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.*
+import ai.platon.pulsar.common.options.OptionUtils
+import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.HtmlDocumentHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
@@ -109,7 +108,7 @@ open class CompletableHyperlink<T>(
     override var priority: Int = 0
 ): UrlAware, Comparable<UrlAware>, StatefulUrl, CompletableFuture<T>() {
 
-    override val configuredUrl get() = if (args != null) "$url $args" else url
+    override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
 
     override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
 
@@ -118,7 +117,7 @@ open class CompletableHyperlink<T>(
      * */
     override val isPersistable: Boolean = false
 
-    override val label: String get() = findOption(args, listOf("-l", "-label", "--label")) ?: ""
+    override val label: String get() = OptionUtils.findOption(args, listOf("-l", "-label", "--label")) ?: ""
 
     /**
      * Required website language
@@ -135,11 +134,11 @@ open class CompletableHyperlink<T>(
     /**
      * The maximum retry times
      * */
-    override var maxRetry: Int = 3
+    override var nMaxRetry: Int = 3
 
     override val deadTime: Instant
         get() {
-            val deadTime = findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
+            val deadTime = OptionUtils.findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
         }
 

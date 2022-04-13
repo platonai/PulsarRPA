@@ -173,7 +173,7 @@ class TestPulsarOptions {
             "$search -parse"
         )
         argsList.forEach { args ->
-            val args1 = arity0ToArity1(args, search)
+            val args1 = OptionUtils.arity0ToArity1(args, search)
             assertTrue("$search true" in args1, args)
         }
     }

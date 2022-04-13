@@ -9,10 +9,13 @@ import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
     companion object {
-        fun registerEventHandlers(url: ListenableHyperlink, options: LoadOptions) {
-            url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
-            options.eventHandler = url.eventHandler
+        fun overrideLoadOptions(url: UrlAware, options: LoadOptions) {
+            if (url is ListenableHyperlink) {
+                url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
+                options.eventHandler = url.eventHandler
+            }
             options.conf.name = options.label
+            options.nMaxRetry = url.nMaxRetry
         }
     }
 
@@ -30,9 +33,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         val args = "$args2 $args1 $args0".trim()
 
         val finalOptions = initOptions(LoadOptions.parse(args, options), toItemOption)
-        if (url is ListenableHyperlink) {
-            registerEventHandlers(url, finalOptions)
-        }
+        overrideLoadOptions(url, finalOptions)
 
 //        require(options.eventHandler != null)
 //        require(finalOptions.eventHandler != null)
@@ -51,14 +52,14 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
             }
         }
 
-        finalOptions.toConf()
+        finalOptions.overrideConfiguration()
 
         val href = url.href?.takeIf { UrlUtils.isValidUrl(it) }
         return NormUrl(normalizedUrl, finalOptions, href, url)
     }
 
     private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
-        options.toConf()
+        options.overrideConfiguration()
         return if (toItemOption) options.createItemOptions() else options
     }
 }

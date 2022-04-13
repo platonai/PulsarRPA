@@ -1,11 +1,9 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.options.findOption
-import org.apache.commons.lang3.StringUtils
+import ai.platon.pulsar.common.options.OptionUtils
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class TestOptions {
 
@@ -32,11 +30,11 @@ class TestOptions {
         }
 
         argsList.forEach { args ->
-            assertEquals(label, findOption(args, "-label"), args)
+            assertEquals(label, OptionUtils.findOption(args, "-label"), args)
         }
 
         argsList.forEach { args ->
-            assertEquals(label, findOption(args, listOf("-l", "-label", "--label")), args)
+            assertEquals(label, OptionUtils.findOption(args, listOf("-l", "-label", "--label")), args)
         }
     }
 }

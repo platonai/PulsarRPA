@@ -418,10 +418,6 @@ final public class WebPage implements Comparable<WebPage> {
         return isContentUpdated;
     }
 
-    public int getMaxRetries() {
-        return conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3);
-    }
-
     @NotNull
     public VolatileConfig getConf() {
         return conf;
@@ -478,6 +474,14 @@ final public class WebPage implements Comparable<WebPage> {
 
     public void setRetryDelay(@NotNull Duration retryDelay) {
         this.retryDelay = retryDelay;
+    }
+
+    public int getMaxRetries() {
+        return getMetadata().getInt(Name.FETCH_MAX_RETRY, 3);
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        getMetadata().set(Name.FETCH_MAX_RETRY, maxRetries);
     }
 
     @NotNull

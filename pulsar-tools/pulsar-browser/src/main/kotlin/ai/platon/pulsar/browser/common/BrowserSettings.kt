@@ -46,7 +46,7 @@ data class EmulateSettings(
         Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
-    fun toConf(conf: MutableConfig) {
+    fun overrideConfiguration(conf: MutableConfig) {
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)

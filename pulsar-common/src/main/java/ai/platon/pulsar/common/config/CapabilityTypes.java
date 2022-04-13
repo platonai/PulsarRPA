@@ -233,7 +233,7 @@ public interface CapabilityTypes {
 
     String FETCH_INTERVAL = "fetch.fetch.interval";
 
-    String FETCH_DEFAULT_INTERVAL = "fetch.interval.default";
+    String FETCH_DEFAULT_INTERVAL = "fetch.default.interval";
 
     String FETCH_MAX_RETRY = "fetch.retry.max";
 

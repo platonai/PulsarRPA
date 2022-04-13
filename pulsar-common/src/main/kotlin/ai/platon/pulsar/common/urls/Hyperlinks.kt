@@ -3,12 +3,15 @@ package ai.platon.pulsar.common.urls
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.options.findOption
+import ai.platon.pulsar.common.options.OptionUtils
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
 
+/**
+ * A degenerate url can be used to perform non-fetching tasks in the main loop.
+ * */
 interface DegenerateUrl
 
 /**
@@ -83,7 +86,7 @@ interface UrlAware {
     /**
      * The maximum retry times
      * */
-    val maxRetry: Int
+    val nMaxRetry: Int
 }
 
 interface ComparableUrlAware : UrlAware, Comparable<UrlAware>
@@ -107,7 +110,7 @@ abstract class AbstractUrl(
     override var priority: Int = 0
 ) : UrlAware, ComparableUrlAware {
 
-    override val configuredUrl get() = if (args != null) "$url $args" else url
+    override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
 
     override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
 
@@ -116,7 +119,7 @@ abstract class AbstractUrl(
      * */
     override val isPersistable: Boolean = true
 
-    override val label: String get() = findOption(args, listOf("-l", "-label", "--label")) ?: ""
+    override val label: String get() = OptionUtils.findOption(args, listOf("-l", "-label", "--label")) ?: ""
 
     /**
      * Required website language
@@ -136,11 +139,11 @@ abstract class AbstractUrl(
     /**
      * The maximum retry times
      * */
-    override var maxRetry: Int = 3
+    override var nMaxRetry: Int = 3
 
     override val deadTime: Instant
         get() {
-            val deadTime = findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
+            val deadTime = OptionUtils.findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
         }
 
@@ -266,37 +269,6 @@ open class Hyperlink(
 
     fun data() = HyperlinkDatum(url, text, order, referer = referer, args = args, href = href, true, 0)
 }
-
-open class LabeledHyperlink(
-    /**
-     * The url of this hyperlink
-     * */
-    override val label: String,
-    /**
-     * The url of this hyperlink
-     * */
-    url: String,
-    /**
-     * The anchor text of this hyperlink
-     * */
-    text: String = "",
-    /**
-     * The order of this hyperlink in it's referer page
-     * */
-    order: Int = 0,
-    /**
-     * The url of the referer page
-     * */
-    referer: String? = null,
-    /**
-     * The url arguments
-     * */
-    args: String? = null,
-    /**
-     * The hypertext reference, It defines the address of the document, which this time is linked from
-     * */
-    href: String? = null
-) : Hyperlink(url, text, order, referer, args, href)
 
 open class StatefulHyperlink(
     /**

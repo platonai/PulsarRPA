@@ -194,7 +194,7 @@ class LoadComponent(
         val links = normUrls
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
-            .onEach { it.maxRetry = 0 }
+            .onEach { it.nMaxRetry = 0 }
             .onEach { url -> url.eventHandler = options.eventHandler }
             .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()

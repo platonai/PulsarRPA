@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.urls.LabeledHyperlink
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.HyperlinkPersistable
@@ -18,6 +18,7 @@ import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.DomStatistics
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -170,7 +171,7 @@ class MiscMessageWriter(
         write(report, "document-statistics.txt")
     }
 
-    fun reportLabeledHyperlinks(hyperLinks: Set<LabeledHyperlink>) {
+    fun reportLabeledHyperlinks(hyperLinks: Set<Hyperlink>) {
         if (hyperLinks.isEmpty()) return
         val groupedHyperlinks = hyperLinks.groupBy { it.label }
         groupedHyperlinks.keys.forEach { label ->
@@ -180,7 +181,7 @@ class MiscMessageWriter(
                 String.format("%4d %4d | %-50s | %s", it.depth, it.order, it.text, it.url)
             }
 
-            val ident = label.toLowerCase()
+            val ident = label.lowercase(Locale.getDefault())
             write(report, "labeled-links-$ident.txt")
         }
     }

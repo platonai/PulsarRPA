@@ -468,9 +468,9 @@ open class LoadOptions(
         browser = itemBrowser
     }
 
-    fun toConf() = toConf(this.conf)
+    fun overrideConfiguration() = overrideConfiguration(this.conf)
 
-    fun toConf(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+    fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         val emulateSettings = when (netCondition) {
             Condition.WORSE -> EmulateSettings.worseNetSettings
             Condition.WORST -> EmulateSettings.worstNetSettings
@@ -482,12 +482,11 @@ open class LoadOptions(
         if (!isDefault("scriptTimeout")) emulateSettings.scriptTimeout = scriptTimeout
         if (!isDefault("pageLoadTimeout")) emulateSettings.pageLoadTimeout = pageLoadTimeout
 
-        emulateSettings.toConf(conf)
+        emulateSettings.overrideConfiguration(conf)
 
         putBean(eventHandler)
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
-        setInt(CapabilityTypes.FETCH_MAX_RETRY, nMaxRetry)
     }
 
     open fun isDefault(option: String): Boolean {

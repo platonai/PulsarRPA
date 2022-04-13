@@ -37,6 +37,7 @@ public enum Name {
     FETCH_MODE("F_MD"),
     FETCH_AHEAD_TIME("F_EFT"),
     FETCH_TIME_HISTORY("F_FTH"),
+    FETCH_MAX_RETRY("F_MR"),
     REDIRECT_DISCOVERED("F_RD"),
     RESPONSE_TIME("F_RT"),
     BROWSER("F_BR"),
