@@ -1,17 +1,15 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.options.findOption
 import org.apache.commons.lang3.StringUtils
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class TestStrings {
     @Test
     fun testHTMLCharsetReplacer() {
         val html = "<html><head><meta charset=\"GBK\"></head><body><div>Hello World</div></body></html>"
-        val html2 = replaceHTMLCharset(html, DEFAULT_CHARSET_PATTERN)
+        val html2 = HtmlUtils.replaceHTMLCharset(html, DEFAULT_CHARSET_PATTERN)
         // println(html2.toString())
         assertTrue { html2.toString().contains("<meta charset=\"UTF-8\">") }
     }

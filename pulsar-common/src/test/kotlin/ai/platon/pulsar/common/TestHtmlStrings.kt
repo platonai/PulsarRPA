@@ -10,24 +10,24 @@ class TestHtmlStrings {
     @Test
     fun testHTMLCharsetReplacer() {
         val html = "<html><head><meta charset=\"GBK\"></head><body><div>Hello World</div></body></html>"
-        val html2 = replaceHTMLCharset(html, DEFAULT_CHARSET_PATTERN)
+        val html2 = HtmlUtils.replaceHTMLCharset(html, DEFAULT_CHARSET_PATTERN)
         // println(html2.toString())
         assertTrue { html2.toString().contains("<meta charset=\"UTF-8\">") }
     }
 
     @Test
     fun isBlankBody() {
-        assertTrue(isBlankBody("....<body></body>...."))
-        assertTrue(isBlankBody("....<body>\n</body>...."))
-        assertTrue(isBlankBody("....<body>\t</body>...."))
-        assertTrue(isBlankBody("....<body a=1 b=2></body>...."))
-        assertTrue(isBlankBody("<script>....<body   >    </body>...."))
-        assertTrue(isBlankBody("script....<body a='1'>     </body>...."))
+        assertTrue(HtmlUtils.isBlankBody("....<body></body>...."))
+        assertTrue(HtmlUtils.isBlankBody("....<body>\n</body>...."))
+        assertTrue(HtmlUtils.isBlankBody("....<body>\t</body>...."))
+        assertTrue(HtmlUtils.isBlankBody("....<body a=1 b=2></body>...."))
+        assertTrue(HtmlUtils.isBlankBody("<script>....<body   >    </body>...."))
+        assertTrue(HtmlUtils.isBlankBody("script....<body a='1'>     </body>...."))
 
-        assertFalse(isBlankBody("....<body>    body </body>...."))
-        assertFalse(isBlankBody("....<body a=1 b=2> 2> 1 </body>...."))
-        assertFalse(isBlankBody("<script>....<body   > 2< 1 </body>...."))
-        assertFalse(isBlankBody("script....<body a='1'>   &nbsp;    </body>...."))
+        assertFalse(HtmlUtils.isBlankBody("....<body>    body </body>...."))
+        assertFalse(HtmlUtils.isBlankBody("....<body a=1 b=2> 2> 1 </body>...."))
+        assertFalse(HtmlUtils.isBlankBody("<script>....<body   > 2< 1 </body>...."))
+        assertFalse(HtmlUtils.isBlankBody("script....<body a='1'>   &nbsp;    </body>...."))
     }
 
     @Test

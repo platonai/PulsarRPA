@@ -14,6 +14,7 @@ import com.github.kklisura.cdt.protocol.types.input.DispatchMouseEventType
 import com.github.kklisura.cdt.protocol.types.input.MouseButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
 import kotlin.math.abs
@@ -169,21 +170,23 @@ class Mouse(private val input: Input) {
             val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
 
             withContext(Dispatchers.IO) {
-                input.dispatchMouseEvent(
-                    DispatchMouseEventType.MOUSE_MOVED, x1, y1,
-                    null, null,
-                    null, // button
-                    null, // buttons
-                    null,
-                    null, // force
-                    null,
-                    null,
-                    null,
-                    null, // twist
-                    null,
-                    null,
-                    null
-                )
+                if (isActive) {
+                    input.dispatchMouseEvent(
+                        DispatchMouseEventType.MOUSE_MOVED, x1, y1,
+                        null, null,
+                        null, // button
+                        null, // buttons
+                        null,
+                        null, // force
+                        null,
+                        null,
+                        null,
+                        null, // twist
+                        null,
+                        null,
+                        null
+                    )
+                }
             }
 
             if (delayMillis > 0) {

@@ -134,14 +134,14 @@ open class EmulateEventHandler(
         return when {
             length == 0L -> HtmlIntegrity.EMPTY_0B
             length == 39L -> HtmlIntegrity.EMPTY_39B
-            isBlankBody(pageSource) -> HtmlIntegrity.BLANK_BODY
+            HtmlUtils.isBlankBody(pageSource) -> HtmlIntegrity.BLANK_BODY
             else -> checkHtmlIntegrity(pageSource)
         }
     }
 
     open fun normalizePageSource(url: String, pageSource: String): StringBuilder {
         // The browser has already convert source code to UTF-8
-        return replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
+        return HtmlUtils.replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
     }
 
     open fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
