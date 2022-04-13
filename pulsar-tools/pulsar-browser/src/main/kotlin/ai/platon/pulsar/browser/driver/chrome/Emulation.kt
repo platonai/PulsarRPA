@@ -14,7 +14,6 @@ import com.github.kklisura.cdt.protocol.types.input.DispatchMouseEventType
 import com.github.kklisura.cdt.protocol.types.input.MouseButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
 import kotlin.math.abs
@@ -150,7 +149,6 @@ class Mouse(private val input: Input) {
         down(x, y, clickCount)
 
         if (delayMillis > 0) {
-//            sleepMillis(delayMillis)
             delay(delayMillis)
         }
 
@@ -170,23 +168,21 @@ class Mouse(private val input: Input) {
             val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
 
             withContext(Dispatchers.IO) {
-                if (isActive) {
-                    input.dispatchMouseEvent(
-                        DispatchMouseEventType.MOUSE_MOVED, x1, y1,
-                        null, null,
-                        null, // button
-                        null, // buttons
-                        null,
-                        null, // force
-                        null,
-                        null,
-                        null,
-                        null, // twist
-                        null,
-                        null,
-                        null
-                    )
-                }
+                input.dispatchMouseEvent(
+                    DispatchMouseEventType.MOUSE_MOVED, x1, y1,
+                    null, null,
+                    null, // button
+                    null, // buttons
+                    null,
+                    null, // force
+                    null,
+                    null,
+                    null,
+                    null, // twist
+                    null,
+                    null,
+                    null
+                )
             }
 
             if (delayMillis > 0) {
@@ -228,11 +224,11 @@ class Mouse(private val input: Input) {
                 clickCount,
                 null, // force
                 null,
-                null,
-                null,
+                null, // tiltX
+                null, // tiltY
                 null, // twist
-                null,
-                null,
+                null, // deltaX
+                null, // deltaY
                 null
             )
         }
