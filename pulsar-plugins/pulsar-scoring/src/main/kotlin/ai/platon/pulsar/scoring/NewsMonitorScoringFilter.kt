@@ -29,6 +29,7 @@ import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.Name
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
 import org.apache.commons.lang3.math.NumberUtils
@@ -146,7 +147,8 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
     }
 
     private fun calculateModifiedTime(page: WebPage): Instant {
-        var modifiedTime = page.sniffModifiedTime()
+        val pageExt = WebPageExt(page)
+        var modifiedTime = pageExt.sniffModifiedTime()
 
         if (modifiedTime.isAfter(impreciseTomorrow)) {
             // Bad modified time, decrease the score

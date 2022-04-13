@@ -36,7 +36,7 @@ import kotlin.reflect.KClass
 /**
  * The main entry point for pulsar functionality.
  *
- * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
+ * A PulsarContext can be used to inject, fetch, load, parse, store webpages.
  */
 abstract class AbstractPulsarContext(
         override val applicationContext: AbstractApplicationContext,

@@ -4,7 +4,7 @@ import ai.platon.pulsar.context.PulsarContexts
 
 fun main() {
     val urls = """
-            "http://category.dangdang.com/cid4010209.html" -ol a[href~=product]
+            http://category.dangdang.com/cid4010209.html -ol a[href~=product]
             https://list.gome.com.cn/cat10000092.html -ol a[href~=item]
             https://list.jd.com/list.html?cat=652,12345,12349 -ol a[href~=item]
             https://list.tmall.com/search_product.htm?q=大家电 -ol a[href~=item]
@@ -13,16 +13,13 @@ fun main() {
     """.trimIndent()
     val args = "-i 1s -ii 5d -parse -ignoreFailure"
 
-    val context = PulsarContexts.create()
-    val session = context.createSession()
+    val session = PulsarContexts.createSession()
     val options = session.options(args)
+
     options.eventHandler.loadEventHandler.onAfterHtmlParse.addLast { page, document ->
-        println(document.title)
+        println(document.title + " | " + document.baseUri)
     }
+    urls.split("\n").forEach { session.asyncLoadOutPages(it, options) }
 
-    urls.split("\n").forEach {
-        session.asyncLoadOutPages(it, options)
-    }
-
-    context.await()
+    PulsarContexts.await()
 }

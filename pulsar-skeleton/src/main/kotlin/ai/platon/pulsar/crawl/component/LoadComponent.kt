@@ -76,9 +76,6 @@ class LoadComponent(
     private val coreMetrics get() = fetchComponent.coreMetrics
     private val closed = AtomicBoolean()
 
-    /**
-     * TODO: only check active before blocking calls
-     * */
     private val isActive get() = !closed.get()
 
     @Volatile
@@ -258,18 +255,6 @@ class LoadComponent(
 
         return page
     }
-
-//    private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
-//        val page = createPageShell(normUrl)
-//
-//        beforeLoad(normUrl, page)
-//
-//        fetchContentIfNecessaryDeferred(normUrl, page)
-//
-//        afterLoad(page, normUrl)
-//
-//        return page
-//    }
 
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {

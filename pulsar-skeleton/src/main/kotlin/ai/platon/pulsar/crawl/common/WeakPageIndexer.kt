@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
 
@@ -78,6 +79,8 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         }
 
         val indexPage = getIndex(pageNo)
+        val indexPageExt = WebPageExt(indexPage)
+
         val vividLinks = indexPage.vividLinks
         if (remove) {
             urls.forEach { vividLinks.remove(it) }
@@ -86,7 +89,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         }
 
         val message = "Total " + vividLinks.size + " indexed links"
-        indexPage.setTextCascaded(message)
+        indexPageExt.setTextCascaded(message)
         LOG.takeIf { it.isTraceEnabled }?.trace(message + ", indexed in " + indexPage.url)
 
         // webDb.put(indexPage.getUrl(), indexPage, true);

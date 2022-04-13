@@ -53,43 +53,16 @@ import static ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS;
 import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
- * Every WebPage is a seperate execution context
- *
- * <p>
- * Notice: Use a build-in java string or a Utf8 to serialize strings?
- * </p>
- *
- * <p>
- * see org.apache.gora.hbase.util.HBaseByteInterface#fromBytes
- * </p>
- * <p>
- * In serialization phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
- * in deserialization phrase, every string are wrapped to be a Utf8
- * </p>
- * So both build-in string and a Utf8 wrap is OK to serialize, and Utf8 is always returned
- *
- * @author vincent
- * @version $Id: $Id
+ * The core web page structure
  */
 final public class WebPage implements Comparable<WebPage> {
 
-    /**
-     * Constant <code>LOG</code>
-     */
     public static final Logger LOG = LoggerFactory.getLogger(WebPage.class);
 
-    /**
-     * Constant <code>sequencer</code>
-     */
     public static AtomicInteger sequencer = new AtomicInteger();
-    /**
-     * Constant <code>NIL</code>
-     */
+
     public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
-    /**
-     * The process scope WebPage instance sequence
-     */
     private Integer id = sequencer.incrementAndGet();
     /**
      * The url is the permanent internal address, and the location is the last working address
@@ -180,36 +153,16 @@ final public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    /**
-     * <p>newWebPage.</p>
-     *
-     * @param url  a {@link java.lang.String} object.
-     * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf) {
         return newWebPage(url, conf, null);
     }
 
-    /**
-     * <p>newWebPage.</p>
-     *
-     * @param url a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newTestWebPage(@NotNull String url) {
         return newWebPage(url, new VolatileConfig(), null);
     }
 
-    /**
-     * <p>newWebPage.</p>
-     *
-     * @param url  a {@link java.lang.String} object.
-     * @param conf a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
         return newWebPageInternal(url, conf, href);
@@ -231,51 +184,21 @@ final public class WebPage implements Comparable<WebPage> {
         return page;
     }
 
-    /**
-     * <p>newInternalPage.</p>
-     *
-     * @param url a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newInternalPage(@NotNull String url) {
         return newInternalPage(url, "internal", "internal");
     }
 
-    /**
-     * <p>newInternalPage.</p>
-     *
-     * @param url   a {@link java.lang.String} object.
-     * @param title a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newInternalPage(@NotNull String url, @NotNull String title) {
         return newInternalPage(url, title, "internal");
     }
 
-    /**
-     * <p>newInternalPage.</p>
-     *
-     * @param url     a {@link java.lang.String} object.
-     * @param title   a {@link java.lang.String} object.
-     * @param content a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newInternalPage(@NotNull String url, @NotNull String title, @NotNull String content) {
         return newInternalPage(url, -1, title, content);
     }
 
-    /**
-     * <p>newInternalPage.</p>
-     *
-     * @param url     a {@link java.lang.String} object.
-     * @param id      a int.
-     * @param title   a {@link java.lang.String} object.
-     * @param content a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     */
     @NotNull
     public static WebPage newInternalPage(@NotNull String url, int id, @NotNull String title, @NotNull String content) {
         VolatileConfig unsafe = VolatileConfig.Companion.getUNSAFE();
@@ -304,11 +227,6 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
-     *
-     * @param url         a {@link java.lang.String} object.
-     * @param reversedUrl a {@link java.lang.String} object.
-     * @param page        a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
     public static WebPage box(
@@ -318,10 +236,6 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
-     *
-     * @param url  a {@link java.lang.String} object.
-     * @param page a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
     public static WebPage box(@NotNull String url, @NotNull GWebPage page, @NotNull VolatileConfig conf) {
@@ -330,11 +244,6 @@ final public class WebPage implements Comparable<WebPage> {
 
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
-     *
-     * @param url         a {@link java.lang.String} object.
-     * @param page        a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
-     * @param urlReversed a boolean.
-     * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
     public static WebPage box(
@@ -343,26 +252,11 @@ final public class WebPage implements Comparable<WebPage> {
         return new WebPage(url, page, urlReversed, conf);
     }
 
-    /**
-     * *****************************************************************************
-     * Other
-     * ******************************************************************************
-     *
-     * @param mark a {@link ai.platon.pulsar.persist.metadata.Mark} object.
-     * @return a {@link org.apache.avro.util.Utf8} object.
-     */
-
     @NotNull
     public static Utf8 wrapKey(@NotNull Mark mark) {
         return u8(mark.value());
     }
 
-    /**
-     * What's the difference between String and Utf8?
-     *
-     * @param value a {@link java.lang.String} object.
-     * @return a {@link org.apache.avro.util.Utf8} object.
-     */
     @Nullable
     public static Utf8 u8(@Nullable String value) {
         if (value == null) {
@@ -372,41 +266,21 @@ final public class WebPage implements Comparable<WebPage> {
         return new Utf8(value);
     }
 
-    /**
-     * page.location is the last working address, and page.url is the permanent internal address
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getUrl() {
         return url;
     }
 
-    /**
-     * <p>getKey.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getKey() {
         return getReversedUrl();
     }
 
-    /**
-     * <p>Getter for the field <code>reversedUrl</code>.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getReversedUrl() {
         return reversedUrl != null ? reversedUrl : "";
     }
 
-    /**
-     * <p>Getter for the field <code>id</code>.</p>
-     *
-     * @return a int.
-     */
     public int getId() {
         return id;
     }
@@ -434,47 +308,22 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.HREF, href);
     }
 
-    /**
-     * <p>isNil.</p>
-     *
-     * @return a boolean.
-     */
     public boolean isNil() {
         return this == NIL;
     }
 
-    /**
-     * <p>isNotNil.</p>
-     *
-     * @return a boolean.
-     */
     public boolean isNotNil() {
         return !isNil();
     }
 
-    /**
-     * <p>isInternal.</p>
-     *
-     * @return a boolean.
-     */
     public boolean isInternal() {
         return hasMark(Mark.INTERNAL);
     }
 
-    /**
-     * <p>isNotInternal.</p>
-     *
-     * @return a boolean.
-     */
     public boolean isNotInternal() {
         return !isInternal();
     }
 
-    /**
-     * <p>unbox.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
-     */
     @NotNull
     public GWebPage unbox() {
         return page;
@@ -631,9 +480,6 @@ final public class WebPage implements Comparable<WebPage> {
         this.retryDelay = retryDelay;
     }
 
-    /**
-     * <p>getConfiguredUrl.</p>
-     */
     @NotNull
     public String getConfiguredUrl() {
         String configuredUrl = url;
@@ -770,9 +616,6 @@ final public class WebPage implements Comparable<WebPage> {
         String generateTime = getMetadata().get(Name.GENERATE_TIME);
         if (generateTime == null) {
             return Instant.EPOCH;
-        } else if (NumberUtils.isDigits(generateTime)) {
-            // Old version of generate time, created by String.valueOf(epochMillis)
-            return Instant.ofEpochMilli(NumberUtils.toLong(generateTime, 0));
         } else {
             return Instant.parse(generateTime);
         }
@@ -844,8 +687,6 @@ final public class WebPage implements Comparable<WebPage> {
      * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
      * or it might have additional random parameters.
      * WebPage.location may be different from url, it's generally normalized.
-     *
-     * @return a {@link java.lang.String} object.
      */
     public String getLocation() {
         return getBaseUrl();
@@ -858,10 +699,10 @@ final public class WebPage implements Comparable<WebPage> {
      * <p>
      * Location may be different from url, it's generally normalized.
      *
-     * @param value The location.
+     * @param location The location.
      */
-    public void setLocation(@NotNull String value) {
-        page.setBaseUrl(value);
+    public void setLocation(@NotNull String location) {
+        page.setBaseUrl(location);
     }
 
     /**
@@ -914,9 +755,9 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public Duration getFetchInterval() {
-        int seconds = page.getFetchInterval();
+        long seconds = page.getFetchInterval();
         if (seconds < 0) {
-            seconds = (int)ChronoUnit.DECADES.getDuration().getSeconds();
+            seconds = ChronoUnit.CENTURIES.getDuration().getSeconds();
         }
         return Duration.ofSeconds(seconds);
     }
@@ -959,8 +800,6 @@ final public class WebPage implements Comparable<WebPage> {
      * CONTENT_TYPE,
      * LAST_MODIFIED
      * and LOCATION.
-     *
-     * @return a {@link ai.platon.pulsar.persist.ProtocolHeaders} object.
      */
     @NotNull
     public ProtocolHeaders getHeaders() {
@@ -1009,93 +848,11 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public Instant sniffModifiedTime() {
-        Instant modifiedTime = getModifiedTime();
-        Instant headerModifiedTime = getHeaders().getLastModified();
-        Instant contentModifiedTime = getContentModifiedTime();
-
-        if (isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
-            modifiedTime = headerModifiedTime;
-        }
-
-        if (isValidContentModifyTime(contentModifiedTime) && contentModifiedTime.isAfter(modifiedTime)) {
-            modifiedTime = contentModifiedTime;
-        }
-
-        Instant contentPublishTime = getContentPublishTime();
-        if (isValidContentModifyTime(contentPublishTime) && contentPublishTime.isAfter(modifiedTime)) {
-            modifiedTime = contentPublishTime;
-        }
-
-        // A fix
-        if (modifiedTime.isAfter(Instant.now().plus(1, ChronoUnit.DAYS))) {
-            // LOG.warn("Invalid modified time " + DateTimeUtil.isoInstantFormat(modifiedTime) + ", url : " + page.url());
-            modifiedTime = Instant.now();
-        }
-
-        return modifiedTime;
-    }
-
-    @NotNull
     public String getFetchTimeHistory(@NotNull String defaultValue) {
         String s = getMetadata().get(Name.FETCH_TIME_HISTORY);
         return s == null ? defaultValue : s;
     }
 
-    /**
-     * *****************************************************************************
-     * Parsing
-     * ******************************************************************************
-     */
-    public void updateFetchTimeHistory(@NotNull Instant fetchTime) {
-        String fetchTimeHistory = getMetadata().get(Name.FETCH_TIME_HISTORY);
-        fetchTimeHistory = DateTimes.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
-        getMetadata().set(Name.FETCH_TIME_HISTORY, fetchTimeHistory);
-    }
-
-    /**
-     * Get the first fetch time
-     */
-    public @Nullable Instant getFirstFetchTime() {
-        Instant firstFetchTime = null;
-
-        String history = getFetchTimeHistory("");
-        if (!history.isEmpty()) {
-            String[] times = history.split(",");
-            Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
-            if (time.isAfter(Instant.EPOCH)) {
-                firstFetchTime = time;
-            }
-        }
-
-        return firstFetchTime;
-    }
-
-    /**
-     * namespace : metadata, seed, www
-     * reserved
-     *
-     * @return a {@link java.lang.String} object.
-     */
-    @Nullable
-    public String getNamespace() {
-        return getMetadata().get("namespace");
-    }
-
-    /**
-     * reserved
-     *
-     * @param ns a {@link java.lang.String} object.
-     */
-    public void setNamespace(String ns) {
-        getMetadata().set("namespace", ns);
-    }
-
-    /**
-     * <p>getPageCategory.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.metadata.PageCategory} object.
-     */
     @NotNull
     public PageCategory getPageCategory() {
         try {
@@ -1122,9 +879,8 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getEncoding.</p>
-     *
-     * @return a {@link java.lang.String} object.
+     * Get the encoding of the content.
+     * Content encoding is detected just before it's parsed.
      */
     @Nullable
     public String getEncoding() {
@@ -1132,9 +888,8 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setEncoding.</p>
-     *
-     * @param encoding a {@link java.lang.String} object.
+     * Set the encoding of the content.
+     * Content encoding is detected just before it's parsed.
      */
     public void setEncoding(@Nullable String encoding) {
         page.setEncoding(encoding);
@@ -1142,11 +897,8 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * Get content encoding
-     * Content encoding is detected just before it's parsed
-     *
-     * @param defaultEncoding a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
+     * Get the encoding of the content.
+     * Content encoding is detected just before it's parsed.
      */
     @NotNull
     public String getEncodingOrDefault(@NotNull String defaultEncoding) {
@@ -1154,20 +906,16 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getEncodingClues.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
+     * The cluse used to determine the encoding of the page content
+     * */
     @NotNull
     public String getEncodingClues() {
         return getMetadata().getOrDefault(Name.ENCODING_CLUES, "");
     }
 
     /**
-     * <p>setEncodingClues.</p>
-     *
-     * @param clues a {@link java.lang.String} object.
-     */
+     * The cluse used to determine the encoding of the page content
+     * */
     public void setEncodingClues(@NotNull String clues) {
         getMetadata().set(Name.ENCODING_CLUES, clues);
     }
@@ -1354,58 +1102,28 @@ final public class WebPage implements Comparable<WebPage> {
         return getMetadata().getLong(Name.LAST_CONTENT_BYTES, 0);
     }
 
-    /**
-     * <p>getAveContentBytes.</p>
-     *
-     * @return a int.
-     */
     public long getAveContentBytes() {
         return getMetadata().getLong(Name.AVE_CONTENT_BYTES, 0);
     }
 
-    /**
-     * <p>getContentType.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getContentType() {
         return page.getContentType() == null ? "" : page.getContentType().toString();
     }
 
-    /**
-     * <p>setContentType.</p>
-     *
-     * @param value a {@link java.lang.String} object.
-     */
     public void setContentType(String value) {
         page.setContentType(value.trim().toLowerCase());
     }
 
-    /**
-     * <p>getPrevSignature.</p>
-     *
-     * @return a {@link java.nio.ByteBuffer} object.
-     */
     @Nullable
     public ByteBuffer getPrevSignature() {
         return page.getPrevSignature();
     }
 
-    /**
-     * <p>setPrevSignature.</p>
-     *
-     * @param value a {@link java.nio.ByteBuffer} object.
-     */
     public void setPrevSignature(@Nullable ByteBuffer value) {
         page.setPrevSignature(value);
     }
 
-    /**
-     * <p>getPrevSignatureAsString.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getPrevSignatureAsString() {
         ByteBuffer sig = getPrevSignature();
@@ -1416,9 +1134,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>getProxy.</p>
-     *
-     * @return a {@link java.lang.String} object.
+     * The last proxy used to fetch the page
      */
     @Nullable
     public String getProxy() {
@@ -1426,9 +1142,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>setProxy.</p>
-     *
-     * @param proxy a {@link java.lang.String} object.
+     * The last proxy used to fetch the page
      */
     public void setProxy(@Nullable String proxy) {
         if (proxy != null) {
@@ -1452,12 +1166,12 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public void setActiveDomStatus(ActiveDomStatus s) {
+        if (s == null) {
+            return;
+        }
+
         GActiveDomStatus s2 = page.getActiveDomStatus();
         if (s2 != null) {
-            if (s == null) {
-                page.setActiveDomStatus(null);
-            }
-
             s2.setN(s.getN());
             s2.setScroll(s.getScroll());
             s2.setSt(s.getSt());
@@ -1493,11 +1207,6 @@ final public class WebPage implements Comparable<WebPage> {
         );
     }
 
-    /**
-     * <p>setActiveDomUrls.</p>
-     *
-     * @param urls a {@link ai.platon.pulsar.persist.model.ActiveDomUrls} object.
-     */
     public void setActiveDomUrls(@NotNull ActiveDomUrls urls) {
         Map<CharSequence, CharSequence> domUrls = page.getActiveDomUrls();
         domUrls.put("URL", urls.getURL());
@@ -1509,28 +1218,16 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * An implementation of a WebPage's signature from which it can be identified and referenced at any point in time.
      * This is essentially the WebPage's fingerprint representing its state for any point in time.
-     *
-     * @return a {@link java.nio.ByteBuffer} object.
      */
     @Nullable
     public ByteBuffer getSignature() {
         return page.getSignature();
     }
 
-    /**
-     * <p>setSignature.</p>
-     *
-     * @param value an array of {@link byte} objects.
-     */
     public void setSignature(byte[] value) {
         page.setSignature(ByteBuffer.wrap(value));
     }
 
-    /**
-     * <p>getSignatureAsString.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getSignatureAsString() {
         ByteBuffer sig = getSignature();
@@ -1561,24 +1258,6 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public String sniffTitle() {
-        String title = getContentTitle();
-        if (title.isEmpty()) {
-            title = getAnchor().toString();
-        }
-        if (title.isEmpty()) {
-            title = getPageTitle();
-        }
-        if (title.isEmpty()) {
-            title = getLocation();
-        }
-        if (title.isEmpty()) {
-            title = url;
-        }
-        return title;
-    }
-
-    @NotNull
     public String getPageText() {
         return page.getPageText() == null ? "" : page.getPageText().toString();
     }
@@ -1603,12 +1282,6 @@ final public class WebPage implements Comparable<WebPage> {
         return page.getContentTextLen();
     }
 
-    public void setTextCascaded(String text) {
-        setContent(text);
-        setContentText(text);
-        setPageText(text);
-    }
-
     @NotNull
     public ParseStatus getParseStatus() {
         GParseStatus parseStatus = page.getParseStatus();
@@ -1627,11 +1300,6 @@ final public class WebPage implements Comparable<WebPage> {
         return CollectionUtils.collect(page.getLiveLinks().keySet(), CharSequence::toString);
     }
 
-    /**
-     * TODO: Remove redundant url to reduce space
-     *
-     * @param liveLinks a {@link java.lang.Iterable} object.
-     */
     public void setLiveLinks(Iterable<HyperlinkPersistable> liveLinks) {
         page.getLiveLinks().clear();
         Map<CharSequence, GHypeLink> links = page.getLiveLinks();
@@ -1674,114 +1342,29 @@ final public class WebPage implements Comparable<WebPage> {
         page.setLinks(links);
     }
 
-    /**
-     * Record all links appeared in a page
-     * The links are in FIFO order, for each time we fetch and parse a page,
-     * we push newly discovered links to the queue, if the queue is full, we drop out some old ones,
-     * usually they do not appears in the page any more.
-     * <p>
-     * TODO: compress links
-     * TODO: HBase seems not modify any nested array
-     *
-     * @param hypeLinks a {@link java.lang.Iterable} object.
-     */
-    public void addHyperlinks(Iterable<HyperlinkPersistable> hypeLinks) {
-        List<CharSequence> links = page.getLinks();
-
-        // If there are too many links, Drop the front 1/3 links
-        if (links.size() > MAX_LINK_PER_PAGE) {
-            links = links.subList(links.size() - MAX_LINK_PER_PAGE / 3, links.size());
-        }
-
-        for (HyperlinkPersistable l : hypeLinks) {
-            Utf8 url = u8(l.getUrl());
-            if (!links.contains(url)) {
-                links.add(url);
-            }
-        }
-
-        setLinks(links);
-        setImpreciseLinkCount(links.size());
-    }
-
-    /**
-     * <p>addLinks.</p>
-     *
-     * @param hypeLinks a {@link java.lang.Iterable} object.
-     */
-    public void addLinks(Iterable<CharSequence> hypeLinks) {
-        List<CharSequence> links = page.getLinks();
-
-        // If there are too many links, Drop the front 1/3 links
-        if (links.size() > MAX_LINK_PER_PAGE) {
-            links = links.subList(links.size() - MAX_LINK_PER_PAGE / 3, links.size());
-        }
-
-        for (CharSequence link : hypeLinks) {
-            Utf8 url = u8(link.toString());
-            // Use a set?
-            if (!links.contains(url)) {
-                links.add(url);
-            }
-        }
-
-        setLinks(links);
-        setImpreciseLinkCount(links.size());
-    }
-
-    /**
-     * <p>getImpreciseLinkCount.</p>
-     *
-     * @return a int.
-     */
     public int getImpreciseLinkCount() {
         String count = getMetadata().getOrDefault(Name.TOTAL_OUT_LINKS, "0");
         return NumberUtils.toInt(count, 0);
     }
 
-    /**
-     * <p>setImpreciseLinkCount.</p>
-     *
-     * @param count a int.
-     */
     public void setImpreciseLinkCount(int count) {
         getMetadata().set(Name.TOTAL_OUT_LINKS, String.valueOf(count));
     }
 
-    /**
-     * <p>increaseImpreciseLinkCount.</p>
-     *
-     * @param count a int.
-     */
     public void increaseImpreciseLinkCount(int count) {
         int oldCount = getImpreciseLinkCount();
         setImpreciseLinkCount(oldCount + count);
     }
 
-    /**
-     * <p>getInlinks.</p>
-     *
-     * @return a {@link java.util.Map} object.
-     */
     public Map<CharSequence, CharSequence> getInlinks() {
         return page.getInlinks();
     }
 
-    /**
-     * <p>getAnchor.</p>
-     *
-     * @return a {@link java.lang.CharSequence} object.
-     */
     @NotNull
     public CharSequence getAnchor() {
         return page.getAnchor() != null ? page.getAnchor() : "";
     }
 
-    /**
-     * Anchor can be used to sniff article title
-     *
-     * @param anchor a {@link java.lang.CharSequence} object.
-     */
     public void setAnchor(CharSequence anchor) {
         page.setAnchor(anchor);
     }
@@ -1811,22 +1394,8 @@ final public class WebPage implements Comparable<WebPage> {
         page.setContentPublishTime(publishTime.toEpochMilli());
     }
 
-    private boolean isValidContentModifyTime(Instant publishTime) {
+    public boolean isValidContentModifyTime(Instant publishTime) {
         return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME);
-    }
-
-    public boolean updateContentPublishTime(Instant newPublishTime) {
-        if (!isValidContentModifyTime(newPublishTime)) {
-            return false;
-        }
-
-        Instant lastPublishTime = getContentPublishTime();
-        if (newPublishTime.isAfter(lastPublishTime)) {
-            setPrevContentPublishTime(lastPublishTime);
-            setContentPublishTime(newPublishTime);
-        }
-
-        return true;
     }
 
     public Instant getPrevContentPublishTime() {
@@ -1861,20 +1430,6 @@ final public class WebPage implements Comparable<WebPage> {
         page.setPrevContentModifiedTime(modifiedTime.toEpochMilli());
     }
 
-    public boolean updateContentModifiedTime(Instant newModifiedTime) {
-        if (!isValidContentModifyTime(newModifiedTime)) {
-            return false;
-        }
-
-        Instant lastModifyTime = getContentModifiedTime();
-        if (newModifiedTime.isAfter(lastModifyTime)) {
-            setPrevContentModifiedTime(lastModifyTime);
-            setContentModifiedTime(newModifiedTime);
-        }
-
-        return true;
-    }
-
     public Instant getPrevRefContentPublishTime() {
         return Instant.ofEpochMilli(page.getPrevRefContentPublishTime());
     }
@@ -1883,42 +1438,11 @@ final public class WebPage implements Comparable<WebPage> {
         page.setPrevRefContentPublishTime(publishTime.toEpochMilli());
     }
 
-    public boolean updateRefContentPublishTime(Instant newRefPublishTime) {
-        if (!isValidContentModifyTime(newRefPublishTime)) {
-            return false;
-        }
-
-        Instant latestRefPublishTime = getRefContentPublishTime();
-
-        // LOG.debug("Ref Content Publish Time: " + latestRefPublishTime + " -> " + newRefPublishTime + ", Url: " + getUrl());
-
-        if (newRefPublishTime.isAfter(latestRefPublishTime)) {
-            setPrevRefContentPublishTime(latestRefPublishTime);
-            setRefContentPublishTime(newRefPublishTime);
-
-            // LOG.debug("[Updated] " + latestRefPublishTime + " -> " + newRefPublishTime);
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * <p>getReferrer.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @Nullable
     public String getReferrer() {
         return page.getReferrer() == null ? null : page.getReferrer().toString();
     }
 
-    /**
-     * <p>setReferrer.</p>
-     *
-     * @param referrer a {@link java.lang.String} object.
-     */
     public void setReferrer(@Nullable String referrer) {
         if (referrer != null && referrer.length() > SHORTEST_VALID_URL_LENGTH) {
             page.setReferrer(referrer);
@@ -1929,8 +1453,6 @@ final public class WebPage implements Comparable<WebPage> {
      * *****************************************************************************
      * Page Model
      * ******************************************************************************
-     *
-     * @return a {@link ai.platon.pulsar.persist.model.PageModel} object.
      */
 
     @NotNull
@@ -1942,82 +1464,40 @@ final public class WebPage implements Comparable<WebPage> {
      * *****************************************************************************
      * Scoring
      * ******************************************************************************
-     *
-     * @return a float.
      */
     public float getScore() {
         return page.getScore();
     }
 
-    /**
-     * <p>setScore.</p>
-     *
-     * @param value a float.
-     */
     public void setScore(float value) {
         page.setScore(value);
     }
 
-    /**
-     * <p>getContentScore.</p>
-     *
-     * @return a float.
-     */
     public float getContentScore() {
         return page.getContentScore() == null ? 0.0f : page.getContentScore();
     }
 
-    /**
-     * <p>setContentScore.</p>
-     *
-     * @param score a float.
-     */
     public void setContentScore(float score) {
         page.setContentScore(score);
     }
 
-    /**
-     * <p>getSortScore.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     @NotNull
     public String getSortScore() {
         return page.getSortScore() == null ? "" : page.getSortScore().toString();
     }
 
-    /**
-     * <p>setSortScore.</p>
-     *
-     * @param score a {@link java.lang.String} object.
-     */
     public void setSortScore(String score) {
         page.setSortScore(score);
     }
 
-    /**
-     * <p>getCash.</p>
-     *
-     * @return a float.
-     */
     public float getCash() {
         return getMetadata().getFloat(Name.CASH_KEY, 0.0f);
     }
 
-    /**
-     * <p>setCash.</p>
-     *
-     * @param cash a float.
-     */
     public void setCash(float cash) {
         getMetadata().set(Name.CASH_KEY, String.valueOf(cash));
     }
 
-    /**
-     * <p>getPageCounters.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.PageCounters} object.
-     */
     @NotNull
     public PageCounters getPageCounters() {
         return PageCounters.box(page.getPageCounters());
@@ -2027,74 +1507,34 @@ final public class WebPage implements Comparable<WebPage> {
      * *****************************************************************************
      * Index
      * ******************************************************************************
-     *
-     * @param defaultValue a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
      */
+
     public String getIndexTimeHistory(String defaultValue) {
         String s = getMetadata().get(Name.INDEX_TIME_HISTORY);
         return s == null ? defaultValue : s;
     }
 
-    /**
-     * <p>putIndexTimeHistory.</p>
-     *
-     * @param indexTime a {@link java.time.Instant} object.
-     */
     public void putIndexTimeHistory(Instant indexTime) {
         String indexTimeHistory = getMetadata().get(Name.INDEX_TIME_HISTORY);
         indexTimeHistory = DateTimes.constructTimeHistory(indexTimeHistory, indexTime, 10);
         getMetadata().set(Name.INDEX_TIME_HISTORY, indexTimeHistory);
     }
 
-    /**
-     * <p>getFirstIndexTime.</p>
-     *
-     * @param defaultValue a {@link java.time.Instant} object.
-     * @return a {@link java.time.Instant} object.
-     */
-    public Instant getFirstIndexTime(Instant defaultValue) {
-        Instant firstIndexTime = null;
-
-        String indexTimeHistory = getIndexTimeHistory("");
-        if (!indexTimeHistory.isEmpty()) {
-            String[] times = indexTimeHistory.split(",");
-            Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
-            if (time.isAfter(Instant.EPOCH)) {
-                firstIndexTime = time;
-            }
-        }
-
-        return firstIndexTime == null ? defaultValue : firstIndexTime;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return url.hashCode();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int compareTo(@NotNull WebPage o) {
         return url.compareTo(o.url);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object other) {
         return other instanceof WebPage && ((WebPage) other).url.equals(url);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return new WebPageFormatter(this).format();

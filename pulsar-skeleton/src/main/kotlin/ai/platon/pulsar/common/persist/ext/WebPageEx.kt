@@ -4,10 +4,11 @@ import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import java.time.Instant
 
 val WebPage.loadEventHandler: LoadEventHandler?
-    get() = this.conf.getBeanOrNull(LoadEventHandler::class.java)
+    get() = this.options.eventHandler.loadEventHandler
 
 /**
  * Get or create a LoadOptions from the args
@@ -31,5 +32,6 @@ fun WebPage.updateFetchTime(prevFetchTime: Instant, fetchTime: Instant) {
     // the next time supposed to fetch
     this.fetchTime = fetchTime
 
-    updateFetchTimeHistory(fetchTime)
+    val pageExt = WebPageExt(this)
+    pageExt.updateFetchTimeHistory(fetchTime)
 }

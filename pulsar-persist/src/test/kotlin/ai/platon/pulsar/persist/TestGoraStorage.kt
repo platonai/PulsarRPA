@@ -69,18 +69,19 @@ class TestGoraStorage {
         webDb.flush()
 
         page = webDb.get(url)
+        val pageExt = WebPageExt(page)
         val page2 = webDb.get(url)
         assertEquals(page.url, page2.url)
         assertEquals(page.contentAsString, page2.contentAsString)
         assertTrue(page.isNotNil)
         assertTrue(page.isInternal)
-        page.addLinks(exampleUrls)
+        pageExt.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
 
         val page3 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page3.links.size.toLong())
-        page.addLinks(exampleUrls)
+        pageExt.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
 

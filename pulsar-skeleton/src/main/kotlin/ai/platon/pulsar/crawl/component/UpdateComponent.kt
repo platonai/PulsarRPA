@@ -30,11 +30,8 @@ import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.schedule.ModifyInfo
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.crawl.signature.SignatureComparator
-import ai.platon.pulsar.persist.CrawlStatus
-import ai.platon.pulsar.persist.PageCounters
+import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.PageCounters.Self
-import ai.platon.pulsar.persist.WebDb
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -76,9 +73,10 @@ class UpdateComponent(
     }
 
     fun updateByOutgoingPage(page: WebPage, outgoingPage: WebPage) {
+        val pageExt = WebPageExt(page)
         val pageCounters = page.pageCounters
         pageCounters.increase(PageCounters.Ref.page)
-        page.updateRefContentPublishTime(outgoingPage.contentPublishTime)
+        pageExt.updateRefContentPublishTime(outgoingPage.contentPublishTime)
 
         if (outgoingPage.pageCategory.isDetail || CrawlFilter.guessPageCategory(outgoingPage.url).isDetail) {
             pageCounters.increase(PageCounters.Ref.ch, outgoingPage.contentTextLen)
@@ -191,13 +189,15 @@ class UpdateComponent(
     }
 
     private fun handleModifiedTime(page: WebPage, crawlStatus: CrawlStatus): ModifyInfo {
+        val pageExt = WebPageExt(page)
+
         // page.fetchTime is not the actual fetch time!
         val prevFetchTime = page.fetchTime
         val fetchTime = Instant.now()
 
         var prevModifiedTime = page.prevModifiedTime
         var modifiedTime = page.modifiedTime
-        val newModifiedTime = page.sniffModifiedTime()
+        val newModifiedTime = pageExt.sniffModifiedTime()
 
         var modified = FetchSchedule.STATUS_UNKNOWN
         if (crawlStatus.code == CrawlStatusCodes.NOTMODIFIED.toInt()) {

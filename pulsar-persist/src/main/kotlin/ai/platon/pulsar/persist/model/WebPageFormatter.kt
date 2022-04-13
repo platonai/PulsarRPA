@@ -18,6 +18,7 @@ package ai.platon.pulsar.persist.model
 
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import com.google.gson.GsonBuilder
@@ -32,14 +33,15 @@ import java.util.*
 import java.util.function.Consumer
 import java.util.stream.Collectors
 
-class WebPageFormatter(page: WebPage) {
+class WebPageFormatter(val page: WebPage) {
     private var withText = false
     private var withContent = false
     private var withLinks = false
     private var withFields = false
     private var withEntities = false
-    private val page: WebPage
-    private val zoneId: ZoneId
+    private val pageExt = WebPageExt(page)
+    private val zoneId = page.zoneId
+
     fun withText(withText: Boolean): WebPageFormatter {
         this.withText = withText
         return this
@@ -133,7 +135,7 @@ class WebPageFormatter(page: WebPage) {
         fields["pageTitle"] = page.pageTitle
         fields["contentTitle"] = page.contentTitle
         fields["inlinkAnchor"] = page.anchor
-        fields["title"] = page.sniffTitle()
+        fields["title"] = pageExt.sniffTitle()
         /* Score */fields["contentScore"] = page.contentScore.toString()
         fields["score"] = page.score.toString()
         fields["cash"] = page.cash.toString()
@@ -215,7 +217,7 @@ class WebPageFormatter(page: WebPage) {
                 .append("pageTitle:\t" + page.pageTitle + "\n")
                 .append("contentTitle:\t" + page.contentTitle + "\n")
                 .append("anchor:\t" + page.anchor + "\n")
-                .append("title:\t" + page.sniffTitle() + "\n")
+                .append("title:\t" + pageExt.sniffTitle() + "\n")
         sb.append("\n")
                 .append("parseStatus:\t" + page.parseStatus.toString() + "\n")
                 .append("prevSignature:\t" + page.prevSignatureAsString + "\n")
@@ -341,11 +343,5 @@ class WebPageFormatter(page: WebPage) {
 
     override fun toString(): String {
         return format()
-    }
-
-    init {
-        Objects.requireNonNull(page)
-        this.page = page
-        zoneId = page.zoneId
     }
 }

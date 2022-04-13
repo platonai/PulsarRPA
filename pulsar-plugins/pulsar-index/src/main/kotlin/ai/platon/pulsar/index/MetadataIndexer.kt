@@ -28,6 +28,7 @@ import ai.platon.pulsar.persist.WebPage
 import java.net.MalformedURLException
 import ai.platon.pulsar.common.DateTimes.isoInstantFormat
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.persist.WebPageExt
 import java.net.URL
 import java.time.Instant
 import java.util.*
@@ -91,15 +92,16 @@ class MetadataIndexer(
     }
 
     private fun addTime(doc: IndexDocument, url: String, page: WebPage) {
+        val pageExt = WebPageExt(page)
         val now = Instant.now()
         val crawlTimeStr = isoInstantFormat(now)
-        val firstFetchTime = page.firstFetchTime ?: now
+        val firstFetchTime = pageExt.firstFetchTime ?: now
         val fetchTimeHistory = page.getFetchTimeHistory(crawlTimeStr)
         doc.add("first_crawl_time", isoInstantFormat(firstFetchTime))
         doc.add("last_crawl_time", crawlTimeStr)
         doc.add("fetch_time_history", fetchTimeHistory)
         val indexTimeStr = isoInstantFormat(now)
-        val firstIndexTime = page.getFirstIndexTime(now)
+        val firstIndexTime = pageExt.getFirstIndexTime(now)
         val indexTimeHistory = page.getIndexTimeHistory(indexTimeStr)
         doc.add("first_index_time", isoInstantFormat(firstIndexTime))
         doc.add("last_index_time", indexTimeStr)

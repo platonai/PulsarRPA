@@ -30,6 +30,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.PageCategory
 import org.apache.commons.logging.LogFactory
 
@@ -52,11 +53,12 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
      */
     fun extract(page: WebPage, encoding: String): TextDocument? {
         val doc = extract(page) ?: return null
+        val pageExt = WebPageExt(page)
         page.contentTitle = doc.contentTitle
         page.contentText = doc.textContent
         page.pageCategory = PageCategory.parse(doc.pageCategoryAsString)
-        page.updateContentPublishTime(doc.publishTime)
-        page.updateContentModifiedTime(doc.modifiedTime)
+        pageExt.updateContentPublishTime(doc.publishTime)
+        pageExt.updateContentModifiedTime(doc.modifiedTime)
         val id = 1000
         page.pageModel.emplace(id, 0, "boilerpipe", doc.fields)
         return doc

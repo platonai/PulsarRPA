@@ -34,6 +34,7 @@ import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
@@ -265,12 +266,13 @@ class PageParser(
                 || page.metadata.contains(Name.FORCE_FOLLOW)
                 || page.variables.contains(Name.FORCE_FOLLOW.name))
         if (follow) {
+            val pageExt = WebPageExt(page)
             // val hypeLinks = filterLinks(page, unfilteredLinks)
             // TODO: too many filters, hard to debug, move all filters to a single filter, or just do it in ParserFilter
             val hypeLinks = unfilteredLinks
             log.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
             page.setLiveLinks(hypeLinks)
-            page.addHyperlinks(hypeLinks)
+            pageExt.addHyperlinks(hypeLinks)
         }
     }
 
