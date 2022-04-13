@@ -58,16 +58,18 @@ class ChromeDevtoolsDriver(
 //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
     private val toolsConfig = DevToolsConfig()
+
     private val chromeTab: ChromeTab
     private val devTools: RemoteDevTools
-    private val mouse: Mouse
-    private val keyboard: Keyboard
+    private val _mouse: Mouse
+    private val _keyboard: Keyboard
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
-    private val browser get() = devTools.browser
     private var navigateEntry: NavigateEntry? = null
     private var navigateUrl = ""
+
+    private val browser get() = devTools.browser
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
     private val input get() = devTools.input.takeIf { isActive }
@@ -76,6 +78,8 @@ class ChromeDevtoolsDriver(
     private val fetch get() = devTools.fetch.takeIf { isActive }
     private val runtime get() = devTools.runtime.takeIf { isActive }
     private val emulation get() = devTools.emulation.takeIf { isActive }
+    private val mouse get() = _mouse.takeIf { isActive }
+    private val keyboard get() = _keyboard.takeIf { isActive }
 
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
@@ -97,8 +101,8 @@ class ChromeDevtoolsDriver(
             navigateUrl = chromeTab.url ?: ""
 
             devTools = browserInstance.createDevTools(chromeTab, toolsConfig)
-            mouse = Mouse(input!!)
-            keyboard = Keyboard(input!!)
+            _mouse = Mouse(input!!)
+            _keyboard = Keyboard(input!!)
 
             if (userAgent.isNotEmpty()) {
                 emulation?.setUserAgentOverride(userAgent)
@@ -121,8 +125,9 @@ class ChromeDevtoolsDriver(
         lastActiveTime = Instant.now()
 
         val driver = this
+        val invade = browserSettings.jsInvadingEnabled
         withContext(Dispatchers.IO) {
-            driver.takeIf { browserSettings.jsInvadingEnabled }?.getInvaded(url) ?: getNoInvaded(url)
+            driver.takeIf { invade }?.getInvaded(url) ?: getNoInvaded(url)
         }
     }
 
@@ -306,7 +311,11 @@ class ChromeDevtoolsDriver(
         val d = dom
         if (p != null && d != null) {
             val point = ClickableDOM(p, d, nodeId, offset).clickablePoint() ?: return
-            mouse.click(point.x, point.y, count, delayPolicy("click"))
+
+            withContext(Dispatchers.IO) {
+                mouse?.click(point.x, point.y, count, delayPolicy("click"))
+            }
+
             gap()
         }
     }
@@ -316,7 +325,11 @@ class ChromeDevtoolsDriver(
 
         val nodeId = focus(selector)
         if (nodeId == 0) return
-        keyboard.type(nodeId, text, delayPolicy("type"))
+
+        withContext(Dispatchers.IO) {
+            keyboard?.type(nodeId, text, delayPolicy("type"))
+        }
+
         gap()
     }
 
@@ -325,6 +338,7 @@ class ChromeDevtoolsDriver(
 
         val nodeId = focus(selector)
         if (nodeId == 0) return
+
         dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
     }
 
@@ -333,7 +347,11 @@ class ChromeDevtoolsDriver(
         return isActive
     }
 
-    private suspend fun gap() = delay(delayPolicy("gap"))
+    private suspend fun gap() {
+        if (isActive) {
+            delay(delayPolicy("gap"))
+        }
+    }
 
     private fun focus(selector: String): Int {
         if (!refreshState()) return 0
@@ -469,7 +487,7 @@ class ChromeDevtoolsDriver(
     }
 
     /**
-     * TODO: use an event handler to do this stuff
+     * TODO: use onAfterBrowserLaunch event handler
      * */
     private fun initSpecialSiteBeforeVisit(url: String) {
         if (isFirstLaunch) {

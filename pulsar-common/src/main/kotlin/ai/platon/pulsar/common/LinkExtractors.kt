@@ -6,7 +6,7 @@ import java.util.regex.Pattern
 
 open class UrlExtractor {
     companion object {
-        val urlPattern = Pattern.compile(
+        val URL_PATTERN = Pattern.compile(
                 "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
                         + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
                         + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
@@ -14,7 +14,7 @@ open class UrlExtractor {
     }
 
     fun extract(line: String): String? {
-        val matcher = urlPattern.matcher(line)
+        val matcher = URL_PATTERN.matcher(line)
         while (matcher.find()) {
             val start = matcher.start(1)
             val end = matcher.end()
@@ -24,7 +24,7 @@ open class UrlExtractor {
     }
 
     fun extractTo(line: String, urls: MutableSet<String>) {
-        val matcher = urlPattern.matcher(line)
+        val matcher = URL_PATTERN.matcher(line)
         while (matcher.find()) {
             val start = matcher.start(1)
             val end = matcher.end()
