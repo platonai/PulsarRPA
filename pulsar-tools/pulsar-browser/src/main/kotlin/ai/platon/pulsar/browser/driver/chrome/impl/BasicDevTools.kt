@@ -59,7 +59,7 @@ class InvocationFuture(val returnProperty: String? = null) {
     }
 }
 
-/** Error object returned from dev tools.  */
+/** Error object returned from dev tools. */
 internal class ErrorObject {
     var code: Long = 0
     var message: String = ""

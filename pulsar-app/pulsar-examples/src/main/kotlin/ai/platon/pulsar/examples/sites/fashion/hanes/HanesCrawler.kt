@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples.sites.fashion.hanes
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.ql.context.withSQLContext
+import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.test.ProductExtractor
 
 fun main() {
@@ -26,17 +26,19 @@ fun main() {
             )
         """
 
-    withSQLContext { ctx ->
-        val now = DateTimes.formatNow("HH")
-        val path = AppPaths.getTmp("rs").resolve(now).resolve("tommy")
-        val executor = ProductExtractor(path, ctx)
-        val itemUrls = arrayOf(
-            "https://www.hanes.com/men/underwear.html",
-            "https://www.hanes.com/men/sleepwear-lounge/sets.html"
-        )
-        itemUrls.forEach { url ->
-            val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
-            executor.extract(itemsSQL)
-        }
+    val context = SQLContexts.create()
+    val now = DateTimes.formatNow("HH")
+    val path = AppPaths.getTmp("rs").resolve(now).resolve("tommy")
+    val executor = ProductExtractor(path, context)
+    val itemUrls = arrayOf(
+        "https://www.hanes.com/",
+        "https://www.hanes.com/men/underwear.html",
+        "https://www.hanes.com/men/sleepwear-lounge/sets.html"
+    )
+    itemUrls.forEach { url ->
+        val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
+        executor.extract(itemsSQL)
     }
+
+    SQLContexts.await()
 }

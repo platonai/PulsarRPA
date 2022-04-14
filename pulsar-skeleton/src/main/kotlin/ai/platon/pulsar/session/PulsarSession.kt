@@ -173,7 +173,7 @@ interface PulsarSession : AutoCloseable {
      * @return The web pages
      */
     fun loadAll(
-        urls: Iterable<String>, options: LoadOptions = options(), areItems: Boolean = false
+        urls: Iterable<String>, options: LoadOptions = options(), toItemOption: Boolean = false
     ): List<WebPage>
 
     fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage>

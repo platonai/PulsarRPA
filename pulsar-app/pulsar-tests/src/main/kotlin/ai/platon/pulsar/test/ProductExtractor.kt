@@ -1,11 +1,9 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.ql.h2.utils.CSV
-import java.nio.file.Files
 import java.nio.file.Path
 
 open class ProductExtractor(
@@ -35,11 +33,5 @@ open class ProductExtractor(
 
         path = CSV().export(resultSets.values, exportDirectory.resolve("reviews.csv"))
         println("Reviews are written to file://$path")
-
-        // save disk space
-        val contextDirectory = AppPaths.getTmp("context")
-        if (Files.exists(contextDirectory)) {
-           Files.delete(contextDirectory)
-        }
     }
 }

@@ -3,9 +3,7 @@ package ai.platon.pulsar.examples.sites.fashion.saxx
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.ql.context.withSQLContext
 import ai.platon.pulsar.test.ProductExtractor
-import kotlin.system.exitProcess
 
 fun main() {
     val indexSQL = """
@@ -44,7 +42,7 @@ fun main() {
         from
            load_out_pages(
                 '{{url}}
-                    -i 1d -requireSize 500000 -itemRequireSize 300000 -ignoreFailure -netCond worst',
+                    -i 1s -requireSize 500000 -itemRequireSize 300000 -ignoreFailure -netCond worst -topLinks 20',
                 'div.product-card a[href~=/products/]'
            )
         """
@@ -67,16 +65,16 @@ fun main() {
            )
         """
 
-    withSQLContext { ctx ->
-        val now = DateTimes.formatNow("HH")
-        val path = AppPaths.getTmp("rs").resolve(now).resolve("saxx")
-        val executor = ProductExtractor(path, ctx)
-        val itemUrls = arrayOf(
-            "https://www.saxxunderwear.com/collections/underwear",
-        )
-        itemUrls.forEach { url ->
-            val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
-            executor.extract(itemsSQL, reviewsSQLTemplate)
-        }
+    val now = DateTimes.formatNow("HH")
+    val path = AppPaths.getTmp("rs").resolve(now).resolve("saxx")
+    val executor = ProductExtractor(path)
+    val itemUrls = arrayOf(
+        "https://www.saxxunderwear.com/collections/underwear",
+    )
+    itemUrls.forEach { url ->
+        val itemsSQL = SQLTemplate(itemsSQLTemplate).createInstance(url).sql
+        executor.extract(itemsSQL, reviewsSQLTemplate)
     }
+
+    executor.context.await()
 }

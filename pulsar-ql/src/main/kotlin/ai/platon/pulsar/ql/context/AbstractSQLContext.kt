@@ -48,8 +48,7 @@ abstract class AbstractSQLContext constructor(
     private val resultSetConcurrency = ResultSet.CONCUR_READ_ONLY
 
     /**
-     * The sessions container
-     * A session will be closed if it's expired or the pool is full
+     * The sql session container.
      */
     val sqlSessions = ConcurrentHashMap<Int, AbstractSQLSession>()
 
@@ -60,9 +59,9 @@ abstract class AbstractSQLContext constructor(
 
         status = Status.INITIALIZING
 
-        status = Status.RUNNING
-
         logger.info("SQLContext is created | {}/{} | {}", id, sessions.size, this::class.java.simpleName)
+
+        status = Status.RUNNING
     }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {

@@ -62,7 +62,7 @@ class LoadComponentTests: TestBase() {
         val normUrls = urls.take(5).map { NormUrl(it, options) }
         val resultUrls = mutableListOf<String>()
         val futures = loadComponent.loadAllAsync(normUrls)
-        futures.map { it.thenApply { resultUrls.add(it.url) } }
+            .map { it.thenApply { resultUrls.add(it.url) } }
 
         val future = CompletableFuture.allOf(*futures.toTypedArray())
         future.join()
@@ -71,7 +71,7 @@ class LoadComponentTests: TestBase() {
     }
 
     @Test
-    fun testLoadAllFlow() {
+    fun testLoadAllAsFlow() {
         val options = session.options(args)
         val normUrls = urls.take(5).map { NormUrl(it, options) }
 

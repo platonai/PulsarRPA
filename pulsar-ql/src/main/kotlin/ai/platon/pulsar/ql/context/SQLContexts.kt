@@ -155,6 +155,10 @@ object SQLContexts {
     @Synchronized
     fun createSession() = create().createSession()
 
+    fun await() {
+        PulsarContexts.await()
+    }
+
     @Synchronized
     fun shutdown() {
         PulsarContexts.shutdown()

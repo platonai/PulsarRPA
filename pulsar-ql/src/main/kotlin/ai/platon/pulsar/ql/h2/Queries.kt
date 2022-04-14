@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -15,6 +14,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.types.ValueDom
+import ai.platon.pulsar.session.PulsarSession
 import org.apache.commons.math3.linear.RealVector
 import org.h2.api.ErrorCode
 import org.h2.message.DbException
@@ -27,6 +27,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
 import java.util.*
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.reflect.full.memberProperties
@@ -86,7 +87,7 @@ object Queries {
 
         when (configuredUrls) {
             is ValueString -> {
-                val doc = session.loadDocument(configuredUrls.getString())
+                val doc = session.loadDocument(configuredUrls.string)
                 collection = transformer(doc.document, restrictCss, offset, limit)
             }
             is ValueArray -> {
@@ -111,16 +112,16 @@ object Queries {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 
         val normUrl = session.normalize(portalUrl)
+        val limit2 = min(limit, normUrl.options.topLinks)
         val document = session.loadDocument(normUrl)
-        var links = transformer(document.document, restrictCss, offset, limit).filter { !UrlUtils.isInternal(it) }
+        var links = transformer(document.document, restrictCss, offset, limit2).filter { !UrlUtils.isInternal(it) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
         }
 
         val itemOptions = normUrl.options.createItemOptions()
-
-        return session.loadAll(links, itemOptions, true).filter { it.isNotInternal }
+        return session.loadAll(links, itemOptions, false).filter { it.isNotInternal }
     }
 
     /**

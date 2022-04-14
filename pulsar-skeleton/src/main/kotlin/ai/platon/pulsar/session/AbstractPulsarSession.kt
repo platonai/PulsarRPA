@@ -263,8 +263,8 @@ abstract class AbstractPulsarSession(
      * @param options The load options for all urls
      * @return The web pages
      */
-    override fun loadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean): List<WebPage> {
-        val normUrls = normalize(urls, options, areItems)
+    override fun loadAll(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<WebPage> {
+        val normUrls = normalize(urls, options, toItemOption)
         return context.loadAll(normUrls)
     }
 

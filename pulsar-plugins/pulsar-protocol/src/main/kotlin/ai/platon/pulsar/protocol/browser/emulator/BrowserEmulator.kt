@@ -108,7 +108,7 @@ open class BrowserEmulator(
         } catch (e: Exception) {
             when {
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
-                    logger.warn("Coroutine was cancelled")
+                    logger.warn("Coroutine was cancelled | {}", e.message)
                 }
                 else -> {
                     logger.warn("Unexpected exception", e)
