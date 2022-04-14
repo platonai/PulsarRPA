@@ -338,10 +338,12 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
+        startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(normalize(urls, options))
     }
 
     override fun loadAll(urls: Iterable<NormUrl>): List<WebPage> {
+        startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(urls)
     }
 
@@ -474,6 +476,9 @@ abstract class AbstractPulsarContext(
             closableObjects.clear()
 
             if (applicationContext.isActive) {
+                kotlin.runCatching { crawlLoops.stop() }
+                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+
                 applicationContext.close()
             }
         }

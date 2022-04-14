@@ -55,11 +55,14 @@ object LoadOptionDefaults {
  *
  * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
  *
+ * NOTICE: every load task should has it's own load options, it's bad to share one load options
+ *
  * TODO: consider make LoadOptions be visible by all modules
  */
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
+    // TODO: there are problems if multiple links share the same event handler
     var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
 ): CommonOptions(argv) {
 

@@ -208,11 +208,14 @@ open class CompletableListenableHyperlink<T>(
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
 }
 
+/**
+ * Create a completable listenable hyperlink, hyperlink's event handler overrides the load options' event handler
+ * */
 fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
     val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
 
-    link.eventHandler = options.eventHandler
-    options.eventHandler.loadEventHandler.onAfterLoad.addLast { link.complete(it) }
+    // make sure every option has its own event handler
+    link.eventHandler.loadEventHandler.onAfterLoad.addLast { link.complete(it) }
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 
     return link

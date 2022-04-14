@@ -21,9 +21,7 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -125,7 +123,7 @@ class ChromeDevtoolsDriver(
 
         val driver = this
         val invade = browserSettings.jsInvadingEnabled
-        withContext(Dispatchers.IO) {
+        withIOContext {
             driver.takeIf { invade }?.getInvaded(url) ?: getNoInvaded(url)
         }
     }
@@ -141,7 +139,7 @@ class ChromeDevtoolsDriver(
     override suspend fun getCookies(): List<Map<String, String>> {
         if (!refreshState()) return listOf()
 
-        return withContext(Dispatchers.IO) {
+        return withIOContext {
             getCookies0()
         }
     }
@@ -195,7 +193,7 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return null
 
         try {
-            val evaluate = withContext(Dispatchers.IO) {
+            val evaluate = withIOContext {
                 runtime?.evaluate(browserSettings.nameMangling(expression))
             }
 
@@ -234,7 +232,7 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return navigateUrl
 
         navigateUrl = try {
-            return withContext(Dispatchers.IO) {
+            return withIOContext {
                 mainFrame?.url ?: navigateUrl
             }
         } catch (e: ChromeRPCException) {
@@ -311,7 +309,7 @@ class ChromeDevtoolsDriver(
         if (p != null && d != null) {
             val point = ClickableDOM(p, d, nodeId, offset).clickablePoint() ?: return
 
-            withContext(Dispatchers.IO) {
+            withIOContext {
                 mouse?.click(point.x, point.y, count, delayPolicy("click"))
             }
 
@@ -325,7 +323,7 @@ class ChromeDevtoolsDriver(
         val nodeId = focus(selector)
         if (nodeId == 0) return
 
-        withContext(Dispatchers.IO) {
+        withIOContext {
             keyboard?.type(nodeId, text, delayPolicy("type"))
         }
 
@@ -405,7 +403,7 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return null
 
         try {
-            return withContext(Dispatchers.IO) {
+            return withIOContext {
                 dom?.getOuterHTML(dom?.document?.nodeId, null, null)
             }
         } catch (e: ChromeRPCException) {
@@ -417,7 +415,7 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun bringToFront() {
-        withContext(Dispatchers.IO) {
+        withIOContext {
             page?.bringToFront()
         }
     }
@@ -600,19 +598,30 @@ class ChromeDevtoolsDriver(
         return browserSettings.nameMangling(js)
     }
 
-    @Throws(WebDriverException::class)
     private fun isMainFrame(frameId: String): Boolean {
         if (!isActive) return false
 
         return mainFrame?.id == frameId
     }
 
+    private suspend fun <T> withIOContext2(block: suspend () -> T): T {
+        return block()
+    }
+
+    private suspend fun <T> withIOContext(block: suspend CoroutineScope.() -> T): T {
+        return withContext(Dispatchers.IO) {
+            block()
+        }
+    }
+
     class ShutdownHookRegistry : ChromeLauncher.ShutdownHookRegistry {
 
         override fun register(thread: Thread) {
+            // Runtime.getRuntime().addShutdownHook(thread)
         }
 
         override fun remove(thread: Thread) {
+            // Runtime.getRuntime().removeShutdownHook(thread)
         }
     }
 }

@@ -13,11 +13,9 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
@@ -30,7 +28,6 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -137,6 +134,9 @@ class LoadComponent(
 
         val links = loadAllAsync(normUrls)
 
+        logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
+            globalCache.javaClass, globalCache.hashCode(), globalCache.urlPool.hashCode())
+
         var i = 90
         val pendingLinks = links.toMutableList()
         while (i-- > 0 && pendingLinks.isNotEmpty()) {
@@ -164,7 +164,9 @@ class LoadComponent(
             return listOf()
         }
 
-        val links = normUrls.map { it.toCompletableListenableHyperlink() }
+        // TODO: distinct or not?
+        // NOTE: the hyperlink's event handler overrides the load options' event handler
+        val links = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
 
         links.forEach {
             val cache = globalCache.urlPool.orderedCaches[it.priority] ?: globalCache.urlPool.lowestCache

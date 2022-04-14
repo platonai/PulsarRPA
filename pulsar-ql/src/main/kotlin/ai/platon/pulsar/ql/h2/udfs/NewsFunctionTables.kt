@@ -106,9 +106,7 @@ object NewsFunctionTables {
         val (url, args) = UrlUtils.splitUrlArgs(portalUrl)
         ss.load(url, ss.options(args))
 
-        val docs = Queries.loadOutPages(
-            ss, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery
-        )
+        val docs = Queries.loadOutPages(ss, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
             .asSequence()
             .map { ss.parse(it) }
         val doms = docs.map { ValueDom.get(it.document) }

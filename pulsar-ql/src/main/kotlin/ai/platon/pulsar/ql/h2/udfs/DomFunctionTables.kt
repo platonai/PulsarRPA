@@ -40,13 +40,13 @@ object DomFunctionTables {
      */
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
-    fun loadAll(@H2Context conn: JdbcConnection, portalUrls: ValueArray): ResultSet {
+    fun loadAll(@H2Context conn: JdbcConnection, urls: ValueArray): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val pages = Queries.loadAll(session, portalUrls)
+        val pages = Queries.loadAll(session, urls)
         val doms = pages.map { session.parseValueDom(it) }
 
         return toResultSet("DOM", doms)
@@ -144,7 +144,7 @@ object DomFunctionTables {
                      restrictCss: String = ":root",
                      offset: Int = 1,
                      limit: Int = Integer.MAX_VALUE,
-                     normalize: Boolean = false): ResultSet {
+                     normalize: Boolean = true): ResultSet {
         return loadOutPagesAsRsInternal(conn, portalUrl, restrictCss, offset, limit, normalize = normalize)
     }
 
@@ -156,7 +156,7 @@ object DomFunctionTables {
                                    restrictCss: String = ":root",
                                    offset: Int = 1,
                                    limit: Int = Int.MAX_VALUE,
-                                   normalize: Boolean = false): ResultSet {
+                                   normalize: Boolean = true): ResultSet {
         return loadOutPagesAsRsInternal(conn,
                 portalUrl, restrictCss, offset, limit, normalize = normalize, ignoreQuery = true)
     }
@@ -180,7 +180,7 @@ object DomFunctionTables {
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE,
             targetCss: String = ":root",
-            normalize: Boolean = false,
+            normalize: Boolean = true,
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
@@ -219,7 +219,7 @@ object DomFunctionTables {
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE,
             targetCss: String = ":root",
-            normalize: Boolean = false,
+            normalize: Boolean = true,
             ignoreQuery: Boolean = false): ResultSet {
         return loadOutPagesAsRsInternal(conn,
                 portalUrl, restrictCss, offset, limit, targetCss = targetCss, normalize = normalize, ignoreQuery = ignoreQuery)
@@ -232,17 +232,16 @@ object DomFunctionTables {
             offset: Int = 1,
             limit: Int = Int.MAX_VALUE,
             targetCss: String = ":root",
-            normalize: Boolean = false,
+            normalize: Boolean = true,
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val docs =
-                Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
-                    .map { session.parse(it) }
-                    .filterNot { it.isInternal() }
+        val pages = Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
+
+        val docs = pages.map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }

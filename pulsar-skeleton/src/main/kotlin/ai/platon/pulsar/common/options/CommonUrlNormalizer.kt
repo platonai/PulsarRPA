@@ -8,17 +8,6 @@ import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
-    companion object {
-        fun overrideLoadOptions(url: UrlAware, options: LoadOptions) {
-            if (url is ListenableHyperlink) {
-                url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
-                options.eventHandler = url.eventHandler
-            }
-            options.conf.name = options.label
-            options.nMaxRetry = url.nMaxRetry
-        }
-    }
-
     /**
      * Normalize an url.
      *
@@ -32,8 +21,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         // the later args overwrites the earlier ones
         val args = "$args2 $args1 $args0".trim()
 
-        val finalOptions = initOptions(LoadOptions.parse(args, options), toItemOption)
-        overrideLoadOptions(url, finalOptions)
+        val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options), toItemOption)
 
 //        require(options.eventHandler != null)
 //        require(finalOptions.eventHandler != null)
@@ -51,6 +39,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
                 normalizedUrl = normalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
             }
         }
+        normalizedUrl = normalizedUrl.substringBefore("#")
 
         finalOptions.overrideConfiguration()
 
@@ -58,8 +47,25 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         return NormUrl(normalizedUrl, finalOptions, href, url)
     }
 
-    private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
-        options.overrideConfiguration()
-        return if (toItemOption) options.createItemOptions() else options
+    private fun createLoadOptions(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
+        val options2 = if (toItemOption) options.createItemOptions() else options
+        val options3 = createLoadOptions0(url, options2)
+
+        options3.overrideConfiguration()
+
+        return options3
+    }
+
+    private fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
+        val clone = options.clone()
+        clone.conf.name = clone.label
+        clone.nMaxRetry = url.nMaxRetry
+
+        if (url is ListenableHyperlink) {
+            url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
+            clone.eventHandler = url.eventHandler
+        }
+
+        return clone
     }
 }

@@ -42,7 +42,7 @@ fun main() {
         from
            load_out_pages(
                 '{{url}}
-                    -i 1s -requireSize 500000 -itemRequireSize 300000 -ignoreFailure -netCond worst -topLinks 20',
+                    -i 1s -ii 1s -requireSize 500000 -itemRequireSize 300000 -ignoreFailure -netCond worst -topLinks 20',
                 'div.product-card a[href~=/products/]'
            )
         """

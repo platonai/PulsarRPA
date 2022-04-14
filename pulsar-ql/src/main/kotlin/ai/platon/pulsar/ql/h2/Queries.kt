@@ -38,27 +38,23 @@ object Queries {
     /**
      * Load all Web pages
      *
-     * @param session        The session
-     * @param configuredUrls The configured urls, can be a single string represented by a [ValueString],
+     * @param session The session
+     * @param urls The urls to load, can be a single string represented by a [ValueString]
      * or an array of strings represented by a [ValueArray]
      * @return A collection of [WebPage]s
      */
-    fun loadAll(session: PulsarSession, portal: Value): Collection<WebPage> {
+    fun loadAll(session: PulsarSession, urls: Value): Collection<WebPage> {
         var pages: Collection<WebPage> = listOf()
 
-        when (portal) {
+        when (urls) {
             is ValueString -> {
-                val normUrl = session.normalize(portal.string)
+                val normUrl = session.normalize(urls.string)
                 pages = ArrayList()
                 pages.add(session.load(normUrl))
             }
             is ValueArray ->
-                if (portal.list.isNotEmpty()) {
-                    val normUrl = session.normalize(portal.list[0].string)
-                    val itemOptions = normUrl.options.createItemOptions()
-                    for (configuredUrl in portal.list) {
-                        pages = session.loadAll(portal.list.map { configuredUrl.string }, itemOptions)
-                    }
+                if (urls.list.isNotEmpty()) {
+                    pages = session.loadAll(urls.list.mapTo(mutableSetOf()) { it.string })
                 }
             else -> throw DbException.get(ErrorCode.METHOD_NOT_FOUND_1, "Unsupported type ${Value::class}")
         }
@@ -107,21 +103,23 @@ object Queries {
         session: PulsarSession,
         portalUrl: String, restrictCss: String,
         offset: Int = 1, limit: Int = Int.MAX_VALUE,
-        normalize: Boolean = false, ignoreQuery: Boolean = false
+        normalize: Boolean = true, ignoreQuery: Boolean = false
     ): Collection<WebPage> {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 
         val normUrl = session.normalize(portalUrl)
         val limit2 = min(limit, normUrl.options.topLinks)
         val document = session.loadDocument(normUrl)
-        var links = transformer(document.document, restrictCss, offset, limit2).filter { !UrlUtils.isInternal(it) }
+        var links = transformer(document.document, restrictCss, offset, Int.MAX_VALUE).filter { !UrlUtils.isInternal(it) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
         }
 
         val itemOptions = normUrl.options.createItemOptions()
-        return session.loadAll(links, itemOptions, false).filter { it.isNotInternal }
+        val distinctLinks = links.toSet().take(limit2)
+
+        return session.loadAll(distinctLinks, itemOptions, false).filter { it.isNotInternal }
     }
 
     /**
@@ -146,7 +144,7 @@ object Queries {
 
     fun getLinks(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-        return ele.select(cssQuery, offset, limit) { it.absUrl("href") }.filterNotNull()
+        return ele.select(cssQuery, offset, limit) { it.absUrl("href") }
     }
 
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {

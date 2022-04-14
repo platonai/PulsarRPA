@@ -75,8 +75,8 @@ class ChromeLauncher(
         this.process = null
         if (p.isAlive) {
             Runtimes.destroyProcess(p, options.shutdownWaitTime)
-            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-                    .onFailure { logger.warn("Unexpected exception", it) }
+//            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+//                    .onFailure { logger.warn("Unexpected exception", it) }
         }
 
         // if the data dir is the default dir, we might have problem to clean up
