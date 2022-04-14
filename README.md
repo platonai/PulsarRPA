@@ -47,7 +47,7 @@ val document2 = session.loadDocument(url, "-expires 1d")
 // do something with the document
 // ...
 // load all pages with links specified by -outLink
-val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/]")
+val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 // load, parse and scrape fields
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // load, parse and scrape named fields
