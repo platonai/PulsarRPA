@@ -567,7 +567,6 @@
             </dependency>
 
             <!-- For parsers -->
-            <!-- https://mvnrepository.com/artifact/org.apache.tika/tika-parsers -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parsers-standard-package</artifactId>

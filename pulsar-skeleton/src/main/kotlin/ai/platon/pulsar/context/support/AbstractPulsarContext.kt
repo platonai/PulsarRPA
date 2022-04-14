@@ -455,7 +455,7 @@ abstract class AbstractPulsarContext(
         }
     }
 
-    private fun doClose() {
+    protected open fun doClose() {
         AppContext.beginTerminate()
 
         if (closed.compareAndSet(false, true)) {
@@ -476,8 +476,8 @@ abstract class AbstractPulsarContext(
             closableObjects.clear()
 
             if (applicationContext.isActive) {
-                kotlin.runCatching { crawlLoops.stop() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+//                kotlin.runCatching { crawlLoops.stop() }
+//                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
 
                 applicationContext.close()
             }

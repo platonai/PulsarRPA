@@ -36,16 +36,6 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
     fun scrape2() = session.scrape(url, "-i 1d", "li[data-sku]",
             mapOf("name" to ".p-name em", "price" to ".p-price"))
 
-    fun scrapeOutPages(): List<Map<String, String?>> = session.scrapeOutPages(url,
-            "-expires 1d -itemExpires 7d -outLink a[href~=item]",
-            ".product-intro",
-            listOf(".sku-name", ".p-price"))
-
-    fun scrapeOutPages2(): List<Map<String, String?>> = session.scrapeOutPages(url,
-            "-i 1d -ii 7d -ol a[href~=item]",
-            ".product-intro",
-            mapOf("name" to ".sku-name", "price" to ".p-price"))
-
     fun runAll() {
         println("Load:")
         load()
@@ -56,11 +46,6 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
         println(scrape().joinToString("\n") { it[".p-price"] + " | " + it[".p-name em"] })
         println("Scrape - 2:")
         println(scrape2().joinToString("\n") { it["price"] + " | " + it["name"] })
-
-        println("Scrape out pages:")
-        println(scrapeOutPages().joinToString("\n") { it[".p-price"] + " | " + it[".sku-name"] })
-        println("Scrape out pages - 2:")
-        println(scrapeOutPages2().joinToString("\n") { it["price"] + " | " + it["name"] })
     }
 }
 

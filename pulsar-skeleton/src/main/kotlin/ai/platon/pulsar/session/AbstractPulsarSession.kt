@@ -1,10 +1,7 @@
 package ai.platon.pulsar.session
 
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
-import ai.platon.pulsar.common.BeanFactory
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.*
@@ -402,9 +399,11 @@ abstract class AbstractPulsarSession(
         }
     }
 
+    @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>) =
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
+    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
@@ -414,9 +413,11 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
+    @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>) =
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
+    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {

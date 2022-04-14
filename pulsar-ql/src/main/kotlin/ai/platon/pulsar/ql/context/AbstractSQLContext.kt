@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
 import org.h2.engine.SessionInterface

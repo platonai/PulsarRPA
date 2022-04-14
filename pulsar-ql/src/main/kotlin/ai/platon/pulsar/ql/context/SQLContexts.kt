@@ -176,9 +176,3 @@ fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit
         block(it)
     }
 }
-
-fun withSQLContext(applicationContext: ApplicationContext, block: (context: SQLContext) -> Unit) {
-    SQLContexts.create(applicationContext).use {
-        block(it)
-    }
-}
