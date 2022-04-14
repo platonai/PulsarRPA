@@ -48,8 +48,7 @@ class MockWebDriver(
     val realDriver: WebDriver get() = backupDriverOrNull ?: this
 
     override val browserType: BrowserType
-        get() = if (realDriver is PlaywrightDriver)
-            BrowserType.CHROME else BrowserType.MOCK_CHROME
+        get() = if (realDriver == this) BrowserType.MOCK_CHROME else realDriver.browserType
 
     override val supportJavascript: Boolean
         get() = when (realDriver) {

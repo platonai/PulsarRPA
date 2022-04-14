@@ -18,17 +18,11 @@
  */
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.Runtimes.checkIfProcessRunning
-import ai.platon.pulsar.common.Runtimes.deleteBrokenSymbolicLinks
-import ai.platon.pulsar.common.Runtimes.locateBinary
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import org.junit.Test
-import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class TestAppRuntimes {
@@ -39,20 +33,21 @@ class TestAppRuntimes {
 
     @Test
     fun testCheckIfProcessRunning() {
-        val running = checkIfProcessRunning("java")
+        val running = Runtimes.checkIfProcessRunning("java")
         assertTrue { running }
     }
 
     @Test
     fun testLocateBinary() {
-        val locations = locateBinary("dir")
+        val locations = Runtimes.locateBinary("dir")
         assertTrue { locations.isNotEmpty() }
     }
 
     @Test
     fun testDeleteBrokenSymbolicLinksUsingBash() {
-        val tmp = Paths.get(SystemUtils.JAVA_IO_TMPDIR)
+        val tmp = AppPaths.getTmp("test")
         val file = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
+        Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")
         val symbolicPath = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createSymbolicLink(symbolicPath, file)
@@ -65,7 +60,7 @@ class TestAppRuntimes {
         assertFalse { Files.exists(symbolicPath) }
         assertTrue { Files.isSymbolicLink(symbolicPath) }
 
-        deleteBrokenSymbolicLinks(tmp)
+        Runtimes.deleteBrokenSymbolicLinks(tmp)
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: what happens on windows
         } else {
@@ -75,10 +70,11 @@ class TestAppRuntimes {
 
     @Test
     fun testDeleteBrokenSymbolicLinksUsingJava() {
-        val tmp = Paths.get(SystemUtils.JAVA_IO_TMPDIR)
-        val file = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
+        val tmpDir = AppPaths.getTmp("test")
+        val file = tmpDir.resolve(RandomStringUtils.randomAlphabetic(5))
+        Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")
-        val symbolicPath = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
+        val symbolicPath = tmpDir.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createSymbolicLink(symbolicPath, file)
 
         assertTrue { Files.exists(file) }
@@ -89,7 +85,7 @@ class TestAppRuntimes {
         assertFalse { Files.exists(symbolicPath) }
         assertTrue { Files.isSymbolicLink(symbolicPath) }
 
-        Files.list(tmp).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
+        Files.list(tmpDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
 
         assertFalse { Files.isSymbolicLink(symbolicPath) }
     }

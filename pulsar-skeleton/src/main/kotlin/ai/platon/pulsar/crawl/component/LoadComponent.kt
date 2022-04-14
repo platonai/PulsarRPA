@@ -1,25 +1,27 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppStatusTracker
+import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
-import ai.platon.pulsar.crawl.*
+import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import org.slf4j.LoggerFactory
@@ -27,7 +29,6 @@ import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -46,9 +47,8 @@ class LoadComponent(
     val fetchComponent: BatchFetchComponent,
     val parseComponent: ParseComponent,
     val updateComponent: UpdateComponent,
-    val statusTracker: AppStatusTracker? = null,
-    val crawlLoop: CrawlLoop? = null,
     val immutableConfig: ImmutableConfig,
+    val statusTracker: AppStatusTracker? = null,
 ) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
@@ -72,15 +72,6 @@ class LoadComponent(
     @Volatile
     private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
-
-    constructor(
-        webDb: WebDb,
-        globalCacheFactory: GlobalCacheFactory,
-        fetchComponent: BatchFetchComponent,
-        parseComponent: ParseComponent,
-        updateComponent: UpdateComponent,
-        immutableConfig: ImmutableConfig,
-    ) : this(webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, null, null, immutableConfig)
 
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
@@ -126,22 +117,25 @@ class LoadComponent(
     }
 
     /**
+     * Load a page specified by [normUrl], wait until all pages are loaded or timeout
+     * */
+    fun loadAsync(normUrl: NormUrl): CompletableFuture<WebPage> {
+        val link = normUrl.toCompletableListenableHyperlink()
+
+        globalCache.urlPool.higher3Cache.reentrantQueue.add(link)
+
+        return link
+    }
+
+    /**
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
      * */
-    fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        val queue = globalCache.urlPool.higher3Cache.reentrantQueue
-        val timeoutSeconds = options.pageLoadTimeout.seconds + 1
-        val links = normUrls
-            .asSequence()
-            .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
-            .onEach { it.nMaxRetry = 0 }
-            .onEach { url -> url.eventHandler = options.eventHandler }
-            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
-            .toList()
+    fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage> {
+        if (!normUrls.iterator().hasNext()) {
+            return listOf()
+        }
 
-        queue.addAll(links)
-        logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
-            globalCache.javaClass, globalCache.hashCode(), globalCache.urlPool.hashCode())
+        val links = loadAllAsync(normUrls)
 
         var i = 90
         val pendingLinks = links.toMutableList()
@@ -159,28 +153,23 @@ class LoadComponent(
             sleepSeconds(1)
         }
 
-        // timeout process?
-//        val future = CompletableFuture.allOf(*links.toTypedArray())
-//        future.join()
-
         return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
     /**
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
      * */
-    fun loadAllAsync(normUrls: Iterable<NormUrl>, options: LoadOptions): List<CompletableFuture<WebPage>> {
-        val queue = globalCache.urlPool.higher3Cache.reentrantQueue
-        val timeoutSeconds = options.pageLoadTimeout.seconds + 1
-        val links = normUrls
-            .asSequence()
-            .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
-            .onEach { it.nMaxRetry = 0 }
-            .onEach { url -> url.eventHandler = options.eventHandler }
-            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
-            .toList()
+    fun loadAllAsync(normUrls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
+        if (!normUrls.iterator().hasNext()) {
+            return listOf()
+        }
 
-        queue.addAll(links)
+        val links = normUrls.map { it.toCompletableListenableHyperlink() }
+
+        links.forEach {
+            val cache = globalCache.urlPool.orderedCaches[it.priority] ?: globalCache.urlPool.lowestCache
+            cache.reentrantQueue.add(it)
+        }
 
         return links
     }

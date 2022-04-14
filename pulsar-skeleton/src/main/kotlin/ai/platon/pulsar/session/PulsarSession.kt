@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
 
 interface PulsarSession : AutoCloseable {
 
@@ -80,6 +81,7 @@ interface PulsarSession : AutoCloseable {
      * @return The web page created
      */
     fun inject(url: String): WebPage
+
     /**
      * Get a page from database if exists
      *
@@ -87,6 +89,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage
      */
     fun get(url: String): WebPage
+
     /**
      * Get a page from database if exists
      *
@@ -94,6 +97,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage
      */
     fun getOrNull(url: String): WebPage?
+
     /**
      * Check if a page exists in the database
      *
@@ -101,6 +105,7 @@ interface PulsarSession : AutoCloseable {
      * @return true if the page exists in the database
      */
     fun exists(url: String): Boolean
+
     /**
      * Return the fetch state of the page
      *
@@ -109,6 +114,7 @@ interface PulsarSession : AutoCloseable {
      * @return The fetch state of the page
      */
     fun fetchState(page: WebPage, options: LoadOptions): CheckState
+
     /**
      * Open a page with [url]
      *
@@ -117,6 +123,7 @@ interface PulsarSession : AutoCloseable {
      */
     @Throws(Exception::class)
     fun open(url: String): WebPage
+
     /**
      * Load an url with specified options
      *
@@ -126,6 +133,7 @@ interface PulsarSession : AutoCloseable {
      */
     @Throws(Exception::class)
     fun load(url: String, args: String): WebPage
+
     /**
      * Load an url with specified options
      *
@@ -166,11 +174,17 @@ interface PulsarSession : AutoCloseable {
      */
     fun loadAll(
         urls: Iterable<String>, options: LoadOptions = options(), areItems: Boolean = false
-    ): Collection<WebPage>
+    ): List<WebPage>
 
-    fun loadAll(normUrls: Collection<NormUrl>, options: LoadOptions = options()): Collection<WebPage>
+    fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage>
 
-    fun asyncLoadAll(urls: Collection<UrlAware>): PulsarSession
+    fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
+
+    fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
+
+    fun submit(url: UrlAware): AbstractPulsarSession
+
+    fun submitAll(urls: Iterable<UrlAware>): PulsarSession
 
     /**
      * Load all out pages in a portal page
@@ -179,7 +193,8 @@ interface PulsarSession : AutoCloseable {
      * @param args         The load args
      * @return The web pages
      */
-    fun loadOutPages(portalUrl: String, args: String): Collection<WebPage>
+    fun loadOutPages(portalUrl: String, args: String): List<WebPage>
+
     /**
      * Load all out pages in a portal page
      *
@@ -187,9 +202,11 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The web pages
      */
-    fun loadOutPages(portalUrl: String, options: LoadOptions = options()): Collection<WebPage>
+    fun loadOutPages(portalUrl: String, options: LoadOptions = options()): List<WebPage>
 
-    fun asyncLoadOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
+    fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>>
+
+    fun submitLoadOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
     /**
      * Load an url as a resource without browser rendering in the browser context
      *

@@ -40,12 +40,6 @@
         <constructor-arg ref="conf" />
     </bean>
 
-    <bean id="lazyFetchTaskManager" class="ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager" destroy-method="close">
-        <constructor-arg ref="webDb"/>
-        <constructor-arg ref="coreMetrics"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="globalCacheFactory" class="ai.platon.pulsar.crawl.common.GlobalCacheFactory">
         <constructor-arg ref="conf"/>
     </bean>

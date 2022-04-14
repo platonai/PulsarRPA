@@ -1,8 +1,5 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.session.AbstractPulsarSession
-import ai.platon.pulsar.session.PulsarEnvironment
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -22,11 +19,15 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.session.AbstractPulsarSession
+import ai.platon.pulsar.session.PulsarEnvironment
+import ai.platon.pulsar.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -135,7 +136,7 @@ abstract class AbstractPulsarContext(
 
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
-    private val abnormalPages: Collection<WebPage>? get() = if (isActive) null else listOf()
+    private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
@@ -170,7 +171,7 @@ abstract class AbstractPulsarContext(
 
     /**
      * Normalize an url, the url can be one of the following:
-     * 1. an normal url
+     * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
@@ -336,20 +337,32 @@ abstract class AbstractPulsarContext(
      * @param options The options
      * @return Pages for all urls.
      */
-    override fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return abnormalPages ?: loadComponent.loadAll(normalize(urls, options), options)
+    override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
+        return abnormalPages ?: loadComponent.loadAll(normalize(urls, options))
     }
 
-    override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return abnormalPages ?: loadComponent.loadAll(urls, options)
+    override fun loadAll(urls: Iterable<NormUrl>): List<WebPage> {
+        return abnormalPages ?: loadComponent.loadAll(urls)
     }
 
-    override fun asyncLoad(url: UrlAware): AbstractPulsarContext {
+    override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
+        startLoopIfNecessary()
+        return loadComponent.loadAsync(url)
+    }
+
+    override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
+        startLoopIfNecessary()
+        return loadComponent.loadAllAsync(urls)
+    }
+
+    override fun submit(url: UrlAware): AbstractPulsarContext {
+        startLoopIfNecessary()
         crawlPool.add(url)
         return this
     }
 
-    override fun asyncLoadAll(urls: Collection<UrlAware>): AbstractPulsarContext {
+    override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
+        startLoopIfNecessary()
         crawlPool.addAll(urls)
         return this
     }
@@ -461,13 +474,16 @@ abstract class AbstractPulsarContext(
             closableObjects.clear()
 
             if (applicationContext.isActive) {
-                kotlin.runCatching { crawlLoops.stop() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
-
                 applicationContext.close()
             }
         }
 
         AppContext.endTerminate()
+    }
+
+    private fun startLoopIfNecessary() {
+        if (isActive && !crawlLoops.isStarted) {
+            crawlLoops.start()
+        }
     }
 }

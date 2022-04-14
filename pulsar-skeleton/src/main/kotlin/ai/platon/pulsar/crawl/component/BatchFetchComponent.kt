@@ -134,7 +134,6 @@ class BatchFetchComponent(
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
         coreMetrics?.markTaskStart(size)
-
         return runBlocking { urls.asFlow().map { fetch(it, options) }.toList(mutableListOf()) }
     }
 
@@ -186,19 +185,5 @@ class BatchFetchComponent(
         }
 
         return eagerTasks
-    }
-
-    private fun getResponse(future: Future<WebPage>): WebPage {
-        try {
-            return future.get(35, TimeUnit.SECONDS)
-        } catch (e: InterruptedException) {
-            logger.warn("Interrupted when fetch resource", e)
-            Thread.currentThread().interrupt()
-        } catch (e: ExecutionException) {
-            logger.warn(e.toString())
-        } catch (e: TimeoutException) {
-            logger.warn("Fetch resource timeout", e)
-        }
-        return WebPage.NIL
     }
 }

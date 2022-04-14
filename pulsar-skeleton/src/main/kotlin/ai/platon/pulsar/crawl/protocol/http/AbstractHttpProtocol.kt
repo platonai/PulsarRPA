@@ -147,9 +147,6 @@ abstract class AbstractHttpProtocol: Protocol {
         return response !is ForwardingResponse && response.status.isRetry(RetryScope.PROTOCOL)
     }
 
-    /**
-     * TODO: do not translate status code, they are just OK to handle in FetchComponent
-     */
     private fun getOutputWithHttpStatusTransformed(url: String, response: Response): ProtocolOutput {
         var u = URL(url)
         val httpCode = response.httpCode

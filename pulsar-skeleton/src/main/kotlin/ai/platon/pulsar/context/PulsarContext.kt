@@ -14,6 +14,8 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.springframework.context.ApplicationContext
 import java.net.URL
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Future
 
 /**
  * Main entry point for Pulsar functionality.
@@ -121,11 +123,15 @@ interface PulsarContext: AutoCloseable {
      */
     fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage>
 
-    fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage>
+    fun loadAll(urls: Iterable<NormUrl>): Collection<WebPage>
 
-    fun asyncLoad(url: UrlAware): PulsarContext
+    fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
 
-    fun asyncLoadAll(urls: Collection<UrlAware>): PulsarContext
+    fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
+
+    fun submit(url: UrlAware): PulsarContext
+
+    fun submitAll(urls: Iterable<UrlAware>): PulsarContext
 
     /**
      * Parse the WebPage using Jsoup

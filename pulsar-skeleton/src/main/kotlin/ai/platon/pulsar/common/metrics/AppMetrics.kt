@@ -86,14 +86,18 @@ class AppMetrics(
         val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         val memoryInfo get() = systemInfo.hardware.memory
-        // Free memory in bytes
-        // Free memory is the amount of memory which is currently not used for anything.
-        // This number should be small, because memory which is not used is simply wasted.
+        /**
+         * Free memory in bytes
+         * Free memory is the amount of memory which is currently not used for anything.
+         * This number should be small, because memory which is not used is simply wasted.
+         * */
         val freeMemory get() = Runtime.getRuntime().freeMemory()
         val freeMemoryGiB get() = ByteUnit.BYTE.toGiB(freeMemory.toDouble())
-        // Available memory in bytes
-        // Available memory is the amount of memory which is available for allocation to a new process or to existing
-        // processes.
+        /**
+         * Available memory in bytes
+         * Available memory is the amount of memory which is available for allocation to a new process or to existing
+         * processes.
+         * */
         val availableMemory get() = memoryInfo.available
 
         val freeSpace get() = FileSystems.getDefault().fileStores

@@ -70,6 +70,10 @@ class StaticH2SQLContext(
      * */
     override val globalCacheFactory = getBeanOrNull() ?: GlobalCacheFactory(unmodifiedConfig)
     /**
+     * The main loop
+     * */
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig))
+    /**
      * The injection component
      * */
     override val injectComponent = getBeanOrNull() ?: InjectComponent(webDb, unmodifiedConfig)
@@ -90,10 +94,6 @@ class StaticH2SQLContext(
      * */
     override val loadComponent = getBeanOrNull() ?: LoadComponent(
         webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
-    /**
-     * The main loop
-     * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(mutableListOf(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)))
 
     init {
         applicationContext.refresh()

@@ -36,10 +36,6 @@ object PulsarContexts {
         context.registerShutdownHook()
         logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
 
-        if (!context.crawlLoops.isStarted) {
-            context.crawlLoops.start()
-        }
-
         return context
     }
 

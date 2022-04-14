@@ -173,7 +173,7 @@ open class BrowserEmulator(
             }
             navigateTask.pageSource = driver.pageSource() ?: ""
         } catch (e: NoSuchElementException) {
-            // TODO: when this exception is thrown?
+            // TODO: this exception seems not thrown anymore
             logger.warn(e.message)
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
@@ -215,11 +215,9 @@ open class BrowserEmulator(
         var pageSource = ""
         var i = 0
         do {
-            if (isActive) {
-                pageSource = interactTask.driver.pageSource() ?: ""
-                if (pageSource.length < 20_000) {
-                    delay(1000)
-                }
+            pageSource = interactTask.driver.pageSource() ?: ""
+            if (pageSource.length < 20_000) {
+                delay(1000)
             }
         } while (i++ < 45 && pageSource.length < 20_000 && isActive)
 

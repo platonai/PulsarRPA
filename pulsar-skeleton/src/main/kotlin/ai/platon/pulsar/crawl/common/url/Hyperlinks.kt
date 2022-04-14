@@ -15,6 +15,7 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 
 interface ListenableHyperlink: UrlAware {
@@ -205,4 +206,14 @@ open class CompletableListenableHyperlink<T>(
     CompletableHyperlink<T>(url, text, order, referer, args, href)
 {
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
+}
+
+fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
+    val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
+
+    link.eventHandler = options.eventHandler
+    options.eventHandler.loadEventHandler.onAfterLoad.addLast { link.complete(it) }
+    link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
+
+    return link
 }

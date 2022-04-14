@@ -94,7 +94,9 @@ open class WebDriverFactory(
     ): MockWebDriver {
         require(instanceId.browserType == BrowserType.MOCK_CHROME)
         val browserInstance = createBrowserInstance(instanceId, capabilities) as MockBrowserInstance
-        val backupDriverCreator = { createChromeDevtoolsDriver(instanceId, capabilities) }
+        val fingerprint = instanceId.fingerprint.copy(browserType = BrowserType.CHROME)
+        val backupInstanceId = BrowserInstanceId(instanceId.contextDir, fingerprint)
+        val backupDriverCreator = { createChromeDevtoolsDriver(backupInstanceId, capabilities) }
         return MockWebDriver(browserInstance, backupDriverCreator)
     }
 

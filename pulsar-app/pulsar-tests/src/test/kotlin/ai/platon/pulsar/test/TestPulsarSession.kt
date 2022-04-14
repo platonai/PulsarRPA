@@ -1,13 +1,9 @@
 package ai.platon.pulsar.test
 
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.persist.WebPage
 import org.junit.Test
-import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoField
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals

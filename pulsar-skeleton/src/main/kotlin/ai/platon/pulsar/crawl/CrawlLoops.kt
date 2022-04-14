@@ -13,6 +13,8 @@ class CrawlLoops(val loops: MutableList<CrawlLoop>) : StartStopRunnable {
 
     val isStarted get() = started.get()
 
+    constructor(loop: CrawlLoop): this(mutableListOf(loop))
+
     fun first() = loops.first()
 
     fun last() = loops.last()

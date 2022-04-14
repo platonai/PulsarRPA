@@ -19,7 +19,7 @@ fun main() {
     options.eventHandler.loadEventHandler.onAfterHtmlParse.addLast { page, document ->
         println(document.title + " | " + document.baseUri)
     }
-    urls.split("\n").forEach { session.asyncLoadOutPages(it, options) }
+    urls.split("\n").forEach { session.submitLoadOutPages(it, options) }
 
     PulsarContexts.await()
 }

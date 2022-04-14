@@ -46,7 +46,7 @@ object ResultSetUtils {
     }
 
     /**
-     * Transpose a result set if the result set has only row and every row is an array
+     * Transpose a result set if the result set has only one row and every cell is an array
      * */
     fun transpose(rs: ResultSet): ResultSet {
         val newRs = ResultSets.newSimpleResultSet()
@@ -60,7 +60,7 @@ object ResultSetUtils {
         IntRange(1, columnCount).map { i -> newRs.addColumn(rs.metaData.getColumnName(i)) }
 
         val array = rs.getArray(1)
-        val nativeArray = (array.array as? kotlin.Array<*>) ?: return newRs
+        val nativeArray = (array.array as? Array<*>) ?: return newRs
         val newRowCount = nativeArray.size
 
         if (columnCount == 0) {
@@ -72,13 +72,13 @@ object ResultSetUtils {
         IntRange(0, newRowCount - 1).forEach outer@{ i ->
             IntRange(0, columnCount - 1).forEach inner@{ j ->
                 val a = rs.getArray(j + 1)
-                if (a.array !is kotlin.Array<*>) {
+                if (a.array !is Array<*>) {
                     logger.warn("The {}th column is expected to be an array, actual {}", j + 1, a.array.javaClass.name)
                     rows[i][j] = null
                     return@inner
                 }
 
-                val na = a.array as kotlin.Array<*>
+                val na = a.array as Array<*>
                 if (i < na.size) {
                     rows[i][j] = na[i].toString()
                 } else {

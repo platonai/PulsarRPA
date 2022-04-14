@@ -68,7 +68,7 @@ interface UrlPool {
     fun add(url: String, priority: Priority13 = Priority13.NORMAL): Boolean
     fun add(url: UrlAware): Boolean
     fun addAll(urls: Iterable<String>, priority: Priority13 = Priority13.NORMAL): Boolean
-    fun addAll(urls: Collection<UrlAware>): Boolean
+    fun addAll(urls: Iterable<UrlAware>): Boolean
     fun removeDeceased()
     fun clear()
     fun hasMore(): Boolean
@@ -106,7 +106,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
         return addAll(urls.map { Hyperlink(it) })
     }
 
-    override fun addAll(urls: Collection<UrlAware>): Boolean {
+    override fun addAll(urls: Iterable<UrlAware>): Boolean {
         var count = 0
         urls.forEach {
             val added = orderedCaches[it.priority]?.nReentrantQueue?.add(it)

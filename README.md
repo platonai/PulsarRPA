@@ -77,9 +77,9 @@ fun main() {
     val urls = LinkExtractors.fromResource("seeds.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
     val context = PulsarContexts.create()
-    context.asyncLoadAll(urls)
-    // feel free to fetch another millions of urls here
-    context.asyncLoadAll(urls)
+    context.submitAll(urls)
+    // feel free to fetch millions of urls here
+    context.submitAll(urls)
     // ...
     context.await()
 }
@@ -99,9 +99,9 @@ public class MassiveCrawler {
                 .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
                 .collect(Collectors.toList());
         PulsarContext context = PulsarContexts.create();
-        context.asyncLoadAll(urls);
-        // feel free to fetch another millions of urls here
-        context.asyncLoadAll(urls);
+        context.submitAll(urls);
+        // feel free to fetch millions of urls here
+        context.submitAll(urls);
         // ...
         context.await();
     }
