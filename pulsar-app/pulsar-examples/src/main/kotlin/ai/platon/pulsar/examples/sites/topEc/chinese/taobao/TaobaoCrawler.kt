@@ -30,7 +30,7 @@ fun main() {
     val session: PulsarSession = PulsarContexts.createSession()
     val options = session.options(args)
     val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
-    options.eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
+    options.ensureEventHandler().loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
 
     session.loadOutPages(portalUrl, options)
 

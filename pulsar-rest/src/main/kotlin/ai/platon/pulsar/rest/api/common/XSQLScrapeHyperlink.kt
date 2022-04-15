@@ -24,7 +24,7 @@ import java.util.*
 import kotlin.system.measureTimeMillis
 
 class ScrapeLoadEventHandler(
-    val hyperlink: ScrapeHyperlink,
+    val hyperlink: XSQLScrapeHyperlink,
     val response: ScrapeResponse,
 ) : DefaultLoadEventHandler() {
     init {
@@ -49,7 +49,7 @@ class ScrapeLoadEventHandler(
     }
 }
 
-open class ScrapeHyperlink(
+open class XSQLScrapeHyperlink(
     val request: ScrapeRequest,
     val sql: NormXSQL,
     val session: PulsarSession,
@@ -57,7 +57,7 @@ open class ScrapeHyperlink(
     val uuid: String = UUID.randomUUID().toString()
 ) : CompletableListenableHyperlink<ScrapeResponse>(sql.url) {
 
-    private val logger = getLogger(ScrapeHyperlink::class)
+    private val logger = getLogger(XSQLScrapeHyperlink::class)
 
     private val sqlContext get() = session.context as AbstractSQLContext
     private val connectionPool get() = sqlContext.connectionPool

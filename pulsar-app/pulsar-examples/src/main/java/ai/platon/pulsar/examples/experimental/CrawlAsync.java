@@ -13,7 +13,7 @@ class CrawlAsync {
     public static void loadAsync() {
         PulsarSession session = PulsarContexts.createSession();
         LinkExtractors.fromResource("seeds10.txt").stream()
-                .map(url -> session.normalize(url, session.options("", null), false))
+                .map(url -> session.normalize(url, ""))
                 .map(url -> CompletableFuture.supplyAsync(() -> session.load(url)))
                 .map(f -> f.thenApply(p -> session.parse(p, true)))
                 .map(CompletableFuture::join)
@@ -23,7 +23,7 @@ class CrawlAsync {
     public static void loadAllAsync() {
         PulsarSession session = PulsarContexts.createSession();
         List<NormUrl> urls = LinkExtractors.fromResource("seeds10.txt").stream()
-                .map(url -> session.normalize(url, session.options("", null), false))
+                .map(url -> session.normalize(url, ""))
                 .collect(Collectors.toList());
         session.loadAllAsync(urls).stream()
                 .map(f -> f.thenApply(p -> session.parse(p, true)))

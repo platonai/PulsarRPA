@@ -30,7 +30,7 @@ object LoadOptionDefaults {
     var parse = false
     var storeContent = true
     /**
-     * Retry or not if a page is gone
+     * If true, still fetch the page if it is gone
      * */
     var ignoreFailure = false
     /**
@@ -62,8 +62,8 @@ object LoadOptionDefaults {
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    // TODO: there are problems if multiple links share the same event handler
-    var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
+    // Be careful if multiple hyperlinks share the same event handler
+    var eventHandler: PulsarEventHandler? = null
 ): CommonOptions(argv) {
 
     @ApiPublic
@@ -406,7 +406,14 @@ open class LoadOptions(
 
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
 
-    protected constructor(args: String, options: LoadOptions) : this(split(args), options.conf, options.eventHandler)
+    protected constructor(args: String, options: LoadOptions) :
+            this(split(args), options.conf, options.eventHandler)
+
+    fun ensureEventHandler(): PulsarEventHandler {
+        val eh = eventHandler ?: DefaultPulsarEventHandler()
+        eventHandler = eh
+        return eh
+    }
 
     /**
      * Parse with parameter overwriting fix
@@ -487,7 +494,7 @@ open class LoadOptions(
 
         emulateSettings.overrideConfiguration(conf)
 
-        putBean(eventHandler)
+        eventHandler?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }

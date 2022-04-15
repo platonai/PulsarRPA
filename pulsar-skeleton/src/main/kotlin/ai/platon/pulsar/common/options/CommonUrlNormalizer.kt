@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
 class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
@@ -29,7 +29,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         // TODO: the normalization order might not be the best
         var normalizedUrl: String
         val eventHandler = finalOptions.eventHandler
-        if (eventHandler.loadEventHandler.onNormalize.isNotEmpty) {
+        if (eventHandler?.loadEventHandler?.onNormalize?.isNotEmpty == true) {
             normalizedUrl = eventHandler.loadEventHandler.onNormalize(spec) ?: return NormUrl.NIL
         } else {
             val ignoreQuery = options.shortenKey || options.ignoreQuery
@@ -61,7 +61,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         clone.conf.name = clone.label
         clone.nMaxRetry = url.nMaxRetry
 
-        if (url is ListenableHyperlink) {
+        if (url is ListenableUrl) {
             url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
             clone.eventHandler = url.eventHandler
         }

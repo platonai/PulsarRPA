@@ -8,7 +8,7 @@ import ai.platon.pulsar.persist.WebPageExt
 import java.time.Instant
 
 val WebPage.loadEventHandler: LoadEventHandler?
-    get() = this.options.eventHandler.loadEventHandler
+    get() = this.options.eventHandler?.loadEventHandler
 
 /**
  * Get or create a LoadOptions from the args

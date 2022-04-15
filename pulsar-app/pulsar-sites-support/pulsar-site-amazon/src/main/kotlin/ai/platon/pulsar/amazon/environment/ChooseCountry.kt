@@ -64,7 +64,7 @@ class ChooseCountry(
 
         // 3. choose district
         val jsEventHandler = ChooseCountryJsEventHandler()
-        options.eventHandler.simulateEventHandler.onBeforeComputeFeature.addLast(jsEventHandler)
+        options.ensureEventHandler().simulateEventHandler.onBeforeComputeFeature.addLast(jsEventHandler)
         session.load(portalUrl, options)
 
         // 4. check the result

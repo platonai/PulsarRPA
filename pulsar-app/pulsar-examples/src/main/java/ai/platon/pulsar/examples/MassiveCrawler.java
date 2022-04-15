@@ -24,7 +24,7 @@ public class MassiveCrawler {
                 .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
                 .collect(Collectors.toList());
         PulsarContext context = PulsarContexts.create().submitAll(urls);
-        // feel free to fetch millions of urls here
+        // feel free to submit millions of urls here
         // ...
         context.await();
     }

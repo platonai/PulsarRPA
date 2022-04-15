@@ -45,8 +45,7 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAsync() {
-        val options = session.options(args)
-        val normUrl = NormUrl(url, options)
+        val normUrl = session.normalize(url, args)
         val future = loadComponent.loadAsync(normUrl)
         assertFalse(future.isCancelled)
         assertFalse(future.isDone)
@@ -58,8 +57,7 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAllAsync() {
-        val options = session.options(args)
-        val normUrls = urls.take(5).map { NormUrl(it, options) }
+        val normUrls = urls.take(5).map { session.normalize(it, args) }
         val resultUrls = mutableListOf<String>()
         val futures = loadComponent.loadAllAsync(normUrls)
             .map { it.thenApply { resultUrls.add(it.url) } }
@@ -72,8 +70,7 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAllAsFlow() {
-        val options = session.options(args)
-        val normUrls = urls.take(5).map { NormUrl(it, options) }
+        val normUrls = urls.take(5).map { session.normalize(it, args) }
 
         val resultUrls = mutableListOf<String>()
         runBlocking {

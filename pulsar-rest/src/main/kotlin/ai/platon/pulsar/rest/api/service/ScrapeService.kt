@@ -4,9 +4,9 @@ import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import ai.platon.pulsar.rest.api.common.DegenerateScrapeHyperlink
+import ai.platon.pulsar.rest.api.common.DegenerateXSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
-import ai.platon.pulsar.rest.api.common.ScrapeHyperlink
+import ai.platon.pulsar.rest.api.common.XSQLScrapeHyperlink
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
@@ -53,13 +53,13 @@ class ScrapeService(
         }
     }
 
-    private fun createScrapeHyperlink(request: ScrapeRequest): ScrapeHyperlink {
+    private fun createScrapeHyperlink(request: ScrapeRequest): XSQLScrapeHyperlink {
         val sql = request.sql
         return if (ScrapeAPIUtils.isScrapeUDF(sql)) {
             val xSQL = ScrapeAPIUtils.normalize(sql)
-            ScrapeHyperlink(request, xSQL, session, globalCacheFactory)
+            XSQLScrapeHyperlink(request, xSQL, session, globalCacheFactory)
         } else {
-            DegenerateScrapeHyperlink(request, session, globalCacheFactory)
+            DegenerateXSQLScrapeHyperlink(request, session, globalCacheFactory)
         }
     }
 }

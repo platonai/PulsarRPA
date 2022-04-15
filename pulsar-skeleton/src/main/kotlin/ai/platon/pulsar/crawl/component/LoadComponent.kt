@@ -23,7 +23,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -165,8 +164,11 @@ class LoadComponent(
         }
 
         // TODO: distinct or not?
-        // NOTE: the hyperlink's event handler overrides the load options' event handler
         val links = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
+        if (links.size > 2) {
+            // be careful if EventHandlers are shared
+            // require(links[0].eventHandler != links[1].eventHandler)
+        }
         globalCache.urlPool.addAll(links)
         return links
     }

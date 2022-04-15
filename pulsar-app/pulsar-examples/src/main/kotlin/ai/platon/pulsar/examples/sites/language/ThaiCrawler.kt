@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites
+package ai.platon.pulsar.examples.sites.language
 
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.event.CloseMaskLayerHandler
@@ -14,7 +14,9 @@ fun main() {
     val options = session.options(args)
 
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
-    options.eventHandler.simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
+    options.ensureEventHandler().simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
 
     session.loadOutPages(portalUrl, options)
+
+    PulsarContexts.await()
 }

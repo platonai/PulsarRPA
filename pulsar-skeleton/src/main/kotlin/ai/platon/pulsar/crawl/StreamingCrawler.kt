@@ -21,7 +21,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -391,7 +391,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private suspend fun runUrlTask(url: UrlAware) {
-        if (url is ListenableHyperlink && url is DegenerateUrl) {
+        if (url is ListenableUrl && url is DegenerateUrl) {
             val eventHandler = url.eventHandler.crawlEventHandler
             eventHandler.onBeforeLoad(url)
             eventHandler.onLoad(url)
@@ -463,7 +463,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
-        if (url is ListenableHyperlink) {
+        if (url is ListenableUrl) {
             url.eventHandler.loadEventHandler.onFilter(url.url) ?: return null
         }
 
@@ -471,7 +471,7 @@ open class StreamingCrawler<T : UrlAware>(
 
         crawlEventHandler.onBeforeLoad(url)
 
-        if (url is ListenableHyperlink) {
+        if (url is ListenableUrl) {
             url.eventHandler.crawlEventHandler.onBeforeLoad(url)
         }
 
@@ -479,7 +479,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
-        if (url is ListenableHyperlink) {
+        if (url is ListenableUrl) {
             url.eventHandler.crawlEventHandler.onAfterLoad(url, page)
         }
 

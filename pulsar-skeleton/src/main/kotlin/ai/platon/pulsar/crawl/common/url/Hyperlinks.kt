@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
 import ai.platon.pulsar.crawl.HtmlDocumentHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
@@ -18,8 +19,45 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 
-interface ListenableHyperlink: UrlAware {
+interface ListenableUrl: UrlAware {
     val eventHandler: PulsarEventHandler
+}
+
+open class ListenableHyperlink(
+    /**
+     * The url of this hyperlink
+     * */
+    url: String,
+    /**
+     * The anchor text of this hyperlink
+     * */
+    text: String = "",
+    /**
+     * The order of this hyperlink in it's referer page
+     * */
+    order: Int = 0,
+    /**
+     * The url of the referer page
+     * */
+    referer: String? = null,
+    /**
+     * The url arguments
+     * */
+    args: String? = null,
+    /**
+     * A click url is an url variant, it's the raw url in the html without normalization,
+     * for example, an url with a timestamp query parameter added
+     * */
+    href: String? = null,
+    /**
+     * The event handler
+     * */
+    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler(),
+): Hyperlink(url, text, order, referer, args, href), ListenableUrl {
+    /**
+     * A listenable url is not a persistence object because the event handler is not persistent
+     * */
+    override val isPersistable: Boolean = false
 }
 
 open class StatefulListenableHyperlink(
@@ -47,14 +85,16 @@ open class StatefulListenableHyperlink(
          * A click url is a url variant, it's the raw url in the html without normalization,
          * for example, an url with a timestamp query parameter added
          * */
-        href: String? = null
-): StatefulHyperlink(url, text, order, referer, args, href), ListenableHyperlink {
+        href: String? = null,
+        /**
+         * The event handler
+         * */
+        override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
+): StatefulHyperlink(url, text, order, referer, args, href), ListenableUrl {
 
     override val isPersistable: Boolean = false
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
-
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
 }
 
 open class ParsableHyperlink(
@@ -63,7 +103,7 @@ open class ParsableHyperlink(
      * */
     url: String,
     val onParse: (WebPage, Document) -> Unit
-): Hyperlink(url, args = "-parse"), ListenableHyperlink {
+): Hyperlink(url, args = "-parse"), ListenableUrl {
 
     /**
      * Java compatible constructor
@@ -201,21 +241,31 @@ open class CompletableListenableHyperlink<T>(
     /**
      * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
-    href: String? = null
-): UrlAware, Comparable<UrlAware>, ListenableHyperlink,
-    CompletableHyperlink<T>(url, text, order, referer, args, href)
-{
+    href: String? = null,
+    /**
+     * The event handler
+     * */
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
+): UrlAware, Comparable<UrlAware>, ListenableUrl,
+    CompletableHyperlink<T>(url, text, order, referer, args, href)
+
+internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHyperlink<WebPage>): WebPageHandler() {
+    override fun invoke(page: WebPage) {
+        link.complete(page)
+        link.eventHandler.loadEventHandler.onAfterLoad.remove(this)
+    }
 }
 
 /**
- * Create a completable listenable hyperlink, hyperlink's event handler overrides the load options' event handler
+ * Create a completable listenable hyperlink
  * */
 fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
     val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
 
     // make sure every option has its own event handler
-    link.eventHandler.loadEventHandler.onAfterLoad.addLast { link.complete(it) }
+    options.eventHandler?.let { link.eventHandler = it }
+    val handler = CompleteWebPageHyperlinkHandler(link)
+    link.eventHandler.loadEventHandler.onAfterLoad.addLast(handler)
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 
     return link

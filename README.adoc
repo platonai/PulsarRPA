@@ -217,8 +217,8 @@ The response is as follows:
 * How to scrape pages behind a login?
 * How to download resources directly within a browser context?
 * How to scrape a single page application (SPA)?
-* Resource mode
-* RPA mode
+** Resource mode
+** RPA mode
 * How to scrape page by page?
 * How to crawl newly discovered links?
 * How to crawl the entire website?

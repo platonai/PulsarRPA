@@ -12,7 +12,9 @@ import java.time.Instant
 /**
  * A degenerate url can be used to perform non-fetching tasks in the main loop.
  * */
-interface DegenerateUrl
+interface DegenerateUrl {
+
+}
 
 /**
  * The UrlAware interface.
@@ -49,7 +51,7 @@ interface UrlAware {
     val configuredUrl: String
 
     /**
-     * If this is a Nil url who's url is AppConstants.NIL_PAGE_URL
+     * An url is Nil if it equals to AppConstants.NIL_PAGE_URL
      * */
     val isNil: Boolean
 
@@ -59,12 +61,12 @@ interface UrlAware {
     val isPersistable: Boolean
 
     /**
-     * The url label, it should be in args
+     * The url label, it should be a shortcut for -label option in args
      * */
     val label: String
 
     /**
-     * The url label, it should be in args
+     * The url label, it should be a shortcut for -deadTime option in args
      * */
     val deadTime: Instant
 
@@ -108,18 +110,24 @@ abstract class AbstractUrl(
     override var referer: String? = null,
     override var href: String? = null,
     override var priority: Int = 0
-) : UrlAware, ComparableUrlAware {
+) : ComparableUrlAware {
 
     override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
 
     override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
 
     /**
-     * If this link is persistable
+     * If this url is persistable
      * */
     override val isPersistable: Boolean = true
 
     override val label: String get() = OptionUtils.findOption(args, listOf("-l", "-label", "--label")) ?: ""
+
+    override val deadTime: Instant
+        get() {
+            val deadTime = OptionUtils.findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
+            return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
+        }
 
     /**
      * Required website language
@@ -140,12 +148,6 @@ abstract class AbstractUrl(
      * The maximum retry times
      * */
     override var nMaxRetry: Int = 3
-
-    override val deadTime: Instant
-        get() {
-            val deadTime = OptionUtils.findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
-            return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
-        }
 
     /**
      * A abstract url can be compare to one of the following types:
@@ -171,8 +173,6 @@ abstract class AbstractUrl(
     }
 
     override fun hashCode() = url.hashCode()
-
-//    override fun compareTo(other: UrlAware) = url.compareTo(other.url)
 
     override fun toString() = url
 }
@@ -208,7 +208,7 @@ data class HyperlinkDatum(
      * */
     val referer: String? = null,
     /**
-     * A programmer might give a argument to a hyperlink, so the default value is null
+     * The load argument, can be parsed into a LoadOptions
      * */
     val args: String? = null,
     /**
@@ -467,6 +467,9 @@ open class CrawlableFatLink(
 
 object Hyperlinks {
 
+    /**
+     * Convert a [UrlAware] to a [Hyperlink], might loss information
+     * */
     fun toHyperlink(url: UrlAware): Hyperlink {
         return if (url is Hyperlink) url
         else Hyperlink(url.url, args = url.args, referer = url.referer, href = url.href)

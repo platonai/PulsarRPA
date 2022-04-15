@@ -4,8 +4,10 @@ import ai.platon.pulsar.context.PulsarContexts
 import com.google.gson.Gson
 
 fun main() {
-    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
+    // create a pulsar session
     val session = PulsarContexts.createSession()
+    // the main url we are playing with
+    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
     // load a page, fetch it from the web if it has expired or if it's being fetched for the first time
     val page = session.load(url, "-expires 1d")
     // parse the page content into a Jsoup document
@@ -13,7 +15,7 @@ fun main() {
     // do something with the document
     // ...
 
-    // load and parse
+    // or, load and parse
     val document2 = session.loadDocument(url, "-expires 1d")
     // do something with the document
     // ...

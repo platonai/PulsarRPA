@@ -16,10 +16,10 @@ fun main() {
     val session = PulsarContexts.createSession()
     val options = session.options(args)
 
-    options.eventHandler.loadEventHandler.onAfterHtmlParse.addLast { page, document ->
+    options.ensureEventHandler().loadEventHandler.onAfterHtmlParse.addLast { page, document ->
         println(document.title + " | " + document.baseUri)
     }
-    urls.split("\n").forEach { session.submitLoadOutPages(it, options) }
+    urls.split("\n").forEach { session.submitOutPages(it, options) }
 
     PulsarContexts.await()
 }

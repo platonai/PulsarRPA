@@ -59,6 +59,7 @@ interface PulsarSession : AutoCloseable {
     fun options(args: String = "", eventHandler: PulsarEventHandler? = null): LoadOptions
     fun property(name: String): String?
     fun property(name: String, value: String)
+    fun normalize(url: String, args: String? = null): NormUrl
     fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     fun normalize(
@@ -197,7 +198,7 @@ interface PulsarSession : AutoCloseable {
 
     fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>>
 
-    fun submitLoadOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
+    fun submitOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
     /**
      * Load an url as a resource without browser rendering in the browser context
      *

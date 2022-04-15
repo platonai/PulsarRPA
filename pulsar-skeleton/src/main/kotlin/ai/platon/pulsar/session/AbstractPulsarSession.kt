@@ -9,6 +9,7 @@ import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
+import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
@@ -103,6 +104,8 @@ abstract class AbstractPulsarSession(
         sessionConfig[name] = value
     }
 
+    override fun normalize(url: String, args: String?): NormUrl = context.normalize(url, options(args ?: ""))
+
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(url, options, toItemOption)
 
@@ -180,6 +183,9 @@ abstract class AbstractPulsarSession(
     override suspend fun loadDeferred(url: UrlAware, args: String): WebPage =
         loadDeferred(normalize(url, options(args)))
 
+    /**
+     *
+     * */
     override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage =
         loadDeferred(normalize(url, options))
 
@@ -317,7 +323,7 @@ abstract class AbstractPulsarSession(
         return loadAll(links, itemOpts)
     }
 
-    override fun submitLoadOutPages(portalUrl: String, options: LoadOptions): AbstractPulsarSession {
+    override fun submitOutPages(portalUrl: String, options: LoadOptions): AbstractPulsarSession {
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options
         val itemOpts = normUrl.options.createItemOptions()
@@ -327,8 +333,8 @@ abstract class AbstractPulsarSession(
             .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
-            .map { StatefulListenableHyperlink("$it $itemOpts") }
-            .onEach { it.eventHandler = itemOpts.eventHandler }
+            .map { ListenableHyperlink("$it $itemOpts") }
+            .onEach { link -> itemOpts.eventHandler?.let { link.eventHandler = it } }
 
         submitAll(outLinks)
 

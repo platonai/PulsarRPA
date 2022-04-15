@@ -12,13 +12,13 @@ import java.util.*
 /**
  * Never go to load phrase, LoadComponent.load is never used for a degenerate link
  * */
-open class DegenerateScrapeHyperlink(
+open class DegenerateXSQLScrapeHyperlink(
     request: ScrapeRequest,
     session: PulsarSession,
     globalCacheFactory: GlobalCacheFactory,
     uuid: String = UUID.randomUUID().toString(),
-) : ScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, globalCacheFactory, uuid), DegenerateUrl {
-    private val logger = LoggerFactory.getLogger(DegenerateScrapeHyperlink::class.java)
+) : XSQLScrapeHyperlink(request, DegenerateXSQL(uuid, sql = request.sql), session, globalCacheFactory, uuid), DegenerateUrl {
+    private val logger = LoggerFactory.getLogger(DegenerateXSQLScrapeHyperlink::class.java)
     override var args: String? = "-taskId $uuid ${sql.args}"
 
     init {

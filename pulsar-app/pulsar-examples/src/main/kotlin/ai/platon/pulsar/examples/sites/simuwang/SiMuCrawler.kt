@@ -23,8 +23,8 @@ open class SiMuCrawler {
     val portalUrl = "https://dc.simuwang.com/"
     val args = "-i 30s -ii 30s -ol a[href~=product] -tl 10"
     // login parameters
-    val username = System.getenv("EXOTIC_SIMUWANG_USERNAME") ?: "MustFallUsername"
-    val password = System.getenv("EXOTIC_SIMUWANG_PASSWORD") ?: "MustFallPassword"
+    val username = System.getenv("PULSAR_SIMUWANG_USERNAME") ?: "MustFallUsername"
+    val password = System.getenv("PULSAR_SIMUWANG_PASSWORD") ?: "MustFallPassword"
     // mask layer handling
     val closeMaskLayerSelector = ".comp-alert-btn"
 
@@ -34,8 +34,8 @@ open class SiMuCrawler {
     val loginHandler = SiMuLoginHandler(portalUrl, username, password)
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
     val options = session.options(args).also {
-        it.eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
-        it.eventHandler.simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
+        it.ensureEventHandler().loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
+        it.ensureEventHandler().simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
     }
 
     open fun crawl() {

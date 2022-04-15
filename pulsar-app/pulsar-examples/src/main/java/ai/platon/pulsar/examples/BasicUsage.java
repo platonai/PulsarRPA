@@ -13,8 +13,10 @@ import java.util.stream.Collectors;
 
 public class BasicUsage {
     public static void main(String[] args) {
-        String url = "https://list.jd.com/list.html?cat=652,12345,12349";
+        // create a pulsar session
         PulsarSession session = PulsarContexts.createSession();
+        // the main url we are playing with
+        String url = "https://list.jd.com/list.html?cat=652,12345,12349";
         // load a page, fetch it from the web if it has expired or if it's being fetched for the first time
         WebPage page = session.load(url, "-expires 1d");
         // parse the page content into a Jsoup document
@@ -22,7 +24,7 @@ public class BasicUsage {
         // do something with the document
         // ...
 
-        // load and parse
+        // or, load and parse
         FeaturedDocument document2 = session.loadDocument(url, "-expires 1d");
         // do something with the document
         // ...
