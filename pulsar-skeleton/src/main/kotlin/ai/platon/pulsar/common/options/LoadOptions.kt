@@ -40,7 +40,7 @@ object LoadOptionDefaults {
      * Do not parse by default, since there are may ways to trigger a webpage parsing:
      * 1. use session.parse()
      * 2. add a -parse option
-     * 3. use a [ParsableHyperlink]
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
      * */
     var parse = false
     /**
@@ -547,15 +547,18 @@ open class LoadOptions(
         get() = outLinkSelector.trim('"')
             .takeIf { it.isNotBlank() }
             ?.let { appendSelectorIfMissing(it, "a") } ?: ""
+
     /**
      * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.
      * */
     val outLinkSelectorOrNull
         get() = correctedOutLinkSelector.takeIf { it.isNotBlank() }
+
     /**
      * The page referrer.
      * */
     var referrer: String? = null
+
     /**
      * Find out the modified fields and return a [Params].
      * */
@@ -569,6 +572,7 @@ open class LoadOptions(
                     .associate { "-${it.name}" to it.get(this) }
                     .let { Params.of(it).withRowFormat(rowFormat) }
         }
+
     /**
      * Find out the modified fields and return a map.
      * */
@@ -580,15 +584,18 @@ open class LoadOptions(
                     .filter { it.get(this) != null }
                     .associate { it.name to it.get(this) }
         }
+
     /**
      * The constructor.
      * */
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
+
     /**
      * The constructor.
      * */
-    protected constructor(args: String, options: LoadOptions) :
-            this(split(args), options.conf, options.eventHandler)
+    protected constructor(args: String, other: LoadOptions) :
+            this(split(args), other.conf, other.eventHandler)
+
     /**
      * Ensure the EventHandler is created.
      * */
@@ -598,7 +605,7 @@ open class LoadOptions(
         return eh
     }
     /**
-     * Parse with parameter overwriting fix
+     * Parse with parameter overwriting fix.
      * */
     override fun parse(): Boolean {
         val b = super.parse()
@@ -616,7 +623,7 @@ open class LoadOptions(
         return b
     }
     /**
-     * Create otions for item pages
+     * Create options for item pages.
      * */
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
@@ -645,13 +652,18 @@ open class LoadOptions(
             else -> false
         }
     }
+
     /**
-     * If the page is dead, do not fetch the url from the web.
+     * If the page is dead, do not fetch it from the web.
      * */
     fun isDead(): Boolean {
         return deadTime < Instant.now()
     }
 
+    /**
+     * Convert the item options to major options. The system do not use item options directly,
+     * we have to do the convert before we process item pages.
+     * */
     open fun itemOptions2MajorOptions() {
         expires = itemExpires
         scrollCount = itemScrollCount
@@ -665,8 +677,20 @@ open class LoadOptions(
         browser = itemBrowser
     }
 
+    /**
+     * Write some option values to [conf].
+     *
+     * [LoadOptions] is not globally visible, we have to pass some values to modules who can not see it
+     * through a [VolatileConfig] object.
+     * */
     fun overrideConfiguration() = overrideConfiguration(this.conf)
 
+    /**
+     * Write some option values to [conf].
+     *
+     * [LoadOptions] is not globally visible, we have to pass some values to modules who can not see it
+     * through a [VolatileConfig] object.
+     * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         val emulateSettings = when (netCondition) {
             Condition.WORSE -> EmulateSettings.worseNetSettings
@@ -685,13 +709,15 @@ open class LoadOptions(
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
+
     /**
-     * Check if the value of a option is default.
+     * Check if the option value is the default.
      * */
     open fun isDefault(option: String): Boolean {
         val value = optionFieldsMap[option]?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
+
     /**
      * Convert the [LoadOptions] to be a [Params].
      * */
@@ -703,6 +729,7 @@ open class LoadOptions(
                 .filter { it.value != null }
                 .let { Params.of(it).withRowFormat(rowFormat) }
     }
+
     /**
      * Convert the [LoadOptions] to be a string.
      * The operation should be reversible:
@@ -721,6 +748,9 @@ open class LoadOptions(
                 .formatAsLine().replace("\\s+".toRegex(), " ")
     }
 
+    /**
+     * The equality check, two [LoadOptions] are equal only when the normalized arguments string are equal.
+     * */
     override fun equals(other: Any?): Boolean {
         if (other === this) {
             return true
@@ -728,13 +758,14 @@ open class LoadOptions(
         return other is LoadOptions && other.toString() == toString()
     }
 
-    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode but none of the fields is initialized
+    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode
+    // but none of the fields is initialized
     override fun hashCode(): Int {
         return super.hashCode()
     }
 
     /**
-     * Create a new LoadOptions
+     * Create a new LoadOptions.
      * */
     open fun clone() = parse(toString(), this)
 
@@ -784,6 +815,9 @@ open class LoadOptions(
             .flatMap { it.names.toList() }
             .toList()
 
+        /**
+         * Generate the help message from the field annotations.
+         * */
         val helpList: List<List<String>> get() =
             optionFields
                     .asSequence()
@@ -796,6 +830,9 @@ open class LoadOptions(
                         )
                     }.toList()
 
+        /**
+         * Set the field value who has an annotation [annotationName].
+         * */
         fun setFieldByAnnotation(options: LoadOptions, annotationName: String, value: Any) {
             optionFields.forEach {
                 val found = it.annotations.filterIsInstance<Parameter>().any { annotationName in it.names }
@@ -806,6 +843,9 @@ open class LoadOptions(
             }
         }
 
+        /**
+         * Get all the available option names for field [fieldName].
+         * */
         fun getOptionNames(fieldName: String): List<String> {
             return optionFields
                 .asSequence()
@@ -816,23 +856,44 @@ open class LoadOptions(
                 .toList()
         }
 
+        /**
+         * Create an empty [LoadOptions].
+         * */
         fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }
 
+        /**
+         * Normalize [args], all option names in a normalized argument string match the field name in [LoadOptions].
+         * */
         fun normalize(args: String) = parse(args, VolatileConfig.UNSAFE).toString()
 
+        /**
+         * Parse the [args].
+         * */
         fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
 
+        /**
+         * Parse the [args].
+         * */
         fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply { parse() }
 
         /**
-         * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
+         * Create a new LoadOptions with [o1] and [o2]'s items, [o2] overrides [o1].
          * */
         fun merge(o1: LoadOptions, o2: LoadOptions) = parse("$o1 $o2", o2)
 
+        /**
+         * Create a new LoadOptions with [o1] and [args], [args] overrides [o1].
+         * */
         fun merge(o1: LoadOptions, args: String?) = parse("$o1 $args", o1)
 
+        /**
+         * Create a new LoadOptions with [args] and [args2], [args2] overrides [args].
+         * */
         fun merge(args: String?, args2: String?, conf: VolatileConfig) = parse("$args $args2", conf)
 
+        /**
+         * Erase the specified option, the option name has to match the field name in LoadOptions.
+         * */
         fun eraseOptions(args: String, vararg fieldNames: String): String {
             // do not forget the blanks
             var normalizedArgs = " $args "
