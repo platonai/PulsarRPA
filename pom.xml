@@ -413,11 +413,6 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-jsoup</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-boilerpipe</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -559,6 +554,11 @@
                 <artifactId>pulsar-h2</artifactId>
                 <version>${pulsar-h2.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-jsoup</artifactId>
+                <version>${pulsar-jsoup.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.nibor.autolink</groupId>
@@ -648,6 +648,7 @@
     <properties>
         <kotlin.version>1.5.32</kotlin.version>
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
+        <pulsar-jsoup.version>1.9.1</pulsar-jsoup.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
         <dokka.version>1.4.32</dokka.version>

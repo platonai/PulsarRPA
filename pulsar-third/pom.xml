@@ -24,6 +24,5 @@
 
     <modules>
         <module>pulsar-boilerpipe</module>
-        <module>pulsar-jsoup</module>
     </modules>
 </project>

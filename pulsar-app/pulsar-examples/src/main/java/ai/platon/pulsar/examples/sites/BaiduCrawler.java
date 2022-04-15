@@ -6,7 +6,7 @@ import ai.platon.pulsar.session.PulsarSession;
 public class BaiduCrawler {
     public static void main(String[] args) throws Exception {
         String url = "https://www.baidu.com/";
-        PulsarSession session = PulsarContexts.INSTANCE.createSession();
+        PulsarSession session = PulsarContexts.createSession();
         session.open(url);
     }
 }

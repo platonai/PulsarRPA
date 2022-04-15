@@ -107,5 +107,6 @@ fun main() {
     // submit the link to the fetch pool
     session.submit(link)
 
+    // wait until all done.
     PulsarContexts.await()
 }

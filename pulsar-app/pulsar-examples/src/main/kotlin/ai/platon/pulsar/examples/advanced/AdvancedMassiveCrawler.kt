@@ -19,28 +19,28 @@ fun main() {
                 url
             }
             onBeforeLoad.addLast { url ->
-                println("1. onBeforeLoad | $url")
+
             }
             onBeforeFetch.addLast { page ->
-                println("2. onBeforeFetch | $url")
+
             }
             onBeforeBrowserLaunch.addLast {
-                println("3. onBeforeBrowserLaunch | $url")
+
             }
             onAfterBrowserLaunch.addLast { driver ->
-                println("4. onAfterBrowserLaunch | $url")
+
             }
             onAfterFetch.addLast { page ->
-                println("5. onAfterFetch | $url")
+
             }
             onBeforeParse.addLast { page ->
-                println("6. onBeforeParse | $url")
+
             }
             onBeforeHtmlParse.addLast { page ->
-                println("7. onBeforeHtmlParse | $url")
+
             }
             onBeforeExtract.addLast { page ->
-                println("8. onBeforeHtmlParse | $url")
+
             }
             onAfterExtract.addLast { page: WebPage, document: FeaturedDocument ->
 
@@ -88,10 +88,14 @@ fun main() {
         link
     }
 
-    val urls = LinkExtractors.fromResource("seeds.txt")
-        .map { hyperlinkCreator("$it -refresh") }
-    val context = PulsarContexts.create().submitAll(urls)
+    // load urls from resource, and convert them into listenable hyperlinks
+    val urls = LinkExtractors.fromResource("seeds.txt").map { hyperlinkCreator("$it -refresh") }
+    // create a custom context
+    val context = PulsarContexts.create("classpath:pulsar-beans/app-context.xml")
+    // submit a batch of urls
+    context.submitAll(urls)
     // feel free to submit millions of urls here
     // ...
+    // wait until all done
     context.await()
 }
