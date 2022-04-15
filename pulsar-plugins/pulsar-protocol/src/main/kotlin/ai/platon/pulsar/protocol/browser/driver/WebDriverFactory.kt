@@ -3,7 +3,6 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
@@ -42,7 +41,7 @@ open class WebDriverFactory(
         val browserType = browserInstanceId.browserType
         val driver = kotlin.runCatching {
             when (browserType) {
-                BrowserType.CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
+                BrowserType.PULSAR_CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
                 BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
                 BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId, capabilities)
                 else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
@@ -76,7 +75,7 @@ open class WebDriverFactory(
     private fun createChromeDevtoolsDriver(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
-        require(instanceId.browserType == BrowserType.CHROME)
+        require(instanceId.browserType == BrowserType.PULSAR_CHROME)
         val browserInstance = createBrowserInstance(instanceId, capabilities)
         return ChromeDevtoolsDriver(driverSettings, browserInstance as ChromeDevtoolsBrowserInstance)
     }
@@ -94,7 +93,7 @@ open class WebDriverFactory(
     ): MockWebDriver {
         require(instanceId.browserType == BrowserType.MOCK_CHROME)
         val browserInstance = createBrowserInstance(instanceId, capabilities) as MockBrowserInstance
-        val fingerprint = instanceId.fingerprint.copy(browserType = BrowserType.CHROME)
+        val fingerprint = instanceId.fingerprint.copy(browserType = BrowserType.PULSAR_CHROME)
         val backupInstanceId = BrowserInstanceId(instanceId.contextDir, fingerprint)
         val backupDriverCreator = { createChromeDevtoolsDriver(backupInstanceId, capabilities) }
         return MockWebDriver(browserInstance, backupDriverCreator)

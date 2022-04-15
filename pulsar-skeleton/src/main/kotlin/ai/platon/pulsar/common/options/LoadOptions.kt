@@ -16,35 +16,54 @@ import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
+/**
+ * The default load options, be careful to change the default behaviour.
+ * */
 object LoadOptionDefaults {
+    /**
+     * The default task time.
+     * */
     var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
     /**
-     * The default expire time, some time we may need expire all pages by default, for example, in test mode
+     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
      * */
     var expires = ChronoUnit.DECADES.duration
     /**
      * The default time to expire
      * */
     var expireAt = DateTimes.doomsday
+    /**
+     * Lazy flush.
+     * */
     var lazyFlush = true
+    /**
+     * Do not parse by default, since there are may ways to trigger a webpage parsing:
+     * 1. use session.parse()
+     * 2. add a -parse option
+     * 3. use a [ParsableHyperlink]
+     * */
     var parse = false
+    /**
+     * Store webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     * */
     var storeContent = true
     /**
-     * If true, still fetch the page if it is gone
+     * If true, still fetch the page even if it is gone.
      * */
     var ignoreFailure = false
     /**
-     * The are several cases to enable jit retry
-     * For example, in test environment
+     * There are several cases to enable jit retry.
+     * For example, in a test environment.
      * */
     var nJitRetry = -1
     /**
-     * The default browser
+     * The default browser is chrome with pulsar implemented web driver.
      * */
-    var browser = BrowserType.CHROME
+    var browser = BrowserType.PULSAR_CHROME
     /**
-     * Set to be true if we are doing unit test or other test
-     * We will talk more, log more and trace more in test mode
+     * Set to be > 0 if we are doing unit test or other test.
+     * We will talk more, log more and trace more in test mode.
      * */
     var test = 0
 }
@@ -56,8 +75,6 @@ object LoadOptionDefaults {
  * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
  *
  * NOTICE: every load task should has it's own load options, it's bad to share one load options
- *
- * TODO: consider make LoadOptions be visible by all modules
  */
 open class LoadOptions(
     argv: Array<String>,
@@ -66,82 +83,110 @@ open class LoadOptions(
     var eventHandler: PulsarEventHandler? = null
 ): CommonOptions(argv) {
 
+    /**
+     * The label of this load task.
+     * */
     @ApiPublic
     @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
     var label = ""
 
+    /**
+     * The task id. A task can contain multiple loads.
+     * */
     @ApiPublic
-    @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
+    @Parameter(names = ["-taskId", "--task-id"],
+        description = "The task id. A task can contain multiple loads")
     var taskId = ""
 
     /**
-     * The task time accepts date time format as the following:
-     * 1. ISO_INSTANT: yyyy-MM-ddThh:MM:ssZ
-     * 2. yyyy-MM-dd[ hh[:MM[:ss]]]
+     * The task time, we usually use a task time to indicate the name of a batch task.
      * */
     @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
-            description = "The task time, we usually use a task time to indicate a batch of a task")
+            description = "The task time, we usually use a task time to indicate the name of a batch task")
     var taskTime = LoadOptionDefaults.taskTime
 
+    /**
+     * The dead time, if now > deadTime, the task should be discarded as soon as possible.
+     * */
     @ApiPublic
     @Parameter(names = ["-deadTime", "--dead-time"], converter = InstantConverter::class,
         description = "The dead time, if now > deadTime, the task should be discarded as soon as possible")
     var deadTime = DateTimes.doomsday
 
+    /**
+     * The auth token for this task.
+     * */
     @ApiPublic
-    @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
+    @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this task")
     var authToken = ""
 
+    /**
+     * If true, get a copy of the webpage and do not modify it.
+     * */
     @ApiPublic
-    @Parameter(names = ["-readonly"], description = "The task does not change the status of the web page")
+    @Parameter(names = ["-readonly"], description = "If true, get a copy of the webpage and do not modify it")
     var readonly = false
 
+    /**
+     * If true, fetch the page content as a resource without browser rendering.
+     * */
     @ApiPublic
-    @Parameter(names = ["-resource", "-isResource"], description = "Fetch the page without browser rendering if true")
+    @Parameter(names = ["-resource", "-isResource"],
+        description = "If true, fetch the page content as a resource without browser rendering")
     var isResource = false
 
     /**
-     * Web page expiry time
-     * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,
-     * guess it means "expires at"
+     * The expiry time. If a page is expired, it should be fetched from the web.
      *
-     * The expires field supports both ISO-8601 standard and hadoop time duration format
+     * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,
+     * guess it means "expires at".
+     *
+     * The expires field supports both ISO-8601 standard and hadoop time duration format:
      * ISO-8601 standard : PnDTnHnMn.nS
      * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
      * */
     @ApiPublic
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
-            description = "If a page is expired, it should be fetched from the internet again")
+            description = "The expiry time. If a page is expired, it should be fetched from the web")
     var expires = LoadOptionDefaults.expires
 
     /**
-     * The page is expired if the current time > expireAt
+     * The time point to expire. If a page is expired, it should be fetched from the web.
      * */
     @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
-            description = "If a page is expired, it should be fetched from the internet again")
+            description = "The time point to expire. If a page is expired, it should be fetched from the web")
     var expireAt = LoadOptionDefaults.expireAt
 
     /**
-     * The page is expired if the current time > expireAt
+     * The fetch interval, used for periodically tasks.
      * */
     @ApiPublic
     @Parameter(names = ["-fi", "-fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
-        description = "If a page is expired, it should be fetched from the internet again")
+        description = "The fetch interval, used for periodically tasks")
     var fetchInterval = ChronoUnit.DECADES.duration
 
-    /** Arrange links */
+    /**
+     * The CSS selector to select out links in the portal page.
+     * */
     @ApiPublic
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
-            description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
-                    "Out pages will be detected automatically if the selector is empty")
+            description = "The CSS selector to select out links in the portal page")
     var outLinkSelector = ""
 
+    /**
+     * The pattern to select out links in the portal page.
+     * */
     @ApiPublic
-    @Parameter(names = ["-olp", "-outLinkPattern", "--out-link-pattern"], description = "The pattern of the out links")
+    @Parameter(names = ["-olp", "-outLinkPattern", "--out-link-pattern"],
+        description = "The pattern to select out links in the portal page")
     var outLinkPattern = ".+"
 
+    /**
+     * The selector of the element to click for out links, if it's blank, no element should be clicked.
+     * not implemented yet
+     * */
     @ApiPublic
     @Parameter(
         names = ["-click", "-clickTarget", "--click-target"],
@@ -149,241 +194,371 @@ open class LoadOptions(
     )
     var clickTarget = ""
 
+    /**
+     * The css selector of next page anchor.
+     * not implemented yet
+     * */
     @ApiPublic
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
-            description = "[TODO] The css selector of next page anchor")
+            description = "The css selector of next page anchor")
     var nextPageSelector = ""
 
+    /**
+     * The iframe id to switch to.
+     * */
     @ApiPublic
-    @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The i-th iframe")
+    @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The iframe id to switch to")
     var iframe = 0
 
+    /**
+     * Specify how many links to select if we deal with out-pages.
+     * */
     @ApiPublic
-    @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
+    @Parameter(names = ["-tl", "-topLinks", "--top-links"],
+        description = "Specify how many links to select if we deal with out-pages.")
     var topLinks = 20
 
+    /**
+     * Try the top N anchor groups.
+     * */
     @ApiPublic
     @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
     var topNAnchorGroups = 3
 
+    /**
+     * Wait for ajax content until the element is filled by a non-blank text.
+     * */
     @ApiPublic
     @Parameter(names = ["-wnb", "-waitNonBlank"],
             description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
     var waitNonBlank: String = ""
 
+    /**
+     * Keep the pages only if the required text is not blank.
+     * */
     @ApiPublic
     @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
 
+    /**
+     * Fetch pages smaller than requireSize in bytes.
+     * */
     @ApiPublic
     @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
     var requireSize = 0
 
+    /**
+     * Re-fetch a page who's images less than requireImages.
+     * */
     @ApiPublic
-    @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
+    @Parameter(names = ["-ri", "-requireImages", "--require-images"],
+        description = "Re-fetch a page who's images less than requireImages")
     var requireImages = 0
 
+    /**
+     * Re-fetch a page who's anchors less than requireAnchors.
+     * */
     @ApiPublic
-    @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"], description = "Fetch pages who's anchors less than requireAnchors")
+    @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"],
+        description = "Re-fetch a page who's anchors less than requireAnchors")
     var requireAnchors = 0
 
+    /**
+     * The fetch mode.
+     * */
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode")
     var fetchMode = FetchMode.BROWSER
 
     /**
+     * Specify which browser to use, google chrome is the default.
      * TODO: session scope browser choice is not support by now
      * */
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
-            description = "The browser to use, google chrome is the default")
+            description = "Specify which browser to use, google chrome is the default")
     var browser = LoadOptionDefaults.browser
 
+    /**
+     * The count to scroll down after a page being opened in a browser.
+     * */
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
-            description = "The count to scroll down after a page is opened by a browser")
+            description = "The count to scroll down after a page being opened in a browser")
     var scrollCount = EmulateSettings.DEFAULT.scrollCount
 
+    /**
+     * The interval to scroll down after a page being opened in a browser.
+     * */
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
-            description = "The interval to scroll down after a page is opened by a browser")
+            description = "The interval to scroll down after a page being opened in a browser")
     var scrollInterval = EmulateSettings.DEFAULT.scrollInterval
 
+    /**
+     * The maximum time to perform javascript injected into the browser.
+     * */
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to perform javascript injected into browser")
+            description = "The maximum time to perform javascript injected into the browser")
     var scriptTimeout = EmulateSettings.DEFAULT.scriptTimeout
 
+    /**
+     * The maximum time to wait for a page to finish.
+     * */
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to wait for a page to finish from the first http request start")
+            description = "The maximum time to wait for a page to finish")
     var pageLoadTimeout = EmulateSettings.DEFAULT.pageLoadTimeout
 
     /**
+     * The browser used to visit the item pages.
      * TODO: session scope browser choice is not support by now
      * */
-    // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
-            description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
+            description = "The browser used to visit the item pages")
     var itemBrowser = LoadOptionDefaults.browser
 
+    /**
+     * The same as expires, but only works for item pages.
+     * */
     @ApiPublic
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
-            description = "The same as expires, but only works for item pages in harvest tasks")
+            description = "The same as expires, but only works for item pages")
     var itemExpires = ChronoUnit.DECADES.duration
 
-    /** Web page expire time */
+    /**
+     * If an item page is expired, it should be fetched from the web again.
+     * */
     @ApiPublic
     @Parameter(names = ["-itemExpireAt", "--item-expire-at"], converter = InstantConverter::class,
-            description = "If a page is expired, it should be fetched from the internet again")
+            description = "If an item page is expired, it should be fetched from the web again")
     var itemExpireAt = DateTimes.doomsday
 
-    /** Note: if scroll too many times, the page may fail to calculate the vision information */
+    /**
+     * The same as scrollCount, but only works for item pages.
+     * */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
-            description = "The same as scrollCount, but only works for item pages in harvest tasks")
+            description = "The same as scrollCount, but only works for item pages")
     var itemScrollCount = scrollCount
 
+    /**
+     * The same as scrollInterval, but only works for item pages.
+     * */
     @Parameter(names = ["-isi", "-itemScrollInterval", "--item-scroll-interval"], converter = DurationConverter::class,
-            description = "The same as scrollInterval, but only works for item pages in some batch tasks")
+            description = "The same as scrollInterval, but only works for item pages")
     var itemScrollInterval = scrollInterval
 
+    /**
+     * The same as scriptTimeout, but only works for item pages.
+     * */
     @Parameter(names = ["-ist", "-itemScriptTimeout", "--item-script-timeout"], converter = DurationConverter::class,
-            description = "The same as scriptTimeout, but only works for item pages in some batch tasks")
+            description = "The same as scriptTimeout, but only works for item pages")
     var itemScriptTimeout = scriptTimeout
 
+    /**
+     * The same as pageLoadTimeout, but only works for item pages.
+     * */
     @Parameter(names = ["-iplt", "-itemPageLoadTimeout", "--item-page-load-timeout"], converter = DurationConverter::class,
-            description = "The same as pageLoadTimeout, but only works for item pages in some batch tasks")
+            description = "The same as pageLoadTimeout, but only works for item pages")
     var itemPageLoadTimeout = pageLoadTimeout
 
+    /**
+     * Re-fetch the item pages if the required text is blank.
+     * */
     @ApiPublic
     @Parameter(names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
-            description = "Keep the item pages only if the required text is not blank")
+            description = "Re-fetch the item pages if the required text is blank")
     var itemRequireNotBlank = ""
 
+    /**
+     * Re-fetch item pages smaller than requireSize.
+     * */
     @ApiPublic
     @Parameter(names = ["-irs", "-itemRequireSize", "--item-require-size"],
-            description = "Fetch item pages smaller than requireSize")
+            description = "Re-fetch item pages smaller than requireSize")
     var itemRequireSize = 0
 
+    /**
+     * Re-fetch item pages who's images is less than requireImages.
+     * */
     @ApiPublic
     @Parameter(names = ["-iri", "-itemRequireImages", "--item-require-images"],
-            description = "Fetch item pages who's images less than requireImages")
+            description = "Re-fetch item pages who's images is less than requireImages")
     var itemRequireImages = 0
 
+    /**
+     * Re-fetch item pages who's anchors is less than requireAnchors.
+     * */
     @ApiPublic
     @Parameter(names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],
-            description = "Fetch item pages who's anchors less than requireAnchors")
+            description = "Re-fetch item pages who's anchors is less than requireAnchors")
     var itemRequireAnchors = 0
 
     /**
-     * @deprecated shorten key is deprecated, use href instead
+     * Persist fetched pages as soon as possible.
      * */
-    @Deprecated("Use ignoreQuery instead")
-    @Parameter(names = ["-sk", "-shortenKey", "--shorten-key"],
-            description = "Remove the query parameters when generate the page's key (reversed url)")
-    var shortenKey = false
-
-    @Parameter(names = ["-iq", "-ignoreQuery", "--ignore-query"],
-        description = "Remove the query parameters when normalize the url")
-    var ignoreQuery = false
-
     @Parameter(names = ["-persist", "--persist"], arity = 1,
             description = "Persist fetched pages as soon as possible")
     var persist = true
 
+    /**
+     * If false, persist the page without the content which is usually very large
+     * */
     @Parameter(names = ["-storeContent", "--store-content"], arity = 1,
-            description = "Persist page content into data store")
+            description = "If false, persist the page without it's content which is usually very large")
     var storeContent = LoadOptionDefaults.storeContent
 
+    /**
+     * Refresh the fetch state of a page, clear the retry counters.
+     * If true, the page should be fetched, just like we click the refresh button on a real browser.
+     * The option can be explained as follows: -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0.
+     * */
     @ApiPublic
     @Parameter(names = ["-refresh", "--refresh"],
-        description = "Refresh the fetch state of page, clear fetch retry counter" +
+        description = "Refresh the fetch state of a page, clear the retry counters." +
+                " If true, the page should be fetched immediately." +
+                " The option can be explained as follows:" +
                 " -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0")
     var refresh = false
 
     /**
-     * Force retry fetching the page if it's failed last time, or it's marked as gone
-     * This option is deprecated and be replaced by ignoreFailure which is more descriptive
+     * Force retry fetching the page if it's failed last time, or it's marked as gone.
      * */
     @Deprecated("Replaced by ignoreFailure, will be removed in further versions")
     @ApiPublic
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
-            description = "Retry fetching the page even if it's failed last time")
+            description = "Retry fetching the page even if it's failed last time, or it's marked as gone")
     var retryFailed = LoadOptionDefaults.ignoreFailure
 
     /**
-     * Force retry fetching the page if it's failed last time, or it's marked as gone
+     * Retry fetching the page even if it's failed last time.
      * */
     @ApiPublic
     @Parameter(names = ["-ignF", "-ignoreFailure", "--ignore-failure"],
             description = "Retry fetching the page even if it's failed last time")
     var ignoreFailure = LoadOptionDefaults.ignoreFailure
 
+    /**
+     * Retry to fetch at most n times, if page.fetchRetries > nMaxRetry,
+     * the page is marked as gone and do not fetch it again until -refresh is set to clear page.fetchRetries
+     * */
     @Parameter(names = ["-nmr", "-nMaxRetry", "--n-max-retry"],
-        description = "Retry fetching at most n times, page.fetchRetries <= nMaxRetry")
+        description = "Retry to fetch at most n times, if page.fetchRetries > nMaxRetry," +
+                " the page is marked as gone and do not fetch it again until -refresh is set to clear page.fetchRetries")
     var nMaxRetry = 3
 
+    /**
+     * Retry at most n times at fetch phrase immediately if RETRY(1601) code return.
+     * */
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
             description = "Retry at most n times at fetch phrase immediately if RETRY(1601) code return")
     var nJitRetry = LoadOptionDefaults.nJitRetry
 
+    /**
+     * If false, pages are flushed into database as soon as possible.
+     * */
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
-            description = "If false, flush persisted pages into database as soon as possible")
+            description = "If false, pages are flushed into database as soon as possible")
     var lazyFlush = LoadOptionDefaults.lazyFlush
 
+    /**
+     * Parallel fetch pages whenever applicable.
+     * */
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
             description = "Parallel fetch pages whenever applicable")
     var preferParallel = true
 
+    /**
+     * Run browser in incognito mode.
+     * */
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
 
-    @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
-    var background: Boolean = false
-
+    /**
+     * Do not redirect.
+     * */
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
 
+    /**
+     * If false, return the original page record but the redirect target's content,
+     * otherwise, return the page record of the redirected target.
+     * If we use a browser, redirections are handled by the browser so the flag is ignored.
+     * */
     @Parameter(names = ["-hardRedirect", "--hard-redirect"],
-            description = "If false, return the original page record but the redirect target's content, " +
-                    "otherwise, return the page record of the redirected target")
+            description = "If false, return the original page record but the redirect target's content," +
+                    " otherwise, return the page record of the redirected target." +
+                    " If we use a browser, redirections are handled by the browser so the flag is ignored.")
     var hardRedirect = false
 
-    // parse options
-    @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page after fetch")
+    /**
+     * If true, parse the page after fetch.
+     * */
+    @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page after fetch")
     var parse = LoadOptionDefaults.parse
 
+    /**
+     * Re-parse all links if the page is parsed.
+     * */
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
 
-    @Parameter(names = ["-ignoreUrlQuery", "--ignore-url-query"], description = "Remove the query parameters of urls")
+    /**
+     * Remove the query parameters in the url.
+     * */
+    @Parameter(names = ["-ignoreUrlQuery", "--ignore-url-query"], description = "Remove the query parameters in the url")
     var ignoreUrlQuery = false
 
+    /**
+     * No normalizer is applied to parse links.
+     * */
     @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
     var noNorm = false
 
+    /**
+     * No filter is applied to parse links.
+     * */
     @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
     var noFilter = false
 
+    /**
+     * Specify the network condition.
+     * */
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
         converter = ConditionConverter::class,
-        description = "The network condition level"
+        description = "Specify the network condition"
     )
     var netCondition = Condition.GOOD
 
+    /**
+     * The test level, 0 to disable, we will talk more in test mode.
+     * */
     @Parameter(names = ["-test", "--test"], description = "The test level, 0 to disable, we will talk more in test mode")
     var test = LoadOptionDefaults.test
 
+    /**
+     * The load option version.
+     * */
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
     var version = "20210321"
 
-    // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-    val outLinkSelectorOrNull
+    /**
+     * Get the corrected [outLinkSelector]. See [outLinkSelector] for more information.
+     * */
+    @Deprecated("outLinkSelector is corrected now", replaceWith = ReplaceWith("outLinkSelector"))
+    val correctedOutLinkSelector
         get() = outLinkSelector.trim('"')
             .takeIf { it.isNotBlank() }
-            ?.let { appendSelectorIfMissing(it, "a") }
-
-    val correctedOutLinkSelector
-        get() = outLinkSelectorOrNull ?: ""
-
+            ?.let { appendSelectorIfMissing(it, "a") } ?: ""
+    /**
+     * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.
+     * */
+    val outLinkSelectorOrNull
+        get() = correctedOutLinkSelector.takeIf { it.isNotBlank() }
+    /**
+     * The page referrer.
+     * */
     var referrer: String? = null
-
+    /**
+     * Find out the modified fields and return a [Params].
+     * */
     open val modifiedParams: Params
         get() {
             val rowFormat = "%40s: %s"
@@ -394,7 +569,9 @@ open class LoadOptions(
                     .associate { "-${it.name}" to it.get(this) }
                     .let { Params.of(it).withRowFormat(rowFormat) }
         }
-
+    /**
+     * Find out the modified fields and return a map.
+     * */
     open val modifiedOptions: Map<String, Any>
         get() {
             val fields = LoadOptions::class.java.declaredFields
@@ -403,18 +580,23 @@ open class LoadOptions(
                     .filter { it.get(this) != null }
                     .associate { it.name to it.get(this) }
         }
-
+    /**
+     * The constructor.
+     * */
     protected constructor(args: String, conf: VolatileConfig) : this(split(args), conf)
-
+    /**
+     * The constructor.
+     * */
     protected constructor(args: String, options: LoadOptions) :
             this(split(args), options.conf, options.eventHandler)
-
+    /**
+     * Ensure the EventHandler is created.
+     * */
     fun ensureEventHandler(): PulsarEventHandler {
         val eh = eventHandler ?: DefaultPulsarEventHandler()
         eventHandler = eh
         return eh
     }
-
     /**
      * Parse with parameter overwriting fix
      * */
@@ -429,10 +611,13 @@ open class LoadOptions(
                     it.isAccessible = true
                     it.set(this, true)
                 }
+            outLinkSelector = correctedOutLinkSelector
         }
         return b
     }
-
+    /**
+     * Create otions for item pages
+     * */
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
@@ -460,7 +645,9 @@ open class LoadOptions(
             else -> false
         }
     }
-
+    /**
+     * If the page is dead, do not fetch the url from the web.
+     * */
     fun isDead(): Boolean {
         return deadTime < Instant.now()
     }
@@ -498,12 +685,16 @@ open class LoadOptions(
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
-
+    /**
+     * Check if the value of a option is default.
+     * */
     open fun isDefault(option: String): Boolean {
         val value = optionFieldsMap[option]?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
-
+    /**
+     * Convert the [LoadOptions] to be a [Params].
+     * */
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
         return optionFields.filter { it.annotations.any { it is Parameter } }
@@ -512,7 +703,16 @@ open class LoadOptions(
                 .filter { it.value != null }
                 .let { Params.of(it).withRowFormat(rowFormat) }
     }
-
+    /**
+     * Convert the [LoadOptions] to be a string.
+     * The operation should be reversible:
+     *
+     * val args = "..."
+     * val options1 = LoadOptions.parse(args)
+     * val normalizedArgs = options1
+     * val options2 = LoadOptions.parse(normalizedArgs)
+     * require(normalizedArgs == options2.toString())
+     * */
     override fun toString(): String {
         return modifiedParams.distinct().sorted()
                 .withCmdLineStyle(true)
@@ -539,7 +739,7 @@ open class LoadOptions(
     open fun clone() = parse(toString(), this)
 
     companion object {
-        val default = LoadOptions("", VolatileConfig())
+        val DEFAULT = LoadOptions("", VolatileConfig.DEFAULT)
         val optionFields = LoadOptions::class.java.declaredFields
             .asSequence()
             .onEach { it.isAccessible = true }
@@ -550,12 +750,12 @@ open class LoadOptions(
                 require(count > 0) { "Missing -$name option for field <$name>" }
             }
         val optionFieldsMap = optionFields.associateBy { it.name }
-        val defaultParams = optionFields.associate { it.name to it.get(default) }
-        val defaultArgsMap = default.toArgsMap()
+        val defaultParams = optionFields.associate { it.name to it.get(DEFAULT) }
+        val defaultArgsMap = DEFAULT.toArgsMap()
         val arity0BooleanParams = optionFields
             .asSequence()
             .onEach { it.isAccessible = true }
-            .filter { it.get(default) is Boolean }
+            .filter { it.get(DEFAULT) is Boolean }
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .filter { it.arity < 1 }
@@ -564,7 +764,7 @@ open class LoadOptions(
         val arity1BooleanParams = optionFields
             .asSequence()
             .onEach { it.isAccessible = true }
-            .filter { it.get(default) is Boolean }
+            .filter { it.get(DEFAULT) is Boolean }
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .filter { it.arity == 1 }

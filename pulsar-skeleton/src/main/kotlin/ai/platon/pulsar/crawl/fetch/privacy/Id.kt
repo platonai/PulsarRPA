@@ -33,8 +33,8 @@ data class PrivacyContextId(
     override fun compareTo(other: PrivacyContextId) = toString().compareTo(other.toString())
 
     companion object {
-        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR, BrowserType.CHROME)
-        val PROTOTYPE = PrivacyContextId(PrivacyContext.PROTOTYPE_DIR, BrowserType.CHROME)
+        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
+        val PROTOTYPE = PrivacyContextId(PrivacyContext.PROTOTYPE_DIR, BrowserType.PULSAR_CHROME)
     }
 }
 
@@ -62,7 +62,7 @@ data class BrowserInstanceId constructor(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
-        val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.CHROME))
+        val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
     }
 }
 

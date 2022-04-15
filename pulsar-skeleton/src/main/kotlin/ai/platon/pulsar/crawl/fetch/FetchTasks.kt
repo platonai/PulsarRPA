@@ -118,7 +118,7 @@ class FetchTask constructor(
     override fun toString(): String = "$id"
 
     companion object {
-        val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.CHROME)
+        val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.PULSAR_CHROME)
         val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
     }

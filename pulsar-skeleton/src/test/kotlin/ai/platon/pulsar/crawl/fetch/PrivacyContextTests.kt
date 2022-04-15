@@ -14,7 +14,7 @@ class PrivacyContextTests {
 
     @Test
     fun testBrowserInstanceId() {
-        val id = PrivacyContextId(contextPath, BrowserType.CHROME)
+        val id = PrivacyContextId(contextPath, BrowserType.PULSAR_CHROME)
         val id2 = PrivacyContextId(contextPath2, BrowserType.PLAYWRIGHT_CHROME)
         assertNotEquals(id, id2)
         assertNotEquals(id.hashCode(), id2.hashCode())

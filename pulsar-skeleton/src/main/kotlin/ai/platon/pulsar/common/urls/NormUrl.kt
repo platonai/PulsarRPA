@@ -53,7 +53,7 @@ open class NormUrl constructor(
     override fun toString() = configuredUrl
 
     companion object {
-        val NIL = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
+        val NIL = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.DEFAULT)
 
         @JvmStatic
         fun parse(configuredUrl: String, volatileConfig: VolatileConfig): NormUrl {

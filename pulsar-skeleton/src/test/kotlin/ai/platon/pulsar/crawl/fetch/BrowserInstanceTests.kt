@@ -12,7 +12,7 @@ class BrowserInstanceTests {
 
     @Test
     fun testBrowserInstanceId() {
-        val id = BrowserInstanceId(contextPath, BrowserType.CHROME)
+        val id = BrowserInstanceId(contextPath, BrowserType.PULSAR_CHROME)
         val id2 = BrowserInstanceId(contextPath, BrowserType.PLAYWRIGHT_CHROME)
         assertNotEquals(id, id2)
         assertNotEquals(id.hashCode(), id2.hashCode())

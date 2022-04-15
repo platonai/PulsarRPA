@@ -37,7 +37,7 @@ class NormUrlTests {
     private val defaultNormalizedArgs = LoadOptions.normalize(defaultArgs)
     private val defaultConfiguredUrl = "$defaultUrl $defaultNormalizedArgs"
     private val defaultNormalizedConfiguredUrl = "$defaultUrl $defaultNormalizedArgs"
-    private val defaultOptions = LoadOptions.default
+    private val defaultOptions = LoadOptions.DEFAULT
     private val volatileConfig = defaultOptions.conf
 
     @Test

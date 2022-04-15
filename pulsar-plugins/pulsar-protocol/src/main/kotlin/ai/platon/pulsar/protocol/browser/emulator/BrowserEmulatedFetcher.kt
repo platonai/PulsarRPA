@@ -16,7 +16,6 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by vincent on 18-1-1.
@@ -93,7 +92,7 @@ open class BrowserEmulatedFetcher(
     private fun createFetchTask(page: WebPage): FetchTask {
         val conf = page.conf
         val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
-        val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.CHROME)
+        val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
         val fingerprint = Fingerprint(browserType)
         return FetchTask(0, priority, page, conf, fingerprint = fingerprint)
     }

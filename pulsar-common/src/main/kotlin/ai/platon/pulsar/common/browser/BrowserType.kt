@@ -6,7 +6,7 @@ import java.util.*
  * The supported browser types
  */
 enum class BrowserType {
-    NATIVE, CHROME, MOCK_CHROME, PLAYWRIGHT_CHROME;
+    NATIVE, PULSAR_CHROME, MOCK_CHROME, PLAYWRIGHT_CHROME;
 
     override fun toString(): String {
         return name.lowercase(Locale.getDefault())
@@ -22,11 +22,11 @@ enum class BrowserType {
         @JvmStatic
         fun fromString(name: String?): BrowserType {
             return if (name == null || name.isEmpty()) {
-                CHROME
+                PULSAR_CHROME
             } else try {
                 valueOf(name.uppercase(Locale.getDefault()))
             } catch (e: Throwable) {
-                CHROME
+                PULSAR_CHROME
             }
         }
     }

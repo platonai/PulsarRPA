@@ -36,7 +36,7 @@ class ChromeDevtoolsDriver(
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
-    override val browserType: BrowserType = BrowserType.CHROME
+    override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
     override val delayPolicy: (String) -> Long get() = { type ->
         when (type) {
