@@ -150,9 +150,11 @@ open class PulsarOptions(
             return args1
         }
 
+        /**
+         * Since space can not appear in dynamic parameters in command line, we use % instead.
+         * */
         fun normalize(argv: Array<String>) {
             for (i in argv.indices) {
-                // Since space can not appear in dynamic parameters in command line, we use % instead
                 argv[i] = argv[i]
                     .replace("%", " ")
                     .replace("%20", " ")
@@ -160,9 +162,8 @@ open class PulsarOptions(
         }
 
         /**
-         * Split a command line into argument vector (argv)
+         * Split a command line into argument vector (argv).
          * @see {https://stackoverflow.com/questions/36292591/splitting-a-nested-string-keeping-quotation-marks/36292778}
-         *
          */
         fun split(args: String): Array<String> {
             val matcher = CMD_SPLIT_PATTERN.matcher(normalize(args))

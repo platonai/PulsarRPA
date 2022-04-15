@@ -3,7 +3,10 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 
-class SessionConfig(private val sessionDelegate: SessionDelegate, fallbackConfig: ImmutableConfig): VolatileConfig(fallbackConfig) {
+class SessionConfig(
+    private val sessionDelegate: SessionDelegate,
+    fallbackConfig: ImmutableConfig
+): VolatileConfig(fallbackConfig) {
 
     override fun setTTL(name: String, ttl: Int) {
         super.setTTL(name, 1 + ttl + sessionDelegate.sqlSequence)

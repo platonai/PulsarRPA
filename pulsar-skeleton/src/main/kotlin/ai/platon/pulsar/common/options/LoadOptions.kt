@@ -69,17 +69,26 @@ object LoadOptionDefaults {
 }
 
 /**
- * Created by vincent on 19-4-24.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * LoadOptions can represent the controling arguments which effects how we load a webpage:
  *
- * NOTICE: every option with name `optionName` has to take a Parameter name [-optionName]
+ * ```kotlin
+ * // fetch only when after 1d since last fetch
+ * session.load('https://www.jd.com', '-expires 1d')
+ * // fetch now ignore last errors
+ * session.load('https://www.jd.com', '-refresh')
+ * // do not fetch after dead time
+ * session.load('https://www.jd.com', '-deadTime 2022-04-15T18:36:54.941Z')
+ * // activate the parse phrase
+ * session.load('https://www.jd.com', '-parse')
+ * // write the page content into storage
+ * session.load('https://www.jd.com', '-storeContent')
+ * ```
  *
- * NOTICE: every load task should has it's own load options, it's bad to share one load options
+ * NOTICE: every option with name `optionName` has to take a [Parameter] name [-optionName].
  */
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    // Be careful if multiple hyperlinks share the same event handler
     var eventHandler: PulsarEventHandler? = null
 ): CommonOptions(argv) {
 
@@ -758,8 +767,7 @@ open class LoadOptions(
         return other is LoadOptions && other.toString() == toString()
     }
 
-    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode
-    // but none of the fields is initialized
+    // TODO: hashCode can not rely on any member filed because static filed defaultParams uses hashCode before
     override fun hashCode(): Int {
         return super.hashCode()
     }
@@ -770,7 +778,14 @@ open class LoadOptions(
     open fun clone() = parse(toString(), this)
 
     companion object {
+        /**
+         * The default option.
+         * */
         val DEFAULT = LoadOptions("", VolatileConfig.DEFAULT)
+
+        /**
+         * A list of all option fields.
+         * */
         val optionFields = LoadOptions::class.java.declaredFields
             .asSequence()
             .onEach { it.isAccessible = true }
@@ -780,9 +795,25 @@ open class LoadOptions(
                 val count = it.annotations.filterIsInstance<Parameter>().count { it.names.contains("-$name") }
                 require(count > 0) { "Missing -$name option for field <$name>" }
             }
+
+        /**
+         * A map of all option fields.
+         * */
         val optionFieldsMap = optionFields.associateBy { it.name }
+
+        /**
+         * A map of all default options.
+         * */
         val defaultParams = optionFields.associate { it.name to it.get(DEFAULT) }
+
+        /**
+         * A map of all default options.
+         * */
         val defaultArgsMap = DEFAULT.toArgsMap()
+
+        /**
+         * A list of the options who's arity is 0.
+         * */
         val arity0BooleanParams = optionFields
             .asSequence()
             .onEach { it.isAccessible = true }
@@ -792,6 +823,10 @@ open class LoadOptions(
             .filter { it.arity < 1 }
             .flatMap { it.names.toList() }
             .toList()
+
+        /**
+         * A list of the options who's arity is 1.
+         * */
         val arity1BooleanParams = optionFields
             .asSequence()
             .onEach { it.isAccessible = true }
@@ -801,12 +836,20 @@ open class LoadOptions(
             .filter { it.arity == 1 }
             .flatMap { it.names.toList() }
             .toList()
+
+        /**
+         * A list of all the option names.
+         * */
         val optionNames = optionFields
             .asSequence()
             .flatMap { it.annotations.toList() }
             .filterIsInstance<Parameter>()
             .flatMap { it.names.toList() }
             .toList()
+
+        /**
+         * A list of all the names of options who are allowed with REST APIs.
+         * */
         val apiPublicOptionNames = optionFields
             .asSequence()
             .filter { it.kotlinProperty?.hasAnnotation<ApiPublic>() == true }
