@@ -39,11 +39,8 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Created by vincent on 17-5-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
- * Fetch component
+ * The fetch component is the portal to fetch the content of pages.
  */
-@Component
 open class FetchComponent(
     val coreMetrics: CoreMetrics? = null,
     val protocolFactory: ProtocolFactory,

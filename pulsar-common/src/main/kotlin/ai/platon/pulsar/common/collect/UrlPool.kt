@@ -98,7 +98,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override fun add(url: String, priority: Priority13) = add(Hyperlink(url))
 
     override fun add(url: UrlAware): Boolean {
-        val added = orderedCaches[url.priority]?.nReentrantQueue?.add(url)
+        val added = orderedCaches[url.priority]?.reentrantQueue?.add(url)
         return added == true
     }
 
@@ -109,7 +109,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override fun addAll(urls: Iterable<UrlAware>): Boolean {
         var count = 0
         urls.forEach {
-            val added = orderedCaches[it.priority]?.nReentrantQueue?.add(it)
+            val added = orderedCaches[it.priority]?.reentrantQueue?.add(it)
             if (added == true) {
                 ++count
             }

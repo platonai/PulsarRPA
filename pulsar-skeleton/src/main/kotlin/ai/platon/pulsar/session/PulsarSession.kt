@@ -122,7 +122,6 @@ interface PulsarSession : AutoCloseable {
      * @param url     The url of the page to open
      * @return The web page
      */
-    @Throws(Exception::class)
     fun open(url: String): WebPage
 
     /**
@@ -132,7 +131,6 @@ interface PulsarSession : AutoCloseable {
      * @param args The load args
      * @return The web page
      */
-    @Throws(Exception::class)
     fun load(url: String, args: String): WebPage
 
     /**
@@ -142,28 +140,20 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The web page
      */
-    @Throws(Exception::class)
     fun load(url: String, options: LoadOptions = options()): WebPage
 
-    @Throws(Exception::class)
     fun load(url: UrlAware, args: String): WebPage
 
-    @Throws(Exception::class)
     fun load(url: UrlAware, options: LoadOptions = options()): WebPage
 
-    @Throws(Exception::class)
     fun load(normUrl: NormUrl): WebPage
 
-    @Throws(Exception::class)
     suspend fun loadDeferred(url: String, options: LoadOptions = options()): WebPage
 
-    @Throws(Exception::class)
     suspend fun loadDeferred(url: UrlAware, args: String): WebPage
 
-    @Throws(Exception::class)
     suspend fun loadDeferred(url: UrlAware, options: LoadOptions = options()): WebPage
 
-    @Throws(Exception::class)
     suspend fun loadDeferred(normUrl: NormUrl): WebPage
 
     /**
@@ -215,7 +205,6 @@ interface PulsarSession : AutoCloseable {
      * @param args The load args
      * @return The web page
      */
-    @Throws(Exception::class)
     suspend fun loadResource(url: String, referer: String, args: String): WebPage
     /**
      * Load an url as a resource without browser rendering in the browser context
@@ -224,7 +213,6 @@ interface PulsarSession : AutoCloseable {
      * @param opts The load options
      * @return The web page
      */
-    @Throws(Exception::class)
     suspend fun loadResource(url: String, referer: String, opts: LoadOptions = options()): WebPage
 
     /**

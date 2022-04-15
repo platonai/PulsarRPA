@@ -132,7 +132,7 @@ Node.prototype.__pulsar_isImage = function() {
  * */
 Node.prototype.__pulsar_nScreen = function() {
     let rect = this.__pulsar_getRect();
-    const config = PULSAR_CONFIGS;
+    const config = __pulsar_CONFIGS;
     const viewPortHeight = config.viewPortHeight;
     let ns = rect.y / viewPortHeight;
     return Math.ceil(ns);

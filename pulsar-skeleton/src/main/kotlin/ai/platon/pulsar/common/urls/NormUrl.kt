@@ -55,6 +55,7 @@ open class NormUrl constructor(
     companion object {
         val NIL = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
 
+        @JvmStatic
         fun parse(configuredUrl: String, volatileConfig: VolatileConfig): NormUrl {
             val (url, args) = UrlUtils.splitUrlArgs(configuredUrl)
             val options = LoadOptions.parse(args, volatileConfig)

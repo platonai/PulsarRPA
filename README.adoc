@@ -1,5 +1,4 @@
-Pulsar README
-===================
+= Pulsar README
 
 Pulsar is an open source solution to scrape web data at scale.
 
@@ -9,31 +8,39 @@ Pulsar supports the Network As A Database paradigm, so we can turn the Web into 
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
-# Features
-- Web spider: browser rendering, ajax data crawling
-- Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
-- Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
-- Large scale: fully distributed, designed for large scale crawling
-- Simple API: single line of code to scrape, or single SQL to turn a website into a table
-- X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-- Bot stealth: IP rotation, web driver stealth, never get banned
-- RPA: imitating human behaviors, SPA crawling, or do something else awesome
-- Big data: various backend storage support: MongoDB/HBase/Gora
-- Logs & metrics: monitored closely and every event is recorded
+== Features
 
-For more information check [platon.ai](http://platon.ai)
-# Use pulsar as a library
+* Web spider: browser rendering, ajax data crawling
+* Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
+* Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
+* Large scale: fully distributed, designed for large scale crawling
+* Simple API: single line of code to scrape, or single SQL to turn a website into a table
+* X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
+* Bot stealth: IP rotation, web driver stealth, never get banned
+* RPA: imitating human behaviors, SPA crawling, or do something else awesome
+* Big data: various backend storage support: MongoDB/HBase/Gora
+* Logs &amp; metrics: monitored closely and every event is recorded
+
+For more information check http://platon.ai[platon.ai]
+
+== Use pulsar as a library
+
 Maven:
-```
+
+----
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
   <version>1.9.1</version>
 </dependency>
-```
-## Basic usage:
-### Kotlin
-```kotlin
+----
+
+=== Basic usage:
+
+==== Kotlin
+
+[source,kotlin]
+----
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 val session = PulsarContexts.createSession()
 // load a page, fetch it from the web if it has expired or if it's being fetched for the first time
@@ -52,17 +59,26 @@ val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[hr
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // load, parse and scrape named fields
 val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
-```
-## Extract data from documents:
-Pulsar uses jsoup to extract data from html documents, please check [selector-syntax](https://jsoup.org/cookbook/extracting-data/selector-syntax) for all possible selectors.
-### Kotlin
-```kotlin
+----
+
+=== Extract data from documents:
+
+Pulsar uses jsoup to extract data from html documents, please check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all possible selectors.
+
+==== Kotlin
+
+[source,kotlin]
+----
 val document = session.loadDocument(url, "-expires 1d")
 val price = document.selectFirst('.price')
-```
-## Scrape a massive url collection:
-### Kotlin
-```kotlin
+----
+
+=== Scrape a massive url collection:
+
+==== Kotlin
+
+[source,kotlin]
+----
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
@@ -83,9 +99,12 @@ fun main() {
     // ...
     context.await()
 }
-```
-### Java
-```java
+----
+
+==== Java
+
+[source,java]
+----
 public class MassiveCrawler {
 
     private static void onParse(WebPage page, Document document) {
@@ -106,12 +125,14 @@ public class MassiveCrawler {
         context.await();
     }
 }
-```
-## Use X-SQL to query the web
+----
+
+=== Use X-SQL to query the web
 
 Scrape a single page:
 
-```sql
+[source,sql]
+----
 select
     dom_first_text(dom, '#productTitle') as `title`,
     dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
@@ -120,50 +141,58 @@ select
     dom_base_uri(dom) as `baseUri`
 from
     load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
-```
+----
 
 Execute the X-SQL:
 
-```kotlin
+[source,kotlin]
+----
 val context = SQLContexts.create()
 context.executeQuery(sql)
-```
+----
 
 The result is as follows:
 
-    TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
-    Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926
+----
+TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
+Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926
+----
 
-# Use pulsar as a REST service
+== Use pulsar as a REST service
 
-## Requirements
+=== Requirements
 
-- Memory 4G+
-- Maven 3.2+
-- The latest version of the Java 11 OpenJDK
-- java and jar on the PATH
-- Google Chrome 90+
+* Memory 4G+
+* Maven 3.2+
+* The latest version of the Java 11 OpenJDK
+* java and jar on the PATH
+* Google Chrome 90+
 
-## Build from source
+=== Build from source
 
-    git clone https://github.com/platonai/pulsar.git
-    cd pulsar && bin/build.sh
+----
+git clone https://github.com/platonai/pulsar.git
+cd pulsar && bin/build.sh
+----
 
-## Start the pulsar server if not started
+=== Start the pulsar server if not started
 
-```shell
+[source,shell]
+----
 bin/pulsar
-```
+----
 
-## Scrape a webpage in another terminal window
+=== Scrape a webpage in another terminal window
 
-```shell
+[source,shell]
+----
 bin/scrape.sh
-```
+----
 
 The response is as follows:
 
-```json
+[source,json]
+----
 {
     "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
     "statusCode": 200,
@@ -181,27 +210,31 @@ The response is as follows:
     "pageStatus": "OK",
     "status": "OK"
 }
-```
-# Advanced topics:
-- How to scrape pages behind a login?
-- How to download resources directly within a browser context?
-- How to scrape a single page application (SPA)?
-  - Resource mode
-  - RPA mode
-- How to scrape page by page?
-- How to crawl newly discovered links?
-- How to crawl the entire website?
-- How to simulate human behaviors?
-- How to schedule priority tasks?
-- How to drop a scheduled task?
-- How to know the status of a task?
-- How to know what is happening in the system?
-- How to scrape amazon.com to match industrial needs?
-# Compare with other solutions
-- Pulsar vs selenium/puppeteer/playwright
-- Pulsar vs nutch
-- Pulsar vs scrapy+splash
-# Technical details
-- How to hide my bot from being detected?
-- Why to simulate human behaviors?
-- How to render as many pages as possible on a single machine?
+----
+
+== Advanced topics:
+
+* How to scrape pages behind a login?
+* How to download resources directly within a browser context?
+* How to scrape a single page application (SPA)?
+* Resource mode
+* RPA mode
+* How to scrape page by page?
+* How to crawl newly discovered links?
+* How to crawl the entire website?
+* How to simulate human behaviors?
+* How to schedule priority tasks?
+* How to drop a scheduled task?
+* How to know the status of a task?
+* How to know what is happening in the system?
+* How to scrape amazon.com to match industrial needs?
+
+== Compare with other solutions
+* Pulsar vs selenium/puppeteer/playwright
+* Pulsar vs nutch
+* Pulsar vs scrapy+splash
+
+== Technical details
+* How to hide my bot from being detected?
+* Why to simulate human behaviors?
+* How to render as many pages as possible on a single machine?

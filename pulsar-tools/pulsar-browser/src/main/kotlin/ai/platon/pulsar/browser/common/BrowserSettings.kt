@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
+import org.apache.commons.lang3.RandomStringUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -123,10 +124,15 @@ open class BrowserSettings(
 
         // required
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
-
         // Available user agents
         val userAgents = mutableListOf<String>()
-
+        val scriptNamePrefix = "__pulsar_"
+        /**
+         * The default name cipher for all injected scripts.
+         * All names in injected scripts must not be detected from a javascript,
+         * the name mangling technology helps to archive this purpose.
+         * */
+        val scriptNameCipher = RandomStringUtils.randomAlphabetic(6)
         val preloadJavaScriptResources = """
             stealth.js
             __pulsar_utils__.js
@@ -236,7 +242,7 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    val jsNameManglingCipher = conf.get(BROWSER_JS_NAME_MANGLING_MAGIC, "__exotic_")
+    val scriptNameManglingCipher = conf[BROWSER_JS_NAME_MANGLING_MAGIC, scriptNameCipher]
 
     /**
      * Chrome has to run without sandbox in a virtual machine
@@ -279,7 +285,13 @@ open class BrowserSettings(
         mapOf(
             "propertyNames" to propertyNames,
             "viewPortWidth" to viewPort.width,
-            "viewPortHeight" to viewPort.height
+            "viewPortHeight" to viewPort.height,
+
+            "META_INFORMATION_ID" to AppConstants.PULSAR_META_INFORMATION_ID,
+            "SCRIPT_SECTION_ID" to AppConstants.PULSAR_SCRIPT_SECTION_ID,
+            "ATTR_HIDDEN" to AppConstants.PULSAR_ATTR_HIDDEN,
+            "ATTR_OVERFLOW_HIDDEN" to AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN,
+            "ATTR_OVERFLOW_VISIBLE" to AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE,
         ).also { jsParameters.putAll(it) }
     }
 
@@ -300,7 +312,7 @@ open class BrowserSettings(
         return preloadJs
     }
 
-    open fun generatePredefinedJsVariables(): String {
+    open fun generatePredefinedJsConfig(): String {
         // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
         val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
@@ -308,12 +320,7 @@ open class BrowserSettings(
         // TODO: avoid global variables, all variables should be put in configs
         return """
             ;
-            let META_INFORMATION_ID = "${AppConstants.PULSAR_META_INFORMATION_ID}";
-            let SCRIPT_SECTION_ID = "${AppConstants.PULSAR_SCRIPT_SECTION_ID}";
-            let ATTR_HIDDEN = "${AppConstants.PULSAR_ATTR_HIDDEN}";
-            let ATTR_OVERFLOW_HIDDEN = "${AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN}";
-            let ATTR_OVERFLOW_VISIBLE = "${AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE}";
-            let PULSAR_CONFIGS = $configs;
+            let ${scriptNamePrefix}CONFIGS = $configs;
         """.trimIndent()
     }
 
@@ -327,13 +334,13 @@ open class BrowserSettings(
      * A simple name mangling policy
      * */
     open fun nameMangling(script: String): String {
-        return script.replace("__pulsar_", jsNameManglingCipher)
+        return script.replace(scriptNamePrefix, scriptNameManglingCipher)
     }
 
     private fun loadJs() {
         val sb = StringBuilder()
 
-        val jsVariables = generatePredefinedJsVariables()
+        val jsVariables = generatePredefinedJsConfig()
         sb.appendLine(jsVariables).appendLine("\n\n\n")
 
         loadExternalResource()

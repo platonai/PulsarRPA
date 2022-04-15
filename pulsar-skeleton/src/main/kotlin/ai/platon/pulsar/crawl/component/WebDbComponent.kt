@@ -31,9 +31,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Parser checker, useful for testing parser. It also accurately reports
- * possible fetching and parsing failures and presents protocol status signals
- * to aid debugging. The tool enables us to retrieve the following data from any
+ * The WebDb component.
  */
 class WebDbComponent(private val webDb: WebDb, private val conf: ImmutableConfig) : AutoCloseable {
     private val isClosed = AtomicBoolean()

@@ -13,7 +13,6 @@ import java.time.Instant
  * Created by vincent on 16-9-8.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-@Component
 class IndexComponent(
     var indexingFilters: IndexingFilters,
     var indexWriters: IndexWriters,

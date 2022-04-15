@@ -34,11 +34,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Parser checker, useful for testing parser. It also accurately reports
- * possible fetching and parsing failures and presents protocol status signals
- * to aid debugging. The tool enables us to retrieve the following data from any
+ * The parse component.
  */
-@Component
 class ParseComponent(
         val crawlFilters: CrawlFilters,
         val pageParser: PageParser,

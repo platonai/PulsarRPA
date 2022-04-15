@@ -19,25 +19,20 @@ class TaobaoLoginHandler(
     submitSelector, warnUpUrl, activateSelector
 )
 
-class TaobaoCrawler(
-    val portalUrl: String = "https://s.taobao.com/search?spm=a21bo.jianhua.201867-main.24.5af911d9wFOWsc&q=收纳",
-    val args: String = "-i 1s -ii 5m -ol a[href~=detail] -ignoreFailure",
-    val session: PulsarSession = PulsarContexts.createSession()
-) {
+fun main() {
+    val portalUrl = "https://s.taobao.com/search?spm=a21bo.jianhua.201867-main.24.5af911d9wFOWsc&q=收纳"
+    val args = "-i 1s -ii 5m -ol a[href~=detail] -ignoreFailure"
+
     // login parameters
     val username = System.getenv("PULSAR_TAOBAO_USERNAME") ?: "MustFallUsername"
     val password = System.getenv("PULSAR_TAOBAO_PASSWORD") ?: "MustFallPassword"
 
-    fun crawl() {
-        val options = session.options(args)
-        val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
-        options.eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
+    val session: PulsarSession = PulsarContexts.createSession()
+    val options = session.options(args)
+    val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
+    options.eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
 
-        session.loadOutPages(portalUrl, options)
-    }
-}
+    session.loadOutPages(portalUrl, options)
 
-fun main() {
-    TaobaoCrawler().crawl()
     PulsarContexts.await()
 }

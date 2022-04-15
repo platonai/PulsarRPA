@@ -39,11 +39,8 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Parser checker, useful for testing parser. It also accurately reports
- * possible fetching and parsing failures and presents protocol status signals
- * to aid debugging. The tool enables us to retrieve the following data from any
+ * The update component.
  */
-@Component
 class UpdateComponent(
     val webDb: WebDb,
     val fetchSchedule: FetchSchedule,

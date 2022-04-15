@@ -120,13 +120,13 @@ __pulsar_utils__.writePulsarData = function() {
         return false
     }
 
-    let script = document.getElementById(SCRIPT_SECTION_ID);
+    let script = document.getElementById(__pulsar_CONFIGS.SCRIPT_SECTION_ID);
     if (script != null) {
         return
     }
 
     script = document.createElement('script');
-    script.id = SCRIPT_SECTION_ID;
+    script.id = __pulsar_CONFIGS.SCRIPT_SECTION_ID;
     script.type = 'text/javascript';
 
     let pulsarData = JSON.stringify(document.__pulsar__Data, null, 3);
@@ -204,7 +204,7 @@ __pulsar_utils__.updatePulsarStat = function(init = false) {
         return
     }
 
-    const config = PULSAR_CONFIGS;
+    const config = __pulsar_CONFIGS;
     const viewPortWidth = config.viewPortWidth;
     const viewPortHeight = config.viewPortHeight;
     const maxWidth = 1.2 * viewPortWidth;
@@ -825,13 +825,12 @@ __pulsar_utils__.getFullPageMetrics = function() {
  * 0.2.2 :
  * */
 __pulsar_utils__.generateMetadata = function() {
-    let meta = document.getElementById(META_INFORMATION_ID);
+    let config = __pulsar_CONFIGS || {};
+    let meta = document.getElementById(config.META_INFORMATION_ID);
     if (meta != null) {
         // already generated
         return
     }
-
-    let config = PULSAR_CONFIGS || {};
 
     // TODO: remove the attributes
     document.body.setAttribute("data-url", document.URL);
@@ -839,17 +838,17 @@ __pulsar_utils__.generateMetadata = function() {
 
     let ele = document.createElement("input");
     ele.setAttribute("type", "hidden");
-    ele.setAttribute("id", META_INFORMATION_ID);
+    ele.setAttribute("id", config.META_INFORMATION_ID);
     ele.setAttribute("domain", document.domain);
-    ele.setAttribute("version", DATA_VERSION);
+    ele.setAttribute("version", config.DATA_VERSION);
     ele.setAttribute("view-port", config.viewPortWidth + "x" + config.viewPortHeight);
-    ele.setAttribute("code-structure", CODE_STRUCTURE_SCHEMA_STRING);
-    ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
+    ele.setAttribute("code-structure", config.CODE_STRUCTURE_SCHEMA_STRING);
+    ele.setAttribute("vision-schema", config.VISION_SCHEMA_STRING);
     ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
     ele.setAttribute("timestamp", date.getTime().toString());
 
-    if (config.version !== DATA_VERSION) {
-        ele.setAttribute("version-mismatch", config.version + "-" + DATA_VERSION);
+    if (config.version !== config.DATA_VERSION) {
+        ele.setAttribute("version-mismatch", config.version + "-" + config.DATA_VERSION);
     }
 
     document.body.appendChild(ele);

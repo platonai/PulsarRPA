@@ -45,9 +45,7 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
- * Parser checker, useful for testing parser. It also accurately reports
- * possible fetching and parsing failures and presents protocol status signals
- * to aid debugging. The tool enables us to retrieve the following data from any
+ * The generate component.
  */
 class GenerateComponent(
     val crawlFilters: CrawlFilters,

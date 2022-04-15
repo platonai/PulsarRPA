@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * Load pages from storage or fetch from the Internet if it's not fetched or expired
  */
-@Component
 class LoadComponent(
     val webDb: WebDb,
     val globalCacheFactory: GlobalCacheFactory,
@@ -114,17 +113,6 @@ class LoadComponent(
     }
 
     /**
-     * Load a page specified by [normUrl], wait until all pages are loaded or timeout
-     * */
-    fun loadAsync(normUrl: NormUrl): CompletableFuture<WebPage> {
-        val link = normUrl.toCompletableListenableHyperlink()
-
-        globalCache.urlPool.higher3Cache.reentrantQueue.add(link)
-
-        return link
-    }
-
-    /**
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
      * */
     fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage> {
@@ -157,6 +145,18 @@ class LoadComponent(
     }
 
     /**
+     * Load a page specified by [normUrl]
+     *
+     * @param normUrl The normalized url
+     * @return A completable future of webpage
+     * */
+    fun loadAsync(normUrl: NormUrl): CompletableFuture<WebPage> {
+        val link = normUrl.toCompletableListenableHyperlink()
+        globalCache.urlPool.add(link)
+        return link
+    }
+
+    /**
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
      * */
     fun loadAllAsync(normUrls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
@@ -167,12 +167,7 @@ class LoadComponent(
         // TODO: distinct or not?
         // NOTE: the hyperlink's event handler overrides the load options' event handler
         val links = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
-
-        links.forEach {
-            val cache = globalCache.urlPool.orderedCaches[it.priority] ?: globalCache.urlPool.lowestCache
-            cache.reentrantQueue.add(it)
-        }
-
+        globalCache.urlPool.addAll(links)
         return links
     }
 

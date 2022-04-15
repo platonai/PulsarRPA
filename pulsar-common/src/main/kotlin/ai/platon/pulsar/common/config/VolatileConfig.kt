@@ -152,7 +152,9 @@ open class VolatileConfig : MutableConfig {
     }
 
     companion object {
+        @JvmStatic
         val EMPTY = VolatileConfig()
+        @JvmStatic
         val UNSAFE = VolatileConfig()
     }
 }
