@@ -108,12 +108,12 @@ class WebDriverAdapter(
         driver.takeIf { isWorking }?.runCatching { stop() }
     }
 
-    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(browserSettings: BrowserSettings) {
         if (isNotWorking) {
             return
         }
 
-        driver.setTimeouts(driverConfig)
+        driver.setTimeouts(browserSettings)
     }
 
     /**

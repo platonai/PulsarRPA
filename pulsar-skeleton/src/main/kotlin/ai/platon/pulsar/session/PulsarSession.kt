@@ -198,7 +198,9 @@ interface PulsarSession : AutoCloseable {
 
     fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>>
 
-    fun submitOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
+    fun submitOutPages(portalUrl: String, args: String): AbstractPulsarSession
+
+    fun submitOutPages(portalUrl: String, options: LoadOptions = options()): AbstractPulsarSession
     /**
      * Load an url as a resource without browser rendering in the browser context
      *

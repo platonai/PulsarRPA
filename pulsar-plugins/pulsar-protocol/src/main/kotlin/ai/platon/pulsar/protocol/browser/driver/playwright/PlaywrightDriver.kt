@@ -54,7 +54,7 @@ class PlaywrightDriver(
     val isGone get() = closed.get() || numSessionLost.get() > 1
     val isActive get() = !isGone && !page.isClosed
 
-    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
     override suspend fun navigateTo(url: String) {

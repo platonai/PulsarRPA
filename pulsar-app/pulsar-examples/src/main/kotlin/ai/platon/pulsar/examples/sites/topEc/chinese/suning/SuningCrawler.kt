@@ -8,6 +8,4 @@ fun main() {
 
     val session = PulsarContexts.createSession()
     session.loadOutPages(portalUrl, args)
-
-    PulsarContexts.await()
 }

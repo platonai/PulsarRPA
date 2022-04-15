@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites.topEc.chinese.s1688
+package ai.platon.pulsar.examples.sites.topEc.chinese.login.s1688
 
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.event.LoginHandler

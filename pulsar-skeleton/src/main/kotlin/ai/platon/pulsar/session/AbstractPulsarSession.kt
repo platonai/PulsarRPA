@@ -323,6 +323,9 @@ abstract class AbstractPulsarSession(
         return loadAll(links, itemOpts)
     }
 
+    override fun submitOutPages(portalUrl: String, args: String): AbstractPulsarSession =
+        submitOutPages(portalUrl, options(args))
+
     override fun submitOutPages(portalUrl: String, options: LoadOptions): AbstractPulsarSession {
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options

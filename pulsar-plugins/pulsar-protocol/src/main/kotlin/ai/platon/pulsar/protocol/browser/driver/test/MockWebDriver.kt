@@ -66,7 +66,7 @@ class MockWebDriver(
         return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
     }
 
-    override suspend fun setTimeouts(driverConfig: BrowserSettings) {
+    override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
     override suspend fun navigateTo(url: String) {

@@ -58,7 +58,7 @@ interface WebDriver: Closeable {
     suspend fun getCookies(): List<Map<String, String>>
 
     suspend fun navigateTo(url: String)
-    suspend fun setTimeouts(driverConfig: BrowserSettings)
+    suspend fun setTimeouts(browserSettings: BrowserSettings)
 
     suspend fun bringToFront()
     /**
