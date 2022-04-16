@@ -195,7 +195,7 @@ bin/pulsar
 ----
 bin/scrape.sh
 ----
-or
+The bash script is quite simple, just use curl to post a X-SQL:
 [source,shell]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "

@@ -50,10 +50,8 @@ fun main() = withSQLContext(PULSAR_CONTEXT_CONFIG_LOCATION) { cx ->
         keywordAsinList to "keyword-asin-extract.sql",
         keywordAsinList to "keyword-side-category-tree-1.sql"
     )
-        .map { SQLInstance(it.first, SQLTemplate(it.second)) }
-        .filter { "x-asin-best-sellers.sql" in it.sql }
+        .map { SQLInstance(it.first, SQLTemplate.load(it.second)) }
+        .filter { "x-asin-best-sellers.sql" in (it.template.resource?:"") }
 
     VerboseSQLRunner(cx).executeAll(sqls)
-
-    exitProcess(0)
 }
