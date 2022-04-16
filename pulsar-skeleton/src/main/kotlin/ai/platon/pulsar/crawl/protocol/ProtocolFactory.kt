@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * implement. Configuration object is used for caching. Cache key is constructed
  * from appending protocol name (eg. http) to constant
  */
-@Component
 class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoCloseable {
     private val log = LoggerFactory.getLogger(ProtocolFactory::class.java)
 

@@ -84,6 +84,7 @@ open class XSQLScrapeHyperlink(
     }
 
     open fun complete(page: WebPage) {
+        response.uuid = uuid
         response.isDone = true
         response.finishTime = Instant.now()
 

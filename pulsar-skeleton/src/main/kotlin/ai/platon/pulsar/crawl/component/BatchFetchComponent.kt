@@ -69,7 +69,7 @@ class BatchFetchComponent(
     }
 
     /**
-     * Group all urls by URL schema, and parallel fetch each group
+     * Group all urls by URL schema, and parallel fetch each group.
      *
      * Eager fetch only some urls to response as soon as possible, the rest urls will be fetched in background later
      *
@@ -108,9 +108,9 @@ class BatchFetchComponent(
     }
 
     /**
-     * Parallel fetch all urls
+     * Parallel fetch all urls.
      * If the protocol supports native parallel, use the protocol's native parallel fetch method,
-     * Or else parallel fetch pages in a ExecutorService
+     * Or else parallel fetch pages in a ExecutorService.
      */
     private fun parallelFetchAll0(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         val optimizedUrls = optimizeBatchSize(urls, options)

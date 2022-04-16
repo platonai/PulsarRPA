@@ -126,13 +126,14 @@ open class BrowserSettings(
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
         // Available user agents
         val userAgents = mutableListOf<String>()
-        val scriptNamePrefix = "__pulsar_"
+        const val scriptNamePrefix = "__pulsar_"
         /**
-         * The default name cipher for all injected scripts.
-         * All names in injected scripts must not be detected from a javascript,
-         * the name mangling technology helps to archive this purpose.
+         * The name cipher for all injected scripts.
+         * All names in injected scripts must not be detected by javascript,
+         * the name mangling technology helps to achieve this purpose.
          * */
         val scriptNameCipher = RandomStringUtils.randomAlphabetic(6)
+        val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
             stealth.js
             __pulsar_utils__.js
@@ -141,7 +142,6 @@ open class BrowserSettings(
             node_traversor.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
         val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
-        val jsParameters = mutableMapOf<String, Any>()
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
@@ -180,9 +180,10 @@ open class BrowserSettings(
         /**
          * Single page application
          * */
-        fun withSPA() {
+        fun withSPA(): Companion {
             System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
             System.setProperty(BROWSER_SPA_MODE, "true")
+            return BrowserSettings
         }
 
         fun enableUrlBlocking(): Companion {

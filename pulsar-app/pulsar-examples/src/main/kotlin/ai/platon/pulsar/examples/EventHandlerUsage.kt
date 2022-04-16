@@ -104,7 +104,7 @@ fun main() {
     val link = ListenableHyperlink(
         portalUrl, args = "-refresh -parse", eventHandler = PrintFlowEventHandler())
 
-    // submit the link to the fetch pool
+    // submit the link to the fetch pool.
     session.submit(link)
 
     // wait until all done.

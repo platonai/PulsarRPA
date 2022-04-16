@@ -40,18 +40,12 @@ import javax.xml.parsers.DocumentBuilderFactory
  * Allows users to do regex substitutions on all/any URLs that are encountered,
  * which is useful for stripping session IDs from URLs.
  *
- *
- *
- *
  * This class uses the <tt>urlnormalizer.regex.file</tt> property. It should be
  * set to the file name of an xml file which should contain the patterns and
  * substitutions to be done on encountered URLs.
  *
- *
- *
  * This class also supports different rules depending on the scope. Please see
  * the javadoc in [UrlNormalizers] for more details.
- *
  *
  * @author Luke Baker
  * @author Andrzej Bialecki

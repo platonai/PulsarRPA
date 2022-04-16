@@ -11,8 +11,7 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
     /**
      * Normalize an url.
      *
-     * If both url arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
-     * but default values in LoadOptions are ignored.
+     * If both url arguments and LoadOptions are present, the url arguments overrides the LoadOptions.
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val (spec, args0) = UrlUtils.splitUrlArgs(url.url)

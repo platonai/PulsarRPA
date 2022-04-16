@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Manage all external proxies
+ * Manage all external proxies.
  * Check all unavailable proxies, recover them if possible.
- * This might take a long time, so it should be run in a separate thread
+ * This might take a long time, so it should be run in a separate thread.
  */
 open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
 

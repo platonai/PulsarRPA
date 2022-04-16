@@ -24,15 +24,22 @@ We also have a plan to release an advanced AI to automatically extract every fie
 For more information check http://platon.ai[platon.ai]
 
 == Use pulsar as a library
+The simplest way to leverage the power of pulsar is adding it to your project as a library.
 
 Maven:
-
+[source,xml]
 ----
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
   <version>1.9.1</version>
 </dependency>
+----
+
+Gradle:
+[source,kotlin]
+----
+implementation("ai.platon.pulsar:pulsar-all:1.9.0")
 ----
 
 === Basic usage:
@@ -61,9 +68,11 @@ val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name 
 val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
 ----
 
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
+
 === Extract data from documents:
 
-Pulsar uses jsoup to extract data from html documents, please check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all possible selectors.
+Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for the all the CSS selector syntax supported.
 
 ==== Kotlin
 
@@ -79,12 +88,6 @@ val price = document.selectFirst('.price')
 
 [source,kotlin]
 ----
-import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
-import ai.platon.pulsar.persist.WebPage
-import org.jsoup.nodes.Document
-
 fun main() {
     val parseHandler = { _: WebPage, document: Document ->
         // do something wonderful with the document
@@ -127,6 +130,8 @@ public class MassiveCrawler {
 }
 ----
 
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/MassiveCrawler.java[java].
+
 === Use X-SQL to query the web
 
 Scrape a single page:
@@ -134,13 +139,12 @@ Scrape a single page:
 [source,sql]
 ----
 select
-    dom_first_text(dom, '#productTitle') as `title`,
-    dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as `listprice`,
-    dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #price_inside_buybox') as `price`,
-    array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
-    dom_base_uri(dom) as `baseUri`
-from
-    load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_text(dom, '#bylineInfo') as brand,
+      dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+      dom_first_text(dom, '#acrCustomerReviewText') as ratings,
+      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+  from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1s -njr 3', 'body');
 ----
 
 Execute the X-SQL:
@@ -151,14 +155,17 @@ val context = SQLContexts.create()
 context.executeQuery(sql)
 ----
 
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
+
 The result is as follows:
 
 ----
-TITLE                                                            | LISTPRICE | PRICE  | CATEGORIES                                    | BASEURI
-Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $12.99 | Toys & Games|Arts & Crafts|Craft Kits|Jewelry | https://www.amazon.com/dp/B00BTX5926
+TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $159.99 | 1,349 ratings | 4.40
 ----
 
-== Use pulsar as a REST service
+== Run pulsar as a REST service
+When the pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 
 === Requirements
 
@@ -172,7 +179,7 @@ Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394) | $19.99    | $
 
 ----
 git clone https://github.com/platonai/pulsar.git
-cd pulsar && bin/build.sh
+cd pulsar && bin/build-run.sh
 ----
 
 === Start the pulsar server if not started
@@ -187,6 +194,22 @@ bin/pulsar
 [source,shell]
 ----
 bin/scrape.sh
+----
+or
+[source,shell]
+----
+curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  select
+      dom_base_uri(dom) as url,
+      dom_first_text(dom, '#productTitle') as title,
+      str_substring_after(dom_first_href(dom, '#wayfinding-breadcrumbs_container ul li:last-child a'), '&node=') as category,
+      dom_first_slim_html(dom, '#bylineInfo') as brand,
+      cast(dom_all_slim_htmls(dom, '#imageBlock img') as varchar) as gallery,
+      dom_first_slim_html(dom, '#landingImage, #imgTagWrapperId img, #imageBlock img:expr(width > 400)') as img,
+      dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
+      dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
+      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+  from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1d -njr 3', 'body');"
 ----
 
 The response is as follows:
@@ -219,7 +242,7 @@ The response is as follows:
 * How to scrape a single page application (SPA)?
 ** Resource mode
 ** RPA mode
-* How to scrape page by page?
+* How to crawl pagination links?
 * How to crawl newly discovered links?
 * How to crawl the entire website?
 * How to simulate human behaviors?
@@ -235,6 +258,7 @@ The response is as follows:
 * Pulsar vs scrapy+splash
 
 == Technical details
+* How to rotate proxy ips?
 * How to hide my bot from being detected?
 * Why to simulate human behaviors?
 * How to render as many pages as possible on a single machine?

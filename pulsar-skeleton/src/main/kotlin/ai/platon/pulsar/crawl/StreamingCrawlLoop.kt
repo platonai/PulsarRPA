@@ -47,7 +47,7 @@ open class StreamingCrawlLoop(
         protected set
 
     init {
-        logger.info("Crawl loop is created | {}", this.javaClass.name + "@" + hashCode())
+        logger.info("Crawl loop is created | @{}", hashCode())
     }
 
     @Synchronized

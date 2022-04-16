@@ -28,9 +28,6 @@ import java.util.*
  * contexts where they are used (note however that they need to be activated
  * first through <tt>plugin.include</tt> property).
  *
- *
- *
- *
  * There is one global scope defined by default, which consists of all active
  * normalizers. The order in which these normalizers are executed may be defined
  * in "urlnormalizer.order" property, which lists space-separated implementation
@@ -39,34 +36,24 @@ import java.util.*
  * list, the remaining ones will be run in random order after the ones specified
  * on the list are executed.
  *
- *
- *
  * You can define a set of contexts (or scopes) in which normalizers may be
  * called. Each scope can have its own list of normalizers (defined in
  * "urlnormalizer.scope.<scope_name>" property) and its own order (defined in
  * "urlnormalizer.order.<scope_name>" property). If any of these properties are
  * missing, default settings are used for the global scope.
-</scope_name></scope_name> *
- *
  *
  * In case no normalizers are required for any given scope, a
  * `ai.platon.pulsar.crawl.net.urlnormalizer.pass.PassURLNormalizer` should
  * be used.
- *
- *
  *
  * Each normalizer may further select among many configurations, depending on
  * the scope in which it is called, because the scope name is passed as a
  * parameter to each normalizer. You can also use the same normalizer for many
  * scopes.
  *
- *
- *
  * Several scopes have been defined, and various AppConstants cli will attempt using
  * scope-specific normalizers first (and fall back to default config if
  * scope-specific configuration is missing).
- *
- *
  *
  * Normalizers may be run several times, to ensure that modifications introduced
  * by normalizers at the end of the list can be further reduced by normalizers
@@ -75,7 +62,6 @@ import java.util.*
  * want to run this loop up to the number of activated normalizers. This loop
  * count can be configured through <tt>urlnormalizer.loop.count</tt> property.
  * As soon as the url is unchanged the loop will stop and return the result.
- *
  *
  * @author Andrzej Bialecki
  */
@@ -93,7 +79,7 @@ class CrawlUrlNormalizers(
     constructor(conf: ImmutableConfig): this(listOf(), SCOPE_DEFAULT, conf)
 
     /**
-     * TODO : not implemented
+     * TODO : scoped normalizer not implemented
      */
     fun getURLNormalizers(scope: String): List<CrawlUrlNormalizer> {
         return urlNormalizers
@@ -103,13 +89,6 @@ class CrawlUrlNormalizers(
         return urlNormalizers.firstOrNull { it.javaClass.simpleName == name || it.javaClass.name == name }
     }
 
-    /**
-     * Normalize
-     *
-     * @param urlString The URL string to normalize.
-     * @param scope     The given scope.
-     * @return A normalized String, using the given `scope`
-     */
     /**
      * Normalize
      *
