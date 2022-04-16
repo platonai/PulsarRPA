@@ -21,13 +21,12 @@ public class Scraper {
                 "        from\n" +
                 "            load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')";
 
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8182/api/x/e"))
                 .header("Content-Type", "text/plain")
                 .POST(HttpRequest.BodyPublishers.ofString(sql)).build();
         String response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
 
         System.out.println(response);
-
-        System.exit(0);
     }
 }

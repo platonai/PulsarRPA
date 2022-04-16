@@ -19,15 +19,14 @@ fun main() {
             array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
             dom_base_uri(dom) as `baseUri`
         from
-            load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
+            load_and_select('https://www.amazon.com/dp/B00BTX5926 -i 10s', ':root')
     """
 
-    val request = HttpRequest.newBuilder().uri(URI.create("http://localhost:8182/api/x/e"))
+    val request = HttpRequest.newBuilder()
+        .uri(URI.create("http://localhost:8182/api/x/e"))
         .header("Content-Type", "text/plain")
         .POST(BodyPublishers.ofString(sql)).build()
     val response = HttpClient.newHttpClient().send(request, BodyHandlers.ofString()).body()
 
     println(response)
-
-    exitProcess(0)
 }
