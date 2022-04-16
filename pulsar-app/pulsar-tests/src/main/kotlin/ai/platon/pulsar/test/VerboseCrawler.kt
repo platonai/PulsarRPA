@@ -6,8 +6,6 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory
@@ -40,11 +38,11 @@ open class VerboseCrawler(
         doc.absoluteLinks()
         doc.stripScripts()
 
-        if (options.correctedOutLinkSelector.isBlank()) {
+        if (options.outLinkSelector.isBlank()) {
             return
         }
 
-        doc.select(options.correctedOutLinkSelector) { it.attr("abs:href") }.asSequence()
+        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
             .filter { UrlUtils.isValidUrl(it) }
             .mapTo(HashSet()) { it.substringBefore(".com") }
             .asSequence()
@@ -77,7 +75,7 @@ open class VerboseCrawler(
         val path = session.export(document)
         logger.info("Portal page is exported to: file://$path")
 
-        val links = document.select(options.correctedOutLinkSelector) { it.attr("abs:href") }
+        val links = document.select(options.outLinkSelector) { it.attr("abs:href") }
             .mapTo(mutableSetOf()) { session.normalize(it, options) }
             .take(options.topLinks).map { it.spec }
         logger.info("Total {} items to load", links.size)

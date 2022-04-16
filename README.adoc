@@ -70,7 +70,7 @@ val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-n
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
 
-=== Extract data from documents:
+=== Extract data from documents
 
 Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for the all the CSS selector syntax supported.
 
@@ -82,7 +82,8 @@ val document = session.loadDocument(url, "-expires 1d")
 val price = document.selectFirst('.price')
 ----
 
-=== Scrape a massive url collection:
+=== Scrape a massive url collection
+It's really simple to scrape a massive url collection or run continuous crawls in pulsar.
 
 ==== Kotlin
 
@@ -260,6 +261,7 @@ The response is as follows:
 * Pulsar vs scrapy+splash
 
 == Technical details
+* The core concepts in pulsar.
 * How to rotate proxy ips?
 * How to hide my bot from being detected?
 * Why to simulate human behaviors?

@@ -47,8 +47,7 @@ class TestLoadOptions {
     fun testOptions() {
         val args0 = UrlUtils.splitUrlArgs(url).second
         val options = i.options("$args0 $args")
-        assertEquals("\".products a\"", options.outLinkSelector)
-        assertEquals(".products a", options.correctedOutLinkSelector)
+        assertEquals(".products a", options.outLinkSelector)
 
         val (url, args) = UrlUtils.splitUrlArgs("$url -incognito -expires 1s -retry")
         val options2 = LoadOptions.parse(args, conf)
@@ -310,8 +309,9 @@ class TestLoadOptions {
 
     private fun assertOptions(options: LoadOptions) {
         assertTrue(options.incognito)
-        assertEquals("\".products a\"", options.outLinkSelector)
-        assertEquals(".products a", options.correctedOutLinkSelector)
+        // already corrected
+        // assertEquals("\".products a\"", options.outLinkSelector)
+        assertEquals(".products a", options.outLinkSelector)
         assertEquals(1, options.expires.seconds)
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)

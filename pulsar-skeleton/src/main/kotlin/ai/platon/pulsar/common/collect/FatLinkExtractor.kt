@@ -122,7 +122,7 @@ class FatLinkExtractor(
         val normalizedFatLink = normalizer.invoke(fatLinkSpec) ?: fatLinkSpec
         val options = seed.options
         val args = if (options.label.isNotBlank()) "-label ${options.label}" else ""
-        val selector = options.correctedOutLinkSelector
+        val selector = options.outLinkSelector
         val now = Instant.now()
 
         val vividLinks = if (document != null) {
@@ -170,7 +170,7 @@ class FatLinkExtractor(
         val now = Instant.now()
         val fatLinkSpec = seed.spec
         val options = seed.options
-        val selector = options.correctedOutLinkSelector
+        val selector = options.outLinkSelector
         val urlRegex = options.outLinkPattern.toRegex()
 
         if (selector.isBlank()) {

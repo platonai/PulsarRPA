@@ -549,19 +549,10 @@ open class LoadOptions(
     var version = "20210321"
 
     /**
-     * Get the corrected [outLinkSelector]. See [outLinkSelector] for more information.
-     * */
-    @Deprecated("outLinkSelector is corrected now", replaceWith = ReplaceWith("outLinkSelector"))
-    val correctedOutLinkSelector
-        get() = outLinkSelector.trim('"')
-            .takeIf { it.isNotBlank() }
-            ?.let { appendSelectorIfMissing(it, "a") } ?: ""
-
-    /**
      * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.
      * */
     val outLinkSelectorOrNull
-        get() = correctedOutLinkSelector.takeIf { it.isNotBlank() }
+        get() = outLinkSelector.takeIf { it.isNotBlank() }
 
     /**
      * The page referrer.
@@ -627,7 +618,7 @@ open class LoadOptions(
                     it.isAccessible = true
                     it.set(this, true)
                 }
-            outLinkSelector = correctedOutLinkSelector
+            outLinkSelector = correctOutLinkSelector() ?: ""
         }
         return b
     }
@@ -776,6 +767,16 @@ open class LoadOptions(
      * Create a new LoadOptions.
      * */
     open fun clone() = parse(toString(), this)
+
+    /**
+     * Correct [outLinkSelector].
+     * There is a JCommand bug with quoted options.
+     * */
+    private fun correctOutLinkSelector(): String? {
+        return outLinkSelector.trim('"')
+            .takeIf { it.isNotBlank() }
+            ?.let { appendSelectorIfMissing(it, "a") }
+    }
 
     companion object {
         /**
