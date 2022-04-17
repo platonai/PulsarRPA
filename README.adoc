@@ -32,14 +32,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.1</version>
+  <version>1.9.2</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.1")
+implementation("ai.platon.pulsar:pulsar-all:1.9.2")
 ----
 
 === Basic usage:
