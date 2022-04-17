@@ -44,7 +44,7 @@ implementation("ai.platon.pulsar:pulsar-all:1.9.1")
 
 === Basic usage:
 
-==== Kotlin
+*Kotlin*
 
 [source,kotlin]
 ----
@@ -74,7 +74,7 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 
 Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for the all the CSS selector syntax supported.
 
-==== Kotlin
+*Kotlin*
 
 [source,kotlin]
 ----
@@ -85,7 +85,7 @@ val price = document.selectFirst('.price')
 === Scrape a massive url collection
 It's really simple to scrape a massive url collection or run continuous crawls in pulsar.
 
-==== Kotlin
+*Kotlin*
 
 [source,kotlin]
 ----
@@ -105,7 +105,7 @@ fun main() {
 }
 ----
 
-==== Java
+*Java*
 
 [source,java]
 ----
@@ -153,7 +153,8 @@ Execute the X-SQL:
 [source,kotlin]
 ----
 val context = SQLContexts.create()
-context.executeQuery(sql)
+val rs = context.executeQuery(sql)
+println(ResultSetFormatter(rs, withHeader = true))
 ----
 
 The result is as follows:
