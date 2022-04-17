@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.RandomStringUtils
+import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -206,7 +207,7 @@ open class BrowserSettings(
 
         fun randomUserAgent(): String {
             if (userAgents.isEmpty()) {
-                generateUserAgents()
+                loadUserAgents()
             }
 
             if (userAgents.isNotEmpty()) {
@@ -217,12 +218,18 @@ open class BrowserSettings(
         }
 
         // also see https://github.com/arouel/uadetector
-        fun generateUserAgents() {
+        fun loadUserAgents() {
             if (userAgents.isNotEmpty()) return
 
-            ResourceLoader.readAllLines("ua/chrome-user-agents-linux.txt")
+            var usa = ResourceLoader.readAllLines("ua/chrome-user-agents.txt")
                 .filter { it.startsWith("Mozilla/5.0") }
-                .toCollection(userAgents)
+            if (SystemUtils.IS_OS_LINUX) {
+                usa = usa.filter { it.contains("X11") }
+            } else if (SystemUtils.IS_OS_WINDOWS) {
+                usa = usa.filter { it.contains("Windows") }
+            }
+
+            usa.toCollection(userAgents)
         }
 
         fun buildChromeUserAgent(
