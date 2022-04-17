@@ -10,19 +10,23 @@ import java.util.concurrent.TimeUnit
  */
 fun stopExecution(executor: ExecutorService, future: Future<*>?, shutdown: Boolean = false) {
     if (shutdown) {
-        executor.shutdown() // Disable new tasks from being submitted
-        try { // Wait a while for existing tasks to terminate
+        // Disable new tasks from being submitted
+        executor.shutdown()
+        try {
+            // Wait a while for existing tasks to terminate
             if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
-                executor.shutdownNow() // Cancel currently executing tasks
+                // Cancel currently executing tasks
+                executor.shutdownNow()
                 // Wait a while for tasks to respond to being cancelled
                 if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
                     System.err.println("ExecutorService did not terminate")
                 }
             }
-        } catch (ie: InterruptedException) { // (Re-)Cancel if current thread also interrupted
-            executor.shutdownNow()
+        } catch (e: InterruptedException) {
+            // (Re-)Cancel if current thread also interrupted
             // Preserve interrupt status
             Thread.currentThread().interrupt()
+            executor.shutdownNow()
         }
     } else { // The external manager(like JEE container) responsible for lifecycle of executor
         synchronized(executor) {

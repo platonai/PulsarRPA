@@ -13,12 +13,11 @@ class SqlManual(val context: SQLContext = SQLContexts.create()) {
             dom_first_text(dom, '.p-price') as price,
             dom_first_text(dom, '.sku-name') as name
         from
-            load_out_pages('$url -i 1d -ii 7d', 'a[href~=item]')"""
+            load_out_pages('$url -i 1s -ii 7s', 'a[href~=item]')"""
     )
 
     fun runAll() {
         scrapeOutPages()
-        context.close()
     }
 
     private fun execute(sql: String) {

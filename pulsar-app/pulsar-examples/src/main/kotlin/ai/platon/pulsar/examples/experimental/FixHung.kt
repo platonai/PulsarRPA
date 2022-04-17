@@ -17,7 +17,7 @@ object FixHung {
      * the main thread hung, caused by the runBlocking calling in BrowserEmulatedFetcher
      * */
     fun hung() {
-        session.load(portalUrl, "-i 1s")
+        session.load(portalUrl, "-i 1d")
     }
 
     fun notHung() {
@@ -34,6 +34,7 @@ object FixHung {
 }
 
 fun main() {
-    FixHung.notHung()
-    // FixHung.hung()
+    // FixHung.notHung()
+    FixHung.hung()
+//    getLogger("main").info("Done.")
 }

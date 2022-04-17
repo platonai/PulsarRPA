@@ -9,9 +9,6 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * TODO: java.util.Time is perfect
- * */
 abstract class ScheduledMonitor(
         var initialDelay: Duration = Duration.ofMinutes(5),
         var watchInterval: Duration = Duration.ofSeconds(30),
