@@ -428,7 +428,6 @@ abstract class AbstractPulsarContext(
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
             this.shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
             Runtime.getRuntime().addShutdownHook(this.shutdownHook)
-            (applicationContext as? AbstractApplicationContext)?.registerShutdownHook()
         }
     }
 
@@ -474,13 +473,6 @@ abstract class AbstractPulsarContext(
                     .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
             }
             closableObjects.clear()
-
-            if (applicationContext.isActive) {
-//                kotlin.runCatching { crawlLoops.stop() }
-//                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
-
-                applicationContext.close()
-            }
         }
 
         AppContext.endTerminate()

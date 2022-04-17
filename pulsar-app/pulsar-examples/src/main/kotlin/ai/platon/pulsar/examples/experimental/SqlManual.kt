@@ -13,7 +13,7 @@ class SqlManual(val context: SQLContext = SQLContexts.create()) {
             dom_first_text(dom, '.p-price') as price,
             dom_first_text(dom, '.sku-name') as name
         from
-            load_out_pages('$url -i 1s -ii 7s', 'a[href~=item]')"""
+            load_out_pages('$url -i 1s -ii 7d -ignoreFailure', 'a[href~=item]')"""
     )
 
     fun runAll() {

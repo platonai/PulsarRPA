@@ -46,7 +46,6 @@ fun main(args: Array<String>) {
     runApplication<PulsarMaster>(*args) {
         addInitializers(PulsarContextInitializer())
         setAdditionalProfiles("master")
-        setRegisterShutdownHook(true)
         setLogStartupInfo(true)
     }
 }

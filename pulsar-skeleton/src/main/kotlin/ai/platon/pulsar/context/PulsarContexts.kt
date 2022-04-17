@@ -33,6 +33,7 @@ object PulsarContexts {
 
         contexts.add(context)
         activeContext = context
+        (context.applicationContext as? AbstractApplicationContext)?.registerShutdownHook()
         context.registerShutdownHook()
         logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
 

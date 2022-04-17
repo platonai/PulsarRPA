@@ -25,6 +25,7 @@ fun stopExecution(executor: ExecutorService, future: Future<*>?, shutdown: Boole
         } catch (e: InterruptedException) {
             // (Re-)Cancel if current thread also interrupted
             // Preserve interrupt status
+            System.err.println("Shutting down executor $executor")
             Thread.currentThread().interrupt()
             executor.shutdownNow()
         }
