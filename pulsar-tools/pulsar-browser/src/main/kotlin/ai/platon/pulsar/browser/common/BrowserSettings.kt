@@ -318,10 +318,10 @@ open class BrowserSettings(
         val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
-        // TODO: avoid global variables, all variables should be put in configs
+        val configVar = nameMangling( "${scriptNamePrefix}CONFIGS")
         return """
             ;
-            let ${scriptNamePrefix}CONFIGS = $configs;
+            let $configVar = $configs;
         """.trimIndent()
     }
 

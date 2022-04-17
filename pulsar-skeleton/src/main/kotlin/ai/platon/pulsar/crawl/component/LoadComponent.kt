@@ -119,10 +119,32 @@ class LoadComponent(
             return listOf()
         }
 
+        val futures = loadAllAsync(normUrls)
+
+        logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
+
+        val future = CompletableFuture.allOf(*futures.toTypedArray())
+        future.join()
+
+        val pages = futures.mapNotNull { it.get() }.filter { it.isNotInternal }
+
+        logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
+
+        return pages
+    }
+
+    /**
+     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * */
+    fun loadAll2(normUrls: Iterable<NormUrl>): List<WebPage> {
+        if (!normUrls.iterator().hasNext()) {
+            return listOf()
+        }
+
         val links = loadAllAsync(normUrls)
 
         logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
-            globalCache.javaClass, globalCache.hashCode(), globalCache.urlPool.hashCode())
+            globalCache.javaClass.name, globalCache.hashCode(), globalCache.urlPool.hashCode())
 
         var i = 90
         val pendingLinks = links.toMutableList()
@@ -165,10 +187,6 @@ class LoadComponent(
 
         // TODO: distinct or not?
         val links = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
-        if (links.size > 2) {
-            // be careful if EventHandlers are shared
-            // require(links[0].eventHandler != links[1].eventHandler)
-        }
         globalCache.urlPool.addAll(links)
         return links
     }

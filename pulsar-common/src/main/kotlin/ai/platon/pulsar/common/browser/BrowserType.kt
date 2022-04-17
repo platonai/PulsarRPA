@@ -14,7 +14,7 @@ enum class BrowserType {
 
     companion object {
         /**
-         * Create a browser type from a string
+         * Create a browser type from a string.
          *
          * @param s the name of the browser type.
          * @return the BrowserType.

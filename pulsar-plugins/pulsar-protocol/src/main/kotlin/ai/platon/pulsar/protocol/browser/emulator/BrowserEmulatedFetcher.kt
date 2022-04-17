@@ -1,19 +1,20 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -40,11 +41,13 @@ open class BrowserEmulatedFetcher(
 
     /**
      * Fetch page content
+     *
+     * TODO: runBlocking causes the calling thread hung
      * */
-    fun fetchContent(page: WebPage) = runBlocking {
+    fun fetchContent(page: WebPage): Response = runBlocking {
         fetchContentDeferred(page)
     }
-
+    
     suspend fun fetchDeferred(url: String) =
         fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 

@@ -613,15 +613,4 @@ class ChromeDevtoolsDriver(
             block()
         }
     }
-
-    class ShutdownHookRegistry : ChromeLauncher.ShutdownHookRegistry {
-
-        override fun register(thread: Thread) {
-            // Runtime.getRuntime().addShutdownHook(thread)
-        }
-
-        override fun remove(thread: Thread) {
-            // Runtime.getRuntime().removeShutdownHook(thread)
-        }
-    }
 }

@@ -88,7 +88,7 @@ open class StreamingCrawler<T : UrlAware>(
     /**
      * The crawl name
      * */
-    val name: String = "StreamingCrawler",
+    val name: String = StreamingCrawler::class.simpleName!!,
     /**
      * Do not use proxy
      * */
@@ -226,7 +226,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        logger.info("Starting streaming crawler #{}-{} ... {}", name, id, defaultOptions)
+        logger.info("Starting {} #{} ... {}", name, id, defaultOptions)
 
         globalRunningInstances.incrementAndGet()
 
@@ -513,12 +513,6 @@ open class StreamingCrawler<T : UrlAware>(
             globalKilledTasks.incrementAndGet()
             return null
         }
-
-        // do this in normalization
-//        options.nMaxRetry = url.nMaxRetry
-//        if (url is ListenableHyperlink) {
-//            options.eventHandler = url.eventHandler
-//        }
 
         return session.runCatching { loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }

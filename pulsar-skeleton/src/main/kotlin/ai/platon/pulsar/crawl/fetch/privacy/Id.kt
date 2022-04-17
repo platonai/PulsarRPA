@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.readableClassName
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -110,7 +111,7 @@ class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
             defaultClazz
         }
 
-        logger.info("Using id generator {}", clazz)
+        logger.info("Using id generator {}", readableClassName(clazz))
 
         return clazz.constructors.first { it.parameters.isEmpty() }.newInstance() as PrivacyContextIdGenerator
     }

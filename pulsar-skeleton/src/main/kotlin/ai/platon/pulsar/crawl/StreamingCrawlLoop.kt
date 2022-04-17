@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -11,8 +10,6 @@ import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 open class StreamingCrawlLoop(
     /**
@@ -41,7 +38,7 @@ open class StreamingCrawlLoop(
 
     var crawlEventHandler = DefaultCrawlEventHandler()
 
-    override val urlFeeder by lazy { createHyperlinkFeeder() }
+    override val urlFeeder by lazy { createUrlFeeder() }
 
     override lateinit var crawler: StreamingCrawler<UrlAware>
         protected set
@@ -102,7 +99,7 @@ open class StreamingCrawlLoop(
         }
     }
 
-    private fun createHyperlinkFeeder(): UrlFeeder {
+    private fun createUrlFeeder(): UrlFeeder {
         val enableDefaults = config.getBoolean(CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS, true)
         return UrlFeeder(globalCache.urlPool, enableDefaults = enableDefaults)
     }

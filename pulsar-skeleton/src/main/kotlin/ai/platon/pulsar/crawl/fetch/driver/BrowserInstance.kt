@@ -15,6 +15,8 @@ interface BrowserInstance: AutoCloseable {
     val launcherOptions: LauncherOptions
     val launchOptions: ChromeOptions
 
+    val shutdownHookThread: Thread
+
     val tabCount: AtomicInteger
     // remember, navigate history is small, so search is very fast for a list
     val navigateHistory: List<NavigateEntry>
@@ -44,6 +46,8 @@ abstract class AbstractBrowserInstance(
 
     protected val launched = AtomicBoolean()
     protected val closed = AtomicBoolean()
+
+    override val shutdownHookThread: Thread = Thread { this.close() }
 
     override fun await() {
         initializedLock.withLock { initialized.await() }

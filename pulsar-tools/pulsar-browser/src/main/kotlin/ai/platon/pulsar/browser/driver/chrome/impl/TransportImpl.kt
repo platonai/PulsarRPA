@@ -11,6 +11,8 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.URI
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -28,6 +30,7 @@ class TransportImpl : Transport {
     private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
+    private val executor: ExecutorService = Executors.newCachedThreadPool()
 
     class DevToolsMessageHandler(val consumer: Consumer<String>): MessageHandler.Whole<String> {
         override fun onMessage(message: String) {
@@ -154,8 +157,8 @@ class TransportImpl : Transport {
     companion object {
         val instanceSequencer = AtomicInteger()
         private const val WEB_SOCKET_CONTAINER_FACTORY_PROPERTY = "ai.platon.pulsar.browser.driver.chrome.webSocketContainerFactory"
-        private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY = DefaultWebSocketContainerFactory::class.java.getName()
-        private val WEB_SOCKET_CONTAINER = createWebSocketContainer()
+        private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY = DefaultWebSocketContainerFactory::class.java.name
+        val WEB_SOCKET_CONTAINER = createWebSocketContainer()
         /**
          * Creates a WebSocketService and connects to a specified uri.
          *

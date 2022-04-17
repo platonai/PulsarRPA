@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
+import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -27,7 +28,7 @@ class ChromeDevtoolsBrowserInstance(
     @Throws(Exception::class)
     override fun launch() {
         if (launched.compareAndSet(false, true)) {
-            val shutdownHookRegistry = ChromeDevtoolsDriver.ShutdownHookRegistry()
+            val shutdownHookRegistry = BrowserShutdownHookRegistry(this)
             launcher = ChromeLauncher(
                 options = launcherOptions,
                 shutdownHookRegistry = shutdownHookRegistry
@@ -65,7 +66,7 @@ class ChromeDevtoolsBrowserInstance(
 
     override fun close() {
         if (launched.get() && closed.compareAndSet(false, true)) {
-            logger.info("Closing {} devtools ... | {}", devToolsList.size, id.display)
+            logger.info("Closing browser with {} devtools ... | {}", devToolsList.size, id)
 
             val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
             nonSynchronized.parallelStream().forEach {
@@ -82,6 +83,19 @@ class ChromeDevtoolsBrowserInstance(
             launcher.close()
 
             logger.info("Browser instance is closed | {}", id.display)
+        }
+    }
+
+    class BrowserShutdownHookRegistry(val browserInstance: BrowserInstance): ChromeLauncher.ShutdownHookRegistry {
+        override fun register(thread: Thread) {
+            Runtime.getRuntime().addShutdownHook(browserInstance.shutdownHookThread)
+            // Runtime.getRuntime().addShutdownHook(thread)
+        }
+
+        override fun remove(thread: Thread) {
+            // TODO: java.lang.IllegalStateException: Shutdown in progress
+            Runtime.getRuntime().removeShutdownHook(browserInstance.shutdownHookThread)
+            // Runtime.getRuntime().removeShutdownHook(thread)
         }
     }
 }
