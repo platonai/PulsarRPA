@@ -291,7 +291,7 @@ open class StreamingCrawler<T : UrlAware>(
         )
     }
 
-    private fun checkEmptyUrlSequence(idleSeconds: Int) {
+    private suspend fun checkEmptyUrlSequence(idleSeconds: Int) {
         if (urls.iterator().hasNext()) {
             return
         }
@@ -303,10 +303,10 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         if (idleSeconds % reportPeriod == 0) {
-            logger.debug("The url sequence is empty")
+            logger.debug("The url sequence is empty. {} {}", globalLoadingUrls.size, idleTime)
         }
 
-        sleepSeconds(1)
+        delay(1_000)
 
         if (isIdle) {
             lock.withLock { notBusy.signalAll() }

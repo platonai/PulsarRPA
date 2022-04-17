@@ -18,6 +18,7 @@ class SqlManual(val context: SQLContext = SQLContexts.create()) {
 
     fun runAll() {
         scrapeOutPages()
+        context.close()
     }
 
     private fun execute(sql: String) {

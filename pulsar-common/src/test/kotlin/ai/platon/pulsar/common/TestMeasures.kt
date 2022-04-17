@@ -8,6 +8,6 @@ class TestMeasures {
 
     @Test
     fun testByteUnit() {
-        assertEquals(500 * 1024 * 1024, ByteUnit.MIB.toBytes(500.0).toLong())
+        assertEquals(500 * 1024 * 1024L, ByteUnit.MIB.toBytes(500.0).toLong())
     }
 }

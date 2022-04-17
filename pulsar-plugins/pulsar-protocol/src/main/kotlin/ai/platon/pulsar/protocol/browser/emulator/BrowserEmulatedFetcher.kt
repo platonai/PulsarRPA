@@ -41,13 +41,11 @@ open class BrowserEmulatedFetcher(
 
     /**
      * Fetch page content
-     *
-     * TODO: runBlocking causes the calling thread hung
      * */
     fun fetchContent(page: WebPage): Response = runBlocking {
         fetchContentDeferred(page)
     }
-    
+
     suspend fun fetchDeferred(url: String) =
         fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
