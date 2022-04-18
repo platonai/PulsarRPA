@@ -256,6 +256,7 @@ The response is as follows in json format:
 * How to drop a scheduled task?
 * How to know the status of a task?
 * How to know what is happening in the system?
+* How to extract content from websites automatically?
 * How to scrape amazon.com to match industrial needs?
 
 == Compare with other solutions
@@ -264,8 +265,8 @@ The response is as follows in json format:
 * Pulsar vs scrapy+splash
 
 == Technical details
-* What are the core concepts in pulsar?
-* How to rotate proxy ips?
+* The core concepts of pulsar.
+* How to rotate my ip addresses?
 * How to hide my bot from being detected?
 * How & why to simulate human behaviors?
 * How to render as many pages as possible on a single machine without be blocked?
