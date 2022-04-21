@@ -4,7 +4,7 @@ import ai.platon.pulsar.context.PulsarContexts
 
 fun main() {
     val portalUrl = "https://shopee.sg/Computers-Peripherals-cat.11013247"
-    val args = "-i 1s -ii 5s -ol a[href~=sp_atk] -tl 20 -ignoreFailure"
+    val args = "-i 1s -ii 5d -ol a[href~=sp_atk] -tl 20 -ignoreFailure"
     val session = PulsarContexts.createSession()
 
 //    val fieldSelectors = listOf("._2Csw3W", "._3uBhVI", "._3b2Btx", "._1kpF5Y")

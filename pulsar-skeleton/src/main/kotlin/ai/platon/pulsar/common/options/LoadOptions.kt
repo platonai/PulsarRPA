@@ -37,6 +37,8 @@ object LoadOptionDefaults {
      * */
     var lazyFlush = true
     /**
+     * Trigger the parse phrase or not.
+     *
      * Do not parse by default, since there are may ways to trigger a webpage parsing:
      * 1. use session.parse()
      * 2. add a -parse option
@@ -44,6 +46,8 @@ object LoadOptionDefaults {
      * */
     var parse = false
     /**
+     * Store webpage content or not.
+     *
      * Store webpage content by default.
      * If we are running a public cloud, this option might be changed to false.
      * */
@@ -74,7 +78,7 @@ object LoadOptionDefaults {
  * ```kotlin
  * // fetch only when after 1d since last fetch
  * session.load('https://www.jd.com', '-expires 1d')
- * // fetch now ignore last errors
+ * // fetch now ignoring errors
  * session.load('https://www.jd.com', '-refresh')
  * // do not fetch after dead time
  * session.load('https://www.jd.com', '-deadTime 2022-04-15T18:36:54.941Z')
@@ -475,12 +479,15 @@ open class LoadOptions(
 
     /**
      * Run browser in incognito mode.
+     * Not used since the browser is always running in temporary contexts
      * */
+    @Deprecated("Not used since the browser is always running in temporary contexts")
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
 
     /**
      * Do not redirect.
+     * Ignored in browser mode since the browser handles the redirection itself.
      * */
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
@@ -497,7 +504,7 @@ open class LoadOptions(
     var hardRedirect = false
 
     /**
-     * If true, parse the page after fetch.
+     * If true, run the parse phrase.
      * */
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page after fetch")
     var parse = LoadOptionDefaults.parse
@@ -509,7 +516,7 @@ open class LoadOptions(
     var reparseLinks = false
 
     /**
-     * Remove the query parameters in the url.
+     * If true, remove the query parameters in the url.
      * */
     @Parameter(names = ["-ignoreUrlQuery", "--ignore-url-query"], description = "Remove the query parameters in the url")
     var ignoreUrlQuery = false
@@ -604,8 +611,9 @@ open class LoadOptions(
         eventHandler = eh
         return eh
     }
+
     /**
-     * Parse with parameter overwriting fix.
+     * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
      * */
     override fun parse(): Boolean {
         val b = super.parse()
@@ -622,6 +630,7 @@ open class LoadOptions(
         }
         return b
     }
+
     /**
      * Create options for item pages.
      * */
@@ -707,6 +716,7 @@ open class LoadOptions(
 
         eventHandler?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
+        // not used since the browser is always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 
@@ -764,7 +774,7 @@ open class LoadOptions(
     }
 
     /**
-     * Create a new LoadOptions.
+     * Create a new [LoadOptions] object.
      * */
     open fun clone() = parse(toString(), this)
 
@@ -794,7 +804,8 @@ open class LoadOptions(
             .onEach {
                 val name = it.name
                 val count = it.annotations.filterIsInstance<Parameter>().count { it.names.contains("-$name") }
-                require(count > 0) { "Missing -$name option for field <$name>" }
+                require(count > 0) { "Missing -$name option for field <$name>. " +
+                            "Every option with name `optionName` has to take a [Parameter] name [-optionName]." }
             }
 
         /**
