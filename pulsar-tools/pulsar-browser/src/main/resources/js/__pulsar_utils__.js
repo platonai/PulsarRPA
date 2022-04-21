@@ -886,7 +886,7 @@ __pulsar_utils__.compute = function() {
     });
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization
-    // new PulsarNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
+    new __pulsar_NodeTraversor(new __pulsar_NodeFeatureCalculator()).traverse(document.body);
 
     __pulsar_utils__.generateMetadata();
 

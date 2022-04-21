@@ -4,13 +4,13 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
-import ai.platon.pulsar.crawl.LoadEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -220,7 +220,8 @@ abstract class AbstractPulsarSession(
             return null
         }
 
-        if (normUrl.options.conf.getBeanOrNull(LoadEventHandler::class.java) != null) {
+        // We have events to handle later
+        if (normUrl.options.eventHandler?.loadEventHandler != null) {
             return null
         }
 

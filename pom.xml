@@ -652,10 +652,10 @@
     </dependencies>
 
     <properties>
-<!--        <kotlin.version>1.5.32</kotlin.version>-->
-        <kotlin.version>1.6.20</kotlin.version>
+        <kotlin.version>1.5.32</kotlin.version>
+<!--        <kotlin.version>1.6.20</kotlin.version>-->
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
-        <pulsar-jsoup.version>1.9.1</pulsar-jsoup.version>
+        <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
         <dokka.version>1.4.32</dokka.version>

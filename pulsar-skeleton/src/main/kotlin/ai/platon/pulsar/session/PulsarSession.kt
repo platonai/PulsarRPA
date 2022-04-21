@@ -174,7 +174,7 @@ interface PulsarSession : AutoCloseable {
 
     fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
 
-    fun submit(url: UrlAware): AbstractPulsarSession
+    fun submit(url: UrlAware): PulsarSession
 
     fun submitAll(urls: Iterable<UrlAware>): PulsarSession
 

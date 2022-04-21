@@ -69,7 +69,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
         }
 
         /**
-         * Return the DataStore persistent class used to persist WebPage.
+         * Return the DataStore persistent class used to persist webpages.
          *
          * @param conf AppConstants configuration
          * @return the DataStore persistent class

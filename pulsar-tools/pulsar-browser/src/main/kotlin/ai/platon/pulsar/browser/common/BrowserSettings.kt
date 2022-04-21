@@ -141,6 +141,7 @@ open class BrowserSettings(
             configs.js
             node_ext.js
             node_traversor.js
+            feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
         val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
 
@@ -287,7 +288,7 @@ open class BrowserSettings(
     /**
      * The js to inject to the browser
      * */
-    protected var preloadJs = ""
+    var preloadJs = ""
 
     init {
         mapOf(
@@ -300,6 +301,8 @@ open class BrowserSettings(
             "ATTR_HIDDEN" to AppConstants.PULSAR_ATTR_HIDDEN,
             "ATTR_OVERFLOW_HIDDEN" to AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN,
             "ATTR_OVERFLOW_VISIBLE" to AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE,
+            "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
+            "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
         ).also { jsParameters.putAll(it) }
     }
 

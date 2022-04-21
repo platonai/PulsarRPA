@@ -185,10 +185,9 @@ class LoadComponent(
             return listOf()
         }
 
-        // TODO: distinct or not?
-        val links = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
-        globalCache.urlPool.addAll(links)
-        return links
+        val linkFutures = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
+        globalCache.urlPool.addAll(linkFutures)
+        return linkFutures
     }
 
     private fun load0(normUrl: NormUrl): WebPage {
