@@ -16,6 +16,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.crawl.common.url.CompletableHyperlink
 import ai.platon.pulsar.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
@@ -126,7 +127,7 @@ class LoadComponent(
         val future = CompletableFuture.allOf(*futures.toTypedArray())
         future.join()
 
-        val pages = futures.mapNotNull { it.get() }.filter { it.isNotInternal }
+        val pages = futures.mapNotNull { it.get() }
 
         logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
 
@@ -233,14 +234,12 @@ class LoadComponent(
     }
 
     /**
-     * Create a page shell, the page shell is the process unit for most tasks
+     * Create a page shell, the page shell is the process unit for most tasks.
      * */
     private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
-        // the page is a resource, do not render it in a browser
-        page.isResource = normUrl.options.isResource
-        page.referrer = normUrl.options.referrer
+//        FetchEntry.initWebPage(page, normUrl.options, normUrl.hrefSpec)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -251,7 +250,6 @@ class LoadComponent(
             page.unsafeCloneGPage(cachedPage)
             page.clearPersistContent()
 
-            page.args = normUrl.args
             page.tmpContent = cachedPage.content
 
             // TODO: test the dirty flag
@@ -335,6 +333,11 @@ class LoadComponent(
 
         try {
             // we might use the cached page's content in after load handler
+            if (normUrl.detail is CompletableHyperlink<*>) {
+                require(page.loadEventHandler?.onAfterLoad?.isNotEmpty == true) {
+                    "A completable hyperlink must have a onAfterLoad handler"
+                }
+            }
             page.loadEventHandler?.onAfterLoad?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)

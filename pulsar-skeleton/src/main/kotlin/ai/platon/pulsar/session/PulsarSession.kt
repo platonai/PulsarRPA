@@ -51,7 +51,10 @@ interface PulsarSession : AutoCloseable {
      * Close objects when sessions close
      * */
     fun registerClosable(closable: AutoCloseable): Boolean
-    fun disableCache()
+    /**
+     * Disable page cache and document cache
+     * */
+    fun disablePDCache()
 
     /**
      * Create a new options, with a new volatile config

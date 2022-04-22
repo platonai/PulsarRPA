@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 class LoadComponentTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
-    private val args = "-i 5s"
+    private val args = "-i 5s -ignoreFailure"
 
     @Autowired
     lateinit var crawlLoops: CrawlLoops
@@ -41,6 +41,23 @@ class LoadComponentTests: TestBase() {
     @Before
     fun setup() {
         crawlLoops.start()
+    }
+
+    @Test
+    fun testLoadAll() {
+        val normUrls = urls.take(5).map { session.normalize(it, args) }
+        val pages = loadComponent.loadAll(normUrls)
+        val pages2 = loadComponent.loadAll(normUrls)
+        assertEquals(pages.size, pages2.size)
+    }
+
+    @Test
+    fun testLoadAllWithAllCached() {
+        val normUrls = urls.take(5).map { session.normalize(it, args) }
+        val pages = loadComponent.loadAll(normUrls)
+        val normUrls3 = urls.take(5).map { session.normalize(it) }
+        val pages3 = loadComponent.loadAll(normUrls3)
+        assertEquals(pages.size, pages3.size)
     }
 
     @Test

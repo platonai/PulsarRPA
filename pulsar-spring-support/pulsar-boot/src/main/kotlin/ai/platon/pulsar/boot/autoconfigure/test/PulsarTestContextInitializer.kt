@@ -18,7 +18,8 @@ class PulsarTestContextInitializer : ApplicationContextInitializer<AbstractAppli
             ignoreFailure = true
             nJitRetry = 3
             test = 1
-            browser = BrowserType.MOCK_CHROME
+            browser = BrowserType.PULSAR_CHROME
+//            browser = BrowserType.MOCK_CHROME
         }
     }
 }

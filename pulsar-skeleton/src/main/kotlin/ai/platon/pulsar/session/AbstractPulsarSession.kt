@@ -72,7 +72,7 @@ abstract class AbstractPulsarSession(
     val isActive get() = !closed.get() && context.isActive
 
     private val variables = ConcurrentHashMap<String, Any>()
-    private var enableCache = true
+    private var enablePDCache = true
     override val globalCacheFactory get() = context.globalCacheFactory
     override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
     override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
@@ -83,7 +83,7 @@ abstract class AbstractPulsarSession(
      * */
     override fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
 
-    override fun disableCache() = run { enableCache = false }
+    override fun disablePDCache() = run { enablePDCache = false }
 
     /**
      * Create a new options, with a new volatile config
@@ -171,7 +171,7 @@ abstract class AbstractPulsarSession(
     override fun load(url: UrlAware, options: LoadOptions): WebPage = load(normalize(url, options))
 
     override fun load(normUrl: NormUrl): WebPage {
-        if (!enableCache) {
+        if (!enablePDCache) {
             return context.load(normUrl)
         }
 
@@ -190,7 +190,7 @@ abstract class AbstractPulsarSession(
         loadDeferred(normalize(url, options))
 
     override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        if (!enableCache) {
+        if (!enablePDCache) {
             return context.loadDeferred(normUrl)
         }
 
@@ -214,6 +214,8 @@ abstract class AbstractPulsarSession(
      *
      * If the loading is not a read-only-loading, which might modify the page status, or the loading have event handlers,
      * in such cases, we must render the page in the browser again.
+     *
+     * TODO: handle the session cache and the FetchComponent cache
      * */
     private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
         if (!normUrl.options.readonly) {
@@ -378,6 +380,13 @@ abstract class AbstractPulsarSession(
 
     override fun loadDocument(url: String, options: LoadOptions): FeaturedDocument {
         val normUrl = normalize(url, options)
+        if (enablePDCache) {
+            val now = Instant.now()
+            val document = documentCache.getDatum(url, options.expires, now)
+            if (document != null) {
+                return document
+            }
+        }
         return parse(load(normUrl))
     }
 

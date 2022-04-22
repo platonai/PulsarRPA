@@ -32,6 +32,8 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
                 it.conf = options.conf
                 it.args = options.toString()
                 it.maxRetries = options.nMaxRetry
+                it.isResource = options.isResource
+                it.referrer = options.referrer
 
                 it.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
             }

@@ -3,8 +3,14 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
@@ -30,6 +36,7 @@ import org.jsoup.select.Elements
 import java.sql.ResultSet
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -138,7 +145,7 @@ object Queries {
             return listOf()
         }
 
-        val futures = session.loadAllAsync(normUrls)
+        val futures = session.loadAllAsync(normUrls.distinctBy { it.spec })
 
         logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
 
@@ -150,6 +157,46 @@ object Queries {
         logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
 
         return pages
+    }
+
+    /**
+     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * */
+    private fun loadAll2(session: PulsarSession, normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        val globalCache = session.globalCacheFactory.globalCache
+        val queue = globalCache.urlPool.higher3Cache.reentrantQueue
+        val timeoutSeconds = options.pageLoadTimeout.seconds + 1
+        val links = normUrls
+            .asSequence()
+            .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
+            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
+            .toList()
+
+        queue.addAll(links)
+        logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
+            globalCache.javaClass, globalCache.hashCode(), globalCache.urlPool.hashCode())
+
+        var i = 90
+        val pendingLinks = links.toMutableList()
+        while (i-- > 0 && pendingLinks.isNotEmpty()) {
+            val finishedLinks = pendingLinks.filter { it.isDone }
+            if (finishedLinks.isNotEmpty()) {
+                logger.debug("Has finished {} links", finishedLinks.size)
+            }
+
+            if (i % 30 == 0) {
+                logger.debug("Still {} pending links", pendingLinks.size)
+            }
+
+            pendingLinks.removeIf { it.isDone }
+            sleepSeconds(1)
+        }
+
+        // timeout process?
+//        val future = CompletableFuture.allOf(*links.toTypedArray())
+//        future.join()
+
+        return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
     /**

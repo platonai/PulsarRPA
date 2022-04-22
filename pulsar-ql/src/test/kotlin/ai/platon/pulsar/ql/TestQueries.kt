@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class TestQueries: TestBase() {
 
     private val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs"
-    private val args = "-i 1s -ii 5s -ol a[href~=/dp/] -ignoreFailure"
+    private val args = "-i 10d -ii 50d -ol a[href~=/dp/] -ignoreFailure"
     private val url = "$portalUrl $args"
     private val restrictCss = "a[href~=/dp/]"
 
