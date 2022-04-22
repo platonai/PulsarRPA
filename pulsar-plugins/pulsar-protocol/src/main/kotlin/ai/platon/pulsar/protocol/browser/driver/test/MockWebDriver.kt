@@ -78,7 +78,7 @@ class MockWebDriver(
         navigateUrl = url
         mockPageSource = loadMockPageSourceOrNull(url)
         if (mockPageSource == null) {
-            logger.info("Resource does not exist, fallback to PlaywrightDriver | {}", url)
+            logger.info("Resource does not exist, fallback to backup driver | {}", url)
         }
 
         backupDriverOrNull?.navigateTo(url)

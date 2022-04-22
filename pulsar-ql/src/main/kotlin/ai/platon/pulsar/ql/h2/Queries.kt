@@ -1,7 +1,9 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
@@ -27,6 +29,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -34,6 +37,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
 object Queries {
+    private val logger = getLogger(this::class)
 
     /**
      * Load all Web pages
@@ -109,6 +113,7 @@ object Queries {
 
         val normUrl = session.normalize(portalUrl)
         val limit2 = min(limit, normUrl.options.topLinks)
+
         val document = session.loadDocument(normUrl)
         var links = transformer(document.document, restrictCss, offset, Int.MAX_VALUE).filter { !UrlUtils.isInternal(it) }
 
@@ -117,9 +122,34 @@ object Queries {
         }
 
         val itemOptions = normUrl.options.createItemOptions()
-        val distinctLinks = links.toSet().take(limit2)
+        val distinctLinks = session.normalize(links.toSet().take(limit2), itemOptions)
 
-        return session.loadAll(distinctLinks, itemOptions, false).filter { it.isNotInternal }
+        return loadAll(session, distinctLinks)
+    }
+
+    /**
+     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout.
+     * */
+    private fun loadAll(
+        session: PulsarSession,
+        normUrls: Iterable<NormUrl>
+    ): List<WebPage> {
+        if (!normUrls.iterator().hasNext()) {
+            return listOf()
+        }
+
+        val futures = session.loadAllAsync(normUrls)
+
+        logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
+
+        val future = CompletableFuture.allOf(*futures.toTypedArray())
+        future.join()
+
+        val pages = futures.mapNotNull { it.get() }.filter { it.isNotInternal }
+
+        logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
+
+        return pages
     }
 
     /**

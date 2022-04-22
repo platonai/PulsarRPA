@@ -19,8 +19,6 @@ abstract class TestBase {
 
     companion object {
         init {
-            PulsarContexts.create(DefaultClassPathXmlSQLContext())
-
             /**
              * Load options are in webpage scope, so it should be initialized after PulsarContextInitializer
              * */
@@ -29,7 +27,9 @@ abstract class TestBase {
                 ignoreFailure = true
                 nJitRetry = 3
                 test = 1
-                browser = BrowserType.MOCK_CHROME
+                // TODO: there are problems to use fallback driver
+//                browser = BrowserType.MOCK_CHROME
+                browser = BrowserType.PULSAR_CHROME
             }
         }
 
@@ -39,7 +39,7 @@ abstract class TestBase {
         val startTime = Instant.now()
     }
 
-    val context = SQLContexts.create(DefaultClassPathXmlSQLContext())
+    val context = SQLContexts.create()
     val session = context.createSession()
 
     fun execute(sql: String, printResult: Boolean = true) {

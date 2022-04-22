@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory
 
 class MultiPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
-    val proxyPoolManager: ProxyPoolManager,
-    val coreMetrics: CoreMetrics,
+    val proxyPoolManager: ProxyPoolManager? = null,
+    val coreMetrics: CoreMetrics? = null,
     immutableConfig: ImmutableConfig
 ) : PrivacyManager(immutableConfig) {
     class Metrics {
@@ -43,6 +43,11 @@ class MultiPrivacyContextManager(
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
     val metrics = Metrics()
+
+    constructor(
+        driverPoolManager: WebDriverPoolManager,
+        immutableConfig: ImmutableConfig
+    ): this(driverPoolManager, null, null, immutableConfig)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         metrics.tasks.mark()
