@@ -27,11 +27,29 @@ data class PrivacyContextId(
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
-//    override fun hashCode() = /** AUTO GENERATED **/
-//    override fun equals(other: Any?) = /** AUTO GENERATED **/
-//    override fun toString() = /** AUTO GENERATED **/
+    /**
+     * The PrivacyContextId equality.
+     * Note: do not use the default equality function
+     * */
+    override fun equals(other: Any?): Boolean {
+        return other is PrivacyContextId
+                && other.contextDir == contextDir
+                && other.fingerprint.browserType == fingerprint.browserType
+    }
 
-    override fun compareTo(other: PrivacyContextId) = toString().compareTo(other.toString())
+    override fun hashCode(): Int {
+        return 31 * contextDir.hashCode() + fingerprint.browserType.hashCode()
+    }
+
+    override fun compareTo(other: PrivacyContextId): Int {
+        val r = contextDir.compareTo(other.contextDir)
+        if (r != 0) {
+            return r
+        }
+        return fingerprint.browserType.compareTo(other.fingerprint.browserType)
+    }
+
+//    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
         val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
@@ -56,11 +74,23 @@ data class BrowserInstanceId constructor(
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
-    override fun compareTo(other: BrowserInstanceId) = toString().compareTo(other.toString())
+    override fun equals(other: Any?): Boolean {
+        return other is PrivacyContextId
+                && other.contextDir == contextDir
+                && other.fingerprint.browserType == fingerprint.browserType
+    }
 
-//    override fun hashCode() = /** AUTO GENERATED **/
-//    override fun equals(other: Any?) = /** AUTO GENERATED **/
-//    override fun toString() = /** AUTO GENERATED **/
+    override fun hashCode(): Int {
+        return 31 * contextDir.hashCode() + fingerprint.browserType.hashCode()
+    }
+
+    override fun compareTo(other: BrowserInstanceId): Int {
+        val r = contextDir.compareTo(other.contextDir)
+        if (r != 0) {
+            return r
+        }
+        return fingerprint.browserType.compareTo(other.fingerprint.browserType)
+    }
 
     companion object {
         val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))

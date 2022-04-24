@@ -2,7 +2,6 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -11,8 +10,10 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import kotlinx.coroutines.runBlocking
+import org.apache.commons.lang3.RandomStringUtils
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -20,6 +21,7 @@ import kotlin.test.assertTrue
 class BrowserContextTests {
     private val conf = ImmutableConfig()
     private val webDriverPoolManager = DefaultWebDriverPoolManager(conf)
+    private val fetcher = DefaultBrowserEmulatedFetcher(conf)
     private val contextPath = AppPaths.getTmp("test-context")
 
     init {
@@ -45,7 +47,8 @@ class BrowserContextTests {
 
         runBlocking {
             repeat(10) {
-                val task = createFetchTask(page)
+                val task = fetcher.createFetchTask(page)
+                task.fingerprint.userAgent = RandomStringUtils.randomAlphanumeric(10)
                 manager.run(task) { task, driver -> mockFetch(task, driver) }
                 assertTrue { manager.activeContexts.size <= manager.maxAllowedBadContexts }
             }
@@ -54,13 +57,5 @@ class BrowserContextTests {
 
     private suspend fun mockFetch(task: FetchTask, driver: WebDriver): FetchResult {
         return FetchResult.canceled(task)
-    }
-
-    private fun createFetchTask(page: WebPage): FetchTask {
-        val conf = page.conf
-        val priority = conf.getUint(CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY, 0)
-        val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
-        val fingerprint = Fingerprint(browserType)
-        return FetchTask(0, priority, page, conf, fingerprint = fingerprint)
     }
 }

@@ -74,8 +74,6 @@ class MultiPrivacyContextManager(
 
         close(context)
 
-// println("=== computeNextContext before computeIfAbsent 1 ")
-
         return computeIfAbsent(privacyContextIdGenerator(fingerprint))
     }
 
@@ -86,7 +84,6 @@ class MultiPrivacyContextManager(
         if (activeContexts.size < numPrivacyContexts) {
             synchronized(activeContexts) {
                 if (activeContexts.size < numPrivacyContexts) {
-// println("=== computeIfNecessary computeIfAbsent 2 ")
                     computeIfAbsent(privacyContextIdGenerator(fingerprint))
                 }
             }

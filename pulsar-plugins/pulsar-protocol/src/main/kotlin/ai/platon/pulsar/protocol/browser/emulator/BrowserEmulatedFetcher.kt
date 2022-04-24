@@ -90,7 +90,7 @@ open class BrowserEmulatedFetcher(
         TODO("Not implemented")
     }
 
-    private fun createFetchTask(page: WebPage): FetchTask {
+    internal fun createFetchTask(page: WebPage): FetchTask {
         val conf = page.conf
         val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
         val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
