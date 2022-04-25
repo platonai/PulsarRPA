@@ -39,8 +39,10 @@ class TestAppRuntimes {
 
     @Test
     fun testLocateBinary() {
-        val locations = Runtimes.locateBinary("dir")
-        assertTrue { locations.isNotEmpty() }
+        if (SystemUtils.IS_OS_LINUX) {
+            val locations = Runtimes.locateBinary("dir")
+            assertTrue { locations.isNotEmpty() }
+        }
     }
 
     @Test

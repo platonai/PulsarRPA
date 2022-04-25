@@ -561,6 +561,13 @@
             </dependency>
 
             <dependency>
+                <groupId>com.microsoft.playwright</groupId>
+                <artifactId>playwright</artifactId>
+                <version>1.19.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.nibor.autolink</groupId>
                 <artifactId>autolink</artifactId>
                 <version>${autolink.version}</version>
@@ -572,6 +579,7 @@
                 <artifactId>tika-parsers-standard-package</artifactId>
                 <version>${tika.version}</version>
                 <type>pom</type>
+                <scope>provided</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.logging.log4j</groupId>

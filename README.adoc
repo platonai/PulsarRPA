@@ -256,7 +256,7 @@ The response is as follows in json format:
 * How to drop a scheduled task?
 * How to know the status of a task?
 * How to know what is happening in the system?
-* How to extract content from websites automatically?
+* How to extract content from websites using machine learning automatically with commercial accuracy?
 * How to scrape amazon.com to match industrial needs?
 
 == Compare with other solutions

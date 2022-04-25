@@ -32,17 +32,6 @@ class TestLoadOptions {
             " -itemScrollCount 20 -itemScrollInterval 1s" +
             ""
 
-    @Before
-    fun setup() {
-        LoadOptionDefaults.storeContent = true
-    }
-
-    @After
-    fun tearDown() {
-        // reset default options
-        LoadOptionDefaults.storeContent = false
-    }
-
     @Test
     fun testOptions() {
         val args0 = UrlUtils.splitUrlArgs(url).second

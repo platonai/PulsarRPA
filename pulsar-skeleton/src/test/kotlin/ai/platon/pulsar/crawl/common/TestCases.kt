@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils.splitUrlArgs
 import ai.platon.pulsar.persist.metadata.PageCategory
@@ -20,6 +21,8 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 16-7-20.
@@ -54,31 +57,6 @@ class TestCases {
     }
 
     @Test
-    @Ignore
-    @Throws(IOException::class)
-    fun normalizeUrlLists() {
-        val filename = "/home/vincent/Tmp/novel-list.txt"
-        val lines = Files.readAllLines(Paths.get(filename))
-        val urls: MutableSet<String?> = Sets.newHashSet()
-        val domains: MutableSet<String?> = Sets.newHashSet()
-        val regexes: MutableSet<String?> = Sets.newHashSet()
-        lines.forEach {
-            val pos = StringUtils.indexOfAny(it, "abcdefjhijklmnopqrstufwxyz")
-            if (pos >= 0) {
-                val url = it.substring(pos)
-                urls.add("http://$url")
-                domains.add(url)
-                regexes.add("+http://www.$url(.+)")
-            }
-        }
-        Files.write(Paths.get("/tmp/domain-urlfilter.txt"), StringUtils.join(domains, "\n").toByteArray())
-        Files.write(Paths.get("/tmp/novel.seeds.txt"), StringUtils.join(urls, "\n").toByteArray())
-        Files.write(Paths.get("/tmp/regex-urlfilter.txt"), StringUtils.join(regexes, "\n").toByteArray())
-        println(urls.size)
-        println(StringUtils.join(urls, ","))
-    }
-
-    @Test
     fun testTreeMap() {
         val ints: MutableMap<Int, String> = TreeMap(Comparator.reverseOrder())
         ints[1] = "1"
@@ -91,14 +69,13 @@ class TestCases {
 
     @Test
     fun testEnum() {
-        val pageCategory: PageCategory
-        pageCategory = try {
+        val pageCategory = try {
             PageCategory.parse("APP")
         } catch (e: Throwable) {
             println(e.localizedMessage)
             PageCategory.UNKNOWN
         }
-        Assert.assertEquals(pageCategory, PageCategory.UNKNOWN)
+        assertEquals(pageCategory, PageCategory.UNKNOWN)
     }
 
     @Test
@@ -155,6 +132,7 @@ class TestCases {
 
     @Test
     fun testSplitUrlArgs() {
+        assertTrue { LoadOptionDefaults.storeContent }
         // String configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE";
         val configuredUrl = "http://list.mogujie.com/book/jiadian/1005951"
         val (url, args) = splitUrlArgs(configuredUrl)
