@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.sites
+package ai.platon.pulsar.examples.sites.vpnrequired
 
 import ai.platon.pulsar.context.PulsarContexts
 
