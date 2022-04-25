@@ -1,16 +1,22 @@
-For developers in China, we suggest you add aliyun maven mirror to your global maven settings to accelerate the building.
+For Chinese developers, we suggest you add aliyun maven mirror to your global maven settings to accelerate the building.
 
-On linux, the path of the global maven settings is:
+On Linux, the path of the global maven settings is:
 
     ~/.m2/settings.xml
 
-On Windows,
+on Windows,
 
-    C:\Users\{username}\.m2\settings.xml
+    %UserProfile%\.m2\settings.xml
 
 If the file doesn't exist, just copy link:settings.xml[settings.xml] to the proper directory.
 
-    cp bin/tools/maven/settings.xml ~/.m2/
+On Linux:
+
+    cp bin/tools/maven/settings.xml ~/.m2
+
+On Windows:
+
+    copy ".\bin\tools\maven\settings.xml" "%UserProfile%\.m2"
 
 If the file exists, add the following code to the file:
 
