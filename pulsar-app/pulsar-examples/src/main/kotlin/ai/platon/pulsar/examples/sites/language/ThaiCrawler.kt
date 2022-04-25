@@ -17,6 +17,4 @@ fun main() {
     options.ensureEventHandler().simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
 
     session.loadOutPages(portalUrl, options)
-
-    PulsarContexts.await()
 }

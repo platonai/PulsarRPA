@@ -50,14 +50,11 @@ object AppContext {
      * */
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
 
-    /**
-     * TODO: WSL actually supports GUI
-     * */
     val isGUIAvailable: Boolean get() {
         return when {
             OS_IS_LINUX_DESKTOP -> true
             OS_IS_WSL -> false
-            else -> GraphicsEnvironment.isHeadless()
+            else -> !GraphicsEnvironment.isHeadless()
         }
     }
 
