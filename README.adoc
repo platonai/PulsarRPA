@@ -177,6 +177,8 @@ When the pulsar runs as a REST service, X-SQL can be used to scrape webpages or 
 * java and jar on the PATH
 * Google Chrome 90+
 
+Pulsar is tested on Ubuntu 18.04, Ubuntu 20.10, Windows 11, WSL, any other OS matches the requirements above might also be OK.
+
 === Build from source
 
 ----
