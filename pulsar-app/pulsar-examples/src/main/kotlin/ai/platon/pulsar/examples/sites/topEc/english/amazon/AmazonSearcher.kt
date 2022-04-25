@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples.sites.topEc.english.amazon
 
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -7,6 +8,7 @@ import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.WebPage
 
 class AmazonSearcherJsEventHandler: AbstractWebPageWebDriverHandler() {
+    override var verbose: Boolean = true
 
     override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         val selector = "input#twotabsearchtextbox"
@@ -39,11 +41,14 @@ class AmazonSearcherJsEventHandler: AbstractWebPageWebDriverHandler() {
 }
 
 fun main() {
-    val portalUrl = "https://www.amazon.com/ -i 0s"
+    val portalUrl = "https://www.amazon.com/"
 
-    withContext { cx ->
-        val i = cx.createSession()
-        i.sessionConfig.putBean(AmazonSearcherJsEventHandler())
-        i.load(portalUrl)
-    }
+    val cx = PulsarContexts.create()
+    val i = cx.createSession()
+    val opts = i.options("-i 0s")
+    opts.ensureEventHandler().simulateEventHandler.onAfterComputeFeature
+        .addLast(AmazonSearcherJsEventHandler())
+    i.load(portalUrl, opts)
+
+    readLine()
 }
