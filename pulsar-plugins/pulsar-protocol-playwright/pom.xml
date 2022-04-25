@@ -17,9 +17,9 @@
         <version>1.9.3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>pulsar-protocol</artifactId>
+    <artifactId>pulsar-protocol-playwright</artifactId>
 
-    <name>Pulsar Protocol</name>
+    <name>Pulsar Protocol Playwright</name>
 
     <dependencies>
         <dependency>
@@ -28,8 +28,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
         </dependency>
     </dependencies>
 

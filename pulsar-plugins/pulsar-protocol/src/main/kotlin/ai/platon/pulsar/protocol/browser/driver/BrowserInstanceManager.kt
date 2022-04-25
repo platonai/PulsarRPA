@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
-import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
+//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowserInstance
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -54,7 +54,7 @@ open class BrowserInstanceManager(
     ): AbstractBrowserInstance {
         return when(instanceId.browserType) {
             BrowserType.MOCK_CHROME -> MockBrowserInstance(instanceId, launcherOptions, launchOptions)
-            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
+//            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
             else -> ChromeDevtoolsBrowserInstance(instanceId, launcherOptions, launchOptions)
         }.apply { launch() }
     }

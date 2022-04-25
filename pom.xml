@@ -563,8 +563,7 @@
             <dependency>
                 <groupId>com.microsoft.playwright</groupId>
                 <artifactId>playwright</artifactId>
-                <version>1.19.0</version>
-                <scope>provided</scope>
+                <version>${playwright.version}</version>
             </dependency>
 
             <dependency>
@@ -579,7 +578,6 @@
                 <artifactId>tika-parsers-standard-package</artifactId>
                 <version>${tika.version}</version>
                 <type>pom</type>
-                <scope>provided</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.logging.log4j</groupId>
@@ -676,6 +674,7 @@
         <spring-boot.version>2.4.13</spring-boot.version>
         <tika.version>2.3.0</tika.version>
         <autolink.version>0.10.0</autolink.version>
+        <playwright.version>1.19.0</playwright.version>
     </properties>
 
 </project>

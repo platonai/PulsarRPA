@@ -10,8 +10,8 @@ import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
-import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
-import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
+//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
+//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
 import org.slf4j.LoggerFactory
@@ -42,7 +42,7 @@ open class WebDriverFactory(
         val driver = kotlin.runCatching {
             when (browserType) {
                 BrowserType.PULSAR_CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
-                BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
+//                BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
                 BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId, capabilities)
                 else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
             }
@@ -80,13 +80,13 @@ open class WebDriverFactory(
         return ChromeDevtoolsDriver(driverSettings, browserInstance as ChromeDevtoolsBrowserInstance)
     }
 
-    private fun createPlaywrightDriver(
-        instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
-    ): PlaywrightDriver {
-        require(instanceId.browserType == BrowserType.PLAYWRIGHT_CHROME)
-        val browserInstance = createBrowserInstance(instanceId, capabilities)
-        return PlaywrightDriver(driverSettings, browserInstance as PlaywrightBrowserInstance)
-    }
+//    private fun createPlaywrightDriver(
+//        instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
+//    ): PlaywrightDriver {
+//        require(instanceId.browserType == BrowserType.PLAYWRIGHT_CHROME)
+//        val browserInstance = createBrowserInstance(instanceId, capabilities)
+//        return PlaywrightDriver(driverSettings, browserInstance as PlaywrightBrowserInstance)
+//    }
 
     private fun createMockChromeDevtoolsDriver(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
