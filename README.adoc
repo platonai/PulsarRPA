@@ -181,7 +181,7 @@ When the pulsar runs as a REST service, X-SQL can be used to scrape webpages or 
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 18.04, Ubuntu 20.10, Windows 11, WSL, any other OS matches the requirements above might also be OK.
+Pulsar is tested on Ubuntu 18.04, Ubuntu 20.10, Windows 11, WSL, any other OS matches the requirements might also be OK.
 
 === Build from source
 For Chinese developers, we strongly suggest you to follow link:bin/tools/maven/maven-settings.adoc[this] instruction to accelerate the building.
@@ -190,14 +190,14 @@ git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ----
 
-=== Start the pulsar server if not started
+Start the pulsar server if not started:
 
 [source,shell]
 ----
 bin/pulsar
 ----
 
-=== Scrape a webpage in another terminal window
+Scrape a webpage in another terminal window:
 
 [source,shell]
 ----
