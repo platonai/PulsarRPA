@@ -473,6 +473,7 @@ open class LoadOptions(
     /**
      * Parallel fetch pages whenever applicable.
      * */
+    @Deprecated("Not used since there is no non-parallel fetching")
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
             description = "Parallel fetch pages whenever applicable")
     var preferParallel = true

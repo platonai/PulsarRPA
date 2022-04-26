@@ -50,7 +50,7 @@ implementation("ai.platon.pulsar:pulsar-all:1.9.3")
 val session = PulsarContexts.createSession()
 // the main url we are playing with
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-// load a page, fetch it from the web if it has expired or if it's being fetched for the first time
+// load a page, fetch it from the web if it has expired or if it's the first time to fetch
 val page = session.load(url, "-expires 1d")
 // parse the page content into a Jsoup document
 val document = session.parse(page)
@@ -72,9 +72,24 @@ val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-n
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
 
+*Load options*
+
+Note that most of our scraping methods accept a parameter called load arguments, or load options, to control how to load/fetch a webpage.
+
+The most important load options are:
+
+    -expires     // The expiry time of a page
+    -itemExpires // The expiry time of item pages in some batch scraping methods
+    -outLink     // The selector for out links to scrape
+    -refresh     // Force (re)fetch the page, just like the refresh button on a real browser
+    -parse       // Triger the parse phrase
+    -isResource  // Fetch the url as a resource without browser rendering
+
+All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all possible options.
+
 === Extract data from documents
 
-Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for the all the CSS selector syntax supported.
+Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
 *Kotlin*
 

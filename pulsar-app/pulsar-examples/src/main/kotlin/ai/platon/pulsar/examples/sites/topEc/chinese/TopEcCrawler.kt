@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese
 
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.examples.sites.topEc.chinese.login.taobao.TaobaoLoginHandler
 
 fun main() {
     val urls = """
@@ -10,16 +11,27 @@ fun main() {
             https://list.tmall.com/search_product.htm?q=大家电 -ol a[href~=item]
             https://search.suning.com/微单/&zw=0?safp=d488778a.shuma.44811515285.1 -ol a[href~=detail]
             https://s.taobao.com/search?spm=a21bo.jianhua.201867-main.24.5af911d9wFOWsc&q=收纳 -ol a[href~=item]
-    """.trimIndent()
+    """.trimIndent().split("\n").filter { it.startsWith("http") }
     val args = "-i 1s -ii 5d -parse -ignoreFailure"
 
     val session = PulsarContexts.createSession()
     val options = session.options(args)
 
-    options.ensureEventHandler().loadEventHandler.onAfterHtmlParse.addLast { page, document ->
+    val eventHandler = options.ensureEventHandler()
+    eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast { driver ->
+        // TODO: rotate accounts
+        val username = System.getenv("PULSAR_TAOBAO_USERNAME") ?: "MustFallUsername"
+        val password = System.getenv("PULSAR_TAOBAO_PASSWORD") ?: "MustFallPassword"
+        val taobaoLoginHandler = TaobaoLoginHandler(username, password, warnUpUrl = urls.first { it.contains("taobao") })
+        taobaoLoginHandler.invoke(driver)
+
+        // sign in all websites requiring login
+    }
+
+    eventHandler.loadEventHandler.onAfterHtmlParse.addLast { page, document ->
         println(document.title + " | " + document.baseUri)
     }
-    urls.split("\n").forEach { session.submitOutPages(it, options) }
+    urls.forEach { session.submitOutPages(it, options) }
 
     PulsarContexts.await()
 }
