@@ -93,9 +93,9 @@ if [ -z "$APP_ENV_INIT" ]; then
 fi
 
 # Now having JAVA_HOME defined is required
-JAVA=$(command -v java)
-if [[ -e $JAVA ]]; then
-  JAVA_HOME=$(readlink -f "$JAVA" | sed "s:bin/java::")
+JAVAC=$(command -v javac)
+if [[ -e $JAVAC ]]; then
+  JAVA_HOME=$(readlink -f "$JAVAC" | sed "s:bin/javac::")
   export JAVA_HOME
 fi
 
@@ -103,7 +103,7 @@ fi
 if [[ -z "$JAVA_HOME" ]]; then
     cat 1>&2 <<EOF
 +======================================================================+
-|      Error: JAVA_HOME is not set and Java could not be found         |
+|      Error: JAVA_HOME is not set and javac could not be found        |
 +======================================================================+
 EOF
     exit 1

@@ -21,8 +21,6 @@ We also have a plan to release an advanced AI to automatically extract every fie
 * Big data: various backend storage support: MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
 
-For more information check http://platon.ai[platon.ai]
-
 == Use pulsar as a library
 The simplest way to leverage the power of pulsar is adding it to your project as a library.
 
@@ -181,7 +179,7 @@ When the pulsar runs as a REST service, X-SQL can be used to scrape webpages or 
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 18.04, Ubuntu 20.10, Windows 11, WSL, any other OS matches the requirements might also be OK.
+Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements might also be OK.
 
 === Build from source
 For Chinese developers, we strongly suggest you to follow link:bin/tools/maven/maven-settings.adoc[this] instruction to accelerate the building.
