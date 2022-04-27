@@ -81,11 +81,11 @@ The most important load options are:
     -expires     // The expiry time of a page
     -itemExpires // The expiry time of item pages in some batch scraping methods
     -outLink     // The selector for out links to scrape
-    -refresh     // Force (re)fetch the page, just like the refresh button on a real browser
+    -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
     -parse       // Triger the parse phrase
     -isResource  // Fetch the url as a resource without browser rendering
 
-All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all possible options.
+All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
 
 === Extract data from documents
 
@@ -100,7 +100,7 @@ val price = document.selectFirst('.price')
 ----
 
 === Scrape a massive url collection
-It's really simple to scrape a massive url collection or run continuous crawls in pulsar.
+It's really simple to scrape a massive url collection or run continuous crawls in Pulsar.
 
 *Kotlin*
 
@@ -194,7 +194,7 @@ When the pulsar runs as a REST service, X-SQL can be used to scrape webpages or 
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements might also be OK.
+Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements is also supposed be OK.
 
 === Build from source
 For Chinese developers, we strongly suggest you to follow link:bin/tools/maven/maven-settings.adoc[this] instruction to accelerate the building.
@@ -216,7 +216,7 @@ Scrape a webpage in another terminal window:
 ----
 bin/scrape.sh
 ----
-The bash script is quite simple, just use curl to post a X-SQL:
+The bash script is quite simple, just use curl to post an X-SQL:
 [source,shell]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -265,7 +265,7 @@ The response is as follows in json format:
 * How to scrape a single page application (SPA)?
 ** Resource mode
 ** RPA mode
-* How to make sure all fields are scraped correctly?
+* How to make sure all fields are extracted correctly?
 * How to crawl pagination links?
 * How to crawl newly discovered links?
 * How to crawl the entire website?
@@ -284,7 +284,26 @@ The response is as follows in json format:
 * Pulsar vs scrapy+splash
 
 == Technical details
-* The core concepts of pulsar.
+* The core concepts of Pulsar
+** Web Scraping
+** Network As A Database
+** Browser Rendering
+** Headless Browser
+** Hyperlink
+** Load Options
+** Event Handler
+** X-SQL
+** Auto Web Mining
+* More concepts of Pulsar
+** Url Pool
+** Url Collector
+** Crawl Loop
+** Privacy Context
+** Proxy Management
+** Web Drivers
+** Web Driver Stealth
+** Page Cache
+** Backend Storage
 * How to rotate my ip addresses?
 * How to hide my bot from being detected?
 * How & why to simulate human behaviors?
