@@ -44,7 +44,7 @@ object Runtimes {
             SystemUtils.IS_OS_LINUX -> "ps -ef"
             else -> return 0
         }
-        return exec(command).filter { it.contains(pattern.toRegex()) }.count()
+        return exec(command).count { it.contains(pattern.toRegex()) }
     }
 
     fun checkIfProcessRunning(pattern: String): Boolean {
