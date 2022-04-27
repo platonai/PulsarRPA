@@ -13,4 +13,4 @@ echo "$VERSION" > "$APP_HOME"/VERSION
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/" {} \;
 
 mvn clean
-mvn package -Pall-modules -Pplaton-release -Pplaton-deploy
+mvn deploy -Pall-modules -Pplaton-release -Pplaton-deploy
