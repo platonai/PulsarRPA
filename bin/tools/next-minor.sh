@@ -12,6 +12,6 @@ MINOR_VERSION=$(("$MINOR_VERSION" + 1))
 
 NEXT_VERSION="$PREFIX.$MINOR_VERSION-SNAPSHOT"
 
-echo "Next version: $NEXT_VERSION"
+echo "New version: $NEXT_VERSION"
 echo "$NEXT_VERSION" > "$APP_HOME"/VERSION
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$NEXT_VERSION/" {} \;
