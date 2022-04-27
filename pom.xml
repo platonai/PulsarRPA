@@ -47,7 +47,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.8.0</tag>
+        <tag>v1.9.4</tag>
     </scm>
 
     <repositories>
@@ -560,7 +560,11 @@
                 <artifactId>autolink</artifactId>
                 <version>${autolink.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.1.0</version>
+            </dependency>
             <!-- For parsers -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
