@@ -233,7 +233,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
   from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1d -njr 3', 'body');"
 ----
 
-The example code can be found here: link:bin/scrape.sh[bash], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
+The example code can be found here: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
 
 The response is as follows in json format:
 
