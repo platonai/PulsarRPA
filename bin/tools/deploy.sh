@@ -10,10 +10,7 @@ echo "Changing version ..."
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=$(sed 's/\(.*\)-.*/\1/' <<< $SNAPSHOT_VERSION)
 echo "$VERSION" > "$APP_HOME"/VERSION
-sed -i "s/$SNAPSHOT_VERSION/$VERSION/" "$APP_HOME/pom.xml"
-for f in */pom.xml; do
-  sed -i "s/$SNAPSHOT_VERSION/$VERSION/" "$f"
-done
+find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$VERSION/" {} \;
 
-mvn clean
-mvn deploy -Pall-modules -Pplaton-release -Pplaton-deploy
+#mvn clean
+#mvn package -Pall-modules -Pplaton-release -Pplaton-deploy
