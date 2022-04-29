@@ -46,7 +46,7 @@ open class ProxyPoolManager(
     val isActive get() = !closed.get()
 
     /**
-     * Run the task, it it's disabled, call the innovation directly
+     * Run the task, if the proxy is disabled, call the innovation directly
      * */
     @Throws(NoProxyException::class)
     open suspend fun <R> runWith(proxyEntry: ProxyEntry?, task: suspend () -> R): R {

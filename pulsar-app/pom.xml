@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.9.3-SNAPSHOT</version>
+        <version>1.10.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-app</artifactId>
@@ -23,8 +23,6 @@
     <name>Pulsar App</name>
 
     <modules>
-        <module>pulsar-app-resources</module>
-        <module>pulsar-sites-support</module>
         <module>pulsar-qa</module>
         <module>pulsar-tests</module>
         <module>pulsar-master</module>
