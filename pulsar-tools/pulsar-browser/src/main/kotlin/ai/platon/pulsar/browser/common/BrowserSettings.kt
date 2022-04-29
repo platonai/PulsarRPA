@@ -172,10 +172,24 @@ open class BrowserSettings(
                 return BrowserSettings
             }
 
-            arrayOf(BROWSER_LAUNCH_SUPERVISOR_PROCESS, BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS).forEach {
-                System.clearProperty(it)
-            }
+            listOf(
+                BROWSER_LAUNCH_SUPERVISOR_PROCESS,
+                BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
+            ).forEach { System.clearProperty(it) }
+
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
+
+            return BrowserSettings
+        }
+
+        fun headless(): Companion {
+            listOf(
+                BROWSER_LAUNCH_SUPERVISOR_PROCESS,
+                BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
+            ).forEach { System.clearProperty(it) }
+
+            System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS.name)
+
             return BrowserSettings
         }
 

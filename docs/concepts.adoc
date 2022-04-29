@@ -1,0 +1,44 @@
+= The Pulsar concepts
+Vincent Zhang <ivincent.zhang@gmail.com>
+3.0, July 29, 2022: The Pulsar concepts
+:toc:
+:icons: font
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+
+The Pulsar concepts.
+
+== The core concepts of Pulsar
+=== Web Scraping
+Web scraping, web harvesting, or web data extraction is data scraping used for extracting data from websites.
+
+=== Network As A Database
+The network, especially, the web, is the largest database in the world, but it is never easy to gain data from the web.
+
+Pulsar views the network as a database
+
+TODO:
+
+=== Browser Rendering
+
+
+
+=== Headless Browser
+=== Hyperlink
+
+
+
+=== Load Options
+=== Event Handler
+=== X-SQL
+=== Auto Web Mining
+
+== More concepts of Pulsar
+=== Url Pool
+=== Url Collector
+=== Crawl Loop
+=== Privacy Context
+=== Proxy Management
+=== Web Drivers
+=== Web Driver Stealth
+=== Page Cache
+=== Backend Storage

@@ -48,7 +48,8 @@ class FetchLoop(
     private val closed = AtomicBoolean(false)
 
     private val numPrivacyContexts = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val fetchConcurrency = numPrivacyContexts * immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val maxActiveTabs = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val fetchConcurrency = numPrivacyContexts * maxActiveTabs
 
     private val isAppActive get() = !fetchMonitor.isMissionComplete && !closed.get() && !illegalState.get()
 

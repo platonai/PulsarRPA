@@ -1,4 +1,9 @@
 = Pulsar README
+Vincent Zhang <ivincent.zhang@gmail.com>
+3.0, July 29, 2022: Pulsar README
+:toc:
+:icons: font
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
 Pulsar is an open source solution to scrape web data at scale.
 
@@ -15,14 +20,24 @@ We also have a plan to release an advanced AI to automatically extract every fie
 * Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
 * Large scale: fully distributed, designed for large scale crawling
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
-* X-SQL: extend SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
+* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 * Bot stealth: IP rotation, web driver stealth, never get banned
 * RPA: imitating human behaviors, SPA crawling, or do something else awesome
 * Big data: various backend storage support: MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
 
-== Use pulsar as a library
-The simplest way to leverage the power of pulsar is adding it to your project as a library.
+== Requirements
+
+* Memory 4G+
+* Maven 3.2+
+* The latest version of the Java 11 OpenJDK
+* java and jar on the PATH
+* Google Chrome 90+
+
+Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements is also supposed be OK.
+
+== Use Pulsar as a library
+The simplest way to leverage the power of Pulsar is to add it to your project as a library.
 
 Maven:
 [source,xml]
@@ -40,7 +55,7 @@ Gradle:
 implementation("ai.platon.pulsar:pulsar-all:1.9.3")
 ----
 
-=== Basic usage:
+=== Basic usage
 
 *Kotlin*
 
@@ -87,7 +102,7 @@ The most important load options are:
 
 All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
 
-=== Extract data from documents
+=== Extract web data
 
 Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
@@ -99,7 +114,7 @@ val document = session.loadDocument(url, "-expires 1d")
 val price = document.selectFirst('.price')
 ----
 
-=== Scrape a massive url collection
+=== Continuous crawling
 It's really simple to scrape a massive url collection or run continuous crawls in Pulsar.
 
 *Kotlin*
@@ -183,25 +198,17 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
-== Run pulsar as a REST service
-When the pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
-
-=== Requirements
-
-* Memory 4G+
-* Maven 3.2+
-* The latest version of the Java 11 OpenJDK
-* java and jar on the PATH
-* Google Chrome 90+
-
-Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements is also supposed be OK.
+== Run Pulsar as a REST service
+When Pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 
 === Build from source
-For Chinese developers, we strongly suggest you to follow link:bin/tools/maven/maven-settings.adoc[this] instruction to accelerate the building.
 ----
 git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ----
+For Chinese developers, we strongly suggest you to follow link:bin/tools/maven/maven-settings.adoc[this] instruction to accelerate the building.
+
+=== Use X-SQL to query the web
 
 Start the pulsar server if not started:
 
@@ -258,15 +265,15 @@ The response is as follows in json format:
 }
 ----
 
-== Advanced topics:
-
+== Advanced topics
+* How to scrape a million product pages from an e-commerce website a day?
 * How to scrape pages behind a login?
 * How to download resources directly within a browser context?
 * How to scrape a single page application (SPA)?
 ** Resource mode
 ** RPA mode
 * How to make sure all fields are extracted correctly?
-* How to crawl pagination links?
+* How to crawl paginated links?
 * How to crawl newly discovered links?
 * How to crawl the entire website?
 * How to simulate human behaviors?
@@ -275,6 +282,7 @@ The response is as follows in json format:
 * How to drop a scheduled task?
 * How to know the status of a task?
 * How to know what is happening in the system?
+* How to automatically generate the css selectors for fields to scrape?
 * How to extract content from websites using machine learning automatically with commercial accuracy?
 * How to scrape amazon.com to match industrial needs?
 
