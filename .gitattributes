@@ -1,0 +1,4 @@
+*.html linguist-detectable=false
+*.htm linguist-detectable=false
+*.xml linguist-detectable=false
+docs/* linguist-detectable=false

@@ -9,7 +9,7 @@ Pulsar is an open source solution to scrape web data at scale.
 
 Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, pulsar is an open source solution to address such issues.
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, and we can query the web using SQL directly.
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
@@ -102,7 +102,7 @@ The most important load options are:
 
 All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
 
-=== Extract web data
+=== Extracting web data
 
 Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
@@ -122,13 +122,14 @@ It's really simple to scrape a massive url collection or run continuous crawls i
 [source,kotlin]
 ----
 fun main() {
+    val context = PulsarContexts.create()
+
     val parseHandler = { _: WebPage, document: Document ->
         // do something wonderful with the document
         println(document.title() + "\t|\t" + document.baseUri())
     }
     val urls = LinkExtractors.fromResource("seeds.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
-    val context = PulsarContexts.create()
     context.submitAll(urls)
     // feel free to submit millions of urls here
     context.submitAll(urls)
@@ -149,11 +150,12 @@ public class MassiveCrawler {
     }
 
     public static void main(String[] args) {
+        PulsarContext context = PulsarContexts.create();
+
         List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
                 .stream()
                 .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
                 .collect(Collectors.toList());
-        PulsarContext context = PulsarContexts.create();
         context.submitAll(urls);
         // feel free to submit millions of urls here
         context.submitAll(urls);
@@ -301,7 +303,7 @@ The response is as follows in json format:
 ** Load Options
 ** Event Handler
 ** X-SQL
-** Auto Web Mining
+** Auto Extract
 * More concepts of Pulsar
 ** Url Pool
 ** Url Collector

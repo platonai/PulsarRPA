@@ -18,11 +18,35 @@ Pulsar treats the network as a database. For each webpage, Pulsar will first che
 
 Pulsar has SQL support, so we can turn the Web into tables and charts using simple SQLs, and also we can query the Web using SQL directly.
 
+=== Auto Extract
+
+Web data extraction has evolved over the last three decades from using statistical methods to more advanced
+machine learning methods. Machine learning techniques are much preferred in today’s times due to demand for time-to-market, developer
+productivity, and cost concerns. Using our leading edge technology, the entire end-to-end web data extraction life cycle is automated without any manual intervention.
+
+We provided a demo project to show how to use our world leading unsupervised machine learning algorithm to extract almost every field in webpages automatically: https://github.com/platonai/exotic[Exotic].
+
+You can also use https://github.com/platonai/exotic[Exotic] as an intelligent CSS selector generator, the generated CSS selectors can be used in any scrape systems to extract data in traditional manners.
+
 === Browser Rendering
 
 Although Pulsar supports multiple web scraping methods, browser rendering is the primary way Pulsar scraps webpages.
 
 Browser rendering means every webpage is open by a real browser to make sure all fields on the webpage are present correctly.
+
+=== Pulsar Session
+PulsarSession provides a set of simple, powerful and flexible APIs to do web scraping tasks.
+[source,kotlin]
+----
+val session = PulsarContexts.createSession()
+val url = "..."
+val page = session.load(url, "-expires 1d")
+val document = session.parse(page)
+val document2 = session.loadDocument(url, "-expires 1d")
+val pages = session.loadOutPages(url, "-outLink a[href~=item]")
+val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
+// ...
+----
 
 === Urls
 A Uniform Resource Locator (URL), colloquially termed a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
@@ -35,9 +59,9 @@ There are several forms of urls in Pulsar:
 * A String
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[UrlAware]
 
-NormUrl stand for `normalized url`, it means the url is the final form to pass to the fetch component, and is usually passed to chrome.
+NormUrl stands for `normalized url`, it means the url is the final form to be passed to the fetch component, and is usually passed to a real browser to open it at last.
 
-If not specified, an url in string format means a `configured url`, for example:
+If not specified, an url in string format actually means a `configured url`, or `an url with arguments`, for example:
 [source,kotlin]
 ----
 val url = "https://www.amazon.com/dp/B10000 -taskName amazon -expires 1d -ignoreFailure"
@@ -51,15 +75,15 @@ val args = "-taskName amazon -expires 1d -ignoreFailure"
 session.load(url, args)
 ----
 
-A UrlAware provides much more complex controls to the scraping task. UrlAware is the interface for all Hyperlinks, see <<Hyperlink,Hyperlink>> section for details.
+A UrlAware provides much more complex controls to do scrape tasks. UrlAware is the interface for all Hyperlinks, see <<Hyperlinks,Hyperlinks>> section for details.
 
-=== Hyperlink
+=== Hyperlinks
 
 A hyperlink, or simply a link, is a reference to data that the user can follow by clicking or tapping.
 
 A Hyperlink in Pulsar is a normal hyperlink with additional information to tell the system how to do the scraping.
 
-A ParsableHyperlink is a convenient abstraction to do fetch-and-parse tasks in massive crawling jobs:
+A ParsableHyperlink is a convenient abstraction to do fetch-and-parse tasks in continuous crawl jobs:
 
 [source,kotlin]
 ----
@@ -71,7 +95,7 @@ val urls = LinkExtractors.fromResource("seeds.txt")
 PulsarContexts.create().submitAll(urls).await()
 ----
 
-A CompletableHyperlink helps us to do java style asynchronous computation.
+A CompletableHyperlink helps us to do java style asynchronous computation: submit a hyperlink and wait for the task to complete.
 
 A ListenableHyperlink help us to register event handlers for the scraping:
 [source,kotlin]
@@ -90,7 +114,7 @@ fun executeQuery(request: ScrapeRequest): ScrapeResponse {
     // the hyperlink is a CompletableListenableHyperlink
     val hyperlink = createScrapeHyperlink(request)
     session.submit(hyperlink)
-    // wait for the scraping complete or timeout
+    // wait for the task to complete or timeout
     return hyperlink.get(3, TimeUnit.MINUTES)
 }
 ----
@@ -110,16 +134,33 @@ The most important load options are:
 All load options are parsed to a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
 
 === Event Handler
+
+See link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[EventHandlerUsage] for all available event handlers.
+
 === X-SQL
-=== Auto Web Mining
+
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
 == More concepts of Pulsar
 === Url Pool
-=== Url Collector
+When running continuous crawling, urls are pushed into a link:{UrlPool-quickref}[UrlPool]. An link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] contains various link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt[UrlCache]s to satisfy different task requirement, for example, priority, delaying, dead time, and so on.
+
 === Crawl Loop
+When running continuous crawling, a crawl loop is started to keep fetching urls from the UrlPool, and load/fetch them in a PulsarSession.
+
 === Privacy Context
+One of the biggest difficulties in data scraping is the bot stealth, the website should have no idea whether the visit is from a human being or a bot. Once the visit is suspected, we call it's a privacy context leak and the privacy context has to be changed.
+
 === Proxy Management
+Smart rotating proxies.
+
 === Web Drivers
+A web driver is a program to control the browser.
+
 === Web Driver Stealth
-=== Page Cache
+TODO:
+
 === Backend Storage
+Various backend storage can be used by Pulsar: MongoDB, HBase, Gora, etc.
+
+:UrlPool-quickref: ../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt

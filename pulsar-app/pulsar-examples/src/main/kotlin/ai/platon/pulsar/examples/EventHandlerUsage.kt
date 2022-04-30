@@ -96,7 +96,7 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
 }
 
 /**
- * Demonstrate how to use event handlers.
+ * Demonstrates how to use event handlers.
  * */
 fun main() {
     val portalUrl = "https://list.jd.com/list.html?cat=652,12345,12349"
