@@ -36,6 +36,11 @@ We also have a plan to release an advanced AI to automatically extract every fie
 
 Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements is also supposed be OK.
 
+== Core concepts
+The core Pulsar concepts includes: Web Scraping, Network As A Database, Auto Extract, Browser Rendering, Pulsar Session, Urls, Hyperlinks, Load Options, Event Handler and X-SQL.
+
+See link:docs/concepts.adoc[The Pulsar concepts] for details.
+
 == Use Pulsar as a library
 The simplest way to leverage the power of Pulsar is to add it to your project as a library.
 
@@ -294,26 +299,6 @@ The response is as follows in json format:
 * Pulsar vs scrapy+splash
 
 == Technical details
-* The core concepts of Pulsar
-** Web Scraping
-** Network As A Database
-** Browser Rendering
-** Headless Browser
-** Hyperlink
-** Load Options
-** Event Handler
-** X-SQL
-** Auto Extract
-* More concepts of Pulsar
-** Url Pool
-** Url Collector
-** Crawl Loop
-** Privacy Context
-** Proxy Management
-** Web Drivers
-** Web Driver Stealth
-** Page Cache
-** Backend Storage
 * How to rotate my ip addresses?
 * How to hide my bot from being detected?
 * How & why to simulate human behaviors?
