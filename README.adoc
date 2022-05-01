@@ -7,7 +7,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 
 Pulsar is an open source solution to scrape web data at scale.
 
-Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, pulsar is an open source solution to address such issues.
+Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, Pulsar is an open source solution to address such issues.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
@@ -34,10 +34,10 @@ We also have a plan to release an advanced AI to automatically extract every fie
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other OS matches the requirements is also supposed be OK.
+Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Core concepts
-The core Pulsar concepts includes: Web Scraping, Network As A Database, Auto Extract, Browser Rendering, Pulsar Session, Urls, Hyperlinks, Load Options, Event Handler and X-SQL.
+The core Pulsar concepts include the following: Web Scraping, Network As A Database, Auto Extract, Browser Rendering, Pulsar Session, Urls, Hyperlinks, Load Options, Event Handler and X-SQL.
 
 See link:docs/concepts.adoc[The Pulsar concepts] for details.
 
@@ -109,7 +109,7 @@ All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/
 
 === Extracting web data
 
-Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup implements the https://whatwg.org/html[WHATWG HTML5] specification, and parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
+Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
 *Kotlin*
 
