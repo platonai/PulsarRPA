@@ -382,6 +382,27 @@ __pulsar_utils__.click = function(selector) {
 }
 
 /**
+ * Select the first element and click it
+ *
+ * @param  {number} n The n-th anchor
+ * @return
+ */
+__pulsar_utils__.clickNthAnchor = function(n) {
+    let c = 0;
+    let visitor = function () {};
+    visitor.head = function (node, depth) {
+        if (node.__pulsar_isAnchor()) {
+            ++c;
+            if (c === n) {
+                node.click()
+            }
+        }
+    };
+
+    new __pulsar_NodeTraversor(visitor).traverse(document.body);
+}
+
+/**
  * Select the first element and extract the text
  *
  * @param  {String} selector

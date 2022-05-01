@@ -379,8 +379,8 @@ open class BrowserEmulator(
             return
         }
 
-        val clickN = (0.1 * anchorCount + Random.nextInt((anchorCount * 0.9).toInt())).toInt()
-        driver.click("body div a:nth-child($clickN)")
+        val clickN = (0.2 * anchorCount + Random.nextInt((anchorCount * 0.8).toInt())).toInt()
+        driver.evaluateSilently("__pulsar_utils__.clickNthAnchor($clickN)")
     }
 
     private suspend fun evaluate(interactTask: InteractTask,
