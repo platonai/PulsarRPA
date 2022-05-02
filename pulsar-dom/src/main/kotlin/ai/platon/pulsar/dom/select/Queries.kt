@@ -242,6 +242,7 @@ inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, 
     return destination
 }
 
+@JvmOverloads
 fun Element.selectHyperlinks(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
     val cssQuery = appendSelectorIfMissing(restrictCss, "a")
 
