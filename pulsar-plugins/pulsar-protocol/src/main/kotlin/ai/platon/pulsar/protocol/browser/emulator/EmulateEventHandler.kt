@@ -251,13 +251,21 @@ open class EmulateEventHandler(
         exportIfNecessary(task.pageSource, task.pageDatum.protocolStatus, task.page)
     }
 
+    /**
+     * Export the page if one of the following condition triggered:
+     * 1. the first 200 pages
+     * 2. LoadOptions.test > 0
+     * 3. logger level is debug or lower
+     * 4. logger level is info and protocol status is failed
+     * */
     private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
             return
         }
 
+        val id = page.id
         val test = page.options.test
-        val shouldExport = logger.isDebugEnabled || test > 0 || (logger.isInfoEnabled && !status.isSuccess)
+        val shouldExport = id < 200 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             val path = AppFiles.export(status, pageSource, page)
 

@@ -5,13 +5,30 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-Pulsar is an open source solution to scrape web data at scale.
+Pulsar is the ultimate open source solution to scrape web data at scale.
 
 Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, Pulsar is an open source solution to address such issues.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
+
+Most scraping projects can start with the following code snippet:
+
+*Kotlin*
+[source,kotlin]
+----
+fun main() {
+    val context = PulsarContexts.create()
+
+    val parseHandler = { _: WebPage, document: Document ->
+        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
+    }
+    val urls = LinkExtractors.fromResource("seeds10.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls).await()
+}
+----
 
 == Features
 
@@ -22,7 +39,7 @@ We also have a plan to release an advanced AI to automatically extract every fie
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
 * X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 * Bot stealth: IP rotation, web driver stealth, never get banned
-* RPA: imitating human behaviors, SPA crawling, or do something else awesome
+* RPA: simulating human behaviors, SPA crawling, or do something else awesome
 * Big data: various backend storage support: MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
 
@@ -37,9 +54,20 @@ We also have a plan to release an advanced AI to automatically extract every fie
 Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Core concepts
-The core Pulsar concepts include the following: Web Scraping, Network As A Database, Auto Extract, Browser Rendering, Pulsar Session, Urls, Hyperlinks, Load Options, Event Handler and X-SQL.
+The core Pulsar concepts include the following:
 
-See link:docs/concepts.adoc[The Pulsar concepts] for details.
+* Web Scraping
+* Network As A Database
+* Auto Extract
+* Browser Rendering
+* Pulsar Session
+* Urls
+* Hyperlinks
+* Load Options
+* Event Handler
+* X-SQL
+
+Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
 
 == Use Pulsar as a library
 The simplest way to leverage the power of Pulsar is to add it to your project as a library.
@@ -96,16 +124,14 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 
 Note that most of our scraping methods accept a parameter called load arguments, or load options, to control how to load/fetch a webpage.
 
-The most important load options are:
-
     -expires     // The expiry time of a page
     -itemExpires // The expiry time of item pages in some batch scraping methods
     -outLink     // The selector for out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
     -parse       // Triger the parse phrase
-    -isResource  // Fetch the url as a resource without browser rendering
+    -resource  // Fetch the url as a resource without browser rendering
 
-All load options are parsed to a link:pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
+Check link:docs/concepts.adoc#_load_options[Load Options] for details.
 
 === Extracting web data
 
@@ -116,10 +142,10 @@ Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup
 [source,kotlin]
 ----
 val document = session.loadDocument(url, "-expires 1d")
-val price = document.selectFirst('.price')
+val price = document.selectFirst('.price').text()
 ----
 
-=== Continuous crawling
+=== Continuous crawls
 It's really simple to scrape a massive url collection or run continuous crawls in Pulsar.
 
 *Kotlin*
@@ -147,7 +173,7 @@ fun main() {
 
 [source,java]
 ----
-public class MassiveCrawler {
+public class ContinuousCrawler {
 
     private static void onParse(WebPage page, Document document) {
         // do something wonderful with the document
@@ -159,7 +185,7 @@ public class MassiveCrawler {
 
         List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
                 .stream()
-                .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
+                .map(seed -> new ParsableHyperlink(seed, ContinuousCrawler::onParse))
                 .collect(Collectors.toList());
         context.submitAll(urls);
         // feel free to submit millions of urls here
@@ -170,7 +196,7 @@ public class MassiveCrawler {
 }
 ----
 
-The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/MassiveCrawler.java[java].
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 === Use X-SQL to query the web
 
@@ -288,7 +314,7 @@ The response is as follows in json format:
 * How to start a task at a fixed time point?
 * How to drop a scheduled task?
 * How to know the status of a task?
-* How to know what is happening in the system?
+* How to know what's going on in the system?
 * How to automatically generate the css selectors for fields to scrape?
 * How to extract content from websites using machine learning automatically with commercial accuracy?
 * How to scrape amazon.com to match industrial needs?

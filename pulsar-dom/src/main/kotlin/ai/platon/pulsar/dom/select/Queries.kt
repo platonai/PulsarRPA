@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.dom.nodes.TraverseState
@@ -38,12 +39,11 @@ import org.jsoup.select.NodeTraversor
  * Convert a box query to a normal css query
  */
 fun convertCssQuery(cssQuery: String): String {
-    val query = cssQuery
-    val matcher = BOX_SYNTAX_PATTERN.toPattern().matcher(query)
+    val matcher = BOX_SYNTAX_PATTERN.toPattern().matcher(cssQuery)
     if (matcher.find()) {
-        return query.split(",")
-                .map { it.split('x', 'X') }
-                .joinToString { "*:in-box(${it[0]}, ${it[1]})" }
+        return cssQuery.split(",")
+            .map { it.split('x', 'X') }
+            .joinToString { "*:in-box(${it[0]}, ${it[1]})" }
     }
 
     // Bad syntax, no element should find
@@ -225,6 +225,14 @@ fun Node.firstTextOrNull(cssQuery: String): String? {
     return selectFirstOrNull(cssQuery)?.text()
 }
 
+fun Node.firstAttribute(cssQuery: String, attrName: String, defaultValue: String = ""): String {
+    return selectFirstOrNull(cssQuery)?.attr(attrName)?.takeIf { it.isNotEmpty() }?:defaultValue
+}
+
+fun Node.firstAttributeOrNull(cssQuery: String, attrName: String): String? {
+    return selectFirstOrNull(cssQuery)?.attr(attrName)
+}
+
 /**
  * TODO: experimental
  * TODO: may not as efficient as Node.collectIfTo since very call of e.nextElementSibling() generate a new element list
@@ -234,9 +242,40 @@ inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, 
     return destination
 }
 
-/**
- * TODO: use css query parser
- * */
+fun Element.selectHyperlinks(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+
+    return select(cssQuery, offset, limit).mapNotNull {
+        it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
+            ?.let { Hyperlink(it.absUrl("href"), it.cleanText, referer = baseUri()) }
+    }
+}
+
+fun Element.selectAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
+    return getAnchors(restrictCss, offset, limit)
+}
+
+fun Element.selectImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+    return getImages(restrictCss, offset, limit)
+}
+
+@Deprecated("Use selectAnchors instead")
+fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+    return select(cssQuery, offset, limit).mapNotNull {
+        it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
+                ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
+    }
+}
+
+@Deprecated("Use selectImages instead")
+fun Element.getImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "img")
+    return select(cssQuery, offset, limit) {
+        it.absUrl("src").takeIf { UrlUtils.isValidUrl(it) }
+    }.filterNotNull()
+}
+
 fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
     val ap = appendix.trim()
@@ -248,19 +287,4 @@ fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     }
 
     return q
-}
-
-fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<GeoAnchor> {
-    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-    return select(cssQuery, offset, limit).mapNotNull {
-        it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
-                ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
-    }
-}
-
-fun Element.getImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<String> {
-    val cssQuery = appendSelectorIfMissing(restrictCss, "img")
-    return select(cssQuery, offset, limit) {
-        it.absUrl("src").takeIf { UrlUtils.isValidUrl(it) }
-    }.filterNotNull()
 }

@@ -41,7 +41,10 @@ fun AppFiles.export(
     val ident = sb.toString()
     val path = export(page, prettyHtml.toByteArray(), ident, suffix)
 
+    // TODO: path is a temporary field, should not be persisted to page.metadata
     page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
+
+    page.setVar(Name.ORIGINAL_EXPORT_PATH.name, path)
 
     return path
 }
