@@ -265,7 +265,7 @@ open class EmulateEventHandler(
 
         val id = page.id
         val test = page.options.test
-        val shouldExport = id < 200 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
+        val shouldExport = id < 200 || id % 100 == 0 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             val path = AppFiles.export(status, pageSource, page)
 

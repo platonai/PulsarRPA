@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
-import ai.platon.pulsar.common.message.LoadedPageFormatter
+import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.sleepSeconds
@@ -386,7 +386,7 @@ class LoadComponent(
     private fun report(page: WebPage) {
         if (logger.isInfoEnabled) {
             val verbose = logger.isDebugEnabled
-            val report = LoadedPageFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
+            val report = LoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
             taskLogger.info(report)
         }
     }

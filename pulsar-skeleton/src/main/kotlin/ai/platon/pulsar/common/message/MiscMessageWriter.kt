@@ -67,7 +67,7 @@ class MiscMessageWriter(
         val metricsPageUrl = "$urlPrefix/$reportGroup"
         val metricsPage = getOrCreateMetricsPage(metricsPageUrl)
         metricsPage.addLiveLink(HyperlinkPersistable(page.url))
-        metricsPage.setContent(metricsPage.contentAsString + PageFormatter(page) + "\n")
+        metricsPage.setContent(metricsPage.contentAsString + FetchStatusFormatter(page) + "\n")
         metricsPageUrls.add(metricsPageUrl)
         metricsPages[metricsPageUrl] = metricsPage
         if (++reportCount > 40) {
@@ -192,7 +192,7 @@ class MiscMessageWriter(
     }
 
     fun debugFetchLaterSeeds(page: WebPage) {
-        val pageReport = PageFormatter(page)
+        val pageReport = FetchStatusFormatter(page)
         write(pageReport.toString(), "seeds-fetch-later.txt")
     }
 
@@ -280,7 +280,7 @@ class MiscMessageWriter(
     }
 
     fun reportFetchSchedule(page: WebPage, verbose: Boolean) {
-        var report = PageFormatter(page).toString()
+        var report = FetchStatusFormatter(page).toString()
         if (verbose) {
             report = page.referrer + " -> " + page.url + "\n" + report
             report += "\n" + page + "\n\n"

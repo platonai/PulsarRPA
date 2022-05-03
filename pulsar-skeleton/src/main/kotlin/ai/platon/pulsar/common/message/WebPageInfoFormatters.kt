@@ -16,7 +16,7 @@ import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
 
-class PageFormatter(val page: WebPage) {
+class FetchStatusFormatter(val page: WebPage) {
     companion object {
         private val df = DecimalFormat("0.0")
     }
@@ -53,7 +53,7 @@ class PageFormatter(val page: WebPage) {
     }
 }
 
-class LoadedPageFormatter(
+class LoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
         private val withOptions: Boolean = false,
@@ -83,13 +83,26 @@ class LoadedPageFormatter(
         }
 
     private val fetchReason get() = buildFetchReason()
-
-    private val prefix0 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "New "
-        page.isFetched -> "Updated"
-        page.isCached -> "Cached"
-        page.isLoaded -> "Loaded"
-        else -> "Unknown"
+    private val prefix01 get() = when {
+        page.isFetched && page.fetchCount == 1 -> "⚡ "
+        page.isFetched -> "⬆ "
+        page.isCached -> "✿ "
+        page.isLoaded -> "✅ "
+        else -> "\uD83D\uDC94 " // Broken Heart
+    }
+    private val prefix02 get() = when {
+        page.isFetched && page.fetchCount == 1 -> "New ⚡ "
+        page.isFetched -> "Updated ⬆ "
+        page.isCached -> "Cached ✿ "
+        page.isLoaded -> "Loaded ✅ "
+        else -> "Unknown \uD83D\uDC94 "
+    }
+    private val prefix0: String get() {
+        return when {
+            page.id < verboseCount && page.id % 10 == 0 -> prefix02
+            page.id > verboseCount && page.id % verboseCount == 0 -> prefix02
+            else -> prefix01
+        }
     }
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
@@ -185,7 +198,7 @@ class LoadedPagesFormatter(
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
         pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(LoadedPageFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
+            sb.append(i.inc()).append(".\t").append(LoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
         }
         return sb.toString()
     }
