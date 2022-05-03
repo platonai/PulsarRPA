@@ -84,18 +84,18 @@ class LoadStatusFormatter(
 
     private val fetchReason get() = buildFetchReason()
     private val prefix01 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "⚡ "
-        page.isFetched -> "⬆ "
-        page.isCached -> "✿ "
-        page.isLoaded -> "✅ "
+        page.isFetched && page.fetchCount == 1 -> "⚡"
+        page.isFetched -> "⬆"
+        page.isCached -> "✿"
+        page.isLoaded -> "✅"
         else -> "\uD83D\uDC94 " // Broken Heart
     }
     private val prefix02 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "New ⚡ "
-        page.isFetched -> "Updated ⬆ "
-        page.isCached -> "Cached ✿ "
-        page.isLoaded -> "Loaded ✅ "
-        else -> "Unknown \uD83D\uDC94 "
+        page.isFetched && page.fetchCount == 1 -> "New ⚡"
+        page.isFetched -> "Updated ⬆"
+        page.isCached -> "Cached ✿"
+        page.isLoaded -> "Loaded ✅"
+        else -> "Unknown \uD83D\uDC94"
     }
     private val prefix0: String get() {
         return when {
@@ -188,7 +188,7 @@ class LoadStatusFormatter(
     }
 }
 
-class LoadedPagesFormatter(
+class LoadedPagesStatusFormatter(
         val pages: Collection<WebPage>,
         val startTime: Instant,
         val withSymbolicLink: Boolean = false
