@@ -14,6 +14,42 @@ import java.math.BigDecimal
 
 internal abstract class PowerEvaluator : Evaluator() {
 
+    /**
+     * Evaluator for element id
+     */
+    class PowerId(private val id: String) : Evaluator() {
+        override fun matches(root: Element, element: Element): Boolean {
+            var search = id
+            if (id.contains("--x--")) {
+                search = search.replace("--x--", "+")
+            }
+
+            return search == element.id()
+        }
+
+        override fun toString(): String {
+            return String.format("#%s", id)
+        }
+    }
+
+    /**
+     * Evaluator for element class
+     */
+    class PowerClass(private val className: String) : Evaluator() {
+        override fun matches(root: Element, element: Element): Boolean {
+            var search = className
+            if (className.contains("--x--")) {
+                search = search.replace("--x--", "+")
+            }
+
+            return element.hasClass(search)
+        }
+
+        override fun toString(): String {
+            return String.format(".%s", className)
+        }
+    }
+
     class ByBox(
             private val ops: Array<String>,
             private val restriction: IntArray,

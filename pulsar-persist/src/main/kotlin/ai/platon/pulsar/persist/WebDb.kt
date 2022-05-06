@@ -61,7 +61,6 @@ class WebDb(
      * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
-     *
      */
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)

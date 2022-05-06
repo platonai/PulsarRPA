@@ -169,13 +169,13 @@ class PowerQueryParser(private val query: String) {
     private fun byId() {
         val id = tq.consumeCssIdentifier()
         Validate.notEmpty(id)
-        evals.add(Id(id))
+        evals.add(PowerEvaluator.PowerId(id))
     }
 
     private fun byClass() {
         val className = tq.consumeCssIdentifier()
         Validate.notEmpty(className)
-        evals.add(Class(className.trim()))
+        evals.add(PowerEvaluator.PowerClass(className.trim()))
     }
 
     /**
@@ -403,6 +403,7 @@ class PowerQueryParser(private val query: String) {
     companion object {
         private val combinators = arrayOf(",", ">", "+", "~", " ")
         private val AttributeEvals = arrayOf("=", "!=", "^=", "$=", "*=", "~=")
+
         /**
          * Parse a CSS query into an Evaluator.
          * @param query CSS query

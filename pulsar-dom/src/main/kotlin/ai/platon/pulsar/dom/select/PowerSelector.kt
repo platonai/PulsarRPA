@@ -2,11 +2,11 @@ package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.simplify
+import ai.platon.pulsar.common.urls.UrlUtils
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
-import java.net.URL
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -177,9 +177,9 @@ object PowerSelector {
 
     private fun parseOrNullCached(cssQuery: String, baseUri: String): Evaluator? {
         // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-        val cssQuery0 = cssQuery.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
-        val key = "$baseUri $cssQuery0"
-        return cache.computeIfAbsent(key) { parseOrNull(cssQuery0, baseUri) }
+        val query = normalizeQuery(cssQuery) ?: return null
+        val key = "$baseUri $query"
+        return cache.computeIfAbsent(key) { parseOrNull(query, baseUri) }
     }
 
     private fun parseOrNull(cssQuery: String, baseUri: String): Evaluator? {
@@ -188,7 +188,7 @@ object PowerSelector {
         } catch (e: PowerSelectorParseException) {
             var message = e.simplify()
             if (!message.isNullOrBlank()) {
-                val host = URL(baseUri).host
+                val host = UrlUtils.getURLOrNull(baseUri)?.host
                 val key = "$host $cssQuery"
                 message = "$key\n>>>$message<<<"
                 val count1 = totalParseExceptions.computeIfAbsent(cssQuery) { AtomicInteger() }.incrementAndGet()
@@ -219,6 +219,12 @@ object PowerSelector {
         }
 
         return null
+    }
+
+    fun normalizeQuery(query: String): String? {
+        var query0 = query.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
+        query0 = query0.replace("+", "--x--")
+        return query0
     }
 
     private fun checkArguments(cssQuery: String, offset: Int = 1, limit: Int) {

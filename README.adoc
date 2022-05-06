@@ -36,7 +36,7 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 
 * Web spider: browser rendering, ajax data crawling
 * Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
-* Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
+* Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
 * Large scale: fully distributed, designed for large scale crawling
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
 * X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
