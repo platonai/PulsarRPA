@@ -13,6 +13,7 @@ enum class FlowState {
 
 // it seems that java reflection does not support typealias
 // typealias CheckState = OpenResourceStatus
+
 /**
  * Both 0 and 200 are good states
  * */

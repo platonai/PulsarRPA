@@ -54,7 +54,8 @@ class FetchMonitor(
     private val coreMetrics = fetchComponent.coreMetrics
 
     private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val fetchConcurrency = numPrivacyContexts * conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val maxActiveTabs = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val fetchConcurrency = numPrivacyContexts * maxActiveTabs
 
     /**
      * Timing

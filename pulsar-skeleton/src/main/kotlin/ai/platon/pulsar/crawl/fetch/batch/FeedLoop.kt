@@ -34,8 +34,8 @@ class FeedLoop(
     private val checkInterval = Duration.ofSeconds(2)
 
     private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val maxActiveTags = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
-    private val fetchConcurrency = numPrivacyContexts * maxActiveTags
+    private val maxActiveTabs = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val fetchConcurrency = numPrivacyContexts * maxActiveTabs
 
     private val fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofDays(2))
     private var jobDeadline = Instant.now().plus(fetchJobTimeout)

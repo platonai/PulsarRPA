@@ -16,7 +16,7 @@ import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
 
-class PageFormatter(val page: WebPage) {
+class FetchStatusFormatter(val page: WebPage) {
     companion object {
         private val df = DecimalFormat("0.0")
     }
@@ -53,7 +53,7 @@ class PageFormatter(val page: WebPage) {
     }
 }
 
-class LoadedPageFormatter(
+class LoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
         private val withOptions: Boolean = false,
@@ -61,6 +61,7 @@ class LoadedPageFormatter(
         private val withReferer: Boolean = false,
         private val withSymbolicLink: Boolean = false
 ) {
+    private val verboseCount = 200
     private val url get() = page.url
     private val href get() = page.href
     private val location get() = page.location
@@ -72,26 +73,50 @@ class LoadedPageFormatter(
     private val jsSate: String
         get() {
             val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
+            val divisor = if (page.id < verboseCount) 10 else verboseCount
+            val prefix = if (page.id % divisor == 0) {
+                "i/a/nm/st/h:"
+            } else ""
             return if (ni + na + nnm + nst + h != 0) {
-                String.format("i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
+                String.format("$prefix%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
             } else ""
         }
 
     private val fetchReason get() = buildFetchReason()
-
-    private val prefix0 get() = when {
-        page.isFetched -> "Fetched"
-        page.isCached -> "Cached"
-        page.isLoaded -> "Loaded"
-        else -> "Unknown"
+    private val prefix01 get() = when {
+        page.isFetched && page.fetchCount == 1 -> "⚡"
+        page.isFetched -> "⬆"
+        page.isCached -> "✿"
+        page.isLoaded -> "✅"
+        else -> "\uD83D\uDC94 " // Broken Heart
+    }
+    private val prefix02 get() = when {
+        page.isFetched && page.fetchCount == 1 -> "New ⚡"
+        page.isFetched -> "Updated ⬆"
+        page.isCached -> "Cached ✿"
+        page.isLoaded -> "Loaded ✅"
+        else -> "Unknown \uD83D\uDC94"
+    }
+    private val prefix0: String get() {
+        return when {
+            page.id < verboseCount && page.id % 10 == 0 -> prefix02
+            page.id > verboseCount && page.id % verboseCount == 0 -> prefix02
+            else -> prefix01
+        }
     }
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
     private val category get() = page.pageCategory.symbol()
     private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
-    private val prevFetchTimeDuration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now()).readable()
-    private val prevFetchTimeReport get() = " last fetched $prevFetchTimeDuration ago,"
+    private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
+    private val prevFetchTimeReport: String
+        get() {
+            if (prevFetchTimeDuration.toDays() > 20 * 360) {
+                return ""
+            }
+            return " last fetched ${prevFetchTimeDuration.readable()} ago,"
+        }
     private val fieldCount get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
@@ -158,11 +183,12 @@ class LoadedPageFormatter(
         var readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
         if (withNormUrl) readableLocation = "$readableLocation <- $url"
         if (withReferer) readableLocation = "$readableLocation <- ${page.referrer}"
-        return if (withSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
+        val doWithSymbolicLink = page.id < verboseCount || withSymbolicLink
+        return if (doWithSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
     }
 }
 
-class LoadedPagesFormatter(
+class LoadedPagesStatusFormatter(
         val pages: Collection<WebPage>,
         val startTime: Instant,
         val withSymbolicLink: Boolean = false
@@ -172,7 +198,7 @@ class LoadedPagesFormatter(
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
         pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(LoadedPageFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
+            sb.append(i.inc()).append(".\t").append(LoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
         }
         return sb.toString()
     }

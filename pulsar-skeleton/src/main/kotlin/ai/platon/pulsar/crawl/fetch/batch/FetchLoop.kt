@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.LoadedPageFormatter
+import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.crawl.component.FetchComponent
@@ -48,7 +48,8 @@ class FetchLoop(
     private val closed = AtomicBoolean(false)
 
     private val numPrivacyContexts = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val fetchConcurrency = numPrivacyContexts * immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val maxActiveTabs = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    private val fetchConcurrency = numPrivacyContexts * maxActiveTabs
 
     private val isAppActive get() = !fetchMonitor.isMissionComplete && !closed.get() && !illegalState.get()
 
@@ -159,7 +160,7 @@ class FetchLoop(
             }
 
             withContext(Dispatchers.IO) {
-                log.takeIf { it.isInfoEnabled }?.info(LoadedPageFormatter(page).toString())
+                log.takeIf { it.isInfoEnabled }?.info(LoadStatusFormatter(page).toString())
                 if (!isCanceled) {
                     write(page.key, page)
                     enumCounters.inc(CommonCounter.rPersist)

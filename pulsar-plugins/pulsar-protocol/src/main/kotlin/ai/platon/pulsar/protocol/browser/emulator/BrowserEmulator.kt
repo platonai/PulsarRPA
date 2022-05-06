@@ -8,21 +8,20 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
+import ai.platon.pulsar.protocol.browser.driver.WebDriverAdapter
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdEmulator
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
@@ -148,7 +147,7 @@ open class BrowserEmulator(
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
 
-            emulateAfterFetch(task, driverSettings, driver)
+            interactAfterFetch(task, driverSettings, driver)
 
             driver.stop()
         } catch (e: NavigateTaskCancellationException) {
@@ -364,21 +363,24 @@ open class BrowserEmulator(
         }
     }
 
-    protected suspend fun emulateAfterFetch(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
-        emulateJd(task, driverSettings, driver)
-    }
-
-    protected suspend fun emulateJd(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
-        val isJd = task.url.contains("item.jd.com")
-        if (!isJd) return
-
-        val rand = Random.nextInt(3)
-        if (rand == 0) {
-            val interactTask = InteractTask(task, driverSettings, driver)
-            val expressions = JdEmulator().expressions
-            val verbose = logger.isDebugEnabled
-            evaluate(interactTask, expressions, Duration.ofMillis(500), verbose)
+    protected suspend fun interactAfterFetch(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
+        val driver0 = driver as WebDriverAdapter
+        // must perform the interaction for the 1st and 2nd page
+        // for the other pages, there is a change to do the interaction
+        if (driver0.pageViews.get() > 1) {
+            val rand = Random.nextInt(10)
+            if (rand != 0) {
+                return
+            }
         }
+
+        val anchorCount = task.page.activeDomStats.values.firstOrNull()?.na?: return
+        if (anchorCount < 10) {
+            return
+        }
+
+        val clickN = (0.2 * anchorCount + Random.nextInt((anchorCount * 0.8).toInt())).toInt()
+        driver.evaluateSilently("__pulsar_utils__.clickNthAnchor($clickN)")
     }
 
     private suspend fun evaluate(interactTask: InteractTask,

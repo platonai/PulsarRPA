@@ -102,7 +102,7 @@ open class ParsableHyperlink(
      * The url of this hyperlink
      * */
     url: String,
-    val onParse: (WebPage, Document) -> Unit
+    val onParse: (WebPage, Document) -> Any?
 ): Hyperlink(url, args = "-parse"), ListenableUrl {
 
     /**
@@ -113,7 +113,10 @@ open class ParsableHyperlink(
 
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler().also {
         it.loadEventHandler.onAfterHtmlParse.addLast(object: HtmlDocumentHandler() {
-            override fun invoke(page: WebPage, document: FeaturedDocument) = onParse(page, document.document)
+            override fun invoke(page: WebPage, document: FeaturedDocument) {
+                onParse(page, document.document)
+                Unit
+            }
         })
     }
 }

@@ -5,23 +5,28 @@ import ai.platon.pulsar.common.urls.Hyperlink;
 import ai.platon.pulsar.context.PulsarContext;
 import ai.platon.pulsar.context.PulsarContexts;
 import ai.platon.pulsar.crawl.common.url.ParsableHyperlink;
+import ai.platon.pulsar.dom.select.QueriesKt;
 import ai.platon.pulsar.persist.WebPage;
 import org.jsoup.nodes.Document;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MassiveCrawler {
+public class ContinuousCrawler {
 
     private static void onParse(WebPage page, Document document) {
         // do something wonderful with the document
         System.out.println(document.title() + "\t|\t" + document.baseUri());
+
+        // we can extract links in document and then scraping them
+        List<Hyperlink> urls = QueriesKt.selectHyperlinks(document, "a[href~=/dp/]");
+        PulsarContexts.create().submitAll(urls);
     }
 
     public static void main(String[] args) {
         List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
                 .stream()
-                .map(seed -> new ParsableHyperlink(seed, MassiveCrawler::onParse))
+                .map(seed -> new ParsableHyperlink(seed, ContinuousCrawler::onParse))
                 .collect(Collectors.toList());
         PulsarContext context = PulsarContexts.create().submitAll(urls);
         // feel free to submit millions of urls here

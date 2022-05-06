@@ -216,7 +216,7 @@ class TestCases {
         // println(arrayOf("").joinToString(";"))
     }
 
-    @Ignore("Print special chars if required")
+    @Ignore("Print special chars only if we want to check it")
     @Test
     fun printSpecialChars() {
         val s = '!'.toInt()

@@ -21,7 +21,6 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.math3.util.Precision
 import org.junit.Assert.assertArrayEquals
 import org.junit.Test
 import java.io.File
@@ -29,7 +28,6 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.stream.Collectors
@@ -189,23 +187,30 @@ class TestString {
     }
 
     @Test
-    fun testtrimNonCJKChar() {
-        val text = "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  "
-        assertEquals(text.trim { it <= ' ' }, "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ")
-        assertEquals(Strings.trimNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘")
+    fun testTrim() {
+        var text = " 个性表盘  "
+        assertTrue { ' '.isWhitespace() }
+        // String.trim() == CharSequence.trim(Char::isWhitespace)
+        assertEquals("个性表盘", text.trim())
+        assertEquals("个性表盘  ", text.trim { it <= ' ' })
+    }
+
+    @Test
+    fun testTrimNonCJKChar() {
+        val text = "天王表 正品热卖  个性表盘  "
+        assertEquals("天王表 正品热卖  个性表盘  ", text.trim { it <= ' ' })
+        assertEquals("天王表 正品热卖  个性表盘", Strings.trimNonCJKChar(text))
     }
 
     @Test
     fun testStripNonChar() {
         val texts = arrayOf(
-                "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ",
+                "天王表 正品热卖  个性表盘  ",
                 "天王表 正品热卖 \uE004主要职责：  OK"
         )
         for (text in texts) {
             println(Strings.stripNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
         }
-        //    assertEquals(text.trim(), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ");
-//    assertEquals(StringUtil.stripNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘");
     }
 
     @Test
@@ -231,6 +236,7 @@ class TestString {
                 "1b关注全球华人健康",
                 "a关注全球华人健康"
         )
+
         for (text in mainlyChineseTexts) {
             println(Strings.countChinese(text).toString() + "/" + text.length
                     + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text)
@@ -316,17 +322,6 @@ class TestString {
             val kv = SParser.wrap(kvs2[i]).getKvs("=")
             assertEquals("{a=1, b=2, c=4}", kv.toString(), i.toString() + "th [" + kvs2[i] + "]")
         }
-    }
-
-    @Test
-    fun testParseOptions() {
-        val kvs: MutableMap<String, String> = HashMap()
-        kvs["-a"] = "1"
-        kvs["-b"] = "2"
-        kvs["-c"] = "3"
-        kvs["-isX"] = "true"
-        // assertEquals(kvs, StringUtil.parseOptions("-a 1 -b 2 -c 3 -isX"));
-        assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
     }
 
     @Test

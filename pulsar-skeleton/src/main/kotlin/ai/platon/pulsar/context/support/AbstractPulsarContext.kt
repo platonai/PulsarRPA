@@ -24,6 +24,7 @@ import ai.platon.pulsar.session.PulsarEnvironment
 import ai.platon.pulsar.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import org.springframework.beans.factory.BeanCreationNotAllowedException
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
 import java.util.*
@@ -242,11 +243,12 @@ abstract class AbstractPulsarContext(
     override fun inject(url: NormUrl): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }
+
     /**
      * Get a webpage from the storage
      * */
     override fun get(url: String): WebPage {
-        return webDbOrNull?.get(url, false)?: WebPage.NIL
+        return webDbOrNull?.get(url, false) ?: WebPage.NIL
     }
 
     /**
@@ -458,24 +460,33 @@ abstract class AbstractPulsarContext(
         AppContext.beginTerminate()
 
         if (closed.compareAndSet(false, true)) {
-            logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
-
-            globalCacheFactory.globalCache.clearCaches()
-
-            sessions.values.forEach {
-                kotlin.runCatching { it.close() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+            try {
+                doClose0()
+            } catch (t: Throwable) {
+                System.err.println("Unexpected exception:")
+                t.printStackTrace(System.err)
             }
-            sessions.clear()
-
-            closableObjects.forEach {
-                kotlin.runCatching { it.close() }
-                    .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
-            }
-            closableObjects.clear()
         }
 
         AppContext.endTerminate()
+    }
+
+    protected open fun doClose0() {
+        logger.info("Closing context #{}/{} | {}", id, sessions.size, this::class.java.simpleName)
+
+        getBeanOrNull<GlobalCacheFactory>()?.globalCache?.clearCaches()
+
+        sessions.values.forEach {
+            kotlin.runCatching { it.close() }
+                .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+        }
+        sessions.clear()
+
+        closableObjects.forEach {
+            kotlin.runCatching { it.close() }
+                .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+        }
+        closableObjects.clear()
     }
 
     private fun startLoopIfNecessary() {
