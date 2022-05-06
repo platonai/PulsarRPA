@@ -86,6 +86,7 @@ object PowerSelector {
     private val logger = LoggerFactory.getLogger(PowerSelector::class.java)
     private val cache = ConcurrentExpiringLRUCache<String, Evaluator?>(Duration.ofMinutes(10))
     private val parseExceptions = ConcurrentExpiringLRUCache<String, AtomicInteger>(Duration.ofMinutes(10))
+    private val totalParseExceptions = ConcurrentExpiringLRUCache<String, AtomicInteger>(Duration.ofMinutes(10))
 
     /**
      * Find elements matching selector.
@@ -190,13 +191,27 @@ object PowerSelector {
                 val host = URL(baseUri).host
                 val key = "$host $cssQuery"
                 message = "$key\n>>>$message<<<"
-                val count = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
-                if (count == 1) {
-                    logger.warn("Failed to parse css query | $cssQuery | $baseUri | ${e.simplify()}")
-                } else if (count < 50 && count % 10 == 0) {
-                    logger.warn("Caught $count parse exceptions | $cssQuery")
-                } else if (count % 50 == 0) {
-                    logger.warn("Caught $count parse exceptions | $cssQuery")
+                val count1 = totalParseExceptions.computeIfAbsent(cssQuery) { AtomicInteger() }.incrementAndGet()
+                val count2 = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
+
+                if (count1 > 5000 && count1 % 5000 == 0) {
+                    logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                } else if (count1 > 3000 && count1 % 1000 == 0) {
+                    logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                } else if (count1 > 1000 && count1 % 200 == 0) {
+                    logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                } else {
+                    if (count2 == 1) {
+                        logger.warn("Failed to parse css query | $cssQuery | $baseUri | ${e.simplify()}")
+                    } else if (count2 < 50 && count2 % 10 == 0) {
+                        logger.warn("Caught $count2 parse exceptions | $cssQuery")
+                    } else if (count2 < 1000 && count2 % 100 == 0) {
+                        logger.warn("Caught $count2 parse exceptions | $cssQuery")
+                    } else if (count2 < 3000 && count2 % 1000 == 0) {
+                        logger.warn("Caught $count2 parse exceptions | $cssQuery")
+                    } else if (count2 % 5000 == 0) {
+                        logger.warn("Caught $count2 parse exceptions | $cssQuery")
+                    }
                 }
             } else {
                 logger.warn("Unexpected exception", e)
