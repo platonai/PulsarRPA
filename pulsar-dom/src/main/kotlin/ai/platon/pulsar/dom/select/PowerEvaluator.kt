@@ -14,17 +14,30 @@ import java.math.BigDecimal
 
 internal abstract class PowerEvaluator : Evaluator() {
 
+    companion object {
+        /**
+         * Handle non-standard CSS selectors
+         * @see [Issue #10](https://github.com/platonai/pulsar/issues/10)
+         * */
+        fun encodeQuery(query: String): String {
+            return query.replace("+", "--x--")
+        }
+
+        fun decodeQuery(query: String): String {
+            var decoded = query
+            if (query.contains("--x--")) {
+                decoded = decoded.replace("--x--", "+")
+            }
+            return decoded
+        }
+    }
+
     /**
      * Evaluator for element id
      */
     class PowerId(private val id: String) : Evaluator() {
         override fun matches(root: Element, element: Element): Boolean {
-            var search = id
-            if (id.contains("--x--")) {
-                search = search.replace("--x--", "+")
-            }
-
-            return search == element.id()
+            return decodeQuery(id) == element.id()
         }
 
         override fun toString(): String {
@@ -37,12 +50,7 @@ internal abstract class PowerEvaluator : Evaluator() {
      */
     class PowerClass(private val className: String) : Evaluator() {
         override fun matches(root: Element, element: Element): Boolean {
-            var search = className
-            if (className.contains("--x--")) {
-                search = search.replace("--x--", "+")
-            }
-
-            return element.hasClass(search)
+            return element.hasClass(decodeQuery(className))
         }
 
         override fun toString(): String {

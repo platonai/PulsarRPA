@@ -37,7 +37,7 @@ class FileBackendPageStore(
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
         var page = map[reversedUrl] as? GWebPage
         if (page == null) {
-            page = readAvro(reversedUrl) ?: read(reversedUrl)
+            page = readAvro(reversedUrl) ?: readHtml(reversedUrl)
         }
         return page
     }
@@ -47,7 +47,7 @@ class FileBackendPageStore(
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
             val p = WebPage.box(it, page, unsafeConf)
-            write(p)
+            writeHtml(p)
             writeAvro(p)
         }
     }
@@ -56,7 +56,7 @@ class FileBackendPageStore(
 
     override fun getFields(): Array<String> = GWebPage._ALL_FIELDS
 
-    private fun read(reversedUrl: String): GWebPage? {
+    fun readHtml(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".htm")
         val path = persistDirectory.resolve(filename)
@@ -75,7 +75,7 @@ class FileBackendPageStore(
         return null
     }
 
-    private fun readAvro(reversedUrl: String): GWebPage? {
+    fun readAvro(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".avro")
         val path = persistDirectory.resolve(filename)
@@ -94,8 +94,7 @@ class FileBackendPageStore(
     }
 
     @Synchronized
-    @Throws(IOException::class)
-    private fun readAvro(path: Path): GWebPage? {
+    fun readAvro(path: Path): GWebPage? {
         if (!Files.exists(path)) {
             return null
         }
@@ -111,7 +110,7 @@ class FileBackendPageStore(
         return page
     }
 
-    private fun write(page: WebPage) {
+    fun writeHtml(page: WebPage) {
         val filename = AppPaths.fromUri(page.url, "", ".htm")
         val path = persistDirectory.resolve(filename)
 
@@ -121,7 +120,8 @@ class FileBackendPageStore(
         page.content?.let { Files.write(path, it.array()) }
     }
 
-    private fun writeAvro(page: WebPage) {
+    @Synchronized
+    fun writeAvro(page: WebPage) {
         val filename = AppPaths.fromUri(page.url, "", ".avro")
         val path = persistDirectory.resolve(filename)
 
@@ -135,7 +135,6 @@ class FileBackendPageStore(
         }
     }
 
-    @Synchronized
     @Throws(IOException::class)
     private fun writeAvro0(page: GWebPage, path: Path) {
         val datumWriter: DatumWriter<GWebPage> = SpecificDatumWriter(GWebPage::class.java)

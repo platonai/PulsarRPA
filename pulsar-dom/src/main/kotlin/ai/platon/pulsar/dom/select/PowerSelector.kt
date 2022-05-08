@@ -91,7 +91,7 @@ object PowerSelector {
     /**
      * Find elements matching selector.
      *
-     * @param query CSS selector
+     * @param cssQuery A CSS query
      * @param root  root element to descend into
      * @return matching elements, empty if none
      */
@@ -176,8 +176,7 @@ object PowerSelector {
     }
 
     private fun parseOrNullCached(cssQuery: String, baseUri: String): Evaluator? {
-        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-        val query = normalizeQuery(cssQuery) ?: return null
+        val query = normalizeQueryOrNull(cssQuery) ?: return null
         val key = "$baseUri $query"
         return cache.computeIfAbsent(key) { parseOrNull(query, baseUri) }
     }
@@ -194,8 +193,10 @@ object PowerSelector {
                 val count1 = totalParseExceptions.computeIfAbsent(cssQuery) { AtomicInteger() }.incrementAndGet()
                 val count2 = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
 
-                if (count1 > 5000 && count1 % 5000 == 0) {
-                    logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                if (count1 > 5000) {
+                    if (count1 % 5000 == 0) {
+                        logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                    }
                 } else if (count1 > 3000 && count1 % 1000 == 0) {
                     logger.warn("Caught $count1 parse exceptions | $cssQuery")
                 } else if (count1 > 1000 && count1 % 200 == 0) {
@@ -221,10 +222,13 @@ object PowerSelector {
         return null
     }
 
-    fun normalizeQuery(query: String): String? {
-        var query0 = query.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
-        query0 = query0.replace("+", "--x--")
-        return query0
+    /**
+     * Normalize the CSS query
+     * */
+    fun normalizeQueryOrNull(query: String): String? {
+        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
+        val query0 = query.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
+        return PowerEvaluator.encodeQuery(query0)
     }
 
     private fun checkArguments(cssQuery: String, offset: Int = 1, limit: Int) {
