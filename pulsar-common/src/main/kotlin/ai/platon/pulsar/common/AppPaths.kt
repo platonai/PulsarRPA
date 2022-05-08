@@ -109,13 +109,13 @@ object AppPaths {
 
     @RequiredFile
     val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
-    @RequiredFile
+
     val PATH_EMERGENT_SEEDS = TMP_DIR.resolve("emergent-seeds")
 
-    @RequiredFile
     val PATH_LAST_BATCH_ID = REPORT_DIR.resolve("last-batch-id")
-    @RequiredFile
+
     val PATH_LAST_GENERATED_ROWS = REPORT_DIR.resolve("last-generated-rows")
+
     @RequiredFile
     val PATH_BANNED_URLS = REPORT_DIR.resolve("banned-urls")
     @RequiredFile
