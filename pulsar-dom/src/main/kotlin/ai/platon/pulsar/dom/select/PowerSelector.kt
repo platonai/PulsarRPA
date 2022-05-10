@@ -2,11 +2,11 @@ package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.common.simplify
+import ai.platon.pulsar.common.urls.UrlUtils
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
-import java.net.URL
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -91,7 +91,7 @@ object PowerSelector {
     /**
      * Find elements matching selector.
      *
-     * @param query CSS selector
+     * @param cssQuery A CSS query
      * @param root  root element to descend into
      * @return matching elements, empty if none
      */
@@ -176,10 +176,9 @@ object PowerSelector {
     }
 
     private fun parseOrNullCached(cssQuery: String, baseUri: String): Evaluator? {
-        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-        val cssQuery0 = cssQuery.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
-        val key = "$baseUri $cssQuery0"
-        return cache.computeIfAbsent(key) { parseOrNull(cssQuery0, baseUri) }
+        val query = normalizeQueryOrNull(cssQuery) ?: return null
+        val key = "$baseUri $query"
+        return cache.computeIfAbsent(key) { parseOrNull(query, baseUri) }
     }
 
     private fun parseOrNull(cssQuery: String, baseUri: String): Evaluator? {
@@ -188,14 +187,16 @@ object PowerSelector {
         } catch (e: PowerSelectorParseException) {
             var message = e.simplify()
             if (!message.isNullOrBlank()) {
-                val host = URL(baseUri).host
+                val host = UrlUtils.getURLOrNull(baseUri)?.host
                 val key = "$host $cssQuery"
                 message = "$key\n>>>$message<<<"
                 val count1 = totalParseExceptions.computeIfAbsent(cssQuery) { AtomicInteger() }.incrementAndGet()
                 val count2 = parseExceptions.computeIfAbsent(message) { AtomicInteger() }.incrementAndGet()
 
-                if (count1 > 5000 && count1 % 5000 == 0) {
-                    logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                if (count1 > 5000) {
+                    if (count1 % 5000 == 0) {
+                        logger.warn("Caught $count1 parse exceptions | $cssQuery")
+                    }
                 } else if (count1 > 3000 && count1 % 1000 == 0) {
                     logger.warn("Caught $count1 parse exceptions | $cssQuery")
                 } else if (count1 > 1000 && count1 % 200 == 0) {
@@ -219,6 +220,15 @@ object PowerSelector {
         }
 
         return null
+    }
+
+    /**
+     * Normalize the CSS query
+     * */
+    fun normalizeQueryOrNull(query: String): String? {
+        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
+        val query0 = query.removeSurrounding("\"").takeIf { it.isNotBlank() } ?: return null
+        return PowerEvaluator.encodeQuery(query0)
     }
 
     private fun checkArguments(cssQuery: String, offset: Int = 1, limit: Int) {
