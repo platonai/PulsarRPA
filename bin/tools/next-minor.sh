@@ -21,7 +21,7 @@ sed -i "s/\b$PREFIX.[0-9]\{1,\}\b/$NEXT_VERSION/g" "$APP_HOME/README.adoc";
 # pom.xml files
 find "$APP_HOME" -name 'pom.xml' -exec sed -i "s/$SNAPSHOT_VERSION/$NEXT_SNAPSHOT_VERSION/" {} \;
 
-COMMENT="v"${$NEXT_SNAPSHOT_VERSION//"-SNAPSHOT"/""}
+COMMENT="v"${NEXT_SNAPSHOT_VERSION//"-SNAPSHOT"/""}
 
 echo "Ready to commit with comment: <$COMMENT>"
 read -p "Are you sure to continue?" -n 1 -r
