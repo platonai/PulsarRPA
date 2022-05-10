@@ -13,7 +13,21 @@ Pulsar supports the Network As A Database paradigm, so we can turn the Web into 
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
-Most scraping projects can start with the following code snippet:
+Most scraping attempt can start with (almost) a single line of code:
+
+*Kotlin*
+[source,kotlin]
+----
+fun main() = PulsarContexts.createSession().scrapeOutPages(
+    "https://www.amazon.com/",
+    "-outLink a[href~=/dp/]",
+    mapOf("title" to "#title", "ratings" to "#acrCustomerReviewText")
+).let { println(it) }
+----
+
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+
+Most real world scraping projects can start with the following code snippet:
 
 *Kotlin*
 [source,kotlin]
@@ -52,6 +66,7 @@ The core Pulsar concepts include the following:
 * Network As A Database
 * Auto Extract
 * Browser Rendering
+* Pulsar Context
 * Pulsar Session
 * Urls
 * Hyperlinks

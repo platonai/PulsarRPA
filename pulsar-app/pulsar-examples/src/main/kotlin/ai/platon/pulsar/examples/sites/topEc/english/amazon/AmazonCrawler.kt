@@ -1,13 +1,9 @@
 package ai.platon.pulsar.examples.sites.topEc.english.amazon
 
-import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.context.PulsarContexts
 
-fun main() {
-    val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs"
-    val args = "-i 1s -ii 5s -ol a[href~=/dp/] -ignoreFailure"
-
-    val session = SQLContexts.createSession()
-    // session.loadOutPages(portalUrl, args)
-    session.load(portalUrl, args)
-    println("Done.")
-}
+fun main() = PulsarContexts.createSession().scrapeOutPages(
+    "https://www.amazon.com/Best-Sellers/zgbs",
+    "-outLink a[href~=/dp/]",
+    mapOf("title" to "#title", "ratings" to "#acrCustomerReviewText")
+).let { println(it) }
