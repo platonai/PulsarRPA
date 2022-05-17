@@ -7,7 +7,7 @@ import java.nio.file.Paths
 
 object Browsers {
 
-    val CHROME_BINARY_SEARCH_PATHS = arrayOf(
+    val CHROME_BINARY_SEARCH_PATHS = listOf(
         "/usr/bin/google-chrome-stable",
         "/usr/bin/google-chrome",
         "/opt/google/chrome/chrome",
@@ -18,6 +18,8 @@ object Browsers {
         "/usr/bin/chromium",
         "/usr/bin/chromium-browser"
     )
+
+    val ADDITIONAL_CHROME_BINARY_SEARCH_PATHS = mutableListOf<String>()
 
     /**
      * Returns the chrome binary path.
@@ -31,7 +33,8 @@ object Browsers {
                 ?: throw RuntimeException("CHROME_PATH is not executable | $path")
         }
 
-        return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }
+        val searchPaths = ADDITIONAL_CHROME_BINARY_SEARCH_PATHS + CHROME_BINARY_SEARCH_PATHS
+        return searchPaths.map { Paths.get(it) }
             .firstOrNull { Files.isExecutable(it) }
             ?.toAbsolutePath()
             ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")

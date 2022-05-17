@@ -17,10 +17,7 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.util.regex.Pattern
 
 /**
@@ -274,9 +271,9 @@ class ChromeLauncher(
                 FileChannel.open(lock, StandardOpenOption.APPEND).use {
                     it.lock()
                     kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                            .onFailure { logger.warn("Failed to delete directory | {} | {}",
-                                dirToDelete, it.message)
-                            }
+                        .onFailure { logger.warn("Failed to delete directory | {} | {}",
+                            dirToDelete, it.message)
+                        }
                 }
 
                 Thread.sleep(500)

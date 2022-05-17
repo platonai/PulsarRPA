@@ -102,20 +102,25 @@ object AppPaths {
     @RequiredFile
     val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve( "proxy-ban-strategy.txt")
 
+    // Archive
     @RequiredDirectory
     val ARCHIVE_DIR = DATA_DIR.resolve("archive")
     @RequiredDirectory
     val TMP_ARCHIVE_DIR = TMP_DIR.resolve("archive")
 
+    // Config
+    @RequiredDirectory
+    val CONFIG_DIR = DATA_DIR.resolve("config")
+
     @RequiredFile
     val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
-
+    @RequiredFile
     val PATH_EMERGENT_SEEDS = TMP_DIR.resolve("emergent-seeds")
 
+    @RequiredFile
     val PATH_LAST_BATCH_ID = REPORT_DIR.resolve("last-batch-id")
-
+    @RequiredFile
     val PATH_LAST_GENERATED_ROWS = REPORT_DIR.resolve("last-generated-rows")
-
     @RequiredFile
     val PATH_BANNED_URLS = REPORT_DIR.resolve("banned-urls")
     @RequiredFile
@@ -127,17 +132,17 @@ object AppPaths {
 
     init {
         AppPaths::class.java.declaredFields
-                .filter { it.annotations.any { it is RequiredDirectory } }
-                .mapNotNull { it.get(AppPaths) as? Path }
-                .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
+            .filter { it.annotations.any { it is RequiredDirectory } }
+            .mapNotNull { it.get(AppPaths) as? Path }
+            .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
 
         AppPaths::class.java.declaredFields
-                .filter { it.annotations.any { it is RequiredFile } }
-                .mapNotNull { it.get(AppPaths) as? Path }
-                .forEach {
-                    it.parent.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) }
-                    it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
-                }
+            .filter { it.annotations.any { it is RequiredFile } }
+            .mapNotNull { it.get(AppPaths) as? Path }
+            .forEach {
+                it.parent.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) }
+                it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
+            }
     }
 
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)

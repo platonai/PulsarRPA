@@ -11,6 +11,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 import kotlin.io.path.isReadable
 import kotlin.io.path.listDirectoryEntries
@@ -318,6 +319,8 @@ open class BrowserSettings(
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
             "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
         ).also { jsParameters.putAll(it) }
+
+        searchChromeBinaryPathAllAround()
     }
 
     open fun formatViewPort(delimiter: String = ","): String {
@@ -394,5 +397,18 @@ open class BrowserSettings(
 
         val report = Files.writeString(dir.resolve("preload.js"), script)
         logger.info("Generated js: file://$report")
+    }
+
+    /**
+     * Find BROWSER_CHROME_PATH in all config files
+     * */
+    private fun searchChromeBinaryPathAllAround() {
+        val chromeBinaryPath = conf.get(BROWSER_CHROME_PATH)
+        if (chromeBinaryPath != null) {
+            val path = Paths.get(chromeBinaryPath).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
+            if (path != null) {
+                System.setProperty(BROWSER_CHROME_PATH, chromeBinaryPath)
+            }
+        }
     }
 }
