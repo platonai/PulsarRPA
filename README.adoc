@@ -309,11 +309,11 @@ The response is as follows in json format:
 
 * Memory 4G+
 * Maven 3.2+
-* The latest version of the Java 11 OpenJDK
+* The latest version of the Java 11 JDK
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other operating system that meets the requirements should work as well.
+Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
 * How to scrape a million product pages from an e-commerce website a day?
