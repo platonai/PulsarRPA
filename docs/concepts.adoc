@@ -35,8 +35,17 @@ Although Pulsar supports various web scraping methods, browser rendering is the 
 
 Browser rendering means every webpage is open by a real browser to make sure all fields on the webpage are present correctly.
 
+=== Pulsar Context
+A PulsarContext consists of different components that are highly customizable.
+
+A StaticPulsarContext consists of the default components.
+
+A ClassPathXmlPulsarContext consists of a set of components which are customized using spring beans files.
+
+A SQLContext consists of components to support X-SQL.
+
 === Pulsar Session
-PulsarSession provides a set of simple, powerful and flexible APIs to do web scraping tasks.
+A PulsarSession provides a set of simple, powerful and flexible APIs to do web scraping tasks.
 [source,kotlin]
 ----
 val session = PulsarContexts.createSession()
