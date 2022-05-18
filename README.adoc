@@ -21,11 +21,11 @@ Most scraping attempt can start with (almost) a single line of code:
 fun main() = PulsarContexts.createSession().scrapeOutPages(
     "https://www.amazon.com/",
     "-outLink a[href~=/dp/]",
-    mapOf("title" to "#title", "ratings" to "#acrCustomerReviewText")
+    listOf("#title", "#acrCustomerReviewText")
 ).let { println(it) }
 ----
 
-The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+The code above scrapes fields specified by css selector #title and #acrCustomerReviewText from a set of product pages. The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
 
 Most real world scraping projects can start with the following code snippet:
 
