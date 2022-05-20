@@ -143,7 +143,7 @@ open class BrowserSettings(
             node_traversor.js
             feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
-        val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
+        private val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
@@ -324,6 +324,10 @@ open class BrowserSettings(
         return "${viewPort.width}$delimiter${viewPort.height}"
     }
 
+    /**
+     * Make sure generatePreloadJs is thread safe
+     * */
+    @Synchronized
     open fun generatePreloadJs(reload: Boolean = false): String {
         if (reload) {
             preloadJavaScripts.clear()
@@ -349,7 +353,7 @@ open class BrowserSettings(
         """.trimIndent()
     }
 
-    open fun loadDefaultResource() {
+    private fun loadDefaultResource() {
         preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
             ResourceLoader.readAllLines(it).joinToString("\n") { nameMangling(it) }
         }
