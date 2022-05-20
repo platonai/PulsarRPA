@@ -133,7 +133,9 @@ open class BrowserSettings(
          * All names in injected scripts must not be detected by javascript,
          * the name mangling technology helps to achieve this purpose.
          * */
-        val scriptNameCipher = RandomStringUtils.randomAlphabetic(6)
+        var specifiedScriptNameCipher: String? = null
+        val randomScriptNameCipher = RandomStringUtils.randomAlphabetic(6)
+        val scriptNameCipher get() = specifiedScriptNameCipher ?: randomScriptNameCipher
         val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
             stealth.js
