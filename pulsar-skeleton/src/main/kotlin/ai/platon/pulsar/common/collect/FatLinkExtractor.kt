@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.session.AbstractPulsarSession
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -59,7 +60,8 @@ class FatLinkExtractor(
         }
     }
 
-    private val webDb = session.context.webDb
+    private val abstractSession get() = session as AbstractPulsarSession
+    private val webDb = abstractSession.context.webDb
     val counters = Counters()
 
     fun parse(page: WebPage, document: FeaturedDocument, options: LoadOptions) {

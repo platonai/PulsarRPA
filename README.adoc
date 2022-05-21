@@ -7,13 +7,24 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 
 Pulsar is the ultimate open source solution to scrape web data at scale.
 
-Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, Pulsar is an open source solution to address such issues.
+Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar is an open source solution to address such issues.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
-Most scraping projects can start with the following code snippet:
+*Most scraping attempt can start with (almost) a single line of code:*
+
+*Kotlin*
+[source,kotlin,options="nowrap"]
+----
+fun main() = PulsarContexts.createSession().scrapeOutPages(
+  "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
+----
+
+The code above scrapes fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages. The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+
+*Most #real world# scraping projects can start with the following code snippet:*
 
 *Kotlin*
 [source,kotlin]
@@ -22,6 +33,9 @@ fun main() {
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: Document ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
         context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
     }
     val urls = LinkExtractors.fromResource("seeds10.txt")
@@ -52,6 +66,7 @@ The core Pulsar concepts include the following:
 * Network As A Database
 * Auto Extract
 * Browser Rendering
+* Pulsar Context
 * Pulsar Session
 * Urls
 * Hyperlinks
@@ -70,14 +85,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.3</version>
+  <version>1.9.8</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.3")
+implementation("ai.platon.pulsar:pulsar-all:1.9.8")
 ----
 
 === Basic usage
@@ -218,7 +233,7 @@ The result is as follows:
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $159.99 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.8 | 1,349 ratings | 4.40
 ----
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
@@ -294,11 +309,11 @@ The response is as follows in json format:
 
 * Memory 4G+
 * Maven 3.2+
-* The latest version of the Java 11 OpenJDK
+* The latest version of the Java 11 JDK
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 20.04, Windows 11, WSL, any other operating system that meets the requirements should work as well.
+Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
 * How to scrape a million product pages from an e-commerce website a day?

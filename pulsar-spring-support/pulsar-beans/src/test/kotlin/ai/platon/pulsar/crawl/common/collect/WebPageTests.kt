@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.session.AbstractPulsarSession
 import org.junit.Before
 import org.junit.Test
 import java.time.Duration
@@ -18,7 +19,7 @@ import kotlin.test.assertTrue
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class WebPageTests {
-    private val session = PulsarContexts.createSession()
+    private val session = PulsarContexts.createSession() as AbstractPulsarSession
     val url = "https://www.amazon.com/dp/B082P8J28M"
 
     @Before

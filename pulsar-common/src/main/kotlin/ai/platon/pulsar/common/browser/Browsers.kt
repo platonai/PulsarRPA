@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.browser
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import java.nio.file.Files
 import java.nio.file.Path
@@ -12,6 +13,9 @@ object Browsers {
         "/usr/bin/google-chrome",
         "/opt/google/chrome/chrome",
         "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+        "C:/Program Files/Google/Chrome/Application/chrome.exe",
+        // Windows 7, see https://github.com/platonai/pulsar/issues/9
+        AppContext.USER_HOME + "/AppData/Local/Google/Chrome/Application/chrome.exe",
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
         "/Applications/Chromium.app/Contents/MacOS/Chromium",
