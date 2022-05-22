@@ -24,7 +24,6 @@ import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.session.AbstractPulsarSession
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
@@ -157,9 +156,7 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     val defaultArgs = defaultOptions.toString()
-
-    private val abstractSession get() = session as AbstractPulsarSession
-    private val proxyPool: ProxyPool? = if (noProxy) null else abstractSession.context.getBeanOrNull()
+    private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull()
     private var proxyOutOfService = 0
 
     val outOfWorkTimeout = Duration.ofMinutes(10)
@@ -631,7 +628,7 @@ open class StreamingCrawler<T : UrlAware>(
             Strings.readableBytes(memoryToReserve.toLong()),
             Strings.readableBytes(availableMemory - memoryToReserve.toLong())
         )
-        abstractSession.context.clearCaches()
+        session.context.clearCaches()
         System.gc()
     }
 
