@@ -7,27 +7,24 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 
 Pulsar is the ultimate open source solution to scrape web data at scale.
 
-Extracting web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, Pulsar is an open source solution to address such issues.
+Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar is an open source solution to address such issues.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
-Most scraping attempt can start with (almost) a single line of code:
+*Most scraping attempt can start with (almost) a single line of code:*
 
 *Kotlin*
-[source,kotlin]
+[source,kotlin,options="nowrap"]
 ----
 fun main() = PulsarContexts.createSession().scrapeOutPages(
-    "https://www.amazon.com/",
-    "-outLink a[href~=/dp/]",
-    listOf("#title", "#acrCustomerReviewText")
-).let { println(it) }
+  "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-The code above scrapes fields specified by css selector #title and #acrCustomerReviewText from a set of product pages. The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+The code above scrapes fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages. The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
 
-Most real world scraping projects can start with the following code snippet:
+*Most #real world# scraping projects can start with the following code snippet:*
 
 *Kotlin*
 [source,kotlin]
@@ -36,6 +33,9 @@ fun main() {
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: Document ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
         context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
     }
     val urls = LinkExtractors.fromResource("seeds10.txt")
@@ -85,14 +85,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.6</version>
+  <version>1.9.8</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.6")
+implementation("ai.platon.pulsar:pulsar-all:1.9.8")
 ----
 
 === Basic usage
@@ -233,7 +233,7 @@ The result is as follows:
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.7 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.8 | 1,349 ratings | 4.40
 ----
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].

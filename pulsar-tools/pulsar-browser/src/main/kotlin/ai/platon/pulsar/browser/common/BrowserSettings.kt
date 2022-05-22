@@ -133,7 +133,9 @@ open class BrowserSettings(
          * All names in injected scripts must not be detected by javascript,
          * the name mangling technology helps to achieve this purpose.
          * */
-        val scriptNameCipher = RandomStringUtils.randomAlphabetic(6)
+        var specifiedScriptNameCipher: String? = null
+        val randomScriptNameCipher = RandomStringUtils.randomAlphabetic(6)
+        val scriptNameCipher get() = specifiedScriptNameCipher ?: randomScriptNameCipher
         val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
             stealth.js
@@ -143,7 +145,7 @@ open class BrowserSettings(
             node_traversor.js
             feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
-        val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
+        private val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
@@ -324,6 +326,10 @@ open class BrowserSettings(
         return "${viewPort.width}$delimiter${viewPort.height}"
     }
 
+    /**
+     * Make sure generatePreloadJs is thread safe
+     * */
+    @Synchronized
     open fun generatePreloadJs(reload: Boolean = false): String {
         if (reload) {
             preloadJavaScripts.clear()
@@ -349,7 +355,7 @@ open class BrowserSettings(
         """.trimIndent()
     }
 
-    open fun loadDefaultResource() {
+    private fun loadDefaultResource() {
         preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
             ResourceLoader.readAllLines(it).joinToString("\n") { nameMangling(it) }
         }
