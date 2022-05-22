@@ -15,6 +15,7 @@ read -p "Are you sure to continue?Yy" -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   git checkout "$BRANCH"
+  echo ""
 else
   echo "Bye."
   exit 0
