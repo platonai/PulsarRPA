@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class WebPageTests {
-    private val session = PulsarContexts.createSession()
+    private val session = PulsarContexts.createSession() as AbstractPulsarSession
     val url = "https://www.amazon.com/dp/B082P8J28M"
 
     @Before

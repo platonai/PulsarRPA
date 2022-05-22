@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.session.AbstractPulsarSession
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
