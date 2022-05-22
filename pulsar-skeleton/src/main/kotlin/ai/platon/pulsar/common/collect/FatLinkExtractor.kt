@@ -60,7 +60,8 @@ class FatLinkExtractor(
         }
     }
 
-    private val webDb = session.context.webDb
+    private val abstractSession get() = session as AbstractPulsarSession
+    private val webDb = abstractSession.context.webDb
     val counters = Counters()
 
     fun parse(page: WebPage, document: FeaturedDocument, options: LoadOptions) {

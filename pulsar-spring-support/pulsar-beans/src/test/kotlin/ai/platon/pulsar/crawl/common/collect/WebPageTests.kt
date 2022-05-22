@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.session.AbstractPulsarSession
 import org.junit.Before
 import org.junit.Test
 import java.time.Duration
