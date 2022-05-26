@@ -224,7 +224,7 @@ interface PulsarSession : AutoCloseable {
      * Load a url with specified options
      *
      * @param url     The url to load
-     * @param args The load args
+     * @param options The load options
      * @return The web page
      */
     suspend fun loadDeferred(url: UrlAware, options: LoadOptions = options()): WebPage
@@ -249,7 +249,7 @@ interface PulsarSession : AutoCloseable {
     ): List<WebPage>
 
     /**
-     * Load all urls with specified options, this causes a parallel fetching whenever applicable
+     * Load all urls with specified options
      *
      * @param normUrls    The urls to load
      * @return The web pages
@@ -265,7 +265,7 @@ interface PulsarSession : AutoCloseable {
     fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
 
     /**
-     * Load all urls with specified options, this causes a parallel fetching whenever applicable
+     * Load all urls with specified options with java async style
      *
      * @param urls The urls to load
      * @return The web pages
@@ -355,39 +355,99 @@ interface PulsarSession : AutoCloseable {
      * If the Web page is not changed since last parse, use the last result if available
      */
     fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into a document
+     * */
     fun loadDocument(url: String, args: String): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into a document
+     * */
     fun loadDocument(url: String, options: LoadOptions = options()): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into a document
+     * */
     fun loadDocument(normUrl: NormUrl): FeaturedDocument
+    /**
+     * Scrape a webpage
+     * */
     fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?>
+    /**
+     * Scrape a webpage
+     * */
     fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?>
+    /**
+     * Scrape a webpage
+     * */
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
+    /**
+     * Scrape a webpage
+     * */
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
+    /**
+     * Scrape out pages
+     * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
+
+    /**
+     * Scrape out pages
+     * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
 
+    /**
+     * Scrape out pages
+     * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+    /**
+     * Scrape out pages
+     * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
-
+    /**
+     * Get a variable associated with this session
+     * */
     fun getVariable(name: String): Any?
+    /**
+     * Set a variable associated with this session
+     * */
     fun setVariable(name: String, value: Any)
+    /**
+     * Put session scope bean
+     * */
     fun putSessionBean(obj: Any)
+    /**
+     * Delete a webpage from the backend storage
+     * */
     fun delete(url: String)
+    /**
+     * Flush to the backend storage
+     * */
     fun flush()
+    /**
+     * Persist to the backend storage
+     * */
     fun persist(page: WebPage): Boolean
+    /**
+     * Export a webpage
+     * */
     fun export(page: WebPage, ident: String = ""): Path
+    /**
+     * Export a document
+     * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
+    /**
+     * Export a document to the given path
+     * */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
 }
