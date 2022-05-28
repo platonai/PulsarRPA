@@ -25,10 +25,10 @@ import java.time.temporal.ChronoUnit
 import kotlin.jvm.Throws
 
 /**
- * A very simple file backend storage for Web pages
+ * A very simple file backend storage for webpages
  * */
 class FileBackendPageStore(
-        private val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
+    private val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
 ) : MemStore<String, GWebPage>() {
 
     private val logger = LoggerFactory.getLogger(FileBackendPageStore::class.java)
@@ -111,19 +111,20 @@ class FileBackendPageStore(
     }
 
     fun writeHtml(page: WebPage) {
+        val content = page.content ?: return
+        val directory = getPersistDirectory(page)
         val filename = AppPaths.fromUri(page.url, "", ".htm")
-        val path = persistDirectory.resolve(filename)
+        val path = directory.resolve(filename)
 
         logger.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
-
-        // TODO: serialize with the metadata
-        page.content?.let { Files.write(path, it.array()) }
+        Files.write(path, content.array())
     }
 
     @Synchronized
     fun writeAvro(page: WebPage) {
+        val directory = getPersistDirectory(page)
         val filename = AppPaths.fromUri(page.url, "", ".avro")
-        val path = persistDirectory.resolve(filename)
+        val path = directory.resolve(filename)
 
         logger.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
 
@@ -133,6 +134,13 @@ class FileBackendPageStore(
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
         }
+    }
+
+    private fun getPersistDirectory(page: WebPage): Path {
+        val dirForDomain = AppPaths.fromDomain(page.url)
+        val path = persistDirectory.resolve(dirForDomain)
+        Files.createDirectories(path)
+        return path
     }
 
     @Throws(IOException::class)

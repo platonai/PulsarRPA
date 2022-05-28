@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -102,15 +103,10 @@ object AppPaths {
     @RequiredFile
     val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve( "proxy-ban-strategy.txt")
 
-    // Archive
     @RequiredDirectory
     val ARCHIVE_DIR = DATA_DIR.resolve("archive")
     @RequiredDirectory
     val TMP_ARCHIVE_DIR = TMP_DIR.resolve("archive")
-
-    // Config
-    @RequiredDirectory
-    val CONFIG_DIR = DATA_DIR.resolve("config")
 
     @RequiredFile
     val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
@@ -164,13 +160,22 @@ object AppPaths {
         return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
     }
 
+    fun fromDomain(url: URL): String {
+        val host = url.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(url.host).topPrivateDomain().toString()
+        return host.replace('.', '-')
+    }
+
+    fun fromDomain(url: String): String {
+        val u = UrlUtils.getURLOrNull(url) ?: return "unknown"
+        return fromDomain(u)
+    }
+
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = UrlUtils.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
 
-        var host = u.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(u.host).topPrivateDomain().toString()
-        host = host.replace('.', '-')
+        val dirForDomain = fromDomain(u)
         val fileId = fileId(uri)
-        return "$prefix$host-$fileId$suffix"
+        return "$prefix$dirForDomain-$fileId$suffix"
     }
 
     fun uniqueSymbolicLinkForUri(uri: String, suffix: String = ".htm"): Path {
