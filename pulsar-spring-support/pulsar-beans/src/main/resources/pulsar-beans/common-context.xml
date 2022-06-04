@@ -21,7 +21,6 @@
 
     <!--System metrics -->
     <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">
-        <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
 
