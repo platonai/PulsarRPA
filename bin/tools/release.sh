@@ -17,7 +17,7 @@ echo "Ready to checkout HEAD"
 read -p "Are you sure to continue? [Y/n]" -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git checkout "$BRANCH"
+  git checkout HEAD
 else
   echo "Bye."
   exit 0
@@ -48,6 +48,11 @@ read -p "Are you sure to continue? [Y/n]" -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   git checkout main
+
+  # The main branch name is master
+  exitCode=$?
+  [ ! $exitCode -eq 0 ] && git checkout master
+
   git merge "$BRANCH"
 else
   echo "Bye."
