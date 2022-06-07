@@ -85,14 +85,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.8</version>
+  <version>1.9.9</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.8")
+implementation("ai.platon.pulsar:pulsar-all:1.9.9")
 ----
 
 === Basic usage
@@ -217,7 +217,7 @@ select
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
       dom_first_text(dom, '#acrCustomerReviewText') as ratings,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1s -njr 3', 'body');
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
 ----
 
 Execute the X-SQL:
@@ -233,7 +233,7 @@ The result is as follows:
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.8 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.9 | 1,349 ratings | 4.40
 ----
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
@@ -277,7 +277,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
       dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1d -njr 3', 'body');"
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');"
 ----
 
 The example code can be found here: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].

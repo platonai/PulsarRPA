@@ -307,10 +307,10 @@ class MiscMessageWriter(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            commit()
+//            commit()
             if (metricsPageUrls.isNotEmpty()) {
-                weakIndexer.indexAll(metricsPageUrls)
-                weakIndexer.commit()
+//                weakIndexer.indexAll(metricsPageUrls)
+//                weakIndexer.commit()
             }
         }
     }
