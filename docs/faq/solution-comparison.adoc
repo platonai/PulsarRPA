@@ -6,6 +6,13 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
 == Compare with other solutions
+
+The following advanced features are not supported by all other popular solutions:
+
+* Machine learning based web content extraction with notable accuracy.
+
+Once the competitive risk is avoided, we will open source all the source code for the advanced features.
+
 The following features supported by Pulsar are not supported or not well-supported by all other popular solutions:
 
 * Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
