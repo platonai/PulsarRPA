@@ -13,13 +13,16 @@ import java.util.concurrent.atomic.AtomicInteger
  * The data collector interface
  * */
 interface DataCollector<T> {
+    /**
+     * The collector id
+     * */
     val id: Int
     /**
      * The collector name
      * */
     var name: String
     /**
-     * The collector name
+     * The collector labels
      * */
     val labels: Set<String>
     /**

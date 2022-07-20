@@ -152,7 +152,7 @@ open class LoadOptions(
     /**
      * The expiry time. If a page is expired, it should be fetched from the web.
      *
-     * The term "expires" usually be used for a expiry time, for example, http-equiv, or in cookie specification,
+     * The term "expires" usually be used for an expiry time, for example, http-equiv, or in cookie specification,
      * guess it means "expires at".
      *
      * The expires field supports both ISO-8601 standard and hadoop time duration format:
@@ -540,7 +540,7 @@ open class LoadOptions(
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
         converter = ConditionConverter::class,
-        description = "Specify the network condition"
+        description = "Indicates the network condition"
     )
     var netCondition = Condition.GOOD
 

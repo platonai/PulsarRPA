@@ -7,24 +7,69 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
+/**
+ * The url cache holds [UrlAware]s.
+ *
+ * A url cache contains several queues for different purpose: reentrant, non-reentrant and n-reentrant. A reentrant
+ * queue accepts a url multiple times, a non-reentrant queue accepts a url only once, and a n-reentrant queue accepts a
+ * url for n times at most.
+ *
+ * Url caches are expected to be very large, the items can be loaded from external source, for example, MongoDB.
+ * */
 interface UrlCache {
+    /**
+     * The cache name
+     * */
     val name: String
     /**
      * The priority
      * */
     val priority: Int
+    /**
+     * A non-reentrant queue accepts the same url only once
+     * */
     val nonReentrantQueue: Queue<UrlAware>
+    /**
+     * A non-reentrant queue accepts the same url for n times at most
+     * */
     val nReentrantQueue: Queue<UrlAware>
+    /**
+     * A reentrant queue accepts the same url multiple times
+     * */
     val reentrantQueue: Queue<UrlAware>
+    /**
+     * A list of all queues
+     * */
     val queues: List<Queue<UrlAware>>
         get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
+    /**
+     * The total size of all the queues
+     * */
     val size get() = queues.sumOf { it.size }
+    /**
+     * The precise count of urls in the external source, since the external source can be very large, retrieve the precise
+     * size can be very slow in some external storage.
+     * */
     val externalSize: Int get() = 0
+    /**
+     * The estimated, imprecise count of urls in the external source, it should be very fast.
+     * */
     val estimatedExternalSize get() = 0
+    /**
+     * The estimated, imprecise count of all urls both in local cache and the external source.
+     * */
     val estimatedSize get() = size + estimatedExternalSize
-
+    /**
+     * Remove dead urls.
+     * */
     fun removeDeceased()
+    /**
+     * Clear the local cache.
+     * */
     fun clear()
+    /**
+     * Clear both the local cache and external source.
+     * */
     fun deepClear() = clear()
 }
 
@@ -52,13 +97,7 @@ open class ConcurrentUrlCache(
 }
 
 class LoadingUrlCache constructor(
-    /**
-     * The cache name, a loading fetch cache requires a unique name
-     * */
     name: String,
-    /**
-     * The priority
-     * */
     priority: Int,
     /**
      * The external url loader

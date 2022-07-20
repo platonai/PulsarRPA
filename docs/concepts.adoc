@@ -177,18 +177,18 @@ When running continuous crawls, a crawl loop is started to keep fetching urls fr
 Keep in mind that every task in Pulsar is a url, so the crawl loop can accept and execute any kind of tasks.
 
 === Privacy Context
-One of the biggest difficulties in web scraping tasks is the bot stealth. For scraping tasks, the website should have no idea whether a visit is from a human being or a bot. Once a visit is suspected, it's a privacy leak and the privacy context has to be changed.
+One of the biggest difficulties in web scraping tasks is the bot stealth. For scraping tasks, the website should have no idea whether a visit is from a human being or a bot. Once a page visit is suspected by the website, which we call a privacy leak, the privacy context has to be dropped, and the system will visit the page in another privacy context.
 
 === Proxy Management
 Smart rotating proxies.
 
-=== Web Drivers
-A web driver is a program to control the browser.
+=== Web Driver
+A web driver is a program to automate the browser.
 
 === Web Driver Stealth
-When controlling a browser programmatically to visit a webpage, the webpage might detect if the visit is automated, the web driver stealth technology is used to prevent the bot from be detected.
+When controlling a browser programmatically to visit a webpage, the website might detect if the visit is automated, the web driver stealth technology is used to prevent the bot from be detected.
 
 === Backend Storage
-A variety of backend storage solutions are supported by Pulsar to meet our customers' pressing needs: MongoDB, HBase, Gora, etc.
+A variety of backend storage solutions are supported by Pulsar to meet our customers' pressing needs: Local File System, MongoDB, HBase, Gora, etc.
 
 :UrlPool-quickref: ../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt
