@@ -19,12 +19,13 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <!--System metrics -->
+    <!--Misc message writer -->
     <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
 
+    <!--The core metrics -->
     <bean id="coreMetrics" class="ai.platon.pulsar.crawl.CoreMetrics" destroy-method="close">
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>

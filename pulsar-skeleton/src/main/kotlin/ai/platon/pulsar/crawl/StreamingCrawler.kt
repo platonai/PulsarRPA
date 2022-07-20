@@ -168,6 +168,8 @@ open class StreamingCrawler<T : UrlAware>(
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isOutOfWork get() = idleTime > outOfWorkTimeout
+
+    private val enableStartRetry get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
     private val isIdle: Boolean
         get() {
             return !urls.iterator().hasNext()
@@ -373,6 +375,7 @@ open class StreamingCrawler<T : UrlAware>(
         scope.launch(context) {
             try {
                 globalMetrics.tasks.mark()
+                // TODO: temporary solution
                 if (AmazonDiagnosis.isAmazon(urlSpec)) {
                     AmazonMetrics.tasks.mark(urlSpec)
                 }
@@ -384,6 +387,7 @@ open class StreamingCrawler<T : UrlAware>(
                 globalRunningTasks.decrementAndGet()
 
                 globalMetrics.finishes.mark()
+                // TODO: temporary solution
                 if (AmazonDiagnosis.isAmazon(urlSpec)) {
                     AmazonMetrics.finishes.mark(urlSpec)
                 }
@@ -395,6 +399,7 @@ open class StreamingCrawler<T : UrlAware>(
 
     private suspend fun runUrlTask(url: UrlAware) {
         if (url is ListenableUrl && url is DegenerateUrl) {
+            // The url is degenerated, which means it's not a resource in the network to fetch.
             val eventHandler = url.eventHandler.crawlEventHandler
             eventHandler.onBeforeLoad(url)
             eventHandler.onLoad(url)
@@ -411,7 +416,7 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun loadUrl(url: UrlAware): WebPage? {
         var page: WebPage? = null
         try {
-            val timeout = 20_000 + fetchTaskTimeout.toMillis()
+//            val timeout = 20_000 + fetchTaskTimeout.toMillis()
 //            page = withTimeout(timeout) { loadWithEventHandlers(url) }
             page = loadWithEventHandlers(url)
             if (page != null) {
@@ -422,6 +427,8 @@ open class StreamingCrawler<T : UrlAware>(
             logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, fetchTaskTimeout, url)
         } catch (e: Throwable) {
             when {
+                // The following exceptions can be caught as a Throwable but not the concrete exception,
+                // one of the reason is the concrete exception is not public.
                 e.javaClass.name == "kotlinx.coroutines.JobCancellationException" -> {
                     if (isIllegalApplicationState.compareAndSet(false, true)) {
                         logger.warn("Coroutine was cancelled, quit")
@@ -446,11 +453,12 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-        wrongDistrict.reset()
         lastUrl = page.configuredUrl
         lastHtmlIntegrity = page.htmlIntegrity.toString()
         if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
             wrongDistrict.mark()
+        } else {
+            wrongDistrict.reset()
         }
 
         if (page.isFetched) {
@@ -490,7 +498,7 @@ open class StreamingCrawler<T : UrlAware>(
             crawlEventHandler.onAfterLoad(url, page)
         }
 
-        if (conf.getBoolean(CRAWL_SMART_RETRY, true)) {
+        if (enableStartRetry) {
             handleRetry(url, page)
         }
     }
@@ -510,9 +518,10 @@ open class StreamingCrawler<T : UrlAware>(
 
     @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
-        // apply the default options, arguments in the url has the highest priority
+        // apply the default options, arguments in the url has the highest priority, so url.args needs to appear last
         val options = session.options("$defaultArgs ${url.args}")
         if (options.isDead()) {
+            // The url is dead, drop the task
             globalKilledTasks.incrementAndGet()
             return null
         }
@@ -636,8 +645,8 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     /**
-     * The vendor proclaimed every ip can be used for more than 5 minutes,
-     * If proxy is not enabled, the rate is always 0
+     * Proxies should live for more than 5 minutes.
+     * If proxy is not enabled, the rate is always 0.
      *
      * 5 / 60f = 0.083
      * */
@@ -675,12 +684,14 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun handleProxyOutOfService0() {
         if (++proxyOutOfService % 180 == 0) {
-            logger.warn("Proxy account insufficient balance, check it again ...")
+            logger.warn("Proxy out of service, check it again ...")
             val p = proxyPool
             if (p != null) {
                 p.runCatching { take() }.onFailure {
                     if (it !is ProxyInsufficientBalanceException) {
                         proxyOutOfService = 0
+                    } else {
+                        logger.warn("Proxy account insufficient balance")
                     }
                 }.onSuccess { proxyOutOfService = 0 }
             } else {

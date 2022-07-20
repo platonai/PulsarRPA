@@ -42,23 +42,70 @@ interface DataCollector<T> {
     val externalSize: Int
     val estimatedSize: Int
     val estimatedExternalSize: Int
+    /**
+     * The count of all collect attempts
+     * */
     val collectCount: Int
+    /**
+     * The count of all collected items
+     * */
     val collectedCount: Int
+    /**
+     * The create time of this collector
+     * */
     val createTime: Instant
+    /**
+     * The first collect time
+     * */
     val firstCollectTime: Instant
+    /**
+     * The last time to collect an item successfully
+     * */
     val lastCollectedTime: Instant
+    /**
+     * The time between the first collect and the last collect
+     * */
     val collectTime: Duration
+    /**
+     * The dead time of this collector, if the collector is dead, all items should be dropped
+     * */
     val deadTime: Instant
-
+    /**
+     * Check if the collector is dead
+     * */
     val isDead get() = deadTime <= Instant.now()
 
+    /**
+     * Check if there are more items to collect
+     * */
     fun hasMore(): Boolean = false
+    /**
+     * Collect an element to the sink
+     * */
     fun collectTo(element: T, sink: MutableList<T>): Int
+    /**
+     * Collect an element to the sink
+     * */
     fun collectTo(index: Int, element: T, sink: MutableList<T>): Int
+    /**
+     * Collect an element to the sink
+     * */
     fun collectTo(sink: MutableList<T>): Int
+    /**
+     * Collect an element to the sink
+     * */
     fun collectTo(index: Int, sink: MutableList<T>): Int
+    /**
+     * Dump the collector
+     * */
     fun dump(): List<String>
+    /**
+     * Clear the collector
+     * */
     fun clear()
+    /**
+     * Clear the collector both from the local cache and the external source
+     * */
     fun deepClear() = clear()
 }
 
