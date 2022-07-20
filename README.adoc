@@ -316,6 +316,8 @@ The response is as follows in json format:
 Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
+Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the following questions:
+
 * How to scrape a million product pages from an e-commerce website a day?
 * How to scrape pages behind a login?
 * How to download resources directly within a browser context?
@@ -337,11 +339,15 @@ Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operatin
 * How to scrape amazon.com to match industrial needs?
 
 == Compare with other solutions
+Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the comparison to the other solutions:
+
 * Pulsar vs selenium/puppeteer/playwright
 * Pulsar vs nutch
 * Pulsar vs scrapy+splash
 
 == Technical details
+Check link:docs/faq/technical-details.adoc[technical details] to see answers for the following questions:
+
 * How to rotate my ip addresses?
 * How to hide my bot from being detected?
 * How & why to simulate human behaviors?

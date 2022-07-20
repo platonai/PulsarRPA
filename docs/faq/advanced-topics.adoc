@@ -132,36 +132,4 @@ User event handler and web driver interface to interact with the browser.
 . try exotic
 
 === How to scrape amazon.com to match industrial needs?
-
-== Compare with other solutions
-=== Pulsar vs selenium/puppeteer/playwright
-=== Pulsar vs nutch
-=== Pulsar vs scrapy+splash
-
-== Technical details
-=== The core concepts of Pulsar
-** Web Scraping
-** Network As A Database
-** Browser Rendering
-** Headless Browser
-** Hyperlink
-** Load Options
-** Event Handler
-** X-SQL
-** Auto Web Mining
-
-=== More concepts of Pulsar
-** Url Pool
-** Url Collector
-** Crawl Loop
-** Privacy Context
-** Proxy Management
-** Web Drivers
-** Web Driver Stealth
-** Page Cache
-** Backend Storage
-
-=== How to rotate my ip addresses?
-=== How to hide my bot from being detected?
-=== How & why to simulate human behaviors?
-=== How to render as many pages as possible on a single machine without be blocked?
+We will release a complete solution to crawl the entire amazon website.
