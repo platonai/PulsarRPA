@@ -339,7 +339,9 @@ Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the
 * How to scrape amazon.com to match industrial needs?
 
 == Compare with other solutions
-Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the comparison to the other solutions:
+In general, the features mentioned in the Feature section are well-supported by Pulsar, but other solutions do not.
+
+Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the detailed comparison to the other solutions:
 
 * Pulsar vs selenium/puppeteer/playwright
 * Pulsar vs nutch
