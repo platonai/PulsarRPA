@@ -29,9 +29,9 @@ The right data extraction method for you should also address practical concerns 
 * Whether you need homogeneous or heterogeneous structured data
 * Whether you need data from a single site, a range of sites, or from across the whole web
 
-Here is a complete solution to scrape amazon.com at scale.
+Here is a complete solution to scrape amazon.com at scale: link:https://github.com/platonai/exotic[TODO]
 
-== How to scrape pages behind a login?
+=== How to scrape pages behind a login?
 
 It's fair simple to sign in a website before scraping in Pulsar:
 
@@ -86,9 +86,9 @@ class RPAPaginateHandler(val initPageNumber: Int) : AbstractWebPageWebDriverHand
 === How to make sure all fields are extracted correctly?
 
 . Wait for the page loaded completely
-. Scroll down to the bottom of a page to ensure all ajax requests are triggered and loaded
+. Scroll down to the bottom of the page to ensure all ajax requests are triggered and loaded
 . Simulate how a human being visits the webpage
-. If there is still missing fields, consider retry fetching the page
+. If there is still missing fields, consider refresh the page
 
 === How to crawl paginated links?
 
@@ -115,53 +115,21 @@ User event handler and web driver interface to interact with the browser.
 === How to start a task at a fixed time point?
 === How to drop a scheduled task?
 
-. use the load option *-deadTime*.
+. Use the load option *-deadTime*.
 
 === How to know the status of a task?
 === How to know what is happening in the system?
 
-. metrics
-. logs
+. Check the metrics
+. Check the logs
 
 === How to automatically generate the css selectors for fields to scrape?
 
-. try exotic
+. Use link:https://github.com/platonai/exotic[Exotic]
 
 === How to extract content from websites using machine learning automatically with commercial accuracy?
 
-. try exotic
+. Use link:https://github.com/platonai/exotic[Exotic]
 
 === How to scrape amazon.com to match industrial needs?
-
-== Compare with other solutions
-=== Pulsar vs selenium/puppeteer/playwright
-=== Pulsar vs nutch
-=== Pulsar vs scrapy+splash
-
-== Technical details
-=== The core concepts of Pulsar
-** Web Scraping
-** Network As A Database
-** Browser Rendering
-** Headless Browser
-** Hyperlink
-** Load Options
-** Event Handler
-** X-SQL
-** Auto Web Mining
-
-=== More concepts of Pulsar
-** Url Pool
-** Url Collector
-** Crawl Loop
-** Privacy Context
-** Proxy Management
-** Web Drivers
-** Web Driver Stealth
-** Page Cache
-** Backend Storage
-
-=== How to rotate my ip addresses?
-=== How to hide my bot from being detected?
-=== How & why to simulate human behaviors?
-=== How to render as many pages as possible on a single machine without be blocked?
+We will release a complete solution to crawl the entire amazon website.

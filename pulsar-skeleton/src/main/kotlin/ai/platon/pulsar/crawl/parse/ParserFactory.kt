@@ -91,7 +91,7 @@ class ParserFactory(private val conf: ImmutableConfig) {
     }
 
     override fun toString(): String {
-        return mineType2Parsers.values.joinToString { it.javaClass.simpleName }
+        return mineType2Parsers.values.flatMap { it.map { it.javaClass.simpleName } }.distinct().joinToString()
     }
 
     companion object {

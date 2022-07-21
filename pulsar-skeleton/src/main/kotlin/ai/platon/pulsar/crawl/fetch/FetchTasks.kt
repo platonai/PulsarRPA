@@ -87,7 +87,7 @@ class FetchTask constructor(
     // A task is working when it enters the the web driver
     fun startWork() = state.set(State.WORKING)
     fun cancel() = state.set(State.CANCELED)
-    // A task is done if it exit from a privacy context
+    // A task is done if it exits in a privacy context
     fun done() = state.set(State.DONE)
 
     fun reset() {

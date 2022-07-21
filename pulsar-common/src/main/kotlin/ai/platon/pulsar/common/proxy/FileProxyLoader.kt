@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.time.Duration
 
 /**
- * Load proxies from proxy vendors
+ * Load proxies from files
  */
 open class FileProxyLoader(conf: ImmutableConfig): ProxyLoader(conf) {
     private val log = LoggerFactory.getLogger(FileProxyLoader::class.java)

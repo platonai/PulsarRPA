@@ -16,6 +16,11 @@ import java.util.concurrent.Delayed
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * The delay url. A delay url is a url with a delay duration.
+ * Delay urls can work with a [DelayQueue], so every time when we retrieve an item from the queue,
+ * only the expired items are available.
+ * */
 open class DelayUrl(
     val url: UrlAware,
     val delay: Duration,
@@ -40,14 +45,25 @@ interface UrlPool {
     companion object {
         val REAL_TIME_PRIORITY = Priority13.HIGHEST.value
     }
-
+    /**
+     * The real time fetch cache, real time tasks have the highest priority
+     * */
     val realTimeCache: UrlCache
+    /**
+     * The delayed fetch cache
+     * */
     val delayCache: Queue<DelayUrl>
     /**
-     * The priority fetch caches
+     * The ordered fetch caches
      * */
     val orderedCaches: MutableMap<Int, UrlCache>
+    /**
+     * The unordered fetch caches, tasks in unordered caches have the lowest priority
+     * */
     val unorderedCaches: MutableList<UrlCache>
+    /**
+     * Total number of items in all url caches
+     * */
     val totalItems: Int
 
     val lowestCache: UrlCache
@@ -148,22 +164,10 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
  * The global cache
  * */
 open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
-    /**
-     * The priority fetch caches
-     * */
-    override val orderedCaches = ConcurrentSkipListMap<Int, UrlCache>()
-
-    override val unorderedCaches: MutableList<UrlCache> = Collections.synchronizedList(mutableListOf())
-
-    /**
-     * The real time fetch cache
-     * */
     override val realTimeCache: UrlCache = ConcurrentUrlCache("realtime", REAL_TIME_PRIORITY)
-
-    /**
-     * The delayed fetch cache
-     * */
     override val delayCache: Queue<DelayUrl> = SynchronizedQueue.synchronizedQueue(DelayQueue())
+    override val orderedCaches = ConcurrentSkipListMap<Int, UrlCache>()
+    override val unorderedCaches: MutableList<UrlCache> = Collections.synchronizedList(mutableListOf())
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {

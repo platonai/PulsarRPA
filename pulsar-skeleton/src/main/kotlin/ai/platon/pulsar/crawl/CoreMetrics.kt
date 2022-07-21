@@ -73,6 +73,7 @@ class CoreMetrics(
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()
+
     // Exception on windows 11:
     // Caused by: java.lang.IllegalStateException: Unmapped relationship: 7
     //	at com.sun.jna.platform.win32.WinNT$SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX.fromPointer(WinNT.java:3033)
@@ -83,7 +84,13 @@ class CoreMetrics(
      */
     private var maxUrlLength: Int = conf.getInt(PARSE_MAX_URL_LENGTH, 1024)
 
+    /**
+     * The start time of the process
+     */
     val startTime = Instant.now()
+    /**
+     * The elapsed time since the process starts
+     */
     val elapsedTime get() = Duration.between(startTime, Instant.now())
 
     /**

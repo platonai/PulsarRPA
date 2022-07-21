@@ -1,0 +1,13 @@
+= Frequently Asked Questions
+Vincent Zhang <ivincent.zhang@gmail.com>
+3.0, July 29, 2022: Frequently Asked Questions
+:toc:
+:icons: font
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+
+== Technical details
+
+=== How to rotate my ip addresses?
+=== How to hide my bot from being detected?
+=== How & why to simulate human behaviors?
+=== How to render as many pages as possible on a single machine without be blocked?
