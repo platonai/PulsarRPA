@@ -9,7 +9,7 @@ Pulsar is the ultimate open source solution to scrape web data at scale.
 
 Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar is an open source solution to address such issues.
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
@@ -49,8 +49,9 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 == Features
 
 * Web spider: browser rendering, ajax data crawling
-* Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
-* Data quantity assurance: smart retry, accurate scheduling, web data lifetime management
+* High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
+* Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
+* Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
 * Large scale: fully distributed, designed for large scale crawling
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
 * X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
