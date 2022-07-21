@@ -51,6 +51,9 @@ abstract class AbstractPulsarContext(
 
     private val logger = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
 
+    /**
+     * The context id
+     * */
     override val id = instanceSequencer.incrementAndGet()
 
     /**
@@ -74,7 +77,7 @@ abstract class AbstractPulsarContext(
     open val globalCacheFactory: GlobalCacheFactory get() = getBean()
 
     /**
-     * The inject component
+     * The injection component
      * */
     open val injectComponent: InjectComponent get() = getBean()
 
@@ -104,7 +107,7 @@ abstract class AbstractPulsarContext(
     override val crawlPool: UrlPool get() = globalCacheFactory.globalCache.urlPool
 
     /**
-     * The main loop
+     * The main loops
      * */
     override val crawlLoops: CrawlLoops get() = getBean()
 
@@ -113,6 +116,9 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
+    /**
+     * Check if the context is active
+     * */
     val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
@@ -139,19 +145,37 @@ abstract class AbstractPulsarContext(
 
     private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
+    /**
+     * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
+     * */
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
 
+    /**
+     * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
+     * */
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
 
+    /**
+     * Get a bean with the specified class, returns null if the bean doesn't exist
+     * */
     fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
         kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
 
+    /**
+     * Get a bean with the specified class, returns null if the bean doesn't exist
+     * */
     inline fun <reified T : Any> getBeanOrNull(): T? = getBeanOrNull(T::class)
 
+    /**
+     * Create a session
+     * */
     abstract override fun createSession(): AbstractPulsarSession
 
+    /**
+     * Close the given session
+     * */
     override fun closeSession(session: PulsarSession) {
         session.close()
         logger.info("Removing PulsarSession #{}", session.id)
@@ -159,12 +183,15 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Close objects when sessions closes
+     * Register close objects, the objects will be closed when the context closes
      * */
     override fun registerClosable(closable: AutoCloseable) {
         closableObjects.add(closable)
     }
 
+    /**
+     * Clear caches
+     * */
     fun clearCaches() {
         globalCacheFactory.globalCache.pageCache.clear()
         globalCacheFactory.globalCache.documentCache.clear()
@@ -240,6 +267,12 @@ abstract class AbstractPulsarContext(
         return abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
     }
 
+    /**
+     * Inject an url
+     *
+     * @param url The url followed by options
+     * @return The web page created
+     */
     override fun inject(url: NormUrl): WebPage {
         return abnormalPage ?: injectComponent.inject(url.spec, url.args)
     }

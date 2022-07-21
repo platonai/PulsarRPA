@@ -28,7 +28,7 @@ open class StreamingCrawlLoop(
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private var running = AtomicBoolean()
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default) + CoroutineName("sc")
     private var crawlJob: Job? = null
     private val started = CountDownLatch(1)
 

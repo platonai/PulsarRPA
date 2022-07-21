@@ -9,7 +9,7 @@ Pulsar is the ultimate open source solution to scrape web data at scale.
 
 Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar is an open source solution to address such issues.
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
+Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
 
@@ -49,7 +49,8 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 == Features
 
 * Web spider: browser rendering, ajax data crawling
-* Performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
+* High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
+* Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
 * Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
 * Large scale: fully distributed, designed for large scale crawling
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
@@ -85,14 +86,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.8</version>
+  <version>1.10.0</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.8")
+implementation("ai.platon.pulsar:pulsar-all:1.10.0")
 ----
 
 === Basic usage
@@ -136,7 +137,7 @@ Note that most of our scraping methods accept a parameter called load arguments,
     -outLink     // The selector for out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
     -parse       // Triger the parse phrase
-    -resource  // Fetch the url as a resource without browser rendering
+    -resource    // Fetch the url as a resource without browser rendering
 
 Check link:docs/concepts.adoc#_load_options[Load Options] for details.
 
@@ -217,7 +218,7 @@ select
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
       dom_first_text(dom, '#acrCustomerReviewText') as ratings,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1s -njr 3', 'body');
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
 ----
 
 Execute the X-SQL:
@@ -233,7 +234,7 @@ The result is as follows:
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.8 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.11 | 1,349 ratings | 4.40
 ----
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
@@ -277,7 +278,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
       dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B07C5B98V7 -i 1d -njr 3', 'body');"
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');"
 ----
 
 The example code can be found here: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
@@ -316,6 +317,8 @@ The response is as follows in json format:
 Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
+Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the following questions:
+
 * How to scrape a million product pages from an e-commerce website a day?
 * How to scrape pages behind a login?
 * How to download resources directly within a browser context?
@@ -337,11 +340,17 @@ Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operatin
 * How to scrape amazon.com to match industrial needs?
 
 == Compare with other solutions
+In general, the features mentioned in the Feature section are well-supported by Pulsar, but other solutions do not.
+
+Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the detailed comparison to the other solutions:
+
 * Pulsar vs selenium/puppeteer/playwright
 * Pulsar vs nutch
 * Pulsar vs scrapy+splash
 
 == Technical details
+Check link:docs/faq/technical-details.adoc[technical details] to see answers for the following questions:
+
 * How to rotate my ip addresses?
 * How to hide my bot from being detected?
 * How & why to simulate human behaviors?

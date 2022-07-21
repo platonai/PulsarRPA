@@ -34,6 +34,8 @@ object AppPaths {
     @RequiredDirectory
     val DATA_DIR = AppContext.APP_DATA_DIR
     @RequiredDirectory
+    val CONF_DIR = AppContext.APP_DATA_DIR.resolve( "conf")
+    @RequiredDirectory
     val BROWSER_DATA_DIR = DATA_DIR.resolve( "browser")
     @RequiredDirectory
     val CHROME_DATA_DIR_PROTOTYPE = BROWSER_DATA_DIR.resolve("chrome/prototype/google-chrome")

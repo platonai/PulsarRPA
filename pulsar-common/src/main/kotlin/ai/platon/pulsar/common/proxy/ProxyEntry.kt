@@ -24,24 +24,60 @@ enum class ProxyType {
 }
 
 class ProxyEntry(
-        var host: String,
-        var port: Int = 0,
-        var outIp: String = "",
-        var id: Int = instanceSequence.incrementAndGet(),
-        var declaredTTL: Instant? = null,
-        var lastTarget: String? = null,
-        var testUrls: List<URL> = TEST_URLS.toList(),
-        var defaultTestUrl: URL = DEFAULT_TEST_URL,
-        var isTestIp: Boolean = false,
-        var proxyType: ProxyType = ProxyType.HTTP, // reserved
-        var user: String? = null, // reserved
-        var pwd: String? = null // reserved
+    /**
+     * The host of the proxy server
+     * */
+    var host: String,
+    /**
+     * The port of the proxy server
+     * */
+    var port: Int = 0,
+    /**
+     * The out ip which will be seen by the target site
+     * */
+    var outIp: String = "",
+    /**
+     * The proxy entry id, it's unique in the process scope
+     * */
+    var id: Int = instanceSequence.incrementAndGet(),
+    /**
+     * The time to live of the proxy entry declared by the proxy vendor
+     * */
+    var declaredTTL: Instant? = null,
+    /**
+     * The last target url
+     * */
+    var lastTarget: String? = null,
+    /**
+     * The test urls
+     * */
+    var testUrls: List<URL> = TEST_URLS.toList(),
+    /**
+     * The default test url
+     * */
+    var defaultTestUrl: URL = DEFAULT_TEST_URL,
+    /**
+     * Check if the proxy is used for test
+     * */
+    var isTestIp: Boolean = false,
+    /**
+     * The proxy type
+     * */
+    var proxyType: ProxyType = ProxyType.HTTP, // reserved
+    /**
+     * The username
+     * */
+    var user: String? = null, // reserved
+    /**
+     * The password
+     * */
+    var pwd: String? = null // reserved
 ): Comparable<ProxyEntry> {
     enum class Status { FREE, WORKING, RETIRED, EXPIRED, GONE }
 
-    val hostPort = "$host:$port"
-    val segment = host.substringBeforeLast(".")
-    val outSegment = outIp.substringBeforeLast(".")
+    val hostPort get() = "$host:$port"
+    val segment get() = host.substringBeforeLast(".")
+    val outSegment get() = outIp.substringBeforeLast(".")
     val startTime = Instant.now()
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     val display get() = formatDisplay()
@@ -49,9 +85,9 @@ class ProxyEntry(
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val numTests = AtomicInteger()
     val numConnectionLosses = AtomicInteger()
-    // accumulated test time
+    // accumulated response time
     val accumResponseMillis = AtomicLong()
-    // last time the proxy is proven be available (note: )
+    // last time the proxy is proven be available
     var availableTime: Instant = Instant.now()
     // number of failed pages
     val numFailedPages = AtomicInteger()
@@ -203,7 +239,7 @@ class ProxyEntry(
         private const val DEFAULT_PROXY_SERVER_PORT = 80
         const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
         val DEFAULT_TEST_URL = URL("https://www.baidu.com")
-        // TODO: Jan 2 18:06 2021, there is a strange bug in mutableSetOf<URL>(), add items to the set hungs up the process
+        // Jan 2 18:06 2021, there is a strange bug in mutableSetOf<URL>(), add items to the set hungs up the process
         // environment:
         // Linux vincent-KLVC-WXX9 5.8.0-34-generic #37~20.04.2-Ubuntu SMP Thu Dec 17 14:53:00 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
 //        val TEST_URLS = mutableSetOf<URL>()

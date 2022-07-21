@@ -18,7 +18,7 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.random.Random
 
 /**
- * The chrome display mode
+ * The browser display mode
  * SUPERVISED: supervised by other programs
  * GUI: open as a normal browser
  * HEADLESS: open in headless mode

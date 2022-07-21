@@ -7,11 +7,6 @@
 
     <import resource="common-context.xml"/>
 
-    <bean id="proxyPoolManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyPoolManagerFactory" destroy-method="close">
-        <constructor-arg ref="proxyPool"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="proxyLoaderFactory" class="ai.platon.pulsar.common.proxy.ProxyLoaderFactory" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
@@ -20,6 +15,11 @@
 
     <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.LoadingProxyPool">
         <constructor-arg ref="proxyLoader"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="proxyPoolManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyPoolManagerFactory" destroy-method="close">
+        <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>
 

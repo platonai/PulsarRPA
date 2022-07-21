@@ -72,16 +72,28 @@ class OpenMapTable(
         val attributes: MutableMap<String, Any> = mutableMapOf()
         val values get() = cells.map { it?.value }
 
+        /**
+         * Get the cell of the j-th column, 0 based
+         * */
         operator fun get(j: Int) = cells[j]
 
+        /**
+         * Set the cell of the j-th column, 0 based
+         * */
         operator fun set(j: Int, cell: Cell) {
             require(j < cells.size)
             require(j == cell.j)
             cells[j] = cell
         }
 
+        /**
+         * Get the cell value of the j-th column, 0 based
+         * */
         fun getValue(j: Int) = cells[j]?.value
 
+        /**
+         * Set the cell value of the j-th column, 0 based
+         * */
         fun setValue(j: Int, value: Any?) {
             require(j < cells.size)
             cells[j] = Cell(j, value)

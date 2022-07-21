@@ -39,6 +39,7 @@ import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -86,7 +87,6 @@ final public class WebPage implements Comparable<WebPage> {
     private VolatileConfig conf;
     /**
      * Web page scope variables
-     * TODO : we may use it a PageDatum to track all context scope variables
      */
     private final Variables variables = new Variables();
 
@@ -289,7 +289,7 @@ final public class WebPage implements Comparable<WebPage> {
      * Get The hypertext reference of this page.
      * It defines the address of the document, which this time is linked from
      * <p>
-     * TODO: use a seperate field to hold href
+     * TODO: use a separate field for href
      *
      * @return The hypertext reference
      */
@@ -540,7 +540,7 @@ final public class WebPage implements Comparable<WebPage> {
         page.setDistance(newDistance);
     }
 
-    public void updateDistance(int newDistance) {
+    public void increaseDistance(int newDistance) {
         int oldDistance = getDistance();
         if (newDistance < oldDistance) {
             setDistance(newDistance);
@@ -757,6 +757,9 @@ final public class WebPage implements Comparable<WebPage> {
         page.setPrevCrawlTime1(time.toEpochMilli());
     }
 
+    /**
+     * Get fetch interval
+     * */
     @NotNull
     public Duration getFetchInterval() {
         long seconds = page.getFetchInterval();
@@ -766,18 +769,30 @@ final public class WebPage implements Comparable<WebPage> {
         return Duration.ofSeconds(seconds);
     }
 
+    /**
+     * Set fetch interval
+     * */
     public void setFetchInterval(@NotNull Duration duration) {
         page.setFetchInterval((int) duration.getSeconds());
     }
 
-    public void setFetchInterval(long interval) {
-        page.setFetchInterval((int) interval);
+    /**
+     * Set fetch interval in seconds
+     * */
+    public void setFetchInterval(long seconds) {
+        page.setFetchInterval((int) seconds);
     }
 
-    public void setFetchInterval(float interval) {
-        page.setFetchInterval(Math.round(interval));
+    /**
+     * Set fetch interval in seconds
+     * */
+    public void setFetchInterval(float seconds) {
+        page.setFetchInterval(Math.round(seconds));
     }
 
+    /**
+     * Get protocol status
+     * */
     @NotNull
     public ProtocolStatus getProtocolStatus() {
         GProtocolStatus protocolStatus = page.getProtocolStatus();
@@ -787,6 +802,9 @@ final public class WebPage implements Comparable<WebPage> {
         return ProtocolStatus.box(protocolStatus);
     }
 
+    /**
+     * Set protocol status
+     * */
     public void setProtocolStatus(@NotNull ProtocolStatus protocolStatus) {
         page.setProtocolStatus(protocolStatus.unbox());
     }
@@ -910,7 +928,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * The cluse used to determine the encoding of the page content
+     * The clues are used to determine the encoding of the page content
      * */
     @NotNull
     public String getEncodingClues() {
@@ -918,7 +936,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * The cluse used to determine the encoding of the page content
+     * The clues are used to determine the encoding of the page content
      * */
     public void setEncodingClues(@NotNull String clues) {
         getMetadata().set(Name.ENCODING_CLUES, clues);
@@ -927,7 +945,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The entire raw document content e.g. raw XHTML
      *
-     * @return a {@link java.nio.ByteBuffer} object.
+     * @return The raw document content in {@link java.nio.ByteBuffer}.
      */
     @Nullable
     public ByteBuffer getContent() {
@@ -946,14 +964,14 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * Set the cached content, keep the page content unmodified
+     * Set the cached content, keep the persisted page content unmodified
      */
     public void setTmpContent(ByteBuffer tmpContent) {
         this.tmpContent = tmpContent;
     }
 
     /**
-     * Get the uncached content
+     * Get the persistent page content
      */
     @Nullable
     public ByteBuffer getPersistContent() {
@@ -975,12 +993,16 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * Get the page content as a string
+     * Get the page content as a string, if the underlying page content is null, return an empty string
      */
     @NotNull
     public String getContentAsString() {
         ByteBuffer buffer = getContent();
-        return ByteUtils.toString(buffer.array());
+        byte[] array = buffer.array();
+        if (array == null) {
+            array = "".getBytes(StandardCharsets.UTF_8);
+        }
+        return ByteUtils.toString(array);
     }
 
     /**
@@ -1058,6 +1080,8 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
+     * Get the decleared content length.
+     *
      * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
      *
      * @return The content length
@@ -1067,7 +1091,9 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * TODO: use a field
+     * Set the decleared content length.
+     *
+     * TODO: use a field for content length
      */
     private void setContentLength(long bytes) {
         long lastBytes = getContentLength();
