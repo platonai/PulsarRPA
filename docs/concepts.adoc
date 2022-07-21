@@ -153,7 +153,7 @@ The most important load options are:
     -outLink     // The selector for out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
     -parse       // Triger the parse phrase
-    -resource  // Fetch the url as a resource without browser rendering
+    -resource    // Fetch the url as a resource without browser rendering
 
 All load options are parsed to a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
 
