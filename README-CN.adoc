@@ -59,7 +59,7 @@ fun main() {
 * 大规模：完全分布式，为大规模采集设计
 * 简单API：一行代码进行采集，或者一行SQL将一个网站栏目转变为表格
 * X-SQL：扩展SQL来管理所有网页数据相关任务：网络爬虫，数据采集，网页内容挖掘，Web BI等
-* 机器人隐身：IP轮换，Web driver隐身，永不被屏蔽
+* 机器人隐身：Web driver 隐身，IP轮换，隐私上下文轮换，永不被屏蔽
 * RPA：拟人行为，采集单网页应用（SPA），或者执行其他有趣的任务
 * 大数据：支持多种多样的底层存储，如本地文件，MongoDB/HBase/Gora等
 * 日志和指标：密切监控并记录每一个事件
@@ -314,6 +314,12 @@ Json格式的响应如下：
     "status": "OK"
 }
 ----
+
+== 在可执行 jar 中体验 Pulsar
+
+我们发布了一个基于 Pulsar 的独立可执行 jar。 下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行享受使用乐趣：
+
+    java -jar exotic-standalone.jar
 
 == 系统要求
 

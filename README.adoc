@@ -59,7 +59,7 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 * Large scale: fully distributed, designed for large scale crawling
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
 * X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-* Bot stealth: IP rotation, web driver stealth, never get banned
+* Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
 * RPA: simulating human behaviors, SPA crawling, or do something else awesome
 * Big data: various backend storage support: MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
@@ -309,6 +309,12 @@ The response is as follows in json format:
     "status": "OK"
 }
 ----
+
+== Experience Pulsar in a executable jar
+
+We have released a standalone, executable jar, based on Pulsar. Download link:https://github.com/platonai/exotic#download[Exotic] and enjoy it with a single command line:
+
+    java -jar exotic-standalone.jar
 
 == Requirements
 
