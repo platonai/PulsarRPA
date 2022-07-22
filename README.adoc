@@ -1,13 +1,17 @@
-= Pulsar README
+= What is Pulsar?
 Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: Pulsar README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
+English | link:README-CN.adoc[简体中文]
+
+== Introduction
+
 Pulsar is the ultimate open source solution to scrape web data at scale.
 
-Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar is an open source solution to address such issues.
+Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar provides a series of advanced features to solve this problem.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
 
@@ -69,7 +73,7 @@ The core Pulsar concepts include the following:
 * Browser Rendering
 * Pulsar Context
 * Pulsar Session
-* Urls
+* URLs
 * Hyperlinks
 * Load Options
 * Event Handler
@@ -314,7 +318,7 @@ The response is as follows in json format:
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
+Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
 Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the following questions:
