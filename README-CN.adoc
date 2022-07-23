@@ -104,6 +104,8 @@ Gradle:
 implementation("ai.platon.pulsar:pulsar-all:1.9.10")
 ----
 
+对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指令来加速构建。
+
 === 基本用法
 
 *Kotlin*
