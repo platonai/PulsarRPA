@@ -339,6 +339,7 @@ Pulsar 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行�
 
 点击链接 link:docs/faq/advanced-topics.adoc[advanced topics] 查看以下问题的答案：
 
+* 大规模网络爬虫有什么困难？
 * 如何每天从电子商务网站上抓取一百万个产品页面？
 * 如何在登录后抓取页面？
 * 如何在浏览器上下文中直接下载资源？
