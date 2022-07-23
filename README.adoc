@@ -331,6 +331,7 @@ Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, any 
 == Advanced topics
 Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the following questions:
 
+* What’s so difficult about scraping web data at scale?
 * How to scrape a million product pages from an e-commerce website a day?
 * How to scrape pages behind a login?
 * How to download resources directly within a browser context?
