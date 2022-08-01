@@ -106,20 +106,20 @@ class UrlFeeder(
         return this
     }
 
-    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
+    fun findByName(name: String): List<PriorityDataCollector<UrlAware>> {
         return combinedDataCollector.collectors.filter { it.name == name }
     }
 
-    fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
+    fun findByName(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
         return combinedDataCollector.collectors.filter { it.name in names }
     }
 
-    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
+    fun findByName(regex: Regex): List<PriorityDataCollector<UrlAware>> {
         return combinedDataCollector.collectors.filter { it.name.matches(regex) }
     }
 
-    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> {
-        return getCollectors(".*$name.*".toRegex())
+    fun findByNameLike(name: String): List<PriorityDataCollector<UrlAware>> {
+        return findByName(".*$name.*".toRegex())
     }
 
     fun remove(collector: DataCollector<UrlAware>): Boolean {

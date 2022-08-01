@@ -10,26 +10,26 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class CollectorHelper(val feeder: UrlFeeder) {
+class UrlFeederHelper(val feeder: UrlFeeder) {
     private val dcLogger = getLogger(DataCollector::class)
     private val urlPool get() = feeder.urlPool
 
-    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> = feeder.getCollectors(name)
+    fun findByName(name: String): List<PriorityDataCollector<UrlAware>> = feeder.findByName(name)
 
-    fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> =
-        feeder.getCollectors(names)
+    fun findByName(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> =
+        feeder.findByName(names)
 
-    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> = feeder.getCollectors(regex)
+    fun findByName(regex: Regex): List<PriorityDataCollector<UrlAware>> = feeder.findByName(regex)
 
-    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> = feeder.getCollectorsLike(name)
+    fun findByNameLike(name: String): List<PriorityDataCollector<UrlAware>> = feeder.findByNameLike(name)
 
-    fun contains(name: String): Boolean = getCollectors(name).isNotEmpty()
+    fun contains(name: String): Boolean = findByName(name).isNotEmpty()
 
-    fun contains(names: Iterable<String>): Boolean = getCollectors(names).isNotEmpty()
+    fun contains(names: Iterable<String>): Boolean = findByName(names).isNotEmpty()
 
-    fun contains(regex: Regex): Boolean = getCollectors(regex).isNotEmpty()
+    fun contains(regex: Regex): Boolean = findByName(regex).isNotEmpty()
 
-    fun containsLike(name: String): Boolean = getCollectorsLike(name).isNotEmpty()
+    fun containsLike(name: String): Boolean = findByNameLike(name).isNotEmpty()
 
     fun addDefaults() {
         feeder.addDefaultCollectors()
@@ -39,19 +39,30 @@ class CollectorHelper(val feeder: UrlFeeder) {
         addAll(listOf(collector))
     }
 
+    fun add(
+        name: String, priority: Int = Priority13.NORMAL.value, queue: Queue<UrlAware> = ConcurrentLinkedQueue()
+    ): QueueCollector {
+        val collector = QueueCollector(queue, priority).also { it.name = name }
+
+        feeder.addCollector(collector)
+        report(collector)
+
+        return collector
+    }
+
     fun addAll(collectors: Iterable<PriorityDataCollector<UrlAware>>) {
         collectors.filterIsInstance<UrlCacheCollector>().forEach {
-            urlPool.unorderedCaches.add(it.urlCache)
+            urlPool.orderedCaches[it.priority] = it.urlCache
         }
         collectors.forEach { report(it) }
         feeder.addCollectors(collectors)
     }
 
-    fun addUrlPoolCollector(priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
-        return addUrlPoolCollector("", priority, urlLoader).also { it.name = "LFC@" + it.id }
+    fun create(priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
+        return create("", priority, urlLoader).also { it.name = "LFC@" + it.id }
     }
 
-    fun addUrlPoolCollector(name: String, priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
+    fun create(name: String, priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
         val urlCache = LoadingUrlCache(name, priority, urlLoader)
         urlPool.unorderedCaches.add(urlCache)
         val collector = UrlCacheCollector(urlCache).also { it.name = name }
@@ -62,27 +73,14 @@ class CollectorHelper(val feeder: UrlFeeder) {
         return collector
     }
 
-    fun addUrlPoolCollector(priority: Int): UrlCacheCollector {
-        return addUrlPoolCollector("", priority).also { it.name = "FC@" + it.id }
+    fun create(priority: Int): UrlCacheCollector {
+        return create("", priority).also { it.name = "FC@" + it.id }
     }
 
-    fun addUrlPoolCollector(name: String, priority: Int): UrlCacheCollector {
+    fun create(name: String, priority: Int): UrlCacheCollector {
         val urlCache = ConcurrentUrlCache(name)
         urlPool.unorderedCaches.add(urlCache)
         val collector = UrlCacheCollector(urlCache).also { it.name = name }
-
-        feeder.addCollector(collector)
-        report(collector)
-
-        return collector
-    }
-
-    fun addQueueCollector(
-        name: String,
-        priority: Int = Priority13.NORMAL.value,
-        queue: Queue<UrlAware> = ConcurrentLinkedQueue()
-    ): QueueCollector {
-        val collector = QueueCollector(queue, priority).also { it.name = name }
 
         feeder.addCollector(collector)
         report(collector)
@@ -95,12 +93,12 @@ class CollectorHelper(val feeder: UrlFeeder) {
     }
 
     fun removeAll(names: Iterable<String>): Collection<DataCollector<UrlAware>> {
-        val collectors = feeder.getCollectors(names)
+        val collectors = feeder.findByName(names)
         return removeAll(collectors)
     }
 
     fun removeAll(regex: Regex): Collection<DataCollector<UrlAware>> {
-        val collectors = feeder.getCollectors(regex)
+        val collectors = feeder.findByName(regex)
         return removeAll(collectors)
     }
 
