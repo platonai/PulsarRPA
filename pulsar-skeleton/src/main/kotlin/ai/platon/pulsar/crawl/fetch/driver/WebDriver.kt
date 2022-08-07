@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.geometric.RectD
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
@@ -93,6 +94,8 @@ interface WebDriver: Closeable {
     suspend fun newSession(): Connection
     suspend fun loadResource(url: String): Connection.Response?
 
+    suspend fun captureScreenshot(selector: String): String?
+    suspend fun captureScreenshot(rect: RectD): String?
     suspend fun stop()
 
     fun free()

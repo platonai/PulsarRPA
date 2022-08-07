@@ -8,10 +8,11 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
+import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
@@ -21,7 +22,12 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
-import kotlinx.coroutines.*
+import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
+import com.github.kklisura.cdt.protocol.types.page.Viewport
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -339,6 +345,35 @@ class ChromeDevtoolsDriver(
         dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
     }
 
+    override suspend fun captureScreenshot(selector: String): String? {
+        if (!refreshState()) {
+            return null
+        }
+
+        val nodeId = scrollIntoViewIfNeeded(selector)
+
+        val p = page
+        val d = dom
+        if (nodeId != null && p != null && d != null) {
+            val rect = ClickableDOM(p, d, nodeId).boundingBox() ?: return null
+            return captureScreenshot(rect)
+        }
+
+        return null
+    }
+
+    override suspend fun captureScreenshot(rect: RectD): String? {
+        val viewport = Viewport().apply { x = rect.x; y = rect.y; width = rect.with; height = rect.height }
+        return captureScreenshot(viewport)
+    }
+
+    suspend fun captureScreenshot(viewport: Viewport): String? {
+        viewport.scale = 1.0
+        return withIOContext {
+            page?.captureScreenshot(CaptureScreenshotFormat.JPEG, 75, viewport, true, false)
+        }
+    }
+
     private fun refreshState(): Boolean {
         navigateEntry?.refresh()
         return isActive
@@ -361,7 +396,7 @@ class ChromeDevtoolsDriver(
         }
 
         try {
-            dom?.focus(nodeId, null, null)
+            dom?.focus(nodeId, rootId, null)
         } catch (e: Exception) {
             logger.warn("Failed to focus #$nodeId | {}", e.message)
         }

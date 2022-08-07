@@ -423,6 +423,10 @@ abstract class AbstractPulsarSession(
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
     @ExperimentalApi
+    override fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>) =
+        scrapeOutPages(portalUrl, options, ":root", fieldSelectors)
+
+    @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
@@ -433,14 +437,42 @@ abstract class AbstractPulsarSession(
     }
 
     @ExperimentalApi
+    override fun scrapeOutPages(
+        portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>> {
+        return loadOutPages(portalUrl, options).asSequence().map { parse(it) }
+            .mapNotNull { it.selectFirstOrNull(restrictSelector) }
+            .map { ele -> fieldSelectors.associateWith { ele.firstTextOrNull(it) } }
+            .toList()
+    }
+
+    @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>) =
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
+
+    /**
+     * Scrape out pages
+     * */
+    @ExperimentalApi
+    override fun scrapeOutPages(portalUrl: String,
+                       options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>> =
+        scrapeOutPages(portalUrl, options, ":root", fieldSelectors)
 
     @ExperimentalApi
     override fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {
         return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
+            .mapNotNull { it.selectFirstOrNull(restrictSelector) }
+            .map { ele -> fieldSelectors.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
+            .toList()
+    }
+
+    @ExperimentalApi
+    override fun scrapeOutPages(
+        portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>> {
+        return loadOutPages(portalUrl, options).asSequence().map { parse(it) }
             .mapNotNull { it.selectFirstOrNull(restrictSelector) }
             .map { ele -> fieldSelectors.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
             .toList()

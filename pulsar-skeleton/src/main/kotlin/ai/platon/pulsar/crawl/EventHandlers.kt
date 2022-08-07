@@ -505,7 +505,7 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
 class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
     private val registeredHandlers = mutableListOf<WebPageWebDriverHandler>()
 
-    fun addFirst(handler: (WebPage, WebDriver) -> Any?): WebPageWebDriverHandlerPipeline {
+    fun addFirst(handler: suspend (WebPage, WebDriver) -> Any?): WebPageWebDriverHandlerPipeline {
         registeredHandlers.add(0, object: AbstractWebPageWebDriverHandler() {
             override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
                 return handler(page, driver)
@@ -524,7 +524,7 @@ class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
         return this
     }
 
-    fun addLast(handler: (WebPage, WebDriver) -> Any?): WebPageWebDriverHandlerPipeline {
+    fun addLast(handler: suspend (WebPage, WebDriver) -> Any?): WebPageWebDriverHandlerPipeline {
         registeredHandlers.add(object: AbstractWebPageWebDriverHandler() {
             override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
                 return handler(page, driver)
