@@ -305,8 +305,6 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun click(selector: String, count: Int) {
-        if (!refreshState()) return
-
         val nodeId = scrollIntoViewIfNeeded(selector) ?: return
         val offset = OffsetD(4.0, 4.0)
 
@@ -346,10 +344,6 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun captureScreenshot(selector: String): String? {
-        if (!refreshState()) {
-            return null
-        }
-
         val nodeId = scrollIntoViewIfNeeded(selector)
 
         val p = page
@@ -363,12 +357,15 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun captureScreenshot(rect: RectD): String? {
-        val viewport = Viewport().apply { x = rect.x; y = rect.y; width = rect.with; height = rect.height }
+        val viewport = Viewport().apply {
+            x = rect.x; y = rect.y
+            width = rect.with; height = rect.height
+            scale = 1.0
+        }
         return captureScreenshot(viewport)
     }
 
     suspend fun captureScreenshot(viewport: Viewport): String? {
-        viewport.scale = 1.0
         return withIOContext {
             page?.captureScreenshot(CaptureScreenshotFormat.JPEG, 75, viewport, true, false)
         }

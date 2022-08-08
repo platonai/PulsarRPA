@@ -374,7 +374,15 @@ interface PulsarSession : AutoCloseable {
     /**
      * Scrape a webpage
      * */
+    fun scrape(url: String, options: LoadOptions, fieldSelectors: Iterable<String>): Map<String, String?>
+    /**
+     * Scrape a webpage
+     * */
     fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?>
+    /**
+     * Scrape a webpage
+     * */
+    fun scrape(url: String, options: LoadOptions, fieldSelectors: Map<String, String>): Map<String, String?>
     /**
      * Scrape a webpage
      * */
@@ -385,7 +393,19 @@ interface PulsarSession : AutoCloseable {
      * Scrape a webpage
      * */
     fun scrape(
+        url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>>
+    /**
+     * Scrape a webpage
+     * */
+    fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>>
+    /**
+     * Scrape a webpage
+     * */
+    fun scrape(
+        url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
     /**

@@ -392,28 +392,42 @@ abstract class AbstractPulsarSession(
 
     override fun loadDocument(normUrl: NormUrl) = parse(load(normUrl))
 
-    override fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?> {
-        val document = loadDocument(url, args)
+    override fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?> =
+        scrape(url, options(args), fieldSelectors)
+
+    override fun scrape(url: String, options: LoadOptions, fieldSelectors: Iterable<String>): Map<String, String?> {
+        val document = loadDocument(url, options)
         return fieldSelectors.associateWith { document.selectFirstOrNull(it)?.text() }
     }
 
-    override fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?> {
-        val document = loadDocument(url, args)
+    override fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?> =
+        scrape(url, options(args), fieldSelectors)
+
+    override fun scrape(url: String, options: LoadOptions, fieldSelectors: Map<String, String>): Map<String, String?> {
+        val document = loadDocument(url, options)
         return fieldSelectors.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
     }
 
     override fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>> = scrape(url, options(args), restrictSelector, fieldSelectors)
+
+    override fun scrape(
+        url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>> {
-        return loadDocument(url, args).select(restrictSelector).map { ele ->
+        return loadDocument(url, options).select(restrictSelector).map { ele ->
             fieldSelectors.associateWith { ele.selectFirstOrNull(it)?.text() }
         }
     }
 
     override fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>> = scrape(url, options(args), restrictSelector, fieldSelectors)
+
+    override fun scrape(
+        url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>> {
-        return loadDocument(url, args).select(restrictSelector).map { ele ->
+        return loadDocument(url, options).select(restrictSelector).map { ele ->
             fieldSelectors.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
         }
     }
