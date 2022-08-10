@@ -369,6 +369,22 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
 };
 
 /**
+ * @param {String} selector The element to scroll to
+ * */
+__pulsar_utils__.scrollIntoView = function(selector) {
+    let ele = document.querySelector(selector)
+    if (ele) {
+        ele.scrollIntoView(
+            {
+                block: "start",
+                inline: "nearest",
+                behavior: 'auto',
+            }
+        )
+    }
+};
+
+/**
  * Select the first element and click it
  *
  * @param  {String} selector
@@ -658,7 +674,23 @@ __pulsar_utils__.formatDOMRect = function(rect) {
 /**
  * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
  *
- * @param node {Node|Element|Text}
+ * @param selector {string} The selector to get the element from.
+ * @return {DOMRect|Boolean|null}
+ * */
+__pulsar_utils__.queryClientRect = function(selector) {
+    let ele = document.querySelector(selector);
+    if (!ele) {
+        return null;
+    }
+
+    let rect = this.getClientRect(ele)
+    return this.formatDOMRect(rect)
+};
+
+/**
+ * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
+ *
+ * @param node {Node|Element}
  * @return {DOMRect|Boolean|null}
  * */
 __pulsar_utils__.getClientRect = function(node) {

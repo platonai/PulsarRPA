@@ -244,9 +244,7 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The web pages
      */
-    fun loadAll(
-        urls: Iterable<String>, options: LoadOptions = options(), toItemOption: Boolean = false
-    ): List<WebPage>
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = options()): List<WebPage>
 
     /**
      * Load all urls with specified options

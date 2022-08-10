@@ -21,6 +21,7 @@ import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdInitializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kklisura.cdt.protocol.types.dom.Rect
 import com.github.kklisura.cdt.protocol.types.network.Cookie
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
@@ -33,6 +34,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
@@ -304,6 +306,22 @@ class ChromeDevtoolsDriver(
         return false
     }
 
+    /**
+     * This method fetches an element with `selector`, scrolls it into view if
+     * needed, and then uses {@link Mouse} to click in the center of the
+     * element. If there's no element matching `selector`, the method do not click anything.
+     * @remarks Bear in mind that if `click()` triggers a navigation event and
+     * there's a separate `driver.waitForNavigation()` promise to be resolved, you
+     * may end up with a race condition that yields unexpected results. The
+     * correct pattern for click and wait for navigation is the following:
+     * ```kotlin
+     * page.waitForNavigation(waitOptions)
+     * page.click(selector, clickOptions)
+     * ```
+     * @param selector - A `selector` to search for element to click. If there are
+     * multiple elements satisfying the `selector`, the first will be clicked
+     * @param count - Click count
+     */
     override suspend fun click(selector: String, count: Int) {
         val nodeId = scrollIntoViewIfNeeded(selector) ?: return
         val offset = OffsetD(4.0, 4.0)
@@ -335,31 +353,57 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun scrollTo(selector: String) {
-        if (!refreshState()) return
-
-        val nodeId = focus(selector)
-        if (nodeId == 0) return
-
-        dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
+        scrollIntoViewIfNeeded(selector)
     }
 
+    /**
+     * This method scrolls element into view if needed, and then uses
+     * {@link page.captureScreenshot} to take a screenshot of the element.
+     * If the element is detached from DOM, the method throws an error.
+     */
     override suspend fun captureScreenshot(selector: String): String? {
         val nodeId = scrollIntoViewIfNeeded(selector)
-
-        val p = page
-        val d = dom
-        if (nodeId != null && p != null && d != null) {
-            val rect = ClickableDOM(p, d, nodeId).boundingBox() ?: return null
-            return captureScreenshot(rect)
+        if (nodeId == null || nodeId <= 0) {
+            logger.info("Can not find node for selector <{}>", selector)
+            return null
         }
 
-        return null
+        val vi = firstAttr(selector, "vi") ?: return captureScreenshotWithoutVi(selector)
+
+        val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
+        if (quad.size != 4) {
+            logger.warn("Invalid node vi information for selector <{}>", selector)
+            return null
+        }
+
+        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
+
+        return captureScreenshot(rect)
     }
 
-    override suspend fun captureScreenshot(rect: RectD): String? {
+    private suspend fun captureScreenshotWithoutVi(selector: String): String? {
+        val nodeClip = calculateNodeClip(selector)
+
+        if (nodeClip == null) {
+            logger.info("Can not calculate node clip | {}", selector)
+            return null
+        }
+
+        val rect = nodeClip.rect
+        if (rect == null) {
+            logger.info("Can not take clip | {}", selector)
+            return null
+        }
+
+        // val clip = normalizeClip(rect)
+
+        return captureScreenshot(rect)
+    }
+
+    override suspend fun captureScreenshot(clip: RectD): String? {
         val viewport = Viewport().apply {
-            x = rect.x; y = rect.y
-            width = rect.with; height = rect.height
+            x = clip.x; y = clip.y
+            width = clip.width; height = clip.height
             scale = 1.0
         }
         return captureScreenshot(viewport)
@@ -369,6 +413,48 @@ class ChromeDevtoolsDriver(
         return withIOContext {
             page?.captureScreenshot(CaptureScreenshotFormat.JPEG, 75, viewport, true, false)
         }
+    }
+
+    /**
+     * TODO: This method is not implemented correctly yet.
+     */
+    private suspend fun calculateNodeClip(selector: String): NodeClip? {
+        val nodeId = querySelector(selector)
+        if (nodeId == null || nodeId <= 0) {
+            logger.info("Can not find node | {}", selector)
+            return null
+        }
+
+        evaluate("__pulsar_utils__.scrollToTop()")
+        val clientRect = evaluate("__pulsar_utils__.queryClientRect('$selector')")?.toString()
+        if (clientRect == null) {
+            logger.info("Can not query client rect for selector <{}>", selector)
+            return null
+        }
+
+        val quad = clientRect.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
+        if (quad.size != 4) {
+            return null
+        }
+
+        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
+
+        val p = page ?: return null
+//        val d = dom ?: return null
+
+        val viewport = p.layoutMetrics.cssLayoutViewport
+        val pageX = viewport.pageX
+        val pageY = viewport.pageY
+
+        return NodeClip(nodeId, pageX, pageY, rect)
+    }
+
+    private fun normalizeClip(clip: RectD): RectD {
+        val x = clip.x.roundToInt()
+        val y = clip.y.roundToInt()
+        val width = (clip.width + clip.x - x).roundToInt()
+        val height = (clip.height + clip.y - y).roundToInt()
+        return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
     }
 
     private fun refreshState(): Boolean {
@@ -382,6 +468,17 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    /**
+     * This method fetches an element with `selector` and focuses it. If there's no
+     * element matching `selector`, the method throws an error.
+     * @param selector - A
+     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
+     * of an element to focus. If there are multiple elements satisfying the
+     * selector, the first will be focused.
+     * @returns  NodeId which resolves when the element matching selector is
+     * successfully focused. returns 0 if there is no element
+     * matching selector.
+     */
     private fun focus(selector: String): Int {
         if (!refreshState()) return 0
 
@@ -410,8 +507,8 @@ class ChromeDevtoolsDriver(
         }.getOrNull()
     }
 
-    private fun scrollIntoViewIfNeeded(selector: String): Int? {
-        if (!refreshState()) return 0
+    private suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
+        if (!refreshState()) return null
 
         val nodeId = querySelector(selector)
         if (nodeId == null || nodeId == 0) {
@@ -427,7 +524,14 @@ class ChromeDevtoolsDriver(
             return null
         }
 
-        dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
+        try {
+            dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
+        } catch (t: Throwable) {
+            logger.info("Fallback to Element.scrollIntoView | {}", selector)
+            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
+            evaluate("__pulsar_utils__.scrollIntoView('$selector')")
+        }
+
         return nodeId
     }
 

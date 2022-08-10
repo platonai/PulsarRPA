@@ -2,50 +2,78 @@ package ai.platon.pulsar.examples.sites.food.dianping
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.session.PulsarSession
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.runBlocking
+import java.awt.RenderingHints
+import java.awt.Transparency
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.nio.file.Files
 import java.util.*
+import javax.imageio.ImageIO
 
-class WebDriverExt(
+class Screenshot(
     val page: WebPage,
     val driver: WebDriver
 ) {
-
-    suspend fun screenshotNoExcept(name: String, selector: String) {
-        kotlin.runCatching { screenshot(name, selector) }.onFailure { it.printStackTrace() }
+    companion object {
+        val OCR = "OCR-"
     }
 
-    suspend fun screenshot(name: String, selector: String) {
-        val screenshot = driver.captureScreenshot(selector) ?: return
+    private val logger = getLogger(this)
+
+    suspend fun screenshotNoExcept(name: String, selector: String): String? {
+        return kotlin.runCatching { screenshot(name, selector) }
+            .onFailure { it.printStackTrace() }.getOrNull()
+    }
+
+    suspend fun screenshot(name: String, selector: String): String? {
+        val screenshot = driver.captureScreenshot(selector)
+        if (screenshot == null) {
+            logger.info("Failed to take screenshot | {}", selector)
+            return null
+        }
 
         val path = AppPaths.WEB_CACHE_DIR
             .resolve("screenshot")
             .resolve(AppPaths.fileId(page.url))
             .resolve("$name.jpg")
-        AppFiles.saveTo(Base64.getDecoder().decode(screenshot), path, true)
+        val bytes = Base64.getDecoder().decode(screenshot)
+        AppFiles.saveTo(bytes, path, true)
 
-        val metadataPath = path.resolveSibling("_metadata.txt")
-        val exportPath = page.getVar(Name.ORIGINAL_EXPORT_PATH.name)
-        val metadata = "url:\t${page.url}\nexportPath:\t$exportPath"
-        Files.writeString(metadataPath, metadata)
+        return path.toString()
+    }
+
+    private fun getScaledImage(srcImg: BufferedImage, w: Int, h: Int): BufferedImage {
+        val resizedImg = BufferedImage(w, h, Transparency.TRANSLUCENT)
+        val g2 = resizedImg.createGraphics()
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+        g2.drawImage(srcImg, 0, 0, w, h, null)
+        g2.dispose()
+        return resizedImg
     }
 }
 
-fun main() {
-    val url = "https://www.dianping.com/shop/Enk0gTkqu0Cyj7Ch"
-    val args = "-i 1s -ignoreFailure"
+class RestaurantCrawler(
+    val session: PulsarSession = PulsarContexts.createSession()
+) {
+    val commentSelectors = IntRange(1, 10)
+        .associate { i -> "comment-$i" to "#reviewlist-wrapper li.comment-item:nth-child($i) div.content" }
 
-    val session = PulsarContexts.createSession()
-
-    val fieldSelectors = mapOf(
+    val fieldSelectors = mutableMapOf(
         "title" to ".basic-info h2",
         "score" to ".basic-info .brief-info .mid-score",
         "reviewCount" to "#reviewCount",
@@ -53,16 +81,48 @@ fun main() {
         "commentScores" to "#comment_score",
         "address" to "#address",
         "tel" to ".tel",
-    )
+    ).also { it.putAll(commentSelectors) }
 
-    val options = session.options(args)
-    options.ensureEventHandler().simulateEventHandler.onAfterComputeFeature.addLast { page, driver ->
-        fieldSelectors.entries.asFlow().flowOn(Dispatchers.IO).collect { (name, selector) ->
-            WebDriverExt(page, driver).screenshotNoExcept(name, selector)
+    fun options(args: String): LoadOptions {
+        val options = session.options(args)
+        val eh = options.ensureEventHandler()
+
+        val seh = eh.simulateEventHandler
+        seh.onBeforeComputeFeature.addLast { page, driver ->
+            commentSelectors.entries.mapIndexed { i, _ ->
+                "#reviewlist-wrapper .comment-item:nth-child($i) .more"
+            }.asFlow().flowOn(Dispatchers.IO).collect { selector ->
+                driver.click(selector)
+                delay(500)
+            }
         }
-    }
-    session.load(url, options)
 
-    val fields = session.scrape(url, args, fieldSelectors)
+        seh.onAfterComputeFeature.addLast { page, driver ->
+            fieldSelectors.entries.asFlow().flowOn(Dispatchers.IO).collect { (name, selector) ->
+                delay(1500)
+                Screenshot(page, driver).screenshotNoExcept(name, selector)
+            }
+        }
+
+        return options
+    }
+}
+
+/**
+ * Running the program directly in the IDE may crash the system, use command line instead:
+ *
+java -Xmx10g -Xms2G -cp pulsar-examples*.jar \
+-D"loader.main=ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt" \
+org.springframework.boot.loader.PropertiesLauncher
+ * */
+fun main() {
+    val url = "https://www.dianping.com/shop/Enk0gTkqu0Cyj7Ch"
+    val args = "-i 1s -ignoreFailure -parse"
+
+    val crawler = RestaurantCrawler()
+
+    val fields = crawler.session.scrape(url, crawler.options(args), crawler.fieldSelectors)
     println(GsonBuilder().setPrettyPrinting().create().toJson(fields))
+
+    readLine()
 }

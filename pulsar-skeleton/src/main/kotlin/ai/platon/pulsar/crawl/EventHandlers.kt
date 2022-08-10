@@ -142,22 +142,22 @@ class UrlAwareFilterPipeline: UrlAwareFilter(), EventHandlerPipeline {
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+    fun addFirst(handler: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addFirst(vararg handlers: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+    fun addFirst(vararg handlers: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
         handlers.forEach { addFirst(it) }
         return this
     }
 
-    fun addLast(handler: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+    fun addLast(handler: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: (UrlAware) -> UrlAware): UrlAwareFilterPipeline {
+    fun addLast(vararg handlers: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
         handlers.toCollection(registeredHandlers)
         return this
     }
@@ -357,6 +357,8 @@ interface LoadEventHandler {
     val onAfterHtmlParse: HtmlDocumentHandlerPipeline
     val onAfterParse: WebPageHandlerPipeline
     val onAfterLoad: WebPageHandlerPipeline
+
+    fun combine(other: LoadEventHandler): LoadEventHandler
 }
 
 abstract class AbstractLoadEventHandler(
@@ -374,7 +376,27 @@ abstract class AbstractLoadEventHandler(
     override val onAfterHtmlParse: HtmlDocumentHandlerPipeline = HtmlDocumentHandlerPipeline(),
     override val onAfterParse: WebPageHandlerPipeline = WebPageHandlerPipeline(),
     override val onAfterLoad: WebPageHandlerPipeline = WebPageHandlerPipeline()
-): LoadEventHandler
+): LoadEventHandler {
+
+    override fun combine(other: LoadEventHandler): AbstractLoadEventHandler {
+        onFilter.addLast(other.onFilter)
+        onNormalize.addLast(other.onNormalize)
+        onBeforeLoad.addLast(other.onBeforeLoad)
+        onBeforeFetch.addLast(other.onBeforeFetch)
+        onBeforeBrowserLaunch.addLast(other.onBeforeBrowserLaunch)
+        onAfterBrowserLaunch.addLast(other.onAfterBrowserLaunch)
+        onAfterFetch.addLast(other.onAfterFetch)
+        onBeforeParse.addLast(other.onBeforeParse)
+        onBeforeHtmlParse.addLast(other.onBeforeHtmlParse)
+        onBeforeExtract.addLast(other.onBeforeExtract)
+        onAfterExtract.addLast(other.onAfterExtract)
+        onAfterHtmlParse.addLast(other.onAfterHtmlParse)
+        onAfterParse.addLast(other.onAfterParse)
+        onAfterLoad.addLast(other.onAfterLoad)
+
+        return this
+    }
+}
 
 open class DefaultLoadEventHandler: AbstractLoadEventHandler()
 
@@ -479,6 +501,8 @@ interface SimulateEventHandler {
     val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline
     val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline
     val onAfterComputeFeature: WebPageWebDriverHandlerPipeline
+
+    fun combine(other: SimulateEventHandler): SimulateEventHandler
 }
 
 abstract class AbstractSimulateEventHandler: SimulateEventHandler {
@@ -500,6 +524,15 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
     override val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onAfterComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+
+    override fun combine(other: SimulateEventHandler): SimulateEventHandler {
+        onBeforeCheckDOMState.addLast(other.onBeforeCheckDOMState)
+        onAfterCheckDOMState.addLast(other.onAfterCheckDOMState)
+        onBeforeComputeFeature.addLast(other.onBeforeComputeFeature)
+        onAfterComputeFeature.addLast(other.onAfterComputeFeature)
+
+        return this
+    }
 }
 
 class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
@@ -578,6 +611,8 @@ interface CrawlEventHandler {
     val onBeforeLoad: UrlAwareHandlerPipeline
     val onLoad: UrlAwareHandlerPipeline
     val onAfterLoad: UrlAwareWebPageHandlerPipeline
+
+    fun combine(other: CrawlEventHandler): CrawlEventHandler
 }
 
 abstract class AbstractCrawlEventHandler(
@@ -586,7 +621,16 @@ abstract class AbstractCrawlEventHandler(
     override val onBeforeLoad: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
     override val onLoad: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
     override val onAfterLoad: UrlAwareWebPageHandlerPipeline = UrlAwareWebPageHandlerPipeline()
-): CrawlEventHandler
+): CrawlEventHandler {
+    override fun combine(other: CrawlEventHandler): CrawlEventHandler {
+        onFilter.addLast(other.onFilter)
+        onNormalize.addLast(other.onNormalize)
+        onBeforeLoad.addLast(other.onBeforeLoad)
+        onLoad.addLast(other.onLoad)
+        onAfterLoad.addLast(other.onAfterLoad)
+        return this
+    }
+}
 
 class DefaultCrawlEventHandler: AbstractCrawlEventHandler()
 
@@ -594,19 +638,30 @@ interface PulsarEventHandler {
     val loadEventHandler: LoadEventHandler
     val simulateEventHandler: SimulateEventHandler
     val crawlEventHandler: CrawlEventHandler
+
+    fun combone(other: PulsarEventHandler): PulsarEventHandler
 }
 
 abstract class AbstractPulsarEventHandler(
     override val loadEventHandler: AbstractLoadEventHandler,
     override val simulateEventHandler: AbstractSimulateEventHandler,
     override val crawlEventHandler: AbstractCrawlEventHandler
-): PulsarEventHandler
+): PulsarEventHandler {
+    override fun combone(other: PulsarEventHandler): PulsarEventHandler {
+        loadEventHandler.combine(other.loadEventHandler)
+        simulateEventHandler.combine(other.simulateEventHandler)
+        crawlEventHandler.combine(other.crawlEventHandler)
+        return this
+    }
+}
 
 open class DefaultPulsarEventHandler(
     loadEventHandler: DefaultLoadEventHandler = DefaultLoadEventHandler(),
     simulateEventHandler: DefaultSimulateEventHandler = DefaultSimulateEventHandler(),
     crawlEventHandler: DefaultCrawlEventHandler = DefaultCrawlEventHandler()
-): AbstractPulsarEventHandler(loadEventHandler, simulateEventHandler, crawlEventHandler)
+): AbstractPulsarEventHandler(loadEventHandler, simulateEventHandler, crawlEventHandler) {
+
+}
 
 open class PulsarEventHandlerTemplate(
     loadEventHandler: DefaultLoadEventHandler = DefaultLoadEventHandler(),

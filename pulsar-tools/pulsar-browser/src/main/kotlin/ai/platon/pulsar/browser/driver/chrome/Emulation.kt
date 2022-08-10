@@ -90,7 +90,10 @@ class ClickableDOM(
     }
 
     fun boundingBox(): RectD? {
-        val box = dom.getBoxModel(nodeId, null, null)
+        val box = kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
+            .onFailure { logger.warn("Failed to get box model for #{} | {}", nodeId, it.message) }
+            .getOrNull() ?: return null
+
         val quad = box.border
         if (quad.isEmpty()) {
             return null
@@ -100,6 +103,8 @@ class ClickableDOM(
         val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()!!
         val width = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()!! - x
         val height = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()!! - y
+
+        // TODO: handle iframes
 
         return RectD(x, y, width, height)
     }
@@ -262,3 +267,10 @@ class Keyboard(private val input: Input) {
 class Touchscreen() {
 
 }
+
+class NodeClip(
+    var nodeId: Int = 0,
+    var pageX: Int = 0,
+    var pageY: Int = 0,
+    var rect: RectD? = null,
+)

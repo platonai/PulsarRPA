@@ -61,6 +61,9 @@ interface WebDriver: Closeable {
     suspend fun navigateTo(url: String)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
 
+    /**
+     * Brings page to front (activates tab).
+     */
     suspend fun bringToFront()
     /**
      * Returns when element specified by selector satisfies {@code state} option.
@@ -94,6 +97,10 @@ interface WebDriver: Closeable {
     suspend fun newSession(): Connection
     suspend fun loadResource(url: String): Connection.Response?
 
+    /**
+     * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     * If the element is detached from DOM, the method throws an error.
+     */
     suspend fun captureScreenshot(selector: String): String?
     suspend fun captureScreenshot(rect: RectD): String?
     suspend fun stop()

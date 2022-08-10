@@ -269,8 +269,8 @@ abstract class AbstractPulsarSession(
      * @param options The load options for all urls
      * @return The web pages
      */
-    override fun loadAll(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<WebPage> {
-        val normUrls = normalize(urls, options, toItemOption)
+    override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
+        val normUrls = normalize(urls, options)
         return context.loadAll(normUrls)
     }
 
@@ -306,7 +306,7 @@ abstract class AbstractPulsarSession(
     override fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, options(args))
 
     /**
-     * Load all out pages in a portal page
+     * Load out pages from a portal page
      *
      * @param portalUrl    The portal url from where to load pages
      * @param options The load options
@@ -316,6 +316,10 @@ abstract class AbstractPulsarSession(
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options
         val itemOpts = normUrl.options.createItemOptions()
+
+        require(normUrl.options.eventHandler == options.eventHandler)
+        require(options.itemEventHandler == itemOpts.eventHandler)
+
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
 
         val links = loadDocument(normUrl)
