@@ -18,8 +18,6 @@ import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.OpenPageCategory
-import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverAdapter
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
@@ -31,12 +29,12 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
-open class EmulateEventHandler(
+open class BrowserEmulatorEventHandler(
         private val driverPoolManager: WebDriverPoolManager,
         private val messageWriter: MiscMessageWriter? = null,
         private val immutableConfig: ImmutableConfig
 ) {
-    protected val logger = LoggerFactory.getLogger(EmulateEventHandler::class.java)!!
+    protected val logger = LoggerFactory.getLogger(BrowserEmulatorEventHandler::class.java)!!
     protected val tracer = logger.takeIf { it.isTraceEnabled }
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val takeScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
@@ -54,6 +52,14 @@ open class EmulateEventHandler(
     protected val smallPageRate get() = 100 * smallPages.count / numNavigates.get()
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
+
+    val pageCategorySniffer: CombinedPageCategorySniffer = CombinedPageCategorySniffer(immutableConfig).apply {
+        sniffers.add(DefaultPageCategorySniffer(immutableConfig))
+    }
+
+    var htmlIntegrityChecker: CombinedHtmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
+        checkers.add(DefaultHtmlIntegrityChecker(jsInvadingEnabled, immutableConfig))
+    }
 
     fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
@@ -76,7 +82,7 @@ open class EmulateEventHandler(
         pageSourceByteHistogram.update(length)
         pageSourceBytes.mark(length.toLong())
 
-        pageDatum.pageCategory = sniffPageCategory(task.page)
+        pageDatum.pageCategory = pageCategorySniffer(pageDatum)
         pageDatum.protocolStatus = checkErrorPage(task.page, pageDatum.protocolStatus)
         if (!pageDatum.protocolStatus.isSuccess) {
             // The browser shows internal error page, which is no value to store
@@ -86,7 +92,7 @@ open class EmulateEventHandler(
         }
 
         // Check if the page source is integral
-        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.protocolStatus, task)
+        val integrity = htmlIntegrityChecker(task.pageSource, task.pageDatum)
         // Check browse timeout event, transform status to be success if the page source is good
         if (pageDatum.protocolStatus.isTimeout) {
             if (integrity.isOK) {
@@ -116,56 +122,13 @@ open class EmulateEventHandler(
         return createResponse(task, pageDatum)
     }
 
-    open fun sniffPageCategory(page: WebPage): OpenPageCategory {
-        return OpenPageCategory(PageCategory.UNKNOWN)
-    }
-
     open fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus {
         return status
-    }
-
-    /**
-     * Check if the html is integral before field extraction, a further html integrity checking can be
-     * applied after field extraction.
-     * */
-    open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: NavigateTask): HtmlIntegrity {
-        val length = pageSource.length.toLong()
-
-        return when {
-            length == 0L -> HtmlIntegrity.EMPTY_0B
-            length == 39L -> HtmlIntegrity.EMPTY_39B
-            HtmlUtils.isBlankBody(pageSource) -> HtmlIntegrity.BLANK_BODY
-            else -> checkHtmlIntegrity(pageSource)
-        }
     }
 
     open fun normalizePageSource(url: String, pageSource: String): StringBuilder {
         // The browser has already convert source code to UTF-8
         return HtmlUtils.replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
-    }
-
-    open fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
-        val p0 = pageSource.indexOf("</head>")
-        val p1 = pageSource.indexOf("<body", p0)
-        if (p1 <= 0) return HtmlIntegrity.OTHER
-        val p2 = pageSource.indexOf(">", p1)
-        if (p2 < p1) return HtmlIntegrity.OTHER
-        // no any link, it's broken
-        val p3 = pageSource.indexOf("<a", p2)
-        if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
-
-        if (jsInvadingEnabled) {
-            // TODO: optimize using region match
-            val bodyTag = pageSource.substring(p1, p2)
-            tracer?.trace("Body tag: $bodyTag")
-            // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
-            val r = bodyTag.contains("data-error=\"0\"")
-            if (!r) {
-                return HtmlIntegrity.NO_JS_OK_FLAG
-            }
-        }
-
-        return HtmlIntegrity.OK
     }
 
     open fun handleBrowseTimeout(task: NavigateTask) {
@@ -235,7 +198,8 @@ open class EmulateEventHandler(
     fun handleBrokenPageSource(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
         return when {
             // should cancel all running tasks and reset the privacy context and then re-fetch them
-            htmlIntegrity.isBanned -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
+            htmlIntegrity.isRobotCheck -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
+            htmlIntegrity.isForbidden -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also { bannedPages.mark() }
             htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }

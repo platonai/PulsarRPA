@@ -123,8 +123,10 @@ open class BrowserSettings(
     companion object {
         private val logger = getLogger(BrowserSettings::class)
 
-        // required
+        // The viewport size for browser to rendering all webpages
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
+        // Compression quality from range [0..100] (jpeg only) to capture screenshots
+        var screenshotQuality = 50
         // Available user agents
         val userAgents = mutableListOf<String>()
         const val scriptNamePrefix = "__pulsar_"

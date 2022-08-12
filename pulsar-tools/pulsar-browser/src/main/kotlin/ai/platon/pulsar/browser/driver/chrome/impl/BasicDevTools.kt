@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCTimeoutException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
@@ -18,9 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.type.TypeFactory
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -83,7 +82,10 @@ class EventDispatcher : Consumer<String> {
     private val logger = LoggerFactory.getLogger(EventDispatcher::class.java)
 
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
-    private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
+//    private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
+    private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> = ConcurrentHashMap()
+
+    private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
 
     fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
 
@@ -190,8 +192,7 @@ class EventDispatcher : Consumer<String> {
         synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
         if (unmodifiedListeners.isEmpty()) return
 
-        val scope = CoroutineScope(Dispatchers.Default)
-        scope.launch {
+        eventDispatcherScope.launch {
             handleEvent0(params, unmodifiedListeners)
         }
     }
@@ -301,8 +302,8 @@ abstract class BasicDevTools(
             }
 
             if (!responded) {
-                logger.warn("Timeout to wait for ws response #{}", numInvokes.count)
-                throw ChromeRPCException("Timeout to wait for ws response #${numInvokes.count}")
+                val methodName = method.method
+                throw ChromeRPCTimeoutException("Response #${numInvokes.count} timeout for $methodName")
             }
 
             if (future.isSuccess) {

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -142,6 +143,7 @@ abstract class PrivacyContext(
         val status = result.status
         when {
             status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> markLeaked()
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.FORBIDDEN) -> markLeaked()
             status.isRetry(RetryScope.PRIVACY) -> markWarning()
             status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
             status.isSuccess -> markSuccess()

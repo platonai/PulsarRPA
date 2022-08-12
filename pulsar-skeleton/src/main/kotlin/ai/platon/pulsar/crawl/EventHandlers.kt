@@ -7,6 +7,7 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -634,12 +635,70 @@ abstract class AbstractCrawlEventHandler(
 
 class DefaultCrawlEventHandler: AbstractCrawlEventHandler()
 
+abstract class PageDatumHandler: (String, PageDatum) -> Unit, AbstractEventHandler() {
+    abstract override operator fun invoke(pageSource: String, pageDatum: PageDatum)
+}
+
+class PageDatumHandlerPipeline: PageDatumHandler(), EventHandlerPipeline {
+    private val registeredHandlers = Collections.synchronizedList(mutableListOf<(String, PageDatum) -> Unit>())
+
+    override val size: Int
+        get() = registeredHandlers.size
+
+    fun addFirst(handler: (String, PageDatum) -> Unit): PageDatumHandlerPipeline {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addFirst(vararg handlers: (String, PageDatum) -> Unit): PageDatumHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: (String, PageDatum) -> Unit): PageDatumHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: (String, PageDatum) -> Unit): PageDatumHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
+        return this
+    }
+
+    override operator fun invoke(pageSource: String, pageDatum: PageDatum) {
+        registeredHandlers.forEach { it(pageSource, pageDatum) }
+    }
+}
+
+interface EmulateEventHandler {
+    val onSniffPageCategory: PageDatumHandlerPipeline
+    val onCheckHtmlIntegrity: PageDatumHandlerPipeline
+
+    fun combine(other: EmulateEventHandler): EmulateEventHandler
+}
+
+abstract class AbstractEmulateEventHandler(
+    override val onSniffPageCategory: PageDatumHandlerPipeline = PageDatumHandlerPipeline(),
+    override val onCheckHtmlIntegrity: PageDatumHandlerPipeline = PageDatumHandlerPipeline(),
+): EmulateEventHandler {
+    override fun combine(other: EmulateEventHandler): EmulateEventHandler {
+        onSniffPageCategory.addLast(other.onSniffPageCategory)
+        onCheckHtmlIntegrity.addLast(other.onCheckHtmlIntegrity)
+        return this
+    }
+}
+
+class DefaultEmulateEventHandler: AbstractEmulateEventHandler() {
+    override val onSniffPageCategory: PageDatumHandlerPipeline = PageDatumHandlerPipeline()
+    override val onCheckHtmlIntegrity: PageDatumHandlerPipeline = PageDatumHandlerPipeline()
+}
+
 interface PulsarEventHandler {
     val loadEventHandler: LoadEventHandler
     val simulateEventHandler: SimulateEventHandler
     val crawlEventHandler: CrawlEventHandler
 
-    fun combone(other: PulsarEventHandler): PulsarEventHandler
+    fun combine(other: PulsarEventHandler): PulsarEventHandler
 }
 
 abstract class AbstractPulsarEventHandler(
@@ -647,7 +706,7 @@ abstract class AbstractPulsarEventHandler(
     override val simulateEventHandler: AbstractSimulateEventHandler,
     override val crawlEventHandler: AbstractCrawlEventHandler
 ): PulsarEventHandler {
-    override fun combone(other: PulsarEventHandler): PulsarEventHandler {
+    override fun combine(other: PulsarEventHandler): PulsarEventHandler {
         loadEventHandler.combine(other.loadEventHandler)
         simulateEventHandler.combine(other.simulateEventHandler)
         crawlEventHandler.combine(other.crawlEventHandler)

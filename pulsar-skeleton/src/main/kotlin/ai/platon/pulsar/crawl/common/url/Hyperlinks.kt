@@ -270,7 +270,7 @@ fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<W
 
     val handler = CompleteWebPageHyperlinkHandler(link)
     link.eventHandler.loadEventHandler.onAfterLoad.addLast(handler)
-    options.eventHandler?.let { link.eventHandler.combone(it) }
+    options.eventHandler?.let { link.eventHandler.combine(it) }
 
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 

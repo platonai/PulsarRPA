@@ -35,15 +35,10 @@ class Screenshot(
 
     private val logger = getLogger(this)
 
-    suspend fun screenshotNoExcept(name: String, selector: String): String? {
-        return kotlin.runCatching { screenshot(name, selector) }
-            .onFailure { it.printStackTrace() }.getOrNull()
-    }
-
     suspend fun screenshot(name: String, selector: String): String? {
         val screenshot = driver.captureScreenshot(selector)
         if (screenshot == null) {
-            logger.info("Failed to take screenshot | {}", selector)
+            logger.info("Failed to take screenshot for {}", selector)
             return null
         }
 
@@ -71,7 +66,7 @@ class RestaurantCrawler(
     val session: PulsarSession = PulsarContexts.createSession()
 ) {
     val commentSelectors = IntRange(1, 10)
-        .associate { i -> "comment-$i" to "#reviewlist-wrapper li.comment-item:nth-child($i) div.content" }
+        .associate { i -> "comment-$i" to "#reviewlist-wrapper li.comment-item:nth-child($i) p.desc.J-desc" }
 
     val fieldSelectors = mutableMapOf(
         "title" to ".basic-info h2",
@@ -100,7 +95,9 @@ class RestaurantCrawler(
         seh.onAfterComputeFeature.addLast { page, driver ->
             fieldSelectors.entries.asFlow().flowOn(Dispatchers.IO).collect { (name, selector) ->
                 delay(1500)
-                Screenshot(page, driver).screenshotNoExcept(name, selector)
+
+                Screenshot(page, driver).runCatching { screenshot(name, selector) }
+                    .onFailure { it.printStackTrace() }.getOrNull()
             }
         }
 
@@ -119,9 +116,10 @@ fun main() {
     val url = "https://www.dianping.com/shop/Enk0gTkqu0Cyj7Ch"
     val args = "-i 1s -ignoreFailure -parse"
 
-    val crawler = RestaurantCrawler()
+    val session = PulsarContexts.createSession()
+    val crawler = RestaurantCrawler(session)
 
-    val fields = crawler.session.scrape(url, crawler.options(args), crawler.fieldSelectors)
+    val fields = session.scrape(url, crawler.options(args), crawler.fieldSelectors)
     println(GsonBuilder().setPrettyPrinting().create().toJson(fields))
 
     readLine()
