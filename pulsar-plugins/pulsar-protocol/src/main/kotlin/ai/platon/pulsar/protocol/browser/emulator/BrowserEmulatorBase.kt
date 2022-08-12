@@ -20,7 +20,7 @@ abstract class BrowserEmulatorBase(
     /**
      * The event handler to handle page content
      * */
-    val emulateEventHandler: EmulateEventHandler,
+    val browserEmulatorEventHandler: BrowserEmulatorEventHandler,
     val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!

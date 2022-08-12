@@ -24,7 +24,7 @@ class DefaultBrowserEmulator(
         conf: ImmutableConfig
 ): BrowserEmulator(
         driverPoolManager,
-        EmulateEventHandler(driverPoolManager, null, conf),
+        BrowserEmulatorEventHandler(driverPoolManager, null, conf),
         conf
 )
 

@@ -244,9 +244,7 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The web pages
      */
-    fun loadAll(
-        urls: Iterable<String>, options: LoadOptions = options(), toItemOption: Boolean = false
-    ): List<WebPage>
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = options()): List<WebPage>
 
     /**
      * Load all urls with specified options
@@ -374,7 +372,15 @@ interface PulsarSession : AutoCloseable {
     /**
      * Scrape a webpage
      * */
+    fun scrape(url: String, options: LoadOptions, fieldSelectors: Iterable<String>): Map<String, String?>
+    /**
+     * Scrape a webpage
+     * */
     fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?>
+    /**
+     * Scrape a webpage
+     * */
+    fun scrape(url: String, options: LoadOptions, fieldSelectors: Map<String, String>): Map<String, String?>
     /**
      * Scrape a webpage
      * */
@@ -385,7 +391,19 @@ interface PulsarSession : AutoCloseable {
      * Scrape a webpage
      * */
     fun scrape(
+        url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>>
+    /**
+     * Scrape a webpage
+     * */
+    fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>>
+    /**
+     * Scrape a webpage
+     * */
+    fun scrape(
+        url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
     /**
@@ -393,6 +411,12 @@ interface PulsarSession : AutoCloseable {
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
+
+    /**
+     * Scrape out pages
+     * */
+    @ExperimentalApi
+    fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
      * Scrape out pages
@@ -406,13 +430,34 @@ interface PulsarSession : AutoCloseable {
      * Scrape out pages
      * */
     @ExperimentalApi
+    fun scrapeOutPages(
+        portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>>
+
+    /**
+     * Scrape out pages
+     * */
+    @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+
+    /**
+     * Scrape out pages
+     * */
+    @ExperimentalApi
+    fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
     /**
      * Scrape out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>>
+    /**
+     * Scrape out pages
+     * */
+    @ExperimentalApi
+    fun scrapeOutPages(
+        portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
     /**
      * Get a variable associated with this session

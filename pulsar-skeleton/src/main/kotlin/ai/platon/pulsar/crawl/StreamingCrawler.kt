@@ -169,7 +169,11 @@ open class StreamingCrawler<T : UrlAware>(
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isOutOfWork get() = idleTime > outOfWorkTimeout
 
-    private val enableStartRetry get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
+    var delayPolicy: (Int) -> Duration = { nextRetryNumber ->
+        Duration.ofMinutes(1L + 2 * nextRetryNumber)
+    }
+
+    private val enableSmartRetry get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
     private val isIdle: Boolean
         get() {
             return !urls.iterator().hasNext()
@@ -498,7 +502,7 @@ open class StreamingCrawler<T : UrlAware>(
             crawlEventHandler.onAfterLoad(url, page)
         }
 
-        if (enableStartRetry) {
+        if (enableSmartRetry) {
             handleRetry(url, page)
         }
     }
@@ -602,7 +606,7 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: defaultDelayPolicy(nextRetryNumber)
+        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: delayPolicy(nextRetryNumber)
 //        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
@@ -614,10 +618,6 @@ open class StreamingCrawler<T : UrlAware>(
             val prefix = "Trying ${nextRetryNumber}th ${delay.readable()} later"
             taskLogger.info("{}", LoadStatusFormatter(page, prefix = prefix))
         }
-    }
-
-    private fun defaultDelayPolicy(nextRetryNumber: Int): Duration {
-        return Duration.ofMinutes(1L + 2 * nextRetryNumber)
     }
 
     private fun fetchDelayed(url: UrlAware, delay: Duration) {

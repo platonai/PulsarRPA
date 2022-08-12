@@ -267,8 +267,11 @@ fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<W
 
     // make sure every option has its own event handler
     link.eventHandler = DefaultPulsarEventHandler()
+
     val handler = CompleteWebPageHyperlinkHandler(link)
     link.eventHandler.loadEventHandler.onAfterLoad.addLast(handler)
+    options.eventHandler?.let { link.eventHandler.combine(it) }
+
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 
     return link

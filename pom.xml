@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.9.10-SNAPSHOT</version>
+    <version>1.9.11-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>The easy way to crawl and scrape the web:
@@ -47,7 +47,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.9.10</tag>
+        <tag>v1.9.11</tag>
     </scm>
 
     <repositories>
@@ -83,6 +83,18 @@
 
                 <module>pulsar-client</module>
                 <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <!-- This is a temporary profile for screenshot development -->
+        <profile>
+            <id>develop-screenshot</id>
+
+            <modules>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-plugins/pulsar-protocol</module>
+                <module>pulsar-tools/pulsar-browser</module>
+                <module>pulsar-app/pulsar-examples</module>
             </modules>
         </profile>
 
@@ -668,6 +680,9 @@
         <tika.version>2.3.0</tika.version>
         <autolink.version>0.10.0</autolink.version>
         <playwright.version>1.19.0</playwright.version>
+
+        <!-- oshi bug: https://github.com/oshi/oshi/issues/1289 -->
+        <oshi.version>5.6.1</oshi.version>
     </properties>
 
 </project>
