@@ -1,17 +1,37 @@
-= Pulsar README
+= What is Pulsar?
 Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: Pulsar README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
+English | link:README-CN.adoc[简体中文]
+
+== Introduction
+
 Pulsar is the ultimate open source solution to scrape web data at scale.
 
-Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar is an open source solution to address such issues.
+Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar provides a series of advanced features to solve this problem.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
 
 We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
+
+== Features
+
+* Web spider: browser rendering, ajax data crawling
+* High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
+* Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
+* Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
+* Large scale: fully distributed, designed for large scale crawling
+* Simple API: single line of code to scrape, or single SQL to turn a website into a table
+* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
+* Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
+* RPA: simulating human behaviors, SPA crawling, or do something else awesome
+* Big data: various backend storage support: MongoDB/HBase/Gora
+* Logs &amp; metrics: monitored closely and every event is recorded
+
+== Get started
 
 *Most scraping attempt can start with (almost) a single line of code:*
 
@@ -46,20 +66,6 @@ fun main() {
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin].
 
-== Features
-
-* Web spider: browser rendering, ajax data crawling
-* High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
-* Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
-* Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
-* Large scale: fully distributed, designed for large scale crawling
-* Simple API: single line of code to scrape, or single SQL to turn a website into a table
-* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-* Bot stealth: IP rotation, web driver stealth, never get banned
-* RPA: simulating human behaviors, SPA crawling, or do something else awesome
-* Big data: various backend storage support: MongoDB/HBase/Gora
-* Logs &amp; metrics: monitored closely and every event is recorded
-
 == Core concepts
 The core Pulsar concepts include the following:
 
@@ -69,7 +75,7 @@ The core Pulsar concepts include the following:
 * Browser Rendering
 * Pulsar Context
 * Pulsar Session
-* Urls
+* URLs
 * Hyperlinks
 * Load Options
 * Event Handler
@@ -77,7 +83,7 @@ The core Pulsar concepts include the following:
 
 Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
 
-== Use Pulsar as a library
+== Usage: use Pulsar as a library
 The simplest way to leverage the power of Pulsar is to add it to your project as a library.
 
 Maven:
@@ -239,7 +245,7 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
-== Run Pulsar as a REST service
+== Usage: run Pulsar as a REST service
 When Pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 
 === Build from source
@@ -306,6 +312,12 @@ The response is as follows in json format:
 }
 ----
 
+== Usage: experience Pulsar in a executable jar
+
+We have released a standalone, executable jar, based on Pulsar. Download link:https://github.com/platonai/exotic#download[Exotic] and enjoy it with a single command line:
+
+    java -jar exotic-standalone.jar
+
 == Requirements
 
 * Memory 4G+
@@ -314,11 +326,12 @@ The response is as follows in json format:
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar is tested on Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
+Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
 Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the following questions:
 
+* What’s so difficult about scraping web data at scale?
 * How to scrape a million product pages from an e-commerce website a day?
 * How to scrape pages behind a login?
 * How to download resources directly within a browser context?
