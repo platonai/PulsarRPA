@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -8,7 +9,6 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -33,9 +33,9 @@ import kotlin.random.Random
  */
 open class BrowserEmulator(
     val driverManager: WebDriverPoolManager,
-    emulateEventHandler: EmulateEventHandler,
+    browserEmulatorEventHandler: BrowserEmulatorEventHandler,
     immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, emulateEventHandler, immutableConfig) {
+): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, browserEmulatorEventHandler, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
@@ -86,6 +86,9 @@ open class BrowserEmulator(
             response = if (task.page.isResource) {
                 loadResourceWithoutRendering(task, driver)
             } else browseWithCancellationHandled(task, driver)
+        }  catch (e: ChromeProtocolException) {
+            logger.warn(e.message)
+            response = ForwardingResponse.crawlRetry(task.page)
         } catch (e: NoSuchSessionException) {
             logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
             driver.retire()
@@ -138,7 +141,7 @@ open class BrowserEmulator(
             logger.warn(e.stringify())
         }
 
-        return emulateEventHandler.createResponse(navigateTask, navigateTask.pageDatum)
+        return browserEmulatorEventHandler.createResponse(navigateTask, navigateTask.pageDatum)
     }
 
     private suspend fun browseWithCancellationHandled(task: FetchTask, driver: WebDriver): Response? {
@@ -171,18 +174,17 @@ open class BrowserEmulator(
                 activeDomUrls = interactResult.activeDomMessage?.urls
             }
             navigateTask.pageSource = driver.pageSource() ?: ""
-        } catch (e: NoSuchElementException) {
-            // TODO: this exception seems not thrown anymore
+        } catch (e: ChromeProtocolException) {
             logger.warn(e.message)
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
-        return emulateEventHandler.onAfterNavigate(navigateTask)
+        return browserEmulatorEventHandler.onAfterNavigate(navigateTask)
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
-        emulateEventHandler.logBeforeNavigate(task, driverConfig)
+        browserEmulatorEventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -300,7 +302,7 @@ open class BrowserEmulator(
             } else if (message == "timeout") {
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val browserError = emulateEventHandler.handleChromeErrorPage(message)
+                val browserError = browserEmulatorEventHandler.handleChromeErrorPage(message)
                 status = browserError.status
                 result.activeDomMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK

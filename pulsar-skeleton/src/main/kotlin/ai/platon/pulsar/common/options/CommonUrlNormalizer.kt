@@ -57,6 +57,9 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
 
     private fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
         val clone = options.clone()
+        require(options.eventHandler == clone.eventHandler)
+        require(options.itemEventHandler == clone.itemEventHandler)
+
         clone.conf.name = clone.label
         clone.nMaxRetry = url.nMaxRetry
 

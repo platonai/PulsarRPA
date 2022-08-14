@@ -11,8 +11,7 @@ import ai.platon.pulsar.persist.metadata.Name
 import org.jsoup.nodes.Document
 import java.nio.file.Files
 import java.nio.file.Path
-
-private val monthDay = DateTimes.now("MMdd")
+import java.util.*
 
 fun AppFiles.export(status: ProtocolStatus, content: String, page: WebPage): Path {
     return AppFiles.export(StringBuilder(), status, content, page)
@@ -25,6 +24,8 @@ fun AppFiles.export(
     page: WebPage,
     suffix: String = ".htm",
 ): Path {
+    val monthDay = DateTimes.now("MMdd")
+
     val document = Documents.parse(content, page.baseUrl)
     document.absoluteLinks()
     val prettyHtml = document.prettyHtml
@@ -38,8 +39,8 @@ fun AppFiles.export(
         sb.append("/b").append(length / 20000 * 20000)
     }
 
-    val ident = sb.toString()
-    val path = export(page, prettyHtml.toByteArray(), ident, suffix)
+    val fileNameIdent = sb.toString()
+    val path = export(page, prettyHtml.toByteArray(), prefix = fileNameIdent, suffix = suffix, group = "default")
 
     // TODO: path is a temporary field, should not be persisted to page.metadata
     page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
@@ -49,19 +50,21 @@ fun AppFiles.export(
     return path
 }
 
-fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
-    val browser = page.lastBrowser.name.toLowerCase()
+fun AppFiles.export(
+    page: WebPage, content: ByteArray, prefix: String = "", suffix: String = ".htm", group: String = "default"
+): Path {
+    val browser = page.lastBrowser.name.lowercase(Locale.getDefault())
 
-    val filename = AppPaths.fromUri(page.url, suffix = suffix)
-    val path = WEB_CACHE_DIR.resolve("original").resolve(browser).resolve("$ident-$filename")
+    val filename = AppPaths.fromUri(page.url, prefix, suffix)
+    val path = WEB_CACHE_DIR.resolve(group).resolve(browser).resolve(filename)
     saveTo(content, path, true)
 
     return path
 }
 
-fun AppFiles.export(page: WebPage, ident: String = "", suffix: String = ".htm"): Path {
-    val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, "", suffix)
-    val path = WEB_CACHE_DIR.resolve(ident).resolve(filename)
+fun AppFiles.export(page: WebPage, prefix: String = "", suffix: String = ".htm"): Path {
+    val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, prefix, suffix)
+    val path = WEB_CACHE_DIR.resolve(filename)
     Files.deleteIfExists(path)
     saveTo(page.content?.array() ?: "(empty)".toByteArray(), path)
     return path

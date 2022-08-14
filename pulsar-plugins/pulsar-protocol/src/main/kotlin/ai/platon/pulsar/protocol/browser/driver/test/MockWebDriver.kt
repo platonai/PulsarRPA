@@ -9,6 +9,7 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -94,6 +95,14 @@ class MockWebDriver(
 
     override suspend fun getCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.getCookies() ?: listOf()
+    }
+
+    override suspend fun captureScreenshot(selector: String): String? {
+        return backupDriverOrNull?.captureScreenshot(selector)
+    }
+
+    override suspend fun captureScreenshot(rect: RectD): String? {
+        return backupDriverOrNull?.captureScreenshot(rect)
     }
 
     override suspend fun stop() {

@@ -150,7 +150,7 @@ data class DimD(
 data class RectD(
     var x: Double,
     var y: Double,
-    var with: Double,
+    var width: Double,
     var height: Double
 )
 

@@ -20,6 +20,37 @@
   <artifactId>pulsar-examples</artifactId>
   <name>Pulsar Examples</name>
 
+  <build>
+    <defaultGoal>package</defaultGoal>
+
+    <plugins>
+      <!--
+      Command line to execute:
+
+      java -Xmx10g -Xms2G -cp pulsar-examples*.jar \
+      -D"loader.main=ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt" \
+      org.springframework.boot.loader.PropertiesLauncher
+      -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt</mainClass>
+          <addResources>true</addResources>
+          <executable>true</executable>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
@@ -28,6 +59,12 @@
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
       <artifactId>pulsar-tests</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 

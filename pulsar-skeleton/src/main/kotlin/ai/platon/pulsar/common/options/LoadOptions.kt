@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
+import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.reflect.full.hasAnnotation
@@ -93,7 +94,8 @@ object LoadOptionDefaults {
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var eventHandler: PulsarEventHandler? = null
+    var eventHandler: PulsarEventHandler? = null,
+    var itemEventHandler: PulsarEventHandler? = null
 ): CommonOptions(argv) {
 
     /**
@@ -421,6 +423,8 @@ open class LoadOptions(
      * Refresh the fetch state of a page, clear the retry counters.
      * If true, the page should be fetched, just like we click the refresh button on a real browser.
      * The option can be explained as follows: -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0.
+     *
+     * TODO: consider add an option itemRefresh
      * */
     @ApiPublic
     @Parameter(names = ["-refresh", "--refresh"],
@@ -429,6 +433,7 @@ open class LoadOptions(
                 " The option can be explained as follows:" +
                 " -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0")
     var refresh = false
+        set(value) = doRefresh(value)
 
     /**
      * Force retry fetching the page if it's failed last time, or it's marked as gone.
@@ -602,7 +607,7 @@ open class LoadOptions(
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.eventHandler)
+            this(split(args), other.conf, other.eventHandler, other.itemEventHandler)
 
     /**
      * Ensure the EventHandler is created.
@@ -610,6 +615,12 @@ open class LoadOptions(
     fun ensureEventHandler(): PulsarEventHandler {
         val eh = eventHandler ?: DefaultPulsarEventHandler()
         eventHandler = eh
+        return eh
+    }
+
+    fun ensureItemEventHandler(): PulsarEventHandler {
+        val eh = eventHandler ?: DefaultPulsarEventHandler()
+        itemEventHandler = eh
         return eh
     }
 
@@ -642,7 +653,7 @@ open class LoadOptions(
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
-        itemOptions.eventHandler = eventHandler
+        itemOptions.eventHandler = itemEventHandler
 
         return itemOptions
     }
@@ -685,6 +696,8 @@ open class LoadOptions(
         requireImages = itemRequireImages
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
+
+        eventHandler = itemEventHandler
     }
 
     /**
@@ -787,6 +800,19 @@ open class LoadOptions(
         return outLinkSelector.trim('"')
             .takeIf { it.isNotBlank() }
             ?.let { appendSelectorIfMissing(it, "a") }
+    }
+
+    private fun doRefresh(value: Boolean) {
+        if (value) {
+            expires = Duration.ZERO
+            expireAt = Instant.now()
+
+            itemExpires = Duration.ZERO
+            itemExpireAt = Instant.now()
+
+            ignoreFailure = true
+        }
+        refresh = value
     }
 
     companion object {
@@ -923,12 +949,12 @@ open class LoadOptions(
         fun normalize(args: String) = parse(args, VolatileConfig.UNSAFE).toString()
 
         /**
-         * Parse the [args].
+         * Parse the [args] with other [conf].
          * */
         fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
 
         /**
-         * Parse the [args].
+         * Parse the [args] with other [options].
          * */
         fun parse(args: String, options: LoadOptions) = LoadOptions(args.trim(), options).apply { parse() }
 

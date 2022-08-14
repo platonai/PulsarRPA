@@ -1,8 +1,10 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -102,6 +104,20 @@ class WebDriverAdapter(
 
     override suspend fun bringToFront() {
         driver.takeIf { isWorking }?.runCatching { bringToFront() }
+    }
+
+    override suspend fun captureScreenshot(selector: String): String? {
+        return when (driver) {
+            is ChromeDevtoolsDriver -> driver.captureScreenshot(selector)
+            else -> null // Not implemented currently
+        }
+    }
+
+    override suspend fun captureScreenshot(rect: RectD): String? {
+        return when (driver) {
+            is ChromeDevtoolsDriver -> driver.captureScreenshot(rect)
+            else -> null // Not implemented currently
+        }
     }
 
     override suspend fun stop() {

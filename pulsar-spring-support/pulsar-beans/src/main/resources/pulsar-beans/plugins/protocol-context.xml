@@ -48,7 +48,7 @@
     </bean>
 
     <bean id="emulatorEventHandler"
-          class="ai.platon.pulsar.protocol.browser.emulator.EmulateEventHandler"
+          class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatorEventHandler"
           factory-bean="emulatorEventHandlerFactory"
           factory-method="getEventHandler"
     />

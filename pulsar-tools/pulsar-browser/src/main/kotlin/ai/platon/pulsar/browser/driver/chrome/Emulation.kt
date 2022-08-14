@@ -89,6 +89,26 @@ class ClickableDOM(
         return PointD(x = x / 4, y = y / 4)
     }
 
+    fun boundingBox(): RectD? {
+        val box = kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
+            .onFailure { logger.warn("Failed to get box model for #{} | {}", nodeId, it.message) }
+            .getOrNull() ?: return null
+
+        val quad = box.border
+        if (quad.isEmpty()) {
+            return null
+        }
+
+        val x = arrayOf(quad[0], quad[2], quad[4], quad[6]).minOrNull()!!
+        val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()!!
+        val width = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()!! - x
+        val height = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()!! - y
+
+        // TODO: handle iframes
+
+        return RectD(x, y, width, height)
+    }
+
     private fun fromProtocolQuad(quad: List<Double>): List<PointD> {
         return listOf(
             PointD(quad[0], quad[1]),
@@ -102,21 +122,6 @@ class ClickableDOM(
         return quad.map { point ->
             PointD(x = min(max(point.x, 0.0), width), y = min(max(point.y, 0.0), height))
         }
-    }
-
-    private fun boundingBox(nodeId: Int): RectD? {
-        val box = dom.getBoxModel(nodeId, null, null)
-        val quad = box.border
-        if (quad.isEmpty()) {
-            return null
-        }
-
-        val x = arrayOf(quad[0], quad[2], quad[4], quad[6]).minOrNull()!!
-        val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()!!
-        val width = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()!! - x
-        val height = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()!! - y
-
-        return RectD(x, y, width, height)
     }
 
     private fun computeQuadArea(quad: List<PointD>): Double {
@@ -262,3 +267,10 @@ class Keyboard(private val input: Input) {
 class Touchscreen() {
 
 }
+
+class NodeClip(
+    var nodeId: Int = 0,
+    var pageX: Int = 0,
+    var pageY: Int = 0,
+    var rect: RectD? = null,
+)

@@ -1,0 +1,379 @@
+= Pulsar 简介
+Vincent Zhang <ivincent.zhang@gmail.com>
+3.0, July 29, 2022: Pulsar README
+:toc:
+:icons: font
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+
+link:README.adoc[English] | 简体中文
+
+== 简介
+
+Pulsar 是大规模抓取 Web 数据的终极开源方案。
+
+大规模提取 Web 数据非常困难。 #网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 提供了一系列高级特性来解决该问题。
+
+Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
+
+我们还计划发布一种高级 AI，以自动提取网页中的每个字段，并具有显着的准确性。
+
+== 主要特性
+
+* 网络爬虫：浏览器渲染，ajax 数据采集
+* 高性能：高度优化，在单台机器上并行渲染数百个网页，并避免被屏蔽
+* 低成本：每天采集100,000浏览器渲染的电商网页，或者n * 10,000,000数据点，仅仅需要8核CPU和32G内存
+* 数据质量保证：智能重试，精确调度，网页数据生命周期管理
+* 大规模：完全分布式，为大规模采集设计
+* 简单API：一行代码进行采集，或者一行SQL将一个网站栏目转变为表格
+* X-SQL：扩展SQL来管理所有网页数据相关任务：网络爬虫，数据采集，网页内容挖掘，Web BI等
+* 机器人隐身：Web driver 隐身，IP轮换，隐私上下文轮换，永不被屏蔽
+* RPA：拟人行为，采集单网页应用（SPA），或者执行其他有趣的任务
+* 大数据：支持多种多样的底层存储，如本地文件，MongoDB/HBase/Gora等
+* 日志和指标：密切监控并记录每一个事件
+
+== 开始
+
+*大多数抓取尝试可以从几乎一行代码开始：*
+
+*Kotlin*
+[source,kotlin,options="nowrap"]
+----
+fun main() = PulsarContexts.createSession().scrapeOutPages(
+  "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
+----
+
+上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+
+*大多数#生产环境#抓取项目可以从以下代码片段开始：*
+
+*Kotlin*
+[source,kotlin]
+----
+fun main() {
+    val context = PulsarContexts.create()
+
+    val parseHandler = { _: WebPage, document: Document ->
+        // use the document
+        // ...
+        // and then extract further hyperlinks
+        context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
+    }
+    val urls = LinkExtractors.fromResource("seeds10.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls).await()
+}
+----
+
+示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin].
+
+== 核心概念
+
+Pulsar 的核心概念包括：
+
+* 网络数据采集（Web Scraping）
+* 网络即数据库（Network As A Database）
+* 自动提取（Auto Extract）
+* 浏览器渲染（Browser Rendering）
+* Pulsar 上下文（Pulsar Context）
+* Pulsar 会话（Pulsar Session）
+* 统一资源定位器（URLs）
+* 超链接（Hyperlinks）
+* 加载选项（Load Options）
+* 事件处理器（Event Handler）
+* X-SQL
+
+点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] 查看详情。
+
+== 使用方法：将Pulsar用作软件库
+
+利用 Pulsar 强大功能的最简单方法是将其作为库添加到您的项目中。
+
+Maven:
+[source,xml]
+----
+<dependency>
+  <groupId>ai.platon.pulsar</groupId>
+  <artifactId>pulsar-all</artifactId>
+  <version>1.9.10</version>
+</dependency>
+----
+
+Gradle:
+[source,kotlin]
+----
+implementation("ai.platon.pulsar:pulsar-all:1.9.10")
+----
+
+对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
+
+=== 基本用法
+
+*Kotlin*
+
+[source,kotlin]
+----
+// 创建一个Pulsar会话
+val session = PulsarContexts.createSession()
+// 示例程序使用的url
+val url = "https://list.jd.com/list.html?cat=652,12345,12349"
+// 加载一个页面，如果该页面已过期，或者该页面为首次加载，则从互联网上下载该页面
+val page = session.load(url, "-expires 1d")
+// 将一个网页内容解析为Jsoup文档
+val document = session.parse(page)
+// 使用该文档做一些事情
+// ...
+
+// 或者，加载并解析
+val document2 = session.loadDocument(url, "-expires 1d")
+// 使用该文档做一些事情
+// ...
+
+// 加载由-outLink指示的所有网页
+val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+// 加载，解析并提取字段
+val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
+// 加载，解析并提取具名字段
+val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+----
+
+示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
+
+*Load options*
+
+请注意，我们的大多数抓取方法都接受一个称为加载参数或加载选项的参数，以控制如何加载/获取网页。
+
+    -expires     // The expiry time of a page
+    -itemExpires // The expiry time of item pages in some batch scraping methods
+    -outLink     // The selector for out links to scrape
+    -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
+    -parse       // Triger the parse phrase
+    -resource    // Fetch the url as a resource without browser rendering
+
+点击 link:docs/concepts.adoc#_load_options[Load Options] 查看详情。
+
+=== 提取网页数据
+
+Pulsar 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。
+
+*Kotlin*
+
+[source,kotlin]
+----
+val document = session.loadDocument(url, "-expires 1d")
+val price = document.selectFirst('.price').text()
+----
+
+=== 连续采集
+
+在 Pulsar 中抓取大量 url 集合或运行连续采集非常简单。
+
+*Kotlin*
+
+[source,kotlin]
+----
+fun main() {
+    val context = PulsarContexts.create()
+
+    val parseHandler = { _: WebPage, document: Document ->
+        // do something wonderful with the document
+        println(document.title() + "\t|\t" + document.baseUri())
+    }
+    val urls = LinkExtractors.fromResource("seeds.txt")
+        .map { ParsableHyperlink("$it -refresh", parseHandler) }
+    context.submitAll(urls)
+    // feel free to submit millions of urls here
+    context.submitAll(urls)
+    // ...
+    context.await()
+}
+----
+
+*Java*
+
+[source,java]
+----
+public class ContinuousCrawler {
+
+    private static void onParse(WebPage page, Document document) {
+        // do something wonderful with the document
+        System.out.println(document.title() + "\t|\t" + document.baseUri());
+    }
+
+    public static void main(String[] args) {
+        PulsarContext context = PulsarContexts.create();
+
+        List<Hyperlink> urls = LinkExtractors.fromResource("seeds.txt")
+                .stream()
+                .map(seed -> new ParsableHyperlink(seed, ContinuousCrawler::onParse))
+                .collect(Collectors.toList());
+        context.submitAll(urls);
+        // feel free to submit millions of urls here
+        context.submitAll(urls);
+        // ...
+        context.await();
+    }
+}
+----
+
+示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+
+=== 使用 X-SQL 查询 Web
+
+提取单个页面:
+
+[source,sql]
+----
+select
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_text(dom, '#bylineInfo') as brand,
+      dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+      dom_first_text(dom, '#acrCustomerReviewText') as ratings,
+      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
+----
+
+执行 X-SQL:
+
+[source,kotlin]
+----
+val context = SQLContexts.create()
+val rs = context.executeQuery(sql)
+println(ResultSetFormatter(rs, withHeader = true))
+----
+
+结果如下:
+
+----
+TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.10 | 1,349 ratings | 4.40
+----
+
+示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
+
+== 使用方法：将 Pulsar 作为 REST 服务运行
+
+当 Pulsar 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
+
+=== 从源代码构建
+----
+git clone https://github.com/platonai/pulsar.git
+cd pulsar && bin/build-run.sh
+----
+
+对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
+
+=== 使用 X-SQL 查询网页
+
+如果未启动，则启动 pulsar 服务器：
+
+[source,shell]
+----
+bin/pulsar
+----
+
+在另一个终端窗口中抓取网页：
+
+[source,shell]
+----
+bin/scrape.sh
+----
+bash 脚本非常简单，只需使用 curl 发布 X-SQL：
+[source,shell]
+----
+curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+  select
+      dom_base_uri(dom) as url,
+      dom_first_text(dom, '#productTitle') as title,
+      str_substring_after(dom_first_href(dom, '#wayfinding-breadcrumbs_container ul li:last-child a'), '&node=') as category,
+      dom_first_slim_html(dom, '#bylineInfo') as brand,
+      cast(dom_all_slim_htmls(dom, '#imageBlock img') as varchar) as gallery,
+      dom_first_slim_html(dom, '#landingImage, #imgTagWrapperId img, #imageBlock img:expr(width > 400)') as img,
+      dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
+      dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
+      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');"
+----
+
+示例代码可以在这里找到: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
+
+Json格式的响应如下：
+
+[source,json]
+----
+{
+    "uuid": "cc611841-1f2b-4b6b-bcdd-ce822d97a2ad",
+    "statusCode": 200,
+    "pageStatusCode": 200,
+    "pageContentBytes": 1607636,
+    "resultSet": [
+        {
+            "title": "Tara Toys Ariel Necklace Activity Set - Amazon Exclusive (51394)",
+            "listprice": "$19.99",
+            "price": "$12.99",
+            "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
+            "baseuri": "https://www.amazon.com/dp/B00BTX5926"
+        }
+    ],
+    "pageStatus": "OK",
+    "status": "OK"
+}
+----
+
+== 使用方法：在可执行 jar 中体验 Pulsar
+
+我们发布了一个基于 Pulsar 的独立可执行 jar。 下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行享受使用乐趣：
+
+    java -jar exotic-standalone.jar
+
+== 系统要求
+
+* Memory 4G+
+* Maven 3.2+
+* Java 11 JDK 最新版本
+* java and jar on the PATH
+* Google Chrome 90+
+
+Pulsar 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
+
+== 高级主题
+
+点击链接 link:docs/faq/advanced-topics.adoc[advanced topics] 查看以下问题的答案：
+
+* 大规模网络爬虫有什么困难？
+* 如何每天从电子商务网站上抓取一百万个产品页面？
+* 如何在登录后抓取页面？
+* 如何在浏览器上下文中直接下载资源？
+* 如何抓取单页应用程序（SPA）？
+** 资源模式
+** RPA 模式
+* 如何确保正确提取所有字段？
+* 如何抓取分页链接？
+* 如何抓取新发现的链接？
+* 如何爬取整个网站？
+* 如何模拟人类行为？
+* 如何安排优先任务？
+* 如何在固定时间点开始任务？
+* 如何删除计划任务？
+* 如何知道任务的状态？
+* 如何知道系统中发生了什么？
+* 如何为要抓取的字段自动生成 css 选择器？
+* 如何使用机器学习自动从网站中提取内容并具有商业准确性？
+* 如何抓取 amazon.com 以满足行业需求？
+
+== 同其他方案的对比
+
+一般来说，”主要特性“部分中提到的特性都得到了 Pulsar 的良好支持，但其他解决方案不支持或者支持不好。
+
+点击链接 link:docs/faq/solution-comparison.adoc[solution comparison] 查看以下问题的答案：
+
+* Pulsar vs selenium/puppeteer/playwright
+* Pulsar vs nutch
+* Pulsar vs scrapy+splash
+
+== 技术细节
+点击链接 link:docs/faq/technical-details.adoc[technical details] 查看以下问题的答案：
+
+* 如何轮换我的 IP 地址？
+* 如何隐藏我的机器人不被检测到？
+* 如何以及为什么要模拟人类行为？
+* 如何在一台机器上渲染尽可能多的页面而不被屏蔽？
