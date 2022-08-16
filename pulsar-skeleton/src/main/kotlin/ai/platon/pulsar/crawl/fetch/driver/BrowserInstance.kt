@@ -18,7 +18,7 @@ interface BrowserInstance: AutoCloseable {
     val shutdownHookThread: Thread
 
     val tabCount: AtomicInteger
-    // remember, navigate history is small, so search is very fast for a list
+    // navigate history is small, so search is very fast in a list
     val navigateHistory: MutableList<NavigateEntry>
     val isIdle: Boolean
 

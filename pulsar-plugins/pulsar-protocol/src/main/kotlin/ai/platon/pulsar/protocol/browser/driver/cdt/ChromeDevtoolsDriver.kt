@@ -147,7 +147,7 @@ class ChromeDevtoolsDriver(
         try {
             return withIOContext("getCookies") {
                 getCookies0()
-            }
+            } ?: listOf()
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "getCookies")
         }
@@ -240,7 +240,7 @@ class ChromeDevtoolsDriver(
         navigateUrl = try {
             return withIOContext("currentUrl") {
                 mainFrame?.url ?: navigateUrl
-            }
+            } ?: ""
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "currentUrl")
             ""
@@ -770,10 +770,13 @@ class ChromeDevtoolsDriver(
         logger.warn("Chrome RPC exception | {}", message ?: e.message)
     }
 
-    private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T {
+    private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T? {
         return withContext(Dispatchers.IO) {
             try {
-                refreshState(action)
+                if (!refreshState(action)) {
+                    return@withContext null
+                }
+
                 val result = block()
                 rpcFailures.decrementAndGet()
                 result

@@ -96,7 +96,9 @@ abstract class AbstractWebDriver(
         takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     override suspend fun scrollDown(count: Int) {
-        evaluate("__pulsar_utils__.scrollDown()")
+        repeat(count) {
+            evaluate("__pulsar_utils__.scrollDown()")
+        }
     }
 
     override suspend fun scrollUp(count: Int) {

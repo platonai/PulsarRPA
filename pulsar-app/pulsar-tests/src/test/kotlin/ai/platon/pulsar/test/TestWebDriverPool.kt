@@ -18,9 +18,9 @@ import kotlin.test.assertEquals
 /**
  * TODO: move to pulsar-skeleton module
  * */
-class TestWebDriver {
+class TestWebDriverPool {
     companion object {
-        val log = LoggerFactory.getLogger(TestWebDriver::class.java)
+        val log = LoggerFactory.getLogger(TestWebDriverPool::class.java)
 
         init {
             System.setProperty(PROXY_USE_PROXY, "no")
