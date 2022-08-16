@@ -13,22 +13,15 @@ import org.springframework.context.annotation.ImportResource
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 class PulsarCrawler(
-    val globalCacheFactory: GlobalCacheFactory
+    private val globalCacheFactory: GlobalCacheFactory
 ) {
-    val globalCache get() = globalCacheFactory.globalCache
-
+    private val globalCache get() = globalCacheFactory.globalCache
     private val urlCache get() = globalCache.urlPool.normalCache
-
-    @Autowired
-    lateinit var unmodifiedConfig: ImmutableConfig
 
     @Bean
     fun generate() {
-        val resource = "config/sites/amazon/crawl/inject/seeds/category/best-sellers/leaf-categories.txt"
-
-        LinkExtractors.fromResource(resource)
-            .map { Hyperlink(it, args = "-i 1s") }
-            .toCollection(urlCache.nReentrantQueue)
+        val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+        LinkExtractors.fromResource(resource).mapTo(urlCache.nReentrantQueue) { Hyperlink(it, args = "-i 1s") }
     }
 }
 

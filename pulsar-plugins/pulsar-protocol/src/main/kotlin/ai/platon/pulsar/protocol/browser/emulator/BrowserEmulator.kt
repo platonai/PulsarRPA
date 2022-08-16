@@ -222,7 +222,7 @@ open class BrowserEmulator(
         }
 
         val interactTask = InteractTask(task, driverConfig, driver)
-        return if (driverConfig.jsInvadingEnabled) {
+        return if (driverConfig.enableStartupScript) {
             interact(interactTask)
         } else {
             interactNoJsInvaded(interactTask)

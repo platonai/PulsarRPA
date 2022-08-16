@@ -293,7 +293,7 @@ open class BrowserSettings(
     val isGUI get() = displayMode == DisplayMode.GUI
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
 
-    val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    val enableStartupScript get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
 
     // We will wait for document ready manually using javascript

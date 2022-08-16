@@ -88,6 +88,8 @@ class ChromeDevtoolsDriver(
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
 
+    private val enableStartupScript get() = browserSettings.enableStartupScript
+
     private val enableBlockingReport = false
     private val closed = AtomicBoolean()
 
@@ -96,6 +98,8 @@ class ChromeDevtoolsDriver(
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
+
+    val tabId get() = chromeTab.id
 
     init {
         try {
@@ -124,11 +128,9 @@ class ChromeDevtoolsDriver(
         val driver = this
         this.navigateEntry = entry
 
-        val invade = browserSettings.jsInvadingEnabled
-
         try {
             withIOContext("navigateTo") {
-                driver.takeIf { invade }?.getInvaded(entry.url) ?: getNoInvaded(entry.url)
+                driver.takeIf { enableStartupScript }?.getInvaded(entry.url) ?: getNoInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "navigateTo ${entry.url}")
@@ -712,6 +714,7 @@ class ChromeDevtoolsDriver(
     }
 
     private fun closeIrrelevantTabs(tabs: Array<ChromeTab>) {
+        val now = Instant.now()
         val irrelevantTabs = tabs
             .filter { it.url?.matches("about:".toRegex()) == true }
             .filter { oldTab -> browserInstance.navigateHistory.none { it.url == oldTab.url } }
@@ -757,10 +760,10 @@ class ChromeDevtoolsDriver(
         return browserSettings.nameMangling(js)
     }
 
-    private fun isMainFrame(frameId: String): Boolean {
-        if (!isActive) return false
-
-        return mainFrame?.id == frameId
+    private suspend fun isMainFrame(frameId: String): Boolean {
+        return withIOContext("isMainFrame") {
+            mainFrame?.id == frameId
+        } ?: false
     }
 
     private fun handleRPCException(e: ChromeRPCException, message: String? = null) {

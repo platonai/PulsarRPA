@@ -37,6 +37,7 @@ data class NavigateEntry(
     var stopped: Boolean = false,
 
     var activeTime: Instant = Instant.now(),
+
     val createTime: Instant = Instant.now(),
 ) {
     /**

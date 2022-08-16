@@ -42,7 +42,7 @@ abstract class BrowserEmulatorBase(
                 "scriptTimeout", emulateSettings.scriptTimeout,
                 "scrollDownCount", emulateSettings.scrollCount,
                 "scrollInterval", emulateSettings.scrollInterval,
-                "jsInvadingEnabled", driverSettings.jsInvadingEnabled
+                "jsInvadingEnabled", driverSettings.enableStartupScript
         )
     }
 
