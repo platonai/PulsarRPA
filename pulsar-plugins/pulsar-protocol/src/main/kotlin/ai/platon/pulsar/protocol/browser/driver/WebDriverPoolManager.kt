@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -26,11 +27,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-class WebDriverTask<R> (
+class WebDriverTask (
         val browserId: BrowserInstanceId,
         val priority: Int,
         val volatileConfig: VolatileConfig,
-        val runWith: suspend (driver: WebDriver) -> R
+        val runWith: suspend (driver: WebDriver) -> FetchResult?
 )
 
 /**
@@ -96,11 +97,11 @@ open class WebDriverPoolManager(
      *
      * @return The result of action, or null if timeout
      * */
-    suspend fun <R> run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
-                        action: suspend (driver: WebDriver) -> R?
+    suspend fun run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
+                        action: suspend (driver: WebDriver) -> FetchResult?
     ) = run(WebDriverTask(browserId, priority, volatileConfig, action))
 
-    suspend fun <R> run(task: WebDriverTask<R>): R? {
+    suspend fun run(task: WebDriverTask): FetchResult? {
         lastActiveTime = Instant.now()
         return run0(task).also { lastActiveTime = Instant.now() }
     }
@@ -113,6 +114,7 @@ open class WebDriverPoolManager(
             priority: Int = 0,
             volatileConfig: VolatileConfig? = null
     ): LoadingWebDriverPool {
+        val conf = volatileConfig ?: immutableConfig
         return LoadingWebDriverPool(browserId, priority, driverFactory, immutableConfig)
     }
 
@@ -188,9 +190,9 @@ open class WebDriverPoolManager(
 
     override fun toString(): String = formatStatus(false)
 
-    private suspend fun <R> run0(task: WebDriverTask<R>): R? {
+    private suspend fun run0(task: WebDriverTask): FetchResult? {
         val browserId = task.browserId
-        var result: R? = null
+        var result: FetchResult? = null
         whenNormalDeferred {
             if (isRetiredPool(browserId)) {
                 throw WebDriverPoolException("Web driver pool is retired | $browserId")
@@ -240,14 +242,14 @@ open class WebDriverPoolManager(
         return result
     }
 
-    private fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+    private fun poll(driverPool: LoadingWebDriverPool, task: WebDriverTask): WebDriver {
         val pollingDriverTimeout = driverSettings.pollingDriverTimeout
         val driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout)
         driver.startWork()
         return driver
     }
 
-    private fun <R> firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+    private fun firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask): WebDriver {
         val pollingDriverTimeout = driverSettings.pollingDriverTimeout
 
         onBeforeBrowserLaunch(task.volatileConfig)
@@ -280,8 +282,10 @@ open class WebDriverPoolManager(
     }
 
     @Synchronized
-    private fun <R> computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask<R>): LoadingWebDriverPool {
-        return driverPools.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, task.priority, task.volatileConfig) }
+    private fun computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask): LoadingWebDriverPool {
+        return driverPools.computeIfAbsent(browserId) {
+            createUnmanagedDriverPool(browserId, task.priority, task.volatileConfig)
+        }
     }
 
     private fun doCloseDriverPool(browserId: BrowserInstanceId) {
