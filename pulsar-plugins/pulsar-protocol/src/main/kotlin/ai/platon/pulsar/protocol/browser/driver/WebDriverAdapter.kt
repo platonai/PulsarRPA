@@ -3,11 +3,11 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 class WebDriverAdapter(
@@ -21,6 +21,8 @@ class WebDriverAdapter(
     private val logger = LoggerFactory.getLogger(WebDriverAdapter::class.java)
 
     val pageViews = AtomicInteger()
+
+    private val driverOrNull get() = driver.takeIf { isWorking }
 
     /**
      * The actual url return by the browser
@@ -59,35 +61,29 @@ class WebDriverAdapter(
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
-    override suspend fun navigateTo(url: String) {
-        if (isWorking) {
-            lastActiveTime = Instant.now()
-            driver.navigateTo(url)
-            this.url = url
-            pageViews.incrementAndGet()
-            lastActiveTime = Instant.now()
-        }
-    }
+    override suspend fun navigateTo(url: String) = driverOrNull?.navigateTo(url) ?: Unit
 
-    override suspend fun waitForSelector(selector: String) = driver.waitForSelector(selector)
+    override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
 
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long) = driver.waitForSelector(selector, timeoutMillis)
+    override suspend fun waitForSelector(selector: String) = driverOrNull?.waitForSelector(selector) ?: 0
 
-    override suspend fun waitForSelector(selector: String, timeout: Duration) = driver.waitForSelector(selector, timeout)
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long) = driverOrNull?.waitForSelector(selector, timeoutMillis) ?: 0
 
-    override suspend fun waitForNavigation() = driver.waitForNavigation()
+    override suspend fun waitForSelector(selector: String, timeout: Duration) = driverOrNull?.waitForSelector(selector, timeout) ?: 0
 
-    override suspend fun waitForNavigation(timeoutMillis: Long) = driver.waitForNavigation(timeoutMillis)
+    override suspend fun waitForNavigation() = driverOrNull?.waitForNavigation() ?: 0
 
-    override suspend fun waitForNavigation(timeout: Duration) = driver.waitForNavigation(timeout)
+    override suspend fun waitForNavigation(timeoutMillis: Long) = driverOrNull?.waitForNavigation(timeoutMillis) ?: 0
 
-    override suspend fun exists(selector: String) = driver.exists(selector)
+    override suspend fun waitForNavigation(timeout: Duration) = driverOrNull?.waitForNavigation(timeout) ?: 0
 
-    override suspend fun click(selector: String, count: Int) = driver.click(selector, count)
+    override suspend fun exists(selector: String) = driverOrNull?.exists(selector) ?: false
 
-    override suspend fun scrollTo(selector: String) = driver.scrollTo(selector)
+    override suspend fun click(selector: String, count: Int) = driverOrNull?.click(selector, count) ?: Unit
 
-    override suspend fun type(selector: String, text: String) = driver.type(selector, text)
+    override suspend fun scrollTo(selector: String) = driverOrNull?.scrollTo(selector) ?: Unit
+
+    override suspend fun type(selector: String, text: String) = driverOrNull?.type(selector, text) ?: Unit
 
     override suspend fun evaluate(expression: String): Any? {
         return when {
@@ -96,14 +92,14 @@ class WebDriverAdapter(
         }
     }
 
-    override suspend fun mainRequestHeaders() = driver.mainRequestHeaders()
+    override suspend fun mainRequestHeaders() = driverOrNull?.mainRequestHeaders() ?: mapOf()
 
-    override suspend fun mainRequestCookies() = driver.mainRequestCookies()
+    override suspend fun mainRequestCookies() = driverOrNull?.mainRequestCookies() ?: listOf()
 
-    override suspend fun getCookies() = driver.getCookies()
+    override suspend fun getCookies() = driverOrNull?.getCookies() ?: listOf()
 
     override suspend fun bringToFront() {
-        driver.takeIf { isWorking }?.runCatching { bringToFront() }
+        driverOrNull?.runCatching { bringToFront() }
     }
 
     override suspend fun captureScreenshot(selector: String): String? {
@@ -121,15 +117,11 @@ class WebDriverAdapter(
     }
 
     override suspend fun stop() {
-        driver.takeIf { isWorking }?.runCatching { stop() }
+        driverOrNull?.runCatching { stop() }
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
-        if (isNotWorking) {
-            return
-        }
-
-        driver.setTimeouts(browserSettings)
+        driverOrNull?.setTimeouts(browserSettings)
     }
 
     /**

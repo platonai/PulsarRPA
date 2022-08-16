@@ -136,9 +136,11 @@ open class BrowserSettings(
          * All names in injected scripts must not be detected by javascript,
          * the name mangling technology helps to achieve this purpose.
          * */
-        var specifiedScriptNameCipher: String? = null
         val randomScriptNameCipher = RandomStringUtils.randomAlphabetic(6)
-        val scriptNameCipher get() = specifiedScriptNameCipher ?: randomScriptNameCipher
+        var scriptNameManglingPolicy: (String) -> String = { script ->
+            script.replace(scriptNamePrefix, randomScriptNameCipher)
+        }
+
         val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
             stealth.js
@@ -270,7 +272,6 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    val scriptNameManglingCipher = conf[BROWSER_JS_NAME_MANGLING_MAGIC, scriptNameCipher]
 
     /**
      * Chrome has to run without sandbox in a virtual machine
@@ -369,9 +370,7 @@ open class BrowserSettings(
     /**
      * A simple name mangling policy
      * */
-    open fun nameMangling(script: String): String {
-        return script.replace(scriptNamePrefix, scriptNameManglingCipher)
-    }
+    open fun nameMangling(script: String): String = scriptNameManglingPolicy(script)
 
     private fun loadJs() {
         val sb = StringBuilder()

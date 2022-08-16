@@ -19,7 +19,7 @@ interface BrowserInstance: AutoCloseable {
 
     val tabCount: AtomicInteger
     // remember, navigate history is small, so search is very fast for a list
-    val navigateHistory: List<NavigateEntry>
+    val navigateHistory: MutableList<NavigateEntry>
     val isIdle: Boolean
 
     fun launch()
@@ -35,7 +35,7 @@ abstract class AbstractBrowserInstance(
     val isGUI get() = launcherOptions.browserSettings.isGUI
 
     override val tabCount = AtomicInteger()
-    // remember, navigate history is small, so search is very fast for a list
+    // remember, navigate history is small, so search is very fast in a list
     override val navigateHistory = mutableListOf<NavigateEntry>()
     var activeTime = Instant.now()
     val idleTimeout = Duration.ofMinutes(10)

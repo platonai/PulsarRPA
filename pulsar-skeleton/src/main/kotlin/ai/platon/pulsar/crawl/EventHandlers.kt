@@ -85,6 +85,11 @@ abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractEv
     abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any?
 }
 
+abstract class WebDriverFetchResultHandler: (WebPage, WebDriver) -> FetchResult?, AbstractEventHandler() {
+    abstract override operator fun invoke(page: WebPage, driver: WebDriver): FetchResult?
+    abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult?
+}
+
 class VoidEventHandlerPipeline: VoidEventHandler(), EventHandlerPipeline {
     private val registeredHandlers = Collections.synchronizedList(mutableListOf<() -> Unit>())
 
@@ -498,6 +503,11 @@ open class EmptyWebDriverHandler: AbstractWebPageWebDriverHandler() {
 }
 
 interface SimulateEventHandler {
+    val onBeforeFetch: WebDriverFetchResultHandlerPipeline
+    val onAfterFetch: WebDriverFetchResultHandlerPipeline
+
+    val onBeforeNavigate: WebPageWebDriverHandlerPipeline
+    val onAfterNavigate: WebPageWebDriverHandlerPipeline
     val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline
     val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline
     val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline
@@ -521,16 +531,24 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
 
     protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
 
+    override val onBeforeFetch: WebDriverFetchResultHandlerPipeline = WebDriverFetchResultHandlerPipeline()
+    override val onAfterFetch: WebDriverFetchResultHandlerPipeline = WebDriverFetchResultHandlerPipeline()
+    override val onBeforeNavigate: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onAfterComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onAfterNavigate: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
 
     override fun combine(other: SimulateEventHandler): SimulateEventHandler {
+        onBeforeFetch.addLast(other.onBeforeFetch)
+
         onBeforeCheckDOMState.addLast(other.onBeforeCheckDOMState)
         onAfterCheckDOMState.addLast(other.onAfterCheckDOMState)
         onBeforeComputeFeature.addLast(other.onBeforeComputeFeature)
         onAfterComputeFeature.addLast(other.onAfterComputeFeature)
+
+        onAfterFetch.addLast(other.onAfterFetch)
 
         return this
     }
@@ -579,6 +597,62 @@ class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
 
     override suspend fun invokeDeferred(page: WebPage, driver: WebDriver) {
         registeredHandlers.forEach { it.invokeDeferred(page, driver) }
+    }
+}
+
+abstract class AbstractWebDriverFetchResultHandler: WebDriverFetchResultHandler() {
+    private val logger = getLogger(AbstractWebDriverFetchResultHandler::class)
+
+    override fun invoke(page: WebPage, driver: WebDriver): FetchResult? {
+        return runBlocking { invokeDeferred(page, driver) }
+    }
+}
+
+class WebDriverFetchResultHandlerPipeline: AbstractWebDriverFetchResultHandler() {
+    private val registeredHandlers = mutableListOf<WebDriverFetchResultHandler>()
+
+    fun addFirst(handler: suspend (WebPage, WebDriver) -> FetchResult?): WebDriverFetchResultHandlerPipeline {
+        registeredHandlers.add(0, object: AbstractWebDriverFetchResultHandler() {
+            override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult? {
+                return handler(page, driver)
+            }
+        })
+        return this
+    }
+
+    fun addFirst(handler: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addFirst(vararg handlers: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
+        handlers.forEach { addFirst(it) }
+        return this
+    }
+
+    fun addLast(handler: suspend (WebPage, WebDriver) -> FetchResult?): WebDriverFetchResultHandlerPipeline {
+        registeredHandlers.add(object: AbstractWebDriverFetchResultHandler() {
+            override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult? {
+                return handler(page, driver)
+            }
+        })
+        return this
+    }
+
+    fun addLast(handler: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    fun addLast(vararg handlers: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
+        handlers.toCollection(registeredHandlers)
+        return this
+    }
+
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult? {
+        var result: FetchResult? = null
+        registeredHandlers.forEach { result = it.invokeDeferred(page, driver) }
+        return result
     }
 }
 

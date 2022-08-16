@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
 
@@ -55,7 +57,21 @@ open class BrowserEmulator(
      * */
     @Throws(IllegalApplicationContextStateException::class)
     open suspend fun fetch(task: FetchTask, driver: WebDriver): FetchResult {
-        return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(task)
+        if (!isActive) {
+            return FetchResult.canceled(task)
+        }
+
+        // page.lastBrowser is used by AppFiles.export, so it has to be set before export
+        task.page.lastBrowser = driver.browserType
+
+        if (task.page.options.isDead()) {
+            taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
+            return FetchResult.canceled(task)
+        }
+
+        val result = browseWithDriver(task, driver)
+
+        return result
     }
 
     open fun cancelNow(task: FetchTask) {
@@ -71,14 +87,6 @@ open class BrowserEmulator(
     }
 
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
-        // page.lastBrowser is used by AppFiles.export, so it has to be set before export
-        task.page.lastBrowser = driver.browserType
-
-        if (task.page.options.isDead()) {
-            taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
-            return FetchResult.canceled(task)
-        }
-
         var exception: Exception? = null
         var response: Response?
 
@@ -198,7 +206,16 @@ open class BrowserEmulator(
         checkState(task)
         // href has the higher priority to locate a resource
         val location = task.href ?: task.url
-        driver.navigateTo(location)
+
+        val volatileConfig = task.page.conf
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
+
+        eventHandler?.onBeforeNavigate?.invokeDeferred(task.page, driver)
+
+        val navigateEntry = NavigateEntry(location, task.page.id, task.page.url)
+        driver.navigateTo(navigateEntry)
+
+        eventHandler?.onAfterNavigate?.invokeDeferred(task.page, driver)
 
         if (!driver.supportJavascript) {
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
@@ -240,6 +257,8 @@ open class BrowserEmulator(
         jsCheckDOMState(task, result)
 
         if (result.state.isContinue) {
+            task.driver.navigateEntry.documentReadyTime = Instant.now()
+
             eventHandler?.runCatching { onAfterCheckDOMState(task.fetchTask.page, task.driver) }?.onFailure {
                 logger.warn(it.simplify("Failed to call onAfterCheckDOMState - "))
             }

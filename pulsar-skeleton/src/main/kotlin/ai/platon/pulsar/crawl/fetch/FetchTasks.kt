@@ -75,6 +75,7 @@ class FetchTask constructor(
     val state = AtomicReference(State.NOT_READY)
 
     var proxyEntry: ProxyEntry? = null
+    val createdTime = Instant.now()
 
     val url get() = page.url
     val href get() = page.href

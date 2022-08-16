@@ -70,7 +70,6 @@ class ChromeDevtoolsDriver(
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
-    private var navigateEntry: NavigateEntry? = null
     private var navigateUrl = ""
 
     private val browser get() = devTools.browser
@@ -121,20 +120,18 @@ class ChromeDevtoolsDriver(
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
-    override suspend fun navigateTo(url: String) {
-        try {
-            val entry = NavigateEntry(url)
-            navigateEntry = entry
-            browserInstance.navigateHistory.add(entry)
-            lastActiveTime = Instant.now()
+    override suspend fun navigateTo(entry: NavigateEntry) {
+        val driver = this
+        this.navigateEntry = entry
 
-            val driver = this
-            val invade = browserSettings.jsInvadingEnabled
+        val invade = browserSettings.jsInvadingEnabled
+
+        try {
             withIOContext("navigateTo") {
-                driver.takeIf { invade }?.getInvaded(url) ?: getNoInvaded(url)
+                driver.takeIf { invade }?.getInvaded(entry.url) ?: getNoInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "navigateTo $url")
+            handleRPCException(e, "navigateTo ${entry.url}")
         }
     }
 
@@ -147,8 +144,6 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun getCookies(): List<Map<String, String>> {
-        if (!refreshState()) return listOf()
-
         try {
             return withIOContext("getCookies") {
                 getCookies0()
@@ -179,7 +174,7 @@ class ChromeDevtoolsDriver(
 
         refreshState()
         try {
-            navigateEntry?.stopped = true
+            navigateEntry.stopped = true
 
             if (browserInstance.isGUI) {
                 // in gui mode, just stop the loading, so we can make a diagnosis
@@ -498,8 +493,9 @@ class ChromeDevtoolsDriver(
         return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
     }
 
-    private fun refreshState(): Boolean {
-        navigateEntry?.refresh()
+    private fun refreshState(action: String = ""): Boolean {
+        lastActiveTime = Instant.now()
+        navigateEntry.refresh(action)
         return isActive
     }
 
@@ -767,10 +763,6 @@ class ChromeDevtoolsDriver(
         return mainFrame?.id == frameId
     }
 
-    private suspend fun <T> withIOContext2(block: suspend () -> T): T {
-        return block()
-    }
-
     private fun handleRPCException(e: ChromeRPCException, message: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
             throw NoSuchSessionException("Too many RPC failures")
@@ -778,9 +770,10 @@ class ChromeDevtoolsDriver(
         logger.warn("Chrome RPC exception | {}", message ?: e.message)
     }
 
-    private suspend fun <T> withIOContext(method: String, block: suspend CoroutineScope.() -> T): T {
+    private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T {
         return withContext(Dispatchers.IO) {
             try {
+                refreshState(action)
                 val result = block()
                 rpcFailures.decrementAndGet()
                 result

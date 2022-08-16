@@ -1,10 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.common.URLUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Connection
@@ -14,7 +11,6 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.jvm.Throws
 
 abstract class AbstractWebDriver(
     override val browserInstance: BrowserInstance,
@@ -34,8 +30,6 @@ abstract class AbstractWebDriver(
 
     var waitForTimeout = Duration.ofMinutes(1)
 
-    override var lastActiveTime: Instant = Instant.now()
-
     override var idleTimeout: Duration = Duration.ofMinutes(10)
 
     override val name get() = javaClass.simpleName + "-" + id
@@ -44,7 +38,13 @@ abstract class AbstractWebDriver(
      * The url to navigate
      * The browser might redirect, so it might not be the same with currentUrl()
      * */
-    override var url: String = ""
+    override var navigateEntry: NavigateEntry = NavigateEntry("")
+
+    /**
+     * The url to navigate
+     * The browser might redirect, so it might not be the same with currentUrl()
+     * */
+//    override var url: String = navigateEntry.url
     /**
      * Whether the web driver has javascript support
      * */
@@ -57,6 +57,8 @@ abstract class AbstractWebDriver(
      * Driver status
      * */
     val status = AtomicReference(Status.UNKNOWN)
+
+    override var lastActiveTime: Instant = Instant.now()
 
     val isFree get() = status.get().isFree
     val isWorking get() = status.get().isWorking
@@ -80,6 +82,8 @@ abstract class AbstractWebDriver(
             // stop()
         }
     }
+
+    override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
 
     override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =
         waitForSelector(selector, Duration.ofMillis(timeoutMillis))

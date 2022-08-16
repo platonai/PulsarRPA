@@ -125,6 +125,7 @@ class MultiPrivacyContextManager(
             updatePrivacyContext(privacyContext, result)
         }
 
+        // All retry is forced to do in crawl scope
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL).also { logCrawlRetry(task) }
         }

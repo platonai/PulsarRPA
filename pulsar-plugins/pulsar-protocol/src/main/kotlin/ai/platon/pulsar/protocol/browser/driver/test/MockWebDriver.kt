@@ -10,6 +10,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -58,6 +59,10 @@ class MockWebDriver(
         }
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
+
+    override suspend fun navigateTo(entry: NavigateEntry) {
+        backupDriverOrNull?.navigateTo(entry)
+    }
 
     override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         return backupDriverOrNull?.waitForSelector(selector, timeout) ?: 0

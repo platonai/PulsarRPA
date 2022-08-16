@@ -125,7 +125,7 @@ open class WebDriverPoolManager(
     fun cancel(url: String): WebDriver? {
         var driver: WebDriver? = null
         driverPools.values.forEach { driverPool ->
-            driver = driverPool.firstOrNull { it.url == url }?.also {
+            driver = driverPool.firstOrNull { it.navigateEntry.pageUrl == url }?.also {
                 it.cancel()
             }
         }
@@ -138,7 +138,7 @@ open class WebDriverPoolManager(
      * */
     fun cancel(browserId: BrowserInstanceId, url: String): WebDriver? {
         val driverPool = driverPools[browserId] ?: return null
-        return driverPool.firstOrNull { it.url == url }?.also { it.cancel() }
+        return driverPool.firstOrNull { it.navigateEntry.pageUrl == url }?.also { it.cancel() }
     }
 
     /**

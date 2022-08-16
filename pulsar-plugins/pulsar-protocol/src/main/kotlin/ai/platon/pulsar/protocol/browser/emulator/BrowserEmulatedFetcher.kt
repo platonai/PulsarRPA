@@ -8,7 +8,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORIT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -73,9 +76,24 @@ open class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
-        return privacyManager.run(task) { _, driver ->
-            browserEmulator.fetch(task, driver)
-        }.response
+        return privacyManager.run(task) { _, driver -> doFetch(task, driver) }.response
+    }
+
+    private suspend fun doFetch(task: FetchTask, driver: WebDriver): FetchResult {
+        val volatileConfig = task.page.conf
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
+
+        eventHandler?.onBeforeFetch?.runCatching {
+            invoke(task.page, driver)
+        }?.onFailure { logger.warn("Unexpected exception (ignored)", it) }
+
+        val result = browserEmulator.fetch(task, driver)
+
+        eventHandler?.onAfterFetch?.runCatching {
+            invoke(task.page, driver)
+        }?.onFailure { logger.warn("Unexpected exception (ignored)", it) }
+
+        return result
     }
 
     fun reset() {

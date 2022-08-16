@@ -29,6 +29,10 @@ enum class HtmlIntegrity {
      * */
     FORBIDDEN,
     /**
+     * redirected to verify page, we should fetch later, or change privacy context
+     * */
+    VERIFY,
+    /**
      * the page displays "404 Not Found" or something similar,
      * the the server should issue a 404 error code, but not guaranteed
      * */
@@ -49,6 +53,7 @@ enum class HtmlIntegrity {
     val isEmptyBody: Boolean get() = this == BLANK_BODY
     val isRobotCheck: Boolean get() = this == ROBOT_CHECK
     val isForbidden: Boolean get() = this == FORBIDDEN
+    val isVerify: Boolean get() = this == VERIFY
     val isNotFound: Boolean get() = this == NOT_FOUND
     val isSmall: Boolean get() = this == TOO_SMALL || this == TOO_SMALL_IN_HISTORY || this == TOO_SMALL_IN_BATCH
     val isOther get() = this == OTHER
