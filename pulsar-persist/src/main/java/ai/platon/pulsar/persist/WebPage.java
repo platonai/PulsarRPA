@@ -38,7 +38,6 @@ import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -606,15 +605,6 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.GENERATE_TIME, generateTime.toString());
     }
 
-    @Nullable
-    public Instant getPageModelUpdateTime() {
-        return Instant.ofEpochMilli(page.getPageModelUpdateTime());
-    }
-
-    public void setPageModelUpdateTime(@Nullable Instant time) {
-        page.setPageModelUpdateTime(time == null ? 0 : time.toEpochMilli());
-    }
-
     public int getFetchCount() {
         return page.getFetchCount();
     }
@@ -878,7 +868,6 @@ final public class WebPage implements Comparable<WebPage> {
      */
     public void setEncoding(@Nullable String encoding) {
         page.setEncoding(encoding);
-        getMetadata().set(Name.CHAR_ENCODING_FOR_CONVERSION, encoding);
     }
 
     /**
@@ -961,11 +950,11 @@ final public class WebPage implements Comparable<WebPage> {
     @NotNull
     public String getContentAsString() {
         ByteBuffer buffer = getContent();
-        byte[] array = buffer.array();
-        if (array == null) {
-            array = "".getBytes(StandardCharsets.UTF_8);
+        if (buffer == null || buffer.remaining() == 0) {
+            return "";
         }
-        return ByteUtils.toString(array);
+
+        return new String(buffer.array(), buffer.arrayOffset(), buffer.limit());
     }
 
     /**
@@ -1029,8 +1018,8 @@ final public class WebPage implements Comparable<WebPage> {
             isContentUpdated = true;
 
             int length = value.array().length;
-            setContentLength(length);
-            setPersistContentLength(length);
+            computeContentLength(length);
+            setPersistedContentLength(length);
         } else {
             clearPersistContent();
         }
@@ -1039,38 +1028,33 @@ final public class WebPage implements Comparable<WebPage> {
     public void clearPersistContent() {
         tmpContent = page.getContent();
         page.setContent(null);
-        setPersistContentLength(0);
+        setPersistedContentLength(0);
     }
 
     /**
-     * Get the decleared content length.
+     * Get the length of content in bytes.
      *
      * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
      *
-     * @return The content length
+     * @return The length of the content in bytes.
      */
     public long getContentLength() {
-        return getMetadata().getLong(Name.CONTENT_BYTES, 0);
+        return page.getContentLength();
     }
 
     /**
-     * Set the declared content length.
-     *
-     * TODO: use a field for content length
+     * Compute the length of content in bytes.
      */
-    private void setContentLength(long bytes) {
+    private void computeContentLength(long bytes) {
         long lastBytes = getContentLength();
-        Metadata metadata = getMetadata();
-        metadata.set(Name.LAST_CONTENT_BYTES, lastBytes);
-        metadata.set(Name.CONTENT_BYTES, bytes);
-        metadata.set(Name.AVE_CONTENT_BYTES, getAverageContentBytes(bytes));
+        page.setLastContentLength(lastBytes);
+        page.setContentLength(bytes);
+        computeAveContentLength(bytes);
     }
 
-    private long getAverageContentBytes(long bytes) {
-        Metadata metadata = getMetadata();
-
+    private void computeAveContentLength(long bytes) {
         int count = getFetchCount();
-        long lastAveBytes = metadata.getLong(Name.AVE_CONTENT_BYTES, 0);
+        long lastAveBytes = page.getAveContentLength();
 
         long aveBytes;
         if (count > 0 && lastAveBytes == 0) {
@@ -1080,23 +1064,23 @@ final public class WebPage implements Comparable<WebPage> {
             aveBytes = (lastAveBytes * count + bytes) / (count + 1);
         }
 
-        return aveBytes;
+        page.setAveContentLength(aveBytes);
     }
 
-    public long getPersistContentLength() {
-        return getMetadata().getLong(Name.PERSIST_CONTENT_BYTES, 0);
+    public long getPersistedContentLength() {
+        return page.getPersistedContentLength();
     }
 
-    private void setPersistContentLength(long bytes) {
-        getMetadata().set(Name.PERSIST_CONTENT_BYTES, bytes);
+    private void setPersistedContentLength(long bytes) {
+        page.setPersistedContentLength(bytes);
     }
 
-    public long getLastContentBytes() {
-        return getMetadata().getLong(Name.LAST_CONTENT_BYTES, 0);
+    public long getLastContentLength() {
+        return page.getLastContentLength();
     }
 
-    public long getAveContentBytes() {
-        return getMetadata().getLong(Name.AVE_CONTENT_BYTES, 0);
+    public long getAveContentLength() {
+        return page.getAveContentLength();
     }
 
     @NotNull
@@ -1425,6 +1409,14 @@ final public class WebPage implements Comparable<WebPage> {
      * Page Model
      * ******************************************************************************
      */
+    @Nullable
+    public Instant getPageModelUpdateTime() {
+        return Instant.ofEpochMilli(page.getPageModelUpdateTime());
+    }
+
+    public void setPageModelUpdateTime(@Nullable Instant time) {
+        page.setPageModelUpdateTime(time == null ? 0 : time.toEpochMilli());
+    }
 
     @NotNull
     public PageModel getPageModel() {

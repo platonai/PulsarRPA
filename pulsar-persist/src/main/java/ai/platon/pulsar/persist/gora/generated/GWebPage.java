@@ -18,8 +18,8 @@
 package ai.platon.pulsar.persist.gora.generated;  
 
 public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"args\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"resource\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"browser\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"proxy\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fetchInterval\",\"type\":\"int\",\"default\":0},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevCrawlTime1\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"contentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"lastContentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"aveContentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"persistedContentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"doc\":\"Given two urls, a src and a destination of a redirect, it returns the representative url.\",\"default\":null},{\"name\":\"htmlIntegrity\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"activeDOMStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"activeDOMStatTrace\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}]},\"default\":null},{\"name\":\"pageModelUpdateTime\",\"type\":\"long\",\"default\":0},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
-  private static final long serialVersionUID = -3131560408864654087L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"args\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"resource\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"browser\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"proxy\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fetchInterval\",\"type\":\"int\",\"default\":0},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevCrawlTime1\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"contentLength\",\"type\":[\"null\",\"long\"],\"default\":0},{\"name\":\"lastContentLength\",\"type\":[\"null\",\"long\"],\"default\":0},{\"name\":\"aveContentLength\",\"type\":[\"null\",\"long\"],\"default\":0},{\"name\":\"persistedContentLength\",\"type\":[\"null\",\"long\"],\"default\":0},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"doc\":\"Given two urls, a src and a destination of a redirect, it returns the representative url.\",\"default\":null},{\"name\":\"htmlIntegrity\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"activeDOMStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"activeDOMStatTrace\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}]},\"default\":null},{\"name\":\"pageModelUpdateTime\",\"type\":\"long\",\"default\":0},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
+  private static final long serialVersionUID = 8357047624052126876L;
   /** Enum containing all data bean's fields. */
   public static enum Field {
     BASE_URL(0, "baseUrl"),
@@ -220,10 +220,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   private java.lang.CharSequence contentType;
   /** The entire raw document content e.g. raw XHTML */
   private java.nio.ByteBuffer content;
-  private java.lang.Integer contentLength;
-  private java.lang.Integer lastContentLength;
-  private java.lang.Integer aveContentLength;
-  private java.lang.Integer persistedContentLength;
+  private java.lang.Long contentLength;
+  private java.lang.Long lastContentLength;
+  private java.lang.Long aveContentLength;
+  private java.lang.Long persistedContentLength;
   private java.lang.CharSequence referrer;
   /** Given two urls, a src and a destination of a redirect, it returns the representative url. */
   private java.lang.CharSequence reprUrl;
@@ -359,10 +359,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     case 20: encoding = (java.lang.CharSequence)(value); break;
     case 21: contentType = (java.lang.CharSequence)(value); break;
     case 22: content = (java.nio.ByteBuffer)(value); break;
-    case 23: contentLength = (java.lang.Integer)(value); break;
-    case 24: lastContentLength = (java.lang.Integer)(value); break;
-    case 25: aveContentLength = (java.lang.Integer)(value); break;
-    case 26: persistedContentLength = (java.lang.Integer)(value); break;
+    case 23: contentLength = (java.lang.Long)(value); break;
+    case 24: lastContentLength = (java.lang.Long)(value); break;
+    case 25: aveContentLength = (java.lang.Long)(value); break;
+    case 26: persistedContentLength = (java.lang.Long)(value); break;
     case 27: referrer = (java.lang.CharSequence)(value); break;
     case 28: reprUrl = (java.lang.CharSequence)(value); break;
     case 29: htmlIntegrity = (java.lang.CharSequence)(value); break;
@@ -958,7 +958,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   /**
    * Gets the value of the 'contentLength' field.
    */
-  public java.lang.Integer getContentLength() {
+  public java.lang.Long getContentLength() {
     return contentLength;
   }
 
@@ -966,7 +966,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * Sets the value of the 'contentLength' field.
    * @param value the value to set.
    */
-  public void setContentLength(java.lang.Integer value) {
+  public void setContentLength(java.lang.Long value) {
     this.contentLength = value;
     setDirty(23);
   }
@@ -982,7 +982,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   /**
    * Gets the value of the 'lastContentLength' field.
    */
-  public java.lang.Integer getLastContentLength() {
+  public java.lang.Long getLastContentLength() {
     return lastContentLength;
   }
 
@@ -990,7 +990,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * Sets the value of the 'lastContentLength' field.
    * @param value the value to set.
    */
-  public void setLastContentLength(java.lang.Integer value) {
+  public void setLastContentLength(java.lang.Long value) {
     this.lastContentLength = value;
     setDirty(24);
   }
@@ -1006,7 +1006,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   /**
    * Gets the value of the 'aveContentLength' field.
    */
-  public java.lang.Integer getAveContentLength() {
+  public java.lang.Long getAveContentLength() {
     return aveContentLength;
   }
 
@@ -1014,7 +1014,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * Sets the value of the 'aveContentLength' field.
    * @param value the value to set.
    */
-  public void setAveContentLength(java.lang.Integer value) {
+  public void setAveContentLength(java.lang.Long value) {
     this.aveContentLength = value;
     setDirty(25);
   }
@@ -1030,7 +1030,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   /**
    * Gets the value of the 'persistedContentLength' field.
    */
-  public java.lang.Integer getPersistedContentLength() {
+  public java.lang.Long getPersistedContentLength() {
     return persistedContentLength;
   }
 
@@ -1038,7 +1038,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * Sets the value of the 'persistedContentLength' field.
    * @param value the value to set.
    */
-  public void setPersistedContentLength(java.lang.Integer value) {
+  public void setPersistedContentLength(java.lang.Long value) {
     this.persistedContentLength = value;
     setDirty(26);
   }
@@ -1982,10 +1982,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     private java.lang.CharSequence encoding;
     private java.lang.CharSequence contentType;
     private java.nio.ByteBuffer content;
-    private java.lang.Integer contentLength;
-    private java.lang.Integer lastContentLength;
-    private java.lang.Integer aveContentLength;
-    private java.lang.Integer persistedContentLength;
+    private java.lang.Long contentLength;
+    private java.lang.Long lastContentLength;
+    private java.lang.Long aveContentLength;
+    private java.lang.Long persistedContentLength;
     private java.lang.CharSequence referrer;
     private java.lang.CharSequence reprUrl;
     private java.lang.CharSequence htmlIntegrity;
@@ -2129,19 +2129,19 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
         fieldSetFlags()[22] = true;
       }
       if (isValidValue(fields()[23], other.contentLength)) {
-        this.contentLength = (java.lang.Integer) data().deepCopy(fields()[23].schema(), other.contentLength);
+        this.contentLength = (java.lang.Long) data().deepCopy(fields()[23].schema(), other.contentLength);
         fieldSetFlags()[23] = true;
       }
       if (isValidValue(fields()[24], other.lastContentLength)) {
-        this.lastContentLength = (java.lang.Integer) data().deepCopy(fields()[24].schema(), other.lastContentLength);
+        this.lastContentLength = (java.lang.Long) data().deepCopy(fields()[24].schema(), other.lastContentLength);
         fieldSetFlags()[24] = true;
       }
       if (isValidValue(fields()[25], other.aveContentLength)) {
-        this.aveContentLength = (java.lang.Integer) data().deepCopy(fields()[25].schema(), other.aveContentLength);
+        this.aveContentLength = (java.lang.Long) data().deepCopy(fields()[25].schema(), other.aveContentLength);
         fieldSetFlags()[25] = true;
       }
       if (isValidValue(fields()[26], other.persistedContentLength)) {
-        this.persistedContentLength = (java.lang.Integer) data().deepCopy(fields()[26].schema(), other.persistedContentLength);
+        this.persistedContentLength = (java.lang.Long) data().deepCopy(fields()[26].schema(), other.persistedContentLength);
         fieldSetFlags()[26] = true;
       }
       if (isValidValue(fields()[27], other.referrer)) {
@@ -2854,12 +2854,12 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     }
     
     /** Gets the value of the 'contentLength' field */
-    public java.lang.Integer getContentLength() {
+    public java.lang.Long getContentLength() {
       return contentLength;
     }
     
     /** Sets the value of the 'contentLength' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentLength(java.lang.Integer value) {
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentLength(java.lang.Long value) {
       validate(fields()[23], value);
       this.contentLength = value;
       fieldSetFlags()[23] = true;
@@ -2879,12 +2879,12 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     }
     
     /** Gets the value of the 'lastContentLength' field */
-    public java.lang.Integer getLastContentLength() {
+    public java.lang.Long getLastContentLength() {
       return lastContentLength;
     }
     
     /** Sets the value of the 'lastContentLength' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setLastContentLength(java.lang.Integer value) {
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setLastContentLength(java.lang.Long value) {
       validate(fields()[24], value);
       this.lastContentLength = value;
       fieldSetFlags()[24] = true;
@@ -2904,12 +2904,12 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     }
     
     /** Gets the value of the 'aveContentLength' field */
-    public java.lang.Integer getAveContentLength() {
+    public java.lang.Long getAveContentLength() {
       return aveContentLength;
     }
     
     /** Sets the value of the 'aveContentLength' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setAveContentLength(java.lang.Integer value) {
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setAveContentLength(java.lang.Long value) {
       validate(fields()[25], value);
       this.aveContentLength = value;
       fieldSetFlags()[25] = true;
@@ -2929,12 +2929,12 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     }
     
     /** Gets the value of the 'persistedContentLength' field */
-    public java.lang.Integer getPersistedContentLength() {
+    public java.lang.Long getPersistedContentLength() {
       return persistedContentLength;
     }
     
     /** Sets the value of the 'persistedContentLength' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPersistedContentLength(java.lang.Integer value) {
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPersistedContentLength(java.lang.Long value) {
       validate(fields()[26], value);
       this.persistedContentLength = value;
       fieldSetFlags()[26] = true;
@@ -3869,10 +3869,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
         record.encoding = fieldSetFlags()[20] ? this.encoding : (java.lang.CharSequence) defaultValue(fields()[20]);
         record.contentType = fieldSetFlags()[21] ? this.contentType : (java.lang.CharSequence) defaultValue(fields()[21]);
         record.content = fieldSetFlags()[22] ? this.content : (java.nio.ByteBuffer) defaultValue(fields()[22]);
-        record.contentLength = fieldSetFlags()[23] ? this.contentLength : (java.lang.Integer) defaultValue(fields()[23]);
-        record.lastContentLength = fieldSetFlags()[24] ? this.lastContentLength : (java.lang.Integer) defaultValue(fields()[24]);
-        record.aveContentLength = fieldSetFlags()[25] ? this.aveContentLength : (java.lang.Integer) defaultValue(fields()[25]);
-        record.persistedContentLength = fieldSetFlags()[26] ? this.persistedContentLength : (java.lang.Integer) defaultValue(fields()[26]);
+        record.contentLength = fieldSetFlags()[23] ? this.contentLength : (java.lang.Long) defaultValue(fields()[23]);
+        record.lastContentLength = fieldSetFlags()[24] ? this.lastContentLength : (java.lang.Long) defaultValue(fields()[24]);
+        record.aveContentLength = fieldSetFlags()[25] ? this.aveContentLength : (java.lang.Long) defaultValue(fields()[25]);
+        record.persistedContentLength = fieldSetFlags()[26] ? this.persistedContentLength : (java.lang.Long) defaultValue(fields()[26]);
         record.referrer = fieldSetFlags()[27] ? this.referrer : (java.lang.CharSequence) defaultValue(fields()[27]);
         record.reprUrl = fieldSetFlags()[28] ? this.reprUrl : (java.lang.CharSequence) defaultValue(fields()[28]);
         record.htmlIntegrity = fieldSetFlags()[29] ? this.htmlIntegrity : (java.lang.CharSequence) defaultValue(fields()[29]);
@@ -4462,7 +4462,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 				  /**
 	   * Gets the value of the 'contentLength' field.
 		   */
-	  public java.lang.Integer getContentLength() {
+	  public java.lang.Long getContentLength() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
@@ -4470,7 +4470,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	   * Sets the value of the 'contentLength' field.
 		   * @param value the value to set.
 	   */
-	  public void setContentLength(java.lang.Integer value) {
+	  public void setContentLength(java.lang.Long value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
@@ -4485,7 +4485,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 				  /**
 	   * Gets the value of the 'lastContentLength' field.
 		   */
-	  public java.lang.Integer getLastContentLength() {
+	  public java.lang.Long getLastContentLength() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
@@ -4493,7 +4493,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	   * Sets the value of the 'lastContentLength' field.
 		   * @param value the value to set.
 	   */
-	  public void setLastContentLength(java.lang.Integer value) {
+	  public void setLastContentLength(java.lang.Long value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
@@ -4508,7 +4508,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 				  /**
 	   * Gets the value of the 'aveContentLength' field.
 		   */
-	  public java.lang.Integer getAveContentLength() {
+	  public java.lang.Long getAveContentLength() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
@@ -4516,7 +4516,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	   * Sets the value of the 'aveContentLength' field.
 		   * @param value the value to set.
 	   */
-	  public void setAveContentLength(java.lang.Integer value) {
+	  public void setAveContentLength(java.lang.Long value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
@@ -4531,7 +4531,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 				  /**
 	   * Gets the value of the 'persistedContentLength' field.
 		   */
-	  public java.lang.Integer getPersistedContentLength() {
+	  public java.lang.Long getPersistedContentLength() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
@@ -4539,7 +4539,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	   * Sets the value of the 'persistedContentLength' field.
 		   * @param value the value to set.
 	   */
-	  public void setPersistedContentLength(java.lang.Integer value) {
+	  public void setPersistedContentLength(java.lang.Long value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  

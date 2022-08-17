@@ -239,7 +239,7 @@ class CoreMetrics(
         meterContentBytes.mark(bytes)
         meterContentMBytes.inc(ByteUnitConverter.convert(bytes, "M").toLong())
 
-        page.activeDomStats["lastStat"]?.apply {
+        page.activeDOMStatTrace["lastStat"]?.apply {
             pageAnchors.update(na)
             pageImages.update(ni)
             pageNumbers.update(nnm)

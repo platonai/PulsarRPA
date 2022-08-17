@@ -493,16 +493,16 @@ class LoadComponent(
             return CheckState(FetchState.SCHEDULED, "scheduled")
         }
 
-        if (page.persistContentLength == 0L) {
+        if (page.persistedContentLength == 0) {
             // do not enable this feature by default
             // return CheckState(FetchState.NO_CONTENT, "no content")
         }
 
-        if (page.persistContentLength < options.requireSize) {
+        if (page.persistedContentLength < options.requireSize) {
             return CheckState(FetchState.SMALL_CONTENT, "small content")
         }
 
-        val domStats = page.activeDomStats
+        val domStats = page.activeDOMStatTrace
         val (ni, na) = domStats["lastStat"] ?: ActiveDOMStat()
         if (ni < options.requireImages) {
             return CheckState(FetchState.MISS_FIELD, "miss image")

@@ -84,9 +84,9 @@
         <field name="metadata" docfield="metadata" type="document" />
 
         <!-- extract fields                                     -->
-        <field name="activeDomStatus" docfield="activeDomStatus" type="document" />
-        <field name="activeDomStats" docfield="activeDomStats" type="document" />
-        <field name="activeDomUrls" docfield="activeDomUrls" type="document" />
+        <field name="activeDOMStatus" docfield="activeDOMStatus" type="document" />
+        <field name="activeDOMStatTrace" docfield="activeDOMStatTrace" type="document" />
+        <field name="pageModelUpdateTime" docfield="pageModelUpdateTime" type="long" />
         <field name="pageModel" docfield="pageModel" type="list" />
     </class>
 </gora-otd>

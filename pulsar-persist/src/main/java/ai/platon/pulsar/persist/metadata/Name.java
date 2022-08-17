@@ -97,9 +97,13 @@ public enum Name {
     @Deprecated
     CHAR_ENCODING_FOR_CONVERSION("CCEFC"),
     ENCODING_CLUES("C_EC"),
+    @Deprecated
     CONTENT_BYTES("C_CB"),
+    @Deprecated
     LAST_CONTENT_BYTES("C_LCB"),
+    @Deprecated
     PERSIST_CONTENT_BYTES("CPCB"),
+    @Deprecated
     AVE_CONTENT_BYTES("C_ACB"),
 
     META_KEYWORDS("meta_keywords"),

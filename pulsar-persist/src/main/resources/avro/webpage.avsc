@@ -133,22 +133,22 @@
     },
     {
       "name": "contentLength",
-      "type": ["null","int"],
+      "type": ["null","long"],
       "default": 0
     },
     {
       "name": "lastContentLength",
-      "type": ["null","int"],
+      "type": ["null","long"],
       "default": 0
     },
     {
       "name": "aveContentLength",
-      "type": ["null","int"],
+      "type": ["null","long"],
       "default": 0
     },
     {
       "name": "persistedContentLength",
-      "type": ["null","int"],
+      "type": ["null","long"],
       "default": 0
     },
     {
