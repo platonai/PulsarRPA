@@ -3,11 +3,7 @@ package ai.platon.pulsar.persist.metadata;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * TODO: Auto detect fetch mode: first try native, and then try selenium, if there is no differences, use native mode
- * TODO: FetchMode seems can be merged into BrowserType
- *
  * @author vincent
- * @version $Id: $Id
  */
 public enum FetchMode {
     UNKNOWN,

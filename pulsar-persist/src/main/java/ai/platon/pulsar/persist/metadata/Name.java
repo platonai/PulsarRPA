@@ -54,8 +54,6 @@ public enum Name {
     /**
      * Embedded query is not used any more, use SQL instead
      * */
-    @Deprecated
-    QUERY("PQ"),
     NO_FOLLOW("PNF"),
     FORCE_FOLLOW("PFF"),
     REPARSE_LINKS("PRL"),

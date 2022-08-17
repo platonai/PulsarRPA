@@ -6,6 +6,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Enumeration;
@@ -19,9 +20,9 @@ import java.util.stream.Collectors;
  * <p>
  * Unstable fields are persisted as a metadata, they should be moved to a real database field if it's getting stable,
  * in which case, the database schema should be changed
+ * </p>
  *
- * @author vincent
- * @version $Id: $Id
+ * @author vincent, ivincent.zhang@gmail.com
  */
 public class Metadata {
 
@@ -139,6 +140,7 @@ public class Metadata {
      * @param name a {@link java.lang.String} object.
      * @return a {@link java.nio.ByteBuffer} object.
      */
+    @Nullable
     public ByteBuffer getByteBuffer(String name) {
         return data.get(WebPage.u8(name));
     }
@@ -149,6 +151,7 @@ public class Metadata {
      * @param name a {@link ai.platon.pulsar.persist.metadata.Name} object.
      * @return a {@link java.lang.String} object.
      */
+    @Nullable
     public String get(Name name) {
         return get(name.text());
     }
@@ -159,6 +162,7 @@ public class Metadata {
      * @param name a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
      */
+    @Nullable
     public String get(String name) {
         ByteBuffer bvalue = getByteBuffer(name);
         return bvalue == null ? null : ByteUtils.toString(bvalue.array());
@@ -171,6 +175,7 @@ public class Metadata {
      * @param defaultValue a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
      */
+    @Nonnull
     public String getOrDefault(Name name, String defaultValue) {
         String value = get(name);
         return value == null ? defaultValue : value;
@@ -183,6 +188,7 @@ public class Metadata {
      * @param defaultValue a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
      */
+    @Nonnull
     public String getOrDefault(String name, String defaultValue) {
         String value = get(name);
         return value == null ? defaultValue : value;
@@ -246,6 +252,7 @@ public class Metadata {
      * @param defaultValue a {@link java.time.Instant} object.
      * @return a {@link java.time.Instant} object.
      */
+    @Nonnull
     public Instant getInstant(Name name, Instant defaultValue) {
         return DateTimes.parseInstant(get(name), defaultValue);
     }

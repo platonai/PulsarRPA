@@ -27,6 +27,8 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     val mainFrame get() = page.frameTree.frame
     val runtime get() = devTools.runtime
     val emulation get() = devTools.emulation
+    val dom get() = devTools.dom
+    val overlay get() = devTools.overlay
 
     abstract fun run()
 

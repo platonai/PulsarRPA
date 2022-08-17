@@ -89,8 +89,8 @@ class ChromeDevtoolsDriver(
     private var mainRequestCookies: List<Map<String, String>> = listOf()
 
     private val enableStartupScript get() = browserSettings.enableStartupScript
-
     private val enableBlockingReport = false
+
     private val closed = AtomicBoolean()
 
     val rpcFailures = AtomicInteger()
@@ -331,8 +331,8 @@ class ChromeDevtoolsDriver(
      * may end up with a race condition that yields unexpected results. The
      * correct pattern for click and wait for navigation is the following:
      * ```kotlin
-     * page.waitForNavigation(waitOptions)
-     * page.click(selector, clickOptions)
+     * driver.waitForNavigation()
+     * driver.click(selector)
      * ```
      * @param selector - A `selector` to search for element to click. If there are
      * multiple elements satisfying the `selector`, the first will be clicked

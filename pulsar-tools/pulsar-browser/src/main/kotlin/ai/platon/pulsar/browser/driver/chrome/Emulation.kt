@@ -45,9 +45,11 @@ class ClickableDOM(
 ) {
     private val logger = getLogger(this)
 
-    fun clickablePoint(): PointD? {
-        val contentQuads = dom.getContentQuads(nodeId, null, null)
-        val layoutMetrics = page.layoutMetrics
+    suspend fun clickablePoint(): PointD? {
+        val (contentQuads, layoutMetrics) = withContext(Dispatchers.IO) {
+            dom.getContentQuads(nodeId, null, null) to page.layoutMetrics
+        }
+
         if (contentQuads == null || layoutMetrics == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
@@ -101,10 +103,12 @@ class ClickableDOM(
         return PointD(x = x / 4, y = y / 4)
     }
 
-    fun boundingBox(): RectD? {
-        val box = kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
-            .onFailure { logger.warn("Failed to get box model for #{} | {}", nodeId, it.message) }
-            .getOrNull() ?: return null
+    suspend fun boundingBox(): RectD? {
+        val box = withContext(Dispatchers.IO) {
+            kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
+                .onFailure { logger.warn("Failed to get box model for #{} | {}", nodeId, it.message) }
+                .getOrNull()
+        } ?: return null
 
         val quad = box.border
         if (quad.isEmpty()) {
@@ -237,6 +241,9 @@ class Mouse(private val input: Input) {
 
     /**
      * Dispatches a `mousedown` event.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
      */
     suspend fun down(x: Double, y: Double, clickCount: Int = 1) {
         withContext(Dispatchers.IO) {
@@ -286,6 +293,26 @@ class Mouse(private val input: Input) {
         }
     }
 
+    suspend fun scroll(deltaX: Double = 0.0, deltaY: Double = 10.0) {
+        withContext(Dispatchers.IO) {
+            input.dispatchMouseEvent(
+                DispatchMouseEventType.MOUSE_WHEEL, currentX, currentY,
+                null, null,
+                null, // button
+                null, // buttons
+                null,
+                null, // force
+                null,
+                null, // tiltX
+                null, // tiltY
+                null, // twist
+                deltaX, // deltaX
+                deltaY, // deltaY
+                null
+            )
+        }
+    }
+
     /**
      * Dispatches a `mousewheel` event.
      *
@@ -301,6 +328,49 @@ class Mouse(private val input: Input) {
      *
      * mouse.wheel({ deltaY: -100 })
      * ```
+     */
+    suspend fun wheel(deltaX: Double = 10.0, deltaY: Double = 10.0) {
+        wheel(currentX, currentY, deltaX, deltaY)
+    }
+
+    /**
+     * Dispatches a `mousewheel` event.
+     *
+     * @example
+     * An example of zooming into an element:
+     * ```
+     * val elem = driver.querySelector('div');
+     * val boundingBox = elem.boundingBox();
+     * mouse.move(
+     *   boundingBox.x + boundingBox.width / 2,
+     *   boundingBox.y + boundingBox.height / 2
+     * );
+     *
+     * mouse.wheel({ deltaY: -100 })
+     * ```
+     */
+    suspend fun wheel(point: PointD, deltaX: Double = 10.0, deltaY: Double = 10.0) {
+        wheel(point.x, point.y, deltaX, deltaY)
+    }
+
+    /**
+     * Dispatches a `mousewheel` event.
+     *
+     * @example
+     * An example of zooming into an element:
+     * ```
+     * val elem = driver.querySelector('div');
+     * val boundingBox = elem.boundingBox();
+     * mouse.move(
+     *   boundingBox.x + boundingBox.width / 2,
+     *   boundingBox.y + boundingBox.height / 2
+     * );
+     *
+     * mouse.wheel({ deltaY: -100 })
+     * ```
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
      */
     suspend fun wheel(x: Double, y: Double, deltaX: Double, deltaY: Double) {
         withContext(Dispatchers.IO) {
@@ -327,7 +397,7 @@ class Mouse(private val input: Input) {
      * @param start - starting point for drag
      * @param target - point to drag to
      */
-    suspend fun drag(start: PointD, end: PointD): DragData? {
+    suspend fun drag(start: PointD, target: PointD): DragData? {
         var dragData: DragData? = null
 
         withContext(Dispatchers.IO) {
@@ -339,7 +409,7 @@ class Mouse(private val input: Input) {
 
         move(start, 5, 100)
         down(currentX, currentY)
-        move(end, 3, 500)
+        move(target, 3, 500)
 
         return dragData
     }

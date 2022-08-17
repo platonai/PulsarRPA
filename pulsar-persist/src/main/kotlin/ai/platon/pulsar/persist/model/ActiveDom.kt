@@ -56,12 +56,44 @@ object Converters {
     }
 }
 
-// NOTE: it seems they are all the same
+/**
+ * URLs of a document.
+ * */
 data class ActiveDomUrls(
-        var URL: String = "",
-        var baseURI: String = "",
-        var location: String = "",
-        var documentURI: String = ""
+    /**
+     * The entire URL of the document, including the protocol (like http://)
+     */
+    var URL: String = "",
+    /**
+     * The baseURI is a property of Node, it's the absolute base URL of the
+     * document containing the node. A baseURI is used to resolve relative URLs.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    var baseURI: String = "",
+    /**
+     * The `window.location`, or `document.location`, is a read-only property
+     * returns a Location object, which contains information about the URL of the
+     * document and provides methods for changing that URL and loading another URL.
+     *
+     * To retrieve just the URL as a string, the read-only `document.URL` property can
+     * also be used.
+     * */
+    var location: String = "",
+    /**
+     * Returns the document location as a string.
+     *
+     * The documentURI property can be used on any document types. The document.URL
+     * property can only be used on HTML documents.
+     *
+     * @see https://www.w3schools.com/jsref/prop_document_documenturi.asp
+     * */
+    var documentURI: String = "",
+    /** Returns the URI of the page that linked to this page. */
+    var referrer: String = "",
 ) {
     fun toJson(): String{
         return gson.toJson(this)

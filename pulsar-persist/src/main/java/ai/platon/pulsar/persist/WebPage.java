@@ -1233,7 +1233,8 @@ final public class WebPage implements Comparable<WebPage> {
                 urls.getOrDefault("URL", "").toString(),
                 urls.getOrDefault("baseURI", "").toString(),
                 urls.getOrDefault("location", "").toString(),
-                urls.getOrDefault("documentURI", "").toString()
+                urls.getOrDefault("documentURI", "").toString(),
+                urls.getOrDefault("referrer", "").toString()
         );
     }
 
@@ -1243,6 +1244,7 @@ final public class WebPage implements Comparable<WebPage> {
         domUrls.put("baseURI", urls.getBaseURI());
         domUrls.put("location", urls.getLocation());
         domUrls.put("documentURI", urls.getDocumentURI());
+        domUrls.put("referrer", urls.getReferrer());
     }
 
     /**

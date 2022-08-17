@@ -1,10 +1,10 @@
 package ai.platon.pulsar.rest.integration
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.apache.http.HttpStatus
 import org.junit.Test

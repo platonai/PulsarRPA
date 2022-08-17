@@ -17,17 +17,14 @@
 package ai.platon.pulsar.persist.model.experimental
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.DateTimes.constructTimeHistory
-import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.HtmlIntegrity.Companion.fromString
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.normalize
-import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
-import ai.platon.pulsar.common.urls.UrlUtils.unreverseUrl
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GParseStatus
@@ -39,62 +36,55 @@ import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.PageModel
 import org.apache.avro.util.Utf8
 import org.apache.commons.collections4.CollectionUtils
-import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
-import org.apache.gora.util.ByteUtils
-import org.slf4j.LoggerFactory
-import org.xml.sax.InputSource
-import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.Consumer
 
 /**
  * The core data structure across the whole program execution
- *
  *
  * Notice: Use a build-in java string or a Utf8 to serialize strings?
  *
  * see org .apache .gora. hbase. util .HBaseByteInterface #fromBytes
  *
- *
- * In serializetion phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
+ * In serialization phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
  * in deserialization phrase, every string are wrapped to be a Utf8
- *
  *
  * So both build-in string and a Utf8 wrap is OK to serialize, and Utf8 is always returned
  */
-class KWebPage : Comparable<KWebPage> {
+class KWebPage(
+    /**
+     * The url is the permanent internal address, and the location is the last working address.
+     * Page.location is the last working address, and page.url is the permanent internal address
+     */
+    val url: String,
+    /**
+     * Underlying persistent object
+     */
+    val page: GWebPage
+) : Comparable<KWebPage> {
+
+    constructor(legacyPage: WebPage): this(legacyPage.url, legacyPage.unbox())
+
     /**
      * The process scope WebPage instance sequence
      */
     var id = sequencer.incrementAndGet()
         private set
-    /**
-     * page.location is the last working address, and page.url is the permanent internal address
-     */
-    /**
-     * The url is the permanent internal address, and the location is the last working address
-     */
-    var url = ""
-        private set
+
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this object
      */
-    var reversedUrl: String? = null
-        private set
-    /**
-     * Underlying persistent object
-     */
-    private var page: GWebPage
+    val reversedUrl: String get() = UrlUtils.reverseUrl(url)
     /**
      * Web page scope configuration
      */
     var volatileConfig: VolatileConfig? = null
+
     /********************************************************************************
      * Common fields
      */
@@ -103,18 +93,6 @@ class KWebPage : Comparable<KWebPage> {
      * TODO : we may use it a PageDatum to track all context scope variables
      */
     val variables = Variables()
-
-    private constructor(url: String, page: GWebPage, urlReversed: Boolean) {
-        this.url = if (urlReversed) unreverseUrl(url) else url
-        reversedUrl = if (urlReversed) url else reverseUrlOrEmpty(url)
-        this.page = page
-    }
-
-    private constructor(url: String, reversedUrl: String, page: GWebPage) {
-        this.url = url
-        this.reversedUrl = reversedUrl
-        this.page = page
-    }
 
     val key: String get() = reversedUrl?:""
 
@@ -151,18 +129,12 @@ class KWebPage : Comparable<KWebPage> {
      * All options are saved here, including crawl options, link options, entity options and so on
      */
     var options: String?
-        get() = if (page.options == null) "" else page.options.toString()
+        get() = page.options.toString()
         set(options) {
             page.options = options
         }
 
     val configuredUrl get() = page.options?.let { "$url $it" }?:url
-
-    var query: String?
-        get() = metadata[Name.QUERY]
-        set(query) {
-            metadata[Name.QUERY] = query
-        }
 
     var zoneId: ZoneId
         get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
@@ -171,7 +143,7 @@ class KWebPage : Comparable<KWebPage> {
         }
 
     var batchId: String?
-        get() = if (page.batchId == null) "" else page.batchId.toString()
+        get() = page.batchId?.toString()
         set(value) {
             page.batchId = value
         }
@@ -188,24 +160,11 @@ class KWebPage : Comparable<KWebPage> {
         get() = metadata.contains(Name.IS_SEED)
 
     var distance: Int
-        get() {
-            val distance = page.distance
-            return if (distance < 0) AppConstants.DISTANCE_INFINITE else distance
-        }
+        get() = page.distance.takeIf { it > 0 } ?: AppConstants.DISTANCE_INFINITE
         set(newDistance) {
             page.distance = newDistance
         }
 
-    fun updateDistance(newDistance: Int) {
-        val oldDistance = distance
-        if (newDistance < oldDistance) {
-            distance = newDistance
-        }
-    }
-
-    /**
-     * Fetch mode is used to determine the protocol before fetch
-     */
     /**
      * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
      */
@@ -233,15 +192,6 @@ class KWebPage : Comparable<KWebPage> {
             page.fetchPriority = priority
         }
 
-    fun sniffFetchPriority(): Int {
-        var priority = fetchPriority
-        val depth = distance
-        if (depth < AppConstants.FETCH_PRIORITY_DEPTH_BASE) {
-            priority = Math.max(priority, AppConstants.FETCH_PRIORITY_DEPTH_BASE - depth)
-        }
-        return priority
-    }
-
     var createTime: Instant
         get() = Instant.ofEpochMilli(page.createTime)
         set(createTime) {
@@ -251,17 +201,15 @@ class KWebPage : Comparable<KWebPage> {
     // Old version of generate time, created by String.valueOf(epochMillis)
     var generateTime: Instant
         get() {
-            val generateTime = metadata[Name.GENERATE_TIME]
-            return if (generateTime == null) {
-                Instant.EPOCH
-            } else if (NumberUtils.isDigits(generateTime)) { // Old version of generate time, created by String.valueOf(epochMillis)
-                Instant.ofEpochMilli(NumberUtils.toLong(generateTime, 0))
-            } else {
-                Instant.parse(generateTime)
+            val time = metadata[Name.GENERATE_TIME]
+            return when {
+                time == null -> Instant.EPOCH
+                NumberUtils.isDigits(time) -> Instant.ofEpochMilli(time.toLong())
+                else -> Instant.parse(time)
             }
         }
-        set(generateTime) {
-            metadata[Name.GENERATE_TIME] = generateTime.toString()
+        set(value) {
+            metadata[Name.GENERATE_TIME] = value.toString()
         }
 
     /********************************************************************************
@@ -373,36 +321,17 @@ class KWebPage : Comparable<KWebPage> {
         return ProtocolHeaders.box(page.headers)
     }
 
-    fun getReprUrl(): String {
-        return if (page.reprUrl == null) "" else page.reprUrl.toString()
-    }
-
-    fun setReprUrl(value: String) {
-        page.reprUrl = value
-    }
+    var reprUrl: String
+        get() = page.reprUrl?.toString() ?: ""
+        set(value) { page.reprUrl = value }
 
     /**
      * Get the number of crawl scope retries
      * @see ai.platon.pulsar.persist.RetryScope
-     *
      */
-    fun getFetchRetries(): Int {
-        return page.fetchRetries
-    }
-
-    /**
-     * Set the number of crawl scope retries
-     * @see ai.platon.pulsar.persist.RetryScope
-     *
-     */
-    fun setFetchRetries(value: Int) {
-        page.fetchRetries = value
-    }
-
-    fun getLastTimeout(): Duration {
-        val s = metadata[Name.RESPONSE_TIME]
-        return if (s == null) Duration.ZERO else Duration.parse(s)
-    }
+    var fetchRetries: Int
+        get() = page.fetchRetries
+        set(value) { page.fetchRetries = value }
 
     fun getModifiedTime(): Instant {
         return Instant.ofEpochMilli(page.modifiedTime)
@@ -420,25 +349,6 @@ class KWebPage : Comparable<KWebPage> {
         page.prevModifiedTime = value.toEpochMilli()
     }
 
-    fun sniffModifiedTime(): Instant {
-        var modifiedTime = getModifiedTime()
-        val headerModifiedTime = getHeaders().lastModified
-        if (isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
-            modifiedTime = headerModifiedTime
-        }
-        if (isValidContentModifyTime(contentModifiedTime) && contentModifiedTime.isAfter(modifiedTime)) {
-            modifiedTime = contentModifiedTime
-        }
-        if (isValidContentModifyTime(contentPublishTime) && contentPublishTime.isAfter(modifiedTime)) {
-            modifiedTime = contentPublishTime
-        }
-        // A fix
-        if (modifiedTime.isAfter(Instant.now().plus(1, ChronoUnit.DAYS))) { // LOG.warn("Invalid modified time " + DateTimeUtil.isoInstantFormat(modifiedTime) + ", url : " + page.url());
-            modifiedTime = Instant.now()
-        }
-        return modifiedTime
-    }
-
     fun getFetchTimeHistory(defaultValue: String): String {
         val s = metadata[Name.FETCH_TIME_HISTORY]
         return s ?: defaultValue
@@ -447,24 +357,6 @@ class KWebPage : Comparable<KWebPage> {
     /********************************************************************************
      * Parsing
      */
-    fun putFetchTimeHistory(fetchTime: Instant) {
-        var fetchTimeHistory = metadata[Name.FETCH_TIME_HISTORY]
-        fetchTimeHistory = constructTimeHistory(fetchTimeHistory, fetchTime, 10)
-        metadata[Name.FETCH_TIME_HISTORY] = fetchTimeHistory
-    }
-
-    fun getFirstCrawlTime(defaultValue: Instant): Instant {
-        var firstCrawlTime: Instant? = null
-        val fetchTimeHistory = getFetchTimeHistory("")
-        if (!fetchTimeHistory.isEmpty()) {
-            val times = fetchTimeHistory.split(",").toTypedArray()
-            val time = parseInstant(times[0], Instant.EPOCH)
-            if (time.isAfter(Instant.EPOCH)) {
-                firstCrawlTime = time
-            }
-        }
-        return firstCrawlTime ?: defaultValue
-    }
 
     fun getPageCategory(): PageCategory {
         try {
@@ -528,34 +420,6 @@ class KWebPage : Comparable<KWebPage> {
 
     fun setContent(value: String) {
         setContent(value.toByteArray())
-    }
-
-    fun getContentAsBytes(): ByteArray {
-        val content = content ?: return ByteUtils.toBytes('\u0000')
-        return ByteUtils.toBytes(content)
-    }
-
-    /**
-     * TODO: Encoding is always UTF-8?
-     */
-    fun getContentAsString(): String {
-        return ByteUtils.toString(getContentAsBytes())
-    }
-
-    fun getContentAsInputStream(): ByteArrayInputStream {
-        val contentInOctets = content ?: return ByteArrayInputStream(ByteUtils.toBytes('\u0000'))
-        return ByteArrayInputStream(content!!.array(),
-                contentInOctets.arrayOffset() + contentInOctets.position(),
-                contentInOctets.remaining())
-    }
-
-    fun getContentAsSaxInputSource(): InputSource {
-        val inputSource = InputSource(getContentAsInputStream())
-        val encoding = getEncoding()
-        if (encoding != null) {
-            inputSource.encoding = encoding
-        }
-        return inputSource
     }
 
     fun setContent(value: ByteArray?) {
@@ -648,22 +512,21 @@ class KWebPage : Comparable<KWebPage> {
      * An implementation of a WebPage's signature from which it can be identified and referenced at any point in time.
      * This is essentially the WebPage's fingerprint representing its state for any point in time.
      */
-
     var signature: ByteBuffer?
         get() = page.signature
         set(value) { page.signature = value }
-
-    var prevSignature: ByteBuffer?
-        get() = page.prevSignature
-        set(value) { page.prevSignature = value }
 
     fun setSignature(value: ByteArray?) {
         page.signature = ByteBuffer.wrap(value)
     }
 
-    val signatureAsString: String get() = signature?.let { Strings.toHexString(signature) }?:""
+    val signatureAsString get() = signature?.let { Strings.toHexString(signature) }?:""
 
-    val prevSignatureAsString: String get() = prevSignature?.let { Strings.toHexString(prevSignature) }?:""
+    var prevSignature: ByteBuffer?
+        get() = page.prevSignature
+        set(value) { page.prevSignature = value }
+
+    val prevSignatureAsString get() = prevSignature?.let { Strings.toHexString(prevSignature) }?:""
 
     var pageTitle: String?
         get() = page.pageTitle?.toString()
@@ -673,44 +536,27 @@ class KWebPage : Comparable<KWebPage> {
         get() = page.contentTitle?.toString()
         set(value) { page.contentTitle = value }
 
-    fun sniffTitle(): String {
-        return contentTitle?.takeUnless { it.isBlank() }
-                ?: anchor.takeUnless { it.isBlank() }
-                ?: pageTitle.takeUnless { it.isNullOrBlank() }
-                ?: location.takeUnless { it.isBlank() }
-                ?: url
-    }
+    var pageText: String
+        get() = page.pageText?.toString() ?: ""
+        set(value) { page.pageText = value }
 
-    fun getPageText(): String {
-        return if (page.pageText == null) "" else page.pageText.toString()
-    }
-
-    fun setPageText(value: String?) {
-        if (value != null && !value.isEmpty()) page.pageText = value
-    }
-
-    fun getContentText(): String {
-        return if (page.contentText == null) "" else page.contentText.toString()
-    }
-
-    fun setContentText(textContent: String?) {
-        if (textContent != null && !textContent.isEmpty()) {
-            page.contentText = textContent
-            page.contentTextLen = textContent.length
+    var contentText: String
+        get() = page.contentText?.toString() ?: ""
+        set(value) {
+            page.contentText = value
+            page.contentTextLen = value.length
         }
-    }
 
-    fun getContentTextLen(): Int {
-        return page.contentTextLen
-    }
+    val contentTextLen: Int
+        get() = page.contentTextLen
 
     /**
      * Set all text fields cascaded, including content, content text and page text.
      */
     fun setTextCascaded(text: String) {
         setContent(text)
-        setContentText(text)
-        setPageText(text)
+        contentText = text
+        pageText = text
     }
 
     var parseStatus: ParseStatus
@@ -719,9 +565,7 @@ class KWebPage : Comparable<KWebPage> {
             page.parseStatus = value.unbox()
         }
 
-    fun getSimpleLiveLinks(): Collection<String> {
-        return CollectionUtils.collect(page.liveLinks.keys) { obj: CharSequence -> obj.toString() }
-    }
+    fun getSimpleLiveLinks() = page.liveLinks.keys.map { it.toString() }
 
     /**
      * TODO: Remove redundant url to reduce space
@@ -729,7 +573,7 @@ class KWebPage : Comparable<KWebPage> {
     fun setLiveLinks(liveLinks: Iterable<HyperlinkPersistable>) {
         page.liveLinks.clear()
         val links = page.liveLinks
-        liveLinks.forEach(Consumer { l: HyperlinkPersistable -> links[l.url] = l.unbox() })
+        liveLinks.forEach { l -> links[l.url] = l.unbox() }
     }
 
     fun addLiveLink(hyperlink: HyperlinkPersistable) {
@@ -752,108 +596,35 @@ class KWebPage : Comparable<KWebPage> {
             page.vividLinks = value
         }
 
-    var deadLinks: List<CharSequence>
+    var deadLinks: MutableList<CharSequence>
         get() = page.deadLinks
-        set(value) {
-            page.deadLinks = value
-        }
+        set(value) { page.deadLinks = value }
 
-    var links: List<CharSequence>
+    var links: MutableList<CharSequence>
         get() = page.links
-        set(value) {
-            page.links = value
-        }
+        set(value) { page.links = value }
 
-    /**
-     * Record all links appeared in a page
-     * The links are in FIFO order, for each time we fetch and parse a page,
-     * we push newly discovered links to the queue, if the queue is full, we drop out some old ones,
-     * usually they do not appears in the page any more.
-     *
-     *
-     * TODO: compress links
-     * TODO: HBase seems not modify any nested array
-     */
-    fun addHyperlinks(hyperLinks: Iterable<HyperlinkPersistable>) {
-        var links = page.links
-        // If there are too many links, Drop the front 1/3 links
-        if (links.size > AppConstants.MAX_LINK_PER_PAGE) {
-            links = links.subList(links.size - AppConstants.MAX_LINK_PER_PAGE / 3, links.size)
-        }
-        for (l in hyperLinks) {
-            val url = u8(l.url)
-            if (!links.contains(url)) {
-                links.add(url)
-            }
-        }
-        this.links = links
-        setImpreciseLinkCount(links.size)
-    }
+    var impreciseLinkCount: Int
+        get() = metadata.get(Name.TOTAL_OUT_LINKS)?.toIntOrNull() ?: 0
+        set(value) { metadata[Name.TOTAL_OUT_LINKS] = value.toString() }
 
-    fun addLinks(hypeLinks: Iterable<CharSequence>) {
-        var links = page.links
-        // If there are too many links, Drop the front 1/3 links
-        if (links.size > AppConstants.MAX_LINK_PER_PAGE) {
-            links = links.subList(links.size - AppConstants.MAX_LINK_PER_PAGE / 3, links.size)
-        }
-        for (link in hypeLinks) {
-            val url = u8(link.toString())
-            // Use a set?
-            if (!links.contains(url)) {
-                links.add(url)
-            }
-        }
-        this.links = links
-        setImpreciseLinkCount(links.size)
-    }
-
-    fun getImpreciseLinkCount(): Int {
-        val count = metadata.getOrDefault(Name.TOTAL_OUT_LINKS, "0")
-        return NumberUtils.toInt(count, 0)
-    }
-
-    fun setImpreciseLinkCount(count: Int) {
-        metadata[Name.TOTAL_OUT_LINKS] = count.toString()
-    }
-
-    fun increaseImpreciseLinkCount(count: Int) {
-        val oldCount = getImpreciseLinkCount()
-        setImpreciseLinkCount(oldCount + count)
-    }
-
-    fun getInlinks(): Map<CharSequence, CharSequence> {
-        return page.inlinks
-    }
+    var lnlinks: Map<CharSequence, CharSequence>
+        get() = page.inlinks
+        set(value) { page.inlinks = value }
 
     var anchor: String
         get() = page.anchor?.toString()?:""
         set(value) { page.anchor = value }
 
-    var inlinkAnchors: Array<String>
-        get() = StringUtils.split(metadata.getOrDefault(Name.ANCHORS, ""), "\n")
+    var inlinkAnchors: List<String>
+        get() = metadata.get(Name.ANCHORS)?.split("\n") ?: listOf()
         set(value) {
-            metadata.set(Name.ANCHORS, StringUtils.join(value, "\n"))
+            metadata.set(Name.ANCHORS, value.joinToString("\n"))
         }
 
     var anchorOrder: Int
         get() = if (page.anchorOrder < 0) AppConstants.MAX_LIVE_LINK_PER_PAGE else page.anchorOrder
         set(value) { page.anchorOrder = value }
-
-    private fun isValidContentModifyTime(publishTime: Instant): Boolean {
-        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME)
-    }
-
-    fun updateContentPublishTime(newPublishTime: Instant): Boolean {
-        if (!isValidContentModifyTime(newPublishTime)) {
-            return false
-        }
-        val lastPublishTime = contentPublishTime
-        if (newPublishTime.isAfter(lastPublishTime)) {
-            prevContentPublishTime = lastPublishTime
-            contentPublishTime = newPublishTime
-        }
-        return true
-    }
 
     var contentPublishTime: Instant
         get() = Instant.ofEpochMilli(page.contentPublishTime)
@@ -879,38 +650,9 @@ class KWebPage : Comparable<KWebPage> {
         get() = Instant.ofEpochMilli(page.prevRefContentPublishTime)
         set(value) { page.prevRefContentPublishTime = value.toEpochMilli() }
 
-    fun updateContentModifiedTime(newModifiedTime: Instant): Boolean {
-        if (!isValidContentModifyTime(newModifiedTime)) {
-            return false
-        }
-        val lastModifyTime = contentModifiedTime
-        if (newModifiedTime.isAfter(lastModifyTime)) {
-            prevContentModifiedTime = lastModifyTime
-            contentModifiedTime = newModifiedTime
-        }
-        return true
-    }
-
-    fun updateRefContentPublishTime(newRefPublishTime: Instant): Boolean {
-        if (!isValidContentModifyTime(newRefPublishTime)) {
-            return false
-        }
-        val latestRefPublishTime = refContentPublishTime
-        // LOG.debug("Ref Content Publish Time: " + latestRefPublishTime + " -> " + newRefPublishTime + ", Url: " + getUrl());
-        if (newRefPublishTime.isAfter(latestRefPublishTime)) {
-            prevRefContentPublishTime = latestRefPublishTime
-            refContentPublishTime = newRefPublishTime
-            // LOG.debug("[Updated] " + latestRefPublishTime + " -> " + newRefPublishTime);
-            return true
-        }
-        return false
-    }
-
     var referrer: String?
         get() = page.referrer?.toString()
-        set(value) {
-            page.referrer = value
-        }
+        set(value) { page.referrer = value }
 
     /********************************************************************************
      * Page Model
@@ -951,25 +693,6 @@ class KWebPage : Comparable<KWebPage> {
      */
     fun getIndexTimeHistory(defaultValue: String) = metadata[Name.INDEX_TIME_HISTORY] ?: defaultValue
 
-    fun putIndexTimeHistory(indexTime: Instant?) {
-        var indexTimeHistory = metadata[Name.INDEX_TIME_HISTORY]
-        indexTimeHistory = constructTimeHistory(indexTimeHistory, indexTime!!, 10)
-        metadata[Name.INDEX_TIME_HISTORY] = indexTimeHistory
-    }
-
-    fun getFirstIndexTime(defaultValue: Instant): Instant {
-        var firstIndexTime: Instant? = null
-        val indexTimeHistory = getIndexTimeHistory("")
-        if (!indexTimeHistory.isEmpty()) {
-            val times = indexTimeHistory.split(",").toTypedArray()
-            val time = parseInstant(times[0], Instant.EPOCH)
-            if (time.isAfter(Instant.EPOCH)) {
-                firstIndexTime = time
-            }
-        }
-        return firstIndexTime ?: defaultValue
-    }
-
     override fun hashCode() = url.hashCode()
 
     override fun compareTo(other: KWebPage) = url.compareTo(other.url)
@@ -979,9 +702,8 @@ class KWebPage : Comparable<KWebPage> {
     override fun toString() = url
 
     companion object {
-        val LOG = LoggerFactory.getLogger(KWebPage::class.java)
-        var sequencer = AtomicInteger()
-        var NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "nil", "nil")
+        private val sequencer = AtomicInteger()
+        val NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "NIL", "")
 
         fun newWebPage(originalUrl: String) = newWebPage(originalUrl, false)
 
@@ -999,7 +721,7 @@ class KWebPage : Comparable<KWebPage> {
         }
 
         private fun newWebPageInternal(url: String, volatileConfig: VolatileConfig?): KWebPage {
-            val page = KWebPage(url, GWebPage.newBuilder().build(), false)
+            val page = KWebPage(url, GWebPage.newBuilder().build())
             page.baseUrl = url
             page.volatileConfig = volatileConfig
             page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
@@ -1036,17 +758,7 @@ class KWebPage : Comparable<KWebPage> {
         /**
          * Initialize a WebPage with the underlying GWebPage instance.
          */
-        fun box(url: String, reversedUrl: String, page: GWebPage) = KWebPage(url, reversedUrl, page)
-
-        /**
-         * Initialize a WebPage with the underlying GWebPage instance.
-         */
-        fun box(url: String, page: GWebPage) = KWebPage(url, page, false)
-
-        /**
-         * Initialize a WebPage with the underlying GWebPage instance.
-         */
-        fun box(url: String, page: GWebPage, urlReversed: Boolean) = KWebPage(url, page, urlReversed)
+        fun box(url: String, page: GWebPage) = KWebPage(url, page)
 
         /********************************************************************************
          * Other
@@ -1056,6 +768,6 @@ class KWebPage : Comparable<KWebPage> {
         /**
          * What's the difference between String and Utf8?
          */
-        fun u8(value: String?) = value?.let { Utf8(it) }
+        fun u8(value: String) = Utf8(value)
     }
 }

@@ -21,10 +21,11 @@ class MultiStatus {
 }
 
 class ActiveUrls {
-    URL = document.URL;
-    baseURI = document.baseURI;
-    location = "";
+    URL = document.URL
+    baseURI = document.baseURI
+    location = ""
     documentURI = document.documentURI
+    referrer = document.referrer
 }
 
 class ActiveDomMessage {
@@ -109,7 +110,7 @@ __pulsar_utils__.createPulsarDataIfAbsent = function() {
                 URL: document.URL,
                 baseURI: document.baseURI,
                 location: location,
-                documentURI: document.documentURI
+                documentURI: document.documentURI,
             }
         };
     }
