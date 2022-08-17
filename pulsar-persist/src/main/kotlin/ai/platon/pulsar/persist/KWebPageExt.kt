@@ -3,7 +3,6 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.model.experimental.KWebPage
 import org.apache.gora.util.ByteUtils
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream

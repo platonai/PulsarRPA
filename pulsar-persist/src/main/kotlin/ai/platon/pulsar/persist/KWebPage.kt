@@ -1,4 +1,4 @@
-package ai.platon.pulsar.persist.model.experimental
+package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.HtmlIntegrity
@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.normalize
-import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GParseStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
@@ -21,7 +20,6 @@ import ai.platon.pulsar.persist.model.PageModel
 import org.apache.avro.util.Utf8
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.math.NumberUtils
-import org.jsoup.nodes.Node
 import java.nio.ByteBuffer
 import java.time.Duration
 import java.time.Instant
