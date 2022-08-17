@@ -20,7 +20,6 @@ import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.browser.BrowserType;
-import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.urls.UrlUtils;
 import ai.platon.pulsar.persist.gora.generated.*;
@@ -342,7 +341,7 @@ final public class WebPage implements Comparable<WebPage> {
      * Common fields
      * ******************************************************************************
      *
-     * @return a {@link ai.platon.pulsar.persist.Variables} object.
+     * @return a {@link Variables} object.
      */
 
     @NotNull
@@ -373,7 +372,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>getAndRemoveVar.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name a {@link String} object.
      * @return a boolean.
      */
     public Object removeVar(@NotNull String name) {
@@ -678,7 +677,7 @@ final public class WebPage implements Comparable<WebPage> {
      * <p>
      * A baseUrl has the same semantic with Jsoup.parse:
      *
-     * @return a {@link java.lang.String} object.
+     * @return a {@link String} object.
      * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
      * @see WebPage#getLocation
      */
@@ -890,7 +889,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * category : index, detail, review, media, search, etc
      *
-     * @param pageCategory a {@link ai.platon.pulsar.persist.metadata.PageCategory} object.
+     * @param pageCategory a {@link PageCategory} object.
      */
     public void setPageCategory(@NotNull PageCategory pageCategory) {
         page.setPageCategory(pageCategory.toString());
@@ -945,7 +944,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The entire raw document content e.g. raw XHTML
      *
-     * @return The raw document content in {@link java.nio.ByteBuffer}.
+     * @return The raw document content in {@link ByteBuffer}.
      */
     @Nullable
     public ByteBuffer getContent() {
