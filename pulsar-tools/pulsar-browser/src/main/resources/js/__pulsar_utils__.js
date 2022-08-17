@@ -335,7 +335,7 @@ __pulsar_utils__.scrollToBottom = function() {
 __pulsar_utils__.scrollUp = function() {
     if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
-        return false
+        // return false
     }
 
     window.scrollBy(0, -500);
@@ -348,7 +348,7 @@ __pulsar_utils__.scrollToTop = function() {
 __pulsar_utils__.scrollDown = function() {
     if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
-        return false
+        // return false
     }
 
     window.scrollBy(0, 500);
@@ -357,7 +357,7 @@ __pulsar_utils__.scrollDown = function() {
 __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
     if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
-        return false
+        // return false
     }
 
     let status = document.__pulsar__Data.multiStatus.status;

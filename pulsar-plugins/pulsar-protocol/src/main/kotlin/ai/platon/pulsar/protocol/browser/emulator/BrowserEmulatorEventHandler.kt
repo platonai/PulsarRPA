@@ -41,7 +41,7 @@ open class BrowserEmulatorEventHandler(
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
-    protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverSettings.jsInvadingEnabled
+    protected val enableStartupScript = driverPoolManager.driverFactory.driverSettings.enableStartupScript
 
     private val registry = AppMetrics.defaultMetricRegistry
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
@@ -58,7 +58,7 @@ open class BrowserEmulatorEventHandler(
     }
 
     var htmlIntegrityChecker: CombinedHtmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
-        checkers.add(DefaultHtmlIntegrityChecker(jsInvadingEnabled, immutableConfig))
+        checkers.add(DefaultHtmlIntegrityChecker(enableStartupScript, immutableConfig))
     }
 
     fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {

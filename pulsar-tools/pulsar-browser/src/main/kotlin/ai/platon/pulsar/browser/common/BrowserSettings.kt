@@ -11,6 +11,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 import kotlin.io.path.isReadable
 import kotlin.io.path.listDirectoryEntries
@@ -135,9 +136,11 @@ open class BrowserSettings(
          * All names in injected scripts must not be detected by javascript,
          * the name mangling technology helps to achieve this purpose.
          * */
-        var specifiedScriptNameCipher: String? = null
         val randomScriptNameCipher = RandomStringUtils.randomAlphabetic(6)
-        val scriptNameCipher get() = specifiedScriptNameCipher ?: randomScriptNameCipher
+        var scriptNameManglingPolicy: (String) -> String = { script ->
+            script.replace(scriptNamePrefix, randomScriptNameCipher)
+        }
+
         val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
             stealth.js
@@ -269,7 +272,6 @@ open class BrowserSettings(
 
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    val scriptNameManglingCipher = conf[BROWSER_JS_NAME_MANGLING_MAGIC, scriptNameCipher]
 
     /**
      * Chrome has to run without sandbox in a virtual machine
@@ -291,7 +293,7 @@ open class BrowserSettings(
     val isGUI get() = displayMode == DisplayMode.GUI
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
 
-    val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    val enableStartupScript get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
 
     // We will wait for document ready manually using javascript
@@ -322,6 +324,8 @@ open class BrowserSettings(
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
             "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
         ).also { jsParameters.putAll(it) }
+
+        searchChromeBinaryPathAllAround()
     }
 
     open fun formatViewPort(delimiter: String = ","): String {
@@ -366,9 +370,7 @@ open class BrowserSettings(
     /**
      * A simple name mangling policy
      * */
-    open fun nameMangling(script: String): String {
-        return script.replace(scriptNamePrefix, scriptNameManglingCipher)
-    }
+    open fun nameMangling(script: String): String = scriptNameManglingPolicy(script)
 
     private fun loadJs() {
         val sb = StringBuilder()
@@ -402,5 +404,18 @@ open class BrowserSettings(
 
         val report = Files.writeString(dir.resolve("preload.js"), script)
         logger.info("Generated js: file://$report")
+    }
+
+    /**
+     * Find BROWSER_CHROME_PATH in all config files
+     * */
+    private fun searchChromeBinaryPathAllAround() {
+        val chromeBinaryPath = conf.get(BROWSER_CHROME_PATH)
+        if (chromeBinaryPath != null) {
+            val path = Paths.get(chromeBinaryPath).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
+            if (path != null) {
+                System.setProperty(BROWSER_CHROME_PATH, chromeBinaryPath)
+            }
+        }
     }
 }

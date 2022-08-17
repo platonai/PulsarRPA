@@ -59,7 +59,7 @@ class ChromeDevtoolsDriver(
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
-//    private val preloadJs by lazy { generatePreloadJs() }
+    //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
     private val toolsConfig = DevToolsConfig()
 
@@ -70,7 +70,6 @@ class ChromeDevtoolsDriver(
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
-    private var navigateEntry: NavigateEntry? = null
     private var navigateUrl = ""
 
     private val browser get() = devTools.browser
@@ -89,7 +88,9 @@ class ChromeDevtoolsDriver(
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
 
+    private val enableStartupScript get() = browserSettings.enableStartupScript
     private val enableBlockingReport = false
+
     private val closed = AtomicBoolean()
 
     val rpcFailures = AtomicInteger()
@@ -97,6 +98,8 @@ class ChromeDevtoolsDriver(
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
+
+    val tabId get() = chromeTab.id
 
     init {
         try {
@@ -121,20 +124,16 @@ class ChromeDevtoolsDriver(
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
-    override suspend fun navigateTo(url: String) {
-        try {
-            val entry = NavigateEntry(url)
-            navigateEntry = entry
-            browserInstance.navigateHistory.add(entry)
-            lastActiveTime = Instant.now()
+    override suspend fun navigateTo(entry: NavigateEntry) {
+        val driver = this
+        this.navigateEntry = entry
 
-            val driver = this
-            val invade = browserSettings.jsInvadingEnabled
+        try {
             withIOContext("navigateTo") {
-                driver.takeIf { invade }?.getInvaded(url) ?: getNoInvaded(url)
+                driver.takeIf { enableStartupScript }?.getInvaded(entry.url) ?: getNoInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "navigateTo $url")
+            handleRPCException(e, "navigateTo ${entry.url}")
         }
     }
 
@@ -147,12 +146,10 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun getCookies(): List<Map<String, String>> {
-        if (!refreshState()) return listOf()
-
         try {
             return withIOContext("getCookies") {
                 getCookies0()
-            }
+            } ?: listOf()
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "getCookies")
         }
@@ -179,7 +176,7 @@ class ChromeDevtoolsDriver(
 
         refreshState()
         try {
-            navigateEntry?.stopped = true
+            navigateEntry.stopped = true
 
             if (browserInstance.isGUI) {
                 // in gui mode, just stop the loading, so we can make a diagnosis
@@ -245,7 +242,7 @@ class ChromeDevtoolsDriver(
         navigateUrl = try {
             return withIOContext("currentUrl") {
                 mainFrame?.url ?: navigateUrl
-            }
+            } ?: ""
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "currentUrl")
             ""
@@ -262,7 +259,7 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "exists $selector")
         }
-        
+
         return false
     }
 
@@ -334,8 +331,8 @@ class ChromeDevtoolsDriver(
      * may end up with a race condition that yields unexpected results. The
      * correct pattern for click and wait for navigation is the following:
      * ```kotlin
-     * page.waitForNavigation(waitOptions)
-     * page.click(selector, clickOptions)
+     * driver.waitForNavigation()
+     * driver.click(selector)
      * ```
      * @param selector - A `selector` to search for element to click. If there are
      * multiple elements satisfying the `selector`, the first will be clicked
@@ -498,8 +495,9 @@ class ChromeDevtoolsDriver(
         return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
     }
 
-    private fun refreshState(): Boolean {
-        navigateEntry?.refresh()
+    private fun refreshState(action: String = ""): Boolean {
+        lastActiveTime = Instant.now()
+        navigateEntry.refresh(action)
         return isActive
     }
 
@@ -716,6 +714,7 @@ class ChromeDevtoolsDriver(
     }
 
     private fun closeIrrelevantTabs(tabs: Array<ChromeTab>) {
+        val now = Instant.now()
         val irrelevantTabs = tabs
             .filter { it.url?.matches("about:".toRegex()) == true }
             .filter { oldTab -> browserInstance.navigateHistory.none { it.url == oldTab.url } }
@@ -761,14 +760,10 @@ class ChromeDevtoolsDriver(
         return browserSettings.nameMangling(js)
     }
 
-    private fun isMainFrame(frameId: String): Boolean {
-        if (!isActive) return false
-
-        return mainFrame?.id == frameId
-    }
-
-    private suspend fun <T> withIOContext2(block: suspend () -> T): T {
-        return block()
+    private suspend fun isMainFrame(frameId: String): Boolean {
+        return withIOContext("isMainFrame") {
+            mainFrame?.id == frameId
+        } ?: false
     }
 
     private fun handleRPCException(e: ChromeRPCException, message: String? = null) {
@@ -778,9 +773,13 @@ class ChromeDevtoolsDriver(
         logger.warn("Chrome RPC exception | {}", message ?: e.message)
     }
 
-    private suspend fun <T> withIOContext(method: String, block: suspend CoroutineScope.() -> T): T {
+    private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T? {
         return withContext(Dispatchers.IO) {
             try {
+                if (!refreshState(action)) {
+                    return@withContext null
+                }
+
                 val result = block()
                 rpcFailures.decrementAndGet()
                 result

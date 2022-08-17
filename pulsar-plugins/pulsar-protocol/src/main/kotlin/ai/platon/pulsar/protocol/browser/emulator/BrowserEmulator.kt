@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -196,16 +197,26 @@ open class BrowserEmulator(
 
         checkState(driver)
         checkState(task)
+
+        val volatileConfig = task.page.conf
+        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
+
+        eventHandler?.onBeforeNavigate?.invokeDeferred(task.page, driver)
+
         // href has the higher priority to locate a resource
+        require(task.url == task.page.url)
         val location = task.href ?: task.url
-        driver.navigateTo(location)
+        val navigateEntry = NavigateEntry(location, task.page.id, task.url)
+        driver.navigateTo(navigateEntry)
+
+        eventHandler?.onAfterNavigate?.invokeDeferred(task.page, driver)
 
         if (!driver.supportJavascript) {
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
 
         val interactTask = InteractTask(task, driverConfig, driver)
-        return if (driverConfig.jsInvadingEnabled) {
+        return if (driverConfig.enableStartupScript) {
             interact(interactTask)
         } else {
             interactNoJsInvaded(interactTask)

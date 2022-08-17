@@ -42,7 +42,7 @@ abstract class BrowserEmulatorBase(
                 "scriptTimeout", emulateSettings.scriptTimeout,
                 "scrollDownCount", emulateSettings.scrollCount,
                 "scrollInterval", emulateSettings.scrollInterval,
-                "jsInvadingEnabled", driverSettings.jsInvadingEnabled
+                "enableStartupScript", driverSettings.enableStartupScript
         )
     }
 
@@ -70,7 +70,7 @@ abstract class BrowserEmulatorBase(
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw NavigateTaskCancellationException("Task with driver #${driver.id} is canceled | ${driver.url}")
+            throw NavigateTaskCancellationException("Task with driver #${driver.id} is canceled | ${driver.navigateEntry.pageUrl}")
         }
     }
 
