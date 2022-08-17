@@ -18,65 +18,73 @@
 package ai.platon.pulsar.persist.gora.generated;  
 
 public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchInterval\",\"type\":\"int\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"options\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevCrawlTime1\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"activeDomUrls\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"activeDomStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDomStatus\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"activeDomStats\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDomStat\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}]},\"default\":null},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
-  private static final long serialVersionUID = -3467806473790263562L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"args\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"resource\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"browser\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"proxy\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fetchInterval\",\"type\":\"int\",\"default\":0},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevCrawlTime1\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"contentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"lastContentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"aveContentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"persistedContentLength\",\"type\":[\"null\",\"int\"],\"default\":0},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"doc\":\"Given two urls, a src and a destination of a redirect, it returns the representative url.\",\"default\":null},{\"name\":\"htmlIntegrity\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"activeDOMStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"activeDOMStatTrace\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}]},\"default\":null},{\"name\":\"pageModelUpdateTime\",\"type\":\"long\",\"default\":0},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
+  private static final long serialVersionUID = -3131560408864654087L;
   /** Enum containing all data bean's fields. */
   public static enum Field {
-    CREATE_TIME(0, "createTime"),
-    DISTANCE(1, "distance"),
-    FETCH_COUNT(2, "fetchCount"),
-    FETCH_PRIORITY(3, "fetchPriority"),
-    FETCH_INTERVAL(4, "fetchInterval"),
+    BASE_URL(0, "baseUrl"),
+    CREATE_TIME(1, "createTime"),
+    DISTANCE(2, "distance"),
+    FETCH_COUNT(3, "fetchCount"),
+    FETCH_PRIORITY(4, "fetchPriority"),
     ZONE_ID(5, "zoneId"),
-    OPTIONS(6, "options"),
+    ARGS(6, "args"),
     BATCH_ID(7, "batchId"),
-    CRAWL_STATUS(8, "crawlStatus"),
-    PREV_FETCH_TIME(9, "prevFetchTime"),
-    PREV_CRAWL_TIME1(10, "prevCrawlTime1"),
-    FETCH_TIME(11, "fetchTime"),
-    FETCH_RETRIES(12, "fetchRetries"),
-    REPR_URL(13, "reprUrl"),
-    PREV_MODIFIED_TIME(14, "prevModifiedTime"),
-    MODIFIED_TIME(15, "modifiedTime"),
-    PROTOCOL_STATUS(16, "protocolStatus"),
-    ENCODING(17, "encoding"),
-    CONTENT_TYPE(18, "contentType"),
-    CONTENT(19, "content"),
-    BASE_URL(20, "baseUrl"),
-    REFERRER(21, "referrer"),
-    ANCHOR(22, "anchor"),
-    ANCHOR_ORDER(23, "anchorOrder"),
-    PARSE_STATUS(24, "parseStatus"),
-    PAGE_TITLE(25, "pageTitle"),
-    PAGE_TEXT(26, "pageText"),
-    CONTENT_TITLE(27, "contentTitle"),
-    CONTENT_TEXT(28, "contentText"),
-    CONTENT_TEXT_LEN(29, "contentTextLen"),
-    PAGE_CATEGORY(30, "pageCategory"),
-    CONTENT_MODIFIED_TIME(31, "contentModifiedTime"),
-    PREV_CONTENT_MODIFIED_TIME(32, "prevContentModifiedTime"),
-    CONTENT_PUBLISH_TIME(33, "contentPublishTime"),
-    PREV_CONTENT_PUBLISH_TIME(34, "prevContentPublishTime"),
-    REF_CONTENT_PUBLISH_TIME(35, "refContentPublishTime"),
-    PREV_REF_CONTENT_PUBLISH_TIME(36, "prevRefContentPublishTime"),
-    PREV_SIGNATURE(37, "prevSignature"),
-    SIGNATURE(38, "signature"),
-    CONTENT_SCORE(39, "contentScore"),
-    SCORE(40, "score"),
-    SORT_SCORE(41, "sortScore"),
-    PAGE_COUNTERS(42, "pageCounters"),
-    HEADERS(43, "headers"),
-    LINKS(44, "links"),
-    LIVE_LINKS(45, "liveLinks"),
-    VIVID_LINKS(46, "vividLinks"),
-    DEAD_LINKS(47, "deadLinks"),
-    INLINKS(48, "inlinks"),
-    MARKERS(49, "markers"),
-    METADATA(50, "metadata"),
-    ACTIVE_DOM_URLS(51, "activeDomUrls"),
-    ACTIVE_DOM_STATUS(52, "activeDomStatus"),
-    ACTIVE_DOM_STATS(53, "activeDomStats"),
-    PAGE_MODEL(54, "pageModel"),
+    RESOURCE(8, "resource"),
+    CRAWL_STATUS(9, "crawlStatus"),
+    FETCH_RETRIES(10, "fetchRetries"),
+    BROWSER(11, "browser"),
+    PROXY(12, "proxy"),
+    FETCH_INTERVAL(13, "fetchInterval"),
+    PREV_FETCH_TIME(14, "prevFetchTime"),
+    PREV_CRAWL_TIME1(15, "prevCrawlTime1"),
+    FETCH_TIME(16, "fetchTime"),
+    PREV_MODIFIED_TIME(17, "prevModifiedTime"),
+    MODIFIED_TIME(18, "modifiedTime"),
+    PROTOCOL_STATUS(19, "protocolStatus"),
+    ENCODING(20, "encoding"),
+    CONTENT_TYPE(21, "contentType"),
+    CONTENT(22, "content"),
+    CONTENT_LENGTH(23, "contentLength"),
+    LAST_CONTENT_LENGTH(24, "lastContentLength"),
+    AVE_CONTENT_LENGTH(25, "aveContentLength"),
+    PERSISTED_CONTENT_LENGTH(26, "persistedContentLength"),
+    REFERRER(27, "referrer"),
+    REPR_URL(28, "reprUrl"),
+    HTML_INTEGRITY(29, "htmlIntegrity"),
+    ANCHOR(30, "anchor"),
+    ANCHOR_ORDER(31, "anchorOrder"),
+    PARSE_STATUS(32, "parseStatus"),
+    PAGE_TITLE(33, "pageTitle"),
+    PAGE_TEXT(34, "pageText"),
+    CONTENT_TITLE(35, "contentTitle"),
+    CONTENT_TEXT(36, "contentText"),
+    CONTENT_TEXT_LEN(37, "contentTextLen"),
+    PAGE_CATEGORY(38, "pageCategory"),
+    CONTENT_MODIFIED_TIME(39, "contentModifiedTime"),
+    PREV_CONTENT_MODIFIED_TIME(40, "prevContentModifiedTime"),
+    CONTENT_PUBLISH_TIME(41, "contentPublishTime"),
+    PREV_CONTENT_PUBLISH_TIME(42, "prevContentPublishTime"),
+    REF_CONTENT_PUBLISH_TIME(43, "refContentPublishTime"),
+    PREV_REF_CONTENT_PUBLISH_TIME(44, "prevRefContentPublishTime"),
+    PREV_SIGNATURE(45, "prevSignature"),
+    SIGNATURE(46, "signature"),
+    CONTENT_SCORE(47, "contentScore"),
+    SCORE(48, "score"),
+    SORT_SCORE(49, "sortScore"),
+    PAGE_COUNTERS(50, "pageCounters"),
+    HEADERS(51, "headers"),
+    LINKS(52, "links"),
+    LIVE_LINKS(53, "liveLinks"),
+    VIVID_LINKS(54, "vividLinks"),
+    DEAD_LINKS(55, "deadLinks"),
+    INLINKS(56, "inlinks"),
+    MARKERS(57, "markers"),
+    METADATA(58, "metadata"),
+    ACTIVE_DOMSTATUS(59, "activeDOMStatus"),
+    ACTIVE_DOMSTAT_TRACE(60, "activeDOMStatTrace"),
+    PAGE_MODEL_UPDATE_TIME(61, "pageModelUpdateTime"),
+    PAGE_MODEL(62, "pageModel"),
     ;
     /**
      * Field's index.
@@ -115,28 +123,36 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   };
 
   public static final String[] _ALL_FIELDS = {
+  "baseUrl",
   "createTime",
   "distance",
   "fetchCount",
   "fetchPriority",
-  "fetchInterval",
   "zoneId",
-  "options",
+  "args",
   "batchId",
+  "resource",
   "crawlStatus",
+  "fetchRetries",
+  "browser",
+  "proxy",
+  "fetchInterval",
   "prevFetchTime",
   "prevCrawlTime1",
   "fetchTime",
-  "fetchRetries",
-  "reprUrl",
   "prevModifiedTime",
   "modifiedTime",
   "protocolStatus",
   "encoding",
   "contentType",
   "content",
-  "baseUrl",
+  "contentLength",
+  "lastContentLength",
+  "aveContentLength",
+  "persistedContentLength",
   "referrer",
+  "reprUrl",
+  "htmlIntegrity",
   "anchor",
   "anchorOrder",
   "parseStatus",
@@ -166,9 +182,9 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   "inlinks",
   "markers",
   "metadata",
-  "activeDomUrls",
-  "activeDomStatus",
-  "activeDomStats",
+  "activeDOMStatus",
+  "activeDOMStatTrace",
+  "pageModelUpdateTime",
   "pageModel",
   };
 
@@ -180,20 +196,23 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     return GWebPage._ALL_FIELDS.length;
   }
 
+  private java.lang.CharSequence baseUrl;
   private long createTime;
   private int distance;
   private int fetchCount;
   private int fetchPriority;
-  private int fetchInterval;
   private java.lang.CharSequence zoneId;
-  private java.lang.CharSequence options;
+  private java.lang.CharSequence args;
   private java.lang.CharSequence batchId;
+  private java.lang.Integer resource;
   private int crawlStatus;
+  private int fetchRetries;
+  private java.lang.CharSequence browser;
+  private java.lang.CharSequence proxy;
+  private int fetchInterval;
   private long prevFetchTime;
   private long prevCrawlTime1;
   private long fetchTime;
-  private int fetchRetries;
-  private java.lang.CharSequence reprUrl;
   private long prevModifiedTime;
   private long modifiedTime;
   private ai.platon.pulsar.persist.gora.generated.GProtocolStatus protocolStatus;
@@ -201,8 +220,14 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   private java.lang.CharSequence contentType;
   /** The entire raw document content e.g. raw XHTML */
   private java.nio.ByteBuffer content;
-  private java.lang.CharSequence baseUrl;
+  private java.lang.Integer contentLength;
+  private java.lang.Integer lastContentLength;
+  private java.lang.Integer aveContentLength;
+  private java.lang.Integer persistedContentLength;
   private java.lang.CharSequence referrer;
+  /** Given two urls, a src and a destination of a redirect, it returns the representative url. */
+  private java.lang.CharSequence reprUrl;
+  private java.lang.CharSequence htmlIntegrity;
   private java.lang.CharSequence anchor;
   private int anchorOrder;
   private ai.platon.pulsar.persist.gora.generated.GParseStatus parseStatus;
@@ -232,69 +257,77 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> inlinks;
   private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> markers;
   private java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer> metadata;
-  private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> activeDomUrls;
-  private ai.platon.pulsar.persist.gora.generated.GActiveDomStatus activeDomStatus;
-  private java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> activeDomStats;
+  private ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus activeDOMStatus;
+  private java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> activeDOMStatTrace;
+  private long pageModelUpdateTime;
   private java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup> pageModel;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
     switch (field$) {
-    case 0: return createTime;
-    case 1: return distance;
-    case 2: return fetchCount;
-    case 3: return fetchPriority;
-    case 4: return fetchInterval;
+    case 0: return baseUrl;
+    case 1: return createTime;
+    case 2: return distance;
+    case 3: return fetchCount;
+    case 4: return fetchPriority;
     case 5: return zoneId;
-    case 6: return options;
+    case 6: return args;
     case 7: return batchId;
-    case 8: return crawlStatus;
-    case 9: return prevFetchTime;
-    case 10: return prevCrawlTime1;
-    case 11: return fetchTime;
-    case 12: return fetchRetries;
-    case 13: return reprUrl;
-    case 14: return prevModifiedTime;
-    case 15: return modifiedTime;
-    case 16: return protocolStatus;
-    case 17: return encoding;
-    case 18: return contentType;
-    case 19: return content;
-    case 20: return baseUrl;
-    case 21: return referrer;
-    case 22: return anchor;
-    case 23: return anchorOrder;
-    case 24: return parseStatus;
-    case 25: return pageTitle;
-    case 26: return pageText;
-    case 27: return contentTitle;
-    case 28: return contentText;
-    case 29: return contentTextLen;
-    case 30: return pageCategory;
-    case 31: return contentModifiedTime;
-    case 32: return prevContentModifiedTime;
-    case 33: return contentPublishTime;
-    case 34: return prevContentPublishTime;
-    case 35: return refContentPublishTime;
-    case 36: return prevRefContentPublishTime;
-    case 37: return prevSignature;
-    case 38: return signature;
-    case 39: return contentScore;
-    case 40: return score;
-    case 41: return sortScore;
-    case 42: return pageCounters;
-    case 43: return headers;
-    case 44: return links;
-    case 45: return liveLinks;
-    case 46: return vividLinks;
-    case 47: return deadLinks;
-    case 48: return inlinks;
-    case 49: return markers;
-    case 50: return metadata;
-    case 51: return activeDomUrls;
-    case 52: return activeDomStatus;
-    case 53: return activeDomStats;
-    case 54: return pageModel;
+    case 8: return resource;
+    case 9: return crawlStatus;
+    case 10: return fetchRetries;
+    case 11: return browser;
+    case 12: return proxy;
+    case 13: return fetchInterval;
+    case 14: return prevFetchTime;
+    case 15: return prevCrawlTime1;
+    case 16: return fetchTime;
+    case 17: return prevModifiedTime;
+    case 18: return modifiedTime;
+    case 19: return protocolStatus;
+    case 20: return encoding;
+    case 21: return contentType;
+    case 22: return content;
+    case 23: return contentLength;
+    case 24: return lastContentLength;
+    case 25: return aveContentLength;
+    case 26: return persistedContentLength;
+    case 27: return referrer;
+    case 28: return reprUrl;
+    case 29: return htmlIntegrity;
+    case 30: return anchor;
+    case 31: return anchorOrder;
+    case 32: return parseStatus;
+    case 33: return pageTitle;
+    case 34: return pageText;
+    case 35: return contentTitle;
+    case 36: return contentText;
+    case 37: return contentTextLen;
+    case 38: return pageCategory;
+    case 39: return contentModifiedTime;
+    case 40: return prevContentModifiedTime;
+    case 41: return contentPublishTime;
+    case 42: return prevContentPublishTime;
+    case 43: return refContentPublishTime;
+    case 44: return prevRefContentPublishTime;
+    case 45: return prevSignature;
+    case 46: return signature;
+    case 47: return contentScore;
+    case 48: return score;
+    case 49: return sortScore;
+    case 50: return pageCounters;
+    case 51: return headers;
+    case 52: return links;
+    case 53: return liveLinks;
+    case 54: return vividLinks;
+    case 55: return deadLinks;
+    case 56: return inlinks;
+    case 57: return markers;
+    case 58: return metadata;
+    case 59: return activeDOMStatus;
+    case 60: return activeDOMStatTrace;
+    case 61: return pageModelUpdateTime;
+    case 62: return pageModel;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -303,63 +336,95 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
     switch (field$) {
-    case 0: createTime = (java.lang.Long)(value); break;
-    case 1: distance = (java.lang.Integer)(value); break;
-    case 2: fetchCount = (java.lang.Integer)(value); break;
-    case 3: fetchPriority = (java.lang.Integer)(value); break;
-    case 4: fetchInterval = (java.lang.Integer)(value); break;
+    case 0: baseUrl = (java.lang.CharSequence)(value); break;
+    case 1: createTime = (java.lang.Long)(value); break;
+    case 2: distance = (java.lang.Integer)(value); break;
+    case 3: fetchCount = (java.lang.Integer)(value); break;
+    case 4: fetchPriority = (java.lang.Integer)(value); break;
     case 5: zoneId = (java.lang.CharSequence)(value); break;
-    case 6: options = (java.lang.CharSequence)(value); break;
+    case 6: args = (java.lang.CharSequence)(value); break;
     case 7: batchId = (java.lang.CharSequence)(value); break;
-    case 8: crawlStatus = (java.lang.Integer)(value); break;
-    case 9: prevFetchTime = (java.lang.Long)(value); break;
-    case 10: prevCrawlTime1 = (java.lang.Long)(value); break;
-    case 11: fetchTime = (java.lang.Long)(value); break;
-    case 12: fetchRetries = (java.lang.Integer)(value); break;
-    case 13: reprUrl = (java.lang.CharSequence)(value); break;
-    case 14: prevModifiedTime = (java.lang.Long)(value); break;
-    case 15: modifiedTime = (java.lang.Long)(value); break;
-    case 16: protocolStatus = (ai.platon.pulsar.persist.gora.generated.GProtocolStatus)(value); break;
-    case 17: encoding = (java.lang.CharSequence)(value); break;
-    case 18: contentType = (java.lang.CharSequence)(value); break;
-    case 19: content = (java.nio.ByteBuffer)(value); break;
-    case 20: baseUrl = (java.lang.CharSequence)(value); break;
-    case 21: referrer = (java.lang.CharSequence)(value); break;
-    case 22: anchor = (java.lang.CharSequence)(value); break;
-    case 23: anchorOrder = (java.lang.Integer)(value); break;
-    case 24: parseStatus = (ai.platon.pulsar.persist.gora.generated.GParseStatus)(value); break;
-    case 25: pageTitle = (java.lang.CharSequence)(value); break;
-    case 26: pageText = (java.lang.CharSequence)(value); break;
-    case 27: contentTitle = (java.lang.CharSequence)(value); break;
-    case 28: contentText = (java.lang.CharSequence)(value); break;
-    case 29: contentTextLen = (java.lang.Integer)(value); break;
-    case 30: pageCategory = (java.lang.CharSequence)(value); break;
-    case 31: contentModifiedTime = (java.lang.Long)(value); break;
-    case 32: prevContentModifiedTime = (java.lang.Long)(value); break;
-    case 33: contentPublishTime = (java.lang.Long)(value); break;
-    case 34: prevContentPublishTime = (java.lang.Long)(value); break;
-    case 35: refContentPublishTime = (java.lang.Long)(value); break;
-    case 36: prevRefContentPublishTime = (java.lang.Long)(value); break;
-    case 37: prevSignature = (java.nio.ByteBuffer)(value); break;
-    case 38: signature = (java.nio.ByteBuffer)(value); break;
-    case 39: contentScore = (java.lang.Float)(value); break;
-    case 40: score = (java.lang.Float)(value); break;
-    case 41: sortScore = (java.lang.CharSequence)(value); break;
-    case 42: pageCounters = (java.util.Map<java.lang.CharSequence,java.lang.Integer>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 43: headers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 44: links = (java.util.List<java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)value)); break;
-    case 45: liveLinks = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 46: vividLinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 47: deadLinks = (java.util.List<java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)value)); break;
-    case 48: inlinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 49: markers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 50: metadata = (java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 51: activeDomUrls = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 52: activeDomStatus = (ai.platon.pulsar.persist.gora.generated.GActiveDomStatus)(value); break;
-    case 53: activeDomStats = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
-    case 54: pageModel = (java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)value)); break;
+    case 8: resource = (java.lang.Integer)(value); break;
+    case 9: crawlStatus = (java.lang.Integer)(value); break;
+    case 10: fetchRetries = (java.lang.Integer)(value); break;
+    case 11: browser = (java.lang.CharSequence)(value); break;
+    case 12: proxy = (java.lang.CharSequence)(value); break;
+    case 13: fetchInterval = (java.lang.Integer)(value); break;
+    case 14: prevFetchTime = (java.lang.Long)(value); break;
+    case 15: prevCrawlTime1 = (java.lang.Long)(value); break;
+    case 16: fetchTime = (java.lang.Long)(value); break;
+    case 17: prevModifiedTime = (java.lang.Long)(value); break;
+    case 18: modifiedTime = (java.lang.Long)(value); break;
+    case 19: protocolStatus = (ai.platon.pulsar.persist.gora.generated.GProtocolStatus)(value); break;
+    case 20: encoding = (java.lang.CharSequence)(value); break;
+    case 21: contentType = (java.lang.CharSequence)(value); break;
+    case 22: content = (java.nio.ByteBuffer)(value); break;
+    case 23: contentLength = (java.lang.Integer)(value); break;
+    case 24: lastContentLength = (java.lang.Integer)(value); break;
+    case 25: aveContentLength = (java.lang.Integer)(value); break;
+    case 26: persistedContentLength = (java.lang.Integer)(value); break;
+    case 27: referrer = (java.lang.CharSequence)(value); break;
+    case 28: reprUrl = (java.lang.CharSequence)(value); break;
+    case 29: htmlIntegrity = (java.lang.CharSequence)(value); break;
+    case 30: anchor = (java.lang.CharSequence)(value); break;
+    case 31: anchorOrder = (java.lang.Integer)(value); break;
+    case 32: parseStatus = (ai.platon.pulsar.persist.gora.generated.GParseStatus)(value); break;
+    case 33: pageTitle = (java.lang.CharSequence)(value); break;
+    case 34: pageText = (java.lang.CharSequence)(value); break;
+    case 35: contentTitle = (java.lang.CharSequence)(value); break;
+    case 36: contentText = (java.lang.CharSequence)(value); break;
+    case 37: contentTextLen = (java.lang.Integer)(value); break;
+    case 38: pageCategory = (java.lang.CharSequence)(value); break;
+    case 39: contentModifiedTime = (java.lang.Long)(value); break;
+    case 40: prevContentModifiedTime = (java.lang.Long)(value); break;
+    case 41: contentPublishTime = (java.lang.Long)(value); break;
+    case 42: prevContentPublishTime = (java.lang.Long)(value); break;
+    case 43: refContentPublishTime = (java.lang.Long)(value); break;
+    case 44: prevRefContentPublishTime = (java.lang.Long)(value); break;
+    case 45: prevSignature = (java.nio.ByteBuffer)(value); break;
+    case 46: signature = (java.nio.ByteBuffer)(value); break;
+    case 47: contentScore = (java.lang.Float)(value); break;
+    case 48: score = (java.lang.Float)(value); break;
+    case 49: sortScore = (java.lang.CharSequence)(value); break;
+    case 50: pageCounters = (java.util.Map<java.lang.CharSequence,java.lang.Integer>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 51: headers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 52: links = (java.util.List<java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)value)); break;
+    case 53: liveLinks = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 54: vividLinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 55: deadLinks = (java.util.List<java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)value)); break;
+    case 56: inlinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 57: markers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 58: metadata = (java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 59: activeDOMStatus = (ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus)(value); break;
+    case 60: activeDOMStatTrace = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)value)); break;
+    case 61: pageModelUpdateTime = (java.lang.Long)(value); break;
+    case 62: pageModel = (java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup>)((value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)value)); break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
+  }
+
+  /**
+   * Gets the value of the 'baseUrl' field.
+   */
+  public java.lang.CharSequence getBaseUrl() {
+    return baseUrl;
+  }
+
+  /**
+   * Sets the value of the 'baseUrl' field.
+   * @param value the value to set.
+   */
+  public void setBaseUrl(java.lang.CharSequence value) {
+    this.baseUrl = value;
+    setDirty(0);
+  }
+  
+  /**
+   * Checks the dirty status of the 'baseUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isBaseUrlDirty() {
+    return isDirty(0);
   }
 
   /**
@@ -375,7 +440,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setCreateTime(java.lang.Long value) {
     this.createTime = value;
-    setDirty(0);
+    setDirty(1);
   }
   
   /**
@@ -383,7 +448,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isCreateTimeDirty() {
-    return isDirty(0);
+    return isDirty(1);
   }
 
   /**
@@ -399,7 +464,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setDistance(java.lang.Integer value) {
     this.distance = value;
-    setDirty(1);
+    setDirty(2);
   }
   
   /**
@@ -407,7 +472,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isDistanceDirty() {
-    return isDirty(1);
+    return isDirty(2);
   }
 
   /**
@@ -423,7 +488,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setFetchCount(java.lang.Integer value) {
     this.fetchCount = value;
-    setDirty(2);
+    setDirty(3);
   }
   
   /**
@@ -431,7 +496,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isFetchCountDirty() {
-    return isDirty(2);
+    return isDirty(3);
   }
 
   /**
@@ -447,7 +512,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setFetchPriority(java.lang.Integer value) {
     this.fetchPriority = value;
-    setDirty(3);
+    setDirty(4);
   }
   
   /**
@@ -455,30 +520,6 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isFetchPriorityDirty() {
-    return isDirty(3);
-  }
-
-  /**
-   * Gets the value of the 'fetchInterval' field.
-   */
-  public java.lang.Integer getFetchInterval() {
-    return fetchInterval;
-  }
-
-  /**
-   * Sets the value of the 'fetchInterval' field.
-   * @param value the value to set.
-   */
-  public void setFetchInterval(java.lang.Integer value) {
-    this.fetchInterval = value;
-    setDirty(4);
-  }
-  
-  /**
-   * Checks the dirty status of the 'fetchInterval' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
-   */
-  public boolean isFetchIntervalDirty() {
     return isDirty(4);
   }
 
@@ -507,26 +548,26 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   }
 
   /**
-   * Gets the value of the 'options' field.
+   * Gets the value of the 'args' field.
    */
-  public java.lang.CharSequence getOptions() {
-    return options;
+  public java.lang.CharSequence getArgs() {
+    return args;
   }
 
   /**
-   * Sets the value of the 'options' field.
+   * Sets the value of the 'args' field.
    * @param value the value to set.
    */
-  public void setOptions(java.lang.CharSequence value) {
-    this.options = value;
+  public void setArgs(java.lang.CharSequence value) {
+    this.args = value;
     setDirty(6);
   }
   
   /**
-   * Checks the dirty status of the 'options' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'args' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isOptionsDirty() {
+  public boolean isArgsDirty() {
     return isDirty(6);
   }
 
@@ -555,6 +596,30 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   }
 
   /**
+   * Gets the value of the 'resource' field.
+   */
+  public java.lang.Integer getResource() {
+    return resource;
+  }
+
+  /**
+   * Sets the value of the 'resource' field.
+   * @param value the value to set.
+   */
+  public void setResource(java.lang.Integer value) {
+    this.resource = value;
+    setDirty(8);
+  }
+  
+  /**
+   * Checks the dirty status of the 'resource' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isResourceDirty() {
+    return isDirty(8);
+  }
+
+  /**
    * Gets the value of the 'crawlStatus' field.
    */
   public java.lang.Integer getCrawlStatus() {
@@ -567,7 +632,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setCrawlStatus(java.lang.Integer value) {
     this.crawlStatus = value;
-    setDirty(8);
+    setDirty(9);
   }
   
   /**
@@ -575,79 +640,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isCrawlStatusDirty() {
-    return isDirty(8);
-  }
-
-  /**
-   * Gets the value of the 'prevFetchTime' field.
-   */
-  public java.lang.Long getPrevFetchTime() {
-    return prevFetchTime;
-  }
-
-  /**
-   * Sets the value of the 'prevFetchTime' field.
-   * @param value the value to set.
-   */
-  public void setPrevFetchTime(java.lang.Long value) {
-    this.prevFetchTime = value;
-    setDirty(9);
-  }
-  
-  /**
-   * Checks the dirty status of the 'prevFetchTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
-   */
-  public boolean isPrevFetchTimeDirty() {
     return isDirty(9);
-  }
-
-  /**
-   * Gets the value of the 'prevCrawlTime1' field.
-   */
-  public java.lang.Long getPrevCrawlTime1() {
-    return prevCrawlTime1;
-  }
-
-  /**
-   * Sets the value of the 'prevCrawlTime1' field.
-   * @param value the value to set.
-   */
-  public void setPrevCrawlTime1(java.lang.Long value) {
-    this.prevCrawlTime1 = value;
-    setDirty(10);
-  }
-  
-  /**
-   * Checks the dirty status of the 'prevCrawlTime1' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
-   */
-  public boolean isPrevCrawlTime1Dirty() {
-    return isDirty(10);
-  }
-
-  /**
-   * Gets the value of the 'fetchTime' field.
-   */
-  public java.lang.Long getFetchTime() {
-    return fetchTime;
-  }
-
-  /**
-   * Sets the value of the 'fetchTime' field.
-   * @param value the value to set.
-   */
-  public void setFetchTime(java.lang.Long value) {
-    this.fetchTime = value;
-    setDirty(11);
-  }
-  
-  /**
-   * Checks the dirty status of the 'fetchTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
-   */
-  public boolean isFetchTimeDirty() {
-    return isDirty(11);
   }
 
   /**
@@ -663,7 +656,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setFetchRetries(java.lang.Integer value) {
     this.fetchRetries = value;
-    setDirty(12);
+    setDirty(10);
   }
   
   /**
@@ -671,31 +664,151 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isFetchRetriesDirty() {
+    return isDirty(10);
+  }
+
+  /**
+   * Gets the value of the 'browser' field.
+   */
+  public java.lang.CharSequence getBrowser() {
+    return browser;
+  }
+
+  /**
+   * Sets the value of the 'browser' field.
+   * @param value the value to set.
+   */
+  public void setBrowser(java.lang.CharSequence value) {
+    this.browser = value;
+    setDirty(11);
+  }
+  
+  /**
+   * Checks the dirty status of the 'browser' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isBrowserDirty() {
+    return isDirty(11);
+  }
+
+  /**
+   * Gets the value of the 'proxy' field.
+   */
+  public java.lang.CharSequence getProxy() {
+    return proxy;
+  }
+
+  /**
+   * Sets the value of the 'proxy' field.
+   * @param value the value to set.
+   */
+  public void setProxy(java.lang.CharSequence value) {
+    this.proxy = value;
+    setDirty(12);
+  }
+  
+  /**
+   * Checks the dirty status of the 'proxy' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isProxyDirty() {
     return isDirty(12);
   }
 
   /**
-   * Gets the value of the 'reprUrl' field.
+   * Gets the value of the 'fetchInterval' field.
    */
-  public java.lang.CharSequence getReprUrl() {
-    return reprUrl;
+  public java.lang.Integer getFetchInterval() {
+    return fetchInterval;
   }
 
   /**
-   * Sets the value of the 'reprUrl' field.
+   * Sets the value of the 'fetchInterval' field.
    * @param value the value to set.
    */
-  public void setReprUrl(java.lang.CharSequence value) {
-    this.reprUrl = value;
+  public void setFetchInterval(java.lang.Integer value) {
+    this.fetchInterval = value;
     setDirty(13);
   }
   
   /**
-   * Checks the dirty status of the 'reprUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'fetchInterval' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isReprUrlDirty() {
+  public boolean isFetchIntervalDirty() {
     return isDirty(13);
+  }
+
+  /**
+   * Gets the value of the 'prevFetchTime' field.
+   */
+  public java.lang.Long getPrevFetchTime() {
+    return prevFetchTime;
+  }
+
+  /**
+   * Sets the value of the 'prevFetchTime' field.
+   * @param value the value to set.
+   */
+  public void setPrevFetchTime(java.lang.Long value) {
+    this.prevFetchTime = value;
+    setDirty(14);
+  }
+  
+  /**
+   * Checks the dirty status of the 'prevFetchTime' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isPrevFetchTimeDirty() {
+    return isDirty(14);
+  }
+
+  /**
+   * Gets the value of the 'prevCrawlTime1' field.
+   */
+  public java.lang.Long getPrevCrawlTime1() {
+    return prevCrawlTime1;
+  }
+
+  /**
+   * Sets the value of the 'prevCrawlTime1' field.
+   * @param value the value to set.
+   */
+  public void setPrevCrawlTime1(java.lang.Long value) {
+    this.prevCrawlTime1 = value;
+    setDirty(15);
+  }
+  
+  /**
+   * Checks the dirty status of the 'prevCrawlTime1' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isPrevCrawlTime1Dirty() {
+    return isDirty(15);
+  }
+
+  /**
+   * Gets the value of the 'fetchTime' field.
+   */
+  public java.lang.Long getFetchTime() {
+    return fetchTime;
+  }
+
+  /**
+   * Sets the value of the 'fetchTime' field.
+   * @param value the value to set.
+   */
+  public void setFetchTime(java.lang.Long value) {
+    this.fetchTime = value;
+    setDirty(16);
+  }
+  
+  /**
+   * Checks the dirty status of the 'fetchTime' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isFetchTimeDirty() {
+    return isDirty(16);
   }
 
   /**
@@ -711,7 +824,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPrevModifiedTime(java.lang.Long value) {
     this.prevModifiedTime = value;
-    setDirty(14);
+    setDirty(17);
   }
   
   /**
@@ -719,7 +832,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPrevModifiedTimeDirty() {
-    return isDirty(14);
+    return isDirty(17);
   }
 
   /**
@@ -735,7 +848,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setModifiedTime(java.lang.Long value) {
     this.modifiedTime = value;
-    setDirty(15);
+    setDirty(18);
   }
   
   /**
@@ -743,7 +856,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isModifiedTimeDirty() {
-    return isDirty(15);
+    return isDirty(18);
   }
 
   /**
@@ -759,7 +872,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setProtocolStatus(ai.platon.pulsar.persist.gora.generated.GProtocolStatus value) {
     this.protocolStatus = value;
-    setDirty(16);
+    setDirty(19);
   }
   
   /**
@@ -767,7 +880,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isProtocolStatusDirty() {
-    return isDirty(16);
+    return isDirty(19);
   }
 
   /**
@@ -783,7 +896,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setEncoding(java.lang.CharSequence value) {
     this.encoding = value;
-    setDirty(17);
+    setDirty(20);
   }
   
   /**
@@ -791,7 +904,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isEncodingDirty() {
-    return isDirty(17);
+    return isDirty(20);
   }
 
   /**
@@ -807,7 +920,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentType(java.lang.CharSequence value) {
     this.contentType = value;
-    setDirty(18);
+    setDirty(21);
   }
   
   /**
@@ -815,7 +928,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentTypeDirty() {
-    return isDirty(18);
+    return isDirty(21);
   }
 
   /**
@@ -831,7 +944,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContent(java.nio.ByteBuffer value) {
     this.content = value;
-    setDirty(19);
+    setDirty(22);
   }
   
   /**
@@ -839,31 +952,103 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * The entire raw document content e.g. raw XHTML   * @param value the value to set.
    */
   public boolean isContentDirty() {
-    return isDirty(19);
+    return isDirty(22);
   }
 
   /**
-   * Gets the value of the 'baseUrl' field.
+   * Gets the value of the 'contentLength' field.
    */
-  public java.lang.CharSequence getBaseUrl() {
-    return baseUrl;
+  public java.lang.Integer getContentLength() {
+    return contentLength;
   }
 
   /**
-   * Sets the value of the 'baseUrl' field.
+   * Sets the value of the 'contentLength' field.
    * @param value the value to set.
    */
-  public void setBaseUrl(java.lang.CharSequence value) {
-    this.baseUrl = value;
-    setDirty(20);
+  public void setContentLength(java.lang.Integer value) {
+    this.contentLength = value;
+    setDirty(23);
   }
   
   /**
-   * Checks the dirty status of the 'baseUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'contentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isBaseUrlDirty() {
-    return isDirty(20);
+  public boolean isContentLengthDirty() {
+    return isDirty(23);
+  }
+
+  /**
+   * Gets the value of the 'lastContentLength' field.
+   */
+  public java.lang.Integer getLastContentLength() {
+    return lastContentLength;
+  }
+
+  /**
+   * Sets the value of the 'lastContentLength' field.
+   * @param value the value to set.
+   */
+  public void setLastContentLength(java.lang.Integer value) {
+    this.lastContentLength = value;
+    setDirty(24);
+  }
+  
+  /**
+   * Checks the dirty status of the 'lastContentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isLastContentLengthDirty() {
+    return isDirty(24);
+  }
+
+  /**
+   * Gets the value of the 'aveContentLength' field.
+   */
+  public java.lang.Integer getAveContentLength() {
+    return aveContentLength;
+  }
+
+  /**
+   * Sets the value of the 'aveContentLength' field.
+   * @param value the value to set.
+   */
+  public void setAveContentLength(java.lang.Integer value) {
+    this.aveContentLength = value;
+    setDirty(25);
+  }
+  
+  /**
+   * Checks the dirty status of the 'aveContentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isAveContentLengthDirty() {
+    return isDirty(25);
+  }
+
+  /**
+   * Gets the value of the 'persistedContentLength' field.
+   */
+  public java.lang.Integer getPersistedContentLength() {
+    return persistedContentLength;
+  }
+
+  /**
+   * Sets the value of the 'persistedContentLength' field.
+   * @param value the value to set.
+   */
+  public void setPersistedContentLength(java.lang.Integer value) {
+    this.persistedContentLength = value;
+    setDirty(26);
+  }
+  
+  /**
+   * Checks the dirty status of the 'persistedContentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isPersistedContentLengthDirty() {
+    return isDirty(26);
   }
 
   /**
@@ -879,7 +1064,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setReferrer(java.lang.CharSequence value) {
     this.referrer = value;
-    setDirty(21);
+    setDirty(27);
   }
   
   /**
@@ -887,7 +1072,55 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isReferrerDirty() {
-    return isDirty(21);
+    return isDirty(27);
+  }
+
+  /**
+   * Gets the value of the 'reprUrl' field.
+   * Given two urls, a src and a destination of a redirect, it returns the representative url.   */
+  public java.lang.CharSequence getReprUrl() {
+    return reprUrl;
+  }
+
+  /**
+   * Sets the value of the 'reprUrl' field.
+   * Given two urls, a src and a destination of a redirect, it returns the representative url.   * @param value the value to set.
+   */
+  public void setReprUrl(java.lang.CharSequence value) {
+    this.reprUrl = value;
+    setDirty(28);
+  }
+  
+  /**
+   * Checks the dirty status of the 'reprUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Given two urls, a src and a destination of a redirect, it returns the representative url.   * @param value the value to set.
+   */
+  public boolean isReprUrlDirty() {
+    return isDirty(28);
+  }
+
+  /**
+   * Gets the value of the 'htmlIntegrity' field.
+   */
+  public java.lang.CharSequence getHtmlIntegrity() {
+    return htmlIntegrity;
+  }
+
+  /**
+   * Sets the value of the 'htmlIntegrity' field.
+   * @param value the value to set.
+   */
+  public void setHtmlIntegrity(java.lang.CharSequence value) {
+    this.htmlIntegrity = value;
+    setDirty(29);
+  }
+  
+  /**
+   * Checks the dirty status of the 'htmlIntegrity' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * @param value the value to set.
+   */
+  public boolean isHtmlIntegrityDirty() {
+    return isDirty(29);
   }
 
   /**
@@ -903,7 +1136,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setAnchor(java.lang.CharSequence value) {
     this.anchor = value;
-    setDirty(22);
+    setDirty(30);
   }
   
   /**
@@ -911,7 +1144,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isAnchorDirty() {
-    return isDirty(22);
+    return isDirty(30);
   }
 
   /**
@@ -927,7 +1160,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setAnchorOrder(java.lang.Integer value) {
     this.anchorOrder = value;
-    setDirty(23);
+    setDirty(31);
   }
   
   /**
@@ -935,7 +1168,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isAnchorOrderDirty() {
-    return isDirty(23);
+    return isDirty(31);
   }
 
   /**
@@ -951,7 +1184,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setParseStatus(ai.platon.pulsar.persist.gora.generated.GParseStatus value) {
     this.parseStatus = value;
-    setDirty(24);
+    setDirty(32);
   }
   
   /**
@@ -959,7 +1192,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isParseStatusDirty() {
-    return isDirty(24);
+    return isDirty(32);
   }
 
   /**
@@ -975,7 +1208,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPageTitle(java.lang.CharSequence value) {
     this.pageTitle = value;
-    setDirty(25);
+    setDirty(33);
   }
   
   /**
@@ -983,7 +1216,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPageTitleDirty() {
-    return isDirty(25);
+    return isDirty(33);
   }
 
   /**
@@ -999,7 +1232,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPageText(java.lang.CharSequence value) {
     this.pageText = value;
-    setDirty(26);
+    setDirty(34);
   }
   
   /**
@@ -1007,7 +1240,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPageTextDirty() {
-    return isDirty(26);
+    return isDirty(34);
   }
 
   /**
@@ -1023,7 +1256,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentTitle(java.lang.CharSequence value) {
     this.contentTitle = value;
-    setDirty(27);
+    setDirty(35);
   }
   
   /**
@@ -1031,7 +1264,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentTitleDirty() {
-    return isDirty(27);
+    return isDirty(35);
   }
 
   /**
@@ -1047,7 +1280,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentText(java.lang.CharSequence value) {
     this.contentText = value;
-    setDirty(28);
+    setDirty(36);
   }
   
   /**
@@ -1055,7 +1288,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentTextDirty() {
-    return isDirty(28);
+    return isDirty(36);
   }
 
   /**
@@ -1071,7 +1304,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentTextLen(java.lang.Integer value) {
     this.contentTextLen = value;
-    setDirty(29);
+    setDirty(37);
   }
   
   /**
@@ -1079,7 +1312,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentTextLenDirty() {
-    return isDirty(29);
+    return isDirty(37);
   }
 
   /**
@@ -1095,7 +1328,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPageCategory(java.lang.CharSequence value) {
     this.pageCategory = value;
-    setDirty(30);
+    setDirty(38);
   }
   
   /**
@@ -1103,7 +1336,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPageCategoryDirty() {
-    return isDirty(30);
+    return isDirty(38);
   }
 
   /**
@@ -1119,7 +1352,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentModifiedTime(java.lang.Long value) {
     this.contentModifiedTime = value;
-    setDirty(31);
+    setDirty(39);
   }
   
   /**
@@ -1127,7 +1360,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentModifiedTimeDirty() {
-    return isDirty(31);
+    return isDirty(39);
   }
 
   /**
@@ -1143,7 +1376,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPrevContentModifiedTime(java.lang.Long value) {
     this.prevContentModifiedTime = value;
-    setDirty(32);
+    setDirty(40);
   }
   
   /**
@@ -1151,7 +1384,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPrevContentModifiedTimeDirty() {
-    return isDirty(32);
+    return isDirty(40);
   }
 
   /**
@@ -1167,7 +1400,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentPublishTime(java.lang.Long value) {
     this.contentPublishTime = value;
-    setDirty(33);
+    setDirty(41);
   }
   
   /**
@@ -1175,7 +1408,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentPublishTimeDirty() {
-    return isDirty(33);
+    return isDirty(41);
   }
 
   /**
@@ -1191,7 +1424,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPrevContentPublishTime(java.lang.Long value) {
     this.prevContentPublishTime = value;
-    setDirty(34);
+    setDirty(42);
   }
   
   /**
@@ -1199,7 +1432,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPrevContentPublishTimeDirty() {
-    return isDirty(34);
+    return isDirty(42);
   }
 
   /**
@@ -1215,7 +1448,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setRefContentPublishTime(java.lang.Long value) {
     this.refContentPublishTime = value;
-    setDirty(35);
+    setDirty(43);
   }
   
   /**
@@ -1223,7 +1456,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isRefContentPublishTimeDirty() {
-    return isDirty(35);
+    return isDirty(43);
   }
 
   /**
@@ -1239,7 +1472,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPrevRefContentPublishTime(java.lang.Long value) {
     this.prevRefContentPublishTime = value;
-    setDirty(36);
+    setDirty(44);
   }
   
   /**
@@ -1247,7 +1480,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPrevRefContentPublishTimeDirty() {
-    return isDirty(36);
+    return isDirty(44);
   }
 
   /**
@@ -1263,7 +1496,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPrevSignature(java.nio.ByteBuffer value) {
     this.prevSignature = value;
-    setDirty(37);
+    setDirty(45);
   }
   
   /**
@@ -1271,7 +1504,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPrevSignatureDirty() {
-    return isDirty(37);
+    return isDirty(45);
   }
 
   /**
@@ -1287,7 +1520,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setSignature(java.nio.ByteBuffer value) {
     this.signature = value;
-    setDirty(38);
+    setDirty(46);
   }
   
   /**
@@ -1295,7 +1528,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isSignatureDirty() {
-    return isDirty(38);
+    return isDirty(46);
   }
 
   /**
@@ -1311,7 +1544,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setContentScore(java.lang.Float value) {
     this.contentScore = value;
-    setDirty(39);
+    setDirty(47);
   }
   
   /**
@@ -1319,7 +1552,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isContentScoreDirty() {
-    return isDirty(39);
+    return isDirty(47);
   }
 
   /**
@@ -1335,7 +1568,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setScore(java.lang.Float value) {
     this.score = value;
-    setDirty(40);
+    setDirty(48);
   }
   
   /**
@@ -1343,7 +1576,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isScoreDirty() {
-    return isDirty(40);
+    return isDirty(48);
   }
 
   /**
@@ -1359,7 +1592,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setSortScore(java.lang.CharSequence value) {
     this.sortScore = value;
-    setDirty(41);
+    setDirty(49);
   }
   
   /**
@@ -1367,7 +1600,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isSortScoreDirty() {
-    return isDirty(41);
+    return isDirty(49);
   }
 
   /**
@@ -1383,7 +1616,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPageCounters(java.util.Map<java.lang.CharSequence,java.lang.Integer> value) {
     this.pageCounters = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(42);
+    setDirty(50);
   }
   
   /**
@@ -1391,7 +1624,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPageCountersDirty() {
-    return isDirty(42);
+    return isDirty(50);
   }
 
   /**
@@ -1407,7 +1640,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setHeaders(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
     this.headers = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(43);
+    setDirty(51);
   }
   
   /**
@@ -1415,7 +1648,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isHeadersDirty() {
-    return isDirty(43);
+    return isDirty(51);
   }
 
   /**
@@ -1431,7 +1664,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setLinks(java.util.List<java.lang.CharSequence> value) {
     this.links = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper(value);
-    setDirty(44);
+    setDirty(52);
   }
   
   /**
@@ -1439,7 +1672,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isLinksDirty() {
-    return isDirty(44);
+    return isDirty(52);
   }
 
   /**
@@ -1455,7 +1688,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setLiveLinks(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink> value) {
     this.liveLinks = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(45);
+    setDirty(53);
   }
   
   /**
@@ -1463,7 +1696,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isLiveLinksDirty() {
-    return isDirty(45);
+    return isDirty(53);
   }
 
   /**
@@ -1479,7 +1712,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setVividLinks(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
     this.vividLinks = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(46);
+    setDirty(54);
   }
   
   /**
@@ -1487,7 +1720,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isVividLinksDirty() {
-    return isDirty(46);
+    return isDirty(54);
   }
 
   /**
@@ -1503,7 +1736,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setDeadLinks(java.util.List<java.lang.CharSequence> value) {
     this.deadLinks = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper(value);
-    setDirty(47);
+    setDirty(55);
   }
   
   /**
@@ -1511,7 +1744,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isDeadLinksDirty() {
-    return isDirty(47);
+    return isDirty(55);
   }
 
   /**
@@ -1527,7 +1760,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setInlinks(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
     this.inlinks = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(48);
+    setDirty(56);
   }
   
   /**
@@ -1535,7 +1768,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isInlinksDirty() {
-    return isDirty(48);
+    return isDirty(56);
   }
 
   /**
@@ -1551,7 +1784,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setMarkers(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
     this.markers = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(49);
+    setDirty(57);
   }
   
   /**
@@ -1559,7 +1792,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isMarkersDirty() {
-    return isDirty(49);
+    return isDirty(57);
   }
 
   /**
@@ -1575,7 +1808,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setMetadata(java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer> value) {
     this.metadata = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(50);
+    setDirty(58);
   }
   
   /**
@@ -1583,79 +1816,79 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isMetadataDirty() {
-    return isDirty(50);
+    return isDirty(58);
   }
 
   /**
-   * Gets the value of the 'activeDomUrls' field.
+   * Gets the value of the 'activeDOMStatus' field.
    */
-  public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> getActiveDomUrls() {
-    return activeDomUrls;
+  public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus getActiveDOMStatus() {
+    return activeDOMStatus;
   }
 
   /**
-   * Sets the value of the 'activeDomUrls' field.
+   * Sets the value of the 'activeDOMStatus' field.
    * @param value the value to set.
    */
-  public void setActiveDomUrls(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
-    this.activeDomUrls = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(51);
+  public void setActiveDOMStatus(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus value) {
+    this.activeDOMStatus = value;
+    setDirty(59);
   }
   
   /**
-   * Checks the dirty status of the 'activeDomUrls' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'activeDOMStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isActiveDomUrlsDirty() {
-    return isDirty(51);
+  public boolean isActiveDOMStatusDirty() {
+    return isDirty(59);
   }
 
   /**
-   * Gets the value of the 'activeDomStatus' field.
+   * Gets the value of the 'activeDOMStatTrace' field.
    */
-  public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus getActiveDomStatus() {
-    return activeDomStatus;
+  public java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> getActiveDOMStatTrace() {
+    return activeDOMStatTrace;
   }
 
   /**
-   * Sets the value of the 'activeDomStatus' field.
+   * Sets the value of the 'activeDOMStatTrace' field.
    * @param value the value to set.
    */
-  public void setActiveDomStatus(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus value) {
-    this.activeDomStatus = value;
-    setDirty(52);
+  public void setActiveDOMStatTrace(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> value) {
+    this.activeDOMStatTrace = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
+    setDirty(60);
   }
   
   /**
-   * Checks the dirty status of the 'activeDomStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'activeDOMStatTrace' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isActiveDomStatusDirty() {
-    return isDirty(52);
+  public boolean isActiveDOMStatTraceDirty() {
+    return isDirty(60);
   }
 
   /**
-   * Gets the value of the 'activeDomStats' field.
+   * Gets the value of the 'pageModelUpdateTime' field.
    */
-  public java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> getActiveDomStats() {
-    return activeDomStats;
+  public java.lang.Long getPageModelUpdateTime() {
+    return pageModelUpdateTime;
   }
 
   /**
-   * Sets the value of the 'activeDomStats' field.
+   * Sets the value of the 'pageModelUpdateTime' field.
    * @param value the value to set.
    */
-  public void setActiveDomStats(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> value) {
-    this.activeDomStats = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyMapWrapper(value);
-    setDirty(53);
+  public void setPageModelUpdateTime(java.lang.Long value) {
+    this.pageModelUpdateTime = value;
+    setDirty(61);
   }
   
   /**
-   * Checks the dirty status of the 'activeDomStats' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'pageModelUpdateTime' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isActiveDomStatsDirty() {
-    return isDirty(53);
+  public boolean isPageModelUpdateTimeDirty() {
+    return isDirty(61);
   }
 
   /**
@@ -1671,7 +1904,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    */
   public void setPageModel(java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup> value) {
     this.pageModel = (value instanceof org.apache.gora.persistency.Dirtyable) ? value : new org.apache.gora.persistency.impl.DirtyListWrapper(value);
-    setDirty(54);
+    setDirty(62);
   }
   
   /**
@@ -1679,7 +1912,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
    * @param value the value to set.
    */
   public boolean isPageModelDirty() {
-    return isDirty(54);
+    return isDirty(62);
   }
 
   /** Creates a new GWebPage RecordBuilder */
@@ -1726,28 +1959,36 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<GWebPage>
     implements org.apache.avro.data.RecordBuilder<GWebPage> {
 
+    private java.lang.CharSequence baseUrl;
     private long createTime;
     private int distance;
     private int fetchCount;
     private int fetchPriority;
-    private int fetchInterval;
     private java.lang.CharSequence zoneId;
-    private java.lang.CharSequence options;
+    private java.lang.CharSequence args;
     private java.lang.CharSequence batchId;
+    private java.lang.Integer resource;
     private int crawlStatus;
+    private int fetchRetries;
+    private java.lang.CharSequence browser;
+    private java.lang.CharSequence proxy;
+    private int fetchInterval;
     private long prevFetchTime;
     private long prevCrawlTime1;
     private long fetchTime;
-    private int fetchRetries;
-    private java.lang.CharSequence reprUrl;
     private long prevModifiedTime;
     private long modifiedTime;
     private ai.platon.pulsar.persist.gora.generated.GProtocolStatus protocolStatus;
     private java.lang.CharSequence encoding;
     private java.lang.CharSequence contentType;
     private java.nio.ByteBuffer content;
-    private java.lang.CharSequence baseUrl;
+    private java.lang.Integer contentLength;
+    private java.lang.Integer lastContentLength;
+    private java.lang.Integer aveContentLength;
+    private java.lang.Integer persistedContentLength;
     private java.lang.CharSequence referrer;
+    private java.lang.CharSequence reprUrl;
+    private java.lang.CharSequence htmlIntegrity;
     private java.lang.CharSequence anchor;
     private int anchorOrder;
     private ai.platon.pulsar.persist.gora.generated.GParseStatus parseStatus;
@@ -1777,9 +2018,9 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> inlinks;
     private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> markers;
     private java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer> metadata;
-    private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> activeDomUrls;
-    private ai.platon.pulsar.persist.gora.generated.GActiveDomStatus activeDomStatus;
-    private java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> activeDomStats;
+    private ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus activeDOMStatus;
+    private java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> activeDOMStatTrace;
+    private long pageModelUpdateTime;
     private java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup> pageModel;
 
     /** Creates a new Builder */
@@ -1795,228 +2036,285 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     /** Creates a Builder by copying an existing GWebPage instance */
     private Builder(ai.platon.pulsar.persist.gora.generated.GWebPage other) {
             super(ai.platon.pulsar.persist.gora.generated.GWebPage.SCHEMA$);
-      if (isValidValue(fields()[0], other.createTime)) {
-        this.createTime = (java.lang.Long) data().deepCopy(fields()[0].schema(), other.createTime);
+      if (isValidValue(fields()[0], other.baseUrl)) {
+        this.baseUrl = (java.lang.CharSequence) data().deepCopy(fields()[0].schema(), other.baseUrl);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.distance)) {
-        this.distance = (java.lang.Integer) data().deepCopy(fields()[1].schema(), other.distance);
+      if (isValidValue(fields()[1], other.createTime)) {
+        this.createTime = (java.lang.Long) data().deepCopy(fields()[1].schema(), other.createTime);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.fetchCount)) {
-        this.fetchCount = (java.lang.Integer) data().deepCopy(fields()[2].schema(), other.fetchCount);
+      if (isValidValue(fields()[2], other.distance)) {
+        this.distance = (java.lang.Integer) data().deepCopy(fields()[2].schema(), other.distance);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.fetchPriority)) {
-        this.fetchPriority = (java.lang.Integer) data().deepCopy(fields()[3].schema(), other.fetchPriority);
+      if (isValidValue(fields()[3], other.fetchCount)) {
+        this.fetchCount = (java.lang.Integer) data().deepCopy(fields()[3].schema(), other.fetchCount);
         fieldSetFlags()[3] = true;
       }
-      if (isValidValue(fields()[4], other.fetchInterval)) {
-        this.fetchInterval = (java.lang.Integer) data().deepCopy(fields()[4].schema(), other.fetchInterval);
+      if (isValidValue(fields()[4], other.fetchPriority)) {
+        this.fetchPriority = (java.lang.Integer) data().deepCopy(fields()[4].schema(), other.fetchPriority);
         fieldSetFlags()[4] = true;
       }
       if (isValidValue(fields()[5], other.zoneId)) {
         this.zoneId = (java.lang.CharSequence) data().deepCopy(fields()[5].schema(), other.zoneId);
         fieldSetFlags()[5] = true;
       }
-      if (isValidValue(fields()[6], other.options)) {
-        this.options = (java.lang.CharSequence) data().deepCopy(fields()[6].schema(), other.options);
+      if (isValidValue(fields()[6], other.args)) {
+        this.args = (java.lang.CharSequence) data().deepCopy(fields()[6].schema(), other.args);
         fieldSetFlags()[6] = true;
       }
       if (isValidValue(fields()[7], other.batchId)) {
         this.batchId = (java.lang.CharSequence) data().deepCopy(fields()[7].schema(), other.batchId);
         fieldSetFlags()[7] = true;
       }
-      if (isValidValue(fields()[8], other.crawlStatus)) {
-        this.crawlStatus = (java.lang.Integer) data().deepCopy(fields()[8].schema(), other.crawlStatus);
+      if (isValidValue(fields()[8], other.resource)) {
+        this.resource = (java.lang.Integer) data().deepCopy(fields()[8].schema(), other.resource);
         fieldSetFlags()[8] = true;
       }
-      if (isValidValue(fields()[9], other.prevFetchTime)) {
-        this.prevFetchTime = (java.lang.Long) data().deepCopy(fields()[9].schema(), other.prevFetchTime);
+      if (isValidValue(fields()[9], other.crawlStatus)) {
+        this.crawlStatus = (java.lang.Integer) data().deepCopy(fields()[9].schema(), other.crawlStatus);
         fieldSetFlags()[9] = true;
       }
-      if (isValidValue(fields()[10], other.prevCrawlTime1)) {
-        this.prevCrawlTime1 = (java.lang.Long) data().deepCopy(fields()[10].schema(), other.prevCrawlTime1);
+      if (isValidValue(fields()[10], other.fetchRetries)) {
+        this.fetchRetries = (java.lang.Integer) data().deepCopy(fields()[10].schema(), other.fetchRetries);
         fieldSetFlags()[10] = true;
       }
-      if (isValidValue(fields()[11], other.fetchTime)) {
-        this.fetchTime = (java.lang.Long) data().deepCopy(fields()[11].schema(), other.fetchTime);
+      if (isValidValue(fields()[11], other.browser)) {
+        this.browser = (java.lang.CharSequence) data().deepCopy(fields()[11].schema(), other.browser);
         fieldSetFlags()[11] = true;
       }
-      if (isValidValue(fields()[12], other.fetchRetries)) {
-        this.fetchRetries = (java.lang.Integer) data().deepCopy(fields()[12].schema(), other.fetchRetries);
+      if (isValidValue(fields()[12], other.proxy)) {
+        this.proxy = (java.lang.CharSequence) data().deepCopy(fields()[12].schema(), other.proxy);
         fieldSetFlags()[12] = true;
       }
-      if (isValidValue(fields()[13], other.reprUrl)) {
-        this.reprUrl = (java.lang.CharSequence) data().deepCopy(fields()[13].schema(), other.reprUrl);
+      if (isValidValue(fields()[13], other.fetchInterval)) {
+        this.fetchInterval = (java.lang.Integer) data().deepCopy(fields()[13].schema(), other.fetchInterval);
         fieldSetFlags()[13] = true;
       }
-      if (isValidValue(fields()[14], other.prevModifiedTime)) {
-        this.prevModifiedTime = (java.lang.Long) data().deepCopy(fields()[14].schema(), other.prevModifiedTime);
+      if (isValidValue(fields()[14], other.prevFetchTime)) {
+        this.prevFetchTime = (java.lang.Long) data().deepCopy(fields()[14].schema(), other.prevFetchTime);
         fieldSetFlags()[14] = true;
       }
-      if (isValidValue(fields()[15], other.modifiedTime)) {
-        this.modifiedTime = (java.lang.Long) data().deepCopy(fields()[15].schema(), other.modifiedTime);
+      if (isValidValue(fields()[15], other.prevCrawlTime1)) {
+        this.prevCrawlTime1 = (java.lang.Long) data().deepCopy(fields()[15].schema(), other.prevCrawlTime1);
         fieldSetFlags()[15] = true;
       }
-      if (isValidValue(fields()[16], other.protocolStatus)) {
-        this.protocolStatus = (ai.platon.pulsar.persist.gora.generated.GProtocolStatus) data().deepCopy(fields()[16].schema(), other.protocolStatus);
+      if (isValidValue(fields()[16], other.fetchTime)) {
+        this.fetchTime = (java.lang.Long) data().deepCopy(fields()[16].schema(), other.fetchTime);
         fieldSetFlags()[16] = true;
       }
-      if (isValidValue(fields()[17], other.encoding)) {
-        this.encoding = (java.lang.CharSequence) data().deepCopy(fields()[17].schema(), other.encoding);
+      if (isValidValue(fields()[17], other.prevModifiedTime)) {
+        this.prevModifiedTime = (java.lang.Long) data().deepCopy(fields()[17].schema(), other.prevModifiedTime);
         fieldSetFlags()[17] = true;
       }
-      if (isValidValue(fields()[18], other.contentType)) {
-        this.contentType = (java.lang.CharSequence) data().deepCopy(fields()[18].schema(), other.contentType);
+      if (isValidValue(fields()[18], other.modifiedTime)) {
+        this.modifiedTime = (java.lang.Long) data().deepCopy(fields()[18].schema(), other.modifiedTime);
         fieldSetFlags()[18] = true;
       }
-      if (isValidValue(fields()[19], other.content)) {
-        this.content = (java.nio.ByteBuffer) data().deepCopy(fields()[19].schema(), other.content);
+      if (isValidValue(fields()[19], other.protocolStatus)) {
+        this.protocolStatus = (ai.platon.pulsar.persist.gora.generated.GProtocolStatus) data().deepCopy(fields()[19].schema(), other.protocolStatus);
         fieldSetFlags()[19] = true;
       }
-      if (isValidValue(fields()[20], other.baseUrl)) {
-        this.baseUrl = (java.lang.CharSequence) data().deepCopy(fields()[20].schema(), other.baseUrl);
+      if (isValidValue(fields()[20], other.encoding)) {
+        this.encoding = (java.lang.CharSequence) data().deepCopy(fields()[20].schema(), other.encoding);
         fieldSetFlags()[20] = true;
       }
-      if (isValidValue(fields()[21], other.referrer)) {
-        this.referrer = (java.lang.CharSequence) data().deepCopy(fields()[21].schema(), other.referrer);
+      if (isValidValue(fields()[21], other.contentType)) {
+        this.contentType = (java.lang.CharSequence) data().deepCopy(fields()[21].schema(), other.contentType);
         fieldSetFlags()[21] = true;
       }
-      if (isValidValue(fields()[22], other.anchor)) {
-        this.anchor = (java.lang.CharSequence) data().deepCopy(fields()[22].schema(), other.anchor);
+      if (isValidValue(fields()[22], other.content)) {
+        this.content = (java.nio.ByteBuffer) data().deepCopy(fields()[22].schema(), other.content);
         fieldSetFlags()[22] = true;
       }
-      if (isValidValue(fields()[23], other.anchorOrder)) {
-        this.anchorOrder = (java.lang.Integer) data().deepCopy(fields()[23].schema(), other.anchorOrder);
+      if (isValidValue(fields()[23], other.contentLength)) {
+        this.contentLength = (java.lang.Integer) data().deepCopy(fields()[23].schema(), other.contentLength);
         fieldSetFlags()[23] = true;
       }
-      if (isValidValue(fields()[24], other.parseStatus)) {
-        this.parseStatus = (ai.platon.pulsar.persist.gora.generated.GParseStatus) data().deepCopy(fields()[24].schema(), other.parseStatus);
+      if (isValidValue(fields()[24], other.lastContentLength)) {
+        this.lastContentLength = (java.lang.Integer) data().deepCopy(fields()[24].schema(), other.lastContentLength);
         fieldSetFlags()[24] = true;
       }
-      if (isValidValue(fields()[25], other.pageTitle)) {
-        this.pageTitle = (java.lang.CharSequence) data().deepCopy(fields()[25].schema(), other.pageTitle);
+      if (isValidValue(fields()[25], other.aveContentLength)) {
+        this.aveContentLength = (java.lang.Integer) data().deepCopy(fields()[25].schema(), other.aveContentLength);
         fieldSetFlags()[25] = true;
       }
-      if (isValidValue(fields()[26], other.pageText)) {
-        this.pageText = (java.lang.CharSequence) data().deepCopy(fields()[26].schema(), other.pageText);
+      if (isValidValue(fields()[26], other.persistedContentLength)) {
+        this.persistedContentLength = (java.lang.Integer) data().deepCopy(fields()[26].schema(), other.persistedContentLength);
         fieldSetFlags()[26] = true;
       }
-      if (isValidValue(fields()[27], other.contentTitle)) {
-        this.contentTitle = (java.lang.CharSequence) data().deepCopy(fields()[27].schema(), other.contentTitle);
+      if (isValidValue(fields()[27], other.referrer)) {
+        this.referrer = (java.lang.CharSequence) data().deepCopy(fields()[27].schema(), other.referrer);
         fieldSetFlags()[27] = true;
       }
-      if (isValidValue(fields()[28], other.contentText)) {
-        this.contentText = (java.lang.CharSequence) data().deepCopy(fields()[28].schema(), other.contentText);
+      if (isValidValue(fields()[28], other.reprUrl)) {
+        this.reprUrl = (java.lang.CharSequence) data().deepCopy(fields()[28].schema(), other.reprUrl);
         fieldSetFlags()[28] = true;
       }
-      if (isValidValue(fields()[29], other.contentTextLen)) {
-        this.contentTextLen = (java.lang.Integer) data().deepCopy(fields()[29].schema(), other.contentTextLen);
+      if (isValidValue(fields()[29], other.htmlIntegrity)) {
+        this.htmlIntegrity = (java.lang.CharSequence) data().deepCopy(fields()[29].schema(), other.htmlIntegrity);
         fieldSetFlags()[29] = true;
       }
-      if (isValidValue(fields()[30], other.pageCategory)) {
-        this.pageCategory = (java.lang.CharSequence) data().deepCopy(fields()[30].schema(), other.pageCategory);
+      if (isValidValue(fields()[30], other.anchor)) {
+        this.anchor = (java.lang.CharSequence) data().deepCopy(fields()[30].schema(), other.anchor);
         fieldSetFlags()[30] = true;
       }
-      if (isValidValue(fields()[31], other.contentModifiedTime)) {
-        this.contentModifiedTime = (java.lang.Long) data().deepCopy(fields()[31].schema(), other.contentModifiedTime);
+      if (isValidValue(fields()[31], other.anchorOrder)) {
+        this.anchorOrder = (java.lang.Integer) data().deepCopy(fields()[31].schema(), other.anchorOrder);
         fieldSetFlags()[31] = true;
       }
-      if (isValidValue(fields()[32], other.prevContentModifiedTime)) {
-        this.prevContentModifiedTime = (java.lang.Long) data().deepCopy(fields()[32].schema(), other.prevContentModifiedTime);
+      if (isValidValue(fields()[32], other.parseStatus)) {
+        this.parseStatus = (ai.platon.pulsar.persist.gora.generated.GParseStatus) data().deepCopy(fields()[32].schema(), other.parseStatus);
         fieldSetFlags()[32] = true;
       }
-      if (isValidValue(fields()[33], other.contentPublishTime)) {
-        this.contentPublishTime = (java.lang.Long) data().deepCopy(fields()[33].schema(), other.contentPublishTime);
+      if (isValidValue(fields()[33], other.pageTitle)) {
+        this.pageTitle = (java.lang.CharSequence) data().deepCopy(fields()[33].schema(), other.pageTitle);
         fieldSetFlags()[33] = true;
       }
-      if (isValidValue(fields()[34], other.prevContentPublishTime)) {
-        this.prevContentPublishTime = (java.lang.Long) data().deepCopy(fields()[34].schema(), other.prevContentPublishTime);
+      if (isValidValue(fields()[34], other.pageText)) {
+        this.pageText = (java.lang.CharSequence) data().deepCopy(fields()[34].schema(), other.pageText);
         fieldSetFlags()[34] = true;
       }
-      if (isValidValue(fields()[35], other.refContentPublishTime)) {
-        this.refContentPublishTime = (java.lang.Long) data().deepCopy(fields()[35].schema(), other.refContentPublishTime);
+      if (isValidValue(fields()[35], other.contentTitle)) {
+        this.contentTitle = (java.lang.CharSequence) data().deepCopy(fields()[35].schema(), other.contentTitle);
         fieldSetFlags()[35] = true;
       }
-      if (isValidValue(fields()[36], other.prevRefContentPublishTime)) {
-        this.prevRefContentPublishTime = (java.lang.Long) data().deepCopy(fields()[36].schema(), other.prevRefContentPublishTime);
+      if (isValidValue(fields()[36], other.contentText)) {
+        this.contentText = (java.lang.CharSequence) data().deepCopy(fields()[36].schema(), other.contentText);
         fieldSetFlags()[36] = true;
       }
-      if (isValidValue(fields()[37], other.prevSignature)) {
-        this.prevSignature = (java.nio.ByteBuffer) data().deepCopy(fields()[37].schema(), other.prevSignature);
+      if (isValidValue(fields()[37], other.contentTextLen)) {
+        this.contentTextLen = (java.lang.Integer) data().deepCopy(fields()[37].schema(), other.contentTextLen);
         fieldSetFlags()[37] = true;
       }
-      if (isValidValue(fields()[38], other.signature)) {
-        this.signature = (java.nio.ByteBuffer) data().deepCopy(fields()[38].schema(), other.signature);
+      if (isValidValue(fields()[38], other.pageCategory)) {
+        this.pageCategory = (java.lang.CharSequence) data().deepCopy(fields()[38].schema(), other.pageCategory);
         fieldSetFlags()[38] = true;
       }
-      if (isValidValue(fields()[39], other.contentScore)) {
-        this.contentScore = (java.lang.Float) data().deepCopy(fields()[39].schema(), other.contentScore);
+      if (isValidValue(fields()[39], other.contentModifiedTime)) {
+        this.contentModifiedTime = (java.lang.Long) data().deepCopy(fields()[39].schema(), other.contentModifiedTime);
         fieldSetFlags()[39] = true;
       }
-      if (isValidValue(fields()[40], other.score)) {
-        this.score = (java.lang.Float) data().deepCopy(fields()[40].schema(), other.score);
+      if (isValidValue(fields()[40], other.prevContentModifiedTime)) {
+        this.prevContentModifiedTime = (java.lang.Long) data().deepCopy(fields()[40].schema(), other.prevContentModifiedTime);
         fieldSetFlags()[40] = true;
       }
-      if (isValidValue(fields()[41], other.sortScore)) {
-        this.sortScore = (java.lang.CharSequence) data().deepCopy(fields()[41].schema(), other.sortScore);
+      if (isValidValue(fields()[41], other.contentPublishTime)) {
+        this.contentPublishTime = (java.lang.Long) data().deepCopy(fields()[41].schema(), other.contentPublishTime);
         fieldSetFlags()[41] = true;
       }
-      if (isValidValue(fields()[42], other.pageCounters)) {
-        this.pageCounters = (java.util.Map<java.lang.CharSequence,java.lang.Integer>) data().deepCopy(fields()[42].schema(), other.pageCounters);
+      if (isValidValue(fields()[42], other.prevContentPublishTime)) {
+        this.prevContentPublishTime = (java.lang.Long) data().deepCopy(fields()[42].schema(), other.prevContentPublishTime);
         fieldSetFlags()[42] = true;
       }
-      if (isValidValue(fields()[43], other.headers)) {
-        this.headers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[43].schema(), other.headers);
+      if (isValidValue(fields()[43], other.refContentPublishTime)) {
+        this.refContentPublishTime = (java.lang.Long) data().deepCopy(fields()[43].schema(), other.refContentPublishTime);
         fieldSetFlags()[43] = true;
       }
-      if (isValidValue(fields()[44], other.links)) {
-        this.links = (java.util.List<java.lang.CharSequence>) data().deepCopy(fields()[44].schema(), other.links);
+      if (isValidValue(fields()[44], other.prevRefContentPublishTime)) {
+        this.prevRefContentPublishTime = (java.lang.Long) data().deepCopy(fields()[44].schema(), other.prevRefContentPublishTime);
         fieldSetFlags()[44] = true;
       }
-      if (isValidValue(fields()[45], other.liveLinks)) {
-        this.liveLinks = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink>) data().deepCopy(fields()[45].schema(), other.liveLinks);
+      if (isValidValue(fields()[45], other.prevSignature)) {
+        this.prevSignature = (java.nio.ByteBuffer) data().deepCopy(fields()[45].schema(), other.prevSignature);
         fieldSetFlags()[45] = true;
       }
-      if (isValidValue(fields()[46], other.vividLinks)) {
-        this.vividLinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[46].schema(), other.vividLinks);
+      if (isValidValue(fields()[46], other.signature)) {
+        this.signature = (java.nio.ByteBuffer) data().deepCopy(fields()[46].schema(), other.signature);
         fieldSetFlags()[46] = true;
       }
-      if (isValidValue(fields()[47], other.deadLinks)) {
-        this.deadLinks = (java.util.List<java.lang.CharSequence>) data().deepCopy(fields()[47].schema(), other.deadLinks);
+      if (isValidValue(fields()[47], other.contentScore)) {
+        this.contentScore = (java.lang.Float) data().deepCopy(fields()[47].schema(), other.contentScore);
         fieldSetFlags()[47] = true;
       }
-      if (isValidValue(fields()[48], other.inlinks)) {
-        this.inlinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[48].schema(), other.inlinks);
+      if (isValidValue(fields()[48], other.score)) {
+        this.score = (java.lang.Float) data().deepCopy(fields()[48].schema(), other.score);
         fieldSetFlags()[48] = true;
       }
-      if (isValidValue(fields()[49], other.markers)) {
-        this.markers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[49].schema(), other.markers);
+      if (isValidValue(fields()[49], other.sortScore)) {
+        this.sortScore = (java.lang.CharSequence) data().deepCopy(fields()[49].schema(), other.sortScore);
         fieldSetFlags()[49] = true;
       }
-      if (isValidValue(fields()[50], other.metadata)) {
-        this.metadata = (java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer>) data().deepCopy(fields()[50].schema(), other.metadata);
+      if (isValidValue(fields()[50], other.pageCounters)) {
+        this.pageCounters = (java.util.Map<java.lang.CharSequence,java.lang.Integer>) data().deepCopy(fields()[50].schema(), other.pageCounters);
         fieldSetFlags()[50] = true;
       }
-      if (isValidValue(fields()[51], other.activeDomUrls)) {
-        this.activeDomUrls = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[51].schema(), other.activeDomUrls);
+      if (isValidValue(fields()[51], other.headers)) {
+        this.headers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[51].schema(), other.headers);
         fieldSetFlags()[51] = true;
       }
-      if (isValidValue(fields()[52], other.activeDomStatus)) {
-        this.activeDomStatus = (ai.platon.pulsar.persist.gora.generated.GActiveDomStatus) data().deepCopy(fields()[52].schema(), other.activeDomStatus);
+      if (isValidValue(fields()[52], other.links)) {
+        this.links = (java.util.List<java.lang.CharSequence>) data().deepCopy(fields()[52].schema(), other.links);
         fieldSetFlags()[52] = true;
       }
-      if (isValidValue(fields()[53], other.activeDomStats)) {
-        this.activeDomStats = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat>) data().deepCopy(fields()[53].schema(), other.activeDomStats);
+      if (isValidValue(fields()[53], other.liveLinks)) {
+        this.liveLinks = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink>) data().deepCopy(fields()[53].schema(), other.liveLinks);
         fieldSetFlags()[53] = true;
       }
-      if (isValidValue(fields()[54], other.pageModel)) {
-        this.pageModel = (java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup>) data().deepCopy(fields()[54].schema(), other.pageModel);
+      if (isValidValue(fields()[54], other.vividLinks)) {
+        this.vividLinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[54].schema(), other.vividLinks);
         fieldSetFlags()[54] = true;
+      }
+      if (isValidValue(fields()[55], other.deadLinks)) {
+        this.deadLinks = (java.util.List<java.lang.CharSequence>) data().deepCopy(fields()[55].schema(), other.deadLinks);
+        fieldSetFlags()[55] = true;
+      }
+      if (isValidValue(fields()[56], other.inlinks)) {
+        this.inlinks = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[56].schema(), other.inlinks);
+        fieldSetFlags()[56] = true;
+      }
+      if (isValidValue(fields()[57], other.markers)) {
+        this.markers = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) data().deepCopy(fields()[57].schema(), other.markers);
+        fieldSetFlags()[57] = true;
+      }
+      if (isValidValue(fields()[58], other.metadata)) {
+        this.metadata = (java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer>) data().deepCopy(fields()[58].schema(), other.metadata);
+        fieldSetFlags()[58] = true;
+      }
+      if (isValidValue(fields()[59], other.activeDOMStatus)) {
+        this.activeDOMStatus = (ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus) data().deepCopy(fields()[59].schema(), other.activeDOMStatus);
+        fieldSetFlags()[59] = true;
+      }
+      if (isValidValue(fields()[60], other.activeDOMStatTrace)) {
+        this.activeDOMStatTrace = (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat>) data().deepCopy(fields()[60].schema(), other.activeDOMStatTrace);
+        fieldSetFlags()[60] = true;
+      }
+      if (isValidValue(fields()[61], other.pageModelUpdateTime)) {
+        this.pageModelUpdateTime = (java.lang.Long) data().deepCopy(fields()[61].schema(), other.pageModelUpdateTime);
+        fieldSetFlags()[61] = true;
+      }
+      if (isValidValue(fields()[62], other.pageModel)) {
+        this.pageModel = (java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup>) data().deepCopy(fields()[62].schema(), other.pageModel);
+        fieldSetFlags()[62] = true;
       }
     }
 
+    /** Gets the value of the 'baseUrl' field */
+    public java.lang.CharSequence getBaseUrl() {
+      return baseUrl;
+    }
+    
+    /** Sets the value of the 'baseUrl' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setBaseUrl(java.lang.CharSequence value) {
+      validate(fields()[0], value);
+      this.baseUrl = value;
+      fieldSetFlags()[0] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'baseUrl' field has been set */
+    public boolean hasBaseUrl() {
+      return fieldSetFlags()[0];
+    }
+    
+    /** Clears the value of the 'baseUrl' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearBaseUrl() {
+      baseUrl = null;
+      fieldSetFlags()[0] = false;
+      return this;
+    }
+    
     /** Gets the value of the 'createTime' field */
     public java.lang.Long getCreateTime() {
       return createTime;
@@ -2024,20 +2322,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'createTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setCreateTime(long value) {
-      validate(fields()[0], value);
+      validate(fields()[1], value);
       this.createTime = value;
-      fieldSetFlags()[0] = true;
+      fieldSetFlags()[1] = true;
       return this; 
     }
     
     /** Checks whether the 'createTime' field has been set */
     public boolean hasCreateTime() {
-      return fieldSetFlags()[0];
+      return fieldSetFlags()[1];
     }
     
     /** Clears the value of the 'createTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearCreateTime() {
-      fieldSetFlags()[0] = false;
+      fieldSetFlags()[1] = false;
       return this;
     }
     
@@ -2048,20 +2346,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'distance' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setDistance(int value) {
-      validate(fields()[1], value);
+      validate(fields()[2], value);
       this.distance = value;
-      fieldSetFlags()[1] = true;
+      fieldSetFlags()[2] = true;
       return this; 
     }
     
     /** Checks whether the 'distance' field has been set */
     public boolean hasDistance() {
-      return fieldSetFlags()[1];
+      return fieldSetFlags()[2];
     }
     
     /** Clears the value of the 'distance' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearDistance() {
-      fieldSetFlags()[1] = false;
+      fieldSetFlags()[2] = false;
       return this;
     }
     
@@ -2072,20 +2370,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'fetchCount' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchCount(int value) {
-      validate(fields()[2], value);
+      validate(fields()[3], value);
       this.fetchCount = value;
-      fieldSetFlags()[2] = true;
+      fieldSetFlags()[3] = true;
       return this; 
     }
     
     /** Checks whether the 'fetchCount' field has been set */
     public boolean hasFetchCount() {
-      return fieldSetFlags()[2];
+      return fieldSetFlags()[3];
     }
     
     /** Clears the value of the 'fetchCount' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchCount() {
-      fieldSetFlags()[2] = false;
+      fieldSetFlags()[3] = false;
       return this;
     }
     
@@ -2096,43 +2394,19 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'fetchPriority' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchPriority(int value) {
-      validate(fields()[3], value);
+      validate(fields()[4], value);
       this.fetchPriority = value;
-      fieldSetFlags()[3] = true;
+      fieldSetFlags()[4] = true;
       return this; 
     }
     
     /** Checks whether the 'fetchPriority' field has been set */
     public boolean hasFetchPriority() {
-      return fieldSetFlags()[3];
+      return fieldSetFlags()[4];
     }
     
     /** Clears the value of the 'fetchPriority' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchPriority() {
-      fieldSetFlags()[3] = false;
-      return this;
-    }
-    
-    /** Gets the value of the 'fetchInterval' field */
-    public java.lang.Integer getFetchInterval() {
-      return fetchInterval;
-    }
-    
-    /** Sets the value of the 'fetchInterval' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchInterval(int value) {
-      validate(fields()[4], value);
-      this.fetchInterval = value;
-      fieldSetFlags()[4] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'fetchInterval' field has been set */
-    public boolean hasFetchInterval() {
-      return fieldSetFlags()[4];
-    }
-    
-    /** Clears the value of the 'fetchInterval' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchInterval() {
       fieldSetFlags()[4] = false;
       return this;
     }
@@ -2162,27 +2436,27 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
       return this;
     }
     
-    /** Gets the value of the 'options' field */
-    public java.lang.CharSequence getOptions() {
-      return options;
+    /** Gets the value of the 'args' field */
+    public java.lang.CharSequence getArgs() {
+      return args;
     }
     
-    /** Sets the value of the 'options' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setOptions(java.lang.CharSequence value) {
+    /** Sets the value of the 'args' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setArgs(java.lang.CharSequence value) {
       validate(fields()[6], value);
-      this.options = value;
+      this.args = value;
       fieldSetFlags()[6] = true;
       return this; 
     }
     
-    /** Checks whether the 'options' field has been set */
-    public boolean hasOptions() {
+    /** Checks whether the 'args' field has been set */
+    public boolean hasArgs() {
       return fieldSetFlags()[6];
     }
     
-    /** Clears the value of the 'options' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearOptions() {
-      options = null;
+    /** Clears the value of the 'args' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearArgs() {
+      args = null;
       fieldSetFlags()[6] = false;
       return this;
     }
@@ -2212,6 +2486,31 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
       return this;
     }
     
+    /** Gets the value of the 'resource' field */
+    public java.lang.Integer getResource() {
+      return resource;
+    }
+    
+    /** Sets the value of the 'resource' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setResource(java.lang.Integer value) {
+      validate(fields()[8], value);
+      this.resource = value;
+      fieldSetFlags()[8] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'resource' field has been set */
+    public boolean hasResource() {
+      return fieldSetFlags()[8];
+    }
+    
+    /** Clears the value of the 'resource' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearResource() {
+      resource = null;
+      fieldSetFlags()[8] = false;
+      return this;
+    }
+    
     /** Gets the value of the 'crawlStatus' field */
     public java.lang.Integer getCrawlStatus() {
       return crawlStatus;
@@ -2219,92 +2518,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'crawlStatus' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setCrawlStatus(int value) {
-      validate(fields()[8], value);
+      validate(fields()[9], value);
       this.crawlStatus = value;
-      fieldSetFlags()[8] = true;
+      fieldSetFlags()[9] = true;
       return this; 
     }
     
     /** Checks whether the 'crawlStatus' field has been set */
     public boolean hasCrawlStatus() {
-      return fieldSetFlags()[8];
+      return fieldSetFlags()[9];
     }
     
     /** Clears the value of the 'crawlStatus' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearCrawlStatus() {
-      fieldSetFlags()[8] = false;
-      return this;
-    }
-    
-    /** Gets the value of the 'prevFetchTime' field */
-    public java.lang.Long getPrevFetchTime() {
-      return prevFetchTime;
-    }
-    
-    /** Sets the value of the 'prevFetchTime' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevFetchTime(long value) {
-      validate(fields()[9], value);
-      this.prevFetchTime = value;
-      fieldSetFlags()[9] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'prevFetchTime' field has been set */
-    public boolean hasPrevFetchTime() {
-      return fieldSetFlags()[9];
-    }
-    
-    /** Clears the value of the 'prevFetchTime' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevFetchTime() {
       fieldSetFlags()[9] = false;
-      return this;
-    }
-    
-    /** Gets the value of the 'prevCrawlTime1' field */
-    public java.lang.Long getPrevCrawlTime1() {
-      return prevCrawlTime1;
-    }
-    
-    /** Sets the value of the 'prevCrawlTime1' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevCrawlTime1(long value) {
-      validate(fields()[10], value);
-      this.prevCrawlTime1 = value;
-      fieldSetFlags()[10] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'prevCrawlTime1' field has been set */
-    public boolean hasPrevCrawlTime1() {
-      return fieldSetFlags()[10];
-    }
-    
-    /** Clears the value of the 'prevCrawlTime1' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevCrawlTime1() {
-      fieldSetFlags()[10] = false;
-      return this;
-    }
-    
-    /** Gets the value of the 'fetchTime' field */
-    public java.lang.Long getFetchTime() {
-      return fetchTime;
-    }
-    
-    /** Sets the value of the 'fetchTime' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchTime(long value) {
-      validate(fields()[11], value);
-      this.fetchTime = value;
-      fieldSetFlags()[11] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'fetchTime' field has been set */
-    public boolean hasFetchTime() {
-      return fieldSetFlags()[11];
-    }
-    
-    /** Clears the value of the 'fetchTime' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchTime() {
-      fieldSetFlags()[11] = false;
       return this;
     }
     
@@ -2315,45 +2542,166 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'fetchRetries' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchRetries(int value) {
-      validate(fields()[12], value);
+      validate(fields()[10], value);
       this.fetchRetries = value;
-      fieldSetFlags()[12] = true;
+      fieldSetFlags()[10] = true;
       return this; 
     }
     
     /** Checks whether the 'fetchRetries' field has been set */
     public boolean hasFetchRetries() {
-      return fieldSetFlags()[12];
+      return fieldSetFlags()[10];
     }
     
     /** Clears the value of the 'fetchRetries' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchRetries() {
+      fieldSetFlags()[10] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'browser' field */
+    public java.lang.CharSequence getBrowser() {
+      return browser;
+    }
+    
+    /** Sets the value of the 'browser' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setBrowser(java.lang.CharSequence value) {
+      validate(fields()[11], value);
+      this.browser = value;
+      fieldSetFlags()[11] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'browser' field has been set */
+    public boolean hasBrowser() {
+      return fieldSetFlags()[11];
+    }
+    
+    /** Clears the value of the 'browser' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearBrowser() {
+      browser = null;
+      fieldSetFlags()[11] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'proxy' field */
+    public java.lang.CharSequence getProxy() {
+      return proxy;
+    }
+    
+    /** Sets the value of the 'proxy' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setProxy(java.lang.CharSequence value) {
+      validate(fields()[12], value);
+      this.proxy = value;
+      fieldSetFlags()[12] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'proxy' field has been set */
+    public boolean hasProxy() {
+      return fieldSetFlags()[12];
+    }
+    
+    /** Clears the value of the 'proxy' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearProxy() {
+      proxy = null;
       fieldSetFlags()[12] = false;
       return this;
     }
     
-    /** Gets the value of the 'reprUrl' field */
-    public java.lang.CharSequence getReprUrl() {
-      return reprUrl;
+    /** Gets the value of the 'fetchInterval' field */
+    public java.lang.Integer getFetchInterval() {
+      return fetchInterval;
     }
     
-    /** Sets the value of the 'reprUrl' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setReprUrl(java.lang.CharSequence value) {
+    /** Sets the value of the 'fetchInterval' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchInterval(int value) {
       validate(fields()[13], value);
-      this.reprUrl = value;
+      this.fetchInterval = value;
       fieldSetFlags()[13] = true;
       return this; 
     }
     
-    /** Checks whether the 'reprUrl' field has been set */
-    public boolean hasReprUrl() {
+    /** Checks whether the 'fetchInterval' field has been set */
+    public boolean hasFetchInterval() {
       return fieldSetFlags()[13];
     }
     
-    /** Clears the value of the 'reprUrl' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearReprUrl() {
-      reprUrl = null;
+    /** Clears the value of the 'fetchInterval' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchInterval() {
       fieldSetFlags()[13] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'prevFetchTime' field */
+    public java.lang.Long getPrevFetchTime() {
+      return prevFetchTime;
+    }
+    
+    /** Sets the value of the 'prevFetchTime' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevFetchTime(long value) {
+      validate(fields()[14], value);
+      this.prevFetchTime = value;
+      fieldSetFlags()[14] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'prevFetchTime' field has been set */
+    public boolean hasPrevFetchTime() {
+      return fieldSetFlags()[14];
+    }
+    
+    /** Clears the value of the 'prevFetchTime' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevFetchTime() {
+      fieldSetFlags()[14] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'prevCrawlTime1' field */
+    public java.lang.Long getPrevCrawlTime1() {
+      return prevCrawlTime1;
+    }
+    
+    /** Sets the value of the 'prevCrawlTime1' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevCrawlTime1(long value) {
+      validate(fields()[15], value);
+      this.prevCrawlTime1 = value;
+      fieldSetFlags()[15] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'prevCrawlTime1' field has been set */
+    public boolean hasPrevCrawlTime1() {
+      return fieldSetFlags()[15];
+    }
+    
+    /** Clears the value of the 'prevCrawlTime1' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevCrawlTime1() {
+      fieldSetFlags()[15] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'fetchTime' field */
+    public java.lang.Long getFetchTime() {
+      return fetchTime;
+    }
+    
+    /** Sets the value of the 'fetchTime' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setFetchTime(long value) {
+      validate(fields()[16], value);
+      this.fetchTime = value;
+      fieldSetFlags()[16] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'fetchTime' field has been set */
+    public boolean hasFetchTime() {
+      return fieldSetFlags()[16];
+    }
+    
+    /** Clears the value of the 'fetchTime' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearFetchTime() {
+      fieldSetFlags()[16] = false;
       return this;
     }
     
@@ -2364,20 +2712,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'prevModifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevModifiedTime(long value) {
-      validate(fields()[14], value);
+      validate(fields()[17], value);
       this.prevModifiedTime = value;
-      fieldSetFlags()[14] = true;
+      fieldSetFlags()[17] = true;
       return this; 
     }
     
     /** Checks whether the 'prevModifiedTime' field has been set */
     public boolean hasPrevModifiedTime() {
-      return fieldSetFlags()[14];
+      return fieldSetFlags()[17];
     }
     
     /** Clears the value of the 'prevModifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevModifiedTime() {
-      fieldSetFlags()[14] = false;
+      fieldSetFlags()[17] = false;
       return this;
     }
     
@@ -2388,20 +2736,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'modifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setModifiedTime(long value) {
-      validate(fields()[15], value);
+      validate(fields()[18], value);
       this.modifiedTime = value;
-      fieldSetFlags()[15] = true;
+      fieldSetFlags()[18] = true;
       return this; 
     }
     
     /** Checks whether the 'modifiedTime' field has been set */
     public boolean hasModifiedTime() {
-      return fieldSetFlags()[15];
+      return fieldSetFlags()[18];
     }
     
     /** Clears the value of the 'modifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearModifiedTime() {
-      fieldSetFlags()[15] = false;
+      fieldSetFlags()[18] = false;
       return this;
     }
     
@@ -2412,21 +2760,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'protocolStatus' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setProtocolStatus(ai.platon.pulsar.persist.gora.generated.GProtocolStatus value) {
-      validate(fields()[16], value);
+      validate(fields()[19], value);
       this.protocolStatus = value;
-      fieldSetFlags()[16] = true;
+      fieldSetFlags()[19] = true;
       return this; 
     }
     
     /** Checks whether the 'protocolStatus' field has been set */
     public boolean hasProtocolStatus() {
-      return fieldSetFlags()[16];
+      return fieldSetFlags()[19];
     }
     
     /** Clears the value of the 'protocolStatus' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearProtocolStatus() {
       protocolStatus = null;
-      fieldSetFlags()[16] = false;
+      fieldSetFlags()[19] = false;
       return this;
     }
     
@@ -2437,21 +2785,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'encoding' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setEncoding(java.lang.CharSequence value) {
-      validate(fields()[17], value);
+      validate(fields()[20], value);
       this.encoding = value;
-      fieldSetFlags()[17] = true;
+      fieldSetFlags()[20] = true;
       return this; 
     }
     
     /** Checks whether the 'encoding' field has been set */
     public boolean hasEncoding() {
-      return fieldSetFlags()[17];
+      return fieldSetFlags()[20];
     }
     
     /** Clears the value of the 'encoding' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearEncoding() {
       encoding = null;
-      fieldSetFlags()[17] = false;
+      fieldSetFlags()[20] = false;
       return this;
     }
     
@@ -2462,21 +2810,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentType' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentType(java.lang.CharSequence value) {
-      validate(fields()[18], value);
+      validate(fields()[21], value);
       this.contentType = value;
-      fieldSetFlags()[18] = true;
+      fieldSetFlags()[21] = true;
       return this; 
     }
     
     /** Checks whether the 'contentType' field has been set */
     public boolean hasContentType() {
-      return fieldSetFlags()[18];
+      return fieldSetFlags()[21];
     }
     
     /** Clears the value of the 'contentType' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentType() {
       contentType = null;
-      fieldSetFlags()[18] = false;
+      fieldSetFlags()[21] = false;
       return this;
     }
     
@@ -2487,46 +2835,121 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'content' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContent(java.nio.ByteBuffer value) {
-      validate(fields()[19], value);
+      validate(fields()[22], value);
       this.content = value;
-      fieldSetFlags()[19] = true;
+      fieldSetFlags()[22] = true;
       return this; 
     }
     
     /** Checks whether the 'content' field has been set */
     public boolean hasContent() {
-      return fieldSetFlags()[19];
+      return fieldSetFlags()[22];
     }
     
     /** Clears the value of the 'content' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContent() {
       content = null;
-      fieldSetFlags()[19] = false;
+      fieldSetFlags()[22] = false;
       return this;
     }
     
-    /** Gets the value of the 'baseUrl' field */
-    public java.lang.CharSequence getBaseUrl() {
-      return baseUrl;
+    /** Gets the value of the 'contentLength' field */
+    public java.lang.Integer getContentLength() {
+      return contentLength;
     }
     
-    /** Sets the value of the 'baseUrl' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setBaseUrl(java.lang.CharSequence value) {
-      validate(fields()[20], value);
-      this.baseUrl = value;
-      fieldSetFlags()[20] = true;
+    /** Sets the value of the 'contentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentLength(java.lang.Integer value) {
+      validate(fields()[23], value);
+      this.contentLength = value;
+      fieldSetFlags()[23] = true;
       return this; 
     }
     
-    /** Checks whether the 'baseUrl' field has been set */
-    public boolean hasBaseUrl() {
-      return fieldSetFlags()[20];
+    /** Checks whether the 'contentLength' field has been set */
+    public boolean hasContentLength() {
+      return fieldSetFlags()[23];
     }
     
-    /** Clears the value of the 'baseUrl' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearBaseUrl() {
-      baseUrl = null;
-      fieldSetFlags()[20] = false;
+    /** Clears the value of the 'contentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentLength() {
+      contentLength = null;
+      fieldSetFlags()[23] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'lastContentLength' field */
+    public java.lang.Integer getLastContentLength() {
+      return lastContentLength;
+    }
+    
+    /** Sets the value of the 'lastContentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setLastContentLength(java.lang.Integer value) {
+      validate(fields()[24], value);
+      this.lastContentLength = value;
+      fieldSetFlags()[24] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'lastContentLength' field has been set */
+    public boolean hasLastContentLength() {
+      return fieldSetFlags()[24];
+    }
+    
+    /** Clears the value of the 'lastContentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearLastContentLength() {
+      lastContentLength = null;
+      fieldSetFlags()[24] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'aveContentLength' field */
+    public java.lang.Integer getAveContentLength() {
+      return aveContentLength;
+    }
+    
+    /** Sets the value of the 'aveContentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setAveContentLength(java.lang.Integer value) {
+      validate(fields()[25], value);
+      this.aveContentLength = value;
+      fieldSetFlags()[25] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'aveContentLength' field has been set */
+    public boolean hasAveContentLength() {
+      return fieldSetFlags()[25];
+    }
+    
+    /** Clears the value of the 'aveContentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearAveContentLength() {
+      aveContentLength = null;
+      fieldSetFlags()[25] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'persistedContentLength' field */
+    public java.lang.Integer getPersistedContentLength() {
+      return persistedContentLength;
+    }
+    
+    /** Sets the value of the 'persistedContentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPersistedContentLength(java.lang.Integer value) {
+      validate(fields()[26], value);
+      this.persistedContentLength = value;
+      fieldSetFlags()[26] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'persistedContentLength' field has been set */
+    public boolean hasPersistedContentLength() {
+      return fieldSetFlags()[26];
+    }
+    
+    /** Clears the value of the 'persistedContentLength' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPersistedContentLength() {
+      persistedContentLength = null;
+      fieldSetFlags()[26] = false;
       return this;
     }
     
@@ -2537,21 +2960,71 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'referrer' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setReferrer(java.lang.CharSequence value) {
-      validate(fields()[21], value);
+      validate(fields()[27], value);
       this.referrer = value;
-      fieldSetFlags()[21] = true;
+      fieldSetFlags()[27] = true;
       return this; 
     }
     
     /** Checks whether the 'referrer' field has been set */
     public boolean hasReferrer() {
-      return fieldSetFlags()[21];
+      return fieldSetFlags()[27];
     }
     
     /** Clears the value of the 'referrer' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearReferrer() {
       referrer = null;
-      fieldSetFlags()[21] = false;
+      fieldSetFlags()[27] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'reprUrl' field */
+    public java.lang.CharSequence getReprUrl() {
+      return reprUrl;
+    }
+    
+    /** Sets the value of the 'reprUrl' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setReprUrl(java.lang.CharSequence value) {
+      validate(fields()[28], value);
+      this.reprUrl = value;
+      fieldSetFlags()[28] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'reprUrl' field has been set */
+    public boolean hasReprUrl() {
+      return fieldSetFlags()[28];
+    }
+    
+    /** Clears the value of the 'reprUrl' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearReprUrl() {
+      reprUrl = null;
+      fieldSetFlags()[28] = false;
+      return this;
+    }
+    
+    /** Gets the value of the 'htmlIntegrity' field */
+    public java.lang.CharSequence getHtmlIntegrity() {
+      return htmlIntegrity;
+    }
+    
+    /** Sets the value of the 'htmlIntegrity' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setHtmlIntegrity(java.lang.CharSequence value) {
+      validate(fields()[29], value);
+      this.htmlIntegrity = value;
+      fieldSetFlags()[29] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'htmlIntegrity' field has been set */
+    public boolean hasHtmlIntegrity() {
+      return fieldSetFlags()[29];
+    }
+    
+    /** Clears the value of the 'htmlIntegrity' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearHtmlIntegrity() {
+      htmlIntegrity = null;
+      fieldSetFlags()[29] = false;
       return this;
     }
     
@@ -2562,21 +3035,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'anchor' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setAnchor(java.lang.CharSequence value) {
-      validate(fields()[22], value);
+      validate(fields()[30], value);
       this.anchor = value;
-      fieldSetFlags()[22] = true;
+      fieldSetFlags()[30] = true;
       return this; 
     }
     
     /** Checks whether the 'anchor' field has been set */
     public boolean hasAnchor() {
-      return fieldSetFlags()[22];
+      return fieldSetFlags()[30];
     }
     
     /** Clears the value of the 'anchor' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearAnchor() {
       anchor = null;
-      fieldSetFlags()[22] = false;
+      fieldSetFlags()[30] = false;
       return this;
     }
     
@@ -2587,20 +3060,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'anchorOrder' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setAnchorOrder(int value) {
-      validate(fields()[23], value);
+      validate(fields()[31], value);
       this.anchorOrder = value;
-      fieldSetFlags()[23] = true;
+      fieldSetFlags()[31] = true;
       return this; 
     }
     
     /** Checks whether the 'anchorOrder' field has been set */
     public boolean hasAnchorOrder() {
-      return fieldSetFlags()[23];
+      return fieldSetFlags()[31];
     }
     
     /** Clears the value of the 'anchorOrder' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearAnchorOrder() {
-      fieldSetFlags()[23] = false;
+      fieldSetFlags()[31] = false;
       return this;
     }
     
@@ -2611,21 +3084,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'parseStatus' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setParseStatus(ai.platon.pulsar.persist.gora.generated.GParseStatus value) {
-      validate(fields()[24], value);
+      validate(fields()[32], value);
       this.parseStatus = value;
-      fieldSetFlags()[24] = true;
+      fieldSetFlags()[32] = true;
       return this; 
     }
     
     /** Checks whether the 'parseStatus' field has been set */
     public boolean hasParseStatus() {
-      return fieldSetFlags()[24];
+      return fieldSetFlags()[32];
     }
     
     /** Clears the value of the 'parseStatus' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearParseStatus() {
       parseStatus = null;
-      fieldSetFlags()[24] = false;
+      fieldSetFlags()[32] = false;
       return this;
     }
     
@@ -2636,21 +3109,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'pageTitle' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPageTitle(java.lang.CharSequence value) {
-      validate(fields()[25], value);
+      validate(fields()[33], value);
       this.pageTitle = value;
-      fieldSetFlags()[25] = true;
+      fieldSetFlags()[33] = true;
       return this; 
     }
     
     /** Checks whether the 'pageTitle' field has been set */
     public boolean hasPageTitle() {
-      return fieldSetFlags()[25];
+      return fieldSetFlags()[33];
     }
     
     /** Clears the value of the 'pageTitle' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPageTitle() {
       pageTitle = null;
-      fieldSetFlags()[25] = false;
+      fieldSetFlags()[33] = false;
       return this;
     }
     
@@ -2661,21 +3134,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'pageText' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPageText(java.lang.CharSequence value) {
-      validate(fields()[26], value);
+      validate(fields()[34], value);
       this.pageText = value;
-      fieldSetFlags()[26] = true;
+      fieldSetFlags()[34] = true;
       return this; 
     }
     
     /** Checks whether the 'pageText' field has been set */
     public boolean hasPageText() {
-      return fieldSetFlags()[26];
+      return fieldSetFlags()[34];
     }
     
     /** Clears the value of the 'pageText' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPageText() {
       pageText = null;
-      fieldSetFlags()[26] = false;
+      fieldSetFlags()[34] = false;
       return this;
     }
     
@@ -2686,21 +3159,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentTitle' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentTitle(java.lang.CharSequence value) {
-      validate(fields()[27], value);
+      validate(fields()[35], value);
       this.contentTitle = value;
-      fieldSetFlags()[27] = true;
+      fieldSetFlags()[35] = true;
       return this; 
     }
     
     /** Checks whether the 'contentTitle' field has been set */
     public boolean hasContentTitle() {
-      return fieldSetFlags()[27];
+      return fieldSetFlags()[35];
     }
     
     /** Clears the value of the 'contentTitle' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentTitle() {
       contentTitle = null;
-      fieldSetFlags()[27] = false;
+      fieldSetFlags()[35] = false;
       return this;
     }
     
@@ -2711,21 +3184,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentText' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentText(java.lang.CharSequence value) {
-      validate(fields()[28], value);
+      validate(fields()[36], value);
       this.contentText = value;
-      fieldSetFlags()[28] = true;
+      fieldSetFlags()[36] = true;
       return this; 
     }
     
     /** Checks whether the 'contentText' field has been set */
     public boolean hasContentText() {
-      return fieldSetFlags()[28];
+      return fieldSetFlags()[36];
     }
     
     /** Clears the value of the 'contentText' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentText() {
       contentText = null;
-      fieldSetFlags()[28] = false;
+      fieldSetFlags()[36] = false;
       return this;
     }
     
@@ -2736,20 +3209,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentTextLen' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentTextLen(int value) {
-      validate(fields()[29], value);
+      validate(fields()[37], value);
       this.contentTextLen = value;
-      fieldSetFlags()[29] = true;
+      fieldSetFlags()[37] = true;
       return this; 
     }
     
     /** Checks whether the 'contentTextLen' field has been set */
     public boolean hasContentTextLen() {
-      return fieldSetFlags()[29];
+      return fieldSetFlags()[37];
     }
     
     /** Clears the value of the 'contentTextLen' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentTextLen() {
-      fieldSetFlags()[29] = false;
+      fieldSetFlags()[37] = false;
       return this;
     }
     
@@ -2760,21 +3233,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'pageCategory' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPageCategory(java.lang.CharSequence value) {
-      validate(fields()[30], value);
+      validate(fields()[38], value);
       this.pageCategory = value;
-      fieldSetFlags()[30] = true;
+      fieldSetFlags()[38] = true;
       return this; 
     }
     
     /** Checks whether the 'pageCategory' field has been set */
     public boolean hasPageCategory() {
-      return fieldSetFlags()[30];
+      return fieldSetFlags()[38];
     }
     
     /** Clears the value of the 'pageCategory' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPageCategory() {
       pageCategory = null;
-      fieldSetFlags()[30] = false;
+      fieldSetFlags()[38] = false;
       return this;
     }
     
@@ -2785,20 +3258,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentModifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentModifiedTime(long value) {
-      validate(fields()[31], value);
+      validate(fields()[39], value);
       this.contentModifiedTime = value;
-      fieldSetFlags()[31] = true;
+      fieldSetFlags()[39] = true;
       return this; 
     }
     
     /** Checks whether the 'contentModifiedTime' field has been set */
     public boolean hasContentModifiedTime() {
-      return fieldSetFlags()[31];
+      return fieldSetFlags()[39];
     }
     
     /** Clears the value of the 'contentModifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentModifiedTime() {
-      fieldSetFlags()[31] = false;
+      fieldSetFlags()[39] = false;
       return this;
     }
     
@@ -2809,20 +3282,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'prevContentModifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevContentModifiedTime(long value) {
-      validate(fields()[32], value);
+      validate(fields()[40], value);
       this.prevContentModifiedTime = value;
-      fieldSetFlags()[32] = true;
+      fieldSetFlags()[40] = true;
       return this; 
     }
     
     /** Checks whether the 'prevContentModifiedTime' field has been set */
     public boolean hasPrevContentModifiedTime() {
-      return fieldSetFlags()[32];
+      return fieldSetFlags()[40];
     }
     
     /** Clears the value of the 'prevContentModifiedTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevContentModifiedTime() {
-      fieldSetFlags()[32] = false;
+      fieldSetFlags()[40] = false;
       return this;
     }
     
@@ -2833,20 +3306,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentPublishTime(long value) {
-      validate(fields()[33], value);
+      validate(fields()[41], value);
       this.contentPublishTime = value;
-      fieldSetFlags()[33] = true;
+      fieldSetFlags()[41] = true;
       return this; 
     }
     
     /** Checks whether the 'contentPublishTime' field has been set */
     public boolean hasContentPublishTime() {
-      return fieldSetFlags()[33];
+      return fieldSetFlags()[41];
     }
     
     /** Clears the value of the 'contentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentPublishTime() {
-      fieldSetFlags()[33] = false;
+      fieldSetFlags()[41] = false;
       return this;
     }
     
@@ -2857,20 +3330,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'prevContentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevContentPublishTime(long value) {
-      validate(fields()[34], value);
+      validate(fields()[42], value);
       this.prevContentPublishTime = value;
-      fieldSetFlags()[34] = true;
+      fieldSetFlags()[42] = true;
       return this; 
     }
     
     /** Checks whether the 'prevContentPublishTime' field has been set */
     public boolean hasPrevContentPublishTime() {
-      return fieldSetFlags()[34];
+      return fieldSetFlags()[42];
     }
     
     /** Clears the value of the 'prevContentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevContentPublishTime() {
-      fieldSetFlags()[34] = false;
+      fieldSetFlags()[42] = false;
       return this;
     }
     
@@ -2881,20 +3354,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'refContentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setRefContentPublishTime(long value) {
-      validate(fields()[35], value);
+      validate(fields()[43], value);
       this.refContentPublishTime = value;
-      fieldSetFlags()[35] = true;
+      fieldSetFlags()[43] = true;
       return this; 
     }
     
     /** Checks whether the 'refContentPublishTime' field has been set */
     public boolean hasRefContentPublishTime() {
-      return fieldSetFlags()[35];
+      return fieldSetFlags()[43];
     }
     
     /** Clears the value of the 'refContentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearRefContentPublishTime() {
-      fieldSetFlags()[35] = false;
+      fieldSetFlags()[43] = false;
       return this;
     }
     
@@ -2905,20 +3378,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'prevRefContentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevRefContentPublishTime(long value) {
-      validate(fields()[36], value);
+      validate(fields()[44], value);
       this.prevRefContentPublishTime = value;
-      fieldSetFlags()[36] = true;
+      fieldSetFlags()[44] = true;
       return this; 
     }
     
     /** Checks whether the 'prevRefContentPublishTime' field has been set */
     public boolean hasPrevRefContentPublishTime() {
-      return fieldSetFlags()[36];
+      return fieldSetFlags()[44];
     }
     
     /** Clears the value of the 'prevRefContentPublishTime' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevRefContentPublishTime() {
-      fieldSetFlags()[36] = false;
+      fieldSetFlags()[44] = false;
       return this;
     }
     
@@ -2929,21 +3402,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'prevSignature' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPrevSignature(java.nio.ByteBuffer value) {
-      validate(fields()[37], value);
+      validate(fields()[45], value);
       this.prevSignature = value;
-      fieldSetFlags()[37] = true;
+      fieldSetFlags()[45] = true;
       return this; 
     }
     
     /** Checks whether the 'prevSignature' field has been set */
     public boolean hasPrevSignature() {
-      return fieldSetFlags()[37];
+      return fieldSetFlags()[45];
     }
     
     /** Clears the value of the 'prevSignature' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPrevSignature() {
       prevSignature = null;
-      fieldSetFlags()[37] = false;
+      fieldSetFlags()[45] = false;
       return this;
     }
     
@@ -2954,21 +3427,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'signature' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setSignature(java.nio.ByteBuffer value) {
-      validate(fields()[38], value);
+      validate(fields()[46], value);
       this.signature = value;
-      fieldSetFlags()[38] = true;
+      fieldSetFlags()[46] = true;
       return this; 
     }
     
     /** Checks whether the 'signature' field has been set */
     public boolean hasSignature() {
-      return fieldSetFlags()[38];
+      return fieldSetFlags()[46];
     }
     
     /** Clears the value of the 'signature' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearSignature() {
       signature = null;
-      fieldSetFlags()[38] = false;
+      fieldSetFlags()[46] = false;
       return this;
     }
     
@@ -2979,20 +3452,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'contentScore' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setContentScore(float value) {
-      validate(fields()[39], value);
+      validate(fields()[47], value);
       this.contentScore = value;
-      fieldSetFlags()[39] = true;
+      fieldSetFlags()[47] = true;
       return this; 
     }
     
     /** Checks whether the 'contentScore' field has been set */
     public boolean hasContentScore() {
-      return fieldSetFlags()[39];
+      return fieldSetFlags()[47];
     }
     
     /** Clears the value of the 'contentScore' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearContentScore() {
-      fieldSetFlags()[39] = false;
+      fieldSetFlags()[47] = false;
       return this;
     }
     
@@ -3003,20 +3476,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'score' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setScore(float value) {
-      validate(fields()[40], value);
+      validate(fields()[48], value);
       this.score = value;
-      fieldSetFlags()[40] = true;
+      fieldSetFlags()[48] = true;
       return this; 
     }
     
     /** Checks whether the 'score' field has been set */
     public boolean hasScore() {
-      return fieldSetFlags()[40];
+      return fieldSetFlags()[48];
     }
     
     /** Clears the value of the 'score' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearScore() {
-      fieldSetFlags()[40] = false;
+      fieldSetFlags()[48] = false;
       return this;
     }
     
@@ -3027,21 +3500,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'sortScore' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setSortScore(java.lang.CharSequence value) {
-      validate(fields()[41], value);
+      validate(fields()[49], value);
       this.sortScore = value;
-      fieldSetFlags()[41] = true;
+      fieldSetFlags()[49] = true;
       return this; 
     }
     
     /** Checks whether the 'sortScore' field has been set */
     public boolean hasSortScore() {
-      return fieldSetFlags()[41];
+      return fieldSetFlags()[49];
     }
     
     /** Clears the value of the 'sortScore' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearSortScore() {
       sortScore = null;
-      fieldSetFlags()[41] = false;
+      fieldSetFlags()[49] = false;
       return this;
     }
     
@@ -3052,21 +3525,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'pageCounters' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPageCounters(java.util.Map<java.lang.CharSequence,java.lang.Integer> value) {
-      validate(fields()[42], value);
+      validate(fields()[50], value);
       this.pageCounters = value;
-      fieldSetFlags()[42] = true;
+      fieldSetFlags()[50] = true;
       return this; 
     }
     
     /** Checks whether the 'pageCounters' field has been set */
     public boolean hasPageCounters() {
-      return fieldSetFlags()[42];
+      return fieldSetFlags()[50];
     }
     
     /** Clears the value of the 'pageCounters' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPageCounters() {
       pageCounters = null;
-      fieldSetFlags()[42] = false;
+      fieldSetFlags()[50] = false;
       return this;
     }
     
@@ -3077,21 +3550,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'headers' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setHeaders(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
-      validate(fields()[43], value);
+      validate(fields()[51], value);
       this.headers = value;
-      fieldSetFlags()[43] = true;
+      fieldSetFlags()[51] = true;
       return this; 
     }
     
     /** Checks whether the 'headers' field has been set */
     public boolean hasHeaders() {
-      return fieldSetFlags()[43];
+      return fieldSetFlags()[51];
     }
     
     /** Clears the value of the 'headers' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearHeaders() {
       headers = null;
-      fieldSetFlags()[43] = false;
+      fieldSetFlags()[51] = false;
       return this;
     }
     
@@ -3102,21 +3575,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'links' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setLinks(java.util.List<java.lang.CharSequence> value) {
-      validate(fields()[44], value);
+      validate(fields()[52], value);
       this.links = value;
-      fieldSetFlags()[44] = true;
+      fieldSetFlags()[52] = true;
       return this; 
     }
     
     /** Checks whether the 'links' field has been set */
     public boolean hasLinks() {
-      return fieldSetFlags()[44];
+      return fieldSetFlags()[52];
     }
     
     /** Clears the value of the 'links' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearLinks() {
       links = null;
-      fieldSetFlags()[44] = false;
+      fieldSetFlags()[52] = false;
       return this;
     }
     
@@ -3127,21 +3600,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'liveLinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setLiveLinks(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink> value) {
-      validate(fields()[45], value);
+      validate(fields()[53], value);
       this.liveLinks = value;
-      fieldSetFlags()[45] = true;
+      fieldSetFlags()[53] = true;
       return this; 
     }
     
     /** Checks whether the 'liveLinks' field has been set */
     public boolean hasLiveLinks() {
-      return fieldSetFlags()[45];
+      return fieldSetFlags()[53];
     }
     
     /** Clears the value of the 'liveLinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearLiveLinks() {
       liveLinks = null;
-      fieldSetFlags()[45] = false;
+      fieldSetFlags()[53] = false;
       return this;
     }
     
@@ -3152,21 +3625,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'vividLinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setVividLinks(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
-      validate(fields()[46], value);
+      validate(fields()[54], value);
       this.vividLinks = value;
-      fieldSetFlags()[46] = true;
+      fieldSetFlags()[54] = true;
       return this; 
     }
     
     /** Checks whether the 'vividLinks' field has been set */
     public boolean hasVividLinks() {
-      return fieldSetFlags()[46];
+      return fieldSetFlags()[54];
     }
     
     /** Clears the value of the 'vividLinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearVividLinks() {
       vividLinks = null;
-      fieldSetFlags()[46] = false;
+      fieldSetFlags()[54] = false;
       return this;
     }
     
@@ -3177,21 +3650,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'deadLinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setDeadLinks(java.util.List<java.lang.CharSequence> value) {
-      validate(fields()[47], value);
+      validate(fields()[55], value);
       this.deadLinks = value;
-      fieldSetFlags()[47] = true;
+      fieldSetFlags()[55] = true;
       return this; 
     }
     
     /** Checks whether the 'deadLinks' field has been set */
     public boolean hasDeadLinks() {
-      return fieldSetFlags()[47];
+      return fieldSetFlags()[55];
     }
     
     /** Clears the value of the 'deadLinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearDeadLinks() {
       deadLinks = null;
-      fieldSetFlags()[47] = false;
+      fieldSetFlags()[55] = false;
       return this;
     }
     
@@ -3202,21 +3675,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'inlinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setInlinks(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
-      validate(fields()[48], value);
+      validate(fields()[56], value);
       this.inlinks = value;
-      fieldSetFlags()[48] = true;
+      fieldSetFlags()[56] = true;
       return this; 
     }
     
     /** Checks whether the 'inlinks' field has been set */
     public boolean hasInlinks() {
-      return fieldSetFlags()[48];
+      return fieldSetFlags()[56];
     }
     
     /** Clears the value of the 'inlinks' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearInlinks() {
       inlinks = null;
-      fieldSetFlags()[48] = false;
+      fieldSetFlags()[56] = false;
       return this;
     }
     
@@ -3227,21 +3700,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'markers' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setMarkers(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
-      validate(fields()[49], value);
+      validate(fields()[57], value);
       this.markers = value;
-      fieldSetFlags()[49] = true;
+      fieldSetFlags()[57] = true;
       return this; 
     }
     
     /** Checks whether the 'markers' field has been set */
     public boolean hasMarkers() {
-      return fieldSetFlags()[49];
+      return fieldSetFlags()[57];
     }
     
     /** Clears the value of the 'markers' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearMarkers() {
       markers = null;
-      fieldSetFlags()[49] = false;
+      fieldSetFlags()[57] = false;
       return this;
     }
     
@@ -3252,96 +3725,95 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'metadata' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setMetadata(java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer> value) {
-      validate(fields()[50], value);
+      validate(fields()[58], value);
       this.metadata = value;
-      fieldSetFlags()[50] = true;
+      fieldSetFlags()[58] = true;
       return this; 
     }
     
     /** Checks whether the 'metadata' field has been set */
     public boolean hasMetadata() {
-      return fieldSetFlags()[50];
+      return fieldSetFlags()[58];
     }
     
     /** Clears the value of the 'metadata' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearMetadata() {
       metadata = null;
-      fieldSetFlags()[50] = false;
+      fieldSetFlags()[58] = false;
       return this;
     }
     
-    /** Gets the value of the 'activeDomUrls' field */
-    public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> getActiveDomUrls() {
-      return activeDomUrls;
+    /** Gets the value of the 'activeDOMStatus' field */
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus getActiveDOMStatus() {
+      return activeDOMStatus;
     }
     
-    /** Sets the value of the 'activeDomUrls' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setActiveDomUrls(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
-      validate(fields()[51], value);
-      this.activeDomUrls = value;
-      fieldSetFlags()[51] = true;
+    /** Sets the value of the 'activeDOMStatus' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setActiveDOMStatus(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus value) {
+      validate(fields()[59], value);
+      this.activeDOMStatus = value;
+      fieldSetFlags()[59] = true;
       return this; 
     }
     
-    /** Checks whether the 'activeDomUrls' field has been set */
-    public boolean hasActiveDomUrls() {
-      return fieldSetFlags()[51];
+    /** Checks whether the 'activeDOMStatus' field has been set */
+    public boolean hasActiveDOMStatus() {
+      return fieldSetFlags()[59];
     }
     
-    /** Clears the value of the 'activeDomUrls' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearActiveDomUrls() {
-      activeDomUrls = null;
-      fieldSetFlags()[51] = false;
+    /** Clears the value of the 'activeDOMStatus' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearActiveDOMStatus() {
+      activeDOMStatus = null;
+      fieldSetFlags()[59] = false;
       return this;
     }
     
-    /** Gets the value of the 'activeDomStatus' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus getActiveDomStatus() {
-      return activeDomStatus;
+    /** Gets the value of the 'activeDOMStatTrace' field */
+    public java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> getActiveDOMStatTrace() {
+      return activeDOMStatTrace;
     }
     
-    /** Sets the value of the 'activeDomStatus' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setActiveDomStatus(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus value) {
-      validate(fields()[52], value);
-      this.activeDomStatus = value;
-      fieldSetFlags()[52] = true;
+    /** Sets the value of the 'activeDOMStatTrace' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setActiveDOMStatTrace(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> value) {
+      validate(fields()[60], value);
+      this.activeDOMStatTrace = value;
+      fieldSetFlags()[60] = true;
       return this; 
     }
     
-    /** Checks whether the 'activeDomStatus' field has been set */
-    public boolean hasActiveDomStatus() {
-      return fieldSetFlags()[52];
+    /** Checks whether the 'activeDOMStatTrace' field has been set */
+    public boolean hasActiveDOMStatTrace() {
+      return fieldSetFlags()[60];
     }
     
-    /** Clears the value of the 'activeDomStatus' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearActiveDomStatus() {
-      activeDomStatus = null;
-      fieldSetFlags()[52] = false;
+    /** Clears the value of the 'activeDOMStatTrace' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearActiveDOMStatTrace() {
+      activeDOMStatTrace = null;
+      fieldSetFlags()[60] = false;
       return this;
     }
     
-    /** Gets the value of the 'activeDomStats' field */
-    public java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> getActiveDomStats() {
-      return activeDomStats;
+    /** Gets the value of the 'pageModelUpdateTime' field */
+    public java.lang.Long getPageModelUpdateTime() {
+      return pageModelUpdateTime;
     }
     
-    /** Sets the value of the 'activeDomStats' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setActiveDomStats(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> value) {
-      validate(fields()[53], value);
-      this.activeDomStats = value;
-      fieldSetFlags()[53] = true;
+    /** Sets the value of the 'pageModelUpdateTime' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPageModelUpdateTime(long value) {
+      validate(fields()[61], value);
+      this.pageModelUpdateTime = value;
+      fieldSetFlags()[61] = true;
       return this; 
     }
     
-    /** Checks whether the 'activeDomStats' field has been set */
-    public boolean hasActiveDomStats() {
-      return fieldSetFlags()[53];
+    /** Checks whether the 'pageModelUpdateTime' field has been set */
+    public boolean hasPageModelUpdateTime() {
+      return fieldSetFlags()[61];
     }
     
-    /** Clears the value of the 'activeDomStats' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearActiveDomStats() {
-      activeDomStats = null;
-      fieldSetFlags()[53] = false;
+    /** Clears the value of the 'pageModelUpdateTime' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPageModelUpdateTime() {
+      fieldSetFlags()[61] = false;
       return this;
     }
     
@@ -3352,21 +3824,21 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     
     /** Sets the value of the 'pageModel' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setPageModel(java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup> value) {
-      validate(fields()[54], value);
+      validate(fields()[62], value);
       this.pageModel = value;
-      fieldSetFlags()[54] = true;
+      fieldSetFlags()[62] = true;
       return this; 
     }
     
     /** Checks whether the 'pageModel' field has been set */
     public boolean hasPageModel() {
-      return fieldSetFlags()[54];
+      return fieldSetFlags()[62];
     }
     
     /** Clears the value of the 'pageModel' field */
     public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearPageModel() {
       pageModel = null;
-      fieldSetFlags()[54] = false;
+      fieldSetFlags()[62] = false;
       return this;
     }
     
@@ -3374,61 +3846,69 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     public GWebPage build() {
       try {
         GWebPage record = new GWebPage();
-        record.createTime = fieldSetFlags()[0] ? this.createTime : (java.lang.Long) defaultValue(fields()[0]);
-        record.distance = fieldSetFlags()[1] ? this.distance : (java.lang.Integer) defaultValue(fields()[1]);
-        record.fetchCount = fieldSetFlags()[2] ? this.fetchCount : (java.lang.Integer) defaultValue(fields()[2]);
-        record.fetchPriority = fieldSetFlags()[3] ? this.fetchPriority : (java.lang.Integer) defaultValue(fields()[3]);
-        record.fetchInterval = fieldSetFlags()[4] ? this.fetchInterval : (java.lang.Integer) defaultValue(fields()[4]);
+        record.baseUrl = fieldSetFlags()[0] ? this.baseUrl : (java.lang.CharSequence) defaultValue(fields()[0]);
+        record.createTime = fieldSetFlags()[1] ? this.createTime : (java.lang.Long) defaultValue(fields()[1]);
+        record.distance = fieldSetFlags()[2] ? this.distance : (java.lang.Integer) defaultValue(fields()[2]);
+        record.fetchCount = fieldSetFlags()[3] ? this.fetchCount : (java.lang.Integer) defaultValue(fields()[3]);
+        record.fetchPriority = fieldSetFlags()[4] ? this.fetchPriority : (java.lang.Integer) defaultValue(fields()[4]);
         record.zoneId = fieldSetFlags()[5] ? this.zoneId : (java.lang.CharSequence) defaultValue(fields()[5]);
-        record.options = fieldSetFlags()[6] ? this.options : (java.lang.CharSequence) defaultValue(fields()[6]);
+        record.args = fieldSetFlags()[6] ? this.args : (java.lang.CharSequence) defaultValue(fields()[6]);
         record.batchId = fieldSetFlags()[7] ? this.batchId : (java.lang.CharSequence) defaultValue(fields()[7]);
-        record.crawlStatus = fieldSetFlags()[8] ? this.crawlStatus : (java.lang.Integer) defaultValue(fields()[8]);
-        record.prevFetchTime = fieldSetFlags()[9] ? this.prevFetchTime : (java.lang.Long) defaultValue(fields()[9]);
-        record.prevCrawlTime1 = fieldSetFlags()[10] ? this.prevCrawlTime1 : (java.lang.Long) defaultValue(fields()[10]);
-        record.fetchTime = fieldSetFlags()[11] ? this.fetchTime : (java.lang.Long) defaultValue(fields()[11]);
-        record.fetchRetries = fieldSetFlags()[12] ? this.fetchRetries : (java.lang.Integer) defaultValue(fields()[12]);
-        record.reprUrl = fieldSetFlags()[13] ? this.reprUrl : (java.lang.CharSequence) defaultValue(fields()[13]);
-        record.prevModifiedTime = fieldSetFlags()[14] ? this.prevModifiedTime : (java.lang.Long) defaultValue(fields()[14]);
-        record.modifiedTime = fieldSetFlags()[15] ? this.modifiedTime : (java.lang.Long) defaultValue(fields()[15]);
-        record.protocolStatus = fieldSetFlags()[16] ? this.protocolStatus : (ai.platon.pulsar.persist.gora.generated.GProtocolStatus) defaultValue(fields()[16]);
-        record.encoding = fieldSetFlags()[17] ? this.encoding : (java.lang.CharSequence) defaultValue(fields()[17]);
-        record.contentType = fieldSetFlags()[18] ? this.contentType : (java.lang.CharSequence) defaultValue(fields()[18]);
-        record.content = fieldSetFlags()[19] ? this.content : (java.nio.ByteBuffer) defaultValue(fields()[19]);
-        record.baseUrl = fieldSetFlags()[20] ? this.baseUrl : (java.lang.CharSequence) defaultValue(fields()[20]);
-        record.referrer = fieldSetFlags()[21] ? this.referrer : (java.lang.CharSequence) defaultValue(fields()[21]);
-        record.anchor = fieldSetFlags()[22] ? this.anchor : (java.lang.CharSequence) defaultValue(fields()[22]);
-        record.anchorOrder = fieldSetFlags()[23] ? this.anchorOrder : (java.lang.Integer) defaultValue(fields()[23]);
-        record.parseStatus = fieldSetFlags()[24] ? this.parseStatus : (ai.platon.pulsar.persist.gora.generated.GParseStatus) defaultValue(fields()[24]);
-        record.pageTitle = fieldSetFlags()[25] ? this.pageTitle : (java.lang.CharSequence) defaultValue(fields()[25]);
-        record.pageText = fieldSetFlags()[26] ? this.pageText : (java.lang.CharSequence) defaultValue(fields()[26]);
-        record.contentTitle = fieldSetFlags()[27] ? this.contentTitle : (java.lang.CharSequence) defaultValue(fields()[27]);
-        record.contentText = fieldSetFlags()[28] ? this.contentText : (java.lang.CharSequence) defaultValue(fields()[28]);
-        record.contentTextLen = fieldSetFlags()[29] ? this.contentTextLen : (java.lang.Integer) defaultValue(fields()[29]);
-        record.pageCategory = fieldSetFlags()[30] ? this.pageCategory : (java.lang.CharSequence) defaultValue(fields()[30]);
-        record.contentModifiedTime = fieldSetFlags()[31] ? this.contentModifiedTime : (java.lang.Long) defaultValue(fields()[31]);
-        record.prevContentModifiedTime = fieldSetFlags()[32] ? this.prevContentModifiedTime : (java.lang.Long) defaultValue(fields()[32]);
-        record.contentPublishTime = fieldSetFlags()[33] ? this.contentPublishTime : (java.lang.Long) defaultValue(fields()[33]);
-        record.prevContentPublishTime = fieldSetFlags()[34] ? this.prevContentPublishTime : (java.lang.Long) defaultValue(fields()[34]);
-        record.refContentPublishTime = fieldSetFlags()[35] ? this.refContentPublishTime : (java.lang.Long) defaultValue(fields()[35]);
-        record.prevRefContentPublishTime = fieldSetFlags()[36] ? this.prevRefContentPublishTime : (java.lang.Long) defaultValue(fields()[36]);
-        record.prevSignature = fieldSetFlags()[37] ? this.prevSignature : (java.nio.ByteBuffer) defaultValue(fields()[37]);
-        record.signature = fieldSetFlags()[38] ? this.signature : (java.nio.ByteBuffer) defaultValue(fields()[38]);
-        record.contentScore = fieldSetFlags()[39] ? this.contentScore : (java.lang.Float) defaultValue(fields()[39]);
-        record.score = fieldSetFlags()[40] ? this.score : (java.lang.Float) defaultValue(fields()[40]);
-        record.sortScore = fieldSetFlags()[41] ? this.sortScore : (java.lang.CharSequence) defaultValue(fields()[41]);
-        record.pageCounters = fieldSetFlags()[42] ? this.pageCounters : (java.util.Map<java.lang.CharSequence,java.lang.Integer>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[42]));
-        record.headers = fieldSetFlags()[43] ? this.headers : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[43]));
-        record.links = fieldSetFlags()[44] ? this.links : (java.util.List<java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)defaultValue(fields()[44]));
-        record.liveLinks = fieldSetFlags()[45] ? this.liveLinks : (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[45]));
-        record.vividLinks = fieldSetFlags()[46] ? this.vividLinks : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[46]));
-        record.deadLinks = fieldSetFlags()[47] ? this.deadLinks : (java.util.List<java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)defaultValue(fields()[47]));
-        record.inlinks = fieldSetFlags()[48] ? this.inlinks : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[48]));
-        record.markers = fieldSetFlags()[49] ? this.markers : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[49]));
-        record.metadata = fieldSetFlags()[50] ? this.metadata : (java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[50]));
-        record.activeDomUrls = fieldSetFlags()[51] ? this.activeDomUrls : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[51]));
-        record.activeDomStatus = fieldSetFlags()[52] ? this.activeDomStatus : (ai.platon.pulsar.persist.gora.generated.GActiveDomStatus) defaultValue(fields()[52]);
-        record.activeDomStats = fieldSetFlags()[53] ? this.activeDomStats : (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[53]));
-        record.pageModel = fieldSetFlags()[54] ? this.pageModel : (java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup>) new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)defaultValue(fields()[54]));
+        record.resource = fieldSetFlags()[8] ? this.resource : (java.lang.Integer) defaultValue(fields()[8]);
+        record.crawlStatus = fieldSetFlags()[9] ? this.crawlStatus : (java.lang.Integer) defaultValue(fields()[9]);
+        record.fetchRetries = fieldSetFlags()[10] ? this.fetchRetries : (java.lang.Integer) defaultValue(fields()[10]);
+        record.browser = fieldSetFlags()[11] ? this.browser : (java.lang.CharSequence) defaultValue(fields()[11]);
+        record.proxy = fieldSetFlags()[12] ? this.proxy : (java.lang.CharSequence) defaultValue(fields()[12]);
+        record.fetchInterval = fieldSetFlags()[13] ? this.fetchInterval : (java.lang.Integer) defaultValue(fields()[13]);
+        record.prevFetchTime = fieldSetFlags()[14] ? this.prevFetchTime : (java.lang.Long) defaultValue(fields()[14]);
+        record.prevCrawlTime1 = fieldSetFlags()[15] ? this.prevCrawlTime1 : (java.lang.Long) defaultValue(fields()[15]);
+        record.fetchTime = fieldSetFlags()[16] ? this.fetchTime : (java.lang.Long) defaultValue(fields()[16]);
+        record.prevModifiedTime = fieldSetFlags()[17] ? this.prevModifiedTime : (java.lang.Long) defaultValue(fields()[17]);
+        record.modifiedTime = fieldSetFlags()[18] ? this.modifiedTime : (java.lang.Long) defaultValue(fields()[18]);
+        record.protocolStatus = fieldSetFlags()[19] ? this.protocolStatus : (ai.platon.pulsar.persist.gora.generated.GProtocolStatus) defaultValue(fields()[19]);
+        record.encoding = fieldSetFlags()[20] ? this.encoding : (java.lang.CharSequence) defaultValue(fields()[20]);
+        record.contentType = fieldSetFlags()[21] ? this.contentType : (java.lang.CharSequence) defaultValue(fields()[21]);
+        record.content = fieldSetFlags()[22] ? this.content : (java.nio.ByteBuffer) defaultValue(fields()[22]);
+        record.contentLength = fieldSetFlags()[23] ? this.contentLength : (java.lang.Integer) defaultValue(fields()[23]);
+        record.lastContentLength = fieldSetFlags()[24] ? this.lastContentLength : (java.lang.Integer) defaultValue(fields()[24]);
+        record.aveContentLength = fieldSetFlags()[25] ? this.aveContentLength : (java.lang.Integer) defaultValue(fields()[25]);
+        record.persistedContentLength = fieldSetFlags()[26] ? this.persistedContentLength : (java.lang.Integer) defaultValue(fields()[26]);
+        record.referrer = fieldSetFlags()[27] ? this.referrer : (java.lang.CharSequence) defaultValue(fields()[27]);
+        record.reprUrl = fieldSetFlags()[28] ? this.reprUrl : (java.lang.CharSequence) defaultValue(fields()[28]);
+        record.htmlIntegrity = fieldSetFlags()[29] ? this.htmlIntegrity : (java.lang.CharSequence) defaultValue(fields()[29]);
+        record.anchor = fieldSetFlags()[30] ? this.anchor : (java.lang.CharSequence) defaultValue(fields()[30]);
+        record.anchorOrder = fieldSetFlags()[31] ? this.anchorOrder : (java.lang.Integer) defaultValue(fields()[31]);
+        record.parseStatus = fieldSetFlags()[32] ? this.parseStatus : (ai.platon.pulsar.persist.gora.generated.GParseStatus) defaultValue(fields()[32]);
+        record.pageTitle = fieldSetFlags()[33] ? this.pageTitle : (java.lang.CharSequence) defaultValue(fields()[33]);
+        record.pageText = fieldSetFlags()[34] ? this.pageText : (java.lang.CharSequence) defaultValue(fields()[34]);
+        record.contentTitle = fieldSetFlags()[35] ? this.contentTitle : (java.lang.CharSequence) defaultValue(fields()[35]);
+        record.contentText = fieldSetFlags()[36] ? this.contentText : (java.lang.CharSequence) defaultValue(fields()[36]);
+        record.contentTextLen = fieldSetFlags()[37] ? this.contentTextLen : (java.lang.Integer) defaultValue(fields()[37]);
+        record.pageCategory = fieldSetFlags()[38] ? this.pageCategory : (java.lang.CharSequence) defaultValue(fields()[38]);
+        record.contentModifiedTime = fieldSetFlags()[39] ? this.contentModifiedTime : (java.lang.Long) defaultValue(fields()[39]);
+        record.prevContentModifiedTime = fieldSetFlags()[40] ? this.prevContentModifiedTime : (java.lang.Long) defaultValue(fields()[40]);
+        record.contentPublishTime = fieldSetFlags()[41] ? this.contentPublishTime : (java.lang.Long) defaultValue(fields()[41]);
+        record.prevContentPublishTime = fieldSetFlags()[42] ? this.prevContentPublishTime : (java.lang.Long) defaultValue(fields()[42]);
+        record.refContentPublishTime = fieldSetFlags()[43] ? this.refContentPublishTime : (java.lang.Long) defaultValue(fields()[43]);
+        record.prevRefContentPublishTime = fieldSetFlags()[44] ? this.prevRefContentPublishTime : (java.lang.Long) defaultValue(fields()[44]);
+        record.prevSignature = fieldSetFlags()[45] ? this.prevSignature : (java.nio.ByteBuffer) defaultValue(fields()[45]);
+        record.signature = fieldSetFlags()[46] ? this.signature : (java.nio.ByteBuffer) defaultValue(fields()[46]);
+        record.contentScore = fieldSetFlags()[47] ? this.contentScore : (java.lang.Float) defaultValue(fields()[47]);
+        record.score = fieldSetFlags()[48] ? this.score : (java.lang.Float) defaultValue(fields()[48]);
+        record.sortScore = fieldSetFlags()[49] ? this.sortScore : (java.lang.CharSequence) defaultValue(fields()[49]);
+        record.pageCounters = fieldSetFlags()[50] ? this.pageCounters : (java.util.Map<java.lang.CharSequence,java.lang.Integer>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[50]));
+        record.headers = fieldSetFlags()[51] ? this.headers : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[51]));
+        record.links = fieldSetFlags()[52] ? this.links : (java.util.List<java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)defaultValue(fields()[52]));
+        record.liveLinks = fieldSetFlags()[53] ? this.liveLinks : (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GHypeLink>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[53]));
+        record.vividLinks = fieldSetFlags()[54] ? this.vividLinks : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[54]));
+        record.deadLinks = fieldSetFlags()[55] ? this.deadLinks : (java.util.List<java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)defaultValue(fields()[55]));
+        record.inlinks = fieldSetFlags()[56] ? this.inlinks : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[56]));
+        record.markers = fieldSetFlags()[57] ? this.markers : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[57]));
+        record.metadata = fieldSetFlags()[58] ? this.metadata : (java.util.Map<java.lang.CharSequence,java.nio.ByteBuffer>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[58]));
+        record.activeDOMStatus = fieldSetFlags()[59] ? this.activeDOMStatus : (ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus) defaultValue(fields()[59]);
+        record.activeDOMStatTrace = fieldSetFlags()[60] ? this.activeDOMStatTrace : (java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat>) new org.apache.gora.persistency.impl.DirtyMapWrapper((java.util.Map)defaultValue(fields()[60]));
+        record.pageModelUpdateTime = fieldSetFlags()[61] ? this.pageModelUpdateTime : (java.lang.Long) defaultValue(fields()[61]);
+        record.pageModel = fieldSetFlags()[62] ? this.pageModel : (java.util.List<ai.platon.pulsar.persist.gora.generated.GFieldGroup>) new org.apache.gora.persistency.impl.DirtyListWrapper((java.util.List)defaultValue(fields()[62]));
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
@@ -3451,6 +3931,29 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
       private Tombstone() { }
   
 	  		  /**
+	   * Gets the value of the 'baseUrl' field.
+		   */
+	  public java.lang.CharSequence getBaseUrl() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'baseUrl' field.
+		   * @param value the value to set.
+	   */
+	  public void setBaseUrl(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'baseUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isBaseUrlDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
 	   * Gets the value of the 'createTime' field.
 		   */
 	  public java.lang.Long getCreateTime() {
@@ -3543,29 +4046,6 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	  }
 	
 				  /**
-	   * Gets the value of the 'fetchInterval' field.
-		   */
-	  public java.lang.Integer getFetchInterval() {
-	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
-	  }
-	
-	  /**
-	   * Sets the value of the 'fetchInterval' field.
-		   * @param value the value to set.
-	   */
-	  public void setFetchInterval(java.lang.Integer value) {
-	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
-	  }
-	  
-	  /**
-	   * Checks the dirty status of the 'fetchInterval' field. A field is dirty if it represents a change that has not yet been written to the database.
-		   * @param value the value to set.
-	   */
-	  public boolean isFetchIntervalDirty() {
-	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
-	  }
-	
-				  /**
 	   * Gets the value of the 'zoneId' field.
 		   */
 	  public java.lang.CharSequence getZoneId() {
@@ -3589,25 +4069,25 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	  }
 	
 				  /**
-	   * Gets the value of the 'options' field.
+	   * Gets the value of the 'args' field.
 		   */
-	  public java.lang.CharSequence getOptions() {
+	  public java.lang.CharSequence getArgs() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
 	  /**
-	   * Sets the value of the 'options' field.
+	   * Sets the value of the 'args' field.
 		   * @param value the value to set.
 	   */
-	  public void setOptions(java.lang.CharSequence value) {
+	  public void setArgs(java.lang.CharSequence value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
 	  /**
-	   * Checks the dirty status of the 'options' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Checks the dirty status of the 'args' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
 	   */
-	  public boolean isOptionsDirty() {
+	  public boolean isArgsDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
@@ -3635,6 +4115,29 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	  }
 	
 				  /**
+	   * Gets the value of the 'resource' field.
+		   */
+	  public java.lang.Integer getResource() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'resource' field.
+		   * @param value the value to set.
+	   */
+	  public void setResource(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'resource' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isResourceDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
 	   * Gets the value of the 'crawlStatus' field.
 		   */
 	  public java.lang.Integer getCrawlStatus() {
@@ -3654,6 +4157,98 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 		   * @param value the value to set.
 	   */
 	  public boolean isCrawlStatusDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'fetchRetries' field.
+		   */
+	  public java.lang.Integer getFetchRetries() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'fetchRetries' field.
+		   * @param value the value to set.
+	   */
+	  public void setFetchRetries(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'fetchRetries' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isFetchRetriesDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'browser' field.
+		   */
+	  public java.lang.CharSequence getBrowser() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'browser' field.
+		   * @param value the value to set.
+	   */
+	  public void setBrowser(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'browser' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isBrowserDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'proxy' field.
+		   */
+	  public java.lang.CharSequence getProxy() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'proxy' field.
+		   * @param value the value to set.
+	   */
+	  public void setProxy(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'proxy' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isProxyDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'fetchInterval' field.
+		   */
+	  public java.lang.Integer getFetchInterval() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'fetchInterval' field.
+		   * @param value the value to set.
+	   */
+	  public void setFetchInterval(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'fetchInterval' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isFetchIntervalDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
@@ -3723,52 +4318,6 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 		   * @param value the value to set.
 	   */
 	  public boolean isFetchTimeDirty() {
-	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
-	  }
-	
-				  /**
-	   * Gets the value of the 'fetchRetries' field.
-		   */
-	  public java.lang.Integer getFetchRetries() {
-	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
-	  }
-	
-	  /**
-	   * Sets the value of the 'fetchRetries' field.
-		   * @param value the value to set.
-	   */
-	  public void setFetchRetries(java.lang.Integer value) {
-	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
-	  }
-	  
-	  /**
-	   * Checks the dirty status of the 'fetchRetries' field. A field is dirty if it represents a change that has not yet been written to the database.
-		   * @param value the value to set.
-	   */
-	  public boolean isFetchRetriesDirty() {
-	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
-	  }
-	
-				  /**
-	   * Gets the value of the 'reprUrl' field.
-		   */
-	  public java.lang.CharSequence getReprUrl() {
-	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
-	  }
-	
-	  /**
-	   * Sets the value of the 'reprUrl' field.
-		   * @param value the value to set.
-	   */
-	  public void setReprUrl(java.lang.CharSequence value) {
-	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
-	  }
-	  
-	  /**
-	   * Checks the dirty status of the 'reprUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
-		   * @param value the value to set.
-	   */
-	  public boolean isReprUrlDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
@@ -3911,25 +4460,94 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	  }
 	
 				  /**
-	   * Gets the value of the 'baseUrl' field.
+	   * Gets the value of the 'contentLength' field.
 		   */
-	  public java.lang.CharSequence getBaseUrl() {
+	  public java.lang.Integer getContentLength() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
 	  /**
-	   * Sets the value of the 'baseUrl' field.
+	   * Sets the value of the 'contentLength' field.
 		   * @param value the value to set.
 	   */
-	  public void setBaseUrl(java.lang.CharSequence value) {
+	  public void setContentLength(java.lang.Integer value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
 	  /**
-	   * Checks the dirty status of the 'baseUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Checks the dirty status of the 'contentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
 	   */
-	  public boolean isBaseUrlDirty() {
+	  public boolean isContentLengthDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'lastContentLength' field.
+		   */
+	  public java.lang.Integer getLastContentLength() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'lastContentLength' field.
+		   * @param value the value to set.
+	   */
+	  public void setLastContentLength(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'lastContentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isLastContentLengthDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'aveContentLength' field.
+		   */
+	  public java.lang.Integer getAveContentLength() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'aveContentLength' field.
+		   * @param value the value to set.
+	   */
+	  public void setAveContentLength(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'aveContentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isAveContentLengthDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'persistedContentLength' field.
+		   */
+	  public java.lang.Integer getPersistedContentLength() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'persistedContentLength' field.
+		   * @param value the value to set.
+	   */
+	  public void setPersistedContentLength(java.lang.Integer value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'persistedContentLength' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isPersistedContentLengthDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
@@ -3953,6 +4571,52 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 		   * @param value the value to set.
 	   */
 	  public boolean isReferrerDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'reprUrl' field.
+	   * Given two urls, a src and a destination of a redirect, it returns the representative url.	   */
+	  public java.lang.CharSequence getReprUrl() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'reprUrl' field.
+	   * Given two urls, a src and a destination of a redirect, it returns the representative url.	   * @param value the value to set.
+	   */
+	  public void setReprUrl(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'reprUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Given two urls, a src and a destination of a redirect, it returns the representative url.	   * @param value the value to set.
+	   */
+	  public boolean isReprUrlDirty() {
+	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
+	  }
+	
+				  /**
+	   * Gets the value of the 'htmlIntegrity' field.
+		   */
+	  public java.lang.CharSequence getHtmlIntegrity() {
+	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
+	  }
+	
+	  /**
+	   * Sets the value of the 'htmlIntegrity' field.
+		   * @param value the value to set.
+	   */
+	  public void setHtmlIntegrity(java.lang.CharSequence value) {
+	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
+	  }
+	  
+	  /**
+	   * Checks the dirty status of the 'htmlIntegrity' field. A field is dirty if it represents a change that has not yet been written to the database.
+		   * @param value the value to set.
+	   */
+	  public boolean isHtmlIntegrityDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
@@ -4624,71 +5288,71 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	  }
 	
 				  /**
-	   * Gets the value of the 'activeDomUrls' field.
+	   * Gets the value of the 'activeDOMStatus' field.
 		   */
-	  public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> getActiveDomUrls() {
+	  public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus getActiveDOMStatus() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
 	  /**
-	   * Sets the value of the 'activeDomUrls' field.
+	   * Sets the value of the 'activeDOMStatus' field.
 		   * @param value the value to set.
 	   */
-	  public void setActiveDomUrls(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
+	  public void setActiveDOMStatus(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
 	  /**
-	   * Checks the dirty status of the 'activeDomUrls' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Checks the dirty status of the 'activeDOMStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
 	   */
-	  public boolean isActiveDomUrlsDirty() {
+	  public boolean isActiveDOMStatusDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
 				  /**
-	   * Gets the value of the 'activeDomStatus' field.
+	   * Gets the value of the 'activeDOMStatTrace' field.
 		   */
-	  public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus getActiveDomStatus() {
+	  public java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> getActiveDOMStatTrace() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
 	  /**
-	   * Sets the value of the 'activeDomStatus' field.
+	   * Sets the value of the 'activeDOMStatTrace' field.
 		   * @param value the value to set.
 	   */
-	  public void setActiveDomStatus(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus value) {
+	  public void setActiveDOMStatTrace(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDOMStat> value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
 	  /**
-	   * Checks the dirty status of the 'activeDomStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Checks the dirty status of the 'activeDOMStatTrace' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
 	   */
-	  public boolean isActiveDomStatusDirty() {
+	  public boolean isActiveDOMStatTraceDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	
 				  /**
-	   * Gets the value of the 'activeDomStats' field.
+	   * Gets the value of the 'pageModelUpdateTime' field.
 		   */
-	  public java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> getActiveDomStats() {
+	  public java.lang.Long getPageModelUpdateTime() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
 	  /**
-	   * Sets the value of the 'activeDomStats' field.
+	   * Sets the value of the 'pageModelUpdateTime' field.
 		   * @param value the value to set.
 	   */
-	  public void setActiveDomStats(java.util.Map<java.lang.CharSequence,ai.platon.pulsar.persist.gora.generated.GActiveDomStat> value) {
+	  public void setPageModelUpdateTime(java.lang.Long value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
 	  /**
-	   * Checks the dirty status of the 'activeDomStats' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Checks the dirty status of the 'pageModelUpdateTime' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
 	   */
-	  public boolean isActiveDomStatsDirty() {
+	  public boolean isPageModelUpdateTimeDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	

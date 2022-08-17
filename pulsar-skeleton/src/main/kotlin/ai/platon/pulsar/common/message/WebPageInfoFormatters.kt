@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.model.ActiveDomStat
+import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.DecimalFormat
@@ -72,7 +72,7 @@ class LoadStatusFormatter(
 
     private val jsSate: String
         get() {
-            val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
+            val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDOMStat()
             val divisor = if (page.id < verboseCount) 10 else verboseCount
             val prefix = if (page.id % divisor == 0) {
                 "i/a/nm/st/h:"

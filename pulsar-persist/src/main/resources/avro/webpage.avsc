@@ -4,6 +4,11 @@
   "namespace": "ai.platon.pulsar.persist.gora.generated",
   "fields": [
     {
+      "name": "baseUrl",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
       "name": "createTime",
       "type": "long",
       "default": 0
@@ -24,17 +29,12 @@
       "default": 0
     },
     {
-      "name": "fetchInterval",
-      "type": "int",
-      "default": 0
-    },
-    {
       "name": "zoneId",
       "type": ["null","string"],
       "default": null
     },
     {
-      "name": "options",
+      "name": "args",
       "type": ["null","string"],
       "default": null
     },
@@ -44,7 +44,32 @@
       "default": null
     },
     {
+      "name": "resource",
+      "type": ["null","int"],
+      "default": 0
+    },
+    {
       "name": "crawlStatus",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "fetchRetries",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "browser",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "proxy",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "fetchInterval",
       "type": "int",
       "default": 0
     },
@@ -62,16 +87,6 @@
       "name": "fetchTime",
       "type": "long",
       "default": 0
-    },
-    {
-      "name": "fetchRetries",
-      "type": "int",
-      "default": 0
-    },
-    {
-      "name": "reprUrl",
-      "type": ["null","string"],
-      "default": null
     },
     {
       "name": "prevModifiedTime",
@@ -117,12 +132,38 @@
       "default": null
     },
     {
-       "name": "baseUrl",
-       "type": ["null","string"],
-       "default": null
+      "name": "contentLength",
+      "type": ["null","int"],
+      "default": 0
+    },
+    {
+      "name": "lastContentLength",
+      "type": ["null","int"],
+      "default": 0
+    },
+    {
+      "name": "aveContentLength",
+      "type": ["null","int"],
+      "default": 0
+    },
+    {
+      "name": "persistedContentLength",
+      "type": ["null","int"],
+      "default": 0
     },
     {
       "name": "referrer",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "reprUrl",
+      "type": ["null","string"],
+      "default": null,
+      "doc": "Given two urls, a src and a destination of a redirect, it returns the representative url."
+    },
+    {
+      "name": "htmlIntegrity",
       "type": ["null","string"],
       "default": null
     },
@@ -298,16 +339,11 @@
       "default": {}
     },
     {
-      "name": "activeDomUrls",
-      "type": {"type": "map","values": ["null","string"]},
-      "default": {}
-    },
-    {
-      "name": "activeDomStatus",
+      "name": "activeDOMStatus",
       "type": [
         "null",
         {
-          "name": "GActiveDomStatus",
+          "name": "GActiveDOMStatus",
           "type": "record",
           "namespace": "ai.platon.pulsar.persist.gora.generated",
           "fields": [
@@ -323,12 +359,12 @@
       "default": null
     },
     {
-      "name": "activeDomStats",
+      "name": "activeDOMStatTrace",
       "type": {
         "type": "map",
         "values": ["null",
             {
-              "name": "GActiveDomStat",
+              "name": "GActiveDOMStat",
               "type": "record",
               "namespace": "ai.platon.pulsar.persist.gora.generated",
               "fields" : [
@@ -343,6 +379,11 @@
         ]
       },
       "default": null
+    },
+    {
+      "name": "pageModelUpdateTime",
+      "type": "long",
+      "default": 0
     },
     {
       "name": "pageModel",

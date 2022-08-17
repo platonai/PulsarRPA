@@ -115,11 +115,6 @@ final public class WebPage implements Comparable<WebPage> {
     private volatile ByteBuffer tmpContent = null;
 
     /**
-     * If this page is fetched from internet
-     */
-    private String args = null;
-
-    /**
      * The delay time to retry if a retry is needed
      */
     private Duration retryDelay = Duration.ZERO;
@@ -444,17 +439,8 @@ final public class WebPage implements Comparable<WebPage> {
      */
     @NotNull
     public String getArgs() {
-        if (this.args != null) {
-            return args;
-        }
-
-        CharSequence opts = page.getOptions();
-        if (opts == null) {
-            return "";
-        }
-
-        args = opts.toString().trim();
-        return args;
+        CharSequence args = page.getArgs();
+        return args != null ? args.toString() : "";
     }
 
     /**
@@ -462,8 +448,7 @@ final public class WebPage implements Comparable<WebPage> {
      * */
     public void setArgs(@NotNull String args) {
         variables.remove(VAR_LOAD_OPTIONS);
-        this.args = args;
-        page.setOptions(args);
+        page.setArgs(args);
     }
 
     @NotNull
@@ -539,13 +524,6 @@ final public class WebPage implements Comparable<WebPage> {
         page.setDistance(newDistance);
     }
 
-    public void increaseDistance(int newDistance) {
-        int oldDistance = getDistance();
-        if (newDistance < oldDistance) {
-            setDistance(newDistance);
-        }
-    }
-
     @NotNull
     public FetchMode getFetchMode() {
         return FetchMode.fromString(getMetadata().get(Name.FETCH_MODE));
@@ -560,30 +538,30 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public BrowserType getLastBrowser() {
-        return BrowserType.fromString(getMetadata().get(Name.BROWSER));
+        return BrowserType.fromString(page.getBrowser().toString());
     }
 
     public void setLastBrowser(@NotNull BrowserType browser) {
-        getMetadata().set(Name.BROWSER, browser.name());
+        page.setBrowser(browser.name());
     }
 
     public boolean isResource() {
-        return getMetadata().getBoolean(Name.IS_RESOURCE, false);
+        return page.getResource() != null;
     }
 
     public void setResource(boolean resource) {
         if (resource) {
-            getMetadata().set(Name.IS_RESOURCE, "true");
+            page.setResource(1);
         }
     }
 
     @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
-        return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
+        return HtmlIntegrity.Companion.fromString(page.getHtmlIntegrity().toString());
     }
 
     public void setHtmlIntegrity(@NotNull HtmlIntegrity integrity) {
-        getMetadata().set(Name.HTML_INTEGRITY, integrity.name());
+        page.setHtmlIntegrity(integrity.name());
     }
 
     public int getFetchPriority() {
@@ -629,21 +607,12 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @Nullable
-    public Instant getModelSyncTime() {
-        String modelSyncTime = getMetadata().get(Name.MODEL_SYNC_TIME);
-        if (modelSyncTime == null) {
-            return null;
-        } else {
-            return Instant.parse(modelSyncTime);
-        }
+    public Instant getPageModelUpdateTime() {
+        return Instant.ofEpochMilli(page.getPageModelUpdateTime());
     }
 
-    public void setModelSyncTime(@Nullable Instant modelSyncTime) {
-        if (modelSyncTime != null) {
-            getMetadata().set(Name.MODEL_SYNC_TIME, modelSyncTime.toString());
-        } else {
-            getMetadata().set(Name.MODEL_SYNC_TIME, (Instant) null);
-        }
+    public void setPageModelUpdateTime(@Nullable Instant time) {
+        page.setPageModelUpdateTime(time == null ? 0 : time.toEpochMilli());
     }
 
     public int getFetchCount() {
@@ -845,12 +814,6 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public Duration getLastTimeout() {
-        String s = getMetadata().get(Name.RESPONSE_TIME);
-        return s == null ? Duration.ZERO : Duration.parse(s);
-    }
-
-    @NotNull
     public Instant getModifiedTime() {
         return Instant.ofEpochMilli(page.getModifiedTime());
     }
@@ -877,8 +840,9 @@ final public class WebPage implements Comparable<WebPage> {
     @NotNull
     public PageCategory getPageCategory() {
         try {
-            if (page.getPageCategory() != null) {
-                return PageCategory.parse(page.getPageCategory().toString());
+            CharSequence pageCategory = page.getPageCategory();
+            if (pageCategory != null) {
+                return PageCategory.parse(pageCategory.toString());
             }
         } catch (Throwable ignored) {
         }
@@ -1090,7 +1054,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * Set the decleared content length.
+     * Set the declared content length.
      *
      * TODO: use a field for content length
      */
@@ -1165,26 +1129,23 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The last proxy used to fetch the page
      */
-    @Nullable
     public String getProxy() {
-        return getMetadata().get(Name.PROXY);
+        return page.getProxy() == null ? null : page.getProxy().toString();
     }
 
     /**
      * The last proxy used to fetch the page
      */
     public void setProxy(@Nullable String proxy) {
-        if (proxy != null) {
-            getMetadata().set(Name.PROXY, proxy);
-        }
+        page.setProxy(proxy);
     }
 
     @Nullable
-    public ActiveDomStatus getActiveDomStatus() {
-        GActiveDomStatus s = page.getActiveDomStatus();
+    public ActiveDOMStatus getActiveDOMStatus() {
+        GActiveDOMStatus s = page.getActiveDOMStatus();
         if (s == null) return null;
 
-        return new ActiveDomStatus(
+        return new ActiveDOMStatus(
                 s.getN(),
                 s.getScroll(),
                 s.getSt().toString(),
@@ -1194,12 +1155,12 @@ final public class WebPage implements Comparable<WebPage> {
         );
     }
 
-    public void setActiveDomStatus(ActiveDomStatus s) {
+    public void setActiveDOMStatus(ActiveDOMStatus s) {
         if (s == null) {
             return;
         }
 
-        GActiveDomStatus s2 = page.getActiveDomStatus();
+        GActiveDOMStatus s2 = page.getActiveDOMStatus();
         if (s2 != null) {
             s2.setN(s.getN());
             s2.setScroll(s.getScroll());
@@ -1211,39 +1172,18 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public Map<String, ActiveDomStat> getActiveDomStats() {
-        Map<CharSequence, GActiveDomStat> s = page.getActiveDomStats();
+    public Map<String, ActiveDOMStat> getActiveDOMStatTrace() {
+        Map<CharSequence, GActiveDOMStat> s = page.getActiveDOMStatTrace();
         return s.entrySet().stream().collect(Collectors.toMap(
                 e -> e.getKey().toString(),
                 e -> Converters.INSTANCE.convert(e.getValue())
         ));
     }
 
-    public void setActiveDomStats(@NotNull Map<String, ActiveDomStat> stats) {
-        Map<CharSequence, GActiveDomStat> stats2 = stats.entrySet().stream().collect(
+    public void setActiveDOMStatTrace(@NotNull Map<String, ActiveDOMStat> trace) {
+        Map<CharSequence, GActiveDOMStat> statTrace = trace.entrySet().stream().collect(
                 Collectors.toMap(Map.Entry::getKey, e -> Converters.INSTANCE.convert(e.getValue())));
-        page.setActiveDomStats(stats2);
-    }
-
-    @NotNull
-    public ActiveDomUrls getActiveDomUrls() {
-        Map<CharSequence, CharSequence> urls = page.getActiveDomUrls();
-        return new ActiveDomUrls(
-                urls.getOrDefault("URL", "").toString(),
-                urls.getOrDefault("baseURI", "").toString(),
-                urls.getOrDefault("location", "").toString(),
-                urls.getOrDefault("documentURI", "").toString(),
-                urls.getOrDefault("referrer", "").toString()
-        );
-    }
-
-    public void setActiveDomUrls(@NotNull ActiveDomUrls urls) {
-        Map<CharSequence, CharSequence> domUrls = page.getActiveDomUrls();
-        domUrls.put("URL", urls.getURL());
-        domUrls.put("baseURI", urls.getBaseURI());
-        domUrls.put("location", urls.getLocation());
-        domUrls.put("documentURI", urls.getDocumentURI());
-        domUrls.put("referrer", urls.getReferrer());
+        page.setActiveDOMStatTrace(statTrace);
     }
 
     /**

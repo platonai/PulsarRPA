@@ -14,7 +14,7 @@ import ai.platon.pulsar.persist.gora.generated.GParseStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.*
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
+import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
 import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.PageModel
 import org.apache.avro.util.Utf8
@@ -142,13 +142,13 @@ class KWebPage(
     /**
      * All options are saved here, including crawl options, link options, entity options and so on
      */
-    var options: String?
-        get() = page.options.toString()
-        set(options) {
-            page.options = options
+    var args: String?
+        get() = page.args.toString()
+        set(value) {
+            page.args = value
         }
 
-    val configuredUrl get() = page.options?.let { "$url $it" }?:url
+    val configuredUrl get() = page.args?.let { "$url $it" }?:url
 
     var zoneId: ZoneId
         get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
@@ -425,15 +425,15 @@ class KWebPage(
             metadata[Name.PROXY] = proxy
         }
 
-    fun getActiveDomMultiStatus(): ActiveDomMultiStatus? { // cached
+    fun getActiveDomMultiStatus(): ActiveDOMStatTrace? { // cached
         val name = Name.ACTIVE_DOM_MULTI_STATUS
         val value = variables[name]
-        if (value is ActiveDomMultiStatus) {
+        if (value is ActiveDOMStatTrace) {
             return value
         } else {
             val json = metadata[name]
             if (json != null) {
-                val status = ActiveDomMultiStatus.fromJson(json)
+                val status = ActiveDOMStatTrace.fromJson(json)
                 variables[name] = status
                 return status
             }
@@ -441,7 +441,7 @@ class KWebPage(
         return null
     }
 
-    fun setActiveDomMultiStatus(domStatus: ActiveDomMultiStatus?) {
+    fun setActiveDomMultiStatus(domStatus: ActiveDOMStatTrace?) {
         if (domStatus != null) {
             variables[Name.ACTIVE_DOM_MULTI_STATUS] = domStatus
             metadata[Name.ACTIVE_DOM_MULTI_STATUS] = domStatus.toJson()

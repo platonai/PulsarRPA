@@ -5,9 +5,9 @@
  */
 package ai.platon.pulsar.persist.gora.generated;  
 
-public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GActiveDomStat\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}");
-  private static final long serialVersionUID = 7139016527831633653L;
+public class GActiveDOMStat extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}");
+  private static final long serialVersionUID = -526959596255254644L;
   /** Enum containing all data bean's fields. */
   public static enum Field {
     NI(0, "ni"),
@@ -67,7 +67,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
    * @return int field count
    */
   public int getFieldsCount() {
-    return GActiveDomStat._ALL_FIELDS.length;
+    return GActiveDOMStat._ALL_FIELDS.length;
   }
 
   private int ni;
@@ -248,19 +248,19 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     return isDirty(5);
   }
 
-  /** Creates a new GActiveDomStat RecordBuilder */
-  public static ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder newBuilder() {
-    return new ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder();
+  /** Creates a new GActiveDOMStat RecordBuilder */
+  public static ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder newBuilder() {
+    return new ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder();
   }
   
-  /** Creates a new GActiveDomStat RecordBuilder by copying an existing Builder */
-  public static ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder other) {
-    return new ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder(other);
+  /** Creates a new GActiveDOMStat RecordBuilder by copying an existing Builder */
+  public static ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder other) {
+    return new ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder(other);
   }
   
-  /** Creates a new GActiveDomStat RecordBuilder by copying an existing GActiveDomStat instance */
-  public static ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDomStat other) {
-    return new ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder(other);
+  /** Creates a new GActiveDOMStat RecordBuilder by copying an existing GActiveDOMStat instance */
+  public static ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStat other) {
+    return new ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder(other);
   }
   
   private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
@@ -287,10 +287,10 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
   }
   
   /**
-   * RecordBuilder for GActiveDomStat instances.
+   * RecordBuilder for GActiveDOMStat instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<GActiveDomStat>
-    implements org.apache.avro.data.RecordBuilder<GActiveDomStat> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<GActiveDOMStat>
+    implements org.apache.avro.data.RecordBuilder<GActiveDOMStat> {
 
     private int ni;
     private int na;
@@ -301,17 +301,17 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
 
     /** Creates a new Builder */
     private Builder() {
-      super(ai.platon.pulsar.persist.gora.generated.GActiveDomStat.SCHEMA$);
+      super(ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder other) {
+    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder other) {
       super(other);
     }
     
-    /** Creates a Builder by copying an existing GActiveDomStat instance */
-    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDomStat other) {
-            super(ai.platon.pulsar.persist.gora.generated.GActiveDomStat.SCHEMA$);
+    /** Creates a Builder by copying an existing GActiveDOMStat instance */
+    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStat other) {
+            super(ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.SCHEMA$);
       if (isValidValue(fields()[0], other.ni)) {
         this.ni = (java.lang.Integer) data().deepCopy(fields()[0].schema(), other.ni);
         fieldSetFlags()[0] = true;
@@ -344,7 +344,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Sets the value of the 'ni' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder setNi(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder setNi(int value) {
       validate(fields()[0], value);
       this.ni = value;
       fieldSetFlags()[0] = true;
@@ -357,7 +357,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Clears the value of the 'ni' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder clearNi() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder clearNi() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -368,7 +368,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Sets the value of the 'na' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder setNa(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder setNa(int value) {
       validate(fields()[1], value);
       this.na = value;
       fieldSetFlags()[1] = true;
@@ -381,7 +381,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Clears the value of the 'na' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder clearNa() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder clearNa() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -392,7 +392,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Sets the value of the 'nnm' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder setNnm(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder setNnm(int value) {
       validate(fields()[2], value);
       this.nnm = value;
       fieldSetFlags()[2] = true;
@@ -405,7 +405,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Clears the value of the 'nnm' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder clearNnm() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder clearNnm() {
       fieldSetFlags()[2] = false;
       return this;
     }
@@ -416,7 +416,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Sets the value of the 'nst' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder setNst(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder setNst(int value) {
       validate(fields()[3], value);
       this.nst = value;
       fieldSetFlags()[3] = true;
@@ -429,7 +429,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Clears the value of the 'nst' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder clearNst() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder clearNst() {
       fieldSetFlags()[3] = false;
       return this;
     }
@@ -440,7 +440,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Sets the value of the 'w' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder setW(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder setW(int value) {
       validate(fields()[4], value);
       this.w = value;
       fieldSetFlags()[4] = true;
@@ -453,7 +453,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Clears the value of the 'w' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder clearW() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder clearW() {
       fieldSetFlags()[4] = false;
       return this;
     }
@@ -464,7 +464,7 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Sets the value of the 'h' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder setH(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder setH(int value) {
       validate(fields()[5], value);
       this.h = value;
       fieldSetFlags()[5] = true;
@@ -477,15 +477,15 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
     
     /** Clears the value of the 'h' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStat.Builder clearH() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStat.Builder clearH() {
       fieldSetFlags()[5] = false;
       return this;
     }
     
     @Override
-    public GActiveDomStat build() {
+    public GActiveDOMStat build() {
       try {
-        GActiveDomStat record = new GActiveDomStat();
+        GActiveDOMStat record = new GActiveDOMStat();
         record.ni = fieldSetFlags()[0] ? this.ni : (java.lang.Integer) defaultValue(fields()[0]);
         record.na = fieldSetFlags()[1] ? this.na : (java.lang.Integer) defaultValue(fields()[1]);
         record.nnm = fieldSetFlags()[2] ? this.nnm : (java.lang.Integer) defaultValue(fields()[2]);
@@ -499,17 +499,17 @@ public class GActiveDomStat extends org.apache.gora.persistency.impl.PersistentB
     }
   }
   
-  public GActiveDomStat.Tombstone getTombstone(){
+  public GActiveDOMStat.Tombstone getTombstone(){
   	return TOMBSTONE;
   }
 
-  public GActiveDomStat newInstance(){
+  public GActiveDOMStat newInstance(){
     return newBuilder().build();
   }
 
   private static final Tombstone TOMBSTONE = new Tombstone();
   
-  public static final class Tombstone extends GActiveDomStat implements org.apache.gora.persistency.Tombstone {
+  public static final class Tombstone extends GActiveDOMStat implements org.apache.gora.persistency.Tombstone {
   
       private Tombstone() { }
   

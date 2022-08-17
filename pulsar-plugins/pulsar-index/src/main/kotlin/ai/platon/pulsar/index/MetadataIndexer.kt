@@ -73,13 +73,12 @@ class MetadataIndexer(
     }
 
     @Throws(IndexingException::class)
-    private fun addHost(doc: IndexDocument, url: String, page: WebPage) {
-        var url: String? = url
-        val reprUrlString = page.reprUrl
-        url = if (reprUrlString.isEmpty()) url else reprUrlString
-        if (url == null || url.isEmpty()) {
+    private fun addHost(doc: IndexDocument, url0: String, page: WebPage) {
+        val url: String = url0
+        if (url.isEmpty()) {
             return
         }
+
         try {
             val u = URL(url)
             val domain = getDomainName(u)

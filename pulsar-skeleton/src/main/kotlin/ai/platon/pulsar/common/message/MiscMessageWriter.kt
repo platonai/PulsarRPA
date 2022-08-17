@@ -127,17 +127,6 @@ class MiscMessageWriter(
 
         sb.appendln()
 
-        // show all javascript DOM urls, we should know the exact differences between them
-        // they look like all the same
-        val urls = page.activeDomUrls
-        sb.append('\n')
-        // NOTE: it seems they are all the same
-        val location = urls.location
-        if (location != page.url) sb.append("location:    ").appendLine(location)
-        if (urls.URL != location) sb.append("URL:         ").appendLine(urls.URL)
-        if (urls.baseURI != location) sb.append("baseURI:     ").appendLine(urls.baseURI)
-        if (urls.documentURI != location) sb.append("documentURI: ").appendLine(urls.documentURI)
-
         sb.append("\n").append("Total ${fields.size} fields")
         sb.append("\n\n")
         write(sb.toString(), "page-extracted-fields.txt")

@@ -40,11 +40,15 @@ public enum Name {
     FETCH_MAX_RETRY("F_MR"),
     REDIRECT_DISCOVERED("F_RD"),
     RESPONSE_TIME("F_RT"),
+    @Deprecated
     BROWSER("F_BR"),
+    @Deprecated
     IS_RESOURCE("F_RES"),
+    @Deprecated
     HTML_INTEGRITY("F_HI"),
     ACTIVE_DOM_MULTI_STATUS("F_ADMS"),
     ACTIVE_DOM_URLS("F_ADU"),
+    @Deprecated
     PROXY("F_PX"),
     FETCHED_LINK_COUNT("FFLC"),
 
@@ -90,6 +94,7 @@ public enum Name {
     /**
      * content
      */
+    @Deprecated
     CHAR_ENCODING_FOR_CONVERSION("CCEFC"),
     ENCODING_CLUES("C_EC"),
     CONTENT_BYTES("C_CB"),

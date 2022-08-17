@@ -22,7 +22,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.model.ActiveDomStat
+import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -503,7 +503,7 @@ class LoadComponent(
         }
 
         val domStats = page.activeDomStats
-        val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
+        val (ni, na) = domStats["lastStat"] ?: ActiveDOMStat()
         if (ni < options.requireImages) {
             return CheckState(FetchState.MISS_FIELD, "miss image")
         }

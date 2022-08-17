@@ -1,13 +1,13 @@
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.gora.generated.GActiveDomStat
-import ai.platon.pulsar.persist.gora.generated.GActiveDomStatus
+import ai.platon.pulsar.persist.gora.generated.GActiveDOMStat
+import ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus
 import com.google.gson.Gson
 
 /**
- * An active DOM is a DOM inside a real browser
+ * Records the status of the DOM in a real browser.
  * */
-data class ActiveDomStatus(
+data class ActiveDOMStatus(
         val n: Int = 0,
         val scroll: Int = 0,
         val st: String = "",
@@ -16,7 +16,10 @@ data class ActiveDomStatus(
         val ec: String = ""
 )
 
-data class ActiveDomStat(
+/**
+ * The statistics of the DOM in a real browser.
+ * */
+data class ActiveDOMStat(
         val ni: Int = 0,
         val na: Int = 0,
         val nnm: Int = 0,
@@ -26,12 +29,12 @@ data class ActiveDomStat(
 )
 
 object Converters {
-    fun convert(s: GActiveDomStat): ActiveDomStat {
-        return ActiveDomStat(s.ni, s.na, s.nnm, s.nst, s.w, s.h)
+    fun convert(s: GActiveDOMStat): ActiveDOMStat {
+        return ActiveDOMStat(s.ni, s.na, s.nnm, s.nst, s.w, s.h)
     }
 
-    fun convert(s: ActiveDomStat): GActiveDomStat {
-        return GActiveDomStat().apply {
+    fun convert(s: ActiveDOMStat): GActiveDOMStat {
+        return GActiveDOMStat().apply {
             ni = s.ni
             na = s.na
             nnm = s.nnm
@@ -41,12 +44,12 @@ object Converters {
         }
     }
 
-    fun convert(s: GActiveDomStatus): ActiveDomStatus {
-        return ActiveDomStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
+    fun convert(s: GActiveDOMStatus): ActiveDOMStatus {
+        return ActiveDOMStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
     }
 
-    fun convert(s: ActiveDomStatus): GActiveDomStatus {
-        return GActiveDomStatus().apply {
+    fun convert(s: ActiveDOMStatus): GActiveDOMStatus {
+        return GActiveDOMStatus().apply {
             n = s.n
             st = s.st
             r = s.r
@@ -109,18 +112,18 @@ data class ActiveDomUrls(
     }
 }
 
-data class ActiveDomMultiStatus(
-        val status: ActiveDomStatus? = ActiveDomStatus(),
-        val initStat: ActiveDomStat? = ActiveDomStat(),
-        val lastStat: ActiveDomStat? = ActiveDomStat(),
-        val initD: ActiveDomStat? = ActiveDomStat(),
-        val lastD: ActiveDomStat? = ActiveDomStat()
+data class ActiveDOMStatTrace(
+    val status: ActiveDOMStatus? = ActiveDOMStatus(),
+    val initStat: ActiveDOMStat? = ActiveDOMStat(),
+    val lastStat: ActiveDOMStat? = ActiveDOMStat(),
+    val initD: ActiveDOMStat? = ActiveDOMStat(),
+    val lastD: ActiveDOMStat? = ActiveDOMStat()
 ) {
     override fun toString(): String {
-        val s1 = initStat?:ActiveDomStat()
-        val s2 = lastStat?:ActiveDomStat()
-        val s3 = initD?:ActiveDomStat()
-        val s4 = lastD?:ActiveDomStat()
+        val s1 = initStat?:ActiveDOMStat()
+        val s2 = lastStat?:ActiveDOMStat()
+        val s3 = initD?:ActiveDOMStat()
+        val s4 = lastD?:ActiveDOMStat()
 
         val s = String.format(
                 "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
@@ -133,7 +136,7 @@ data class ActiveDomMultiStatus(
                 s1.h, s2.h, s3.h, s4.h
         )
 
-        val st = status?:ActiveDomStatus()
+        val st = status?:ActiveDOMStatus()
         return String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
                 st.n, st.scroll, st.st, st.r, st.idl, s)
     }
@@ -144,17 +147,17 @@ data class ActiveDomMultiStatus(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDomMultiStatus()
+        val default = ActiveDOMStatTrace()
 
-        fun fromJson(json: String): ActiveDomMultiStatus {
-            return gson.fromJson(json, ActiveDomMultiStatus::class.java)
+        fun fromJson(json: String): ActiveDOMStatTrace {
+            return gson.fromJson(json, ActiveDOMStatTrace::class.java)
         }
     }
 }
 
 data class ActiveDomMessage(
-        var multiStatus: ActiveDomMultiStatus? = null,
-        var urls: ActiveDomUrls? = null
+    var multiStatus: ActiveDOMStatTrace? = null,
+    var urls: ActiveDomUrls? = null
 ) {
     fun toJson(): String {
         return gson.toJson(this)
