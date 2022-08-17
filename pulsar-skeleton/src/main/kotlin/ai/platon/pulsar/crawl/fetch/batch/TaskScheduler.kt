@@ -264,11 +264,13 @@ class TaskScheduler(
         }
 
         // Remove content if storeContent is false. Content is added to page earlier
-        // so PageParser is able to parse it, now, we can clear it
+        // so PageParser is able to parse it, now, we can clear it.
         if (page.content != null && !storeContent) {
             if (!page.isSeed) {
+                // Clear content for non-seed pages
                 page.setContent(ByteArray(0))
             } else if (page.fetchCount > 2) {
+                // Clear content for seed pages after 2nd fetch
                 page.setContent(ByteArray(0))
             }
         }
