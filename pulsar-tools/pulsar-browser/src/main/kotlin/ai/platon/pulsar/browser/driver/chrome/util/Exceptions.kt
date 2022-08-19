@@ -1,6 +1,11 @@
 package ai.platon.pulsar.browser.driver.chrome.util
 
-open class ChromeProtocolException: RuntimeException {
+open class ChromeDriverException: RuntimeException {
+    constructor(message: String): super(message)
+    constructor(message: String, cause: Throwable): super(message, cause)
+}
+
+open class ChromeProtocolException: ChromeDriverException {
     constructor(message: String): super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }
@@ -15,7 +20,7 @@ open class ChromeProcessTimeoutException : ChromeProcessException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
-open class ChromeLaunchException : RuntimeException {
+open class ChromeLaunchException : ChromeDriverException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)
 }

@@ -7,7 +7,7 @@ fun main() {
     // create a pulsar session
     val session = PulsarContexts.createSession()
     // the main url we are playing with
-    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
+    val url = "https://list.jd.com/list.html?cat=670,671,12798"
     // load a page, fetch it from the web if it has expired or if it's being fetched for the first time
     val page = session.load(url, "-expires 1d")
     // parse the page content into a Jsoup document
@@ -26,6 +26,8 @@ fun main() {
     val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
     // load, parse and scrape named fields
     val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+    // load, parse and scrape named fields
+    val fields3 = session.scrapeOutPages(url, "-i 1d", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 
     println("== document")
     println(document.title)
@@ -44,4 +46,7 @@ fun main() {
 
     println("== fields2")
     println(gson.toJson(fields2))
+
+    println("== fields3")
+    println(gson.toJson(fields3))
 }

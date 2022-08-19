@@ -1,21 +1,20 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
-import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
-import kotlinx.coroutines.channels.Channel
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -114,7 +113,7 @@ class LoadingWebDriverPool(
         return poll(0, conf, timeout.seconds, TimeUnit.SECONDS)
     }
 
-    @Throws(WebDriverPoolExhaustedException::class)
+    @Throws(WebDriverPoolException::class, WebDriverPoolExhaustedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         return poll0(priority, conf, timeout, unit).also {
             numWorking.incrementAndGet()
@@ -199,7 +198,7 @@ class LoadingWebDriverPool(
         onlineDrivers.remove(driver)
     }
 
-    @Throws(WebDriverPoolException::class)
+    @Throws(WebDriverPoolException::class, WebDriverPoolExhaustedException::class)
     private fun poll0(priority: Int, conf: VolatileConfig? = null, timeout: Long, unit: TimeUnit): WebDriver {
         if (conf != null) {
             createDriverIfNecessary(priority, conf)
@@ -219,19 +218,16 @@ class LoadingWebDriverPool(
         return driver?:throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + formatStatus() + ")")
     }
 
+    @Throws(DriverLaunchException::class)
     private fun createDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
-        if (shouldCreateDriver()) {
-            synchronized(driverFactory) {
+        synchronized(driverFactory) {
+            try {
                 if (shouldCreateDriver()) {
-                    // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
-                    val driver = driverFactory.create(browserInstanceId, priority, volatileConfig)
-
-                    lock.withLock {
-                        freeDrivers.add(driver)
-                        notEmpty.signalAll()
-                        onlineDrivers.add(driver)
-                    }
-                    logDriverOnline(driver)
+                    createWebDriver(volatileConfig)
+                }
+            } catch (e: WebDriverException) {
+                if (isActive) {
+                    throw e
                 }
             }
         }
@@ -239,6 +235,19 @@ class LoadingWebDriverPool(
 
     private fun shouldCreateDriver(): Boolean {
         return isActive && availableMemory > BROWSER_TAB_REQUIRED_MEMORY && onlineDrivers.size < capacity
+    }
+
+    private fun createWebDriver(volatileConfig: VolatileConfig) {
+        // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
+        val driver = driverFactory.create(browserInstanceId, priority, volatileConfig)
+
+        lock.withLock {
+            freeDrivers.add(driver)
+            notEmpty.signalAll()
+            onlineDrivers.add(driver)
+        }
+
+        logDriverOnline(driver)
     }
 
     private fun doClose(timeToWait: Duration) {
@@ -285,12 +294,6 @@ class LoadingWebDriverPool(
             logger.trace("The {}th web driver is online, browser: {} pageLoadStrategy: {} capacity: {}",
                     numOnline, driver.name,
                 driverSettings.pageLoadStrategy, capacity)
-        }
-    }
-
-    private fun checkState() {
-        if (!isActive) {
-            throw WebDriverPoolException("Loading web driver pool is closed | $this | $browserInstanceId")
         }
     }
 }

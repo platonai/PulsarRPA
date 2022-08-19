@@ -51,6 +51,7 @@ open class WebDriverPoolManager(
 
     private val logger = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
+    private val isActive get() = !closed.get() && AppContext.isActive
 
     val driverSettings get() = driverFactory.driverSettings
     val idleTimeout = Duration.ofMinutes(18)
@@ -58,7 +59,6 @@ open class WebDriverPoolManager(
     val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
     val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
 
-    val isActive get() = !closed.get() && AppContext.isActive
     val startTime = Instant.now()
     var lastActiveTime = startTime
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -195,6 +195,10 @@ open class WebDriverPoolManager(
         val browserId = task.browserId
         var result: R? = null
         whenNormalDeferred {
+            if (!isActive) {
+                return@whenNormalDeferred null
+            }
+
             if (isRetiredPool(browserId)) {
                 throw WebDriverPoolException("Web driver pool is retired | $browserId")
             }
@@ -208,19 +212,13 @@ open class WebDriverPoolManager(
             try {
                 // Mutual exclusion for coroutines.
                 driver = launchMutex.withLock {
-                    val isFirstLaunch = driverPool.numTasks.get() == 0
-                    driverPool.numTasks.incrementAndGet()
-                    if (isFirstLaunch) {
-                        firstLaunch(driverPool, task)
-                    } else {
-                        poll(driverPool, task)
-                    }
+                    if (isActive) poll(driverPool, task) else return@whenNormalDeferred null
                 }
 
                 // do not take up too much time on this driver
                 val fetchTaskTimeout = driverSettings.fetchTaskTimeout
                 result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
-                    task.runWith(driver)
+                    if (isActive) task.runWith(driver) else null
                 }
 
                 if (result == null) {
@@ -244,23 +242,25 @@ open class WebDriverPoolManager(
     }
 
     private fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        val pollingDriverTimeout = driverSettings.pollingDriverTimeout
-        val driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout)
+        val isFirstLaunch = driverPool.numTasks.get() == 0
+        driverPool.numTasks.incrementAndGet()
+        return if (isFirstLaunch) {
+            firstLaunch(driverPool, task)
+        } else {
+            pollWebDriver(driverPool, task)
+        }
+    }
+
+    private fun <R> pollWebDriver(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+        val timeout = driverSettings.pollingDriverTimeout
+        val driver = driverPool.poll(task.priority, task.volatileConfig, timeout)
         driver.startWork()
         return driver
     }
 
     private fun <R> firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        val pollingDriverTimeout = driverSettings.pollingDriverTimeout
-
         onBeforeBrowserLaunch(task.task)
-
-        val driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout)
-        driver.startWork()
-
-        onAfterBrowserLaunch(driver, task.task)
-
-        return driver
+        return pollWebDriver(driverPool, task).also { onAfterBrowserLaunch(it, task.task) }
     }
 
     private fun onBeforeBrowserLaunch(task: FetchTask) {

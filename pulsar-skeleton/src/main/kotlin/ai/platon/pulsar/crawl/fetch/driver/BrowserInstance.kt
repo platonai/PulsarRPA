@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.jvm.Throws
 
 interface BrowserInstance: AutoCloseable {
     val id: BrowserInstanceId
@@ -23,6 +24,7 @@ interface BrowserInstance: AutoCloseable {
     val navigateHistory: List<NavigateEntry>
     val isIdle: Boolean
 
+    @Throws(WebDriverException::class)
     fun launch()
     fun await()
     fun signalAll()

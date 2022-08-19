@@ -80,6 +80,10 @@ open class BrowserEmulatedFetcher(
     }
 
     private suspend fun doFetch(task: FetchTask, driver: WebDriver): FetchResult {
+        if (!isActive) {
+            return FetchResult.canceled(task)
+        }
+
         val volatileConfig = task.page.conf
         val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
 

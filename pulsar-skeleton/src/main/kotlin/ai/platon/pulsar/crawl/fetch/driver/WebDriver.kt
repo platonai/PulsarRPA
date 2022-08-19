@@ -10,6 +10,19 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.random.Random
 
+open class WebDriverException: IllegalStateException {
+    constructor() : super() {}
+
+    constructor(message: String?) : super(message) {
+    }
+
+    constructor(message: String?, cause: Throwable) : super(message, cause) {
+    }
+
+    constructor(cause: Throwable?) : super(cause) {
+    }
+}
+
 /**
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved

@@ -9,9 +9,9 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
-import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -131,11 +131,11 @@ class WebDriverContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.crawlRetry(task)
+            return FetchResult.canceled(task)
         }
 
         if (driverPoolManager.isRetiredPool(browserId)) {
-            return FetchResult.crawlRetry(task)
+            return FetchResult.canceled(task)
         }
 
         return null
@@ -241,7 +241,7 @@ class ProxyContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.privacyRetry(task)
+            return FetchResult.canceled(task)
         }
 
         checkProxyAbsence()

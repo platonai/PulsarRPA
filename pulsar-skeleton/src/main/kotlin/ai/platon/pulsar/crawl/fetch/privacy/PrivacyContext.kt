@@ -20,8 +20,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 open class PrivacyContextException(message: String) : Exception(message)
 
-class FatalPrivacyContextException(message: String) : PrivacyContextException(message)
-
 class PrivacyContextMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
     val contexts = registry.multiMetric(this, "contexts")

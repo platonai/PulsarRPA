@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -25,7 +26,7 @@ class ChromeDevtoolsBrowserInstance(
     val devToolsCount get() = devToolsList.size
 
     @Synchronized
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     override fun launch() {
         if (launched.compareAndSet(false, true)) {
             val shutdownHookRegistry = BrowserShutdownHookRegistry(this)
@@ -38,7 +39,7 @@ class ChromeDevtoolsBrowserInstance(
     }
 
     @Synchronized
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     fun createTab(): ChromeTab {
         activeTime = Instant.now()
         tabCount.incrementAndGet()
@@ -46,24 +47,27 @@ class ChromeDevtoolsBrowserInstance(
     }
 
     @Synchronized
+    @Throws(WebDriverException::class)
     fun closeTab(tab: ChromeTab) {
         tabCount.decrementAndGet()
         chrome.closeTab(tab)
     }
 
     @Synchronized
+    @Throws(WebDriverException::class)
     fun listTab(): Array<ChromeTab> {
         return chrome.getTabs()
     }
 
     @Synchronized
-    @Throws(Exception::class)
+    @Throws(WebDriverException::class)
     fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         val devTools= chrome.createDevTools(tab, config)
         devToolsList.add(devTools)
         return devTools
     }
 
+    @Throws(WebDriverException::class)
     override fun close() {
         if (launched.get() && closed.compareAndSet(false, true)) {
             logger.info("Closing browser with {} devtools ... | {}", devToolsList.size, id)
@@ -86,7 +90,7 @@ class ChromeDevtoolsBrowserInstance(
         }
     }
 
-    class BrowserShutdownHookRegistry(val browserInstance: BrowserInstance): ChromeLauncher.ShutdownHookRegistry {
+    class BrowserShutdownHookRegistry(private val browserInstance: BrowserInstance): ChromeLauncher.ShutdownHookRegistry {
         override fun register(thread: Thread) {
             Runtime.getRuntime().addShutdownHook(browserInstance.shutdownHookThread)
             // Runtime.getRuntime().addShutdownHook(thread)

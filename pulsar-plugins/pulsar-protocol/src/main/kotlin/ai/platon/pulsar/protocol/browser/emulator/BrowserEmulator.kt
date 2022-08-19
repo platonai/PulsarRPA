@@ -11,6 +11,7 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -18,7 +19,6 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverAdapter
-import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -88,9 +88,6 @@ open class BrowserEmulator(
             response = if (task.page.isResource) {
                 loadResourceWithoutRendering(task, driver)
             } else browseWithCancellationHandled(task, driver)
-        }  catch (e: ChromeProtocolException) {
-            logger.warn(e.message)
-            response = ForwardingResponse.crawlRetry(task.page)
         } catch (e: NoSuchSessionException) {
             logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
             driver.retire()
@@ -139,7 +136,7 @@ open class BrowserEmulator(
                 content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
                 protocolStatus = ProtocolStatus.STATUS_SUCCESS
             }
-        } catch (e: IOException) {
+        } catch (e: WebDriverException) {
             logger.warn(e.stringify())
         }
 
@@ -153,7 +150,7 @@ open class BrowserEmulator(
         var response: Response?
 
         try {
-            response = browseWithMinorExceptionsHandled(task, driver)
+            response = browseWithWebDriverExceptionsHandled(task, driver)
 
             interactAfterFetch(task, driverSettings, driver)
 
@@ -168,7 +165,7 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class)
-    private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
+    private suspend fun browseWithWebDriverExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
         val navigateTask = NavigateTask(task, driver, driverSettings)
 
         try {
@@ -179,7 +176,7 @@ open class BrowserEmulator(
                 activeDomUrls = interactResult.activeDomMessage?.urls
             }
             navigateTask.pageSource = driver.pageSource() ?: ""
-        } catch (e: ChromeProtocolException) {
+        } catch (e: WebDriverException) {
             logger.warn(e.message)
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }

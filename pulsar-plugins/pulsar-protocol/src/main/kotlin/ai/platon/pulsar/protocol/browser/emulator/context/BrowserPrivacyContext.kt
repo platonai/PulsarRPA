@@ -81,7 +81,7 @@ open class BrowserPrivacyContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         return when {
-            !isActive -> FetchResult.privacyRetry(task)
+            !isActive -> FetchResult.canceled(task)
             else -> null
         }
     }

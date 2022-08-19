@@ -4,7 +4,10 @@ import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
-import ai.platon.pulsar.browser.driver.chrome.util.*
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProtocolException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
@@ -13,7 +16,6 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
-import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
@@ -629,7 +631,7 @@ class ChromeDevtoolsDriver(
             try {
                 browserInstance.closeTab(chromeTab)
                 devTools.close()
-            } catch (e: ChromeProtocolException) {
+            } catch (e: ChromeDriverException) {
                 // ignored
             }
         }
@@ -667,7 +669,6 @@ class ChromeDevtoolsDriver(
         page?.navigate(url)
     }
 
-    @Throws(WebDriverException::class)
     private fun getNoInvaded(url: String) {
         page?.enable()
         navigateUrl = url
@@ -771,7 +772,7 @@ class ChromeDevtoolsDriver(
         if (rpcFailures.get() > maxRPCFailures) {
             throw NoSuchSessionException("Too many RPC failures")
         }
-        logger.warn("Chrome RPC exception | {}", message ?: e.message)
+        logger.warn("Chrome RPC exception ({}/{}) | {}", rpcFailures, maxRPCFailures, message ?: e.message)
     }
 
     private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T? {
