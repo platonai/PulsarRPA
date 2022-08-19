@@ -116,7 +116,7 @@ class ChromeDevtoolsDriver(
             if (userAgent.isNotEmpty()) {
                 emulation?.setUserAgentOverride(userAgent)
             }
-        } catch (e: ChromeProcessException) {
+        } catch (e: ChromeDriverException) {
             throw DriverLaunchException("Failed to create chrome devtools driver | " + e.message)
         } catch (e: Exception) {
             throw DriverLaunchException("Failed to create chrome devtools driver", e)
@@ -777,18 +777,27 @@ class ChromeDevtoolsDriver(
 
     private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T? {
         return withContext(Dispatchers.IO) {
-            try {
-                if (!refreshState(action)) {
-                    return@withContext null
-                }
+            if (!refreshState(action)) {
+                return@withContext null
+            }
 
-                val result = block()
-                rpcFailures.decrementAndGet()
-                result
+            try {
+                block().also { decreaseRPCFailures() }
             } catch (e: ChromeRPCException) {
-                rpcFailures.incrementAndGet()
+                increaseRPCFailures()
                 throw e
             }
         }
+    }
+
+    private fun decreaseRPCFailures() {
+        rpcFailures.decrementAndGet()
+        if (rpcFailures.get() < 0) {
+            rpcFailures.set(0)
+        }
+    }
+
+    private fun increaseRPCFailures() {
+        rpcFailures.incrementAndGet()
     }
 }
