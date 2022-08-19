@@ -41,21 +41,21 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="emulatorEventHandlerFactory" class="ai.platon.pulsar.protocol.browser.emulator.EventHandlerFactory">
+    <bean id="browserResponseHandlerFactory" class="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandlerFactory">
         <constructor-arg ref="driverPoolManager"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="emulatorEventHandler"
-          class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatorEventHandler"
-          factory-bean="emulatorEventHandlerFactory"
+    <bean id="browserResponseHandler"
+          class="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandler"
+          factory-bean="browserResponseHandlerFactory"
           factory-method="getEventHandler"
     />
 
     <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator" destroy-method="close">
         <constructor-arg ref="driverPoolManager"/>
-        <constructor-arg ref="emulatorEventHandler"/>
+        <constructor-arg ref="browserResponseHandler"/>
         <constructor-arg ref="conf"/>
     </bean>
 

@@ -29,10 +29,10 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
             onBeforeFetch.addLast { page ->
                 println("$seq. onBeforeFetch")
             }
-            onBeforeBrowserLaunch.addLast {
+            onBeforeBrowserLaunch.addLast { page ->
                 println("$seq. onBeforeBrowserLaunch")
             }
-            onAfterBrowserLaunch.addLast { driver ->
+            onAfterBrowserLaunch.addLast { page, driver ->
                 println("$seq. onAfterBrowserLaunch")
             }
             onAfterFetch.addLast { page ->

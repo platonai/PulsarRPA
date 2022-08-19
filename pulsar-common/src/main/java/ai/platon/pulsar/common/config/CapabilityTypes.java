@@ -283,10 +283,19 @@ public interface CapabilityTypes {
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
 
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
+    /**
+     * @deprecated use BROWSER_RESPONSE_HANDLER instead
+     * */
+    @Deprecated
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
+    String BROWSER_RESPONSE_HANDLER = "browser.response.handler";
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
+    /**
+     * @deprecated Use event handlers instead
+     * */
+    @Deprecated
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
     /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,

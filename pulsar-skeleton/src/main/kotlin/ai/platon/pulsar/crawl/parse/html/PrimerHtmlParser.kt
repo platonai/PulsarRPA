@@ -66,7 +66,8 @@ class PrimerHtmlParser(
 
     override fun parse(page: WebPage): ParseResult {
         return try {
-            // The base url is set by protocol. Might be different from url if the request redirected
+            // The base url is set by protocol, it might be different from the page url
+            // if the request redirects.
             beforeHtmlParse(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)

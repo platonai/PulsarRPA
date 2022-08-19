@@ -46,7 +46,7 @@ class WebDriverContext(
         }
     }
 
-    private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
+    private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
@@ -57,17 +57,17 @@ class WebDriverContext(
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             numGlobalRunningTasks.incrementAndGet()
-            driverPoolManager.run(browserId, task.priority, task.volatileConfig) {
+            driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
             }?:FetchResult.crawlRetry(task)
         } catch (e: WebDriverPoolExhaustedException) {
-            log.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task, Duration.ofSeconds(20))
         } catch (e: WebDriverPoolException) {
-            log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } catch (e: WebDriverException) {
-            log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } finally {
             runningTasks.remove(task)
@@ -79,7 +79,7 @@ class WebDriverContext(
             }
 
             if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
-                log.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
+                logger.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
             }
         }
     }
@@ -94,7 +94,7 @@ class WebDriverContext(
             try {
                 doClose()
             } catch (t: Throwable) {
-                log.error("Unexpected exception", t)
+                logger.error("Unexpected exception", t)
             }
         }
     }
@@ -108,10 +108,10 @@ class WebDriverContext(
         }
 
         if (runningTasks.isNotEmpty()) {
-            log.info("Still {} running tasks after context close | {}",
+            logger.info("Still {} running tasks after context close | {}",
                     runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
         } else {
-            log.info("Web driver context is closed successfully | {}", browserId)
+            logger.info("Web driver context is closed successfully | {}", browserId)
         }
     }
 

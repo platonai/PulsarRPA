@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ProcessLauncher
 import ai.platon.pulsar.common.Runtimes
@@ -122,7 +123,12 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
-        check(!isAlive) { "Chrome is started already" }
+        if (!AppContext.isActive) {
+            return 0
+        }
+        check(process == null) { "Chrome process has already been started" }
+        check(!isAlive) { "Chrome process has already been started" }
+
         var supervisorProcess = options.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
             logger.warn("Supervisor program {} can not be located", options.supervisorProcess)
@@ -138,12 +144,16 @@ class ChromeLauncher(
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
             process = ProcessLauncher.launch(executable, arguments)
+
             process?.also {
                 Files.createDirectories(userDataDir)
                 val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
+        } catch (e: IllegalStateException) {
+            shutdownHookRegistry.remove(shutdownHookThread)
+            throw ChromeProcessException("Can not launch chrome", e)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)

@@ -35,7 +35,6 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -143,7 +142,7 @@ open class FetchComponent(
         try {
             page.loadEventHandler?.onBeforeFetch?.invoke(page)
         } catch (e: Throwable) {
-            log.warn("Failed to invoke beforeFetch | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke beforeFetch | ${page.configuredUrl}", e)
         }
     }
 
@@ -151,7 +150,7 @@ open class FetchComponent(
         try {
             page.loadEventHandler?.onAfterFetch?.invoke(page)
         } catch (e: Throwable) {
-            log.warn("Failed to invoke afterFetch | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke afterFetch | ${page.configuredUrl}", e)
         }
     }
 
@@ -280,7 +279,7 @@ open class FetchComponent(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(FetchComponent::class.java)
+        private val logger = LoggerFactory.getLogger(FetchComponent::class.java)
 
         fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
             page.crawlStatus = crawlStatus
@@ -307,7 +306,7 @@ open class FetchComponent(
             if (contentType != null) {
                 page.contentType = contentType
             } else {
-                log.warn("Failed to determine content type!")
+                logger.warn("Failed to determine content type!")
             }
         }
     }

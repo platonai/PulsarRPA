@@ -1474,7 +1474,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public void setReferrer(@Nullable String referrer) {
-        if (referrer != null && referrer.length() > SHORTEST_VALID_URL_LENGTH) {
+        if (UrlUtils.isValidUrl(referrer)) {
             page.setReferrer(referrer);
         }
     }

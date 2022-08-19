@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
@@ -22,7 +23,7 @@ open class WebDriverFactory(
     val browserInstanceManager: BrowserInstanceManager,
     val immutableConfig: ImmutableConfig,
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
+    private val logger = LoggerFactory.getLogger(WebDriverFactory::class.java)
     val numDrivers = AtomicInteger()
 
     /**
@@ -32,7 +33,7 @@ open class WebDriverFactory(
     @Throws(DriverLaunchException::class)
     @Synchronized
     fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): WebDriverAdapter {
-        log.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
+        logger.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
         val capabilities = driverSettings.createGeneralOptions()
         browserInstanceId.proxyServer?.let { setProxy(capabilities, it) }
@@ -47,7 +48,7 @@ open class WebDriverFactory(
                 else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
             }
         }.onFailure {
-            log.error("Failed to create web driver $browserType", it)
+            logger.error("Failed to create web driver $browserType")
         }.getOrElse {
             throw DriverLaunchException("Failed to create web driver | $browserType")
         }

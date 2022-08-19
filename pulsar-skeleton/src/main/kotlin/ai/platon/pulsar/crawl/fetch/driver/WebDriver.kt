@@ -28,6 +28,10 @@ data class NavigateEntry(
      * */
     val pageUrl: String = "",
     /**
+     * The referer claimed by the page.
+     */
+    var pageReferrer: String? = null,
+    /**
      * The location of the page, it shows in the browser window, can differ from url.
      */
     var location: String = url,
@@ -35,9 +39,13 @@ data class NavigateEntry(
      * Indicate if the driver be stopped.
      */
     var stopped: Boolean = false,
-
+    /**
+     * The last active time.
+     */
     var activeTime: Instant = Instant.now(),
-
+    /**
+     * The time when the object is created.
+     */
     val createTime: Instant = Instant.now(),
 ) {
     /**
@@ -48,7 +56,9 @@ data class NavigateEntry(
      * Track the time of page actions.
      */
     val actionTimes = mutableMapOf<String, Instant>()
-
+    /**
+     * Refresh the entry with the given action.
+     * */
     fun refresh(action: String) {
         val now = Instant.now()
         activeTime = now

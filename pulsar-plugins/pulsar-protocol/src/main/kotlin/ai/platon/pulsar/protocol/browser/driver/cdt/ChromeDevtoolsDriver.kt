@@ -127,6 +127,7 @@ class ChromeDevtoolsDriver(
     override suspend fun navigateTo(entry: NavigateEntry) {
         val driver = this
         this.navigateEntry = entry
+        browserInstance.navigateHistory.add(entry)
 
         try {
             withIOContext("navigateTo") {

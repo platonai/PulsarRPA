@@ -113,7 +113,7 @@ open class BrowserEmulatedFetcher(
         val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
         val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
         val fingerprint = Fingerprint(browserType)
-        return FetchTask(0, priority, page, conf, fingerprint = fingerprint)
+        return FetchTask(0, priority, page, fingerprint = fingerprint)
     }
 
     override fun close() {

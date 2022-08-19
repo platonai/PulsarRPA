@@ -353,8 +353,8 @@ interface LoadEventHandler {
     val onNormalize: UrlFilterPipeline
     val onBeforeLoad: UrlHandlerPipeline
     val onBeforeFetch: WebPageHandlerPipeline
-    val onBeforeBrowserLaunch: VoidEventHandlerPipeline
-    val onAfterBrowserLaunch: WebDriverHandlerPipeline
+    val onBeforeBrowserLaunch: WebPageHandlerPipeline
+    val onAfterBrowserLaunch: WebPageWebDriverHandlerPipeline
     val onAfterFetch: WebPageHandlerPipeline
     val onBeforeParse: WebPageHandlerPipeline
     val onBeforeHtmlParse: WebPageHandlerPipeline
@@ -372,8 +372,8 @@ abstract class AbstractLoadEventHandler(
     override val onNormalize: UrlFilterPipeline = UrlFilterPipeline(),
     override val onBeforeLoad: UrlHandlerPipeline = UrlHandlerPipeline(),
     override val onBeforeFetch: WebPageHandlerPipeline = WebPageHandlerPipeline(),
-    override val onBeforeBrowserLaunch: VoidEventHandlerPipeline = VoidEventHandlerPipeline(),
-    override val onAfterBrowserLaunch: WebDriverHandlerPipeline = WebDriverHandlerPipeline(),
+    override val onBeforeBrowserLaunch: WebPageHandlerPipeline = WebPageHandlerPipeline(),
+    override val onAfterBrowserLaunch: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline(),
     override val onAfterFetch: WebPageHandlerPipeline = WebPageHandlerPipeline(),
     override val onBeforeParse: WebPageHandlerPipeline = WebPageHandlerPipeline(),
     override val onBeforeHtmlParse: WebPageHandlerPipeline = WebPageHandlerPipeline(),
@@ -503,8 +503,8 @@ open class EmptyWebDriverHandler: AbstractWebPageWebDriverHandler() {
 }
 
 interface SimulateEventHandler {
-    val onBeforeFetch: WebDriverFetchResultHandlerPipeline
-    val onAfterFetch: WebDriverFetchResultHandlerPipeline
+    val onBeforeFetch: WebPageWebDriverHandlerPipeline
+    val onAfterFetch: WebPageWebDriverHandlerPipeline
 
     val onBeforeNavigate: WebPageWebDriverHandlerPipeline
     val onAfterNavigate: WebPageWebDriverHandlerPipeline
@@ -531,8 +531,8 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
 
     protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
 
-    override val onBeforeFetch: WebDriverFetchResultHandlerPipeline = WebDriverFetchResultHandlerPipeline()
-    override val onAfterFetch: WebDriverFetchResultHandlerPipeline = WebDriverFetchResultHandlerPipeline()
+    override val onBeforeFetch: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onAfterFetch: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onBeforeNavigate: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
@@ -815,10 +815,10 @@ open class PulsarEventHandlerTemplate(
             onBeforeFetch.addLast { page ->
 
             }
-            onBeforeBrowserLaunch.addLast {
+            onBeforeBrowserLaunch.addLast { page ->
 
             }
-            onAfterBrowserLaunch.addLast { driver ->
+            onAfterBrowserLaunch.addLast { page, driver ->
 
             }
             onAfterFetch.addLast { page ->

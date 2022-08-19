@@ -25,18 +25,19 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved.
  */
 open class BrowserEmulator(
     val driverManager: WebDriverPoolManager,
-    browserEmulatorEventHandler: BrowserEmulatorEventHandler,
+    responseHandler: BrowserResponseHandler,
     immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, browserEmulatorEventHandler, immutableConfig) {
+): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, responseHandler, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
@@ -48,7 +49,7 @@ open class BrowserEmulator(
     }
 
     /**
-     * Fetch a page using a browser which can render the DOM and execute scripts
+     * Fetch a page using a browser which can render the DOM and execute scripts.
      *
      * @param task The task to fetch
      * @return The result of this fetch
@@ -142,7 +143,10 @@ open class BrowserEmulator(
             logger.warn(e.stringify())
         }
 
-        return browserEmulatorEventHandler.createResponse(navigateTask, navigateTask.pageDatum)
+        responseHandler.onResponseWillBeCreated(task, driver)
+        return createResponseWithDatum(navigateTask, navigateTask.pageDatum).also {
+            responseHandler.onResponseDidCreated(task, driver, it)
+        }
     }
 
     private suspend fun browseWithCancellationHandled(task: FetchTask, driver: WebDriver): Response? {
@@ -180,12 +184,15 @@ open class BrowserEmulator(
             navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
-        return browserEmulatorEventHandler.onAfterNavigate(navigateTask)
+        responseHandler.onResponseWillBeCreated(task, driver)
+        return createResponse(navigateTask).also {
+            responseHandler.onResponseDidCreated(task, driver, it)
+        }
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
-        browserEmulatorEventHandler.logBeforeNavigate(task, driverConfig)
+        logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -206,7 +213,8 @@ open class BrowserEmulator(
         // href has the higher priority to locate a resource
         require(task.url == task.page.url)
         val location = task.href ?: task.url
-        val navigateEntry = NavigateEntry(location, task.page.id, task.url)
+        val navigateEntry = NavigateEntry(location, task.page.id, task.url, pageReferrer = task.page.referrer)
+
         driver.navigateTo(navigateEntry)
 
         eventHandler?.onAfterNavigate?.invokeDeferred(task.page, driver)
@@ -251,6 +259,8 @@ open class BrowserEmulator(
         jsCheckDOMState(task, result)
 
         if (result.state.isContinue) {
+            task.driver.navigateEntry.documentReadyTime = Instant.now()
+
             eventHandler?.runCatching { onAfterCheckDOMState(task.fetchTask.page, task.driver) }?.onFailure {
                 logger.warn(it.simplify("Failed to call onAfterCheckDOMState - "))
             }
@@ -313,7 +323,7 @@ open class BrowserEmulator(
             } else if (message == "timeout") {
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val browserError = browserEmulatorEventHandler.handleChromeErrorPage(message)
+                val browserError = responseHandler.onChromeErrorPageReturn(message)
                 status = browserError.status
                 result.activeDomMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK

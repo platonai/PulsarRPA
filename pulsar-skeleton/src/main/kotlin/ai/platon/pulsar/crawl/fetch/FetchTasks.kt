@@ -62,7 +62,6 @@ class FetchTask constructor(
         val batchId: Int,
         val priority: Int,
         val page: WebPage,
-        val volatileConfig: VolatileConfig,
         val fingerprint: Fingerprint,
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
@@ -78,13 +77,14 @@ class FetchTask constructor(
 
     val url get() = page.url
     val href get() = page.href
+    val volatileConfig get() = page.conf
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING
 
     // A task is ready when it about to enter a privacy context
     fun markReady() = state.set(State.READY)
-    // A task is working when it enters the the web driver
+    // A task is working when it enters the web driver
     fun startWork() = state.set(State.WORKING)
     fun cancel() = state.set(State.CANCELED)
     // A task is done if it exits in a privacy context
@@ -103,7 +103,6 @@ class FetchTask constructor(
             batchSize = batchSize,
             priority = priority,
             page = page,
-            volatileConfig = volatileConfig,
             fingerprint = fingerprint,
             nRetries = nRetries
         )
@@ -119,7 +118,7 @@ class FetchTask constructor(
 
     companion object {
         val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.PULSAR_CHROME)
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, DEFAULT_FINGERPRINT, id = 0)
+        val NIL = FetchTask(0, 0, WebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
     }
 }

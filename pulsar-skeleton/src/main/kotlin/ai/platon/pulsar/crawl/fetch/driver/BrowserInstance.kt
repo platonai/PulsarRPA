@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import java.time.Duration
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
@@ -36,7 +37,7 @@ abstract class AbstractBrowserInstance(
 
     override val tabCount = AtomicInteger()
     // remember, navigate history is small, so search is very fast for a list
-    override val navigateHistory = mutableListOf<NavigateEntry>()
+    override val navigateHistory = Collections.synchronizedList(mutableListOf<NavigateEntry>())
     var activeTime = Instant.now()
     val idleTimeout = Duration.ofMinutes(10)
     override val isIdle get() = Duration.between(activeTime, Instant.now()) > idleTimeout

@@ -239,7 +239,6 @@ class LoadComponent(
     private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
-//        FetchEntry.initWebPage(page, normUrl.options, normUrl.hrefSpec)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()

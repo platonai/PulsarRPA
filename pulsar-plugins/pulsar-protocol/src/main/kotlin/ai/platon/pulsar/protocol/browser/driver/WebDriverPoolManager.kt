@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -28,10 +29,12 @@ import kotlin.concurrent.withLock
 
 class WebDriverTask<R> (
         val browserId: BrowserInstanceId,
-        val priority: Int,
-        val volatileConfig: VolatileConfig,
+        val task: FetchTask,
         val runWith: suspend (driver: WebDriver) -> R
-)
+) {
+    val priority get() = task.priority
+    val volatileConfig get() = task.volatileConfig
+}
 
 /**
  * Created by vincent on 18-1-1.
@@ -96,9 +99,9 @@ open class WebDriverPoolManager(
      *
      * @return The result of action, or null if timeout
      * */
-    suspend fun <R> run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
-                        action: suspend (driver: WebDriver) -> R?
-    ) = run(WebDriverTask(browserId, priority, volatileConfig, action))
+    suspend fun <R> run(browserId: BrowserInstanceId, task: FetchTask,
+                        browseFun: suspend (driver: WebDriver) -> R?
+    ) = run(WebDriverTask(browserId, task, browseFun))
 
     suspend fun <R> run(task: WebDriverTask<R>): R? {
         lastActiveTime = Instant.now()
@@ -250,32 +253,32 @@ open class WebDriverPoolManager(
     private fun <R> firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
         val pollingDriverTimeout = driverSettings.pollingDriverTimeout
 
-        onBeforeBrowserLaunch(task.volatileConfig)
+        onBeforeBrowserLaunch(task.task)
 
         val driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout)
         driver.startWork()
 
-        onAfterBrowserLaunch(driver, task.volatileConfig)
+        onAfterBrowserLaunch(driver, task.task)
 
         return driver
     }
 
-    private fun onBeforeBrowserLaunch(volatileConfig: VolatileConfig) {
-        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)
+    private fun onBeforeBrowserLaunch(task: FetchTask) {
+        val eventHandler = task.volatileConfig.getBeanOrNull(PulsarEventHandler::class)
         try {
-            eventHandler?.loadEventHandler?.onBeforeBrowserLaunch?.invoke()
+            eventHandler?.loadEventHandler?.onBeforeBrowserLaunch?.invoke(task.page)
         } catch (t: Throwable) {
-            logger.warn(t.stringify("Unexpected exception in onBeforeBrowserLaunch - "))
+            logger.warn(t.stringify("Unexpected exception before browser launch - "))
         }
     }
 
-    private fun onAfterBrowserLaunch(driver: WebDriver, volatileConfig: VolatileConfig) {
-        val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)
+    private fun onAfterBrowserLaunch(driver: WebDriver, task: FetchTask) {
+        val eventHandler = task.volatileConfig.getBeanOrNull(PulsarEventHandler::class)
 
         try {
-            eventHandler?.loadEventHandler?.onAfterBrowserLaunch?.invoke(driver)
+            eventHandler?.loadEventHandler?.onAfterBrowserLaunch?.invoke(task.page, driver)
         } catch (t: Throwable) {
-            logger.warn(t.stringify("Unexpected exception in onAfterBrowserLaunch - "))
+            logger.warn(t.stringify("Unexpected exception after browser launch - "))
         }
     }
 

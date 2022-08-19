@@ -116,6 +116,7 @@ class PrimerParser(val conf: ImmutableConfig) {
         val jsoupParser = JsoupParser(page, conf)
         jsoupParser.parse()
         val document = jsoupParser.document
+        // TODO: no need to convert to a W3CDom, we can use the original document directly
         val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
 
         val metaTags = parseMetaTags(baseURL, fragment, page)

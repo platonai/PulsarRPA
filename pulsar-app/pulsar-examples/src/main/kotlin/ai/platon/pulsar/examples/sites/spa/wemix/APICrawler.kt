@@ -2,13 +2,15 @@ package ai.platon.pulsar.examples.sites.spa.wemix
 
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.AbstractWebDriverHandler
+import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.session.PulsarSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
-private class InitBrowserHandler(val initUrl: String): AbstractWebDriverHandler() {
-    override suspend fun invokeDeferred(driver: WebDriver): Any? {
+private class InitBrowserHandler(val initUrl: String): AbstractWebPageWebDriverHandler() {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         driver.navigateTo(initUrl)
         delay(10_000)
         return null
