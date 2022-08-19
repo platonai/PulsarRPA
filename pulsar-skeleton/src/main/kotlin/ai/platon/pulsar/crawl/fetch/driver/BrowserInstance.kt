@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.jvm.Throws
 
 interface BrowserInstance: AutoCloseable {
     val id: BrowserInstanceId
@@ -26,7 +25,9 @@ interface BrowserInstance: AutoCloseable {
 
     @Throws(WebDriverException::class)
     fun launch()
+    @Throws(InterruptedException::class)
     fun await()
+    @Throws(InterruptedException::class)
     fun signalAll()
 }
 
@@ -52,10 +53,12 @@ abstract class AbstractBrowserInstance(
 
     override val shutdownHookThread: Thread = Thread { this.close() }
 
+    @Throws(InterruptedException::class)
     override fun await() {
         initializedLock.withLock { initialized.await() }
     }
 
+    @Throws(InterruptedException::class)
     override fun signalAll() {
         initializedLock.withLock { initialized.signalAll() }
     }

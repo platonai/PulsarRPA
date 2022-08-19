@@ -1,18 +1,15 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
-//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
-//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.test.MockWebDriver
 import org.slf4j.LoggerFactory
@@ -27,8 +24,7 @@ open class WebDriverFactory(
     val numDrivers = AtomicInteger()
 
     /**
-     * Create a RemoteWebDriver
-     * Use reflection so we can make the dependency level to be "provided" rather than "source"
+     * Create a WebDriver
      */
     @Throws(DriverLaunchException::class)
     @Synchronized

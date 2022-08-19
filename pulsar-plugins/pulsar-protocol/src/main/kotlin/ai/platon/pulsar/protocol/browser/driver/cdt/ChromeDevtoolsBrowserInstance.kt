@@ -79,14 +79,18 @@ class ChromeDevtoolsBrowserInstance(
                     // should we?
                     it.waitUntilClosed()
                 } catch (e: Exception) {
-                    logger.warn("Failed to close the dev tool", e)
+                    logger.warn("Failed to close the devtool", e)
                 }
             }
 
-            chrome.close()
-            launcher.close()
+            try {
+                chrome.close()
+                launcher.close()
+            } catch (e: Exception) {
+                logger.warn("Failed to close the browser", e)
+            }
 
-            logger.info("Browser instance is closed | {}", id.display)
+            logger.info("Browser is closed | {}", id.display)
         }
     }
 
