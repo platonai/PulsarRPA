@@ -9,8 +9,9 @@ import org.w3c.dom.DocumentFragment
  * Created by vincent on 17-7-28.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class ParseContext constructor(
+class ParseContext(
         val page: WebPage,
         val parseResult: ParseResult = ParseResult(),
-        var document: FeaturedDocument? = null
-)
+) {
+        val document get() = parseResult.document
+}

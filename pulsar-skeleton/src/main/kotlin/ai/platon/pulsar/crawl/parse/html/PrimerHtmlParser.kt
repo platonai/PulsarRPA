@@ -73,10 +73,7 @@ class PrimerHtmlParser(
             val parseContext = primerParser.parseHTMLDocument(page)
             parseFilters?.filter(parseContext)
 
-            val document = parseContext.document
-            if (document != null) {
-                afterHtmlParse(page, document)
-            }
+            parseContext.document?.let { afterHtmlParse(page, it) }
 
             parseContext.parseResult
         } catch (e: MalformedURLException) {

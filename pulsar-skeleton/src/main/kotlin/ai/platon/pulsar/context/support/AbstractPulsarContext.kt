@@ -405,7 +405,7 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Parse the WebPage using parseComponent
+     * Parse the WebPage content using parseComponent
      */
     override fun parse(page: WebPage): FeaturedDocument? {
         val parser = loadComponent.parseComponent
