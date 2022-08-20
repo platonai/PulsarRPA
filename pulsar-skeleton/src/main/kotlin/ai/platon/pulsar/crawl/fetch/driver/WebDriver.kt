@@ -139,6 +139,10 @@ interface WebDriver: Closeable {
     suspend fun scrollTo(selector: String)
     suspend fun scrollDown(count: Int = 1)
     suspend fun scrollUp(count: Int = 1)
+    suspend fun scrollToTop()
+    suspend fun scrollToBottom()
+    suspend fun scrollToMiddle(ratio: Float)
+    suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
 
     suspend fun outerHTML(selector: String): String?
     suspend fun firstText(selector: String): String?
@@ -158,11 +162,17 @@ interface WebDriver: Closeable {
      */
     suspend fun captureScreenshot(selector: String): String?
     suspend fun captureScreenshot(rect: RectD): String?
+    /** Force the page stop all navigations and releases all resources. */
     suspend fun stop()
+    /** Force the page stop all navigations and pending resource fetches. */
+    suspend fun stopLoading()
+    /** Force the page stop all navigations and releases all resources. */
+    suspend fun terminate()
+    /** Quit the tab, clicking the close button. */
+    fun quit()
 
     fun free()
     fun startWork()
     fun retire()
-    fun quit()
     fun cancel()
 }

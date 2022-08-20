@@ -29,16 +29,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class MiscMessageWriter(
     /**
-     * TODO: no WebDb dependency
+     * TODO: remove WebDb dependency
      * */
     val webDb: WebDb,
     conf: ImmutableConfig
 ) : MultiSinkWriter(conf) {
-    private val log = LoggerFactory.getLogger(MiscMessageWriter::class.java)
     private val hostname = NetUtil.getHostname()
 
-    // TODO: job name is set in job setup phrase, so it's not available unless this is a [JobInitialized] class
-    private val weakIndexer = WeakPageIndexer(AppConstants.CRAWL_LOG_HOME_URL, webDb)
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val urlPrefix =
         AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimes.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
@@ -52,7 +49,7 @@ class MiscMessageWriter(
     constructor(conf: ImmutableConfig) : this(WebDb(conf), conf)
 
     fun report(page: WebPage) {
-        var category = page.pageCategory.name.toLowerCase()
+        var category = page.pageCategory.name.lowercase(Locale.getDefault())
         if (page.isSeed) {
             category = "seed"
         }

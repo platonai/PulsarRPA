@@ -85,6 +85,10 @@ class WebDriverAdapter(
 
     override suspend fun type(selector: String, text: String) = driverOrNull?.type(selector, text) ?: Unit
 
+    override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
+        driverOrNull?.dragAndDrop(selector, deltaX, deltaY)
+    }
+
     override suspend fun evaluate(expression: String): Any? {
         return when {
             isNotWorking -> null
@@ -99,7 +103,7 @@ class WebDriverAdapter(
     override suspend fun getCookies() = driverOrNull?.getCookies() ?: listOf()
 
     override suspend fun bringToFront() {
-        driverOrNull?.runCatching { bringToFront() }
+        driverOrNull?.bringToFront()
     }
 
     override suspend fun captureScreenshot(selector: String): String? {
@@ -116,9 +120,11 @@ class WebDriverAdapter(
         }
     }
 
-    override suspend fun stop() {
-        driverOrNull?.runCatching { stop() }
-    }
+    override suspend fun stop() = driverOrNull?.stop() ?: Unit
+
+    override suspend fun stopLoading() = driverOrNull?.stopLoading() ?: Unit
+
+    override suspend fun terminate() = driverOrNull?.terminate() ?: Unit
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
         driverOrNull?.setTimeouts(browserSettings)

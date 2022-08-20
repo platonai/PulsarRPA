@@ -105,6 +105,18 @@ abstract class AbstractWebDriver(
         evaluate("__pulsar_utils__.scrollUp()")
     }
 
+    override suspend fun scrollToTop() {
+        evaluate("__pulsar_utils__.scrollToTop()")
+    }
+
+    override suspend fun scrollToBottom() {
+        evaluate("__pulsar_utils__.scrollToBottom()")
+    }
+
+    override suspend fun scrollToMiddle(ratio: Float) {
+        evaluate("__pulsar_utils__.scrollToMiddle($ratio)")
+    }
+
     override suspend fun outerHTML(selector: String): String? {
         val result = evaluate("__pulsar_utils__.outerHTML('$selector')")
         return result?.toString()

@@ -110,10 +110,6 @@ class MockWebDriver(
         return backupDriverOrNull?.captureScreenshot(rect)
     }
 
-    override suspend fun stop() {
-        backupDriverOrNull?.stop()
-    }
-
     override suspend fun evaluate(expression: String): Any? {
         return backupDriverOrNull?.evaluate(expression)
     }
@@ -144,12 +140,24 @@ class MockWebDriver(
         backupDriverOrNull?.click(selector, count)
     }
 
-//    @Throws(ScreenshotException::class, NoSuchSessionException::class)
-//    override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X? {
-//        return backupDriverOrNull?.getScreenshotAs(outputType)
-//    }
+    override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
+        backupDriverOrNull?.dragAndDrop(selector, deltaX, deltaY)
+    }
 
     override fun toString() = "Mock driver ($lastSessionId)"
+
+
+    override suspend fun stop() {
+        backupDriverOrNull?.stop()
+    }
+
+    override suspend fun terminate() {
+        backupDriverOrNull?.terminate()
+    }
+
+    override suspend fun stopLoading() {
+        backupDriverOrNull?.stopLoading()
+    }
 
     /**
      * Quit the browser instance

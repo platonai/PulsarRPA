@@ -11,6 +11,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
+import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
@@ -51,6 +52,7 @@ class ChromeDevtoolsDriver(
             "click" -> 500L + Random.nextInt(1000)
             "type" -> 50L + Random.nextInt(500)
             "gap" -> 500L + Random.nextInt(500)
+            "dragAndDrop" -> 800L + Random.nextInt(500)
             else -> 100L + Random.nextInt(500)
         }
     }
@@ -172,18 +174,40 @@ class ChromeDevtoolsDriver(
         return map.filterValues { it != null }.mapValues { it.toString() }
     }
 
+    /** Force the page stop all navigations and releases all resources. */
     override suspend fun stop() {
-        if (!isActive) {
+        terminate()
+    }
+
+    /** Force the page stop all navigations and pending resource fetches. */
+    override suspend fun stopLoading() {
+        if (!refreshState()) {
             return
         }
 
-        refreshState()
+        try {
+            withIOContext("stopLoading") {
+                page?.stopLoading()
+            }
+        } catch (e: ChromeRPCException) {
+            handleRPCException(e, "stopLoading")
+        }
+    }
+
+    /** Force the page stop all navigations and releases all resources. */
+    override suspend fun terminate() {
+        if (!refreshState()) {
+            return
+        }
+
         try {
             navigateEntry.stopped = true
 
             if (browserInstance.isGUI) {
                 // in gui mode, just stop the loading, so we can make a diagnosis
-                page?.stopLoading()
+                withIOContext("terminate") {
+                    page?.stopLoading()
+                }
             } else {
                 // go to about:blank, so the browser stops the previous page and release all resources
                 navigateTo(Chrome.ABOUT_BLANK_PAGE)
@@ -194,7 +218,7 @@ class ChromeDevtoolsDriver(
             // TODO: it might be better to do this using a scheduled task
             cleanTabs()
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "stop")
+            handleRPCException(e, "terminate")
         }
     }
 
@@ -385,6 +409,25 @@ class ChromeDevtoolsDriver(
             scrollIntoViewIfNeeded(selector)
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "scrollTo")
+        }
+    }
+
+    override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
+        try {
+            val nodeId = scrollIntoViewIfNeeded(selector) ?: return
+            val offset = OffsetD(4.0, 4.0)
+            val p = page
+            val d = dom
+            if (p != null && d != null) {
+                val point = ClickableDOM(p, d, nodeId, offset).clickablePoint() ?: return
+                val point2 = PointD(point.x + deltaX, point.y + deltaY)
+                withIOContext("dragAndDrop") {
+                    mouse?.dragAndDrop(point, point2, delayPolicy("dragAndDrop"))
+                }
+                gap()
+            }
+        } catch (e: ChromeRPCException) {
+            handleRPCException(e, "dragAndDrop")
         }
     }
 
