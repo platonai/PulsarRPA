@@ -222,8 +222,8 @@ abstract class AbstractPulsarSession(
             return null
         }
 
-        // We have events to handle later
-        if (normUrl.options.eventHandler?.loadEventHandler != null) {
+        // We have events to handle, so do not use the cached version
+        if (normUrl.options.eventHandler != null) {
             return null
         }
 
