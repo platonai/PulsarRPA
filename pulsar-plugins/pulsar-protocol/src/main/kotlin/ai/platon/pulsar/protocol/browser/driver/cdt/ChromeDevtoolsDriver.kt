@@ -130,13 +130,12 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun navigateTo(entry: NavigateEntry) {
-        val driver = this
         this.navigateEntry = entry
         browserInstance.navigateHistory.add(entry)
 
         try {
             withIOContext("navigateTo") {
-                driver.takeIf { enableStartupScript }?.getInvaded(entry.url) ?: getNoInvaded(entry.url)
+                if (enableStartupScript) getInvaded(entry.url) else getNoInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "navigateTo ${entry.url}")
@@ -294,13 +293,13 @@ class ChromeDevtoolsDriver(
      * Wait until [selector] for [timeout] at most
      * */
     override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
+        if (!refreshState()) return -1L
+
+        val timeoutMillis = timeout.toMillis()
+        val startTime = System.currentTimeMillis()
+        var elapsedTime = 0L
+
         try {
-            if (!refreshState()) return -1L
-
-            val timeoutMillis = timeout.toMillis()
-            val startTime = System.currentTimeMillis()
-            var elapsedTime = 0L
-
             var nodeId = querySelector(selector)
             while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
                 gap()

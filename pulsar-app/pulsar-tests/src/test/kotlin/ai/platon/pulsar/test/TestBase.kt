@@ -3,6 +3,8 @@ package ai.platon.pulsar.test
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.alwaysTrue
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,6 +18,12 @@ import kotlin.test.assertTrue
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class TestBase {
+    init {
+        System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
+    }
+
+    @Autowired
+    lateinit var conf: ImmutableConfig
 
     @Autowired
     lateinit var session: PulsarSession

@@ -149,19 +149,19 @@ abstract class AbstractPulsarContext(
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
     @Throws(BeansException::class)
-    fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
+    override fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
+
+    /**
+     * Get a bean with the specified class, returns null if the bean doesn't exist
+     * */
+    override fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
+        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
-
-    /**
-     * Get a bean with the specified class, returns null if the bean doesn't exist
-     * */
-    fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
-        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
 
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist

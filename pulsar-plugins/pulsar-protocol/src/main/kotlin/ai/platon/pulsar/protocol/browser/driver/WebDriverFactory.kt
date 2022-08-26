@@ -29,6 +29,18 @@ open class WebDriverFactory(
      * Create a WebDriver
      */
     @Throws(DriverLaunchException::class)
+    fun create() = create(immutableConfig.toVolatileConfig())
+
+    /**
+     * Create a WebDriver
+     */
+    @Throws(DriverLaunchException::class)
+    fun create(conf: VolatileConfig) = create(BrowserInstanceId.DEFAULT, 0, conf)
+
+    /**
+     * Create a WebDriver
+     */
+    @Throws(DriverLaunchException::class)
     @Synchronized
     fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): WebDriver {
         logger.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
@@ -47,9 +59,10 @@ open class WebDriverFactory(
                 else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
             }
 
+            // driver.startWork()
             return WebDriverAdapter(driver, priority)
         } catch (e: DriverLaunchException) {
-            logger.error("Can not launch browser $browserType | ", e.message)
+            logger.error("Can not launch browser $browserType | {}", e.message)
             throw e
         }
     }
