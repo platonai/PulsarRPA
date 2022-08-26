@@ -39,6 +39,7 @@ class CombinedPageCategorySniffer(
 }
 
 interface HtmlIntegrityChecker {
+    val isRelevant: Boolean
     operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity
 }
 
@@ -47,6 +48,8 @@ open class DefaultHtmlIntegrityChecker(
     val conf: ImmutableConfig
 ): HtmlIntegrityChecker {
     private val tracer = getLogger(DefaultHtmlIntegrityChecker::class).takeIf { it.isTraceEnabled }
+
+    override val isRelevant: Boolean = true
 
     override operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity {
         return checkHtmlIntegrity(pageSource)
@@ -97,8 +100,11 @@ open class CombinedHtmlIntegrityChecker(
 ): HtmlIntegrityChecker {
     val checkers = Collections.synchronizedList(mutableListOf<HtmlIntegrityChecker>())
 
+    override val isRelevant: Boolean = true
+
     override fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity {
         return checkers.asSequence()
+            .filter { it.isRelevant }
             .map { it.invoke(pageSource, pageDatum) }
             .firstOrNull { it != HtmlIntegrity.OK }
             ?: HtmlIntegrity.OK

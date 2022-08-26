@@ -8,6 +8,8 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.test.MockBrowserInstance
@@ -27,6 +29,7 @@ open class BrowserInstanceManager(
         return browserInstances.containsKey(userDataDir)
     }
 
+    @Throws(DriverLaunchException::class)
     @Synchronized
     fun launchIfAbsent(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
@@ -49,6 +52,7 @@ open class BrowserInstanceManager(
         }
     }
 
+    @Throws(DriverLaunchException::class)
     private fun createAndLaunch(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): AbstractBrowserInstance {

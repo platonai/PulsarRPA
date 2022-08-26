@@ -35,6 +35,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.jvm.Throws
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -219,6 +220,8 @@ class ChromeDevtoolsDriver(
             cleanTabs()
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "terminate")
+        } catch (e: ChromeDriverException) {
+            logger.info("Terminate exception: {}", e.message)
         }
     }
 
@@ -727,6 +730,7 @@ class ChromeDevtoolsDriver(
     }
 
     // close irrelevant tabs, which might be opened for humanization purpose
+    @Throws(ChromeDriverException::class)
     private fun cleanTabs() {
         val tabs = browserInstance.listTab()
         closeTimeoutTabs(tabs)

@@ -5,6 +5,8 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
@@ -28,7 +30,7 @@ open class WebDriverFactory(
      */
     @Throws(DriverLaunchException::class)
     @Synchronized
-    fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): WebDriverAdapter {
+    fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): WebDriver {
         logger.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
         val capabilities = driverSettings.createGeneralOptions()
@@ -36,26 +38,27 @@ open class WebDriverFactory(
 
         // Choose the WebDriver
         val browserType = browserInstanceId.browserType
-        val driver = kotlin.runCatching {
-            when (browserType) {
+
+        try {
+            val driver = when (browserType) {
                 BrowserType.PULSAR_CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
 //                BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
                 BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserInstanceId, capabilities)
                 else -> throw UnsupportedWebDriverException("Unsupported WebDriver: $browserType")
             }
-        }.onFailure {
-            logger.error("Failed to create web driver $browserType")
-        }.getOrElse {
-            throw DriverLaunchException("Failed to create web driver | $browserType")
-        }
 
-        return WebDriverAdapter(driver, priority)
+            return WebDriverAdapter(driver, priority)
+        } catch (e: DriverLaunchException) {
+            logger.error("Can not launch browser $browserType | ", e.message)
+            throw e
+        }
     }
 
     override fun close() {
         browserInstanceManager.close()
     }
 
+    @Throws(DriverLaunchException::class)
     private fun createBrowserInstance(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): BrowserInstance {
@@ -69,6 +72,7 @@ open class WebDriverFactory(
         return browserInstanceManager.launchIfAbsent(instanceId, launcherOptions, launchOptions)
     }
 
+    @Throws(DriverLaunchException::class)
     private fun createChromeDevtoolsDriver(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
@@ -85,6 +89,7 @@ open class WebDriverFactory(
 //        return PlaywrightDriver(driverSettings, browserInstance as PlaywrightBrowserInstance)
 //    }
 
+    @Throws(DriverLaunchException::class)
     private fun createMockChromeDevtoolsDriver(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): MockWebDriver {

@@ -51,6 +51,7 @@ class Chrome(
 
     constructor(port: Int): this(LOCALHOST, port)
 
+    @Throws(ChromeServiceException::class)
     override fun getTabs(): Array<ChromeTab> {
         return request(Array<ChromeTab>::class.java, "http://%s:%d/%s", host, port, LIST_TABS)
                 ?: throw ChromeServiceException("Failed to list tabs")

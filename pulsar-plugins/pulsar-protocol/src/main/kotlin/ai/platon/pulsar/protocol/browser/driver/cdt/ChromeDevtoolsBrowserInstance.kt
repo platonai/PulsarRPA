@@ -4,10 +4,12 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -26,7 +28,7 @@ class ChromeDevtoolsBrowserInstance(
     val devToolsCount get() = devToolsList.size
 
     @Synchronized
-    @Throws(WebDriverException::class)
+    @Throws(DriverLaunchException::class)
     override fun launch() {
         if (launched.compareAndSet(false, true)) {
             val shutdownHookRegistry = BrowserShutdownHookRegistry(this)
@@ -34,7 +36,9 @@ class ChromeDevtoolsBrowserInstance(
                 options = launcherOptions,
                 shutdownHookRegistry = shutdownHookRegistry
             )
-            chrome = launcher.launch(launchOptions)
+
+            chrome = kotlin.runCatching { launcher.launch(launchOptions) }
+                .getOrElse { throw WebDriverException("launch", it) }
         }
     }
 
@@ -43,26 +47,32 @@ class ChromeDevtoolsBrowserInstance(
     fun createTab(): ChromeTab {
         activeTime = Instant.now()
         tabCount.incrementAndGet()
-        return chrome.createTab(Chrome.ABOUT_BLANK_PAGE)
+
+        return kotlin.runCatching { chrome.createTab(Chrome.ABOUT_BLANK_PAGE) }
+            .getOrElse { throw WebDriverException("createTab", it) }
     }
 
     @Synchronized
     @Throws(WebDriverException::class)
     fun closeTab(tab: ChromeTab) {
         tabCount.decrementAndGet()
-        chrome.closeTab(tab)
+
+        return kotlin.runCatching { chrome.closeTab(tab) }
+            .getOrElse { throw WebDriverException("closeTab", it) }
     }
 
     @Synchronized
     @Throws(WebDriverException::class)
     fun listTab(): Array<ChromeTab> {
-        return chrome.getTabs()
+        return kotlin.runCatching { chrome.getTabs() }
+            .getOrElse { throw WebDriverException("listTab", it) }
     }
 
     @Synchronized
     @Throws(WebDriverException::class)
     fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
-        val devTools= chrome.createDevTools(tab, config)
+        val devTools= kotlin.runCatching { chrome.createDevTools(tab, config) }
+            .getOrElse { throw WebDriverException("createDevTools", it) }
         devToolsList.add(devTools)
         return devTools
     }

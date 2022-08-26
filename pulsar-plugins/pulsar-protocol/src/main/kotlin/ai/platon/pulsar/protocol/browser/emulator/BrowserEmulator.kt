@@ -294,7 +294,7 @@ open class BrowserEmulator(
 
         // make sure the document is ready
         val initialScroll = 5
-        val maxRound = scriptTimeout.seconds - 5 // leave 5 seconds to wait for script finish
+        val maxRound = scriptTimeout.seconds - 5 // leave some time to wait for script finish
 
         // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
         val expression = "__pulsar_utils__.waitForReady($maxRound, $initialScroll)"
@@ -313,7 +313,7 @@ open class BrowserEmulator(
         } finally {
             if (message == null) {
                 if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
-                    logger.warn("WaitForReady got null after $i round, retry is supposed | {}", interactTask.url)
+                    logger.warn("WaitForReady returns null after $i round, retry is supposed | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK
                 }

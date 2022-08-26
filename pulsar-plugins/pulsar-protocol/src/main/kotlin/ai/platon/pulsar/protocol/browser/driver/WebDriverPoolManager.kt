@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
@@ -26,6 +27,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.jvm.Throws
 
 class WebDriverTask<R> (
         val browserId: BrowserInstanceId,
@@ -99,10 +101,12 @@ open class WebDriverPoolManager(
      *
      * @return The result of action, or null if timeout
      * */
+    @Throws(WebDriverException::class)
     suspend fun <R> run(browserId: BrowserInstanceId, task: FetchTask,
                         browseFun: suspend (driver: WebDriver) -> R?
     ) = run(WebDriverTask(browserId, task, browseFun))
 
+    @Throws(WebDriverException::class)
     suspend fun <R> run(task: WebDriverTask<R>): R? {
         lastActiveTime = Instant.now()
         return run0(task).also { lastActiveTime = Instant.now() }
@@ -191,6 +195,7 @@ open class WebDriverPoolManager(
 
     override fun toString(): String = formatStatus(false)
 
+    @Throws(WebDriverException::class)
     private suspend fun <R> run0(task: WebDriverTask<R>): R? {
         val browserId = task.browserId
         var result: R? = null

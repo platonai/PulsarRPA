@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
@@ -25,6 +24,7 @@ import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.session.AbstractPulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
@@ -73,7 +73,7 @@ open class StreamingCrawler<T : UrlAware>(
     /**
      * The default load options
      * */
-    val defaultOptions: LoadOptions,
+    defaultOptions: LoadOptions,
     /**
      * The default pulsar session to use
      * */
@@ -87,10 +87,6 @@ open class StreamingCrawler<T : UrlAware>(
      * */
     val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
     /**
-     * The crawl name
-     * */
-    val name: String = StreamingCrawler::class.simpleName!!,
-    /**
      * Do not use proxy
      * */
     val noProxy: Boolean = true,
@@ -98,9 +94,8 @@ open class StreamingCrawler<T : UrlAware>(
      * Auto close or not
      * */
     autoClose: Boolean = true,
-) : AbstractCrawler(session, autoClose) {
+) : AbstractCrawler(session, defaultOptions, autoClose) {
     companion object {
-        private val instanceSequencer = AtomicInteger()
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
         private val globalKilledTasks = AtomicInteger()
@@ -151,12 +146,10 @@ open class StreamingCrawler<T : UrlAware>(
     private val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
     private val memoryToReserveLarge get() = conf.getDouble(BROWSER_MEMORY_TO_RESERVE_KEY, DEFAULT_BROWSER_RESERVED_MEMORY)
     private val memoryToReserve = when {
-        totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 2 GiB
+        totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 3 GiB
         totalMemoryGiB >= 30 -> memoryToReserveLarge
         else -> BROWSER_TAB_REQUIRED_MEMORY
     }
-
-    val defaultArgs = defaultOptions.toString()
 
     private val abstractSession get() = session as AbstractPulsarSession
     private val proxyPool: ProxyPool? = if (noProxy) null else abstractSession.context.getBeanOrNull()
@@ -168,10 +161,6 @@ open class StreamingCrawler<T : UrlAware>(
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isOutOfWork get() = idleTime > outOfWorkTimeout
-
-    var delayPolicy: (Int) -> Duration = { nextRetryNumber ->
-        Duration.ofMinutes(1L + 2 * nextRetryNumber)
-    }
 
     private val enableSmartRetry get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
     private val isIdle: Boolean
@@ -189,8 +178,6 @@ open class StreamingCrawler<T : UrlAware>(
     private var flowState = FlowState.CONTINUE
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
-
-    val id = instanceSequencer.incrementAndGet()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() },
@@ -259,7 +246,7 @@ open class StreamingCrawler<T : UrlAware>(
                     globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
                 )
 
-                // The largest disk must have at least 10GiB remaining space
+                // The largest disk must have at least 10 GiB remaining space
                 val freeSpace = AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
                 if (freeSpace < 10.0) {
                     logger.error("Disk space is full!")
@@ -530,7 +517,7 @@ open class StreamingCrawler<T : UrlAware>(
             return null
         }
 
-        return session.runCatching { loadDeferred(url, options) }
+        return kotlin.runCatching { session.loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()
     }
@@ -606,7 +593,7 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: delayPolicy(nextRetryNumber)
+        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: retryDelayPolicy(nextRetryNumber, url)
 //        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")

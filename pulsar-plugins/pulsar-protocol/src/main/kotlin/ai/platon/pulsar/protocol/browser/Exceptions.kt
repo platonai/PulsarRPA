@@ -7,6 +7,9 @@ class UnsupportedWebDriverException : WebDriverException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
+/**
+ * TODO: a better name: BrowserLaunchException
+ * */
 class DriverLaunchException : WebDriverException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)

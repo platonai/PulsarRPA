@@ -383,8 +383,8 @@ class LoadComponent(
     }
 
     private fun report(page: WebPage) {
-        if (logger.isInfoEnabled) {
-            val verbose = logger.isDebugEnabled
+        if (taskLogger.isInfoEnabled) {
+            val verbose = taskLogger.isDebugEnabled
             val report = LoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
             taskLogger.info(report)
         }

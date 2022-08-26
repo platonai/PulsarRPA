@@ -21,7 +21,7 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
         val TEST_PROXY_FILE = AppPaths.PROXY_BASE_DIR.resolve("test-ip")
     }
 
-    private val log = LoggerFactory.getLogger(ProxyLoader::class.java)
+    private val logger = LoggerFactory.getLogger(ProxyLoader::class.java)
     protected val startTime = Instant.now()
     protected val closed = AtomicBoolean()
 
@@ -52,7 +52,7 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
     fun updateBanStrategy() {
         val path = AppPaths.PROXY_BAN_STRATEGY
         loadIfModified(path, fileWatchInterval) { Files.readAllLines(it) }
-                .firstOrNull()?.let { banStrategy = it }?.also { log.info("Proxy ban strategy: $it") }
+                .firstOrNull()?.let { banStrategy = it }?.also { logger.info("Proxy ban strategy: $it") }
     }
 
     /**
@@ -67,13 +67,21 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
     }
 
     protected fun <O> loadIfModified(path: Path, expires: Duration, loader: (Path) -> List<O>): List<O> {
+        if (!Files.exists(path)) {
+            return listOf()
+        }
         val lastModified = lastModifiedTimes.getOrDefault(path, Instant.EPOCH)
-        val modified = Files.getLastModifiedTime(path).toInstant()
-        val elapsed = Duration.between(lastModified, modified)
 
-        if (elapsed > expires) {
-            log.info("Reload from file, last modified: {}, elapsed: {} | {}", lastModified, elapsed.readable(), path)
-            return loader(path).also { lastModifiedTimes[path] = modified }
+        try {
+            val modified = Files.getLastModifiedTime(path).toInstant()
+            val elapsed = Duration.between(lastModified, modified)
+
+            if (elapsed > expires) {
+                logger.info("Reload from file, last modified: {}, elapsed: {} | {}", lastModified, elapsed.readable(), path)
+                return loader(path).also { lastModifiedTimes[path] = modified }
+            }
+        } catch (e: IOException) {
+            logger.warn("Failed to load - {}", e.message)
         }
 
         return listOf()

@@ -34,6 +34,7 @@ class FileBackendPageStore(
     private val logger = LoggerFactory.getLogger(FileBackendPageStore::class.java)
     private val unsafeConf = VolatileConfig.UNSAFE
 
+    @Synchronized
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
         var page = map[reversedUrl] as? GWebPage
         if (page == null) {
@@ -42,13 +43,14 @@ class FileBackendPageStore(
         return page
     }
 
+    @Synchronized
     override fun put(reversedUrl: String, page: GWebPage) {
         super.put(reversedUrl, page)
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
             val p = WebPage.box(it, page, unsafeConf)
-            writeHtml(p)
             writeAvro(p)
+            writeHtml(p)
         }
     }
 
@@ -56,6 +58,7 @@ class FileBackendPageStore(
 
     override fun getFields(): Array<String> = GWebPage._ALL_FIELDS
 
+    @Synchronized
     fun readHtml(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".htm")
@@ -75,6 +78,7 @@ class FileBackendPageStore(
         return null
     }
 
+    @Synchronized
     fun readAvro(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".avro")
@@ -110,6 +114,7 @@ class FileBackendPageStore(
         return page
     }
 
+    @Synchronized
     fun writeHtml(page: WebPage) {
         val filename = AppPaths.fromUri(page.url, "", ".htm")
         val path = persistDirectory.resolve(filename)
