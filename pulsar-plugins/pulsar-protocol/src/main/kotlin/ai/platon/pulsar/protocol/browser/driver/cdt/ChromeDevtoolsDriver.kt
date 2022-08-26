@@ -152,15 +152,12 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun getCookies(): List<Map<String, String>> {
-        try {
-            return withIOContext("getCookies") {
-                getCookies0()
-            } ?: listOf()
+        return try {
+            withIOContext("getCookies") { getCookies0() } ?: listOf()
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "getCookies")
+            listOf()
         }
-
-        return listOf()
     }
 
     private fun getCookies0(): List<Map<String, String>> {
@@ -446,7 +443,11 @@ class ChromeDevtoolsDriver(
             return null
         }
 
-        val vi = firstAttr(selector, "vi") ?: return captureScreenshotWithoutVi(selector)
+        val vi = firstAttr(selector, "vi")
+        if (vi == null) {
+            logger.warn("Can not capture screenshot, visual information is not calculated yet")
+            return null
+        }
 
         val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
         if (quad.size != 4) {
@@ -822,7 +823,17 @@ class ChromeDevtoolsDriver(
         logger.warn("Chrome RPC exception ({}/{}) | {}", rpcFailures, maxRPCFailures, message ?: e.message)
     }
 
-    private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T? {
+    private suspend fun <T> withIOContext(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
+        var i = maxRetry
+        var result = kotlin.runCatching { withIOContext0(action, block) }
+        while (result.isFailure && i-- > 0) {
+            result = kotlin.runCatching { withIOContext0(action, block) }
+        }
+
+        return result.getOrElse { throw it }
+    }
+
+    private suspend fun <T> withIOContext0(action: String, block: suspend CoroutineScope.() -> T): T? {
         return withContext(Dispatchers.IO) {
             if (!refreshState(action)) {
                 return@withContext null

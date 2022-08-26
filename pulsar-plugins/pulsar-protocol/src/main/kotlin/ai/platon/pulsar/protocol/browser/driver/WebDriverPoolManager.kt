@@ -23,10 +23,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.jvm.Throws
 
 class WebDriverTask<R> (
@@ -247,10 +244,9 @@ open class WebDriverPoolManager(
     }
 
     private fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        val isFirstLaunch = driverPool.numTasks.get() == 0
-        driverPool.numTasks.incrementAndGet()
-        return if (isFirstLaunch) {
-            firstLaunch(driverPool, task)
+        val notLaunched = driverPool.numTasks.compareAndSet(0, 1)
+        return if (notLaunched) {
+            launchAndPoll(driverPool, task)
         } else {
             pollWebDriver(driverPool, task)
         }
@@ -263,7 +259,7 @@ open class WebDriverPoolManager(
         return driver
     }
 
-    private fun <R> firstLaunch(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+    private fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
         onBeforeBrowserLaunch(task.task)
         return pollWebDriver(driverPool, task).also { onAfterBrowserLaunch(it, task.task) }
     }
