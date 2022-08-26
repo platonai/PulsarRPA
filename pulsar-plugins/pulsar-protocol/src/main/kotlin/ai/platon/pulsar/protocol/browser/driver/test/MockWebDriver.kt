@@ -25,13 +25,16 @@ class MockBrowserInstance(
     launcherOptions: LauncherOptions,
     launchOptions: ChromeOptions
 ): AbstractBrowserInstance(id, launcherOptions, launchOptions) {
+    override fun createDriver(browserSettings: BrowserSettings): WebDriver {
+        TODO("not implemented")
+    }
     override fun launch() {}
     override fun close() {}
 }
 
 class MockWebDriver(
     browserInstance: MockBrowserInstance,
-    backupDriverCreator: () -> ChromeDevtoolsDriver,
+    backupDriverCreator: () -> WebDriver,
 ) : AbstractWebDriver(browserInstance) {
     private val logger = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
@@ -138,6 +141,10 @@ class MockWebDriver(
 
     override suspend fun click(selector: String, count: Int) {
         backupDriverOrNull?.click(selector, count)
+    }
+
+    override suspend fun moveMouseTo(x: Double, y: Double) {
+        backupDriverOrNull?.moveMouseTo(x, y)
     }
 
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {

@@ -90,8 +90,9 @@ open class WebDriverFactory(
         instanceId: BrowserInstanceId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
         require(instanceId.browserType == BrowserType.PULSAR_CHROME)
-        val browserInstance = createBrowserInstance(instanceId, capabilities)
-        return ChromeDevtoolsDriver(driverSettings, browserInstance as ChromeDevtoolsBrowserInstance)
+        val browserInstance = createBrowserInstance(instanceId, capabilities) as ChromeDevtoolsBrowserInstance
+
+        return browserInstance.createDriver(driverSettings)
     }
 
 //    private fun createPlaywrightDriver(

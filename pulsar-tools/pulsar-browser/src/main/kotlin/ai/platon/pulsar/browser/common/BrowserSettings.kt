@@ -125,7 +125,9 @@ open class BrowserSettings(
         private val logger = getLogger(BrowserSettings::class)
 
         // The viewport size for browser to rendering all webpages
+        @Deprecated("Use screenViewport instead")
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
+        val screenViewport get() = viewPort
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
         // Available user agents

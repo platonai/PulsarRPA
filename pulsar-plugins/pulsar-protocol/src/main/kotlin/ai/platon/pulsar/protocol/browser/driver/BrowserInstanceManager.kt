@@ -8,7 +8,6 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowserInstance
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
@@ -36,7 +35,7 @@ open class BrowserInstanceManager(
     ): BrowserInstance {
         val userDataDir = instanceId.userDataDir
         return browserInstances.computeIfAbsent(userDataDir.toString()) {
-            createAndLaunch(instanceId, launcherOptions, launchOptions)
+            launch(instanceId, launcherOptions, launchOptions)
         }
     }
 
@@ -53,7 +52,7 @@ open class BrowserInstanceManager(
     }
 
     @Throws(DriverLaunchException::class)
-    private fun createAndLaunch(
+    private fun launch(
         instanceId: BrowserInstanceId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): AbstractBrowserInstance {
         return when(instanceId.browserType) {

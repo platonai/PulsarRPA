@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
@@ -25,6 +26,8 @@ interface BrowserInstance: AutoCloseable {
 
     @Throws(WebDriverException::class)
     fun launch()
+    @Throws(WebDriverException::class)
+    fun createDriver(browserSettings: BrowserSettings): WebDriver
     @Throws(InterruptedException::class)
     fun await()
     @Throws(InterruptedException::class)

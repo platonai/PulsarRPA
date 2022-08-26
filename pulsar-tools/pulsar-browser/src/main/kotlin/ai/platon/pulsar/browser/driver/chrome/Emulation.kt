@@ -1,13 +1,13 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.pulsar.common.DescriptiveResult
 import ai.platon.pulsar.common.geometric.DimD
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.sleepMillis
+import com.github.kklisura.cdt.protocol.ChromeDevTools
 import com.github.kklisura.cdt.protocol.commands.DOM
-import com.github.kklisura.cdt.protocol.commands.Input
 import com.github.kklisura.cdt.protocol.commands.Page
 import com.github.kklisura.cdt.protocol.types.input.*
 import kotlinx.coroutines.Dispatchers
@@ -43,18 +43,19 @@ class ClickableDOM(
     val nodeId: Int,
     val offset: OffsetD? = null
 ) {
-    private val logger = getLogger(this)
-
-    suspend fun clickablePoint(): PointD? {
-        val (contentQuads, layoutMetrics) = withContext(Dispatchers.IO) {
-            dom.getContentQuads(nodeId, null, null) to page.layoutMetrics
-        }
-
-        if (contentQuads == null || layoutMetrics == null) {
+    fun clickablePoint(): DescriptiveResult<PointD> {
+        val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, null, null) }.getOrNull()
+        if (contentQuads == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
-            logger.info("error:notvisible")
-            return null
+            return DescriptiveResult("error:notvisible")
+        }
+
+        val layoutMetrics = page.layoutMetrics
+        if (layoutMetrics == null) {
+            // throw new Error('Node is either not clickable or not an HTMLElement');
+            // return 'error:notvisible';
+            return DescriptiveResult("error:notvisible")
         }
 
         val viewport = layoutMetrics.cssLayoutViewport
@@ -67,8 +68,7 @@ class ClickableDOM(
         if (quads.isEmpty()) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notinviewport'
-            logger.info("error:notinviewport")
-            return null
+            return DescriptiveResult("error:notinviewport")
         }
 
         val quad = quads[0]
@@ -88,7 +88,7 @@ class ClickableDOM(
             }
 
             if (!Precision.equals(minX, MAX_SAFE_POSITION) && !Precision.equals(minY, MAX_SAFE_POSITION)) {
-                return PointD(x = minX + offset.x, y = minY + offset.y)
+                return DescriptiveResult(PointD(x = minX + offset.x, y = minY + offset.y))
             }
         }
 
@@ -100,15 +100,13 @@ class ClickableDOM(
             y += point.y
         }
 
-        return PointD(x = x / 4, y = y / 4)
+        return DescriptiveResult(PointD(x = x / 4, y = y / 4))
     }
 
-    suspend fun boundingBox(): RectD? {
-        val box = withContext(Dispatchers.IO) {
-            kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
-                .onFailure { logger.warn("Failed to get box model for #{} | {}", nodeId, it.message) }
-                .getOrNull()
-        } ?: return null
+    fun boundingBox(): RectD? {
+        val box = kotlin.runCatching {
+            dom.getBoxModel(nodeId, null, null)
+        }.getOrNull() ?: return null
 
         val quad = box.border
         if (quad.isEmpty()) {
@@ -165,7 +163,9 @@ class ClickableDOM(
  *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
-class Mouse(private val input: Input) {
+class Mouse(private val devTools: ChromeDevTools) {
+    private val input get() = devTools.input
+
     var currentX = 0.0
     var currentY = 0.0
 
@@ -479,7 +479,8 @@ class Mouse(private val input: Input) {
 /**
  * Keyboard provides an api for managing a virtual keyboard.
  * */
-class Keyboard(private val input: Input) {
+class Keyboard(private val devTools: ChromeDevTools) {
+    private val input get() = devTools.input
 
     suspend fun type(nodeId: Int, text: String, delayMillis: Long) {
         text.forEach { char ->

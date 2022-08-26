@@ -7,18 +7,22 @@ import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.kklisura.cdt.protocol.types.dom.Rect
 import com.github.kklisura.cdt.protocol.types.network.Cookie
+import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,16 +33,17 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
-class ChromeDevtoolsDriver(
+class ChromeDevtoolsDriverBackup(
     private val chromeTab: ChromeTab,
     private val devTools: RemoteDevTools,
     private val browserSettings: BrowserSettings,
     override val browserInstance: ChromeDevtoolsBrowserInstance,
 ) : AbstractWebDriver(browserInstance) {
 
-    private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
+    private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriverBackup::class.java)!!
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
@@ -53,33 +58,32 @@ class ChromeDevtoolsDriver(
     }
 
     val openSequence = 1 + browserInstance.devToolsCount
-    //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
+    //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val userAgent get() = BrowserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
     //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
+    private val toolsConfig = DevToolsConfig()
 
-    private val pageHandler = PageHandler(devTools, browserSettings)
-    private val screenshot = Screenshot(pageHandler, devTools)
+    private val _mouse = Mouse(devTools)
+    private val _keyboard = Keyboard(devTools)
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
     private var navigateUrl = ""
 
-    private val browser get() = devTools.browser
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
-    private val input get() = devTools.input.takeIf { isActive }
     private val mainFrame get() = page?.frameTree?.frame
     private val network get() = devTools.network.takeIf { isActive }
     private val fetch get() = devTools.fetch.takeIf { isActive }
     private val runtime get() = devTools.runtime.takeIf { isActive }
     private val emulation get() = devTools.emulation.takeIf { isActive }
-    private val mouse get() = pageHandler.mouse.takeIf { isActive }
-    private val keyboard get() = pageHandler.keyboard.takeIf { isActive }
+    private val mouse get() = _mouse.takeIf { isActive }
+    private val keyboard get() = _keyboard.takeIf { isActive }
 
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
@@ -99,11 +103,16 @@ class ChromeDevtoolsDriver(
     val tabId get() = chromeTab.id
 
     init {
-        // In chrome every tab is a separate process
-        navigateUrl = chromeTab.url ?: ""
+        try {
+            navigateUrl = chromeTab.url ?: ""
 
-        if (userAgent.isNotEmpty()) {
-            emulation?.setUserAgentOverride(userAgent)
+            if (userAgent.isNotEmpty()) {
+                emulation?.setUserAgentOverride(userAgent)
+            }
+        } catch (e: ChromeDriverException) {
+            throw DriverLaunchException("Failed to create chrome devtools driver | " + e.message)
+        } catch (e: Exception) {
+            throw DriverLaunchException("Failed to create chrome devtools driver", e)
         }
     }
 
@@ -210,12 +219,26 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return null
 
         try {
-            return pageHandler.evaluate(expression)
+            return evaluate0(expression)
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "evaluate")
         }
 
         return null
+    }
+
+    private fun evaluate0(expression: String): Any? {
+        val evaluate = runtime?.evaluate(browserSettings.nameMangling(expression))
+
+        val exception = evaluate?.exceptionDetails?.exception
+        if (exception != null) {
+//                logger.warn(exception.value?.toString())
+//                logger.warn(exception.unserializableValue)
+            logger.info(exception.description + "\n>>>$expression<<<")
+        }
+
+        val result = evaluate?.result
+        return result?.value
     }
 
     override val sessionId: String?
@@ -341,7 +364,7 @@ class ChromeDevtoolsDriver(
      */
     override suspend fun click(selector: String, count: Int) {
         try {
-            val nodeId = pageHandler.scrollIntoViewIfNeeded(selector) ?: return
+            val nodeId = scrollIntoViewIfNeeded(selector) ?: return
 
             val offset = OffsetD(4.0, 4.0)
 
@@ -380,7 +403,7 @@ class ChromeDevtoolsDriver(
 
     override suspend fun scrollTo(selector: String) {
         try {
-            pageHandler.scrollIntoViewIfNeeded(selector)
+            scrollIntoViewIfNeeded(selector)
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "scrollTo")
         }
@@ -388,7 +411,7 @@ class ChromeDevtoolsDriver(
 
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         try {
-            val nodeId = pageHandler.scrollIntoViewIfNeeded(selector) ?: return
+            val nodeId = scrollIntoViewIfNeeded(selector) ?: return
             val offset = OffsetD(4.0, 4.0)
             val p = page
             val d = dom
@@ -412,16 +435,163 @@ class ChromeDevtoolsDriver(
      */
     override suspend fun captureScreenshot(selector: String): String? {
         return withIOContext("captureScreenshot") {
-            screenshot.captureScreenshot(selector)
+            captureScreenshot0(selector)
         }
     }
 
     override suspend fun captureScreenshot(clip: RectD) = withIOContext("captureScreenshot") {
-        screenshot.captureScreenshot(clip)
+        captureScreenshot0(0, clip)
     }
 
     suspend fun captureScreenshot(viewport: Viewport) = withIOContext("captureScreenshot") {
-        screenshot.captureScreenshot(viewport)
+        captureScreenshot0(0, viewport)
+    }
+
+    private suspend fun captureScreenshot0(selector: String): String? {
+        val nodeId = querySelector0(selector)
+        if (nodeId == null || nodeId <= 0) {
+            logger.info("No such element <{}>", selector)
+            return null
+        }
+        scrollIntoViewIfNeeded0(nodeId, selector, null)
+
+        val enableVi = alwaysFalse()
+        val vi = if (enableVi) firstAttr(selector, "vi") else null
+
+        return if (vi != null) {
+            captureScreenshotWithVi(nodeId, selector, vi)
+        } else {
+            captureScreenshotWithoutVi(nodeId, selector)
+        }
+    }
+
+    private fun captureScreenshotWithVi(nodeId: Int, selector: String, vi: String): String? {
+        val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
+        if (quad.size != 4) {
+            logger.warn("Invalid node vi information for selector <{}>", selector)
+            return null
+        }
+
+        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
+
+        return captureScreenshot0(nodeId, rect)
+    }
+
+    private fun captureScreenshotWithoutVi(nodeId: Int, selector: String): String? {
+        val nodeClip = calculateNodeClip(nodeId, selector)
+
+        if (nodeClip == null) {
+            logger.info("Can not calculate node clip | {}", selector)
+            return null
+        }
+
+        val rect = nodeClip.rect
+        if (rect == null) {
+            logger.info("Can not take clip | {}", selector)
+            return null
+        }
+
+        // val clip = normalizeClip(rect)
+
+        return captureScreenshot0(nodeId, rect)
+    }
+
+    private fun captureScreenshot0(nodeId: Int, clip: RectD): String? {
+        val viewport = Viewport().apply {
+            x = clip.x; y = clip.y
+            width = clip.width; height = clip.height
+            scale = 1.0
+        }
+        return captureScreenshot0(nodeId, viewport)
+    }
+
+    private fun captureScreenshot0(nodeId: Int, viewport: Viewport): String? {
+        val format = CaptureScreenshotFormat.JPEG
+        val quality = BrowserSettings.screenshotQuality
+
+        try {
+            if (nodeId > 0) {
+                dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
+            }
+            println("viewport: ")
+            println("" + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height)
+            return page?.captureScreenshot(format, quality, viewport, true, false)
+        } catch (e: ChromeRPCException) {
+            handleRPCException(e)
+        }
+
+        return null
+    }
+
+    private fun calculateNodeClip(nodeId: Int, selector: String): NodeClip? {
+        debugNodeClipDebug(nodeId, selector)
+
+        val clientRect = evaluate0("__pulsar_utils__.queryClientRect('$selector')")?.toString()
+        if (clientRect == null) {
+            logger.info("Can not query client rect for selector <{}>", selector)
+            return null
+        }
+
+        val quad = clientRect.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
+        if (quad.size != 4) {
+            return null
+        }
+
+        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
+
+        val p = page ?: return null
+//        val d = dom ?: return null
+
+        val viewport = p.layoutMetrics.cssLayoutViewport
+        val pageX = viewport.pageX
+        val pageY = viewport.pageY
+
+        return NodeClip(nodeId, pageX, pageY, rect)
+    }
+
+    private fun debugNodeClipDebug(nodeId: Int, selector: String) {
+        println("\n")
+        println("===== $selector $nodeId")
+        var result = evaluate0("__pulsar_utils__.queryClientRects('$selector')")
+        println(result)
+        result = dom?.getContentQuads(nodeId, null, null)
+        println(result)
+
+        var clientRect = evaluate0("__pulsar_utils__.queryClientRect('$selector')")?.toString()
+
+        println("clientRect: ")
+        println(clientRect)
+
+        println("== scrollToTop ==")
+        evaluate0("__pulsar_utils__.scrollToTop()")
+
+        result = evaluate0("__pulsar_utils__.queryClientRects('$selector')")
+        println(result)
+        result = dom?.getContentQuads(nodeId, null, null)
+        println(result)
+
+        clientRect = evaluate0("__pulsar_utils__.queryClientRect('$selector')")?.toString()
+
+        println("clientRect: ")
+        println(clientRect)
+
+        val p = page ?: return
+//        val d = dom ?: return null
+
+        val viewport = p.layoutMetrics.cssLayoutViewport
+        val pageX = viewport.pageX
+        val pageY = viewport.pageY
+
+        println("pageX, pageY: ")
+        println("$pageX, $pageY")
+    }
+
+    private fun normalizeClip(clip: RectD): RectD {
+        val x = clip.x.roundToInt()
+        val y = clip.y.roundToInt()
+        val width = (clip.width + clip.x - x).roundToInt()
+        val height = (clip.height + clip.y - y).roundToInt()
+        return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
     }
 
     private fun refreshState(action: String = ""): Boolean {
@@ -470,12 +640,47 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return null
 
         try {
-            return withIOContext("querySelector") { pageHandler?.querySelector(selector) }
+            return withIOContext("querySelector") { querySelector0(selector) }
         } catch (e: ChromeRPCException) {
             handleRPCException(e, "querySelector")
         }
 
         return null
+    }
+
+    private fun querySelector0(selector: String): Int? {
+        val rootId = dom?.document?.nodeId
+        return if (rootId != null && rootId != 0) {
+            dom?.querySelector(rootId, selector)
+        } else null
+    }
+
+    private suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
+        val nodeId = querySelector(selector)
+        if (nodeId == null || nodeId == 0) {
+            logger.info("No node found for selector: $selector")
+            return null
+        }
+
+        return scrollIntoViewIfNeeded0(nodeId, selector, rect)
+    }
+
+    private fun scrollIntoViewIfNeeded0(nodeId: Int, selector: String, rect: Rect? = null): Int? {
+        val node = dom?.describeNode(nodeId, null, null, null, false)
+        // see org.w3c.dom.Node.ELEMENT_NODE
+        val ELEMENT_NODE = 1
+        if (node?.nodeType != ELEMENT_NODE) {
+            logger.info("Node is not an element: $selector")
+            return null
+        }
+
+        try {
+            dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
+        } catch (t: Throwable) {
+            logger.info("Fallback to Element.scrollIntoView | {}", selector)
+        }
+
+        return nodeId
     }
 
     override suspend fun pageSource(): String? {

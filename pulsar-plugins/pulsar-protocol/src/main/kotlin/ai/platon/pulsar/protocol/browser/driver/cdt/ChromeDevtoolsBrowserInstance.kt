@@ -1,14 +1,17 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.BrowserInstance
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -25,6 +28,7 @@ class ChromeDevtoolsBrowserInstance(
     lateinit var chrome: RemoteChrome
     val devToolsList = ConcurrentLinkedQueue<RemoteDevTools>()
     val devToolsCount get() = devToolsList.size
+    private val toolsConfig = DevToolsConfig()
 
     @Synchronized
     @Throws(DriverLaunchException::class)
@@ -38,6 +42,21 @@ class ChromeDevtoolsBrowserInstance(
 
             chrome = kotlin.runCatching { launcher.launch(launchOptions) }
                 .getOrElse { throw WebDriverException("launch", it) }
+        }
+    }
+
+    @Synchronized
+    @Throws(WebDriverException::class)
+    override fun createDriver(browserSettings: BrowserSettings): ChromeDevtoolsDriver {
+        try {
+            val chromeTab = createTab()
+            val devTools = createDevTools(chromeTab, toolsConfig)
+
+            return ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
+        } catch (e: ChromeDriverException) {
+            throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
+        } catch (e: Exception) {
+            throw WebDriverException("Failed to create chrome devtools driver", e)
         }
     }
 

@@ -672,10 +672,46 @@ __pulsar_utils__.formatDOMRect = function(rect) {
 };
 
 /**
+ * Format a DOMRectList object
+ * @param rectList {DOMRectList}
+ * @return {String}
+ * */
+__pulsar_utils__.formatDOMRectList = function(rectList) {
+    if (!rectList) {
+        return '[]';
+    }
+
+    let r = "["
+    for (let i = 0; i < rectList.length; ++i) {
+        r += "{"
+        r += __pulsar_utils__.formatDOMRect(rectList.item(i))
+        r += "}, "
+    }
+    r += "]"
+
+    return r
+};
+
+/**
  * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
  *
  * @param selector {string} The selector to get the element from.
- * @return {DOMRect|Boolean|null}
+ * @return {String}
+ * */
+__pulsar_utils__.queryClientRects = function(selector) {
+    let ele = document.querySelector(selector);
+    if (!ele) {
+        return null;
+    }
+
+    return __pulsar_utils__.formatDOMRectList(ele.getClientRects())
+};
+
+/**
+ * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
+ *
+ * @param selector {string} The selector to get the element from.
+ * @return {DOMRect|String|Boolean}
  * */
 __pulsar_utils__.queryClientRect = function(selector) {
     let ele = document.querySelector(selector);
@@ -683,7 +719,7 @@ __pulsar_utils__.queryClientRect = function(selector) {
         return null;
     }
 
-    let rect = this.getClientRect(ele)
+    let rect = ele.__pulsar_getRect()
     return this.formatDOMRect(rect)
 };
 

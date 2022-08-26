@@ -85,6 +85,10 @@ class WebDriverAdapter(
 
     override suspend fun type(selector: String, text: String) = driverOrNull?.type(selector, text) ?: Unit
 
+    override suspend fun moveMouseTo(x: Double, y: Double) {
+        driverOrNull?.moveMouseTo(x, y)
+    }
+
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         driverOrNull?.dragAndDrop(selector, deltaX, deltaY)
     }
