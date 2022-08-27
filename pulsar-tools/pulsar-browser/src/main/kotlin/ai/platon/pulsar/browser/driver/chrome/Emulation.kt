@@ -43,6 +43,15 @@ class ClickableDOM(
     val nodeId: Int,
     val offset: OffsetD? = null
 ) {
+    companion object {
+        fun create(page: Page?, dom: DOM?, nodeId: Int?, offset: OffsetD? = null): ClickableDOM? {
+            if (nodeId == null || nodeId <= 0) return null
+            if (page == null) return null
+            if (dom == null) return null
+            return ClickableDOM(page, dom, nodeId, offset)
+        }
+    }
+
     fun clickablePoint(): DescriptiveResult<PointD> {
         val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, null, null) }.getOrNull()
         if (contentQuads == null) {
@@ -103,10 +112,13 @@ class ClickableDOM(
         return DescriptiveResult(PointD(x = x / 4, y = y / 4))
     }
 
+    fun isVisible(): Boolean {
+        return clickablePoint().value != null
+    }
+
     fun boundingBox(): RectD? {
-        val box = kotlin.runCatching {
-            dom.getBoxModel(nodeId, null, null)
-        }.getOrNull() ?: return null
+        val box = kotlin.runCatching { dom.getBoxModel(nodeId, null, null) }
+            .getOrNull() ?: return null
 
         val quad = box.border
         if (quad.isEmpty()) {

@@ -79,6 +79,8 @@ class WebDriverAdapter(
 
     override suspend fun exists(selector: String) = driverOrNull?.exists(selector) ?: false
 
+    override suspend fun visible(selector: String) = driverOrNull?.visible(selector) ?: false
+
     override suspend fun click(selector: String, count: Int) = driverOrNull?.click(selector, count) ?: Unit
 
     override suspend fun scrollTo(selector: String) = driverOrNull?.scrollTo(selector) ?: Unit
@@ -92,6 +94,10 @@ class WebDriverAdapter(
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         driverOrNull?.dragAndDrop(selector, deltaX, deltaY)
     }
+
+    override suspend fun clickablePoint(selector: String) = driverOrNull?.clickablePoint(selector)
+
+    override suspend fun boundingBox(selector: String) = driverOrNull?.boundingBox(selector)
 
     override suspend fun evaluate(expression: String): Any? {
         return when {

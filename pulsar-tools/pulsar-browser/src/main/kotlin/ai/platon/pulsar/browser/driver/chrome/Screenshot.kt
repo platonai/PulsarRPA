@@ -2,7 +2,6 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
@@ -12,7 +11,7 @@ import kotlin.math.roundToInt
 
 class Screenshot(
     private val pageHandler: PageHandler,
-    private val devTools: RemoteDevTools
+    private val devTools: RemoteDevTools,
 ) {
     private val logger = getLogger(this)
     private val isActive get() = AppContext.isActive && devTools.isOpen
@@ -27,13 +26,13 @@ class Screenshot(
             return null
         }
 
-        return captureScreenshotWithoutVi(nodeId, selector)
-//        val vi = firstAttr(selector, "vi")
-//        return if (vi != null) {
-//            captureScreenshotWithVi(nodeId, selector, vi)
-//        } else {
-//            captureScreenshotWithoutVi(nodeId, selector)
-//        }
+//        val vi = pageHandler.firstAttr(selector, "vi")
+        val vi: String? = null
+        return if (vi != null) {
+            captureScreenshotWithVi(nodeId, selector, vi)
+        } else {
+            captureScreenshotWithoutVi(nodeId, selector)
+        }
     }
 
     fun captureScreenshot(clip: RectD) = captureScreenshot0(0, clip)
@@ -54,7 +53,6 @@ class Screenshot(
 
     private fun captureScreenshotWithoutVi(nodeId: Int, selector: String): String? {
         val nodeClip = calculateNodeClip(nodeId, selector)
-
         if (nodeClip == null) {
             logger.info("Can not calculate node clip | {}", selector)
             return null
@@ -90,14 +88,22 @@ class Screenshot(
         }
 
         val p = page ?: return null
-//        val d = dom ?: return null
+        val d = dom ?: return null
 
 //        val cssLayoutViewport = p.layoutMetrics.cssLayoutViewport
+//        if (viewport.width > cssLayoutViewport.clientWidth || viewport.height > cssLayoutViewport.clientHeight) {
+//        }
 //        viewport.width = viewport.width.coerceAtMost(cssLayoutViewport.clientWidth.toDouble())
 //        viewport.height = viewport.height.coerceAtMost(cssLayoutViewport.clientHeight.toDouble())
 
         // The viewport has to be visible before screenshot
         dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
+
+        val visible = ClickableDOM.create(page, dom, nodeId)?.isVisible() ?: false
+        if (!visible) {
+            return null
+        }
+
         return page?.captureScreenshot(format, quality, viewport, true, false)
     }
 

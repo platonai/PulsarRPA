@@ -49,6 +49,7 @@ class ChromeDevtoolsBrowserInstance(
     @Throws(WebDriverException::class)
     override fun createDriver(browserSettings: BrowserSettings): ChromeDevtoolsDriver {
         try {
+            // In chrome every tab is a separate process
             val chromeTab = createTab()
             val devTools = createDevTools(chromeTab, toolsConfig)
 

@@ -32,7 +32,7 @@ interface Crawler: AutoCloseable {
     /**
      * Delay policy for retry tasks
      * */
-    val retryDelayPolicy: (Int, UrlAware?) -> Duration
+    var retryDelayPolicy: (Int, UrlAware?) -> Duration
     /**
      * Await for all tasks be done
      * */

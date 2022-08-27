@@ -76,6 +76,11 @@ abstract class AbstractPulsarSession(
     override val globalCacheFactory get() = context.globalCacheFactory
     override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
     override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
+
+    private val globalCacheFactoryOrNull get() = context.takeIf { isActive }?.globalCacheFactory
+    private val pageCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.pageCache
+    private val documentCacheOrNull get() = globalCacheFactoryOrNull?.globalCache?.documentCache
+
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
     /**
@@ -199,13 +204,13 @@ abstract class AbstractPulsarSession(
 
     private fun loadAndCache(normUrl: NormUrl): WebPage {
         return context.load(normUrl).also {
-            pageCache.putDatum(it.url, it)
+            pageCacheOrNull?.putDatum(it.url, it)
         }
     }
 
     private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
         return context.loadDeferred(normUrl).also {
-            pageCache.putDatum(it.url, it)
+            pageCacheOrNull?.putDatum(it.url, it)
         }
     }
 
@@ -253,8 +258,8 @@ abstract class AbstractPulsarSession(
         }
 
         val now = Instant.now()
-        val page = pageCache.getDatum(url, options.expires, now)
-        if (page != null && !options.isExpired(page.prevFetchTime)) {
+        val page = pageCacheOrNull?.getDatum(url, options.expires, now) ?: return null
+        if (!options.isExpired(page.prevFetchTime)) {
             pageCacheHits.incrementAndGet()
             return page
         }
@@ -386,7 +391,7 @@ abstract class AbstractPulsarSession(
         val normUrl = normalize(url, options)
         if (enablePDCache) {
             val now = Instant.now()
-            val document = documentCache.getDatum(url, options.expires, now)
+            val document = documentCacheOrNull?.getDatum(url, options.expires, now)
             if (document != null) {
                 return document
             }
@@ -550,7 +555,7 @@ abstract class AbstractPulsarSession(
             return context.parse(page) ?: nil
         }
 
-        val document = documentCache.getDatum(page.url)
+        val document = documentCacheOrNull?.getDatum(page.url)
         if (document != null) {
             documentCacheHits.incrementAndGet()
             return document

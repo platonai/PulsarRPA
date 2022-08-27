@@ -30,7 +30,7 @@ data class CheckState(
  * A result with a message
  * */
 class DescriptiveResult<T>(
-    val value: T? = null,
+    val value: T?,
     val message: String = "",
 ) {
     constructor(message: String): this(null, message)

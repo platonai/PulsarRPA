@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -73,9 +74,13 @@ open class BrowserPrivacyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            report()
-            driverContext.shutdown()
-            proxyContext?.close()
+            try {
+                report()
+                driverContext.shutdown()
+                proxyContext?.close()
+            } catch (e: Exception) {
+                logger.warn(e.stringify())
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import org.jsoup.Connection
 import java.io.Closeable
@@ -133,7 +134,9 @@ interface WebDriver: Closeable {
     suspend fun waitForNavigation(): Long
     suspend fun waitForNavigation(timeoutMillis: Long): Long
     suspend fun waitForNavigation(timeout: Duration): Long
+
     suspend fun exists(selector: String): Boolean
+    suspend fun visible(selector: String): Boolean
     suspend fun type(selector: String, text: String)
     suspend fun click(selector: String, count: Int = 1)
     suspend fun scrollTo(selector: String)
@@ -144,6 +147,9 @@ interface WebDriver: Closeable {
     suspend fun scrollToMiddle(ratio: Float)
     suspend fun moveMouseTo(x: Double, y: Double)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
+
+    suspend fun clickablePoint(selector: String): PointD?
+    suspend fun boundingBox(selector: String): RectD?
 
     suspend fun outerHTML(selector: String): String?
     suspend fun firstText(selector: String): String?

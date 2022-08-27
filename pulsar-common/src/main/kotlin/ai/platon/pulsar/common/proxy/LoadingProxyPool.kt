@@ -11,16 +11,16 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 /**
- * Manage all external proxies
+ * Manage all external proxies.
  * Check all unavailable proxies, recover them if possible.
- * This might take a long time, so it should be run in a separate thread
+ * This might take a long time, so it should be run in a separate thread.
  */
 class LoadingProxyPool(
         val proxyLoader: ProxyLoader,
         conf: ImmutableConfig
 ): ProxyPool(conf) {
 
-    private val log = LoggerFactory.getLogger(LoadingProxyPool::class.java)
+    private val logger = LoggerFactory.getLogger(LoadingProxyPool::class.java)
 
     private val bannedIps get() = proxyLoader.bannedIps
     private val bannedSegments get() = proxyLoader.bannedSegments
@@ -55,11 +55,11 @@ class LoadingProxyPool(
     }
 
     override fun report(proxyEntry: ProxyEntry) {
-        log.info("Ban proxy <{}> after {} pages served in {} | total ban: {}, banned ips: {} | {}",
+        logger.info("Ban proxy <{}> after {} pages served in {} | total ban: {}, banned ips: {} | {}",
                 proxyEntry.outIp, proxyEntry.numSuccessPages, proxyEntry.elapsedTime.readable(),
                 numProxyBanned, bannedIps.size, proxyEntry)
         val s = bannedSegments.chunked(20).joinToString("\n") { it.joinToString() }
-        log.info("Banned segments ({}): {}", bannedSegments.size, s)
+        logger.info("Banned segments ({}): {}", bannedSegments.size, s)
     }
 
     private fun ban(proxyEntry: ProxyEntry) {
@@ -108,7 +108,7 @@ class LoadingProxyPool(
 
         val banState = handleBanState(proxy).takeIf { it.isBanned }?.also {
             numProxyBanned++
-            log.info("Proxy is banned <{}> | bp: {}, bh: {}, bs: {} | {}",
+            logger.info("Proxy is banned <{}> | bp: {}, bh: {}, bs: {} | {}",
                     it, numProxyBanned, bannedIps.size, bannedSegments.size, proxy.display)
         }
 
@@ -134,7 +134,7 @@ class LoadingProxyPool(
                 Files.writeString(AppPaths.PROXY_BANNED_HOSTS_FILE, bannedIps.joinToString("\n"))
                 Files.writeString(AppPaths.PROXY_BANNED_SEGMENTS_FILE, bannedSegments.joinToString("\n"))
             } catch (e: IOException) {
-                log.warn(e.toString())
+                logger.warn(e.toString())
             }
         }
 

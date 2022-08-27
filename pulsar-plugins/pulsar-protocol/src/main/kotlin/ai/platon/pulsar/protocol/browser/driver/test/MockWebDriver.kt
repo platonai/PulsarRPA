@@ -131,9 +131,9 @@ class MockWebDriver(
     override suspend fun bringToFront() {
     }
 
-    override suspend fun exists(selector: String): Boolean {
-        return backupDriverOrNull?.exists(selector) ?: false
-    }
+    override suspend fun exists(selector: String) = backupDriverOrNull?.exists(selector) ?: false
+
+    override suspend fun visible(selector: String) = backupDriverOrNull?.visible(selector) ?: false
 
     override suspend fun type(selector: String, text: String) {
         backupDriverOrNull?.type(selector, text)
@@ -151,8 +151,11 @@ class MockWebDriver(
         backupDriverOrNull?.dragAndDrop(selector, deltaX, deltaY)
     }
 
-    override fun toString() = "Mock driver ($lastSessionId)"
+    override suspend fun clickablePoint(selector: String) = backupDriverOrNull?.clickablePoint(selector)
 
+    override suspend fun boundingBox(selector: String) = backupDriverOrNull?.boundingBox(selector)
+
+    override fun toString() = "Mock driver ($lastSessionId)"
 
     override suspend fun stop() {
         backupDriverOrNull?.stop()

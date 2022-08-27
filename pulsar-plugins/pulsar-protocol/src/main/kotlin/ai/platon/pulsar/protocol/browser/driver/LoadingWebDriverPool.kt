@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -65,7 +66,7 @@ class LoadingWebDriverPool(
     val counterQuit = registry.counter(this, "quit")
 
     var isRetired = false
-    val isActive get() = !isRetired && !closed.get()
+    val isActive get() = !isRetired && !closed.get() && AppContext.isActive
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numTasks = AtomicInteger()
@@ -251,6 +252,11 @@ class LoadingWebDriverPool(
 
     private fun doClose(timeToWait: Duration) {
         freeDrivers.clear()
+
+        val heavyRendering = conf.getBoolean(CapabilityTypes.BROWSER_HEAVY_RENDERING, false)
+        if (isActive && heavyRendering) {
+            waitUntilIdleOrTimeout(timeToWait)
+        }
 
         val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
         nonSynchronized.parallelStream().forEach { it.cancel() }

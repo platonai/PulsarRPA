@@ -291,7 +291,8 @@ abstract class BasicDevTools(
         try {
             client.send(message)
 
-            val responded = future.await(config.readTimeout)
+            val readTimeout = config.readTimeout
+            val responded = future.await(readTimeout)
             dispatcher.unsubscribe(method.id)
             lastActiveTime = Instant.now()
 
@@ -301,9 +302,13 @@ abstract class BasicDevTools(
                 }
             }
 
+            if (!isOpen) {
+                return null
+            }
+
             if (!responded) {
                 val methodName = method.method
-                throw ChromeRPCTimeoutException("Response #${numInvokes.count} timeout for $methodName")
+                throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
             }
 
             if (future.isSuccess) {

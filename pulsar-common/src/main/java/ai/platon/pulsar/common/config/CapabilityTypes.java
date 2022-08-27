@@ -275,6 +275,7 @@ public interface CapabilityTypes {
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
     String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
+    String BROWSER_HEAVY_RENDERING = "browser.heavy.rendering";
     String BROWSER_TYPE = "browser.type";
     // not used since the browser is always running in temporary contexts
     String BROWSER_INCOGNITO = "browser.incognito";

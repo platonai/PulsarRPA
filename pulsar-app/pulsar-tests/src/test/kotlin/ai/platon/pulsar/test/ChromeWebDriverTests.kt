@@ -30,6 +30,8 @@ class ChromeWebDriverTests: TestBase() {
         "08review1" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(1)",
         "09review2" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(2)",
         "10review3" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(3)",
+        "11review4" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(4)",
+        "12review5" to "#cm-cr-dp-review-list div[data-hook=review]:nth-child(5)",
     )
 
     private val screenshotDir = AppPaths.WEB_CACHE_DIR
@@ -58,8 +60,8 @@ class ChromeWebDriverTests: TestBase() {
             assertNotNull(pageSource)
             assertTrue { pageSource.contains(asin) }
 
-            driver.stopLoading()
-            driver.evaluate("__pulsar_utils__.compute()")
+//            driver.stopLoading()
+//            driver.evaluate("__pulsar_utils__.compute()")
 
             fieldSelectors.forEach { (name, selector) ->
                 val screenshot = driver.captureScreenshot(selector)

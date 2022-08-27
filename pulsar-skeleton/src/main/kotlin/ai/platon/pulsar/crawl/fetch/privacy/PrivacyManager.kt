@@ -10,8 +10,7 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class PrivacyContextMonitor(
@@ -32,6 +31,12 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
+
+    private val cleaningService = Executors.newScheduledThreadPool(1)
+
+    init {
+        cleaningService.scheduleAtFixedRate({ closeZombieContexts() }, 60, 30, TimeUnit.SECONDS)
+    }
 
     /**
      * Run a task within this privacy manager
@@ -67,8 +72,6 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 zombieContexts.add(privacyContext)
             }
         }
-
-        privacyContext.close()
     }
 
     override fun close() {
@@ -78,9 +81,18 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
 
-            zombieContexts.toList().parallelStream().forEach {
+            closeZombieContexts()
+        }
+    }
+
+    private fun closeZombieContexts() {
+        val pendingContexts = zombieContexts.filter { !it.closed.get() }
+        if (pendingContexts.isNotEmpty()) {
+            pendingContexts.parallelStream().forEach {
                 kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) }
             }
+
+            reportZombieContexts()
         }
     }
 

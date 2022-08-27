@@ -2,6 +2,7 @@ package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -94,6 +95,10 @@ class FileBackendPageStore(
             logger.warn("Failed to read avro file from $path, the file might be corrupted, delete it", e)
             Files.deleteIfExists(path)
             null
+        } catch (e: IOException) {
+            logger.warn(e.simplify("readAvro", " | $path"))
+            Files.deleteIfExists(path)
+            null
         }
     }
 
@@ -137,6 +142,8 @@ class FileBackendPageStore(
             writeAvro0(page.unbox(), path)
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
+        } catch (e: IOException) {
+            logger.warn(e.simplify("writeAvro", " | $path"))
         }
     }
 
