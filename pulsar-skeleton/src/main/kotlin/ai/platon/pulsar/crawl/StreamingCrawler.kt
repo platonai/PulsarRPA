@@ -332,21 +332,21 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
-        if (contextLeaksRate >= 5 / 60f) {
+        if (isActive && contextLeaksRate >= 5 / 60f) {
             criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
             handleContextLeaks()
         }
 
-        if (wrongDistrict.hourlyCounter.count > 60) {
+        if (isActive && wrongDistrict.hourlyCounter.count > 60) {
             handleWrongDistrict()
         }
 
-        if (proxyOutOfService > 0) {
+        if (isActive && proxyOutOfService > 0) {
             criticalWarning = CriticalWarning.NO_PROXY
             handleProxyOutOfService()
         }
 
-        if (FileCommand.check("finish-job")) {
+        if (isActive && FileCommand.check("finish-job")) {
             logger.info("Find finish-job command, quit streaming crawler ...")
             flowState = FlowState.BREAK
             return flowState
@@ -361,15 +361,16 @@ open class StreamingCrawler<T : UrlAware>(
 
         val context = Dispatchers.Default + CoroutineName("w")
         val urlSpec = UrlUtils.splitUrlArgs(url.url).first
+        val isAppActive = isActive
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
+            if (!isAppActive) {
+                return@launch
+            }
+
             try {
                 globalMetrics.tasks.mark()
-                // TODO: temporary solution
-                if (AmazonDiagnosis.isAmazon(urlSpec)) {
-                    AmazonMetrics.tasks.mark(urlSpec)
-                }
                 runUrlTask(url)
             } finally {
                 lastActiveTime = Instant.now()
@@ -378,10 +379,6 @@ open class StreamingCrawler<T : UrlAware>(
                 globalRunningTasks.decrementAndGet()
 
                 globalMetrics.finishes.mark()
-                // TODO: temporary solution
-                if (AmazonDiagnosis.isAmazon(urlSpec)) {
-                    AmazonMetrics.finishes.mark(urlSpec)
-                }
             }
         }
 
@@ -509,6 +506,10 @@ open class StreamingCrawler<T : UrlAware>(
 
     @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
+        if (!isActive) {
+            return null
+        }
+
         // apply the default options, arguments in the url has the highest priority, so url.args needs to appear last
         val options = session.options("$defaultArgs ${url.args}")
         if (options.isDead()) {
@@ -529,7 +530,7 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         if (!isActive) {
-            logger.info("Process is closing")
+            logger.debug("Process is closing")
             return FlowState.BREAK
         }
 
@@ -584,6 +585,10 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry0(url: UrlAware, page: WebPage?) {
+        if (!isActive) {
+            return
+        }
+
         val nextRetryNumber = 1 + (page?.fetchRetries ?: 0)
 
         if (page != null && nextRetryNumber > page.maxRetries) {

@@ -87,9 +87,6 @@ class Screenshot(
             println("" + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height)
         }
 
-        val p = page ?: return null
-        val d = dom ?: return null
-
 //        val cssLayoutViewport = p.layoutMetrics.cssLayoutViewport
 //        if (viewport.width > cssLayoutViewport.clientWidth || viewport.height > cssLayoutViewport.clientHeight) {
 //        }
