@@ -1,9 +1,10 @@
-package ai.platon.pulsar.test
+package ai.platon.pulsar.test.browser
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
+import ai.platon.pulsar.test.TestBase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -59,9 +60,6 @@ class ChromeWebDriverTests: TestBase() {
             val pageSource = driver.pageSource()
             assertNotNull(pageSource)
             assertTrue { pageSource.contains(asin) }
-
-//            driver.stopLoading()
-//            driver.evaluate("__pulsar_utils__.compute()")
 
             fieldSelectors.forEach { (name, selector) ->
                 val screenshot = driver.captureScreenshot(selector)

@@ -42,7 +42,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
 
 *大多数#生产环境#抓取项目可以从以下代码片段开始：*
 

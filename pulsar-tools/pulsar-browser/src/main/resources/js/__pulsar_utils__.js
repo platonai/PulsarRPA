@@ -1,38 +1,10 @@
 "use strict";
 
-const fineHeight = 4000;
-const fineNumAnchor = 100;
-const fineNumImage = 20;
-
-class MultiStatus {
-    /**
-     * n: check count
-     * scroll: scroll count
-     * idl: idle count
-     * st: document state
-     * r: complete reason
-     * ec: error code
-     * */
-    status =   { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" };
-    initStat = null;
-    lastStat = { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
-    lastD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
-    initD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
-}
-
-class ActiveUrls {
-    URL = document.URL;
-    baseURI = document.baseURI;
-    location = "";
-    documentURI = document.documentURI
-}
-
-class ActiveDomMessage {
-    multiStatus = new MultiStatus();
-    urls = new ActiveUrls()
-}
-
-let __pulsar_utils__ = function () {};
+let __pulsar_utils__ = function () {
+    this.fineHeight = 4000;
+    this.fineNumAnchor = 100;
+    this.fineNumImage = 20;
+};
 
 /**
  * @param maxRound The maximum round to check ready
@@ -165,7 +137,10 @@ __pulsar_utils__.isActuallyReady = function() {
 
     // The DOM is very good for analysis, no wait for more information
     let stat = multiStatus.lastStat;
-    if (status.n > 20 && stat.h >= fineHeight && stat.na >= fineNumAnchor && stat.ni >= fineNumImage) {
+    if (status.n > 20 && stat.h >= this.fineHeight
+        && stat.na >= this.fineNumAnchor
+        && stat.ni >= this.fineNumImage
+    ) {
         if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
             // DOM changed since last check, store the latest stat and return false to wait for the next check
             ++status.idl;
@@ -450,10 +425,9 @@ __pulsar_utils__.firstText = function(selector) {
  * Select elements and extract the texts
  *
  * @param  {String} selector
- * @param  {String} attrName
  * @return {Array}
  */
-__pulsar_utils__.allTexts = function(selector, attrName) {
+__pulsar_utils__.allTexts = function(selector) {
     let elements = document.querySelectorAll(selector)
     return elements.map(e => e.textContent)
 };

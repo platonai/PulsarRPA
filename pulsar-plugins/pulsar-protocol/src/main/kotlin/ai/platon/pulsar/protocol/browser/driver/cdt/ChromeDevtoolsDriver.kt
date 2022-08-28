@@ -41,10 +41,12 @@ class ChromeDevtoolsDriver(
 
     override val delayPolicy: (String) -> Long get() = { type ->
         when (type) {
+            "gap" -> 500L + Random.nextInt(500)
             "click" -> 500L + Random.nextInt(1000)
             "type" -> 50L + Random.nextInt(500)
-            "gap" -> 500L + Random.nextInt(500)
             "dragAndDrop" -> 800L + Random.nextInt(500)
+            "waitForNavigation" -> 500L
+            "waitForSelector" -> 500L
             else -> 100L + Random.nextInt(500)
         }
     }
@@ -279,7 +281,7 @@ class ChromeDevtoolsDriver(
         try {
             var nodeId = querySelector(selector)
             while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
-                gap()
+                gap("waitForSelector")
                 elapsedTime = System.currentTimeMillis() - startTime
                 nodeId = querySelector(selector)
             }
@@ -303,7 +305,7 @@ class ChromeDevtoolsDriver(
 
             val timeoutMillis = timeout.toMillis()
             while (elapsedTime < timeoutMillis && !navigated) {
-                gap()
+                gap("waitForNavigation")
                 elapsedTime = System.currentTimeMillis() - startTime
                 navigated = isNavigated(oldUrl)
             }
@@ -366,7 +368,7 @@ class ChromeDevtoolsDriver(
                     mouse?.click(point.x, point.y, count, delayPolicy("click"))
                 }
 
-                gap()
+                gap("click")
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "click")
@@ -384,7 +386,7 @@ class ChromeDevtoolsDriver(
                 }
             }
 
-            gap()
+            gap("type")
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "type")
         }
@@ -483,19 +485,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    suspend fun captureScreenshot(viewport: Viewport): String? {
-        return try {
-            rpc.invokeDeferred("captureScreenshot") {
-                // Force the page stop all navigations and pending resource fetches.
-                rpc.invoke("stopLoading") { page?.stopLoading() }
-                rpc.invoke("captureScreenshot") { screenshot.captureScreenshot(viewport) }
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "captureScreenshot")
-            null
-        }
-    }
-
     internal fun refreshState(action: String = ""): Boolean {
         lastActiveTime = Instant.now()
         navigateEntry.refresh(action)
@@ -505,6 +494,18 @@ class ChromeDevtoolsDriver(
     private suspend fun gap() {
         if (isActive) {
             delay(delayPolicy("gap"))
+        }
+    }
+
+    private suspend fun gap(type: String) {
+        if (isActive) {
+            delay(delayPolicy(type))
+        }
+    }
+
+    private suspend fun gap(millis: Long) {
+        if (isActive) {
+            delay(millis)
         }
     }
 

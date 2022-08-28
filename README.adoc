@@ -64,7 +64,7 @@ fun main() {
 }
 ----
 
-The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin].
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
 
 == Core concepts
 The core Pulsar concepts include the following:

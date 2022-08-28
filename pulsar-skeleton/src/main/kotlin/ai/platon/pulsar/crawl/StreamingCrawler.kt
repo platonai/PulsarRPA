@@ -79,7 +79,7 @@ open class StreamingCrawler<T : UrlAware>(
      * */
     session: PulsarSession = PulsarContexts.createSession(),
     /**
-     * A optional global cache which will hold the retry tasks
+     * An optional global cache which will hold the retry tasks
      * */
     val globalCacheFactory: GlobalCacheFactory? = null,
     /**
@@ -451,14 +451,8 @@ open class StreamingCrawler<T : UrlAware>(
 
         if (page.isFetched) {
             globalMetrics.fetchSuccesses.mark()
-            if (AmazonDiagnosis.isAmazon(page.url)) {
-                AmazonMetrics.fetchSuccesses.mark(page.url)
-            }
         }
         globalMetrics.successes.mark()
-        if (AmazonDiagnosis.isAmazon(page.url)) {
-            AmazonMetrics.successes.mark(page.url)
-        }
     }
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {

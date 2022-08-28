@@ -81,6 +81,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
 
+            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
+
             closeZombieContexts()
         }
     }
