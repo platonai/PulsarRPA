@@ -110,6 +110,7 @@ abstract class AbstractHttpProtocol: Protocol {
         var retry = false
         var lastThrowable: Throwable? = null
         var i = 0
+
         val maxTry = fetchMaxRetry.coerceAtMost(MAX_REY_GUARD)
         do {
             if (i > 0) {

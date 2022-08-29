@@ -503,15 +503,33 @@ open class EmptyWebDriverHandler: AbstractWebPageWebDriverHandler() {
 }
 
 interface SimulateEventHandler {
+    @Deprecated("Use onWillFetch instead")
     val onBeforeFetch: WebPageWebDriverHandlerPipeline
+    val onWillFetch: WebPageWebDriverHandlerPipeline get() = onBeforeFetch
+    @Deprecated("Use onFetched instead")
     val onAfterFetch: WebPageWebDriverHandlerPipeline
+    val onFetched: WebPageWebDriverHandlerPipeline get() = onAfterFetch
 
+    @Deprecated("Use onWillNavigate instead")
     val onBeforeNavigate: WebPageWebDriverHandlerPipeline
+    val onWillNavigate: WebPageWebDriverHandlerPipeline get() = onBeforeNavigate
+    @Deprecated("Use onNavigated instead")
     val onAfterNavigate: WebPageWebDriverHandlerPipeline
+    val onNavigated: WebPageWebDriverHandlerPipeline get() = onAfterNavigate
+
+    @Deprecated("Use onWillCheckDOMState instead")
     val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline
+    val onWillCheckDOMState: WebPageWebDriverHandlerPipeline get() = onBeforeCheckDOMState
+    @Deprecated("Use onDOMStateChecked instead")
     val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline
+    val onDOMStateChecked: WebPageWebDriverHandlerPipeline get() = onAfterCheckDOMState
+
+    @Deprecated("Use onWillComputeFeature instead")
     val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline
+    val onWillComputeFeature: WebPageWebDriverHandlerPipeline get() = onBeforeComputeFeature
+    @Deprecated("Use onFeatureComputed instead")
     val onAfterComputeFeature: WebPageWebDriverHandlerPipeline
+    val onFeatureComputed: WebPageWebDriverHandlerPipeline get() = onAfterComputeFeature
 
     fun combine(other: SimulateEventHandler): SimulateEventHandler
 }

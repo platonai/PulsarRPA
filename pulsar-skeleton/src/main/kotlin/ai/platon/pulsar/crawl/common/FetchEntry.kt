@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.persist.WebPage
 
 class FetchEntry(val page: WebPage, val options: LoadOptions) {
@@ -20,9 +19,7 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
 
         fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): WebPage {
             val page = WebPage.newWebPage(url, options.conf, href)
-
             initWebPage(page, options, href, referrer)
-
             return page
         }
 
@@ -36,6 +33,7 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
                 it.isResource = options.isResource
                 it.referrer = referrer
 
+                // since LoadOptions is not visible by WebPage, we use an unsafe method to pass the load options
                 it.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
             }
         }

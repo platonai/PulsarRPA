@@ -364,7 +364,7 @@ abstract class BasicDevTools(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.message) }
+            kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored]", it.message) }
             closeLatch.countDown()
         }
     }

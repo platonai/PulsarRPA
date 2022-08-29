@@ -68,7 +68,7 @@ open class BrowserEmulatedFetcher(
             return ForwardingResponse.canceled(page)
         }
 
-        val task = createFetchTask(page)
+        val task = FetchTask.create(page)
         return fetchTaskDeferred(task)
     }
 
@@ -89,13 +89,13 @@ open class BrowserEmulatedFetcher(
 
         eventHandler?.onBeforeFetch?.runCatching {
             invoke(task.page, driver)
-        }?.onFailure { logger.warn("Unexpected exception (ignored)", it) }
+        }?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
 
         val result = browserEmulator.fetch(task, driver)
 
         eventHandler?.onAfterFetch?.runCatching {
             invoke(task.page, driver)
-        }?.onFailure { logger.warn("Unexpected exception (ignored)", it) }
+        }?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
 
         return result
     }
@@ -110,14 +110,6 @@ open class BrowserEmulatedFetcher(
 
     fun cancelAll() {
         TODO("Not implemented")
-    }
-
-    internal fun createFetchTask(page: WebPage): FetchTask {
-        val conf = page.conf
-        val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
-        val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
-        val fingerprint = Fingerprint(browserType)
-        return FetchTask(0, priority, page, fingerprint = fingerprint)
     }
 
     override fun close() {

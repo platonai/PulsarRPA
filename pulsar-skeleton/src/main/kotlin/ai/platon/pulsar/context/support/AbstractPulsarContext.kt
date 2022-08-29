@@ -1,12 +1,10 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
@@ -70,8 +68,14 @@ abstract class AbstractPulsarContext(
 
     private val loadComponentOrNull: LoadComponent? get() = if (isActive) loadComponent else null
 
+    /**
+     * Return null if everything is OK, or return NIL if something wrong
+     * */
     private val abnormalPage get() = if (isActive) null else WebPage.NIL
 
+    /**
+     * Return null if everything is OK, or return a empty list if something wrong
+     * */
     private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
     /**
@@ -514,15 +518,13 @@ abstract class AbstractPulsarContext(
 
         getBeanOrNull<GlobalCacheFactory>()?.globalCache?.clearCaches()
 
-        sessions.values.forEach {
-            kotlin.runCatching { it.close() }
-                .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+        sessions.values.forEach { session ->
+            session.runCatching { close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
         }
         sessions.clear()
 
-        closableObjects.forEach {
-            kotlin.runCatching { it.close() }
-                .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+        closableObjects.forEach { closable ->
+            closable.runCatching { close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
         }
         closableObjects.clear()
     }

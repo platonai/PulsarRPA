@@ -69,7 +69,7 @@ class CoreMetrics(
         }
     }
 
-    private val log = LoggerFactory.getLogger(CoreMetrics::class.java)!!
+    private val logger = LoggerFactory.getLogger(CoreMetrics::class.java)!!
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()
@@ -172,9 +172,11 @@ class CoreMetrics(
     private val closed = AtomicBoolean()
 
     init {
-        Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
+        kotlin.runCatching {
+            Files.readAllLines(PATH_UNREACHABLE_HOSTS).toCollection(unreachableHosts)
+        }.onFailure { logger.warn("[Unexpected]", it) }
 
-        params.withLogger(log).info(true)
+        params.withLogger(logger).info(true)
     }
 
     override fun getParams(): Params {
@@ -295,7 +297,7 @@ class CoreMetrics(
     fun trackHostUnreachable(url: String, occurrences: Int = 1): Boolean {
         val host = URLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
-            log.warn("Malformed url identified as gone | <{}>", url)
+            logger.warn("Malformed url identified as gone | <{}>", url)
             return false
         }
 
@@ -313,7 +315,7 @@ class CoreMetrics(
         // Only the exception occurs for unknownHostEventCount, it's really add to the black list
         if (failures > maxHostFailureEvents) {
             unreachableHosts.add(host)
-            log.info("Host unreachable | {} failures | {}", failures, host)
+            logger.info("Host unreachable | {} failures | {}", failures, host)
             return true
         }
 
@@ -351,9 +353,9 @@ class CoreMetrics(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (tasks.count > 0) {
-                log.info(formatStatus())
+                logger.info(formatStatus())
 
-                log.info("There are " + unreachableHosts.size + " unreachable hosts")
+                logger.info("There are " + unreachableHosts.size + " unreachable hosts")
                 AppFiles.logUnreachableHosts(this.unreachableHosts)
 
                 logAvailableHosts()
@@ -362,7 +364,7 @@ class CoreMetrics(
     }
 
     fun updateSystemInfo() {
-        kotlin.runCatching { updateSystemInfo0() }.onFailure { log.warn("Unexpected exception", it) }
+        kotlin.runCatching { updateSystemInfo0() }.onFailure { logger.warn("Unexpected exception", it) }
     }
 
     @Throws(Exception::class)
@@ -382,7 +384,7 @@ class CoreMetrics(
     }
 
     private fun reportStatus() {
-        if (!log.isInfoEnabled) {
+        if (!logger.isInfoEnabled) {
             return
         }
 
@@ -400,7 +402,7 @@ class CoreMetrics(
         }.toInt()
 
         if (i % period == 0L) {
-            log.info(formatStatus())
+            logger.info(formatStatus())
         }
     }
 
@@ -426,6 +428,6 @@ class CoreMetrics(
                 )
             }.joinTo(report, "\n") { it }
 
-        log.info(report.toString())
+        logger.info(report.toString())
     }
 }

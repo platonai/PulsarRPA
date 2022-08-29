@@ -152,8 +152,10 @@ open class BrowserEmulator(
         try {
             response = browseWithWebDriverExceptionsHandled(task, driver)
 
-            interactAfterFetch(task, driverSettings, driver)
+            // Do something like a human being
+            interactAfterFetch(task, driver)
 
+            // Force the page stop all navigations and releases all resources
             driver.stop()
         } catch (e: NavigateTaskCancellationException) {
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
@@ -383,7 +385,10 @@ open class BrowserEmulator(
         }
     }
 
-    protected suspend fun interactAfterFetch(task: FetchTask, driverSettings: BrowserSettings, driver: WebDriver) {
+    /**
+     * Do something like a human being
+     * */
+    protected suspend fun interactAfterFetch(task: FetchTask, driver: WebDriver) {
         val driver0 = driver as WebDriverAdapter
         // must perform the interaction for the 1st and 2nd page
         // for the other pages, there is a change to do the interaction
