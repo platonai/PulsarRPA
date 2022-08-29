@@ -504,32 +504,38 @@ open class EmptyWebDriverHandler: AbstractWebPageWebDriverHandler() {
 
 interface SimulateEventHandler {
     @Deprecated("Use onWillFetch instead")
-    val onBeforeFetch: WebPageWebDriverHandlerPipeline
-    val onWillFetch: WebPageWebDriverHandlerPipeline get() = onBeforeFetch
+    val onBeforeFetch: WebPageWebDriverHandlerPipeline get() = onWillFetch
+    val onWillFetch: WebPageWebDriverHandlerPipeline
     @Deprecated("Use onFetched instead")
-    val onAfterFetch: WebPageWebDriverHandlerPipeline
-    val onFetched: WebPageWebDriverHandlerPipeline get() = onAfterFetch
+    val onAfterFetch: WebPageWebDriverHandlerPipeline get() = onFetched
+    val onFetched: WebPageWebDriverHandlerPipeline
 
     @Deprecated("Use onWillNavigate instead")
-    val onBeforeNavigate: WebPageWebDriverHandlerPipeline
-    val onWillNavigate: WebPageWebDriverHandlerPipeline get() = onBeforeNavigate
+    val onBeforeNavigate: WebPageWebDriverHandlerPipeline get() = onWillNavigate
+    val onWillNavigate: WebPageWebDriverHandlerPipeline
     @Deprecated("Use onNavigated instead")
-    val onAfterNavigate: WebPageWebDriverHandlerPipeline
-    val onNavigated: WebPageWebDriverHandlerPipeline get() = onAfterNavigate
+    val onAfterNavigate: WebPageWebDriverHandlerPipeline get() = onNavigated
+    val onNavigated: WebPageWebDriverHandlerPipeline
 
     @Deprecated("Use onWillCheckDOMState instead")
-    val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline
-    val onWillCheckDOMState: WebPageWebDriverHandlerPipeline get() = onBeforeCheckDOMState
+    val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline get() = onWillCheckDOMState
+    val onWillCheckDOMState: WebPageWebDriverHandlerPipeline
     @Deprecated("Use onDOMStateChecked instead")
-    val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline
-    val onDOMStateChecked: WebPageWebDriverHandlerPipeline get() = onAfterCheckDOMState
+    val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline get() = onDOMStateChecked
+    val onDOMStateChecked: WebPageWebDriverHandlerPipeline
 
     @Deprecated("Use onWillComputeFeature instead")
-    val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline
-    val onWillComputeFeature: WebPageWebDriverHandlerPipeline get() = onBeforeComputeFeature
+    val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline get() = onWillComputeFeature
+    val onWillComputeFeature: WebPageWebDriverHandlerPipeline
     @Deprecated("Use onFeatureComputed instead")
-    val onAfterComputeFeature: WebPageWebDriverHandlerPipeline
-    val onFeatureComputed: WebPageWebDriverHandlerPipeline get() = onAfterComputeFeature
+    val onAfterComputeFeature: WebPageWebDriverHandlerPipeline get() = onFeatureComputed
+    val onFeatureComputed: WebPageWebDriverHandlerPipeline
+
+    val onWillInteract: WebPageWebDriverHandlerPipeline
+    val onDidInteract: WebPageWebDriverHandlerPipeline
+
+    val onWillStopTab: WebPageWebDriverHandlerPipeline
+    val onTabStopped: WebPageWebDriverHandlerPipeline
 
     fun combine(other: SimulateEventHandler): SimulateEventHandler
 }
@@ -549,24 +555,40 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
 
     protected suspend fun smartDelay(type: String) = delay(delayPolicy(type))
 
-    override val onBeforeFetch: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onAfterFetch: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onBeforeNavigate: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onBeforeCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onAfterCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onBeforeComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onAfterComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
-    override val onAfterNavigate: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onWillFetch: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onFetched: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+
+    override val onWillNavigate: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onNavigated: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+
+    override val onWillCheckDOMState: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onDOMStateChecked: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+
+    override val onWillComputeFeature: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onFeatureComputed: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+
+    override val onWillInteract: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onDidInteract: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+
+    override val onWillStopTab: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
+    override val onTabStopped: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
 
     override fun combine(other: SimulateEventHandler): SimulateEventHandler {
-        onBeforeFetch.addLast(other.onBeforeFetch)
+        onWillFetch.addLast(other.onWillFetch)
+        onFetched.addLast(other.onFetched)
 
-        onBeforeCheckDOMState.addLast(other.onBeforeCheckDOMState)
-        onAfterCheckDOMState.addLast(other.onAfterCheckDOMState)
-        onBeforeComputeFeature.addLast(other.onBeforeComputeFeature)
-        onAfterComputeFeature.addLast(other.onAfterComputeFeature)
+        onWillNavigate.addLast(other.onWillNavigate)
+        onNavigated.addLast(other.onNavigated)
 
-        onAfterFetch.addLast(other.onAfterFetch)
+        onWillCheckDOMState.addLast(other.onWillCheckDOMState)
+        onDOMStateChecked.addLast(other.onDOMStateChecked)
+        onWillComputeFeature.addLast(other.onWillComputeFeature)
+        onFeatureComputed.addLast(other.onFeatureComputed)
+
+        onWillInteract.addLast(other.onWillInteract)
+        onDidInteract.addLast(other.onDidInteract)
+        onWillStopTab.addLast(other.onWillStopTab)
+        onTabStopped.addLast(other.onTabStopped)
 
         return this
     }
@@ -682,13 +704,13 @@ class ExpressionSimulateEventHandler(
         bcExpressions.split(delimiters), acExpressions2.split(delimiters))
 
     init {
-        onBeforeComputeFeature.addFirst(object: AbstractWebPageWebDriverHandler() {
+        onWillComputeFeature.addFirst(object: AbstractWebPageWebDriverHandler() {
             override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
                 return evaluate(driver, beforeComputeExpressions)
             }
         })
 
-        onAfterComputeFeature.addFirst(object: AbstractWebPageWebDriverHandler() {
+        onFeatureComputed.addFirst(object: AbstractWebPageWebDriverHandler() {
             override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
                 return evaluate(driver, afterComputeExpressions)
             }
@@ -866,10 +888,10 @@ open class PulsarEventHandlerTemplate(
         }
 
         simulateEventHandler.apply {
-            onBeforeCheckDOMState.addLast()
-            onAfterCheckDOMState.addLast()
-            onBeforeComputeFeature.addLast()
-            onAfterComputeFeature.addLast()
+            onWillCheckDOMState.addLast()
+            onDOMStateChecked.addLast()
+            onWillComputeFeature.addLast()
+            onFeatureComputed.addLast()
         }
 
         crawlEventHandler.apply {

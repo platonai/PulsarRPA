@@ -344,6 +344,23 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
 };
 
 /**
+ * Check if a element be visible
+ *
+ * @param  {String} selector
+ * @return boolean
+ */
+__pulsar_utils__.visible = function(selector) {
+    let ele = document.querySelector(selector)
+    if (ele != null) {
+        return false
+    }
+
+    const style = window.getComputedStyle(ele)
+    return (style && style.display !== 'none' &&
+        style.visibility !== 'hidden' && style.opacity !== '0')
+}
+
+/**
  * @param {String} selector The element to scroll to
  * */
 __pulsar_utils__.scrollIntoView = function(selector) {

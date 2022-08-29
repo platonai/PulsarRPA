@@ -20,6 +20,7 @@ class PageHandler(
     private val isActive get() = AppContext.isActive && devTools.isOpen
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
+    private val css get() = devTools.css.takeIf { isActive }
     private val runtime get() = devTools.runtime.takeIf { isActive }
 
     val mouse = Mouse(devTools)
@@ -27,9 +28,41 @@ class PageHandler(
 
     fun querySelector(selector: String): Int? {
         val rootId = dom?.document?.nodeId
-        return if (rootId != null && rootId != 0) {
+        return if (rootId != null && rootId > 0) {
             dom?.querySelector(rootId, selector)
         } else null
+    }
+
+    fun visible(selector: String): Boolean {
+        val nodeId = querySelector(selector)
+        if (nodeId == null || nodeId <= 0) {
+            return false
+        }
+
+        return visible(nodeId)
+    }
+
+    fun visible(nodeId: Int): Boolean {
+        if (nodeId <= 0) {
+            return false
+        }
+
+        var isVisible = true
+
+        val properties = css?.getComputedStyleForNode(nodeId)
+        properties?.forEach { prop ->
+            when {
+                prop.name == "display" && prop.value == "none" -> isVisible = false
+                prop.name == "visibility" && prop.value == "hidden" -> isVisible = false
+                prop.name == "opacity" && prop.value == "0" -> isVisible = false
+            }
+        }
+
+        if (isVisible) {
+            isVisible = ClickableDOM.create(page, dom, nodeId)?.isVisible() ?: false
+        }
+
+        return isVisible
     }
 
     fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
@@ -46,13 +79,15 @@ class PageHandler(
         try {
             val node = dom?.describeNode(nodeId, null, null, null, false)
             if (node?.nodeType != ELEMENT_NODE) {
-                logger.info("Node is not an element: {}", selector ?: nodeId)
+                logger.info("Node is not of type HTMLElement | {}", selector ?: nodeId)
                 return null
             }
 
             dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
         } catch (e: ChromeRPCException) {
-            logger.warn("Failed to scroll into {}/{} | {}", nodeId, selector, e.message)
+            // logger.warn("Can to scroll into {} | {} | {}", nodeId, e.message, selector)
+            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
+            evaluate("__pulsar_utils__.scrollIntoView('$selector')")
         }
 
         return nodeId

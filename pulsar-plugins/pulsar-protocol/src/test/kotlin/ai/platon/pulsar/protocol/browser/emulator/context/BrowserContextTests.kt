@@ -47,7 +47,7 @@ class BrowserContextTests {
 
         runBlocking {
             repeat(10) {
-                val task = fetcher.createFetchTask(page)
+                val task = FetchTask.create(page)
                 task.fingerprint.userAgent = RandomStringUtils.randomAlphanumeric(10)
                 manager.run(task) { task, driver -> mockFetch(task, driver) }
                 assertTrue { manager.activeContexts.size <= manager.maxAllowedBadContexts }

@@ -389,9 +389,9 @@ open class StreamingCrawler<T : UrlAware>(
         if (url is ListenableUrl && url is DegenerateUrl) {
             // The url is degenerated, which means it's not a resource in the network to fetch.
             val eventHandler = url.eventHandler.crawlEventHandler
-            eventHandler.onBeforeLoad(url)
-            eventHandler.onLoad(url)
-            eventHandler.onAfterLoad(url, WebPage.NIL)
+            runSafely("onBeforeLoad") { eventHandler.onBeforeLoad(url) }
+            runSafely("onLoad") { eventHandler.onLoad(url) }
+            runSafely("onAfterLoad") { eventHandler.onAfterLoad(url, WebPage.NIL) }
         } else {
             val normalizedUrl = beforeUrlLoad(url)
             if (normalizedUrl != null) {
@@ -457,15 +457,15 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun beforeUrlLoad(url: UrlAware): UrlAware? {
         if (url is ListenableUrl) {
-            url.eventHandler.loadEventHandler.onFilter(url.url) ?: return null
+            runSafely("onFilter") { url.eventHandler.loadEventHandler.onFilter(url.url) } ?: return null
         }
 
-        crawlEventHandler.onFilter(url) ?: return null
+        runSafely("onFilter") { crawlEventHandler.onFilter(url) } ?: return null
 
-        crawlEventHandler.onBeforeLoad(url)
+        runSafely("onBeforeLoad") { crawlEventHandler.onBeforeLoad(url) }
 
         if (url is ListenableUrl) {
-            url.eventHandler.crawlEventHandler.onBeforeLoad(url)
+            runSafely("onBeforeLoad") { url.eventHandler.crawlEventHandler.onBeforeLoad(url) }
         }
 
         return url
@@ -473,11 +473,11 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
         if (url is ListenableUrl) {
-            url.eventHandler.crawlEventHandler.onAfterLoad(url, page)
+            runSafely("onAfterLoad") { url.eventHandler.crawlEventHandler.onAfterLoad(url, page) }
         }
 
         if (page != null) {
-            crawlEventHandler.onAfterLoad(url, page)
+            runSafely("onAfterLoad") { crawlEventHandler.onAfterLoad(url, page) }
         }
 
         if (enableSmartRetry) {
@@ -710,5 +710,9 @@ open class StreamingCrawler<T : UrlAware>(
         } catch (e: IOException) {
             logger.error(e.toString())
         }
+    }
+
+    private fun <T> runSafely(name: String, action: () -> T?): T? {
+        return runCatching { action() }.onFailure { logger.warn(it.stringify("[Ignored][$name] ")) }.getOrNull()
     }
 }

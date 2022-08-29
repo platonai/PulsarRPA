@@ -71,6 +71,7 @@ class ChromeDevtoolsDriver(
     private val browser get() = devTools.browser
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
+    private val css get() = devTools.css.takeIf { isActive }
     private val input get() = devTools.input.takeIf { isActive }
     private val mainFrame get() = page?.frameTree?.frame
     private val network get() = devTools.network.takeIf { isActive }
@@ -259,10 +260,9 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return false
 
         try {
-            val nodeId = querySelector(selector)
-            return ClickableDOM.create(page, dom, nodeId)?.isVisible() ?: false
+            return pageHandler.visible(selector)
         } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "exists $selector")
+            rpc.handleRPCException(e, "visible $selector")
         }
 
         return false
@@ -607,6 +607,7 @@ class ChromeDevtoolsDriver(
     private fun getInvaded(url: String) {
         page?.enable()
         dom?.enable()
+        css?.enable()
         runtime?.enable()
         network?.enable()
 
