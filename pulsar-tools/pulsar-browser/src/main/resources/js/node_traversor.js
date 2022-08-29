@@ -9,7 +9,7 @@
  *
  * @param visitor {Object} a class implementing the {@link NodeFeatureCalculator} interface, to be called when visiting each node.
  */
-function __pulsar_NodeTraversor(visitor) {
+let __pulsar_NodeTraversor = function(visitor) {
     this.visitor = visitor;
     this.options = {
         diagnosis : false

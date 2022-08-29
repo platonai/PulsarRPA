@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.common
 
+import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.scriptNamePrefix
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -116,6 +117,27 @@ open class BlockRules {
         get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
 }
 
+class ScriptConfuser {
+    companion object {
+        val scriptNamePrefix = "__pulsar_"
+        /**
+         * The name cipher for all injected scripts.
+         * All names in injected scripts must not be detected by javascript,
+         * the name mangling technology helps to achieve this purpose.
+         * */
+        val CIPHER = RandomStringUtils.randomAlphabetic(6)
+        val DEFAULT_NAME_MANGLER: (String) -> String = { script ->
+            script.replace(scriptNamePrefix, CIPHER)
+        }
+    }
+
+    var nameMangler: (String) -> String = DEFAULT_NAME_MANGLER
+
+    fun reset() {
+        nameMangler = DEFAULT_NAME_MANGLER
+    }
+}
+
 open class BrowserSettings(
     parameters: Map<String, Any> = mapOf(),
     var jsDirectory: String = "js",
@@ -132,16 +154,6 @@ open class BrowserSettings(
         var screenshotQuality = 50
         // Available user agents
         val userAgents = mutableListOf<String>()
-        const val scriptNamePrefix = "__pulsar_"
-        /**
-         * The name cipher for all injected scripts.
-         * All names in injected scripts must not be detected by javascript,
-         * the name mangling technology helps to achieve this purpose.
-         * */
-        val randomScriptNameCipher = RandomStringUtils.randomAlphabetic(6)
-        var scriptNameManglingPolicy: (String) -> String = { script ->
-            script.replace(scriptNamePrefix, randomScriptNameCipher)
-        }
 
         val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
@@ -153,6 +165,8 @@ open class BrowserSettings(
             feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
         private val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
+
+        val confuser = ScriptConfuser()
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
@@ -372,7 +386,7 @@ open class BrowserSettings(
     /**
      * A simple name mangling policy
      * */
-    open fun nameMangling(script: String): String = scriptNameManglingPolicy(script)
+    open fun nameMangling(script: String): String = confuser.nameMangler(script)
 
     private fun loadJs() {
         val sb = StringBuilder()
