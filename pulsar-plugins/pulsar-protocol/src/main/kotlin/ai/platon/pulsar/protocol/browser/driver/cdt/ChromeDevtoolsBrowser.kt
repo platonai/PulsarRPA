@@ -7,6 +7,8 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.persist.jackson.prettyPulsarObjectMapper
+import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -30,13 +32,6 @@ class ChromeDevtoolsBrowser(
             // In chrome every tab is a separate process
             val chromeTab = createTab()
             val devTools = createDevTools(chromeTab, toolsConfig)
-
-//            try {
-//                val ids = listContextIds()
-//                println(ids)
-//            } catch (t: Throwable) {
-//                t.printStackTrace()
-//            }
 
             return ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
         } catch (e: ChromeDriverException) {
@@ -69,10 +64,8 @@ class ChromeDevtoolsBrowser(
         return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
     }
 
-    @Synchronized
-    @Throws(WebDriverException::class)
-    fun listContextIds(): Array<String> {
-        return chrome.runCatching { listContextIds() }.getOrElse { throw WebDriverException("listContextIds", it) }
+    fun getBrowserContexts() {
+
     }
 
     @Throws(WebDriverException::class)

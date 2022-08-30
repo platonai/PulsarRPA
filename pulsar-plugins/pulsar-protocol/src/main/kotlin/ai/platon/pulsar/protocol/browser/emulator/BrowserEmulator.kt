@@ -115,7 +115,7 @@ open class BrowserEmulator(
                     logger.warn("Coroutine was cancelled | {}", e.message)
                 }
                 else -> {
-                    logger.warn("Unexpected exception", e)
+                    logger.warn("[Unexpected]", e)
                 }
             }
             response = ForwardingResponse.crawlRetry(task.page, e)
@@ -415,7 +415,7 @@ open class BrowserEmulator(
     }
 
     private suspend fun runSafely(name: String, action: suspend () -> Unit) {
-        runCatching { action() }.onFailure { logger.warn(it.stringify("[Ignored][$name] ")) }
+        runCatching { if (isActive) action() }.onFailure { logger.warn(it.stringify("[Ignored][$name] ")) }
     }
 
     private suspend fun evaluate(interactTask: InteractTask,

@@ -36,12 +36,7 @@ class Chrome(
     private val remoteDevTools: MutableMap<String, RemoteDevTools> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
 
-    override val version: ChromeVersion
-        @Throws(ChromeServiceException::class)
-        get() {
-            return request(ChromeVersion::class.java, "http://%s:%d/%s", host, port, VERSION)
-                    ?: throw ChromeServiceException("Failed to get version")
-        }
+    override val version: ChromeVersion by lazy { refreshVersion() }
 
     constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {
         override fun createWebSocketService(wsUrl: String): Transport {
@@ -50,12 +45,6 @@ class Chrome(
     })
 
     constructor(port: Int): this(LOCALHOST, port)
-
-    @Deprecated("Use list tabs instead")
-    @Throws(ChromeServiceException::class)
-    override fun getTabs(): Array<ChromeTab> {
-        return listTabs()
-    }
 
     @Throws(ChromeServiceException::class)
     override fun listTabs(): Array<ChromeTab> {
@@ -89,16 +78,16 @@ class Chrome(
     @Synchronized
     override fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         return try {
-            remoteDevTools.computeIfAbsent(tab.id) { createDevTools0(tab, config) }
+            remoteDevTools.computeIfAbsent(tab.id) { createDevTools0(version, tab, config) }
         } catch (e: WebSocketServiceException) {
             throw ChromeServiceException("Failed connecting to tab web socket.", e)
         }
     }
 
     @Throws(ChromeServiceException::class)
-    override fun listContextIds(): Array<String> {
-        return request(Array<String>::class.java, "http://%s:%d/%s", host, port, "json/Target.getBrowserContexts")
-            ?: throw ChromeServiceException("Failed to list browser context ids")
+    private fun refreshVersion(): ChromeVersion {
+        return request(ChromeVersion::class.java, "http://%s:%d/%s", host, port, VERSION)
+            ?: throw ChromeServiceException("Failed to get version")
     }
 
     private fun clearDevTools(tab: ChromeTab) {
@@ -113,7 +102,7 @@ class Chrome(
     }
 
     @Throws(WebSocketServiceException::class)
-    private fun createDevTools0(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
+    private fun createDevTools0(version: ChromeVersion, tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         // Create invocation handler
         val commandHandler = DevToolsInvocationHandler()
         val commands: MutableMap<Method, Any> = ConcurrentHashMap()
@@ -121,17 +110,20 @@ class Chrome(
             commands.computeIfAbsent(method) { ProxyClasses.createProxy(method.returnType, commandHandler) }
         }
 
-        // Connect to a tab via web socket
-        val debuggerUrl: String = tab.webSocketDebuggerUrl
-                ?: throw WebSocketServiceException("Invalid web socket debugger url")
+        val browserUrl = version.webSocketDebuggerUrl
+            ?: throw WebSocketServiceException("Invalid web socket debugger url")
+        val browserClient = wss.createWebSocketService(browserUrl)
 
-        val client = wss.createWebSocketService(debuggerUrl)
+        // Connect to a tab via web socket
+        val debuggerUrl = tab.webSocketDebuggerUrl
+                ?: throw WebSocketServiceException("Invalid web socket debugger url")
+        val pageClient = wss.createWebSocketService(debuggerUrl)
 
         // Create concrete dev tools instance from interface
         return ProxyClasses.createProxyFromAbstract(
                 BasicDevTools::class.java,
-                arrayOf(Transport::class.java, DevToolsConfig::class.java),
-                arrayOf(client, config),
+                arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
+                arrayOf(browserClient, pageClient, config),
                 invocationHandler
         ).also { commandHandler.devTools = it }
     }

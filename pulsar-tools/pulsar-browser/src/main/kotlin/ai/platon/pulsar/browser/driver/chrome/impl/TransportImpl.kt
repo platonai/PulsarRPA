@@ -77,7 +77,7 @@ class TransportImpl : Transport {
         meterRequests.mark()
 
         try {
-            logger.takeIf { it.isTraceEnabled }?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
+            tracer?.trace("Send {}", StringUtils.abbreviateMiddle(message, "...", 500))
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)

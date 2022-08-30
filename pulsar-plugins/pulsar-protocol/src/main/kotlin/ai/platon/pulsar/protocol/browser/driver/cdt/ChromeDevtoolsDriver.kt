@@ -109,23 +109,6 @@ class ChromeDevtoolsDriver(
         if (userAgent.isNotEmpty()) {
             emulation?.setUserAgentOverride(userAgent)
         }
-
-//        println("browserContexts: ")
-//
-//        target.activateTarget(chromeTab.id)
-//
-//        target.onTargetCreated {
-//            val targetInfo = prettyPulsarObjectMapper().writeValueAsString(it.targetInfo)
-//            println(targetInfo)
-//        }
-//
-//        target.onReceivedMessageFromTarget {
-//            println(it.message)
-//        }
-//
-//        target.onTargetDestroyed {
-//            println("onTargetDestroyed")
-//        }
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {

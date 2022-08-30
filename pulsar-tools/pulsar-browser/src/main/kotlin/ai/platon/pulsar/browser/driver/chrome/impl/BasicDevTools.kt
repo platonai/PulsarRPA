@@ -216,7 +216,8 @@ class EventDispatcher : Consumer<String> {
 }
 
 abstract class BasicDevTools(
-    private val client: Transport,
+    private val browserClient: Transport,
+    private val pageClient: Transport,
     private val config: DevToolsConfig
 ) : RemoteDevTools, AutoCloseable {
 
@@ -247,12 +248,13 @@ abstract class BasicDevTools(
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
-    override val isOpen get() = !closed.get() && !client.isClosed()
+    override val isOpen get() = !closed.get() && !pageClient.isClosed()
 
     private val dispatcher = EventDispatcher()
 
     init {
-        client.addMessageHandler(dispatcher)
+        browserClient.addMessageHandler(dispatcher)
+        pageClient.addMessageHandler(dispatcher)
     }
 
     open operator fun <T> invoke(
@@ -289,7 +291,12 @@ abstract class BasicDevTools(
         val message = dispatcher.serialize(method)
 
         try {
-            client.send(message)
+            // See https://github.com/hardkoded/puppeteer-sharp/issues/796
+            if (method.method.startsWith("Target.")) {
+                browserClient.send(message)
+            } else {
+                pageClient.send(message)
+            }
 
             val readTimeout = config.readTimeout
             val responded = future.await(readTimeout)
@@ -383,8 +390,10 @@ abstract class BasicDevTools(
             }
         }
 
-        logger.trace("Closing ws client ... | {}", client)
+        logger.trace("Closing ws client ... | {}", browserClient)
+        browserClient.close()
 
-        client.close()
+        logger.trace("Closing ws client ... | {}", pageClient)
+        pageClient.close()
     }
 }

@@ -410,7 +410,7 @@ __pulsar_utils__.clickMatches = function(selector, pattern) {
 }
 
 /**
- * Select the first element and click it
+ * Select the first element and click it.
  *
  * @param  {String} selector
  * @param  {String} attrName
@@ -432,9 +432,9 @@ __pulsar_utils__.clickMatches = function(selector, attrName, pattern) {
 }
 
 /**
- * Select the first element and click it
+ * Select the first element and click it.
  *
- * @param  {number} n The n-th anchor
+ * @param  {number} n The n-th anchor.
  * @return
  */
 __pulsar_utils__.clickNthAnchor = function(n) {
