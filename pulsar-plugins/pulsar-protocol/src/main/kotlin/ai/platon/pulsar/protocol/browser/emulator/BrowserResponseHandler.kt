@@ -112,7 +112,8 @@ open class BrowserResponseHandler(
     fun onPageSourceIsBroken(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
         return when {
             // should cancel all running tasks and reset the privacy context and then re-fetch them
-            htmlIntegrity.isRobotCheck -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
+            htmlIntegrity.isRobotCheck || htmlIntegrity.isRobotCheck2 || htmlIntegrity.isRobotCheck3 ->
+                ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
             htmlIntegrity.isForbidden -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
             htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
@@ -124,5 +125,4 @@ open class BrowserResponseHandler(
             else -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
         }
     }
-
 }

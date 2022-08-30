@@ -37,6 +37,6 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
         }
 
     override fun close() {
-        devTools.waitUntilClosed()
+        devTools.awaitTermination()
     }
 }

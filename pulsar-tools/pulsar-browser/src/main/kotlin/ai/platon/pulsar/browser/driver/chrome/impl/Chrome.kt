@@ -51,10 +51,16 @@ class Chrome(
 
     constructor(port: Int): this(LOCALHOST, port)
 
+    @Deprecated("Use list tabs instead")
     @Throws(ChromeServiceException::class)
     override fun getTabs(): Array<ChromeTab> {
+        return listTabs()
+    }
+
+    @Throws(ChromeServiceException::class)
+    override fun listTabs(): Array<ChromeTab> {
         return request(Array<ChromeTab>::class.java, "http://%s:%d/%s", host, port, LIST_TABS)
-                ?: throw ChromeServiceException("Failed to list tabs")
+            ?: throw ChromeServiceException("Failed to list tabs")
     }
 
     @Throws(ChromeServiceException::class)
@@ -87,6 +93,12 @@ class Chrome(
         } catch (e: WebSocketServiceException) {
             throw ChromeServiceException("Failed connecting to tab web socket.", e)
         }
+    }
+
+    @Throws(ChromeServiceException::class)
+    override fun listContextIds(): Array<String> {
+        return request(Array<String>::class.java, "http://%s:%d/%s", host, port, "json/Target.getBrowserContexts")
+            ?: throw ChromeServiceException("Failed to list browser context ids")
     }
 
     private fun clearDevTools(tab: ChromeTab) {

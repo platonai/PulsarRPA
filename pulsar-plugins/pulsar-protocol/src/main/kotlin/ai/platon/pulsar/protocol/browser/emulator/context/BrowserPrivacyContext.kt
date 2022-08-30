@@ -76,7 +76,7 @@ open class BrowserPrivacyContext(
         if (closed.compareAndSet(false, true)) {
             try {
                 report()
-                driverContext.shutdown()
+                driverContext.close()
                 proxyContext?.close()
             } catch (e: Exception) {
                 logger.warn(e.stringify())

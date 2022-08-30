@@ -9,6 +9,7 @@ import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 open class WebDriverException: IllegalStateException {
@@ -31,6 +32,8 @@ open class WebDriverException: IllegalStateException {
 data class NavigateEntry(
     /**
      * The url to navigate to.
+     * If page.href exists, the url is the href, otherwise, the url is page.url.
+     * The href has the higher priority to locate a resource.
      * */
     val url: String,
     /**
@@ -82,18 +85,33 @@ data class NavigateEntry(
     }
 }
 
+/**
+ * Similar to puppeteer's Page
+ * */
 interface WebDriver: Closeable {
+    enum class Status {
+        UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
+
+        val isFree get() = this == FREE
+        val isWorking get() = this == WORKING
+        val isCanceled get() = this == CANCELED
+        val isRetired get() = this == RETIRED
+        val isCrashed get() = this == CRASHED
+        val isQuit get() = this == QUIT
+    }
+
     val id: Int
     val navigateEntry: NavigateEntry
 //    val url: String
 
-    val browserInstance: BrowserInstance
+    val browserInstance: Browser
     val browserInstanceId: BrowserInstanceId get() = browserInstance.id
 
     val name: String
     val browserType: BrowserType
     val supportJavascript: Boolean
     val isMockedPageSource: Boolean
+    val status: AtomicReference<Status>
 
     val idleTimeout: Duration
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
@@ -139,12 +157,16 @@ interface WebDriver: Closeable {
     suspend fun visible(selector: String): Boolean
     suspend fun type(selector: String, text: String)
     suspend fun click(selector: String, count: Int = 1)
+    suspend fun clickMatches(selector: String, pattern: String, count: Int = 1)
+    suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     suspend fun scrollTo(selector: String)
     suspend fun scrollDown(count: Int = 1)
     suspend fun scrollUp(count: Int = 1)
     suspend fun scrollToTop()
     suspend fun scrollToBottom()
     suspend fun scrollToMiddle(ratio: Float)
+    suspend fun mouseWheelDown(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = 150.0, delayMillis: Long = 0)
+    suspend fun mouseWheelUp(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = -150.0, delayMillis: Long = 0)
     suspend fun moveMouseTo(x: Double, y: Double)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
 
@@ -178,6 +200,7 @@ interface WebDriver: Closeable {
     suspend fun terminate()
     /** Quit the tab, clicking the close button. */
     fun quit()
+    fun awaitTermination()
 
     fun free()
     fun startWork()

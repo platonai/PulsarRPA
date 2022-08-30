@@ -22,6 +22,8 @@ class WebDriverAdapter(
 
     val pageViews = AtomicInteger()
 
+    override val status get() = driver.status
+
     private val driverOrNull get() = driver.takeIf { isWorking }
 
     /**
@@ -83,9 +85,25 @@ class WebDriverAdapter(
 
     override suspend fun click(selector: String, count: Int) = driverOrNull?.click(selector, count) ?: Unit
 
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
+        driverOrNull?.clickMatches(selector, pattern, count)
+    }
+
+    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+        driverOrNull?.clickMatches(selector, attrName, pattern, count)
+    }
+
     override suspend fun scrollTo(selector: String) = driverOrNull?.scrollTo(selector) ?: Unit
 
     override suspend fun type(selector: String, text: String) = driverOrNull?.type(selector, text) ?: Unit
+
+    override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        driverOrNull?.mouseWheelDown(count, deltaX, deltaY, delayMillis)
+    }
+
+    override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        driverOrNull?.mouseWheelUp(count, deltaX, deltaY, delayMillis)
+    }
 
     override suspend fun moveMouseTo(x: Double, y: Double) {
         driverOrNull?.moveMouseTo(x, y)
@@ -140,6 +158,10 @@ class WebDriverAdapter(
         driverOrNull?.setTimeouts(browserSettings)
     }
 
+    override fun awaitTermination() {
+        driverOrNull?.awaitTermination()
+    }
+
     /**
      * Quits this driver, close every associated window
      * */
@@ -147,7 +169,7 @@ class WebDriverAdapter(
         if (!isQuit) {
             synchronized(status) {
                 if (!isQuit) {
-                    status.set(Status.QUIT)
+                    status.set(WebDriver.Status.QUIT)
                     driver.runCatching { quit() }.onFailure { logger.warn("Unexpected exception", it) }
                 }
             }

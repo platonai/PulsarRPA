@@ -13,20 +13,9 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
 abstract class AbstractWebDriver(
-    override val browserInstance: BrowserInstance,
+    override val browserInstance: Browser,
     override val id: Int = 0
 ): Comparable<AbstractWebDriver>, WebDriver {
-
-    enum class Status {
-        UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
-
-        val isFree get() = this == FREE
-        val isWorking get() = this == WORKING
-        val isCanceled get() = this == CANCELED
-        val isRetired get() = this == RETIRED
-        val isCrashed get() = this == CRASHED
-        val isQuit get() = this == QUIT
-    }
 
     var waitForTimeout = Duration.ofMinutes(1)
 
@@ -56,7 +45,7 @@ abstract class AbstractWebDriver(
     /**
      * Driver status
      * */
-    val status = AtomicReference(Status.UNKNOWN)
+    override val status = AtomicReference(WebDriver.Status.UNKNOWN)
 
     override var lastActiveTime: Instant = Instant.now()
 
@@ -70,15 +59,15 @@ abstract class AbstractWebDriver(
 
     private var jsoupSession: Connection? = null
 
-    override fun free() = status.set(Status.FREE)
-    override fun startWork() = status.set(Status.WORKING)
-    override fun retire() = status.set(Status.RETIRED)
+    override fun free() = status.set(WebDriver.Status.FREE)
+    override fun startWork() = status.set(WebDriver.Status.WORKING)
+    override fun retire() = status.set(WebDriver.Status.RETIRED)
     override fun cancel() {
         if (isCanceled) {
             return
         }
 
-        if (status.compareAndSet(Status.WORKING, Status.CANCELED)) {
+        if (status.compareAndSet(WebDriver.Status.WORKING, WebDriver.Status.CANCELED)) {
             // stop()
         }
     }

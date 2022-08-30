@@ -68,7 +68,7 @@ open class WebDriverSettings(
 
     constructor(config: ImmutableConfig): this(mapOf(), "js", config)
 
-    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(6))
+    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(10))
     val pollingDriverTimeout get() = conf.getDuration("polling.driver.timeout", POLLING_DRIVER_TIMEOUT)
 
     // Special

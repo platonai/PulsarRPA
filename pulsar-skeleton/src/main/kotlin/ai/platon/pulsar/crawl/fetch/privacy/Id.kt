@@ -59,6 +59,7 @@ data class PrivacyContextId(
 
 /**
  * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
+ * TODO: rename to BrowserId
  * */
 data class BrowserInstanceId constructor(
     val contextDir: Path,
@@ -96,6 +97,8 @@ data class BrowserInstanceId constructor(
         val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
     }
 }
+
+typealias BrowserId = BrowserInstanceId
 
 interface PrivacyContextIdGenerator {
     operator fun invoke(fingerprint: Fingerprint): PrivacyContextId

@@ -14,6 +14,7 @@ import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.persist.jackson.prettyPulsarObjectMapper
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -25,14 +26,13 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
     private val chromeTab: ChromeTab,
     private val devTools: RemoteDevTools,
     private val browserSettings: BrowserSettings,
-    override val browserInstance: ChromeDevtoolsBrowserInstance,
+    override val browserInstance: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browserInstance) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
@@ -44,6 +44,7 @@ class ChromeDevtoolsDriver(
             "gap" -> 500L + Random.nextInt(500)
             "click" -> 500L + Random.nextInt(1000)
             "type" -> 50L + Random.nextInt(500)
+            "mouseWheel" -> 800L + Random.nextInt(500)
             "dragAndDrop" -> 800L + Random.nextInt(500)
             "waitForNavigation" -> 500L
             "waitForSelector" -> 500L
@@ -51,7 +52,7 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    val openSequence = 1 + browserInstance.devToolsCount
+    val openSequence = 1 + browserInstance.driverCount
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
     val userAgent get() = BrowserSettings.randomUserAgent()
@@ -66,10 +67,11 @@ class ChromeDevtoolsDriver(
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
-    private var navigateUrl = ""
+    private var navigateUrl = chromeTab.url ?: ""
 
     private val browser get() = devTools.browser
     private val page get() = devTools.page.takeIf { isActive }
+    private val target get() = devTools.target
     private val dom get() = devTools.dom.takeIf { isActive }
     private val css get() = devTools.css.takeIf { isActive }
     private val input get() = devTools.input.takeIf { isActive }
@@ -85,7 +87,7 @@ class ChromeDevtoolsDriver(
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
 
-    private val rpc = RPC(this)
+    private val rpc = RobustRPC(this)
 
     private val enableStartupScript get() = browserSettings.enableStartupScript
     private val enableBlockingReport = false
@@ -98,12 +100,32 @@ class ChromeDevtoolsDriver(
 
     val tabId get() = chromeTab.id
 
-    init {
-        navigateUrl = chromeTab.url ?: ""
+    /**
+     * Expose the underlying implementation, used for development purpose
+     * */
+    val implementation get() = devTools
 
+    init {
         if (userAgent.isNotEmpty()) {
             emulation?.setUserAgentOverride(userAgent)
         }
+
+//        println("browserContexts: ")
+//
+//        target.activateTarget(chromeTab.id)
+//
+//        target.onTargetCreated {
+//            val targetInfo = prettyPulsarObjectMapper().writeValueAsString(it.targetInfo)
+//            println(targetInfo)
+//        }
+//
+//        target.onReceivedMessageFromTarget {
+//            println(it.message)
+//        }
+//
+//        target.onTargetDestroyed {
+//            println("onTargetDestroyed")
+//        }
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
@@ -118,7 +140,7 @@ class ChromeDevtoolsDriver(
                 if (enableStartupScript) getInvaded(entry.url) else getNoInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "navigateTo ${entry.url}")
+            rpc.handleRPCException(e, "navigateTo", entry.url)
         }
     }
 
@@ -207,7 +229,7 @@ class ChromeDevtoolsDriver(
         if (!refreshState()) return null
 
         try {
-            return pageHandler.evaluate(expression)
+            return rpc.invokeDeferred("evaluate") { pageHandler.evaluate(expression) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "evaluate")
         }
@@ -327,6 +349,30 @@ class ChromeDevtoolsDriver(
         return false
     }
 
+    override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        rpc.invokeDeferred("mouseWheelDown") {
+            repeat(count) { i ->
+                if (i > 0) {
+                    if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
+                }
+
+                mouse?.wheel(deltaX, deltaY)
+            }
+        }
+    }
+
+    override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        rpc.invokeDeferred("mouseWheelUp") {
+            repeat(count) { i ->
+                if (i > 0) {
+                    if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
+                }
+
+                mouse?.wheel(deltaX, deltaY)
+            }
+        }
+    }
+
     override suspend fun moveMouseTo(x: Double, y: Double) {
         rpc.invokeDeferred("moveMouseTo") {
             mouse?.move(x, y)
@@ -372,6 +418,57 @@ class ChromeDevtoolsDriver(
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "click")
+        }
+    }
+
+    private suspend fun click(nodeId: Int, count: Int) {
+        val offset = OffsetD(4.0, 4.0)
+
+        val p = page
+        val d = dom
+        if (p != null && d != null) {
+            val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
+            mouse?.click(point.x, point.y, count, delayPolicy("click"))
+        }
+    }
+
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
+        if (!refreshState()) return
+
+        try {
+            rpc.invokeDeferred("clickMatches") {
+                pageHandler.evaluate("__pulsar_utils__.clickMatches('$selector', '$pattern')")
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "click")
+        }
+    }
+
+    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+        if (!refreshState()) return
+
+        try {
+            rpc.invokeDeferred("clickMatches") {
+                pageHandler.evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "click")
+        }
+    }
+
+    private suspend fun clickMatches0(selector: String, attrName: String, pattern: String, count: Int) {
+        if (!refreshState()) return
+
+        rpc.invokeDeferred("clickMatches") {
+            val bodyId = pageHandler.scrollIntoViewIfNeeded("body")
+            val nodeIds = dom?.querySelectorAll(bodyId, selector) ?: return@invokeDeferred
+            nodeIds.forEach { nodeId ->
+                val count = dom?.getAttributes(nodeId)?.count { it.matches(pattern.toRegex()) } ?: 0
+                if (count > 0) {
+                    click(nodeId, count)
+                    return@invokeDeferred
+                }
+            }
         }
     }
 
@@ -585,6 +682,10 @@ class ChromeDevtoolsDriver(
         // browserInstanceManager.closeIfPresent(launchOptions.userDataDir)
     }
 
+    override fun awaitTermination() {
+        devTools.awaitTermination()
+    }
+
     /**
      * Close the tab hold by this driver
      * */
@@ -654,7 +755,7 @@ class ChromeDevtoolsDriver(
     // close irrelevant tabs, which might be opened for humanization purpose
     @Throws(ChromeDriverException::class)
     private fun cleanTabs() {
-        val tabs = browserInstance.listTab()
+        val tabs = browserInstance.listTabs()
         closeTimeoutTabs(tabs)
         closeIrrelevantTabs(tabs)
     }

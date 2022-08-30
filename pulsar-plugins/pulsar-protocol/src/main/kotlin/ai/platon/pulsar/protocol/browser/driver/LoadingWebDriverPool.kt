@@ -239,7 +239,7 @@ class LoadingWebDriverPool(
     @Throws(DriverLaunchException::class)
     private fun createWebDriver(volatileConfig: VolatileConfig) {
         // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
-        val driver = driverFactory.create(browserInstanceId, priority, volatileConfig)
+        val driver = driverFactory.create(browserInstanceId, priority, volatileConfig, start = false)
 
         lock.withLock {
             freeDrivers.add(driver)
@@ -253,10 +253,10 @@ class LoadingWebDriverPool(
     private fun doClose(timeToWait: Duration) {
         freeDrivers.clear()
 
-        val heavyRendering = conf.getBoolean(CapabilityTypes.BROWSER_HEAVY_RENDERING, false)
-        if (isActive && heavyRendering) {
-            waitUntilIdleOrTimeout(timeToWait)
-        }
+//        val heavyRendering = conf.getBoolean(CapabilityTypes.BROWSER_HEAVY_RENDERING, false)
+//        if (isActive && heavyRendering) {
+//            waitUntilIdleOrTimeout(timeToWait)
+//        }
 
         val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
         nonSynchronized.parallelStream().forEach { it.cancel() }
@@ -279,17 +279,19 @@ class LoadingWebDriverPool(
 
     @Synchronized
     private fun waitUntilIdleOrTimeout(timeout: Duration) {
-        lock.withLock {
-            val ttl = timeout.seconds
-            var i = 0
-            try {
-                while (isActive && numWorking.get() > 0 && ++i < ttl) {
-                    notBusy.await(1, TimeUnit.SECONDS)
-                    logger.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
-                }
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
+        val ttl = timeout.seconds
+        var i = 0
+        try {
+            lock.withLock { notBusy.await(timeout.seconds, TimeUnit.SECONDS) }
+
+//            while (isActive && numWorking.get() > 0 && ++i < ttl) {
+//                lock.withLock {
+//                    notBusy.await(1, TimeUnit.SECONDS)
+//                }
+//                logger.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
+//            }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
     }
 

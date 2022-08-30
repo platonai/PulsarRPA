@@ -21,8 +21,12 @@ interface RemoteChrome: AutoCloseable {
 
     val version: ChromeVersion
 
+    @Deprecated("Use list tabs instead")
     @Throws(ChromeServiceException::class)
     fun getTabs(): Array<ChromeTab>
+
+    @Throws(ChromeServiceException::class)
+    fun listTabs(): Array<ChromeTab>
 
     @Throws(ChromeServiceException::class)
     fun createTab(): ChromeTab
@@ -35,6 +39,9 @@ interface RemoteChrome: AutoCloseable {
 
     @Throws(ChromeServiceException::class)
     fun closeTab(tab: ChromeTab)
+
+    @Throws(ChromeServiceException::class)
+    fun listContextIds(): Array<String>
 
     fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools
 }
@@ -50,7 +57,7 @@ interface RemoteDevTools: ChromeDevTools, AutoCloseable {
             method: MethodInvocation
     ): T?
 
-    fun waitUntilClosed()
+    fun awaitTermination()
 
     fun addEventListener(domainName: String, eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener
 

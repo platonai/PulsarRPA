@@ -361,7 +361,7 @@ class Mouse(private val devTools: ChromeDevTools) {
      * mouse.wheel({ deltaY: -100 })
      * ```
      */
-    suspend fun wheel(point: PointD, deltaX: Double = 10.0, deltaY: Double = 10.0) {
+    suspend fun wheel(point: PointD, deltaX: Double = 0.0, deltaY: Double = 10.0) {
         wheel(point.x, point.y, deltaX, deltaY)
     }
 

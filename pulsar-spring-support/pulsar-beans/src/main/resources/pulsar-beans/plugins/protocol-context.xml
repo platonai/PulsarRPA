@@ -11,7 +11,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserInstanceManager" class="ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager"
+    <bean id="browserInstanceManager" class="ai.platon.pulsar.protocol.browser.driver.BrowserContext"
           destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>

@@ -312,12 +312,10 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
 
-        while (isActive && globalRunningTasks.get() > fetchConcurrency) {
+        while (isActive && globalRunningTasks.get() >= fetchConcurrency) {
             if (j % 120 == 0) {
-                logger.info(
-                    "$j. Long time to run $globalRunningTasks tasks" +
-                            " | $lastActiveTime -> {}", idleTime.readable()
-                )
+                logger.info("$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
+                    idleTime.readable())
             }
             delay(1000)
         }
@@ -403,16 +401,17 @@ open class StreamingCrawler<T : UrlAware>(
 
     private suspend fun loadUrl(url: UrlAware): WebPage? {
         var page: WebPage? = null
+        val timeout = 20_000 + fetchTaskTimeout.toMillis()
         try {
-//            val timeout = 20_000 + fetchTaskTimeout.toMillis()
-//            page = withTimeout(timeout) { loadWithEventHandlers(url) }
-            page = loadWithEventHandlers(url)
+            page = withTimeout(timeout) { loadWithEventHandlers(url) }
+//            page = loadWithEventHandlers(url)
             if (page != null) {
                 collectStatAfterLoad(page)
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
-            logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, fetchTaskTimeout, url)
+            logger.info("{}. Task timeout ({}) to load page, thrown by [withTimeout] | {}",
+                globalMetrics.timeouts.count, timeout, url)
         } catch (e: Throwable) {
             when {
                 // The following exceptions can be caught as a Throwable but not the concrete exception,
@@ -547,13 +546,14 @@ open class StreamingCrawler<T : UrlAware>(
                 return FlowState.BREAK
             }
             is ProxyException -> {
-                logger.warn("Unexpected proxy exception | {}", e.simplify())
+                logger.warn("[Unexpected] proxy exception | {}", e.simplify())
             }
             is TimeoutCancellationException -> {
-                logger.warn("Timeout cancellation: {} | {}", e.simplify(), url)
+                logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout]. {} | {}",
+                    e.simplify(), url)
             }
             is CancellationException -> {
-                // Comes after TimeoutCancellationException
+                // Has to come after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }

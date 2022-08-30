@@ -100,14 +100,14 @@ open class BrowserEmulator(
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", e.simplify())
             } else {
-                logger.warn("Unexpected WebDriver exception", e)
+                logger.warn("[Unexpected][${e.javaClass.simpleName}]", e)
             }
 
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
         } catch (e: TimeoutCancellationException) {
-            logger.warn("Coroutine was cancelled because of timeout", e)
+            logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.simplify())
             response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: Exception) {
             when {
@@ -156,7 +156,7 @@ open class BrowserEmulator(
             response = browseWithWebDriverExceptionsHandled(task, driver)
 
             // Do something like a human being
-            interactAfterFetch(task, driver)
+//            interactAfterFetch(task, driver)
 
             val page = task.page
             val eventHandler = simulateEventHandler(page.conf)
@@ -219,8 +219,8 @@ open class BrowserEmulator(
 
         // href has the higher priority to locate a resource
         require(task.url == page.url)
-        val location = task.href ?: task.url
-        val navigateEntry = NavigateEntry(location, page.id, task.url, pageReferrer = page.referrer)
+        val finalUrl = task.href ?: task.url
+        val navigateEntry = NavigateEntry(finalUrl, page.id, task.url, pageReferrer = page.referrer)
 
         try {
             driver.navigateTo(navigateEntry)

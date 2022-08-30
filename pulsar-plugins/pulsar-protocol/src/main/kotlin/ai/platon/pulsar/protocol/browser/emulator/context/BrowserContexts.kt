@@ -6,6 +6,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.*
+import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.crawl.StreamingCrawler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -17,6 +19,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.D
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.TimeoutCancellationException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -50,7 +53,6 @@ class WebDriverContext(
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
-    private val isShutdown = AtomicBoolean()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
@@ -84,28 +86,21 @@ class WebDriverContext(
         }
     }
 
-    fun shutdown() {
-        isShutdown.set(true)
-        close()
-    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                doClose()
-            } catch (t: Throwable) {
-                logger.error("Unexpected exception", t)
-            }
+            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.stringify("[Unexpected][Ignored]")) }
         }
     }
 
     private fun doClose() {
+        if (isActive) {
+            waitUntilAllDoneNormally()
+        }
+
         // close underlying IO based modules asynchronously
         closeUnderlyingLayer()
 
-        if (!isShutdown.get()) {
-            waitUntilNoRunningTasks()
-        }
+        waitUntilNoRunningTasks()
 
         if (runningTasks.isNotEmpty()) {
             logger.info("Still {} running tasks after context close | {}",
@@ -125,8 +120,20 @@ class WebDriverContext(
         driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
+    private fun waitUntilAllDoneNormally(minutes: Long = 3) {
+        try {
+            lock.withLock { notBusy.await(minutes, TimeUnit.MINUTES) }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+    }
+
     private fun waitUntilNoRunningTasks() {
-        lock.withLock { notBusy.await(20, TimeUnit.SECONDS) }
+        try {
+            lock.withLock { notBusy.await(20, TimeUnit.SECONDS) }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {

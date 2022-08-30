@@ -87,15 +87,13 @@ open class BrowserEmulatedFetcher(
         val volatileConfig = task.page.conf
         val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
 
-        eventHandler?.onBeforeFetch?.runCatching {
-            invoke(task.page, driver)
-        }?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
+        eventHandler?.onWillFetch?.runCatching { invoke(task.page, driver) }
+            ?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
 
         val result = browserEmulator.fetch(task, driver)
 
-        eventHandler?.onAfterFetch?.runCatching {
-            invoke(task.page, driver)
-        }?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
+        eventHandler?.onFetched?.runCatching { invoke(task.page, driver) }
+            ?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
 
         return result
     }

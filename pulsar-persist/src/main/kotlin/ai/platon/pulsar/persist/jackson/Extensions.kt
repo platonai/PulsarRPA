@@ -14,3 +14,9 @@ fun pulsarObjectMapper(): ObjectMapper = jsonMapper {
     addModule(JavaTimeModule())
     addModule(kotlinModule())
 }.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+
+fun prettyPulsarObjectMapper(): ObjectMapper = jsonMapper {
+    addModule(JavaTimeModule())
+    addModule(kotlinModule())
+}.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    .configure(SerializationFeature.INDENT_OUTPUT, true)

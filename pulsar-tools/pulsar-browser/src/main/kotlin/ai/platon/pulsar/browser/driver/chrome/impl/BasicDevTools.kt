@@ -354,11 +354,11 @@ abstract class BasicDevTools(
         dispatcher.unregisterListener(listener.key, listener)
     }
 
-    override fun waitUntilClosed() {
-        runCatching { closeLatch.await() }.onFailure {
-            if (it is InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
+    override fun awaitTermination() {
+        try {
+            closeLatch.await()
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
     }
 

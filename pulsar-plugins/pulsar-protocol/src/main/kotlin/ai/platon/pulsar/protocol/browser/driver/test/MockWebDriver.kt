@@ -1,16 +1,16 @@
 package ai.platon.pulsar.protocol.browser.driver.test
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowserInstance
+import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -20,20 +20,19 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.time.Duration
 import java.util.*
 
-class MockBrowserInstance(
+class MockBrowser(
     id: BrowserInstanceId,
-    launcherOptions: LauncherOptions,
-    launchOptions: ChromeOptions
-): AbstractBrowserInstance(id, launcherOptions, launchOptions) {
-    override fun createDriver(browserSettings: BrowserSettings): WebDriver {
+    launcherOptions: LauncherOptions
+): AbstractBrowser(id, launcherOptions.browserSettings) {
+    override fun newDriver(): WebDriver {
         TODO("not implemented")
     }
-    override fun launch() {}
+
     override fun close() {}
 }
 
 class MockWebDriver(
-    browserInstance: MockBrowserInstance,
+    browserInstance: MockBrowser,
     backupDriverCreator: () -> WebDriver,
 ) : AbstractWebDriver(browserInstance) {
     private val logger = LoggerFactory.getLogger(MockWebDriver::class.java)!!
@@ -143,6 +142,22 @@ class MockWebDriver(
         backupDriverOrNull?.click(selector, count)
     }
 
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
+        backupDriverOrNull?.clickMatches(selector, pattern, count)
+    }
+
+    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+        backupDriverOrNull?.clickMatches(selector, attrName, pattern, count)
+    }
+
+    override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        backupDriverOrNull?.mouseWheelDown(count, deltaX, deltaY, delayMillis)
+    }
+
+    override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        backupDriverOrNull?.mouseWheelUp(count, deltaX, deltaY, delayMillis)
+    }
+
     override suspend fun moveMouseTo(x: Double, y: Double) {
         backupDriverOrNull?.moveMouseTo(x, y)
     }
@@ -169,6 +184,10 @@ class MockWebDriver(
         backupDriverOrNull?.stopLoading()
     }
 
+    override fun awaitTermination() {
+        backupDriverOrNull?.awaitTermination()
+    }
+    
     /**
      * Quit the browser instance
      * */

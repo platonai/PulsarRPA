@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.test.TestBase
 import com.google.gson.Gson
@@ -15,6 +16,7 @@ import java.io.IOException
 import java.util.*
 import kotlin.jvm.Throws
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -47,15 +49,10 @@ class ChromeWebDriverTests: TestBase() {
     @Test
     fun `Ensure no injected js variables are seen`() {
         confuser.nameMangler = { script -> script }
-        val driver = driverFactory.create().also { it.startWork() }
+        val driver = driverFactory.create()
 
         runBlocking {
-            driver.navigateTo(url)
-            driver.waitForSelector("body")
-            repeat(3) {
-                driver.scrollDown()
-                delay(500)
-            }
+            open(url, driver, 3)
 
             val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()
             assertTrue { windowVariables.contains("document") }
@@ -95,15 +92,10 @@ class ChromeWebDriverTests: TestBase() {
     @Test
     fun `Ensure no injected document variables are seen`() {
         confuser.nameMangler = { script -> script }
-        val driver = driverFactory.create().also { it.startWork() }
+        val driver = driverFactory.create()
 
         runBlocking {
-            driver.navigateTo(url)
-            driver.waitForSelector("body")
-            repeat(3) {
-                driver.scrollDown()
-                delay(500)
-            }
+            open(url, driver, 3)
 
             val nodeVariables = driver.evaluate("JSON.stringify(Object.keys(document))").toString()
 //            assertTrue { nodeVariables.contains("querySelector") }
@@ -126,21 +118,81 @@ class ChromeWebDriverTests: TestBase() {
     }
 
     @Test
+    fun testOpenNewTab() {
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(url, driver)
+
+            driver.clickMatches("ol li a", "href", "product-reviews")
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            driver.scrollDown(5)
+        }
+    }
+
+    @Test
+    fun testClickMatches() {
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(url, driver)
+
+            driver.clickMatches("ol li a", "href", "product-reviews")
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            assertNotEquals(url, driver.currentUrl())
+        }
+    }
+
+    @Test
+    fun testClickMatches2() {
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(url, driver)
+
+            driver.clickMatches("a[data-hook]", "See all reviews")
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            // assertNotEquals(url, driver.currentUrl())
+        }
+    }
+
+    @Test
+    fun testMouseWheel() {
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(url, driver)
+
+            driver.mouseWheelDown(5)
+
+            val box = driver.boundingBox("body")
+            println(box)
+            assertNotNull(box)
+
+            delay(3000)
+
+            driver.mouseWheelUp(5)
+
+            val box2 = driver.boundingBox("body")
+            println(box2)
+            assertNotNull(box2)
+            assertTrue { box2.y < box.y }
+
+            driver.stop()
+        }
+    }
+
+    @Test
     fun testCaptureScreenshot() {
         System.setProperty("debugLevel", "0")
 
-        val driver = driverFactory.create().also { it.startWork() }
+        val driver = driverFactory.create()
 
         runBlocking {
-            driver.navigateTo(url)
-            driver.waitForSelector("body")
-//            driver.bringToFront()
-            var n = 10
-            while (n-- > 0) {
-                driver.scrollDown(1)
-                delay(1000)
-            }
-            driver.moveMouseTo(0.12, 100.0)
+            open(url, driver)
 
             assertTrue { driver.exists("body") }
             val pageSource = driver.pageSource()
@@ -159,6 +211,17 @@ class ChromeWebDriverTests: TestBase() {
             }
 
             driver.stop()
+        }
+    }
+
+    private suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 5) {
+        driver.navigateTo(url)
+        driver.waitForSelector("body")
+        driver.bringToFront()
+        var n = scrollCount
+        while (n-- > 0) {
+            driver.scrollDown(1)
+            delay(1000)
         }
     }
 

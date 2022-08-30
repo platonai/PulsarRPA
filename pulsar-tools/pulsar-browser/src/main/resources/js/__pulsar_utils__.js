@@ -384,8 +384,50 @@ __pulsar_utils__.scrollIntoView = function(selector) {
  */
 __pulsar_utils__.click = function(selector) {
     let ele = document.querySelector(selector)
-    if (ele != null) {
+    if (ele instanceof HTMLElement) {
         ele.click()
+    }
+}
+
+/**
+ * Select the first element and click it
+ *
+ * @param  {String} selector
+ * @param  {String} pattern
+ * @return
+ */
+__pulsar_utils__.clickMatches = function(selector, pattern) {
+    let elements = document.querySelectorAll(selector)
+    for (let ele of elements) {
+        if (ele instanceof HTMLElement) {
+            let text = ele.textContent
+            if (text.match(pattern)) {
+                ele.scrollIntoView()
+                ele.click()
+            }
+        }
+    }
+}
+
+/**
+ * Select the first element and click it
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @param  {String} pattern
+ * @return
+ */
+__pulsar_utils__.clickMatches = function(selector, attrName, pattern) {
+    let elements = document.querySelectorAll(selector)
+    for (let ele of elements) {
+        if (ele instanceof HTMLElement) {
+            let attrValue = ele.getAttribute(attrName)
+            if (attrValue.match(pattern)) {
+                ele.scrollIntoView()
+                ele.click()
+                return
+            }
+        }
     }
 }
 

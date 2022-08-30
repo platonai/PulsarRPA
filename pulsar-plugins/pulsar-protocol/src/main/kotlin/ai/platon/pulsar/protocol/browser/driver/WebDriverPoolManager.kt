@@ -133,8 +133,8 @@ open class WebDriverPoolManager(
     fun isRetiredPool(browserId: BrowserInstanceId) = retiredPools.contains(browserId)
 
     /**
-     * Cancel the fetch task specified by [url] remotely
-     * NOTE: A cancel request should run immediately not waiting for any browser task return
+     * Cancel the fetch task specified by [url] remotely.
+     * NOTE: A cancel request should run immediately not waiting for any browser task return.
      * */
     fun cancel(url: String): WebDriver? {
         var driver: WebDriver? = null
@@ -227,27 +227,36 @@ open class WebDriverPoolManager(
                     if (isActive) poll(driverPool, task) else return@whenNormalDeferred null
                 }
 
-                // do not take up too much time on this driver
-                val fetchTaskTimeout = driverSettings.fetchTaskTimeout
-                result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
-                    if (isActive) task.runWith(driver) else null
-                }
-
-                if (result == null) {
-                    numTimeout.mark()
-                    driverPool.numTimeout.incrementAndGet()
-                    driverPool.numDismissWarnings.incrementAndGet()
-
-                    // This should not happen since the task itself should handle the timeout event
-                    logger.warn("Web driver task timeout({}) | {} | {}",
-                        fetchTaskTimeout.readable(), formatStatus(browserId), browserId)
-                } else {
-                    driverPool.numSuccess.incrementAndGet()
-                    driverPool.numDismissWarnings.decrementAndGet()
-                }
+                result = runWithTimeout(task, driver, driverPool)
             } finally {
                 driver?.let { driverPool.put(it) }
             }
+        }
+
+        return result
+    }
+
+    private suspend fun <R> runWithTimeout(
+        task: WebDriverTask<R>, driver: WebDriver, driverPool: LoadingWebDriverPool
+    ): R? {
+        // do not take up too much time on this driver
+        val fetchTaskTimeout = driverSettings.fetchTaskTimeout
+        val result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
+            if (isActive) task.runWith(driver) else null
+        }
+
+        if (result == null) {
+            numTimeout.mark()
+            driverPool.numTimeout.incrementAndGet()
+            driverPool.numDismissWarnings.incrementAndGet()
+
+            // This should not happen since the task itself should handle the timeout event
+            val browserId = driver.browserInstanceId
+            logger.warn("Coroutine timeout({}) (by [withTimeoutOrNull]) | {} | {}",
+                fetchTaskTimeout.readable(), formatStatus(browserId), browserId)
+        } else {
+            driverPool.numSuccess.incrementAndGet()
+            driverPool.numDismissWarnings.decrementAndGet()
         }
 
         return result
@@ -279,7 +288,7 @@ open class WebDriverPoolManager(
         try {
             eventHandler?.loadEventHandler?.onBeforeBrowserLaunch?.invoke(page)
         } catch (t: Throwable) {
-            logger.warn(t.stringify("Unexpected exception before browser launch - "))
+            logger.warn(t.stringify("[Unexpected][onBeforeBrowserLaunch] - "))
         }
     }
 
@@ -289,7 +298,7 @@ open class WebDriverPoolManager(
         try {
             eventHandler?.loadEventHandler?.onAfterBrowserLaunch?.invoke(page, driver)
         } catch (t: Throwable) {
-            logger.warn(t.stringify("Unexpected exception after browser launch - "))
+            logger.warn(t.stringify("[Unexpected][onAfterBrowserLaunch] - "))
         }
     }
 
@@ -321,7 +330,7 @@ open class WebDriverPoolManager(
                 logger.info("Web drivers are in {} mode, please close it manually | {} ", displayMode, browserId)
             }
 
-            driverFactory.browserInstanceManager.closeIfPresent(browserId)
+            driverFactory.browserContext.closeIfPresent(browserId)
         }
     }
 

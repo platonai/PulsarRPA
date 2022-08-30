@@ -518,15 +518,15 @@ abstract class AbstractPulsarContext(
 
         getBeanOrNull<GlobalCacheFactory>()?.globalCache?.clearCaches()
 
-        sessions.values.forEach { session ->
+        val nonSyncSessions = sessions.values.toList().also { sessions.clear() }
+        nonSyncSessions.parallelStream().forEach { session ->
             session.runCatching { close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
         }
-        sessions.clear()
 
-        closableObjects.forEach { closable ->
+        val nonSyncObjects = closableObjects.toList().also { closableObjects.clear() }
+        nonSyncObjects.parallelStream().forEach { closable ->
             closable.runCatching { close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
         }
-        closableObjects.clear()
     }
 
     private fun startLoopIfNecessary() {

@@ -8,17 +8,17 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class RPC(
+internal class RobustRPC(
     private val driver: ChromeDevtoolsDriver
 ) {
-    private val logger = LoggerFactory.getLogger(RPC::class.java)!!
+    private val logger = LoggerFactory.getLogger(RobustRPC::class.java)!!
 
     val isActive get() = driver.isActive
 
     val rpcFailures = AtomicInteger()
     var maxRPCFailures = 5
 
-    fun handleRPCException(e: ChromeRPCException, action: String? = null) {
+    fun handleRPCException(e: ChromeRPCException, action: String? = null, url: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
             throw NoSuchSessionException("Too many RPC failures")
         }

@@ -142,6 +142,9 @@ abstract class PrivacyContext(
         when {
             status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> markLeaked()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.FORBIDDEN) -> markLeaked()
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK) -> markWarning()
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_2) -> markWarning(2)
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_3) -> markWarning(3)
             status.isRetry(RetryScope.PRIVACY) -> markWarning()
             status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
             status.isSuccess -> markSuccess()

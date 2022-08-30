@@ -28,9 +28,9 @@ import java.util.regex.Pattern
  * The chrome launcher
  * */
 class ChromeLauncher(
-    private val userDataDir: Path = BrowserSettings.generateUserDataDir(),
-    private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
-    private val options: LauncherOptions = LauncherOptions()
+    val userDataDir: Path = BrowserSettings.generateUserDataDir(),
+    val options: LauncherOptions = LauncherOptions(),
+    private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry()
 ) : AutoCloseable {
 
     companion object {
