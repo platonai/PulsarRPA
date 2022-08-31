@@ -47,8 +47,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
             numRunningPreemptiveTasks, numPendingNormalTasks, numRunningNormalTasks).sumBy { it.get() } > 0
 
     /**
-     * The freezer is preemptive, if there is at least one freezer task attempt enter the critical section
-     * without obtaining a lock, all task attempt must wait
+     * If there is at least one preemptive task in the critical section, all normal tasks must wait.
      * */
     fun <T> preempt(preemptiveTask: () -> T) = beforePreempt().runCatching { preemptiveTask() }
             .also { afterPreempt() }.getOrThrow()

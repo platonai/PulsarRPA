@@ -7,19 +7,17 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.StreamingCrawler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
-import kotlinx.coroutines.TimeoutCancellationException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -32,9 +30,9 @@ import kotlin.concurrent.withLock
 import kotlin.random.Random
 
 class WebDriverContext(
-        val browserId: BrowserInstanceId,
+        val browserId: BrowserId,
         private val driverPoolManager: WebDriverPoolManager,
-        private val conf: ImmutableConfig
+        private val unmodifiedConfig: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
@@ -98,7 +96,7 @@ class WebDriverContext(
         }
 
         // close underlying IO based modules asynchronously
-        closeUnderlyingLayer()
+        cancelAllAndCloseUnderlyingLayer()
 
         waitUntilNoRunningTasks()
 
@@ -110,19 +108,20 @@ class WebDriverContext(
         }
     }
 
-    private fun closeUnderlyingLayer() {
+    private fun cancelAllAndCloseUnderlyingLayer() {
         // Mark all working tasks are canceled, so they return as soon as possible,
         // the ready tasks are blocked to wait for driverManager.reset() finish
         // TODO: why the canceled tasks do not return in time?
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
+        driverPoolManager.cancelAll()
         driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
-    private fun waitUntilAllDoneNormally(minutes: Long = 3) {
+    private fun waitUntilAllDoneNormally(timeoutMinutes: Long = 3) {
         try {
-            lock.withLock { notBusy.await(minutes, TimeUnit.MINUTES) }
+            lock.withLock { notBusy.await(timeoutMinutes, TimeUnit.MINUTES) }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         }

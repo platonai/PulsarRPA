@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class WebDriverAdapter(
     val driver: WebDriver,
     val priority: Int = 1000,
-) : AbstractWebDriver(driver.browserInstance, instanceSequencer.incrementAndGet()) {
+) : AbstractWebDriver(driver.browser, instanceSequencer.incrementAndGet()) {
     companion object {
         val instanceSequencer = AtomicInteger()
     }

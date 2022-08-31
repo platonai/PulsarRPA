@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
 abstract class AbstractWebDriver(
-    override val browserInstance: Browser,
+    override val browser: Browser,
     override val id: Int = 0
 ): Comparable<AbstractWebDriver>, WebDriver {
 
@@ -49,13 +49,13 @@ abstract class AbstractWebDriver(
 
     override var lastActiveTime: Instant = Instant.now()
 
-    val isFree get() = status.get().isFree
-    val isWorking get() = status.get().isWorking
+    override val isWorking get() = status.get().isWorking
     val isNotWorking get() = !isWorking
-    val isCrashed get() = status.get().isCrashed
     override val isRetired get() = status.get().isRetired
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
+    val isFree get() = status.get().isFree
+    val isCrashed get() = status.get().isCrashed
 
     private var jsoupSession: Connection? = null
 
@@ -154,7 +154,7 @@ abstract class AbstractWebDriver(
 
         // Since the browser uses the system proxy (by default),
         // so the http connection should also use the system proxy
-        val proxy = browserInstance.id.proxyServer ?: System.getenv("http_proxy")
+        val proxy = browser.id.proxyServer ?: System.getenv("http_proxy")
         if (proxy != null && UrlUtils.isValidUrl(proxy)) {
             val u = URL(proxy)
             session.proxy(u.host, u.port)

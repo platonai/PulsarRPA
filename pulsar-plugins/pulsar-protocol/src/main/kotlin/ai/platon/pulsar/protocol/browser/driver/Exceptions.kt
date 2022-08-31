@@ -15,7 +15,7 @@ open class SessionException: WebDriverException {
     }
 }
 
-open class NoSuchSessionException: SessionException {
+open class SessionLostException: SessionException {
     constructor() : super() {}
 
     constructor(message: String?) : super(message) {

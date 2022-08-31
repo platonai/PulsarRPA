@@ -142,7 +142,7 @@ class EventDispatcher : Consumer<String> {
     override fun accept(message: String) {
         logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
-        BasicDevTools.numAccepts.inc()
+        DevToolsImpl.numAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
             val idNode = jsonNode.get(ID_PROPERTY)
@@ -215,7 +215,7 @@ class EventDispatcher : Consumer<String> {
     }
 }
 
-abstract class BasicDevTools(
+abstract class DevToolsImpl(
     private val browserClient: Transport,
     private val pageClient: Transport,
     private val config: DevToolsConfig
@@ -241,7 +241,7 @@ abstract class BasicDevTools(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
+    private val logger = LoggerFactory.getLogger(DevToolsImpl::class.java)
     private val id = instanceSequencer.incrementAndGet()
 
     private val lock = ReentrantLock() // lock for containers

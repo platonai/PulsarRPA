@@ -20,7 +20,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class ChromeWebDriverTests: TestBase() {
+class ChromeImplWebDriverTests: TestBase() {
 
     private val logger = getLogger(this)
     private val url = "https://www.amazon.com/dp/B00BTX5926"

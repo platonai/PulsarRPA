@@ -18,12 +18,11 @@ import java.util.function.Consumer
 import javax.websocket.*
 
 class TransportImpl : Transport {
-    val id = instanceSequencer.incrementAndGet()
-
     private val logger = LoggerFactory.getLogger(TransportImpl::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
+    val id = instanceSequencer.incrementAndGet()
     private lateinit var session: Session
     private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
@@ -39,7 +38,17 @@ class TransportImpl : Transport {
         return !session.isOpen || closed.get()
     }
 
-    @Throws(WebSocketServiceException::class)
+    /**
+     * Connect the supplied annotated endpoint instance to its server. The supplied
+     * object must be a class decorated with the class level.
+     *
+     * @throws WebSocketServiceException if the annotated endpoint instance is not valid,
+     * or if there was a network or protocol problem that prevented the client endpoint
+     * being connected to its server.
+     * @throws IllegalStateException if called during the deployment phase of the containing
+     * application.
+     * */
+    @Throws(WebSocketServiceException::class, IllegalStateException::class)
     override fun connect(uri: URI) {
         val webSocketService = this
 
@@ -64,10 +73,10 @@ class TransportImpl : Transport {
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
-            logger.warn("Failed connecting to ws server | {}", uri, e)
+            logger.warn("Failed to connect to ws server | {}", uri, e)
             throw WebSocketServiceException("Failed connecting to ws server {}", e)
         } catch (e: IOException) {
-            logger.warn("Failed connecting to ws server | {}", uri, e)
+            logger.warn("Failed to connect to ws server | {}", uri, e)
             throw WebSocketServiceException("Failed connecting to ws server {}", e)
         }
     }
@@ -84,7 +93,7 @@ class TransportImpl : Transport {
         } catch (e: java.lang.IllegalStateException) {
             throw WebSocketServiceException("The connection is closed", e)
         } catch (e: Exception) {
-            logger.error("Unexpected exception | ${session.requestURI}", e)
+            logger.error("[Unexpected] | ${session.requestURI}", e)
         }
     }
 

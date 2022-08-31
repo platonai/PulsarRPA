@@ -1,12 +1,13 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
-import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
+import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.jvm.Throws
 
 internal class RobustRPC(
     private val driver: ChromeDevtoolsDriver
@@ -18,9 +19,10 @@ internal class RobustRPC(
     val rpcFailures = AtomicInteger()
     var maxRPCFailures = 5
 
+    @Throws(SessionLostException::class)
     fun handleRPCException(e: ChromeRPCException, action: String? = null, url: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
-            throw NoSuchSessionException("Too many RPC failures")
+            throw SessionLostException("Too many RPC failures")
         }
 
         logger.warn("Chrome RPC exception: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)

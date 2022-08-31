@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.PageDatum
@@ -165,8 +166,14 @@ abstract class BrowserEmulatorBase(
      * Check the task state.
      * */
     @Throws(NavigateTaskCancellationException::class)
-    protected fun checkState(task: FetchTask) {
+    protected fun checkState(task: FetchTask, driver: WebDriver) {
         checkState()
+
+        if (driver.isCanceled) {
+            // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
+            // and all the running tasks should be redo
+            throw WebDriverCancellationException("Driver #${driver.id} is canceled | ${task.url}")
+        }
 
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset

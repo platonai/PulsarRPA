@@ -1,14 +1,12 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.persist.jackson.prettyPulsarObjectMapper
-import ai.platon.pulsar.persist.jackson.pulsarObjectMapper
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -47,7 +45,7 @@ class ChromeDevtoolsBrowser(
         activeTime = Instant.now()
         tabCount.incrementAndGet()
 
-        return kotlin.runCatching { chrome.createTab(Chrome.ABOUT_BLANK_PAGE) }
+        return kotlin.runCatching { chrome.createTab(ChromeImpl.ABOUT_BLANK_PAGE) }
             .getOrElse { throw WebDriverException("createTab", it) }
     }
 
@@ -62,10 +60,6 @@ class ChromeDevtoolsBrowser(
     @Throws(WebDriverException::class)
     fun listTabs(): Array<ChromeTab> {
         return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
-    }
-
-    fun getBrowserContexts() {
-
     }
 
     @Throws(WebDriverException::class)

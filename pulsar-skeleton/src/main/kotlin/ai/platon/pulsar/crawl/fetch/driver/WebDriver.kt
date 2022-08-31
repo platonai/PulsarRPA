@@ -1,10 +1,10 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
@@ -13,6 +13,19 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 open class WebDriverException: IllegalStateException {
+    constructor() : super() {}
+
+    constructor(message: String?) : super(message) {
+    }
+
+    constructor(message: String?, cause: Throwable) : super(message, cause) {
+    }
+
+    constructor(cause: Throwable?) : super(cause) {
+    }
+}
+
+open class WebDriverCancellationException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String?) : super(message) {
@@ -104,8 +117,8 @@ interface WebDriver: Closeable {
     val navigateEntry: NavigateEntry
 //    val url: String
 
-    val browserInstance: Browser
-    val browserInstanceId: BrowserInstanceId get() = browserInstance.id
+    val browser: Browser
+    val browserId: BrowserId get() = browser.id
 
     val name: String
     val browserType: BrowserType
@@ -117,6 +130,7 @@ interface WebDriver: Closeable {
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
     val isCanceled: Boolean
+    val isWorking: Boolean
     val isQuit: Boolean
     val isRetired: Boolean
 

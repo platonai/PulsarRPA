@@ -16,7 +16,7 @@ import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-class Chrome(
+class ChromeImpl(
         var host: String = LOCALHOST,
         var port: Int = 0,
         var wss: WebSocketServiceFactory
@@ -111,17 +111,17 @@ class Chrome(
         }
 
         val browserUrl = version.webSocketDebuggerUrl
-            ?: throw WebSocketServiceException("Invalid web socket debugger url")
+            ?: throw WebSocketServiceException("Invalid web socket url to browser")
         val browserClient = wss.createWebSocketService(browserUrl)
 
         // Connect to a tab via web socket
         val debuggerUrl = tab.webSocketDebuggerUrl
-                ?: throw WebSocketServiceException("Invalid web socket debugger url")
+                ?: throw WebSocketServiceException("Invalid web socket url to page")
         val pageClient = wss.createWebSocketService(debuggerUrl)
 
         // Create concrete dev tools instance from interface
         return ProxyClasses.createProxyFromAbstract(
-                BasicDevTools::class.java,
+                DevToolsImpl::class.java,
                 arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
                 arrayOf(browserClient, pageClient, config),
                 invocationHandler
