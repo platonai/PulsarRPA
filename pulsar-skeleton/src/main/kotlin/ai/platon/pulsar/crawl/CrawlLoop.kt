@@ -39,7 +39,7 @@ abstract class AbstractCrawlLoop(
     /**
      * The fetch iterable from which all fetch tasks are taken
      * */
-    override abstract val urlFeeder: UrlFeeder
+    abstract override val urlFeeder: UrlFeeder
     /**
      * The shortcut for all collectors
      * */

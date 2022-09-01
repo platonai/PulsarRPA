@@ -7,8 +7,6 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.test.TestBase
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test

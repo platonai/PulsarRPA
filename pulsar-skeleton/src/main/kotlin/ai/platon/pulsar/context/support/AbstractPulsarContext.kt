@@ -198,14 +198,6 @@ abstract class AbstractPulsarContext(
     }
 
     /**
-     * Clear caches
-     * */
-    fun clearCaches() {
-        globalCacheFactory.globalCache.pageCache.clear()
-        globalCacheFactory.globalCache.documentCache.clear()
-    }
-
-    /**
      * Normalize an url, the url can be one of the following:
      * 1. a normal url
      * 2. a configured url

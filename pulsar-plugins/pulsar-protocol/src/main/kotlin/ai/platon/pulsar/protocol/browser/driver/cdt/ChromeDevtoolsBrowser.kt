@@ -77,7 +77,6 @@ class ChromeDevtoolsBrowser(
         nonSynchronized.parallelStream().forEach {
             try {
                 it.close()
-                // should we?
                 it.awaitTermination()
             } catch (e: Throwable) {
                 logger.warn("Failed to close the devtool", e)

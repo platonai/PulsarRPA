@@ -626,7 +626,7 @@ open class StreamingCrawler<T : UrlAware>(
             Strings.readableBytes(memoryToReserve.toLong()),
             Strings.readableBytes(availableMemory - memoryToReserve.toLong())
         )
-        abstractSession.context.clearCaches()
+        session.globalCacheFactory.globalCache.clearPDCaches()
         System.gc()
     }
 
@@ -641,11 +641,9 @@ open class StreamingCrawler<T : UrlAware>(
         val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
-            logger.takeIf { k % 60 == 0 }
-                ?.warn(
+            logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.readableBytes(availableMemory)
-                )
+                    contextLeaksRate, Strings.readableBytes(availableMemory))
             delay(1000)
 
             // trigger the meter updating

@@ -17,8 +17,6 @@ class WebDriverAdapter(
     val priority: Int = 1000,
 ) : AbstractWebDriver(driver.browser) {
 
-    private val logger = LoggerFactory.getLogger(WebDriverAdapter::class.java)
-
     private val driverOrNull get() = driver.takeIf { isWorking }
 
     override var idleTimeout: Duration

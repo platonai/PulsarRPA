@@ -1,10 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
@@ -76,25 +74,11 @@ open class WebDriverFactory(
     }
 
     @Throws(DriverLaunchException::class)
-    private fun newBrowser(
-        instanceId: BrowserId, capabilities: Map<String, Any>,
-    ): Browser {
-        val launcherOptions = LauncherOptions(driverSettings)
-        if (driverSettings.isSupervised) {
-            launcherOptions.supervisorProcess = driverSettings.supervisorProcess
-            launcherOptions.supervisorProcessArgs.addAll(driverSettings.supervisorProcessArgs)
-        }
-
-        val launchOptions = driverSettings.createChromeOptions(capabilities)
-        return browserContext.launchIfAbsent(instanceId, launcherOptions, launchOptions)
-    }
-
-    @Throws(DriverLaunchException::class)
     private fun createChromeDevtoolsDriver(
         instanceId: BrowserId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
         require(instanceId.browserType == BrowserType.PULSAR_CHROME)
-        val browser = newBrowser(instanceId, capabilities) as ChromeDevtoolsBrowser
+        val browser = browserContext.launch(instanceId, driverSettings, capabilities) as ChromeDevtoolsBrowser
         return browser.newDriver()
     }
 
@@ -111,7 +95,7 @@ open class WebDriverFactory(
         instanceId: BrowserId, capabilities: Map<String, Any>,
     ): MockWebDriver {
         require(instanceId.browserType == BrowserType.MOCK_CHROME)
-        val browser = newBrowser(instanceId, capabilities) as MockBrowser
+        val browser = browserContext.launch(instanceId, driverSettings, capabilities) as MockBrowser
         val fingerprint = instanceId.fingerprint.copy(browserType = BrowserType.PULSAR_CHROME)
         val backupInstanceId = BrowserId(instanceId.contextDir, fingerprint)
         val backupDriverCreator = { createChromeDevtoolsDriver(backupInstanceId, capabilities) }

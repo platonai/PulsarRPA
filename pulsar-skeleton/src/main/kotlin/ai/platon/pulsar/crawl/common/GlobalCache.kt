@@ -86,6 +86,11 @@ open class GlobalCache(val conf: ImmutableConfig) {
         urlPool.clear()
     }
 
+    fun clearPDCaches() {
+        pageCache.clear()
+        documentCache.clear()
+    }
+
     /**
      * Put page and document to cache
      * */

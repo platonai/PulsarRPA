@@ -12,8 +12,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * Similar to puppeteer's Browser
- * */
+ * A Browser is created via {@link BrowserFactory#launch BrowserFactory.launch()}.
+ */
 interface Browser: AutoCloseable {
     val id: BrowserId
 
@@ -35,7 +35,6 @@ interface Browser: AutoCloseable {
     fun await()
     @Throws(InterruptedException::class)
     fun signalAll()
-
 }
 
 abstract class AbstractBrowser(

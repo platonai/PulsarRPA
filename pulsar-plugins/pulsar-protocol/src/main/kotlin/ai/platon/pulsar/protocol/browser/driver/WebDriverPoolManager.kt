@@ -88,10 +88,6 @@ open class WebDriverPoolManager(
         gauges?.let { AppMetrics.reg.registerAll(this, it) }
     }
 
-//    @Throws(WebDriverException::class)
-//    suspend fun <R> run(browseFun: suspend (driver: WebDriver) -> R?) =
-//        run(FetchTask.create(WebPage.newTestWebPage()), browseFun)
-
     @Throws(WebDriverException::class)
     suspend fun <R> run(task: FetchTask, browseFun: suspend (driver: WebDriver) -> R?) =
         run(WebDriverTask(BrowserId.DEFAULT, task.page, task.priority, browseFun))
@@ -221,7 +217,7 @@ open class WebDriverPoolManager(
                     if (isActive) poll(driverPool, task) else return@whenNormalDeferred null
                 }
 
-                result = runWithTimeout(task, driver, driverPool)
+                result = runWithTimeout(task, driver)
             } finally {
                 driver?.let { driverPool.put(it) }
             }
@@ -230,9 +226,7 @@ open class WebDriverPoolManager(
         return result
     }
 
-    private suspend fun <R> runWithTimeout(
-        task: WebDriverTask<R>, driver: WebDriver, driverPool: LoadingWebDriverPool
-    ): R? {
+    private suspend fun <R> runWithTimeout(task: WebDriverTask<R>, driver: WebDriver): R? {
         // do not take up too much time on this driver
         val fetchTaskTimeout = driverSettings.fetchTaskTimeout
         val result = withTimeoutOrNull(fetchTaskTimeout.toMillis()) {
@@ -241,15 +235,11 @@ open class WebDriverPoolManager(
 
         if (result == null) {
             numTimeout.mark()
-            driverPool.numDismissWarnings.incrementAndGet()
 
             // This should not happen since the task itself should handle the timeout event
             val browserId = driver.browserId
             logger.warn("Coroutine timeout({}) (by [withTimeoutOrNull]) | {} | {}",
                 fetchTaskTimeout.readable(), formatStatus(browserId), browserId)
-        } else {
-            driverPool.numSuccess.incrementAndGet()
-            driverPool.numDismissWarnings.decrementAndGet()
         }
 
         return result
@@ -264,22 +254,22 @@ open class WebDriverPoolManager(
         }
     }
 
+    private suspend fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+        val eventHandler = task.eventHandler?.loadEventHandler
+        val page = task.page
+
+        runSafely("onBeforeBrowserLaunch") { eventHandler?.onWillLaunchBrowser?.invoke(page) }
+
+        return pollWebDriver(driverPool, task).also { driver ->
+            runSafely("onAfterBrowserLaunch") { eventHandler?.onBrowserLaunched?.invoke(page, driver) }
+        }
+    }
+
     private fun <R> pollWebDriver(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
         val timeout = driverSettings.pollingDriverTimeout
         val driver = driverPool.poll(task.priority, task.volatileConfig, timeout)
         driver.startWork()
         return driver
-    }
-
-    private suspend fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        val loadEventHandler = task.eventHandler?.loadEventHandler
-        val page = task.page
-
-        runSafely("onBeforeBrowserLaunch") { loadEventHandler?.onBeforeBrowserLaunch?.invoke(page) }
-
-        return pollWebDriver(driverPool, task).also { driver ->
-            runSafely("onAfterBrowserLaunch") { loadEventHandler?.onAfterBrowserLaunch?.invoke(page, driver) }
-        }
     }
 
     @Synchronized
@@ -290,7 +280,7 @@ open class WebDriverPoolManager(
     }
 
     private fun doCloseDriverPool(browserId: BrowserId) {
-        // preempt {} prevents new tasks from being accepted
+        // `preempt` prevents new tasks from being accepted
         preempt {
             retiredDriverPools.add(browserId)
 
@@ -313,7 +303,7 @@ open class WebDriverPoolManager(
                 logger.info("Web drivers are in {} mode, please close it manually | {} ", displayMode, browserId)
             }
 
-            driverFactory.browserContext.closeIfPresent(browserId)
+            driverFactory.browserContext.close(browserId)
         }
     }
 

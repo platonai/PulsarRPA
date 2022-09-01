@@ -46,15 +46,15 @@ interface UrlPool {
         val REAL_TIME_PRIORITY = Priority13.HIGHEST.value
     }
     /**
-     * The real time fetch cache, real time tasks have the highest priority
+     * The real time url cache, real time urls have the highest priority
      * */
     val realTimeCache: UrlCache
     /**
-     * The delayed fetch cache
+     * The delayed url cache
      * */
     val delayCache: Queue<DelayUrl>
     /**
-     * The ordered fetch caches
+     * The ordered url caches
      * */
     val orderedCaches: MutableMap<Int, UrlCache>
     /**
@@ -64,7 +64,9 @@ interface UrlPool {
     /**
      * Total number of items in all url caches
      * */
-    val totalItems: Int
+    val totalCount: Int
+    @Deprecated("Confusing name", ReplaceWith("totalCount"))
+    val totalItems: Int get() = totalCount
 
     val lowestCache: UrlCache
     val lower5Cache: UrlCache
@@ -95,7 +97,7 @@ interface UrlPool {
  * */
 abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     protected val initialized = AtomicBoolean()
-    override val totalItems get() = ensureInitialized().orderedCaches.values.sumOf { it.size }
+    override val totalCount get() = ensureInitialized().orderedCaches.values.sumOf { it.size }
 
     override val lowestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.LOWEST.value]!!
     override val lower5Cache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.LOWER5.value]!!
@@ -149,7 +151,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     }
 
     override fun hasMore(): Boolean {
-        return totalItems > 0
+        return totalCount > 0
     }
 
     private fun ensureInitialized(): AbstractUrlPool {

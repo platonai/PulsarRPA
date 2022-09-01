@@ -13,7 +13,6 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
-import ai.platon.pulsar.protocol.browser.emulator.context.WebDriverContext
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -55,7 +54,6 @@ class LoadingWebDriverPool(
     // TODO: never wait for notEmpty
     private val notEmpty = lock.newCondition()
 
-    private val driverSettings get() = driverFactory.driverSettings
     private val closed = AtomicBoolean()
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
@@ -70,10 +68,6 @@ class LoadingWebDriverPool(
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numTasks = AtomicInteger()
-    val numSuccess = AtomicInteger()
-    val numDismissWarnings = AtomicInteger()
-    val maxDismissWarnings = 5
-    val shouldRetire get() = numDismissWarnings.get() > maxDismissWarnings
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
     val numAvailable get() = capacity - numWorking.get()
@@ -126,9 +120,7 @@ class LoadingWebDriverPool(
     }
 
     fun put(driver: WebDriver) {
-        if (numWorking.decrementAndGet() == 0) {
-            lock.withLock { notBusy.signalAll() }
-        }
+        numWorking.decrementAndGet()
 
         // close open tabs to reduce memory usage
         if (availableMemory < BROWSER_TAB_REQUIRED_MEMORY) {
@@ -144,6 +136,10 @@ class LoadingWebDriverPool(
         if (driver.isWorking) offer(driver) else dismiss(driver)
 
         lastActiveTime = Instant.now()
+
+        if (numWorking.get() == 0) {
+            lock.withLock { notBusy.signalAll() }
+        }
     }
 
     fun forEach(action: (WebDriver) -> Unit) = onlineDrivers.forEach(action)
