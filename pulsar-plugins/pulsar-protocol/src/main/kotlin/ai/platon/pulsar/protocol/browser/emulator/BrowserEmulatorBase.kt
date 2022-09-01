@@ -165,7 +165,7 @@ abstract class BrowserEmulatorBase(
     /**
      * Check the task state.
      * */
-    @Throws(NavigateTaskCancellationException::class)
+    @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected fun checkState(task: FetchTask, driver: WebDriver) {
         checkState()
 

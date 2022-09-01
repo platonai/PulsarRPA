@@ -1,15 +1,13 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.PreemptChannelSupport
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
@@ -257,7 +255,7 @@ open class WebDriverPoolManager(
         return result
     }
 
-    private fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+    private suspend fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
         val notLaunched = driverPool.numTasks.compareAndSet(0, 1)
         return if (notLaunched) {
             launchAndPoll(driverPool, task)
@@ -273,27 +271,14 @@ open class WebDriverPoolManager(
         return driver
     }
 
-    private fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        onBeforeBrowserLaunch(task.page)
-        return pollWebDriver(driverPool, task).also { onAfterBrowserLaunch(task.page, it) }
-    }
+    private suspend fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
+        val loadEventHandler = task.eventHandler?.loadEventHandler
+        val page = task.page
 
-    private fun onBeforeBrowserLaunch(page: WebPage) {
-        val eventHandler = page.conf.getBeanOrNull(PulsarEventHandler::class)
-        try {
-            eventHandler?.loadEventHandler?.onBeforeBrowserLaunch?.invoke(page)
-        } catch (t: Throwable) {
-            logger.warn(t.stringify("[Unexpected][onBeforeBrowserLaunch] - "))
-        }
-    }
+        runSafely("onBeforeBrowserLaunch") { loadEventHandler?.onBeforeBrowserLaunch?.invoke(page) }
 
-    private fun onAfterBrowserLaunch(page: WebPage, driver: WebDriver) {
-        val eventHandler = page.conf.getBeanOrNull(PulsarEventHandler::class)
-
-        try {
-            eventHandler?.loadEventHandler?.onAfterBrowserLaunch?.invoke(page, driver)
-        } catch (t: Throwable) {
-            logger.warn(t.stringify("[Unexpected][onAfterBrowserLaunch] - "))
+        return pollWebDriver(driverPool, task).also { driver ->
+            runSafely("onAfterBrowserLaunch") { loadEventHandler?.onAfterBrowserLaunch?.invoke(page, driver) }
         }
     }
 
@@ -338,5 +323,23 @@ open class WebDriverPoolManager(
             driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
         }
         return sb.toString()
+    }
+
+    private suspend fun runSafely(name: String, action: suspend () -> Unit) {
+        if (!isActive) {
+            return
+        }
+
+        try {
+            action()
+        } catch (e: WebDriverCancellationException) {
+            logger.info("Web driver is cancelled")
+        } catch (e: WebDriverException) {
+            logger.warn(e.brief("[Ignored][$name] "))
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
+        }
     }
 }

@@ -387,24 +387,23 @@ open class StreamingCrawler<T : UrlAware>(
         if (url is ListenableUrl && url is DegenerateUrl) {
             // The url is degenerated, which means it's not a resource in the network to fetch.
             val eventHandler = url.eventHandler.crawlEventHandler
-            runSafely("onBeforeLoad") { eventHandler.onBeforeLoad(url) }
+            runSafely("onWillLoad") { eventHandler.onWillLoad(url) }
             runSafely("onLoad") { eventHandler.onLoad(url) }
-            runSafely("onAfterLoad") { eventHandler.onAfterLoad(url, WebPage.NIL) }
+            runSafely("onLoaded") { eventHandler.onLoaded(url, WebPage.NIL) }
         } else {
-            val normalizedUrl = beforeUrlLoad(url)
+            val normalizedUrl = onWillLoad(url)
             if (normalizedUrl != null) {
                 val page = loadUrl(normalizedUrl)
-                afterUrlLoad(normalizedUrl, page)
+                onLoaded(normalizedUrl, page)
             }
         }
     }
 
     private suspend fun loadUrl(url: UrlAware): WebPage? {
         var page: WebPage? = null
-        val timeout = 20_000 + fetchTaskTimeout.toMillis()
+        val timeout = fetchTaskTimeout.plusSeconds(30).toMillis()
         try {
             page = withTimeout(timeout) { loadWithEventHandlers(url) }
-//            page = loadWithEventHandlers(url)
             if (page != null) {
                 collectStatAfterLoad(page)
             }
@@ -426,7 +425,7 @@ open class StreamingCrawler<T : UrlAware>(
                     logger.warn(e.message)
                 }
                 else -> {
-                    logger.warn("Unexpected exception", e)
+                    logger.warn("[Unexpected]", e)
                 }
             }
         }
@@ -454,29 +453,30 @@ open class StreamingCrawler<T : UrlAware>(
         globalMetrics.successes.mark()
     }
 
-    private fun beforeUrlLoad(url: UrlAware): UrlAware? {
+    private fun onWillLoad(url: UrlAware): UrlAware? {
         if (url is ListenableUrl) {
             runSafely("onFilter") { url.eventHandler.loadEventHandler.onFilter(url.url) } ?: return null
         }
 
         runSafely("onFilter") { crawlEventHandler.onFilter(url) } ?: return null
 
-        runSafely("onBeforeLoad") { crawlEventHandler.onBeforeLoad(url) }
+        runSafely("onWillLoad") { crawlEventHandler.onWillLoad(url) }
 
         if (url is ListenableUrl) {
-            runSafely("onBeforeLoad") { url.eventHandler.crawlEventHandler.onBeforeLoad(url) }
+            runSafely("onWillLoad") { url.eventHandler.crawlEventHandler.onWillLoad(url) }
         }
 
         return url
     }
 
-    private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
+    private fun onLoaded(url: UrlAware, page: WebPage?) {
+        // TODO: the event handlers should be merged
         if (url is ListenableUrl) {
-            runSafely("onAfterLoad") { url.eventHandler.crawlEventHandler.onAfterLoad(url, page) }
+            runSafely("onLoaded") { url.eventHandler.crawlEventHandler.onLoaded(url, page) }
         }
 
         if (page != null) {
-            runSafely("onAfterLoad") { crawlEventHandler.onAfterLoad(url, page) }
+            runSafely("onLoaded") { crawlEventHandler.onLoaded(url, page) }
         }
 
         if (enableSmartRetry) {
@@ -713,6 +713,18 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun <T> runSafely(name: String, action: () -> T?): T? {
-        return runCatching { action() }.onFailure { logger.warn(it.stringify("[Ignored][$name] ")) }.getOrNull()
+        if (!isActive) {
+            return null
+        }
+
+        try {
+            return action()
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
+        }
+
+        return null
     }
 }

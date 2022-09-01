@@ -20,7 +20,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class ChromeImplWebDriverTests: TestBase() {
+class ChromeWebDriverTests: TestBase() {
 
     private val logger = getLogger(this)
     private val url = "https://www.amazon.com/dp/B00BTX5926"
@@ -156,6 +156,22 @@ class ChromeImplWebDriverTests: TestBase() {
             driver.waitForNavigation()
             driver.waitForSelector("body")
             // assertNotEquals(url, driver.currentUrl())
+        }
+    }
+
+    @Test
+    fun testClickNthAnchor() {
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(url, driver)
+
+            val href = driver.clickNthAnchor(100, "body")
+            println(href)
+
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            driver.scrollDown(5)
         }
     }
 

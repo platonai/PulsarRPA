@@ -1,14 +1,11 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.simplify
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.SimulateEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -93,6 +90,12 @@ open class BrowserEmulator(
             response = if (task.page.isResource) {
                 loadResourceWithoutRendering(task, driver)
             } else browseWithCancellationHandled(task, driver)
+        }  catch (e: NavigateTaskCancellationException) {
+            // The task is canceled
+            response = ForwardingResponse.canceled(task.page)
+        } catch (e: WebDriverCancellationException) {
+            // The web driver is canceled
+            response = ForwardingResponse.canceled(task.page)
         } catch (e: SessionLostException) {
             logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
             driver.retire()
@@ -108,13 +111,6 @@ open class BrowserEmulator(
             driver.retire()
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
-        } catch (e: NavigateTaskCancellationException) {
-            // The task is canceled
-            // TODO: define the difference between a canceled task and a retry task
-            response = ForwardingResponse.canceled(task.page)
-        } catch (e: WebDriverCancellationException) {
-            // The web driver is canceled
-            response = ForwardingResponse.canceled(task.page)
         } catch (e: TimeoutCancellationException) {
             logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.simplify())
             response = ForwardingResponse.crawlRetry(task.page, e)
@@ -134,6 +130,7 @@ open class BrowserEmulator(
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }
 
+    @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     private suspend fun loadResourceWithoutRendering(task: FetchTask, driver: WebDriver): Response {
         checkState(task, driver)
 
@@ -188,7 +185,7 @@ open class BrowserEmulator(
         return response
     }
 
-    @Throws(NavigateTaskCancellationException::class)
+    @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     private suspend fun browseWithWebDriverExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
         checkState(task, driver)
 
@@ -215,6 +212,8 @@ open class BrowserEmulator(
 
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
+        checkState(task, driver)
+
         logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
@@ -272,7 +271,7 @@ open class BrowserEmulator(
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
 
-    @Throws(NavigateTaskCancellationException::class)
+    @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         checkState(task.fetchTask, task.driver)
 
@@ -413,10 +412,9 @@ open class BrowserEmulator(
      * Do something like a human being
      * */
     protected suspend fun interactAfterFetch(task: FetchTask, driver: WebDriver) {
-        val driver0 = driver as WebDriverAdapter
         // must perform the interaction for the 1st and 2nd page
         // for the other pages, there is a change to do the interaction
-        if (driver0.pageViews.get() > 1) {
+        if (driver.navigateHistory.size > 1) {
             val rand = Random.nextInt(10)
             if (rand != 0) {
                 return
@@ -437,7 +435,21 @@ open class BrowserEmulator(
     }
 
     private suspend fun runSafely(name: String, action: suspend () -> Unit) {
-        runCatching { if (isActive) action() }.onFailure { logger.warn(it.stringify("[Ignored][$name] ")) }
+        if (!isActive) {
+            return
+        }
+
+        try {
+            action()
+        } catch (e: WebDriverCancellationException) {
+            logger.info("Web driver is cancelled")
+        } catch (e: WebDriverException) {
+            logger.warn(e.brief("[Ignored][$name] "))
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
+        }
     }
 
     private suspend fun evaluate(interactTask: InteractTask,
@@ -471,6 +483,7 @@ open class BrowserEmulator(
         return value
     }
 
+    @Throws(WebDriverCancellationException::class)
     private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
         if (!isActive) return null
 

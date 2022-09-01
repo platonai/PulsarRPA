@@ -11,6 +11,8 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ProcessLauncher
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.Browsers
+import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
+import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -295,17 +297,4 @@ class ChromeLauncher(
             require(Files.exists(lock))
         }
     }
-
-    interface ShutdownHookRegistry {
-        fun register(thread: Thread) {
-            Runtime.getRuntime().addShutdownHook(thread)
-        }
-
-        fun remove(thread: Thread) {
-            // TODO: java.lang.IllegalStateException: Shutdown in progress
-            // Runtime.getRuntime().removeShutdownHook(thread)
-        }
-    }
-
-    class RuntimeShutdownHookRegistry : ShutdownHookRegistry
 }

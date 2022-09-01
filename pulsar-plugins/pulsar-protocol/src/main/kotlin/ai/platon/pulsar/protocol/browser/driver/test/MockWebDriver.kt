@@ -27,8 +27,6 @@ class MockBrowser(
     override fun newDriver(): WebDriver {
         TODO("not implemented")
     }
-
-    override fun close() {}
 }
 
 class MockWebDriver(

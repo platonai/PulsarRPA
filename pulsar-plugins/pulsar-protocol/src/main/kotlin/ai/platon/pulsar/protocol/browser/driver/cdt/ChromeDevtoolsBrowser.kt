@@ -65,28 +65,33 @@ class ChromeDevtoolsBrowser(
     @Throws(WebDriverException::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            logger.info("Closing browser with {} devtools ... | {}", drivers.size, id)
-
-            val nonSynchronized = drivers.toList().also { drivers.clear() }
-            nonSynchronized.parallelStream().forEach {
-                try {
-                    it.close()
-                    // should we?
-                    it.awaitTermination()
-                } catch (e: Exception) {
-                    logger.warn("Failed to close the devtool", e)
-                }
-            }
-
-            try {
-                chrome.close()
-                launcher.close()
-            } catch (e: Exception) {
-                logger.warn("Failed to close the browser", e)
-            }
-
-            logger.info("Browser is closed | {}", id.display)
+            doClose()
+            super.close()
         }
+    }
+
+    private fun doClose() {
+        logger.info("Closing browser with {} devtools ... | {}", drivers.size, id)
+
+        val nonSynchronized = drivers.toList().also { drivers.clear() }
+        nonSynchronized.parallelStream().forEach {
+            try {
+                it.close()
+                // should we?
+                it.awaitTermination()
+            } catch (e: Throwable) {
+                logger.warn("Failed to close the devtool", e)
+            }
+        }
+
+        try {
+            chrome.close()
+            launcher.close()
+        } catch (e: Throwable) {
+            logger.warn("Failed to close the browser", e)
+        }
+
+        logger.info("Browser is closed | {}", id.display)
     }
 
     @Synchronized
@@ -94,18 +99,5 @@ class ChromeDevtoolsBrowser(
     private fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         return kotlin.runCatching { chrome.createDevTools(tab, config) }
             .getOrElse { throw WebDriverException("createDevTools", it) }
-    }
-
-    class BrowserShutdownHookRegistry(private val browser: Browser): ChromeLauncher.ShutdownHookRegistry {
-        override fun register(thread: Thread) {
-            Runtime.getRuntime().addShutdownHook(browser.shutdownHookThread)
-            // Runtime.getRuntime().addShutdownHook(thread)
-        }
-
-        override fun remove(thread: Thread) {
-            // TODO: java.lang.IllegalStateException: Shutdown in progress
-            Runtime.getRuntime().removeShutdownHook(browser.shutdownHookThread)
-            // Runtime.getRuntime().removeShutdownHook(thread)
-        }
     }
 }

@@ -91,14 +91,15 @@ class WebDriverContext(
     }
 
     private fun doClose() {
-        if (isActive) {
-            waitUntilAllDoneNormally()
+        // not shutdown
+        if (AppContext.isActive) {
+            waitUntilAllDoneNormally(Duration.ofMinutes(3))
         }
 
         // close underlying IO based modules asynchronously
         cancelAllAndCloseUnderlyingLayer()
 
-        waitUntilNoRunningTasks()
+        waitUntilNoRunningTasks(Duration.ofSeconds(20))
 
         if (runningTasks.isNotEmpty()) {
             logger.info("Still {} running tasks after context close | {}",
@@ -119,17 +120,20 @@ class WebDriverContext(
         driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
-    private fun waitUntilAllDoneNormally(timeoutMinutes: Long = 3) {
-        try {
-            lock.withLock { notBusy.await(timeoutMinutes, TimeUnit.MINUTES) }
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-        }
+    private fun waitUntilAllDoneNormally(timeout: Duration) {
+        waitUntilIdle(timeout)
     }
 
-    private fun waitUntilNoRunningTasks() {
+    private fun waitUntilNoRunningTasks(timeout: Duration) {
+        waitUntilIdle(timeout)
+    }
+
+    private fun waitUntilIdle(timeout: Duration) {
+        var ttl = timeout.seconds
         try {
-            lock.withLock { notBusy.await(20, TimeUnit.SECONDS) }
+            while (ttl-- > 0 && runningTasks.isNotEmpty()) {
+                lock.withLock { notBusy.await(1, TimeUnit.SECONDS) }
+            }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         }
@@ -180,6 +184,7 @@ class ProxyContext(
 
             if (proxy != null) {
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
+
                 val proxyEntry0 = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.contextDir) { proxy }
                 proxyEntry0.startWork()
                 return ProxyContext(proxyEntry0, proxyPoolManager, driverContext, conf)

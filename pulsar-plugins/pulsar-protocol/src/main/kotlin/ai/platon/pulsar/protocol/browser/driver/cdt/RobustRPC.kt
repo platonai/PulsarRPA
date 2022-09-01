@@ -29,7 +29,7 @@ internal class RobustRPC(
     }
 
     fun <T> invoke(action: String, block: () -> T): T? {
-        if (!driver.refreshState(action)) {
+        if (!driver.checkState(action)) {
             return null
         }
 
@@ -53,7 +53,7 @@ internal class RobustRPC(
 
     private suspend fun <T> invokeDeferred0(action: String, block: suspend CoroutineScope.() -> T): T? {
         return withContext(Dispatchers.IO) {
-            if (!driver.refreshState(action)) {
+            if (!driver.checkState(action)) {
                 return@withContext null
             }
 

@@ -100,6 +100,7 @@ open class BrowserPrivacyContext(
             // TODO: better initialize fingerprint.proxyServer
             browserInstanceId.fingerprint.proxyServer = proxyEntry?.hostPort
             proxyContext = pc
+            coreMetrics?.proxies?.mark()
         }
         task.page.variables[VAR_PRIVACY_CONTEXT_NAME] = display
     }

@@ -95,7 +95,7 @@ class LoadStatusFormatter(
         page.isFetched -> "Updated ⬆"
         page.isCached -> "Cached ✿"
         page.isLoaded -> "Loaded ✅"
-        else -> "Unknown \uD83D\uDC94"
+        else -> "Unknown \uD83D\uDC94" // Broken Heart
     }
     private val prefix0: String get() {
         return when {

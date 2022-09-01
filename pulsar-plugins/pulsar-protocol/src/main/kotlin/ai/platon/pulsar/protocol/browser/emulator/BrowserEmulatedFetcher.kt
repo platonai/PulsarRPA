@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -8,10 +9,13 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORIT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -87,13 +91,11 @@ open class BrowserEmulatedFetcher(
         val volatileConfig = task.page.conf
         val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
 
-        eventHandler?.onWillFetch?.runCatching { invoke(task.page, driver) }
-            ?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
+        runSafely("onWillFetch") { eventHandler?.onWillFetch?.invoke(task.page, driver) }
 
         val result = browserEmulator.fetch(task, driver)
 
-        eventHandler?.onFetched?.runCatching { invoke(task.page, driver) }
-            ?.onFailure { logger.warn("[Unexpected][Ignored]", it) }
+        runSafely("onFetched") { eventHandler?.onWillFetch?.invoke(task.page, driver) }
 
         return result
     }
@@ -117,6 +119,24 @@ open class BrowserEmulatedFetcher(
                 driverManager.close()
                 privacyManager.close()
             }
+        }
+    }
+
+    private suspend fun runSafely(name: String, action: suspend () -> Unit) {
+        if (!isActive) {
+            return
+        }
+
+        try {
+            action()
+        } catch (e: WebDriverCancellationException) {
+            logger.info("Web driver is cancelled")
+        } catch (e: WebDriverException) {
+            logger.warn(e.brief("[Ignored][$name] "))
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
         }
     }
 }

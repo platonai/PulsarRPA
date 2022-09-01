@@ -181,7 +181,38 @@ Node.prototype.__pulsar_isLargeImage = function() {
  * */
 Node.prototype.__pulsar_isAnchor = function() {
     // HTML-uppercased qualified name
+    // if (this instanceof HTMLAnchorElement)
     return this.nodeName === "A";
+};
+
+/**
+ * @return {boolean}
+ * */
+Node.prototype.__pulsar_maybeClickable = function() {
+    let element = this.__pulsar_bestElement();
+    if (element == null) {
+        return false
+    }
+    if (!element.__pulsar_isAnchor()) {
+        return false
+    }
+
+    let clickable = true
+    let rect = this.__pulsar_getRect()
+    if (rect.x < 0 || rect.y < 0) {
+        clickable = false
+    }
+    if (rect.width * rect.height < 100.0) {
+        clickable = false
+    }
+
+    let href = element.getAttribute("href")
+    let onclick = element.getAttribute("onclick")
+    if (!href && !onclick) {
+        clickable = false
+    }
+
+    return clickable
 };
 
 /**

@@ -7,7 +7,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class ScheduledMonitor(
         var initialDelay: Duration = Duration.ofMinutes(5),
@@ -15,7 +14,7 @@ abstract class ScheduledMonitor(
         val executor: ScheduledExecutorService = createDefaultExecutor(),
         val autoClose: Boolean = true
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(ScheduledMonitor::class.java)
+    private val logger = LoggerFactory.getLogger(ScheduledMonitor::class.java)
 
     protected var scheduledFuture: ScheduledFuture<*>? = null
 
@@ -49,7 +48,7 @@ abstract class ScheduledMonitor(
     open fun start(initialDelay: Long, period: Long, unit: TimeUnit, runnable: Runnable) {
         require(scheduledFuture == null) { "Scheduled monitor is already started | ${this.javaClass.simpleName}" }
         scheduledFuture = executor.scheduleAtFixedRate(runnable, initialDelay, period, unit)
-        log.info("Scheduled monitor is started | {}", this.javaClass.simpleName)
+        logger.info("Scheduled monitor is started | {}", this.javaClass.simpleName)
     }
 
     /**
@@ -65,7 +64,7 @@ abstract class ScheduledMonitor(
             try {
                 watch()
             } catch (ex: Throwable) {
-                log.error("Exception thrown from {}#report. Exception was suppressed.", javaClass.simpleName, ex)
+                logger.error("Exception thrown from {}#report. Exception was suppressed.", javaClass.simpleName, ex)
             }
         })
     }
@@ -76,8 +75,9 @@ abstract class ScheduledMonitor(
 
     override fun close() {
         if (autoClose) {
-            stopExecution(executor, scheduledFuture, true)
-            log.info("Scheduled monitor is closed | $this")
+            logger.info("Closing scheduled monitor | $this")
+            val name = this.javaClass.simpleName
+            stopExecution(name, executor, scheduledFuture, true)
         }
     }
 

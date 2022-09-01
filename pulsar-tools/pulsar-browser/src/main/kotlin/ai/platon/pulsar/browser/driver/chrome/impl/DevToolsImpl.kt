@@ -378,22 +378,26 @@ abstract class DevToolsImpl(
 
     @Throws(Exception::class)
     private fun doClose() {
-        lock.withLock {
-            try {
-                // TODO: no need to wait for all futures, just ignore them
-                var i = 0
-                while (i++ < 5 && dispatcher.hasFutures()) {
-                    notBusy.await(1, TimeUnit.SECONDS)
-                }
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
-        }
+        waitUntilIdle()
 
         logger.trace("Closing ws client ... | {}", browserClient)
         browserClient.close()
 
         logger.trace("Closing ws client ... | {}", pageClient)
         pageClient.close()
+    }
+
+    private fun waitUntilIdle() {
+        var n = 5
+        try {
+            lock.withLock {
+                // TODO: no need to wait for all futures, just ignore them
+                while (n-- > 0 && dispatcher.hasFutures()) {
+                    notBusy.await(1, TimeUnit.SECONDS)
+                }
+            }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 }

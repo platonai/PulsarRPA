@@ -68,12 +68,12 @@ class PrimerHtmlParser(
         return try {
             // The base url is set by protocol, it might be different from the page url
             // if the request redirects.
-            beforeHtmlParse(page)
+            onWillParseHTMLDocument(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)
             parseFilters?.filter(parseContext)
 
-            parseContext.document?.let { afterHtmlParse(page, it) }
+            parseContext.document?.let { onHTMLDocumentParsed(page, it) }
 
             parseContext.parseResult
         } catch (e: MalformedURLException) {
@@ -86,26 +86,26 @@ class PrimerHtmlParser(
     /**
      *
      * */
-    private fun beforeHtmlParse(page: WebPage) {
+    private fun onWillParseHTMLDocument(page: WebPage) {
         numHtmlParses.incrementAndGet()
 
         try {
-            page.loadEventHandler?.onBeforeHtmlParse?.invoke(page)
+            page.loadEventHandler?.onWillParseHTMLDocument?.invoke(page)
         } catch (e: Throwable) {
-            logger.warn("Failed to invoke beforeHtmlParse | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke onWillParseHTMLDocument | ${page.configuredUrl}", e)
         }
     }
 
     /**
      *
      * */
-    private fun afterHtmlParse(page: WebPage, document: FeaturedDocument) {
+    private fun onHTMLDocumentParsed(page: WebPage, document: FeaturedDocument) {
         try {
-            page.loadEventHandler?.onAfterHtmlParse?.invoke(page, document)
+            page.loadEventHandler?.onHTMLDocumentParsed?.invoke(page, document)
         } catch (e: Throwable) {
-            logger.warn("Failed to invoke afterHtmlParse | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke onHTMLDocumentParsed | ${page.configuredUrl}", e)
+        } finally {
+            numHtmlParsed.incrementAndGet()
         }
-
-        numHtmlParsed.incrementAndGet()
     }
 }

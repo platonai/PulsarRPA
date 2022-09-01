@@ -62,7 +62,7 @@ __pulsar_utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
 
 __pulsar_utils__.createPulsarDataIfAbsent = function() {
     if (!document.__pulsar__Data) {
-        let location = "";
+        let location;
         if (window.location instanceof Location) {
             location = window.location.href
         } else {
@@ -435,21 +435,43 @@ __pulsar_utils__.clickMatches = function(selector, attrName, pattern) {
  * Select the first element and click it.
  *
  * @param  {number} n The n-th anchor.
- * @return
+ * @param  {string|null} rootSelector The n-th anchor.
+ * @return {string|null}
  */
-__pulsar_utils__.clickNthAnchor = function(n) {
-    let c = 0;
-    let visitor = function () {};
+__pulsar_utils__.clickNthAnchor = function(n, rootSelector) {
+    let rootNode
+    if (!rootSelector) {
+        rootNode = document.body
+    } else {
+        rootNode = document.querySelector(rootSelector)
+    }
+
+    if (!rootNode) {
+        return null
+    }
+
+    let c = 0
+    let href = null
+    let visitor = function () {}
+
     visitor.head = function (node, depth) {
-        if (node.__pulsar_isAnchor()) {
+        if (node instanceof HTMLElement
+            && node.__pulsar_isAnchor()
+            && node.__pulsar_maybeClickable()
+        ) {
             ++c;
             if (c === n) {
+                visitor.stopped = true
+                node.scrollIntoView()
+                href = node.getAttribute("href")
                 node.click()
             }
         }
     };
 
-    new __pulsar_NodeTraversor(visitor).traverse(document.body);
+    new __pulsar_NodeTraversor(visitor).traverse(rootNode)
+
+    return href
 }
 
 /**
@@ -993,14 +1015,11 @@ __pulsar_utils__.compute = function() {
 
     __pulsar_utils__.scrollToTop();
 
-    // calling window.stop will suppress onLoadComplete event
+    // calling window.stop will pause all resource loading
     window.stop();
 
     __pulsar_utils__.updatePulsarStat();
     __pulsar_utils__.writePulsarData();
-
-    // do something like a human being
-    // humanize(document.body);
 
     // remove temporary flags
     document.body.__pulsar_forEachElement(ele => {

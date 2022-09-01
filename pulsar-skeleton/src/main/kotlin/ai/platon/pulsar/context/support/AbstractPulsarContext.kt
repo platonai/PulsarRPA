@@ -468,6 +468,7 @@ abstract class AbstractPulsarContext(
      * @see .close
      * @see .doClose
      */
+    @Throws(IllegalStateException::class)
     override fun registerShutdownHook() {
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
             this.shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }

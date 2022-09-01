@@ -26,7 +26,7 @@
     </bean>
 
     <!--The core metrics -->
-    <bean id="coreMetrics" class="ai.platon.pulsar.crawl.CoreMetrics" destroy-method="close">
+    <bean id="coreMetrics" class="ai.platon.pulsar.crawl.CoreMetrics" init-method="start" destroy-method="close">
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>

@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
+import ai.platon.pulsar.protocol.browser.emulator.context.WebDriverContext
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -264,7 +265,7 @@ class LoadingWebDriverPool(
         val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
         nonSynchronized.parallelStream().forEach { it.cancel() }
 
-        waitUntilIdleOrTimeout(timeToWait)
+        waitUntilIdle(timeToWait)
 
         closeAllDrivers(nonSynchronized)
 
@@ -281,18 +282,12 @@ class LoadingWebDriverPool(
     }
 
     @Synchronized
-    private fun waitUntilIdleOrTimeout(timeout: Duration) {
-        val ttl = timeout.seconds
-        var i = 0
+    private fun waitUntilIdle(timeout: Duration) {
+        var ttl = timeout.seconds
         try {
-            lock.withLock { notBusy.await(timeout.seconds, TimeUnit.SECONDS) }
-
-//            while (isActive && numWorking.get() > 0 && ++i < ttl) {
-//                lock.withLock {
-//                    notBusy.await(1, TimeUnit.SECONDS)
-//                }
-//                logger.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
-//            }
+            while (ttl-- > 0 && numWorking.get() > 0) {
+                lock.withLock { notBusy.await(1, TimeUnit.SECONDS) }
+            }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         }

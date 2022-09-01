@@ -96,8 +96,8 @@ open class FetchComponent(
     /**
      * Fetch a page
      *
-     * @param page The page to fetch
-     * @return The fetch result
+     * @param fetchEntry The fetch entry
+     * @return The fetched webpage
      */
     protected fun fetchContent0(fetchEntry: FetchEntry): WebPage {
         val page = fetchEntry.page
@@ -157,14 +157,18 @@ open class FetchComponent(
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
         val url = page.url
         val pageDatum = output.pageDatum
-        if (pageDatum == null) {
-            logger.warn("No content | {}", page.configuredUrl)
+        val protocolStatus = output.protocolStatus
+
+        if (!protocolStatus.isCanceled) {
+            if (pageDatum == null) {
+                logger.warn("No content | {}", page.configuredUrl)
+            }
         }
 
+        // TODO: handle cancellation
         page.isFetched = true
 
         page.headers.putAll(output.headers.asMultimap())
-        val protocolStatus = output.protocolStatus
 
         val crawlStatus = when (protocolStatus.minorCode) {
             ProtocolStatus.SUCCESS_OK -> CrawlStatus.STATUS_FETCHED

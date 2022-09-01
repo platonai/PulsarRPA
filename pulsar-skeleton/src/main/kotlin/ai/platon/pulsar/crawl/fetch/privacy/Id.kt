@@ -76,13 +76,13 @@ data class BrowserInstanceId constructor(
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     override fun equals(other: Any?): Boolean {
-        return other is PrivacyContextId
+        return other is BrowserInstanceId
                 && other.contextDir == contextDir
-                && other.fingerprint.browserType.toString() == fingerprint.browserType.toString()
+                && other.fingerprint.toString() == fingerprint.toString()
     }
 
     override fun hashCode(): Int {
-        return 31 * contextDir.hashCode() + fingerprint.browserType.toString().hashCode()
+        return 31 * contextDir.hashCode() + fingerprint.toString().hashCode()
     }
 
     override fun compareTo(other: BrowserInstanceId): Int {
@@ -90,7 +90,11 @@ data class BrowserInstanceId constructor(
         if (r != 0) {
             return r
         }
-        return fingerprint.browserType.toString().compareTo(other.fingerprint.browserType.toString())
+        return fingerprint.toString().compareTo(other.fingerprint.toString())
+    }
+
+    override fun toString(): String {
+        return "{$fingerprint | $contextDir}"
     }
 
     companion object {
