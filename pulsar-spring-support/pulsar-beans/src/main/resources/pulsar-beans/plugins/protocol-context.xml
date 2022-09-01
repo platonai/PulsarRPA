@@ -11,14 +11,14 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserInstanceManager" class="ai.platon.pulsar.protocol.browser.driver.BrowserContext"
+    <bean id="browserManager" class="ai.platon.pulsar.protocol.browser.driver.BrowserManager"
           destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
         <constructor-arg ref="webDriverSettings"/>
-        <constructor-arg ref="browserInstanceManager"/>
+        <constructor-arg ref="browserManager"/>
         <constructor-arg ref="conf"/>
     </bean>
 

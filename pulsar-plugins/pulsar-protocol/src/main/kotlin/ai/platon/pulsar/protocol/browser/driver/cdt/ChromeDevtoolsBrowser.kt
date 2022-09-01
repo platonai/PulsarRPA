@@ -4,12 +4,10 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
-import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import java.util.concurrent.ConcurrentLinkedQueue
 
 class ChromeDevtoolsBrowser(
     id: BrowserId,
@@ -19,8 +17,6 @@ class ChromeDevtoolsBrowser(
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowser::class.java)
 
-    val drivers = ConcurrentLinkedQueue<ChromeDevtoolsDriver>()
-    val driverCount get() = drivers.size
     private val toolsConfig = DevToolsConfig()
 
     @Synchronized
@@ -42,8 +38,7 @@ class ChromeDevtoolsBrowser(
     @Synchronized
     @Throws(WebDriverException::class)
     fun createTab(): ChromeTab {
-        activeTime = Instant.now()
-        tabCount.incrementAndGet()
+        lastActiveTime = Instant.now()
 
         return kotlin.runCatching { chrome.createTab(ChromeImpl.ABOUT_BLANK_PAGE) }
             .getOrElse { throw WebDriverException("createTab", it) }
@@ -52,7 +47,6 @@ class ChromeDevtoolsBrowser(
     @Synchronized
     @Throws(WebDriverException::class)
     fun closeTab(tab: ChromeTab) {
-        tabCount.decrementAndGet()
         return chrome.runCatching { closeTab(tab) }.getOrElse { throw WebDriverException("closeTab", it) }
     }
 
@@ -62,10 +56,9 @@ class ChromeDevtoolsBrowser(
         return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
     }
 
-    @Throws(WebDriverException::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            doClose()
+            kotlin.runCatching { doClose() }.onFailure { logger.warn("Failed to close browser", it) }
             super.close()
         }
     }
@@ -75,20 +68,11 @@ class ChromeDevtoolsBrowser(
 
         val nonSynchronized = drivers.toList().also { drivers.clear() }
         nonSynchronized.parallelStream().forEach {
-            try {
-                it.close()
-                it.awaitTermination()
-            } catch (e: Throwable) {
-                logger.warn("Failed to close the devtool", e)
-            }
+            it.runCatching { close() }.onFailure { logger.warn("Failed to close the devtool", it) }
         }
 
-        try {
-            chrome.close()
-            launcher.close()
-        } catch (e: Throwable) {
-            logger.warn("Failed to close the browser", e)
-        }
+        chrome.close()
+        launcher.close()
 
         logger.info("Browser is closed | {}", id.display)
     }

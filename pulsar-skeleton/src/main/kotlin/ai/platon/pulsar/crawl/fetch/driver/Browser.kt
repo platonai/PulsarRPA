@@ -17,13 +17,13 @@ import kotlin.concurrent.withLock
 interface Browser: AutoCloseable {
     val id: BrowserId
 
-    val tabCount: AtomicInteger
     // remember, navigate history is small, so search is very fast for a list
     val navigateHistory: List<NavigateEntry>
+    val drivers: Queue<WebDriver>
     val isIdle: Boolean
 
     /** Synchronization monitor for the "refresh" and "destroy" */
-    val startupShutdownMonitor: Any
+    val shutdownMonitor: Any
     /** Reference to the JVM shutdown hook, if registered */
     val shutdownHook: Thread?
     @Throws(IllegalStateException::class)
@@ -31,32 +31,39 @@ interface Browser: AutoCloseable {
 
     @Throws(WebDriverException::class)
     fun newDriver(): WebDriver
+
     @Throws(InterruptedException::class)
     fun await()
     @Throws(InterruptedException::class)
     fun signalAll()
+
+    fun onWillNavigate(entry: NavigateEntry)
 }
 
 abstract class AbstractBrowser(
     override val id: BrowserId,
     val browserSettings: BrowserSettings
 ): Browser {
-    val isGUI get() = browserSettings.isGUI
-
-    override val tabCount = AtomicInteger()
-    // remember, navigate history is small, so search is very fast for a list
-    override val navigateHistory: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
-    var activeTime = Instant.now()
-    val idleTimeout = Duration.ofMinutes(10)
-    override val isIdle get() = Duration.between(activeTime, Instant.now()) > idleTimeout
-
     private val initializedLock = ReentrantLock()
     private val initialized = initializedLock.newCondition()
 
+    protected val _navigateHistory = Collections.synchronizedList(mutableListOf<NavigateEntry>())
+    protected val _drivers = ConcurrentLinkedQueue<WebDriver>()
+
     protected val closed = AtomicBoolean()
+    protected var lastActiveTime = Instant.now()
+
+    // remember, navigate history is small, so search is very fast for a list
+    override val navigateHistory: List<NavigateEntry> get() = _navigateHistory
+    override val drivers: Queue<WebDriver>  get() = _drivers
+
+    override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+
+    val isGUI get() = browserSettings.isGUI
+    val idleTimeout = Duration.ofMinutes(10)
 
     /** Synchronization monitor for the "refresh" and "destroy" */
-    override val startupShutdownMonitor = Any()
+    override val shutdownMonitor = Any()
 
     /** Reference to the JVM shutdown hook, if registered */
     override var shutdownHook: Thread? = null
@@ -74,7 +81,7 @@ abstract class AbstractBrowser(
     @Throws(IllegalStateException::class)
     override fun registerShutdownHook() {
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
-            this.shutdownHook = Thread { synchronized(startupShutdownMonitor) { close() } }
+            this.shutdownHook = Thread { synchronized(shutdownMonitor) { close() } }
             Runtime.getRuntime().addShutdownHook(this.shutdownHook)
         }
     }
@@ -87,6 +94,10 @@ abstract class AbstractBrowser(
     @Throws(InterruptedException::class)
     override fun signalAll() {
         initializedLock.withLock { initialized.signalAll() }
+    }
+
+    override fun onWillNavigate(entry: NavigateEntry) {
+        _navigateHistory.add(entry)
     }
 
     override fun close() {

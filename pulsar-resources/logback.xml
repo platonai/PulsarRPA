@@ -12,6 +12,7 @@
     <property name="logging.hv.file" value="${logging.prefix}.hv.log" />
     <property name="logging.sql.file" value="${logging.prefix}.sql.log" />
     <property name="logging.pg.file" value="${logging.prefix}.pg.log" />
+    <property name="logging.irr.file" value="${logging.prefix}.irr.log" />
     <property name="logging.api.file" value="${logging.prefix}.api.log" />
     <property name="logging.bs.file" value="${logging.prefix}.bs.log" />
     <!-- Data collector -->
@@ -82,6 +83,14 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${logging.dir}/${logging.api.file}.%d{.yyyy-MM-dd}</fileNamePattern>
         </rollingPolicy>
+    </appender>
+
+    <appender name="Irr" class="ch.qos.logback.core.FileAppender">
+        <File>${logging.dir}/${logging.irr.file}</File>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{ISO8601} --- %m%n</pattern>
+        </encoder>
     </appender>
 
     <appender name="BROWSER" class="ch.qos.logback.core.FileAppender">
@@ -157,6 +166,9 @@
         <appender-ref ref="API"/>
     </logger>
 
+    <logger name="ai.platon.scent.parse.html.AbstractSQLExtractor.Irr" level="INFO" additivity="false">
+        <appender-ref ref="Irr"/>
+    </logger>
     <logger name="ai.platon.scent.parse.html.AbstractSinkAwareSQLExtractor.Task" level="DEBUG" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>

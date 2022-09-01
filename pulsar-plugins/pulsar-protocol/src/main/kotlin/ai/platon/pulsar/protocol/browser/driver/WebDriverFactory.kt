@@ -16,9 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 open class WebDriverFactory(
     val driverSettings: WebDriverSettings,
-    val browserContext: BrowserContext,
+    val browserManager: BrowserManager,
     val immutableConfig: ImmutableConfig,
-): AutoCloseable {
+) {
     private val logger = LoggerFactory.getLogger(WebDriverFactory::class.java)
     private val numDrivers = AtomicInteger()
 
@@ -69,16 +69,12 @@ open class WebDriverFactory(
         }
     }
 
-    override fun close() {
-        browserContext.close()
-    }
-
     @Throws(DriverLaunchException::class)
     private fun createChromeDevtoolsDriver(
         instanceId: BrowserId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
         require(instanceId.browserType == BrowserType.PULSAR_CHROME)
-        val browser = browserContext.launch(instanceId, driverSettings, capabilities) as ChromeDevtoolsBrowser
+        val browser = browserManager.launch(instanceId, driverSettings, capabilities) as ChromeDevtoolsBrowser
         return browser.newDriver()
     }
 
@@ -95,7 +91,7 @@ open class WebDriverFactory(
         instanceId: BrowserId, capabilities: Map<String, Any>,
     ): MockWebDriver {
         require(instanceId.browserType == BrowserType.MOCK_CHROME)
-        val browser = browserContext.launch(instanceId, driverSettings, capabilities) as MockBrowser
+        val browser = browserManager.launch(instanceId, driverSettings, capabilities) as MockBrowser
         val fingerprint = instanceId.fingerprint.copy(browserType = BrowserType.PULSAR_CHROME)
         val backupInstanceId = BrowserId(instanceId.contextDir, fingerprint)
         val backupDriverCreator = { createChromeDevtoolsDriver(backupInstanceId, capabilities) }

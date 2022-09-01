@@ -11,10 +11,7 @@ import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Similar to puppeteer's BrowserContext
- * */
-open class BrowserContext(
+open class BrowserManager(
     val conf: ImmutableConfig
 ): AutoCloseable {
     private val logger = getLogger(this)
@@ -44,7 +41,9 @@ open class BrowserContext(
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            doClose()
+            _browsers.values.forEach {
+                it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
+            }
         }
     }
 
@@ -56,16 +55,6 @@ open class BrowserContext(
         val userDataDir = browserId.userDataDir
         return _browsers.computeIfAbsent(userDataDir.toString()) {
             browserFactory.launch(browserId, launcherOptions, launchOptions)
-        }
-    }
-
-    private fun doClose() {
-        kotlin.runCatching {
-            val unSynchronized = _browsers.values.toList().also { _browsers.clear() }
-            logger.info("Closing {} browsers", unSynchronized.size)
-            unSynchronized.parallelStream().forEach { it.close() }
-        }.onFailure {
-            logger.warn("Failed to close | {}", it.message)
         }
     }
 }

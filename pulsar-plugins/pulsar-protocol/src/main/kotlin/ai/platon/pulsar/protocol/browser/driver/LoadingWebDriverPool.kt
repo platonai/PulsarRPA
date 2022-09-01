@@ -253,19 +253,12 @@ class LoadingWebDriverPool(
     private fun doClose(timeToWait: Duration) {
         freeDrivers.clear()
 
-//        val heavyRendering = conf.getBoolean(CapabilityTypes.BROWSER_HEAVY_RENDERING, false)
-//        if (isActive && heavyRendering) {
-//            waitUntilIdleOrTimeout(timeToWait)
-//        }
-
         val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
-        nonSynchronized.parallelStream().forEach { it.cancel() }
+        nonSynchronized.forEach { it.cancel() }
 
         waitUntilIdle(timeToWait)
 
         closeAllDrivers(nonSynchronized)
-
-        driverFactory.close()
     }
 
     private fun closeAllDrivers(drivers: List<WebDriver>) {
@@ -281,7 +274,7 @@ class LoadingWebDriverPool(
     private fun waitUntilIdle(timeout: Duration) {
         var ttl = timeout.seconds
         try {
-            while (ttl-- > 0 && numWorking.get() > 0) {
+            while (ttl-- > 0 && numWorking.get() > 0 && isActive) {
                 lock.withLock { notBusy.await(1, TimeUnit.SECONDS) }
             }
         } catch (e: InterruptedException) {

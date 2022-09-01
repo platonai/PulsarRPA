@@ -51,7 +51,7 @@ class DevToolsConfig(
         var readTimeout: Duration = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
 ) {
     companion object {
-        private const val READ_TIMEOUT_PROPERTY = "chrome.browser.services.config.readTimeout"
-        private val READ_TIMEOUT_MINUTES = System.getProperty(READ_TIMEOUT_PROPERTY, "3").toLong()
+        private const val READ_TIMEOUT_PROPERTY = "browser.driver.chrome.readTimeout"
+        private val READ_TIMEOUT_MINUTES = System.getProperty(READ_TIMEOUT_PROPERTY, "1").toLong()
     }
 }

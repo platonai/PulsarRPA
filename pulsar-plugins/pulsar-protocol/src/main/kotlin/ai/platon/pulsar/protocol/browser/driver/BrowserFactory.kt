@@ -28,7 +28,7 @@ class BrowserFactory {
 
     @Synchronized
     @Throws(DriverLaunchException::class)
-    fun launchChromeDevtoolsBrowser(
+    private fun launchChromeDevtoolsBrowser(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): ChromeDevtoolsBrowser {
         val launcher = ChromeLauncher(options = launcherOptions)

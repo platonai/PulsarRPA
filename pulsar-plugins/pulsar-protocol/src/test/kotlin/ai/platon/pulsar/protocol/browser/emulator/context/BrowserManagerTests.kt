@@ -18,7 +18,7 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class BrowserContextTests {
+class BrowserManagerTests {
     private val conf = ImmutableConfig()
     private val webDriverPoolManager = DefaultWebDriverPoolManager(conf)
     private val fetcher = DefaultBrowserEmulatedFetcher(conf)

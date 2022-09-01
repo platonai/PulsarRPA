@@ -38,7 +38,7 @@ class ChromeDevtoolsDriver(
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
-    val openSequence = 1 + browser.driverCount
+    val openSequence = 1 + browser.drivers.size
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
     val userAgent get() = BrowserSettings.randomUserAgent()
@@ -107,7 +107,7 @@ class ChromeDevtoolsDriver(
 
         this.navigateEntry = entry
         navigateHistory.add(entry)
-        browser.navigateHistory.add(entry)
+        browser.onWillNavigate(entry)
 
         try {
             rpc.invokeDeferred("navigateTo") {
@@ -743,7 +743,7 @@ class ChromeDevtoolsDriver(
         val finalUrl = currentUrl()
         // redirect
         if (finalUrl.isNotBlank() && finalUrl != navigateUrl) {
-            browser.navigateHistory.add(NavigateEntry(finalUrl))
+            browser.onWillNavigate(NavigateEntry(finalUrl))
         }
     }
 
@@ -775,7 +775,7 @@ class ChromeDevtoolsDriver(
             .toList()
 
         if (entries.isNotEmpty()) {
-            browser.navigateHistory.removeAll(entries)
+            // browser.navigateHistory.removeAll(entries)
             browser.closeTab(oldTab)
         }
     }

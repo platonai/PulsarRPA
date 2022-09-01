@@ -202,13 +202,7 @@ Node.prototype.__pulsar_maybeClickable = function() {
     if (rect.x < 0 || rect.y < 0) {
         clickable = false
     }
-    if (rect.width * rect.height < 100.0) {
-        clickable = false
-    }
-
-    let href = element.getAttribute("href")
-    let onclick = element.getAttribute("onclick")
-    if (!href && !onclick) {
+    if (rect.width < 5 || rect.height < 5.0) {
         clickable = false
     }
 
