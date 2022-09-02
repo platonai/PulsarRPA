@@ -136,6 +136,44 @@ interface WebDriver: Closeable {
     val sessionId: String?
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
+    /**
+     * Adds a script which would be evaluated in one of the following scenarios:
+     * <ul>
+     * <li> Whenever the page is navigated.</li>
+     * </ul>
+     *
+     * <p> The script is evaluated after the document was created but before any of
+     * its scripts were run. This is useful to amend the JavaScript environment, e.g.
+     * to seed {@code Math.random}.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun addInitScript(script: String)
+    /**
+     * Returns the main resource response. In case of multiple redirects, the navigation will resolve with the first
+     * non-redirect response.
+     *
+     * <p> The method will not throw an error when any valid HTTP status code is returned by the remote server,
+     * including 404 "Not Found" and 500 "Internal Server Error".
+     *
+     * @param url URL to navigate page to.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun navigateTo(url: String)
+    /**
+     * Returns the main resource response. In case of multiple redirects, the navigation will resolve with the first
+     * non-redirect response.
+     *
+     * <p> The method will not throw an error when any valid HTTP status code is returned by the remote server,
+     * including 404 "Not Found" and 500 "Internal Server Error".
+     *
+     * @param url URL to navigate page to.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun navigateTo(entry: NavigateEntry)
+
+    @Throws(WebDriverException::class)
+    suspend fun setTimeouts(browserSettings: BrowserSettings)
+
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
     @Throws(WebDriverException::class)
@@ -146,13 +184,6 @@ interface WebDriver: Closeable {
     suspend fun mainRequestCookies(): List<Map<String, String>>
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
-
-    @Throws(WebDriverException::class)
-    suspend fun navigateTo(url: String)
-    @Throws(WebDriverException::class)
-    suspend fun navigateTo(entry: NavigateEntry)
-    @Throws(WebDriverException::class)
-    suspend fun setTimeouts(browserSettings: BrowserSettings)
 
     /**
      * Brings page to front (activates tab).

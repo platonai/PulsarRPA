@@ -50,11 +50,11 @@ open class BrowserResponseHandler(
         checkers.add(DefaultHtmlIntegrityChecker(enableStartupScript, immutableConfig))
     }
 
-    open fun onResponseWillBeCreated(task: FetchTask, driver: WebDriver) {
+    open fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {
         numNavigates.incrementAndGet()
     }
 
-    open fun onResponseDidCreated(task: FetchTask, driver: WebDriver, response: Response) {
+    open fun onResponseCreated(task: FetchTask, driver: WebDriver, response: Response) {
 
     }
 

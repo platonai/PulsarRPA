@@ -146,9 +146,9 @@ open class BrowserEmulator(
             protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }
 
-        responseHandler.onResponseWillBeCreated(task, driver)
+        responseHandler.onWillCreateResponse(task, driver)
         return createResponseWithDatum(navigateTask, navigateTask.pageDatum).also {
-            responseHandler.onResponseDidCreated(task, driver, it)
+            responseHandler.onResponseCreated(task, driver, it)
         }
     }
 
@@ -194,9 +194,9 @@ open class BrowserEmulator(
         }
         navigateTask.pageSource = driver.pageSource() ?: ""
 
-        responseHandler.onResponseWillBeCreated(task, driver)
+        responseHandler.onWillCreateResponse(task, driver)
         return createResponse(navigateTask).also {
-            responseHandler.onResponseDidCreated(task, driver, it)
+            responseHandler.onResponseCreated(task, driver, it)
         }
     }
 

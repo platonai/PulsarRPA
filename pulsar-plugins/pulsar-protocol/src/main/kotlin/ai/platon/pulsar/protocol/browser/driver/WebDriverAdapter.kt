@@ -49,6 +49,12 @@ class WebDriverAdapter(
      * */
     override val sessionId get() = driver.sessionId
 
+    @Throws(WebDriverException::class)
+    override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
+
+    @Throws(WebDriverException::class)
+    override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
+
     /**
      * The actual url return by the browser
      * */
@@ -60,16 +66,6 @@ class WebDriverAdapter(
      * */
     @Throws(WebDriverException::class)
     override suspend fun pageSource() = driver.pageSource()
-
-    /**
-     * Navigate to the url
-     * The browser might redirect, so it might not be the same to [currentUrl]
-     * */
-    @Throws(WebDriverException::class)
-    override suspend fun navigateTo(url: String) = driverOrNull?.navigateTo(url) ?: Unit
-
-    @Throws(WebDriverException::class)
-    override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String) = driverOrNull?.waitForSelector(selector) ?: 0

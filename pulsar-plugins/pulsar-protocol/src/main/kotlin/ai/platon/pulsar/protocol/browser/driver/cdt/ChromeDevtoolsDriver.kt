@@ -98,6 +98,17 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    override suspend fun addInitScript(script: String) {
+        try {
+            rpc.invokeDeferred("addInitScript") {
+                pageAPI?.enable()
+                pageAPI?.addScriptToEvaluateOnNewDocument(script)
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "addInitScript")
+        }
+    }
+
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 

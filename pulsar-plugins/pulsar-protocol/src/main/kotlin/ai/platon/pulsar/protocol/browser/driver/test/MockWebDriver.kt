@@ -60,6 +60,10 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
+    override suspend fun addInitScript(script: String) {
+        backupDriverOrNull?.addInitScript(script)
+    }
+
     override suspend fun navigateTo(entry: NavigateEntry) {
         backupDriverOrNull?.navigateTo(entry)
     }
