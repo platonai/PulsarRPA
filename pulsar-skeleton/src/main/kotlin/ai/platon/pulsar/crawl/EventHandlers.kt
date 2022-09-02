@@ -375,7 +375,7 @@ interface LoadEventHandler {
 
     val onWillParse: WebPageHandlerPipeline
     @Deprecated("Old fashioned name", ReplaceWith("onWillParseHTMLDocument"))
-    val onBeforeParse: WebPageHandlerPipeline get() = onWillParseHTMLDocument
+    val onBeforeParse: WebPageHandlerPipeline get() = onWillParse
 
     val onWillParseHTMLDocument: WebPageHandlerPipeline
     @Deprecated("Old fashioned name", ReplaceWith("onWillParseHTMLDocument"))

@@ -299,7 +299,7 @@ class FetchMonitor(
              * Check throughput(fetch speed)
              * */
             if (coreMetrics != null && now > throughputCheckTime
-                    && coreMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
+                    && coreMetrics.successFetchTasksPerSecond < minSuccessPagesPerSecond) {
                 lowThroughputCount++
                 checkFetchThroughput()
                 throughputCheckTime += throughputCheckInterval

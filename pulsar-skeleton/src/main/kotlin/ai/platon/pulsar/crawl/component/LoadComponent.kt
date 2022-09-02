@@ -197,11 +197,11 @@ class LoadComponent(
     }
 
     private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
-        beforeLoad(normUrl, page)
+        onWillLoad(normUrl, page)
 
         fetchContentIfNecessary(normUrl, page)
 
-        afterLoad(page, normUrl)
+        onLoaded(page, normUrl)
 
         return page
     }
@@ -212,11 +212,11 @@ class LoadComponent(
     }
 
     private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
-        beforeLoad(normUrl, page)
+        onWillLoad(normUrl, page)
 
         fetchContentIfNecessaryDeferred(normUrl, page)
 
-        afterLoad(page, normUrl)
+        onLoaded(page, normUrl)
 
         return page
     }
@@ -293,19 +293,19 @@ class LoadComponent(
         return state
     }
 
-    private fun beforeLoad(normUrl: NormUrl, page: WebPage) {
+    private fun onWillLoad(normUrl: NormUrl, page: WebPage) {
         val options = normUrl.options
 
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
-            page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
+            page.loadEventHandler?.onWillLoad?.invoke(page.url)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
         }
     }
 
-    private fun afterLoad(page: WebPage, normUrl: NormUrl) {
+    private fun onLoaded(page: WebPage, normUrl: NormUrl) {
         val options = normUrl.options
         val status = page.protocolStatus
 

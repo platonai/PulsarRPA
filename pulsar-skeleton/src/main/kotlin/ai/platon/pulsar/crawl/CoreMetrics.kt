@@ -94,7 +94,10 @@ class CoreMetrics(
      * The elapsed time since the program process starts
      */
     val elapsedTime get() = Duration.between(startTime, Instant.now())
-
+    /**
+     * The elapsed time in seconds since the program process starts
+     */
+    val elapsedSeconds get() = elapsedTime.seconds.coerceAtLeast(1)
     /**
      * Tracking statistics for each host
      */
@@ -122,9 +125,9 @@ class CoreMetrics(
     /**
      * The total bytes of page content of all success web pages
      * */
-    val tasks = registry.meter(this, "tasks")
-    val successTasks = registry.meter(this, "successTasks")
-    val finishedTasks = registry.meter(this, "finishedTasks")
+    val fetchTasks = registry.meter(this, "fetchTasks")
+    val successFetchTasks = registry.meter(this, "successFetchTasks")
+    val finishedFetchTasks = registry.meter(this, "finishedFetchTasks")
 
     val proxies = registry.meter(this, "proxies")
 
@@ -161,29 +164,22 @@ class CoreMetrics(
      * */
     val networkIFsRecvBytes
         get() = (totalNetworkIFsRecvBytes - initNetworkIFsRecvBytes).coerceAtLeast(0L)
-    val networkIFsRecvBytesPerSecond
-        get() = networkIFsRecvBytes / elapsedTime.seconds.coerceAtLeast(1)
-    val networkIFsRecvBytesPerPage
-        get() = networkIFsRecvBytes / successTasks.count.coerceAtLeast(1)
+    val networkIFsRecvBytesPerSecond get() = networkIFsRecvBytes / elapsedSeconds
+    val networkIFsRecvBytesPerPage get() = networkIFsRecvBytes / successFetchTasks.count
 
-    val tasksPerSecond
-        get() = tasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
-
-    val finishedTasksPerSecond
-        get() = finishedTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
-
-    val successTasksPerSecond
-        get() = successTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
+    val fetchTasksPerSecond get() = fetchTasks.count.toFloat() / elapsedSeconds
+    val finishedFetchTasksPerSecond get() = finishedFetchTasks.count.toFloat() / elapsedSeconds
+    val successFetchTasksPerSecond get() = successFetchTasks.count.toFloat() / elapsedSeconds
 
     var enableReporter = true
-
-    private var lastSystemInfoRefreshTime = 0L
-    private val closed = AtomicBoolean()
-    private var reportTimer: Timer? = null
     var lastTaskTime = Instant.EPOCH
         private set
     var lastReportTime = Instant.EPOCH
         private set
+
+    private var lastSystemInfoRefreshTime = 0L
+    private var reportTimer: Timer? = null
+    private val closed = AtomicBoolean()
 
     init {
         kotlin.runCatching {
@@ -229,13 +225,13 @@ class CoreMetrics(
         return timeoutUrls.contains(url)
     }
 
-    fun markTaskStart() {
-        markTaskStart(1)
+    fun markFetchTaskStart() {
+        markFetchTaskStart(1)
     }
 
-    fun markTaskStart(size: Int) {
+    fun markFetchTaskStart(size: Int) {
         lastTaskTime = Instant.now()
-        tasks.mark(size.toLong())
+        fetchTasks.mark(size.toLong())
     }
 
     /**
@@ -249,11 +245,11 @@ class CoreMetrics(
         unreachableHosts.remove(host)
         failedHosts.remove(host)
 
-        successTasks.mark()
-        finishedTasks.mark()
+        successFetchTasks.mark()
+        finishedFetchTasks.mark()
 
         // update system info for about every 30 seconds
-        if (finishedTasks.count % 30 == 0L) {
+        if (finishedFetchTasks.count % 30 == 0L) {
             updateSystemInfo()
         }
 
@@ -275,7 +271,6 @@ class CoreMetrics(
         ++urlStats.urls
         ++urlStats.pageViews
 
-        // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
         val pageCategory = page.pageCategory
         when {
             pageCategory.isIndex -> ++urlStats.indexUrls
@@ -300,7 +295,7 @@ class CoreMetrics(
 
         urlStatistics[host] = urlStats
 
-        if (finishedTasksPerSecond > 0.5) {
+        if (finishedFetchTasksPerSecond > 0.5) {
             report()
         }
     }
@@ -352,10 +347,10 @@ class CoreMetrics(
     }
 
     private fun formatStatus(): String {
-        if (tasks.count == 0L) return ""
+        if (fetchTasks.count == 0L) return ""
 
-        val seconds = elapsedTime.seconds.coerceAtLeast(1)
-        val count = successTasks.count.coerceAtLeast(1)
+        val seconds = elapsedSeconds.coerceAtLeast(1)
+        val count = successFetchTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
         val proxyFmt = if (proxies.count > 0) " using %s proxies" else ""
         var format = "Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
@@ -364,7 +359,7 @@ class CoreMetrics(
             format,
             count,
             elapsedTime.readable(),
-            successTasks.meanRate,
+            successFetchTasks.meanRate,
             proxies.count,
             Strings.readableBytes(bytes),
             Strings.readableBytes(bytes / seconds),
@@ -381,7 +376,7 @@ class CoreMetrics(
             reportTimer?.cancel()
             reportTimer = null
 
-            if (tasks.count > 0) {
+            if (fetchTasks.count > 0) {
                 logger.info(formatStatus())
 
                 if (unreachableHosts.isNotEmpty()) {
@@ -433,7 +428,7 @@ class CoreMetrics(
         }
         lastReportTime = Instant.now()
 
-        if (finishedTasksPerSecond > 0.5) {
+        if (finishedFetchTasksPerSecond > 0.5) {
             reportWhenHighThroughput()
         } else {
             reportWhenLowThroughput()
@@ -451,9 +446,9 @@ class CoreMetrics(
     }
 
     private fun reportWhenHighThroughput() {
-        val i = finishedTasks.count
+        val i = finishedFetchTasks.count
         // successTasksPerSecond is about to be 1.0
-        val a = successTasksPerSecond * 60
+        val a = successFetchTasksPerSecond * 60
         val period = 10 + when {
             i < 100 -> a / 3
             i < 10000 -> a

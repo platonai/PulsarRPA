@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Html parser
  */
 class PrimerHtmlParser(
-    private val parseFilters: ParseFilters?,
+    private val parseFilters: ParseFilters? = null,
     private val conf: ImmutableConfig,
 ) : Parser {
     companion object {
@@ -71,6 +71,7 @@ class PrimerHtmlParser(
             onWillParseHTMLDocument(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)
+
             parseFilters?.filter(parseContext)
 
             parseContext.document?.let { onHTMLDocumentParsed(page, it) }

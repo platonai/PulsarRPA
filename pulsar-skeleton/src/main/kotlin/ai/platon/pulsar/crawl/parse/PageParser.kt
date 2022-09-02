@@ -117,7 +117,6 @@ class PageParser(
                 updateCounters(parseResult)
 
                 if (parseResult.isSuccess) {
-                    messageWriter?.debugExtractedFields(page)
                     page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
                 }
             }
@@ -166,7 +165,7 @@ class PageParser(
 
     private fun beforeParse(page: WebPage) {
         try {
-            page.loadEventHandler?.onBeforeParse?.invoke(page)
+            page.loadEventHandler?.onWillParse?.invoke(page)
         } catch (e: Throwable) {
             LOG.warn("Failed to invoke beforeParser handler", e)
         }
@@ -174,7 +173,7 @@ class PageParser(
 
     private fun afterParse(page: WebPage) {
         try {
-            page.loadEventHandler?.onAfterParse?.invoke(page)
+            page.loadEventHandler?.onParsed?.invoke(page)
         } catch (e: Throwable) {
             LOG.warn("Failed to invoke afterParser handler", e)
         }

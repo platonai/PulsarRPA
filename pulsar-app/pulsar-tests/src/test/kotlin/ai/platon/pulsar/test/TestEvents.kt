@@ -21,8 +21,8 @@ class TestEvents : TestBase() {
     fun setup() {
         val metrics = fetchComponent.coreMetrics
         assertNotNull(metrics)
-        metrics.tasks.mark(-metrics.tasks.count)
-        metrics.successTasks.mark(-metrics.successTasks.count)
+        metrics.fetchTasks.mark(-metrics.fetchTasks.count)
+        metrics.successFetchTasks.mark(-metrics.successFetchTasks.count)
         metrics.persists.reset()
     }
 
@@ -39,14 +39,14 @@ class TestEvents : TestBase() {
         eventHandler.apply {
             onBeforeLoad.addLast { url ->
                 firedEvents.add("onBeforeLoad")
-                assertEquals(0, metrics.tasks.count)
+                assertEquals(0, metrics.fetchTasks.count)
             }
 
             onAfterFetch.addLast { page ->
                 firedEvents.add("onAfterFetch")
                 assertTrue { page.crawlStatus.isFetched }
-                assertEquals(1, metrics.tasks.count)
-                assertEquals(1, metrics.successTasks.count)
+                assertEquals(1, metrics.fetchTasks.count)
+                assertEquals(1, metrics.successFetchTasks.count)
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
 
@@ -59,8 +59,8 @@ class TestEvents : TestBase() {
 
                 assertTrue { page.options.persist }
 
-                assertEquals(1, metrics.tasks.count)
-                assertEquals(1, metrics.successTasks.count)
+                assertEquals(1, metrics.fetchTasks.count)
+                assertEquals(1, metrics.successFetchTasks.count)
                 assertEquals(1, metrics.persists.counter.count)
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }

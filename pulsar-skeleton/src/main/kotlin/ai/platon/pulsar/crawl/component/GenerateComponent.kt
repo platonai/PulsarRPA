@@ -286,7 +286,6 @@ class GenerateComponent(
             increaseMDaysLater(hours.toInt() / 24, enumCounters)
             if (page.isSeed) {
                 enumCounters.inc(Counter.mSeedLater)
-                messageWriter.debugFetchLaterSeeds(page)
             }
         }
 

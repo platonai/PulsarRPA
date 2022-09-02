@@ -28,71 +28,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Write misc messages into misc sinks
  */
 class MiscMessageWriter(
-    /**
-     * TODO: remove WebDb dependency
-     * */
-    val webDb: WebDb,
     conf: ImmutableConfig
 ) : MultiSinkWriter(conf) {
-    private val hostname = NetUtil.getHostname()
-
-    private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
-    private val urlPrefix =
-        AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimes.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
-    private var reportCount = 0
-
-    // We need predictable iteration order, LinkedHashSet is all right
-    private val metricsPageUrls: MutableSet<CharSequence> = LinkedHashSet()
-    private val metricsPages: MutableMap<String, WebPage> = HashMap()
     private val closed = AtomicBoolean()
-
-    constructor(conf: ImmutableConfig) : this(WebDb(conf), conf)
-
-    fun report(page: WebPage) {
-        var category = page.pageCategory.name.lowercase(Locale.getDefault())
-        if (page.isSeed) {
-            category = "seed"
-        }
-        val fileSuffix = "urls-$category.txt"
-        report(fileSuffix, page)
-    }
-
-    /**
-     * TODO : use WeakIndexer
-     */
-    fun report(reportGroup: String, page: WebPage) {
-        val metricsPageUrl = "$urlPrefix/$reportGroup"
-        val metricsPage = getOrCreateMetricsPage(metricsPageUrl)
-        metricsPage.addLiveLink(HyperlinkPersistable(page.url))
-        metricsPage.setContent(metricsPage.contentAsString + FetchStatusFormatter(page) + "\n")
-        metricsPageUrls.add(metricsPageUrl)
-        metricsPages[metricsPageUrl] = metricsPage
-        if (++reportCount > 40) {
-            commit()
-            reportCount = 0
-        }
-    }
-
-    private fun getOrCreateMetricsPage(url: String): WebPage {
-        var metricsPage = metricsPages[url]
-        if (metricsPage == null) {
-            metricsPage = WebPage.newInternalPage(url, "Pulsar Metrics Page")
-            metricsPage.setContent("")
-            metricsPage.metadata["JobName"] =
-                conf[CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimes.now("MMdd.HHmm")]
-        }
-        return metricsPage
-    }
-
-    fun reportPageFromSeedersist(report: String) {
-        // String reportString = seedUrl + " -> " + url + "\n";
-        write(report, "fetch-urls-from-seed-persist.txt")
-    }
-
-    fun reportPageFromSeed(report: String) {
-        // String reportString = seedUrl + " -> " + url + "\n";
-        write(report, "fetch-urls-from-seed.txt")
-    }
 
     private fun reportFetchTimeHistory(fetchTimeHistory: String) {
         write(fetchTimeHistory, "fetch-time-history.txt")
@@ -110,43 +48,6 @@ class MiscMessageWriter(
     fun debugDeadOutgoingPage(deadUrl: String, page: WebPage) {
         val report = deadUrl + " <= " + page.url
         write(report, "generate-sort-score.txt")
-    }
-
-    fun debugExtractedFields(page: WebPage) {
-        if (page.pageModel.isEmpty) {
-            return
-        }
-
-        val sb = StringBuilder()
-        sb.appendln("-----------------")
-        sb.appendln(page.url)
-        val fields = page.pageModel.firstOrNull()?.fields ?: return
-        page.pageModel.fieldGroups.forEach {
-            sb.append("Group ").append(it.name)
-            it.fields.entries.joinTo(sb, "\n") {
-                String.format("%30s: %s", it.key, it.value)
-            }
-            sb.appendln()
-        }
-
-        sb.appendln()
-
-        // show all javascript DOM urls, we should know the exact differences between them
-        // they look like all the same
-        val urls = page.activeDomUrls
-        if (urls != null) {
-            sb.append('\n')
-            // NOTE: it seems they are all the same
-            val location = urls.location
-            if (location != page.url) sb.append("location:    ").appendln(location)
-            if (urls.URL != location) sb.append("URL:         ").appendln(urls.URL)
-            if (urls.baseURI != location) sb.append("baseURI:     ").appendln(urls.baseURI)
-            if (urls.documentURI != location) sb.append("documentURI: ").appendln(urls.documentURI)
-        }
-
-        sb.append("\n").append("Total ${fields.size} fields")
-        sb.append("\n\n")
-        write(sb.toString(), "page-extracted-fields.txt")
     }
 
     fun reportGeneratedHosts(hostNames: Set<String>) {
@@ -296,19 +197,8 @@ class MiscMessageWriter(
         write(report, "bad-modified-urls.txt")
     }
 
-    fun commit() {
-        // TODO : save only if dirty
-        metricsPages.values.forEach { webDb.put(it) }
-        webDb.flush()
-    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-//            commit()
-            if (metricsPageUrls.isNotEmpty()) {
-//                weakIndexer.indexAll(metricsPageUrls)
-//                weakIndexer.commit()
-            }
         }
     }
 }

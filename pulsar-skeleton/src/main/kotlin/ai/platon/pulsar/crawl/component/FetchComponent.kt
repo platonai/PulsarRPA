@@ -104,16 +104,16 @@ open class FetchComponent(
         require(page.isNotInternal) { "Internal page ${page.url}" }
 
         return try {
-            beforeFetch(page)
+            onWillFetch(page)
 
-            coreMetrics?.markTaskStart()
+            coreMetrics?.markFetchTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
             logger.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         } finally {
-            afterFetch(page)
+            onFetched(page)
         }
     }
 
@@ -125,32 +125,32 @@ open class FetchComponent(
      */
     protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
         return try {
-            beforeFetch(page)
+            onWillFetch(page)
 
-            coreMetrics?.markTaskStart()
+            coreMetrics?.markFetchTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
             logger.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         } finally {
-            afterFetch(page)
+            onFetched(page)
         }
     }
 
-    private fun beforeFetch(page: WebPage) {
+    private fun onWillFetch(page: WebPage) {
         try {
-            page.loadEventHandler?.onBeforeFetch?.invoke(page)
+            page.loadEventHandler?.onWillFetch?.invoke(page)
         } catch (e: Throwable) {
-            logger.warn("Failed to invoke beforeFetch | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke onWillFetch | ${page.configuredUrl}", e)
         }
     }
 
-    private fun afterFetch(page: WebPage) {
+    private fun onFetched(page: WebPage) {
         try {
-            page.loadEventHandler?.onAfterFetch?.invoke(page)
+            page.loadEventHandler?.onFetched?.invoke(page)
         } catch (e: Throwable) {
-            logger.warn("Failed to invoke afterFetch | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke onFetched | ${page.configuredUrl}", e)
         }
     }
 
