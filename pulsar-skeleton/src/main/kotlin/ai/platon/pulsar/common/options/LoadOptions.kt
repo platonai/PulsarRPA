@@ -436,15 +436,6 @@ open class LoadOptions(
         set(value) = doRefresh(value)
 
     /**
-     * Force retry fetching the page if it's failed last time, or it's marked as gone.
-     * */
-    @Deprecated("Replaced by ignoreFailure, will be removed in further versions")
-    @ApiPublic
-    @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
-            description = "Retry fetching the page even if it's failed last time, or it's marked as gone")
-    var retryFailed = LoadOptionDefaults.ignoreFailure
-
-    /**
      * Retry fetching the page even if it's failed last time.
      * */
     @ApiPublic
@@ -478,16 +469,15 @@ open class LoadOptions(
     /**
      * Parallel fetch pages whenever applicable.
      * */
-    @Deprecated("Not used since there is no non-parallel fetching")
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
             description = "Parallel fetch pages whenever applicable")
+    @Deprecated("Not used since there is no non-parallel fetching")
     var preferParallel = true
 
     /**
      * Run browser in incognito mode.
      * Not used since the browser is always running in temporary contexts
      * */
-    @Deprecated("Not used since the browser is always running in temporary contexts")
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
 

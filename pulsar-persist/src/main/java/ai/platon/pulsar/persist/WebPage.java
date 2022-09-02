@@ -56,11 +56,9 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
  */
 final public class WebPage implements Comparable<WebPage> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(WebPage.class);
-
-    public static AtomicInteger sequencer = new AtomicInteger();
-
     public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
+
+    private static AtomicInteger sequencer = new AtomicInteger();
 
     private Integer id = sequencer.incrementAndGet();
     /**

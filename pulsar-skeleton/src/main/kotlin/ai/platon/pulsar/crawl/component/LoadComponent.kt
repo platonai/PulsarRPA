@@ -462,7 +462,7 @@ class LoadComponent(
             return CheckState(FetchState.REFRESH, "refresh")
         }
 
-        val ignoreFailure = options.ignoreFailure || options.retryFailed
+        val ignoreFailure = options.ignoreFailure
         if (protocolStatus.isRetry) {
             return CheckState(FetchState.RETRY, "retry")
         } else if (protocolStatus.isFailed && !ignoreFailure) {
@@ -490,7 +490,8 @@ class LoadComponent(
             return CheckState(FetchState.SCHEDULED, "scheduled")
         }
 
-        if (page.persistedContentLength == 0) {
+        // no content
+        if (page.persistedContentLength == 0L) {
             // do not enable this feature by default
             // return CheckState(FetchState.NO_CONTENT, "no content")
         }
