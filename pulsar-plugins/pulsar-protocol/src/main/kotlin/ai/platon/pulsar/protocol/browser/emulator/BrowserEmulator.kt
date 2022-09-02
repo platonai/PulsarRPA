@@ -411,7 +411,7 @@ open class BrowserEmulator(
             }
         }
 
-        val anchorCount = task.page.activeDomStats.values.firstOrNull()?.na?: return
+        val anchorCount = task.page.activeDOMStatTrace.values.firstOrNull()?.na?: return
         if (anchorCount < 10) {
             return
         }

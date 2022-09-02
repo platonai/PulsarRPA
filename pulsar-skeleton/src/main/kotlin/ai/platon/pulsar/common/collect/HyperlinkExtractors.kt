@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 open class HyperlinkExtractor(
     val page: WebPage,
     val document: FeaturedDocument,
-    val cssSelector: String,
+    val selector: String,
     val normalizer: UrlNormalizer? = null
 ) {
     private val log = LoggerFactory.getLogger(HyperlinkExtractor::class.java)
@@ -27,10 +27,10 @@ open class HyperlinkExtractor(
     fun extract() = extractTo(LinkedHashSet())
 
     fun extractTo(fetchUrls: MutableCollection<Hyperlink>): MutableCollection<Hyperlink> {
-        val selector = appendSelectorIfMissing(cssSelector, "a")
+        val selector0 = appendSelectorIfMissing(selector, "a")
 
         var i = 0
-        val parsedUrls = document.select(selector).mapNotNull { element ->
+        val parsedUrls = document.select(selector0).mapNotNull { element ->
             element.attr("abs:href").takeIf { UrlUtils.isValidUrl(it) }
                 ?.let { Pair(it, normalizer?.invoke(it) ?: it) }
                 ?.let { Hyperlink(it.second, element.text(), i++, referer = page.url, href = it.first) }
@@ -96,7 +96,7 @@ private fun reportHyperlink(
         log.info("Portal page is illegal (too small) | {}", page.url)
     } else {
         val exportLink = AppPaths.uniqueSymbolicLinkForUri(page.url)
-        val readableBytes = Strings.readableBytes(page.contentLength.toLong())
+        val readableBytes = Strings.readableBytes(page.contentLength)
         log.info(
             "{}. There are {} links in portal page ({}), total {} fetch urls | file://{} | {}",
             page.id, links.size, readableBytes, fetchUrls.size, exportLink, page.url

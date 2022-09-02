@@ -255,14 +255,13 @@ open class FetchComponent(
             page.proxy = it.proxyEntry?.outIp
             val ms = it.activeDomMultiStatus
             if (ms != null) {
-                page.activeDomStatus = ms.status
-                page.activeDomStats = mapOf(
+                page.activeDOMStatus = ms.status
+                page.activeDOMStatTrace = mapOf(
                     "initStat" to ms.initStat, "initD" to ms.initD,
                     "lastStat" to ms.lastStat, "lastD" to ms.lastD
                 )
             }
 
-            it.activeDomUrls?.let { page.activeDomUrls = it }
             it.pageCategory?.let { page.setPageCategory(it) }
             it.htmlIntegrity?.let { page.htmlIntegrity = it }
             it.lastBrowser?.let { page.lastBrowser = it }

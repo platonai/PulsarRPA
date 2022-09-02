@@ -179,7 +179,7 @@ class FileBackendPageStore(
 
         page.content = ByteBuffer.wrap(content)
         require(page.contentLength == content.size.toLong())
-        require(page.persistContentLength == content.size.toLong())
+        require(page.persistedContentLength == content.size.toLong())
 
         return page
     }

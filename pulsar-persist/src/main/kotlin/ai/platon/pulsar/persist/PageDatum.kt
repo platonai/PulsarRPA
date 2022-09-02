@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
+import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
 import ai.platon.pulsar.persist.model.ActiveDomUrls
 import java.util.*
 
@@ -66,7 +66,7 @@ class PageDatum(
     var proxyEntry: ProxyEntry? = null
     var lastBrowser: BrowserType? = null
     var htmlIntegrity: HtmlIntegrity? = null
-    var activeDomMultiStatus: ActiveDomMultiStatus? = null
+    var activeDomMultiStatus: ActiveDOMStatTrace? = null
     var activeDomUrls: ActiveDomUrls? = null
 
     val contentLength get() = (content?.size ?: 0).toLong()

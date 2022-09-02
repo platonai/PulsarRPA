@@ -1,20 +1,4 @@
-/*******************************************************************************
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package ai.platon.pulsar.persist.model.experimental
+package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.HtmlIntegrity
@@ -25,13 +9,12 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.normalize
-import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GParseStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.*
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
+import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
 import ai.platon.pulsar.persist.model.ActiveDomUrls
 import ai.platon.pulsar.persist.model.PageModel
 import org.apache.avro.util.Utf8
@@ -43,18 +26,47 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.reflect.KProperty
+
+class MetadataField<T>(val initializer: (KWebPage) -> T) {
+    operator fun getValue(thisRef: KWebPage, property: KProperty<*>): T =
+        thisRef.metadata[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: KWebPage, property: KProperty<*>, value: T): T {
+        thisRef.metadata.set(property.name, value.toString())
+        return value
+    }
+}
+
+class NullableMetadataField<T> {
+    operator fun getValue(thisRef: KWebPage, property: KProperty<*>): T? =
+        thisRef.metadata[property.name] as? T
+
+    operator fun setValue(thisRef: KWebPage, property: KProperty<*>, value: T?): T? {
+        thisRef.metadata.set(property.name, value?.toString())
+        return value
+    }
+}
+
+fun <T> field(initializer: (KWebPage) -> T): MetadataField<T> {
+    return MetadataField(initializer)
+}
+
+inline fun <reified T> nullableField(): NullableMetadataField<T> {
+    return NullableMetadataField()
+}
 
 /**
  * The core data structure across the whole program execution
  *
  * Notice: Use a build-in java string or a Utf8 to serialize strings?
  *
- * see org .apache .gora. hbase. util .HBaseByteInterface #fromBytes
+ * see org .apache.gora.hbase.util.HBaseByteInterface #fromBytes
  *
  * In serialization phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
  * in deserialization phrase, every string are wrapped to be a Utf8
  *
- * So both build-in string and a Utf8 wrap is OK to serialize, and Utf8 is always returned
+ * So both build-in string and a Utf8 wrap is OK to serialize, and Utf8 is always returned.
  */
 class KWebPage(
     /**
@@ -106,6 +118,8 @@ class KWebPage(
 
     fun unbox() = page
 
+    val legacyWebPage = WebPage.box(url, page, volatileConfig!!)
+
     fun hasVar(name: String) = variables.contains(name)
 
     fun getAndRemoveVar(name: String): Boolean {
@@ -128,13 +142,13 @@ class KWebPage(
     /**
      * All options are saved here, including crawl options, link options, entity options and so on
      */
-    var options: String?
-        get() = page.options.toString()
-        set(options) {
-            page.options = options
+    var args: String?
+        get() = page.args.toString()
+        set(value) {
+            page.args = value
         }
 
-    val configuredUrl get() = page.options?.let { "$url $it" }?:url
+    val configuredUrl get() = page.args?.let { "$url $it" }?:url
 
     var zoneId: ZoneId
         get() = if (page.zoneId == null) DateTimes.zoneId else ZoneId.of(page.zoneId.toString())
@@ -148,21 +162,12 @@ class KWebPage(
             page.batchId = value
         }
 
-    fun markSeed() {
-        metadata[Name.IS_SEED] = AppConstants.YES_STRING
-    }
-
-    fun unmarkSeed() {
-        metadata.remove(Name.IS_SEED)
-    }
-
-    val isSeed: Boolean
-        get() = metadata.contains(Name.IS_SEED)
+    val isSeed: Boolean = metadata.contains(Name.IS_SEED)
 
     var distance: Int
         get() = page.distance.takeIf { it > 0 } ?: AppConstants.DISTANCE_INFINITE
-        set(newDistance) {
-            page.distance = newDistance
+        set(value) {
+            page.distance = value
         }
 
     /**
@@ -221,11 +226,6 @@ class KWebPage(
             page.fetchCount = count
         }
 
-    fun increaseFetchCount() {
-        val count = fetchCount
-        fetchCount = count + 1
-    }
-
     var crawlStatus: CrawlStatus
         get() = CrawlStatus(page.crawlStatus.toByte())
         set(crawlStatus) {
@@ -246,8 +246,7 @@ class KWebPage(
      *
      * A baseUrl has the same semantic with Jsoup.parse:
      * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
-     * @see KWebPage.getLocation
-     *
+     * @see [location]
      */
     var baseUrl: String
         get() = if (page.baseUrl == null) "" else page.baseUrl.toString()
@@ -278,20 +277,6 @@ class KWebPage(
         get() = Instant.ofEpochMilli(page.prevFetchTime)
         set(value) { page.prevFetchTime = value.toEpochMilli() }
 
-    /**
-     * Get last fetch time
-     *
-     * If fetchTime is before now, the result is the fetchTime
-     * If fetchTime is after now, it means that schedule has modified it for the next fetch, the result is prevFetchTime
-     */
-    fun getLastFetchTime(now: Instant): Instant {
-        var lastFetchTime = fetchTime
-        if (lastFetchTime.isAfter(now)) { // fetch time is in the further, updated by schedule
-            lastFetchTime = prevFetchTime
-        }
-        return lastFetchTime
-    }
-
     var fetchInterval: Duration
         get() = Duration.ofSeconds(page.fetchInterval.toLong())
         set(value) { page.fetchInterval = value.seconds.toInt() }
@@ -317,12 +302,10 @@ class KWebPage(
      * LAST_MODIFIED
      * and LOCATION.
      */
-    fun getHeaders(): ProtocolHeaders {
-        return ProtocolHeaders.box(page.headers)
-    }
+    val protocalHeaders get() = ProtocolHeaders.box(page.headers)
 
-    var reprUrl: String
-        get() = page.reprUrl?.toString() ?: ""
+    var reprUrl: String?
+        get() = page.reprUrl?.toString()
         set(value) { page.reprUrl = value }
 
     /**
@@ -333,21 +316,15 @@ class KWebPage(
         get() = page.fetchRetries
         set(value) { page.fetchRetries = value }
 
-    fun getModifiedTime(): Instant {
-        return Instant.ofEpochMilli(page.modifiedTime)
-    }
+    var modifiedTime: Instant
+        get() = Instant.ofEpochMilli(page.modifiedTime)
+        set(value) { page.modifiedTime = value.toEpochMilli() }
 
-    fun setModifiedTime(value: Instant) {
-        page.modifiedTime = value.toEpochMilli()
-    }
-
-    fun getPrevModifiedTime(): Instant {
-        return Instant.ofEpochMilli(page.prevModifiedTime)
-    }
-
-    fun setPrevModifiedTime(value: Instant) {
-        page.prevModifiedTime = value.toEpochMilli()
-    }
+    var prevModifiedTime: Instant
+        get() = Instant.ofEpochMilli(page.prevModifiedTime)
+        set(value) {
+            page.prevModifiedTime = value.toEpochMilli()
+        }
 
     fun getFetchTimeHistory(defaultValue: String): String {
         val s = metadata[Name.FETCH_TIME_HISTORY]
@@ -357,23 +334,9 @@ class KWebPage(
     /********************************************************************************
      * Parsing
      */
-
-    fun getPageCategory(): PageCategory {
-        try {
-            if (page.pageCategory != null) {
-                return PageCategory.parse(page.pageCategory.toString())
-            }
-        } catch (ignored: Throwable) {
-        }
-        return PageCategory.UNKNOWN
-    }
-
-    /**
-     * category : index, detail, review, media, search, etc
-     */
-    fun setPageCategory(pageCategory: PageCategory) {
-        page.pageCategory = pageCategory.name
-    }
+    var pageCategory: PageCategory?
+        get() = page.pageCategory?.let { PageCategory.parse(page.pageCategory.toString()) }
+        set(value) { page.pageCategory = value?.name }
 
     fun getEncoding(): String? {
         return if (page.encoding == null) null else page.encoding.toString()
@@ -385,7 +348,7 @@ class KWebPage(
     }
 
     /**
-     * Get content encoding
+     * Get content encoding.
      * Content encoding is detected just before it's parsed
      */
     fun getEncodingOrDefault(defaultEncoding: String): String {
@@ -462,15 +425,15 @@ class KWebPage(
             metadata[Name.PROXY] = proxy
         }
 
-    fun getActiveDomMultiStatus(): ActiveDomMultiStatus? { // cached
+    fun getActiveDomMultiStatus(): ActiveDOMStatTrace? { // cached
         val name = Name.ACTIVE_DOM_MULTI_STATUS
         val value = variables[name]
-        if (value is ActiveDomMultiStatus) {
+        if (value is ActiveDOMStatTrace) {
             return value
         } else {
             val json = metadata[name]
             if (json != null) {
-                val status = ActiveDomMultiStatus.fromJson(json)
+                val status = ActiveDOMStatTrace.fromJson(json)
                 variables[name] = status
                 return status
             }
@@ -478,7 +441,7 @@ class KWebPage(
         return null
     }
 
-    fun setActiveDomMultiStatus(domStatus: ActiveDomMultiStatus?) {
+    fun setActiveDomMultiStatus(domStatus: ActiveDOMStatTrace?) {
         if (domStatus != null) {
             variables[Name.ACTIVE_DOM_MULTI_STATUS] = domStatus
             metadata[Name.ACTIVE_DOM_MULTI_STATUS] = domStatus.toJson()
@@ -742,7 +705,7 @@ class KWebPage(
                 page.id = id
             }
             page.baseUrl = url
-            page.setModifiedTime(Instant.now())
+            page.modifiedTime = Instant.now()
             page.fetchTime = Instant.parse("3000-01-01T00:00:00Z")
             page.fetchInterval = ChronoUnit.DECADES.duration
             page.fetchPriority = AppConstants.FETCH_PRIORITY_MIN

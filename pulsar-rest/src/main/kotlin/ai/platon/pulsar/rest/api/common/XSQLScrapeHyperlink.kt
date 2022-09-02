@@ -92,7 +92,10 @@ open class XSQLScrapeHyperlink(
     }
 
     protected open fun doExtract(page: WebPage, document: FeaturedDocument): ResultSet {
-        if (!page.protocolStatus.isSuccess || page.contentLength == 0L || page.content == null) {
+        if (!page.protocolStatus.isSuccess ||
+            page.contentLength == 0L || page.persistedContentLength == 0L
+            || page.content == null
+        ) {
             response.statusCode = ResourceStatus.SC_NO_CONTENT
             return ResultSets.newSimpleResultSet()
         }

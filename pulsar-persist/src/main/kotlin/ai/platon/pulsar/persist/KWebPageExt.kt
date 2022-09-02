@@ -1,8 +1,7 @@
-package ai.platon.pulsar.persist.model.experimental
+package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.metadata.Name
 import org.apache.gora.util.ByteUtils
 import org.xml.sax.InputSource
@@ -13,6 +12,33 @@ import java.time.temporal.ChronoUnit
 class KWebPageExt(
     val page: KWebPage
 ) {
+    fun markSeed() {
+        page.metadata[Name.IS_SEED] = AppConstants.YES_STRING
+    }
+
+    fun unmarkSeed() {
+        page.metadata.remove(Name.IS_SEED)
+    }
+
+    fun increaseFetchCount() {
+        val count = page.fetchCount
+        page.fetchCount = count + 1
+    }
+
+    /**
+     * Get last fetch time
+     *
+     * If fetchTime is before now, the result is the fetchTime
+     * If fetchTime is after now, it means that schedule has modified it for the next fetch, the result is prevFetchTime
+     */
+    fun getLastFetchTime(now: Instant): Instant {
+        var lastFetchTime = page.fetchTime
+        if (lastFetchTime.isAfter(now)) { // fetch time is in the further, updated by schedule
+            lastFetchTime = page.prevFetchTime
+        }
+        return lastFetchTime
+    }
+
     fun getContentAsBytes(): ByteArray {
         val content = page.content ?: return ByteUtils.toBytes('\u0000')
         return ByteUtils.toBytes(content)
@@ -103,8 +129,8 @@ class KWebPageExt(
     }
 
     fun sniffModifiedTime(): Instant {
-        var modifiedTime = page.getModifiedTime()
-        val headerModifiedTime = page.getHeaders().lastModified
+        var modifiedTime = page.modifiedTime
+        val headerModifiedTime = page.protocalHeaders.lastModified
         if (isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
             modifiedTime = headerModifiedTime
         }

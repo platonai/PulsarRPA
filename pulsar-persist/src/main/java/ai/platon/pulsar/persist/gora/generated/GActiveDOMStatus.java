@@ -5,9 +5,9 @@
  */
 package ai.platon.pulsar.persist.gora.generated;  
 
-public class GActiveDomStatus extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GActiveDomStatus\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
-  private static final long serialVersionUID = -3181668319575479292L;
+public class GActiveDOMStatus extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
+  private static final long serialVersionUID = 570553228940337791L;
   /** Enum containing all data bean's fields. */
   public static enum Field {
     N(0, "n"),
@@ -67,7 +67,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
    * @return int field count
    */
   public int getFieldsCount() {
-    return GActiveDomStatus._ALL_FIELDS.length;
+    return GActiveDOMStatus._ALL_FIELDS.length;
   }
 
   private int n;
@@ -248,19 +248,19 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     return isDirty(5);
   }
 
-  /** Creates a new GActiveDomStatus RecordBuilder */
-  public static ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder newBuilder() {
-    return new ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder();
+  /** Creates a new GActiveDOMStatus RecordBuilder */
+  public static ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder newBuilder() {
+    return new ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder();
   }
   
-  /** Creates a new GActiveDomStatus RecordBuilder by copying an existing Builder */
-  public static ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder other) {
-    return new ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder(other);
+  /** Creates a new GActiveDOMStatus RecordBuilder by copying an existing Builder */
+  public static ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder other) {
+    return new ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder(other);
   }
   
-  /** Creates a new GActiveDomStatus RecordBuilder by copying an existing GActiveDomStatus instance */
-  public static ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus other) {
-    return new ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder(other);
+  /** Creates a new GActiveDOMStatus RecordBuilder by copying an existing GActiveDOMStatus instance */
+  public static ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus other) {
+    return new ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder(other);
   }
   
   private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
@@ -287,10 +287,10 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
   }
   
   /**
-   * RecordBuilder for GActiveDomStatus instances.
+   * RecordBuilder for GActiveDOMStatus instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<GActiveDomStatus>
-    implements org.apache.avro.data.RecordBuilder<GActiveDomStatus> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<GActiveDOMStatus>
+    implements org.apache.avro.data.RecordBuilder<GActiveDOMStatus> {
 
     private int n;
     private int scroll;
@@ -301,17 +301,17 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
 
     /** Creates a new Builder */
     private Builder() {
-      super(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.SCHEMA$);
+      super(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder other) {
+    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder other) {
       super(other);
     }
     
-    /** Creates a Builder by copying an existing GActiveDomStatus instance */
-    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus other) {
-            super(ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.SCHEMA$);
+    /** Creates a Builder by copying an existing GActiveDOMStatus instance */
+    private Builder(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus other) {
+            super(ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.SCHEMA$);
       if (isValidValue(fields()[0], other.n)) {
         this.n = (java.lang.Integer) data().deepCopy(fields()[0].schema(), other.n);
         fieldSetFlags()[0] = true;
@@ -344,7 +344,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Sets the value of the 'n' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder setN(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder setN(int value) {
       validate(fields()[0], value);
       this.n = value;
       fieldSetFlags()[0] = true;
@@ -357,7 +357,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Clears the value of the 'n' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder clearN() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder clearN() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -368,7 +368,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Sets the value of the 'scroll' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder setScroll(int value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder setScroll(int value) {
       validate(fields()[1], value);
       this.scroll = value;
       fieldSetFlags()[1] = true;
@@ -381,7 +381,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Clears the value of the 'scroll' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder clearScroll() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder clearScroll() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -392,7 +392,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Sets the value of the 'st' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder setSt(java.lang.CharSequence value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder setSt(java.lang.CharSequence value) {
       validate(fields()[2], value);
       this.st = value;
       fieldSetFlags()[2] = true;
@@ -405,7 +405,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Clears the value of the 'st' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder clearSt() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder clearSt() {
       st = null;
       fieldSetFlags()[2] = false;
       return this;
@@ -417,7 +417,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Sets the value of the 'r' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder setR(java.lang.CharSequence value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder setR(java.lang.CharSequence value) {
       validate(fields()[3], value);
       this.r = value;
       fieldSetFlags()[3] = true;
@@ -430,7 +430,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Clears the value of the 'r' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder clearR() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder clearR() {
       r = null;
       fieldSetFlags()[3] = false;
       return this;
@@ -442,7 +442,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Sets the value of the 'idl' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder setIdl(java.lang.CharSequence value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder setIdl(java.lang.CharSequence value) {
       validate(fields()[4], value);
       this.idl = value;
       fieldSetFlags()[4] = true;
@@ -455,7 +455,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Clears the value of the 'idl' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder clearIdl() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder clearIdl() {
       idl = null;
       fieldSetFlags()[4] = false;
       return this;
@@ -467,7 +467,7 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Sets the value of the 'ec' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder setEc(java.lang.CharSequence value) {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder setEc(java.lang.CharSequence value) {
       validate(fields()[5], value);
       this.ec = value;
       fieldSetFlags()[5] = true;
@@ -480,16 +480,16 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
     
     /** Clears the value of the 'ec' field */
-    public ai.platon.pulsar.persist.gora.generated.GActiveDomStatus.Builder clearEc() {
+    public ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus.Builder clearEc() {
       ec = null;
       fieldSetFlags()[5] = false;
       return this;
     }
     
     @Override
-    public GActiveDomStatus build() {
+    public GActiveDOMStatus build() {
       try {
-        GActiveDomStatus record = new GActiveDomStatus();
+        GActiveDOMStatus record = new GActiveDOMStatus();
         record.n = fieldSetFlags()[0] ? this.n : (java.lang.Integer) defaultValue(fields()[0]);
         record.scroll = fieldSetFlags()[1] ? this.scroll : (java.lang.Integer) defaultValue(fields()[1]);
         record.st = fieldSetFlags()[2] ? this.st : (java.lang.CharSequence) defaultValue(fields()[2]);
@@ -503,17 +503,17 @@ public class GActiveDomStatus extends org.apache.gora.persistency.impl.Persisten
     }
   }
   
-  public GActiveDomStatus.Tombstone getTombstone(){
+  public GActiveDOMStatus.Tombstone getTombstone(){
   	return TOMBSTONE;
   }
 
-  public GActiveDomStatus newInstance(){
+  public GActiveDOMStatus newInstance(){
     return newBuilder().build();
   }
 
   private static final Tombstone TOMBSTONE = new Tombstone();
   
-  public static final class Tombstone extends GActiveDomStatus implements org.apache.gora.persistency.Tombstone {
+  public static final class Tombstone extends GActiveDOMStatus implements org.apache.gora.persistency.Tombstone {
   
       private Tombstone() { }
   

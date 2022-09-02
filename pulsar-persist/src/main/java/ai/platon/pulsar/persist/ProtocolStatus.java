@@ -307,7 +307,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         String str = minorName + "(" + getMinorCode() + ")";
         if (!getArgs().isEmpty()) {
             String args = getArgs().entrySet().stream()
-                    .map(e -> e.getKey().toString() + ": " + e.getValue().toString())
+                    .map(e -> e.getKey() + ": " + e.getValue())
                     .collect(Collectors.joining(", "));
             str += " " + args;
         }

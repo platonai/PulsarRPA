@@ -116,7 +116,6 @@ class WebPageFormatter(val page: WebPage) {
         fields["prevModifiedTime"] = format(page.prevModifiedTime)
         fields["modifiedTime"] = format(page.modifiedTime)
         fields["baseUrl"] = page.location
-        fields["reprUrl"] = page.reprUrl
         fields["batchId"] = page.batchId
         /* Parse */fields["parseStatus"] = page.parseStatus.name
         fields["parseStatusMessage"] = page.parseStatus.toString()
@@ -225,20 +224,18 @@ class WebPageFormatter(val page: WebPage) {
                 .append("contentScore:\t" + page.contentScore + "\n")
                 .append("score:\t" + page.score + "\n")
                 .append("cash:\t" + page.cash + "\n")
-        if (page.reprUrl.isNotBlank()) {
-            sb.append("\n\n").append("reprUrl:\t" + page.reprUrl + "\n")
-        }
+
         val crawlMarks = page.marks
-        if (!crawlMarks.unbox().isEmpty()) {
+        if (crawlMarks.unbox().isNotEmpty()) {
             sb.append("\n")
             crawlMarks.unbox().forEach { (key, value) -> sb.append("mark $key:\t$value\n") }
         }
-        if (!page.pageCounters.unbox().isEmpty()) {
+        if (page.pageCounters.unbox().isNotEmpty()) {
             sb.append("\n")
             page.pageCounters.unbox().forEach { (key, value) -> sb.append("counter $key : $value\n") }
         }
         val metadata = page.metadata.asStringMap()
-        if (!metadata.isEmpty()) {
+        if (metadata.isNotEmpty()) {
             sb.append("\n")
             metadata.entries.stream().filter { it.value.startsWith("meta_") }
                     .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
@@ -246,7 +243,7 @@ class WebPageFormatter(val page: WebPage) {
                     .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
         }
         val headers = page.headers.unbox()
-        if (headers != null && !headers.isEmpty()) {
+        if (headers != null && headers.isNotEmpty()) {
             sb.append("\n")
             headers.forEach { (key, value) -> sb.append("header $key:\t$value\n") }
         }

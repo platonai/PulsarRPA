@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.model.ActiveDomStat
+import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.DecimalFormat
@@ -66,13 +66,13 @@ class LoadStatusFormatter(
     private val href get() = page.href
     private val location get() = page.location
     private val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
-    private val proxy get() = page.metadata[Name.PROXY]
-    private val activeDomStats = page.activeDomStats
+    private val proxy get() = page.proxy
+    private val activeDOMStatTrace = page.activeDOMStatTrace
     private val m get() = page.pageModel
 
     private val jsSate: String
         get() {
-            val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
+            val (ni, na, nnm, nst, w, h) = activeDOMStatTrace["lastStat"]?: ActiveDOMStat()
             val divisor = if (page.id < verboseCount) 10 else verboseCount
             val prefix = if (page.id % divisor == 0) {
                 "i/a/nm/st/h:"
@@ -156,10 +156,10 @@ class LoadStatusFormatter(
     }
 
     private fun buildContentBytes(): String {
-        var contentBytes = if (page.lastContentBytes == 0L || page.lastContentBytes == page.contentLength) {
+        var contentBytes = if (page.lastContentLength == 0L || page.lastContentLength == page.contentLength) {
             readableBytes(page.contentLength).trim()
         } else {
-            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentBytes).trim()
+            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentLength).trim()
         }
 
         if (page.content == null) {

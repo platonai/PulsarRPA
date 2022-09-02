@@ -1,16 +1,21 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.persist.metadata.Name
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class WebPageExt(private val page: WebPage) {
+
+    fun increaseDistance(newDistance: Int) {
+        val oldDistance: Int = page.distance
+        if (newDistance < oldDistance) {
+            page.distance = newDistance
+        }
+    }
+
     fun sniffTitle(): String {
         var title = page.contentTitle
         if (title.isEmpty()) {
@@ -40,7 +45,6 @@ class WebPageExt(private val page: WebPage) {
      * we push newly discovered links to the queue, if the queue is full, we drop out some old ones,
      * usually they do not appears in the page any more.
      *
-     *
      * TODO: compress links
      * TODO: HBase seems not modify any nested array
      *
@@ -53,12 +57,14 @@ class WebPageExt(private val page: WebPage) {
         if (links.size > AppConstants.MAX_LINK_PER_PAGE) {
             links = links.subList(links.size - AppConstants.MAX_LINK_PER_PAGE / 3, links.size)
         }
+
         for (l in hypeLinks) {
             val url = WebPage.u8(l.url)
             if (!links.contains(url)) {
                 links.add(url)
             }
         }
+
         page.links = links
         page.impreciseLinkCount = links.size
     }
@@ -70,6 +76,7 @@ class WebPageExt(private val page: WebPage) {
         if (links.size > AppConstants.MAX_LINK_PER_PAGE) {
             links = links.subList(links.size - AppConstants.MAX_LINK_PER_PAGE / 3, links.size)
         }
+
         for (link in hypeLinks) {
             val url = WebPage.u8(link.toString())
             // Use a set?
@@ -77,6 +84,7 @@ class WebPageExt(private val page: WebPage) {
                 links.add(url)
             }
         }
+
         page.links = links
         page.impreciseLinkCount = links.size
     }
@@ -85,11 +93,13 @@ class WebPageExt(private val page: WebPage) {
         if (!page.isValidContentModifyTime(newPublishTime)) {
             return false
         }
+
         val lastPublishTime = page.contentPublishTime
         if (newPublishTime.isAfter(lastPublishTime)) {
             page.prevContentPublishTime = lastPublishTime
             page.contentPublishTime = newPublishTime
         }
+
         return true
     }
 

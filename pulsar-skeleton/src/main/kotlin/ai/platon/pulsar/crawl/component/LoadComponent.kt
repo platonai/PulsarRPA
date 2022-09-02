@@ -22,7 +22,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.model.ActiveDomStat
+import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -490,17 +490,17 @@ class LoadComponent(
             return CheckState(FetchState.SCHEDULED, "scheduled")
         }
 
-        if (page.persistContentLength == 0L) {
+        if (page.persistedContentLength == 0) {
             // do not enable this feature by default
             // return CheckState(FetchState.NO_CONTENT, "no content")
         }
 
-        if (page.persistContentLength < options.requireSize) {
+        if (page.persistedContentLength < options.requireSize) {
             return CheckState(FetchState.SMALL_CONTENT, "small content")
         }
 
-        val domStats = page.activeDomStats
-        val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
+        val domStats = page.activeDOMStatTrace
+        val (ni, na) = domStats["lastStat"] ?: ActiveDOMStat()
         if (ni < options.requireImages) {
             return CheckState(FetchState.MISS_FIELD, "miss image")
         }
