@@ -12,10 +12,12 @@ import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
 import java.net.URL
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
+import kotlin.reflect.KClass
 
 /**
  * Main entry point for Pulsar functionality.
@@ -41,6 +43,17 @@ interface PulsarContext: AutoCloseable {
     val crawlPool: UrlPool
 
     val crawlLoops: CrawlLoops
+
+    /**
+     * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
+     * */
+    @Throws(BeansException::class)
+    fun <T : Any> getBean(requiredType: KClass<T>): T
+
+    /**
+     * Get a bean with the specified class, returns null if the bean doesn't exist
+     * */
+    fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T?
 
     fun createSession(): PulsarSession
 

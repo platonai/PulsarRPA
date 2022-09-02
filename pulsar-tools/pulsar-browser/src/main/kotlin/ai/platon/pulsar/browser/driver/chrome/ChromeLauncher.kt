@@ -3,13 +3,16 @@ package ai.platon.pulsar.browser.driver.chrome
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ProcessLauncher
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.Browsers
+import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
+import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
@@ -24,9 +27,9 @@ import java.util.regex.Pattern
  * The chrome launcher
  * */
 class ChromeLauncher(
-    private val userDataDir: Path = BrowserSettings.generateUserDataDir(),
-    private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
-    private val options: LauncherOptions = LauncherOptions()
+    val userDataDir: Path = BrowserSettings.generateUserDataDir(),
+    val options: LauncherOptions = LauncherOptions(),
+    private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry()
 ) : AutoCloseable {
 
     companion object {
@@ -49,7 +52,7 @@ class ChromeLauncher(
         }
 
         val port = launchChromeProcess(chromeBinaryPath, userDataDir, options)
-        return Chrome(port)
+        return ChromeImpl(port)
     }
 
     /**
@@ -119,7 +122,12 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, userDataDir: Path, chromeOptions: ChromeOptions): Int {
-        check(!isAlive) { "Chrome is started already" }
+        if (!AppContext.isActive) {
+            return 0
+        }
+        check(process == null) { "Chrome process has already been started" }
+        check(!isAlive) { "Chrome process has already been started" }
+
         var supervisorProcess = options.supervisorProcess
         if (supervisorProcess != null && Runtimes.locateBinary(supervisorProcess).isEmpty()) {
             logger.warn("Supervisor program {} can not be located", options.supervisorProcess)
@@ -135,12 +143,16 @@ class ChromeLauncher(
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
             process = ProcessLauncher.launch(executable, arguments)
+
             process?.also {
                 Files.createDirectories(userDataDir)
                 val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
+        } catch (e: IllegalStateException) {
+            shutdownHookRegistry.remove(shutdownHookThread)
+            throw ChromeProcessException("Can not launch chrome", e)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)
@@ -282,17 +294,4 @@ class ChromeLauncher(
             require(Files.exists(lock))
         }
     }
-
-    interface ShutdownHookRegistry {
-        fun register(thread: Thread) {
-            Runtime.getRuntime().addShutdownHook(thread)
-        }
-
-        fun remove(thread: Thread) {
-            // TODO: java.lang.IllegalStateException: Shutdown in progress
-            // Runtime.getRuntime().removeShutdownHook(thread)
-        }
-    }
-
-    class RuntimeShutdownHookRegistry : ShutdownHookRegistry
 }

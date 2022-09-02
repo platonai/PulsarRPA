@@ -18,11 +18,11 @@ open class LoginHandler(
     val warnUpUrl: String? = null,
     val activateSelector: String? = null,
     val activateTimeout: Duration = Duration.ofMinutes(3),
-) : AbstractWebDriverHandler() {
+) : AbstractWebPageWebDriverHandler() {
 
     private val logger = getLogger(this)
 
-    override suspend fun invokeDeferred(driver: WebDriver): Any? {
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
         logger.info("Navigating to login page ... | {}", loginUrl)
 
         warnUpUrl?.let {

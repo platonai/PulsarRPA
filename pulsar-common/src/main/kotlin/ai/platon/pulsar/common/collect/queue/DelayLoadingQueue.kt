@@ -55,8 +55,16 @@ open class DelayLoadingQueue(
     override val estimatedExternalSize: Int
         get() = estimateIfExpired().lastEstimatedExternalSize.coerceAtLeast(0)
 
-    fun isExpired(delay: Duration): Boolean {
-        return lastLoadTime + delay < Instant.now()
+    /**
+     * Determines if the given expiration time is less than <code>now</code>.
+     *
+     * @param now the time in used to compare against the expiration time.
+     * @param delay the expiration time
+     * @return <code>true</code> if last load time + <code>delay</code> is &lt; <code>now</code>.
+     *         <code>false</code> otherwise.
+     */
+    fun isExpired(delay: Duration, now: Instant = Instant.now()): Boolean {
+        return lastLoadTime + delay < now
     }
 
     fun expire() {

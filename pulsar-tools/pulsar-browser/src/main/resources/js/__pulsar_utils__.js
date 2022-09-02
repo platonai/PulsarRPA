@@ -1,39 +1,10 @@
 "use strict";
 
-const fineHeight = 4000;
-const fineNumAnchor = 100;
-const fineNumImage = 20;
-
-class MultiStatus {
-    /**
-     * n: check count
-     * scroll: scroll count
-     * idl: idle count
-     * st: document state
-     * r: complete reason
-     * ec: error code
-     * */
-    status =   { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" };
-    initStat = null;
-    lastStat = { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
-    lastD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
-    initD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
-}
-
-class ActiveUrls {
-    URL = document.URL
-    baseURI = document.baseURI
-    location = ""
-    documentURI = document.documentURI
-    referrer = document.referrer
-}
-
-class ActiveDomMessage {
-    multiStatus = new MultiStatus();
-    urls = new ActiveUrls()
-}
-
-let __pulsar_utils__ = function () {};
+let __pulsar_utils__ = function () {
+    this.fineHeight = 4000;
+    this.fineNumAnchor = 100;
+    this.fineNumImage = 20;
+};
 
 /**
  * @param maxRound The maximum round to check ready
@@ -91,7 +62,7 @@ __pulsar_utils__.checkPulsarStatus = function(maxRound = 30, scroll = 3) {
 
 __pulsar_utils__.createPulsarDataIfAbsent = function() {
     if (!document.__pulsar__Data) {
-        let location = "";
+        let location;
         if (window.location instanceof Location) {
             location = window.location.href
         } else {
@@ -110,7 +81,7 @@ __pulsar_utils__.createPulsarDataIfAbsent = function() {
                 URL: document.URL,
                 baseURI: document.baseURI,
                 location: location,
-                documentURI: document.documentURI,
+                documentURI: document.documentURI
             }
         };
     }
@@ -166,7 +137,10 @@ __pulsar_utils__.isActuallyReady = function() {
 
     // The DOM is very good for analysis, no wait for more information
     let stat = multiStatus.lastStat;
-    if (status.n > 20 && stat.h >= fineHeight && stat.na >= fineNumAnchor && stat.ni >= fineNumImage) {
+    if (status.n > 20 && stat.h >= this.fineHeight
+        && stat.na >= this.fineNumAnchor
+        && stat.ni >= this.fineNumImage
+    ) {
         if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
             // DOM changed since last check, store the latest stat and return false to wait for the next check
             ++status.idl;
@@ -334,8 +308,9 @@ __pulsar_utils__.scrollToBottom = function() {
 };
 
 __pulsar_utils__.scrollUp = function() {
-    if (!document || !document.documentElement || !document.body) {
-        return
+    if (!document.__pulsar__Data) {
+        // TODO: this occurs when do performance test, but the reason is not investigated
+        // return false
     }
 
     window.scrollBy(0, -500);
@@ -346,8 +321,9 @@ __pulsar_utils__.scrollToTop = function() {
 };
 
 __pulsar_utils__.scrollDown = function() {
-    if (!document || !document.documentElement || !document.body) {
-        return
+    if (!document.__pulsar__Data) {
+        // TODO: this occurs when do performance test, but the reason is not investigated
+        // return false
     }
 
     window.scrollBy(0, 500);
@@ -355,7 +331,8 @@ __pulsar_utils__.scrollDown = function() {
 
 __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
     if (!document.__pulsar__Data) {
-        return
+        // TODO: this occurs when do performance test, but the reason is not investigated
+        // return false
     }
 
     let status = document.__pulsar__Data.multiStatus.status;
@@ -365,6 +342,23 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
 
     return status.scroll >= scrollCount
 };
+
+/**
+ * Check if a element be visible
+ *
+ * @param  {String} selector
+ * @return boolean
+ */
+__pulsar_utils__.visible = function(selector) {
+    let ele = document.querySelector(selector)
+    if (ele != null) {
+        return false
+    }
+
+    const style = window.getComputedStyle(ele)
+    return (style && style.display !== 'none' &&
+        style.visibility !== 'hidden' && style.opacity !== '0')
+}
 
 /**
  * @param {String} selector The element to scroll to
@@ -390,7 +384,7 @@ __pulsar_utils__.scrollIntoView = function(selector) {
  */
 __pulsar_utils__.click = function(selector) {
     let ele = document.querySelector(selector)
-    if (ele != null) {
+    if (ele instanceof HTMLElement) {
         ele.click()
     }
 }
@@ -398,22 +392,86 @@ __pulsar_utils__.click = function(selector) {
 /**
  * Select the first element and click it
  *
- * @param  {number} n The n-th anchor
+ * @param  {String} selector
+ * @param  {String} pattern
  * @return
  */
-__pulsar_utils__.clickNthAnchor = function(n) {
-    let c = 0;
-    let visitor = function () {};
+__pulsar_utils__.clickMatches = function(selector, pattern) {
+    let elements = document.querySelectorAll(selector)
+    for (let ele of elements) {
+        if (ele instanceof HTMLElement) {
+            let text = ele.textContent
+            if (text.match(pattern)) {
+                ele.scrollIntoView()
+                ele.click()
+            }
+        }
+    }
+}
+
+/**
+ * Select the first element and click it.
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @param  {String} pattern
+ * @return
+ */
+__pulsar_utils__.clickMatches = function(selector, attrName, pattern) {
+    let elements = document.querySelectorAll(selector)
+    for (let ele of elements) {
+        if (ele instanceof HTMLElement) {
+            let attrValue = ele.getAttribute(attrName)
+            if (attrValue.match(pattern)) {
+                ele.scrollIntoView()
+                ele.click()
+                return
+            }
+        }
+    }
+}
+
+/**
+ * Select the first element and click it.
+ *
+ * @param  {number} n The n-th anchor.
+ * @param  {string|null} rootSelector The n-th anchor.
+ * @return {string|null}
+ */
+__pulsar_utils__.clickNthAnchor = function(n, rootSelector) {
+    let rootNode
+    if (!rootSelector) {
+        rootNode = document.body
+    } else {
+        rootNode = document.querySelector(rootSelector)
+    }
+
+    if (!rootNode) {
+        return null
+    }
+
+    let c = 0
+    let href = null
+    let visitor = function () {}
+
     visitor.head = function (node, depth) {
-        if (node.__pulsar_isAnchor()) {
+        if (node instanceof HTMLElement
+            && node.__pulsar_isAnchor()
+            && node.__pulsar_maybeClickable()
+        ) {
             ++c;
             if (c === n) {
+                visitor.stopped = true
+                node.scrollIntoView()
+                href = node.getAttribute("href")
                 node.click()
             }
         }
     };
 
-    new __pulsar_NodeTraversor(visitor).traverse(document.body);
+    new __pulsar_NodeTraversor(visitor).traverse(rootNode)
+
+    return href
 }
 
 /**
@@ -448,10 +506,9 @@ __pulsar_utils__.firstText = function(selector) {
  * Select elements and extract the texts
  *
  * @param  {String} selector
- * @param  {String} attrName
  * @return {Array}
  */
-__pulsar_utils__.allTexts = function(selector, attrName) {
+__pulsar_utils__.allTexts = function(selector) {
     let elements = document.querySelectorAll(selector)
     return elements.map(e => e.textContent)
 };
@@ -670,10 +727,46 @@ __pulsar_utils__.formatDOMRect = function(rect) {
 };
 
 /**
+ * Format a DOMRectList object
+ * @param rectList {DOMRectList}
+ * @return {String}
+ * */
+__pulsar_utils__.formatDOMRectList = function(rectList) {
+    if (!rectList) {
+        return '[]';
+    }
+
+    let r = "["
+    for (let i = 0; i < rectList.length; ++i) {
+        r += "{"
+        r += __pulsar_utils__.formatDOMRect(rectList.item(i))
+        r += "}, "
+    }
+    r += "]"
+
+    return r
+};
+
+/**
  * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
  *
  * @param selector {string} The selector to get the element from.
- * @return {DOMRect|Boolean|null}
+ * @return {String}
+ * */
+__pulsar_utils__.queryClientRects = function(selector) {
+    let ele = document.querySelector(selector);
+    if (!ele) {
+        return null;
+    }
+
+    return __pulsar_utils__.formatDOMRectList(ele.getClientRects())
+};
+
+/**
+ * The result is the smallest rectangle which contains the entire element, including the padding, border and margin.
+ *
+ * @param selector {string} The selector to get the element from.
+ * @return {DOMRect|String|Boolean}
  * */
 __pulsar_utils__.queryClientRect = function(selector) {
     let ele = document.querySelector(selector);
@@ -681,7 +774,7 @@ __pulsar_utils__.queryClientRect = function(selector) {
         return null;
     }
 
-    let rect = this.getClientRect(ele)
+    let rect = ele.__pulsar_getRect()
     return this.formatDOMRect(rect)
 };
 
@@ -922,14 +1015,11 @@ __pulsar_utils__.compute = function() {
 
     __pulsar_utils__.scrollToTop();
 
-    // calling window.stop will suppress onLoadComplete event
+    // calling window.stop will pause all resource loading
     window.stop();
 
     __pulsar_utils__.updatePulsarStat();
     __pulsar_utils__.writePulsarData();
-
-    // do something like a human being
-    // humanize(document.body);
 
     // remove temporary flags
     document.body.__pulsar_forEachElement(ele => {

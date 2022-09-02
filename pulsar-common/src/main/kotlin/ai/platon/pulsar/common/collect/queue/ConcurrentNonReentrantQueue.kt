@@ -33,3 +33,5 @@ open class ConcurrentNonReentrantQueue<E>: AbstractQueue<E>() {
 
     override val size: Int get() = set.size
 }
+
+typealias ConcurrentUniqueQueue<E> = ConcurrentNonReentrantQueue<E>

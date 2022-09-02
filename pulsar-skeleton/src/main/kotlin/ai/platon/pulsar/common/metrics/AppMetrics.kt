@@ -164,8 +164,8 @@ class AppMetrics(
             .filter(MetricFilters.notContains(SHADOW_METRIC_SYMBOL))
             .build(pickled)
     }
-    private val hourlyTimer = java.util.Timer("metric-hourly", true)
-    private val dailyTimer = java.util.Timer("metric-daily", true)
+    private val hourlyTimer = java.util.Timer("MetricHourly", true)
+    private val dailyTimer = java.util.Timer("MetricDaily", true)
 
     private val closed = AtomicBoolean()
 

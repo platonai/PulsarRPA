@@ -6,12 +6,13 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.*
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
-import ai.platon.pulsar.protocol.browser.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -29,9 +30,9 @@ import kotlin.concurrent.withLock
 import kotlin.random.Random
 
 class WebDriverContext(
-        val browserId: BrowserInstanceId,
+        val browserId: BrowserId,
         private val driverPoolManager: WebDriverPoolManager,
-        private val conf: ImmutableConfig
+        private val unmodifiedConfig: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
@@ -46,28 +47,27 @@ class WebDriverContext(
         }
     }
 
-    private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
+    private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
-    private val isShutdown = AtomicBoolean()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             numGlobalRunningTasks.incrementAndGet()
-            driverPoolManager.run(browserId, task.priority, task.volatileConfig) {
+            driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
             }?:FetchResult.crawlRetry(task)
         } catch (e: WebDriverPoolExhaustedException) {
-            log.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task, Duration.ofSeconds(20))
         } catch (e: WebDriverPoolException) {
-            log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } catch (e: WebDriverException) {
-            log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } finally {
             runningTasks.remove(task)
@@ -79,63 +79,73 @@ class WebDriverContext(
             }
 
             if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
-                log.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
+                logger.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
             }
         }
-    }
-
-    fun shutdown() {
-        isShutdown.set(true)
-        close()
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                doClose()
-            } catch (t: Throwable) {
-                log.error("Unexpected exception", t)
-            }
+            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.stringify("[Unexpected][Ignored]")) }
         }
     }
 
     private fun doClose() {
-        // close underlying IO based modules asynchronously
-        closeUnderlyingLayer()
-
-        if (!isShutdown.get()) {
-            waitUntilNoRunningTasks()
+        // not shutdown
+        if (AppContext.isActive) {
+            waitUntilAllDoneNormally(Duration.ofMinutes(3))
         }
 
+        // close underlying IO based modules asynchronously
+        cancelAllAndCloseUnderlyingLayer()
+
+        waitUntilNoRunningTasks(Duration.ofSeconds(20))
+
         if (runningTasks.isNotEmpty()) {
-            log.info("Still {} running tasks after context close | {}",
+            logger.info("Still {} running tasks after context close | {}",
                     runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
         } else {
-            log.info("Web driver context is closed successfully | {}", browserId)
+            logger.info("Web driver context is closed successfully | {}", browserId)
         }
     }
 
-    private fun closeUnderlyingLayer() {
+    private fun cancelAllAndCloseUnderlyingLayer() {
         // Mark all working tasks are canceled, so they return as soon as possible,
         // the ready tasks are blocked to wait for driverManager.reset() finish
         // TODO: why the canceled tasks do not return in time?
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
+        driverPoolManager.cancelAll()
         driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
-    private fun waitUntilNoRunningTasks() {
-        lock.withLock { notBusy.await(20, TimeUnit.SECONDS) }
+    private fun waitUntilAllDoneNormally(timeout: Duration) {
+        waitUntilIdle(timeout)
+    }
+
+    private fun waitUntilNoRunningTasks(timeout: Duration) {
+        waitUntilIdle(timeout)
+    }
+
+    private fun waitUntilIdle(timeout: Duration) {
+        try {
+            lock.lockInterruptibly()
+            notBusy.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        } finally {
+            lock.unlock()
+        }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.crawlRetry(task)
+            return FetchResult.canceled(task)
         }
 
         if (driverPoolManager.isRetiredPool(browserId)) {
-            return FetchResult.crawlRetry(task)
+            return FetchResult.canceled(task)
         }
 
         return null
@@ -174,6 +184,7 @@ class ProxyContext(
 
             if (proxy != null) {
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
+
                 val proxyEntry0 = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.contextDir) { proxy }
                 proxyEntry0.startWork()
                 return ProxyContext(proxyEntry0, proxyPoolManager, driverContext, conf)
@@ -241,7 +252,7 @@ class ProxyContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.privacyRetry(task)
+            return FetchResult.canceled(task)
         }
 
         checkProxyAbsence()

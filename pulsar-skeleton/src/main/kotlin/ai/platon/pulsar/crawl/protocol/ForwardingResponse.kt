@@ -48,6 +48,8 @@ open class ForwardingResponse(
     companion object {
         fun unfetched(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
         fun unchanged(page: WebPage) = ForwardingResponse(page.protocolStatus, page)
+
+        // TODO: define the difference between a canceled task and a retry task
         fun canceled(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
 
         fun retry(page: WebPage, retryScope: RetryScope) = ForwardingResponse(retryScope, page)

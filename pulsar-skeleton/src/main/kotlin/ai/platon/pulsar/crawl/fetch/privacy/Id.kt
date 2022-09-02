@@ -59,6 +59,7 @@ data class PrivacyContextId(
 
 /**
  * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
+ * TODO: rename to BrowserId
  * */
 data class BrowserInstanceId constructor(
     val contextDir: Path,
@@ -75,13 +76,13 @@ data class BrowserInstanceId constructor(
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     override fun equals(other: Any?): Boolean {
-        return other is PrivacyContextId
+        return other is BrowserInstanceId
                 && other.contextDir == contextDir
-                && other.fingerprint.browserType.toString() == fingerprint.browserType.toString()
+                && other.fingerprint.toString() == fingerprint.toString()
     }
 
     override fun hashCode(): Int {
-        return 31 * contextDir.hashCode() + fingerprint.browserType.toString().hashCode()
+        return 31 * contextDir.hashCode() + fingerprint.toString().hashCode()
     }
 
     override fun compareTo(other: BrowserInstanceId): Int {
@@ -89,13 +90,19 @@ data class BrowserInstanceId constructor(
         if (r != 0) {
             return r
         }
-        return fingerprint.browserType.toString().compareTo(other.fingerprint.browserType.toString())
+        return fingerprint.toString().compareTo(other.fingerprint.toString())
+    }
+
+    override fun toString(): String {
+        return "{$fingerprint | $contextDir}"
     }
 
     companion object {
         val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
     }
 }
+
+typealias BrowserId = BrowserInstanceId
 
 interface PrivacyContextIdGenerator {
     operator fun invoke(fingerprint: Fingerprint): PrivacyContextId

@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by vincent on 16-9-14.
- *
- * General parser, Css selector, XPath selector, Regex and Scent selectors are supported
  */
 class JsoupParser(
         private val page: WebPage,
@@ -41,7 +39,7 @@ class JsoupParser(
 
         try {
             document = FeaturedDocument(Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseUrl))
-            setMetaInfos(page, document)
+            updateMetaInfos(page, document)
             return document
         } catch (e: IOException) {
             LOG.warn("Failed to parse page {}", page.url)
@@ -53,16 +51,17 @@ class JsoupParser(
         return document
     }
 
-    private fun setMetaInfos(page: WebPage, document: FeaturedDocument) {
-        // TODO: use a json variable
-        val metadata = document.document.selectFirstOrNull("#${AppConstants.PULSAR_META_INFORMATION_ID}") ?: return
+    private fun updateMetaInfos(page: WebPage, document: FeaturedDocument) {
+        // TODO: a json variable might be better
+        val selector = "#${AppConstants.PULSAR_META_INFORMATION_ID}"
+        val metadata = document.document.selectFirstOrNull(selector) ?: return
 
         page.href?.takeIf { UrlUtils.isValidUrl(it) }?.let { metadata.attr("href", it) }
         page.referrer.takeIf { UrlUtils.isValidUrl(it) }?.let { metadata.attr("referer", it) }
 
         val options = page.options
 
-        // The normalizedUrl
+        // normUrl is deprecated, use normalizedUrl instead
         metadata.attr("normUrl", page.url)
         metadata.attr("normalizedUrl", page.url)
         metadata.attr("label", options.label)

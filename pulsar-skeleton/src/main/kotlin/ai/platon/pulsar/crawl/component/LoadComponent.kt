@@ -239,7 +239,6 @@ class LoadComponent(
     private fun createPageShell(normUrl: NormUrl): WebPage {
         val cachedPage = getCachedPageOrNull(normUrl)
         var page = FetchEntry.createPageShell(normUrl)
-//        FetchEntry.initWebPage(page, normUrl.options, normUrl.hrefSpec)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -308,6 +307,7 @@ class LoadComponent(
 
     private fun afterLoad(page: WebPage, normUrl: NormUrl) {
         val options = normUrl.options
+        val status = page.protocolStatus
 
         // handle page content
         if (!page.isCached) {
@@ -326,7 +326,8 @@ class LoadComponent(
             report(page)
         }
 
-        // we might use the cached page's content in parse phrase
+        // We might use the cached page's content in parse phrase
+        // TODO: what if is canceled
         if (options.parse) {
             parse(page, normUrl.options)
         }
@@ -334,11 +335,11 @@ class LoadComponent(
         try {
             // we might use the cached page's content in after load handler
             if (normUrl.detail is CompletableHyperlink<*>) {
-                require(page.loadEventHandler?.onAfterLoad?.isNotEmpty == true) {
-                    "A completable hyperlink must have a onAfterLoad handler"
+                require(page.loadEventHandler?.onLoaded?.isNotEmpty == true) {
+                    "A completable hyperlink must have a onLoaded handler"
                 }
             }
-            page.loadEventHandler?.onAfterLoad?.invoke(page)
+            page.loadEventHandler?.onLoaded?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
         }
@@ -346,8 +347,7 @@ class LoadComponent(
         // persist if it's not loaded from the cache so it's not updated
         // we might persist only when it's fetched
         // TODO: do not persist content if it's not changed, we can add a contentPage inside a WebPage
-        // TODO: do not we persist if it's loaded from cache or no fields change
-        if (!page.isCached && !options.readonly && options.persist) {
+        if (!page.isCached && !status.isCanceled && !options.readonly && options.persist) {
             persist(page, options)
         }
     }
@@ -384,8 +384,8 @@ class LoadComponent(
     }
 
     private fun report(page: WebPage) {
-        if (logger.isInfoEnabled) {
-            val verbose = logger.isDebugEnabled
+        if (taskLogger.isInfoEnabled) {
+            val verbose = taskLogger.isDebugEnabled
             val report = LoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
             taskLogger.info(report)
         }

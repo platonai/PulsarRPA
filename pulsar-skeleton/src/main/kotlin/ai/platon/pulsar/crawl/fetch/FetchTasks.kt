@@ -12,6 +12,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.CapabilityTypes
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -62,7 +63,6 @@ class FetchTask constructor(
         val batchId: Int,
         val priority: Int,
         val page: WebPage,
-        val volatileConfig: VolatileConfig,
         val fingerprint: Fingerprint,
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
@@ -79,13 +79,14 @@ class FetchTask constructor(
 
     val url get() = page.url
     val href get() = page.href
+    val volatileConfig get() = page.conf
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING
 
     // A task is ready when it about to enter a privacy context
     fun markReady() = state.set(State.READY)
-    // A task is working when it enters the the web driver
+    // A task is working when it enters the web driver
     fun startWork() = state.set(State.WORKING)
     fun cancel() = state.set(State.CANCELED)
     // A task is done if it exits in a privacy context
@@ -104,7 +105,6 @@ class FetchTask constructor(
             batchSize = batchSize,
             priority = priority,
             page = page,
-            volatileConfig = volatileConfig,
             fingerprint = fingerprint,
             nRetries = nRetries
         )
@@ -120,8 +120,24 @@ class FetchTask constructor(
 
     companion object {
         val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.PULSAR_CHROME)
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, DEFAULT_FINGERPRINT, id = 0)
+        val NIL = FetchTask(0, 0, WebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
+
+        fun create(url: String, conf: VolatileConfig): FetchTask {
+            val page = WebPage.newWebPage(url, conf)
+            val priority = conf.getUint(CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY, 0)
+            val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
+            val fingerprint = Fingerprint(browserType)
+            return FetchTask(0, priority, page, fingerprint = fingerprint)
+        }
+
+        fun create(page: WebPage): FetchTask {
+            val conf = page.conf
+            val priority = conf.getUint(CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY, 0)
+            val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
+            val fingerprint = Fingerprint(browserType)
+            return FetchTask(0, priority, page, fingerprint = fingerprint)
+        }
     }
 }
 

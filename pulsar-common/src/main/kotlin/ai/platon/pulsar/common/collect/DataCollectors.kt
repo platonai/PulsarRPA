@@ -30,13 +30,13 @@ open class CombinedDataCollector<E>(
 
     private val logger = getLogger(this)
 
-    override var name: String = "MultiSourceDC"
+    override var name: String = "CombinedDC"
 
     val collectors: Queue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
 
-    private val roundCounter = AtomicInteger()
+    private val _round = AtomicInteger()
 
-    val round get() = roundCounter.get()
+    val round get() = _round.get()
 
     constructor(initCollectors: Iterable<PriorityDataCollector<E>>, priority: Priority13 = Priority13.NORMAL
     ): this(priority) {
@@ -62,7 +62,7 @@ open class CombinedDataCollector<E>(
      * All collectors with the same priority have the same chance to choose
      * */
     override fun collectTo(sink: MutableList<E>): Int {
-        roundCounter.incrementAndGet()
+        _round.incrementAndGet()
         return kotlin.runCatching { collectTo0(sink) }
             .onFailure { logger.warn(it.stringify()) }
             .getOrDefault(0)

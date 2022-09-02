@@ -27,6 +27,23 @@ data class CheckState(
 }
 
 /**
+ * A result with a message
+ * */
+class DescriptiveResult<T>(
+    val value: T?,
+    val message: String = "",
+) {
+    constructor(message: String): this(null, message)
+
+    operator fun component1() = value
+    operator fun component2() = message
+
+    override fun toString(): String {
+        return "{value: $value, message: $message}"
+    }
+}
+
+/**
  * Smaller value, higher priority, keep consistent with PriorityQueue
  *
  * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one

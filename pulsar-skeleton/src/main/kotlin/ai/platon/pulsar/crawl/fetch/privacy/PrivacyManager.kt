@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class PrivacyContextMonitor(
@@ -22,6 +24,8 @@ abstract class PrivacyContextMonitor(
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
+    private val isClosed get() = closed.get()
+
     private val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
 
     open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
@@ -32,6 +36,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
+
+    private val cleaningService = Executors.newScheduledThreadPool(1)
 
     /**
      * Run a task within this privacy manager
@@ -65,10 +71,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             if (activeContexts.containsKey(id)) {
                 activeContexts.remove(id)
                 zombieContexts.add(privacyContext)
+                cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
             }
         }
-
-        privacyContext.close()
     }
 
     override fun close() {
@@ -78,9 +83,23 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
 
-            zombieContexts.toList().parallelStream().forEach {
+            cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
+            closeZombieContexts()
+        }
+    }
+
+    private fun closeZombieContexts() {
+        val pendingContexts = zombieContexts.filter { !it.closed.get() }
+        if (isClosed) {
+            zombieContexts.clear()
+        }
+
+        if (pendingContexts.isNotEmpty()) {
+            pendingContexts.parallelStream().forEach {
                 kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) }
             }
+
+            reportZombieContexts()
         }
     }
 

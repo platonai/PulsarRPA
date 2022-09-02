@@ -36,7 +36,6 @@ fun prependReadableClassName(obj: Any, ident: String, name: String, separator: S
 }
 
 /**
- *
  * Stringify an exception.
  *
  * @param e a Throwable.
@@ -56,7 +55,6 @@ fun stringifyException(e: Throwable, prefix: String = "", postfix: String = ""):
 }
 
 /**
- *
  * simplifyException.
  *
  * @param e a Throwable.
@@ -65,20 +63,15 @@ fun stringifyException(e: Throwable, prefix: String = "", postfix: String = ""):
  * @return The message of the throwable.
  */
 fun simplifyException(e: Throwable, prefix: String = "", postfix: String = ""): String {
-    var message = e.message
-    if (message == null) {
-        message = e.toString()
-    }
+    var message = e.message ?: stringifyException(e)
+    val lines = message.split("\n").filter { it.isNotBlank() }
 
-    val lines = message.split("\n").toTypedArray()
-        .filter { it.isNotBlank() }
-    val n = lines.size
-    message = when (n) {
+    message = when (lines.size) {
         0 -> ""
         1 -> lines[0]
         2 -> lines[0] + "\t" + lines[1]
         else -> lines[0] + "\t" + lines[1] + " ..."
     }
 
-    return prefix + message + postfix
+    return "$prefix$message$postfix"
 }

@@ -20,8 +20,6 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.PageParser
@@ -29,7 +27,6 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -54,9 +51,7 @@ class ParseComponent(
 
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = true): ParseResult {
         beforeParse(page, reparseLinks, noLinkFilter)
-        val result = pageParser.parse(page)
-        afterParse(page, result)
-        return result
+        return pageParser.parse(page).also { afterParse(page, it) }
     }
 
     private fun beforeParse(page: WebPage, reparseLinks: Boolean, noLinkFilter: Boolean) {

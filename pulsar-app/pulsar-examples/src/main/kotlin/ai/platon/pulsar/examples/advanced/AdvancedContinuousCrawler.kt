@@ -24,10 +24,10 @@ fun main() {
             onBeforeFetch.addLast { page ->
 
             }
-            onBeforeBrowserLaunch.addLast {
+            onBeforeBrowserLaunch.addLast { page ->
 
             }
-            onAfterBrowserLaunch.addLast { driver ->
+            onAfterBrowserLaunch.addLast { page, driver ->
 
             }
             onAfterFetch.addLast { page ->

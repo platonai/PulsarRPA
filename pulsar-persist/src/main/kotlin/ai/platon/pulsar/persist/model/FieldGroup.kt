@@ -25,6 +25,9 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
             fieldGroup.parentId = id
         }
 
+    /**
+     * TODO: name is a internal field used by gora, choose another one
+     * */
     var name: String
         get() = fieldGroup.name.toString()
         set(name) {

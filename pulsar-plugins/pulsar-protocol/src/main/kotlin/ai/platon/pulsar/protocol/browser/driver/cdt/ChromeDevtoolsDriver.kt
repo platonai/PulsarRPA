@@ -3,163 +3,154 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
-import ai.platon.pulsar.browser.driver.chrome.util.*
+import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
+import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.protocol.browser.DriverLaunchException
-import ai.platon.pulsar.protocol.browser.driver.NoSuchSessionException
-import ai.platon.pulsar.protocol.browser.driver.WebDriverException
-import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
 import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kklisura.cdt.protocol.types.dom.Rect
 import com.github.kklisura.cdt.protocol.types.network.Cookie
-import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.roundToInt
-import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
-    private val browserSettings: WebDriverSettings,
-    override val browserInstance: ChromeDevtoolsBrowserInstance,
-) : AbstractWebDriver(browserInstance) {
+    private val chromeTab: ChromeTab,
+    private val devTools: RemoteDevTools,
+    private val browserSettings: BrowserSettings,
+    override val browser: ChromeDevtoolsBrowser,
+) : AbstractWebDriver(browser) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
-    override val delayPolicy: (String) -> Long get() = { type ->
-        when (type) {
-            "click" -> 500L + Random.nextInt(1000)
-            "type" -> 50L + Random.nextInt(500)
-            "gap" -> 500L + Random.nextInt(500)
-            else -> 100L + Random.nextInt(500)
-        }
-    }
-
-    val openSequence = 1 + browserInstance.devToolsCount
-    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
+    val openSequence = 1 + browser.drivers.size
+    //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
+    val chromeTabTimeout get() = Duration.ofMinutes(2)
     val userAgent get() = BrowserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
-//    private val preloadJs by lazy { generatePreloadJs() }
+    //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
-    private val toolsConfig = DevToolsConfig()
 
-    private val chromeTab: ChromeTab
-    private val devTools: RemoteDevTools
-    private val _mouse: Mouse
-    private val _keyboard: Keyboard
+    private val pageHandler = PageHandler(devTools, browserSettings)
+    private val screenshot = Screenshot(pageHandler, devTools)
 
     private var isFirstLaunch = openSequence == 1
     private var lastSessionId: String? = null
-    private var navigateUrl = ""
+    private var navigateUrl = chromeTab.url ?: ""
 
-    private val browser get() = devTools.browser
-    private val page get() = devTools.page.takeIf { isActive }
-    private val dom get() = devTools.dom.takeIf { isActive }
-    private val input get() = devTools.input.takeIf { isActive }
-    private val mainFrame get() = page?.frameTree?.frame
-    private val network get() = devTools.network.takeIf { isActive }
-    private val fetch get() = devTools.fetch.takeIf { isActive }
-    private val runtime get() = devTools.runtime.takeIf { isActive }
-    private val emulation get() = devTools.emulation.takeIf { isActive }
-    private val mouse get() = _mouse.takeIf { isActive }
-    private val keyboard get() = _keyboard.takeIf { isActive }
+    private val browserAPI get() = devTools.browser
+    private val pageAPI get() = devTools.page.takeIf { isActive }
+    private val targetAPI get() = devTools.target
+    private val domAPI get() = devTools.dom.takeIf { isActive }
+    private val cssAPI get() = devTools.css.takeIf { isActive }
+    private val inputAPI get() = devTools.input.takeIf { isActive }
+    private val mainFrameAPI get() = pageAPI?.frameTree?.frame
+    private val networkAPI get() = devTools.network.takeIf { isActive }
+    private val fetchAPI get() = devTools.fetch.takeIf { isActive }
+    private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
+    private val emulationAPI get() = devTools.emulation.takeIf { isActive }
+
+    private val mouse get() = pageHandler.mouse.takeIf { isActive }
+    private val keyboard get() = pageHandler.keyboard.takeIf { isActive }
 
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
+
+    private val rpc = RobustRPC(this)
 
     private val enableStartupScript get() = browserSettings.enableStartupScript
     private val enableBlockingReport = false
 
     private val closed = AtomicBoolean()
 
-    val rpcFailures = AtomicInteger()
-    var maxRPCFailures = 5
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
 
     val tabId get() = chromeTab.id
 
+    /**
+     * Expose the underlying implementation, used for development purpose
+     * */
+    val implementation get() = devTools
+
     init {
+        if (userAgent.isNotEmpty()) {
+            emulationAPI?.setUserAgentOverride(userAgent)
+        }
+    }
+
+    override suspend fun addInitScript(script: String) {
         try {
-            // In chrome every tab is a separate process
-            chromeTab = browserInstance.createTab()
-            navigateUrl = chromeTab.url ?: ""
-
-            devTools = browserInstance.createDevTools(chromeTab, toolsConfig)
-            _mouse = Mouse(input!!)
-            _keyboard = Keyboard(input!!)
-
-            if (userAgent.isNotEmpty()) {
-                emulation?.setUserAgentOverride(userAgent)
+            rpc.invokeDeferred("addInitScript") {
+                pageAPI?.enable()
+                pageAPI?.addScriptToEvaluateOnNewDocument(script)
             }
-        } catch (e: ChromeProcessException) {
-            throw DriverLaunchException("Failed to create chrome devtools driver | " + e.message)
-        } catch (e: Exception) {
-            throw DriverLaunchException("Failed to create chrome devtools driver", e)
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "addInitScript")
         }
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
-        val driver = this
         this.navigateEntry = entry
+        navigateHistory.add(entry)
+        browser.onWillNavigate(entry)
 
         try {
-            withIOContext("navigateTo") {
-                driver.takeIf { enableStartupScript }?.getInvaded(entry.url) ?: getNoInvaded(entry.url)
+            rpc.invokeDeferred("navigateTo") {
+                if (enableStartupScript) getInvaded(entry.url) else getNoInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "navigateTo ${entry.url}")
+            rpc.handleRPCException(e, "navigateTo", entry.url)
         }
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders(): Map<String, Any> {
         return mainRequestHeaders
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun mainRequestCookies(): List<Map<String, String>> {
         return mainRequestCookies
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
-        try {
-            return withIOContext("getCookies") {
-                getCookies0()
-            } ?: listOf()
+        return try {
+            rpc.invokeDeferred("getCookies") { getCookies0() } ?: listOf()
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "getCookies")
+            rpc.handleRPCException(e, "getCookies")
+            listOf()
         }
-
-        return listOf()
     }
 
+    @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
-        network?.enable()
-        return network?.cookies?.map { serialize(it) }?: listOf()
+        networkAPI?.enable()
+        return networkAPI?.cookies?.map { serialize(it) }?: listOf()
     }
 
     private fun serialize(cookie: Cookie): Map<String, String> {
@@ -169,21 +160,35 @@ class ChromeDevtoolsDriver(
         return map.filterValues { it != null }.mapValues { it.toString() }
     }
 
+    /** Force the page stop all navigations and releases all resources. */
+    @Throws(WebDriverException::class)
     override suspend fun stop() {
-        if (!isActive) {
-            return
-        }
+        terminate()
+    }
 
-        refreshState()
+    /** Force the page stop all navigations and pending resource fetches. */
+    @Throws(WebDriverException::class)
+    override suspend fun stopLoading() {
         try {
-            navigateEntry.stopped = true
+            rpc.invokeDeferred("stopLoading") {
+                pageAPI?.stopLoading()
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "stopLoading")
+        }
+    }
 
-            if (browserInstance.isGUI) {
+    /** Force the page stop all navigations and releases all resources. */
+    @Throws(WebDriverException::class)
+    override suspend fun terminate() {
+        navigateEntry.stopped = true
+        try {
+            if (browser.isGUI) {
                 // in gui mode, just stop the loading, so we can make a diagnosis
-                page?.stopLoading()
+                pageAPI?.stopLoading()
             } else {
                 // go to about:blank, so the browser stops the previous page and release all resources
-                navigateTo(Chrome.ABOUT_BLANK_PAGE)
+                navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
 
             handleRedirect()
@@ -191,7 +196,9 @@ class ChromeDevtoolsDriver(
             // TODO: it might be better to do this using a scheduled task
             cleanTabs()
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "stop")
+            rpc.handleRPCException(e, "terminate")
+        } catch (e: ChromeDriverException) {
+            logger.info("Terminate exception: {}", e.message)
         }
     }
 
@@ -199,119 +206,116 @@ class ChromeDevtoolsDriver(
      * Evaluate a javascript expression in the browser.
      * The expression should be a single line.
      * */
+    @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
-        if (!refreshState()) return null
-
         try {
-            val evaluate = withIOContext("evaluate") {
-                runtime?.evaluate(browserSettings.nameMangling(expression))
-            }
-
-            val exception = evaluate?.exceptionDetails?.exception
-            if (exception != null) {
-//                logger.warn(exception.value?.toString())
-//                logger.warn(exception.unserializableValue)
-                logger.info(exception.description + "\n>>>$expression<<<")
-            }
-
-            val result = evaluate?.result
-            return result?.value
+            return rpc.invokeDeferred("evaluate") { pageHandler.evaluate(expression) }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "evaluate")
+            rpc.handleRPCException(e, "evaluate")
         }
 
         return null
     }
 
     override val sessionId: String?
+        @Throws(WebDriverException::class)
         get() {
-            if (!refreshState()) return null
-
             lastSessionId = try {
-                if (!isActive) null else mainFrame?.id
+                if (!isActive) null else mainFrameAPI?.id
             } catch (e: ChromeRPCException) {
-                handleRPCException(e, "sessionId")
+                rpc.handleRPCException(e, "sessionId")
                 null
             }
             return lastSessionId
         }
 
+    @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
-        if (!refreshState()) return navigateUrl
-
         navigateUrl = try {
-            return withIOContext("currentUrl") {
-                mainFrame?.url ?: navigateUrl
+            return rpc.invokeDeferred("currentUrl") {
+                mainFrameAPI?.url ?: navigateUrl
             } ?: ""
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "currentUrl")
+            rpc.handleRPCException(e, "currentUrl")
             ""
         }
+
         return navigateUrl
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun exists(selector: String): Boolean {
-        if (!refreshState()) return false
-
         try {
             val nodeId = querySelector(selector)
             return nodeId != null && nodeId > 0
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "exists $selector")
+            rpc.handleRPCException(e, "exists $selector")
         }
-        
+
+        return false
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun visible(selector: String): Boolean {
+        try {
+            return pageHandler.visible(selector)
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "visible $selector")
+        }
+
         return false
     }
 
     /**
      * Wait until [selector] for [timeout] at most
      * */
+    @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
+        val timeoutMillis = timeout.toMillis()
+        val startTime = System.currentTimeMillis()
+        var elapsedTime = 0L
+
         try {
-            if (!refreshState()) return -1L
-
-            val timeoutMillis = timeout.toMillis()
-            val startTime = System.currentTimeMillis()
-            var elapsedTime = 0L
-
             var nodeId = querySelector(selector)
-            while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0)) {
-                gap()
+            while (elapsedTime < timeoutMillis && (nodeId == null || nodeId <= 0) && isActive) {
+                gap("waitForSelector")
                 elapsedTime = System.currentTimeMillis() - startTime
                 nodeId = querySelector(selector)
             }
 
             return timeoutMillis - elapsedTime
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "waitForSelector $selector")
+            rpc.handleRPCException(e, "waitForSelector $selector")
         }
 
         return -1L
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(timeout: Duration): Long {
         try {
-            if (!refreshState()) return -1
-
             val oldUrl = currentUrl()
             var navigated = isNavigated(oldUrl)
             val startTime = System.currentTimeMillis()
             var elapsedTime = 0L
 
             val timeoutMillis = timeout.toMillis()
-            while (elapsedTime < timeoutMillis && !navigated) {
-                gap()
+
+            while (elapsedTime < timeoutMillis && !navigated && isActive) {
+                gap("waitForNavigation")
                 elapsedTime = System.currentTimeMillis() - startTime
                 navigated = isNavigated(oldUrl)
             }
 
             return timeoutMillis - elapsedTime
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "waitForNavigation $timeout")
-            return -1
+            rpc.handleRPCException(e, "waitForNavigation $timeout")
         }
+
+        return -1
     }
 
+    @Throws(WebDriverException::class)
     private suspend fun isNavigated(oldUrl: String): Boolean {
         if (oldUrl != currentUrl()) {
             return true
@@ -320,6 +324,51 @@ class ChromeDevtoolsDriver(
         // TODO: other signals
 
         return false
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        try {
+            rpc.invokeDeferred("mouseWheelDown") {
+                repeat(count) { i ->
+                    if (i > 0) {
+                        if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
+                    }
+
+                    mouse?.wheel(deltaX, deltaY)
+                }
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "mouseWheelDown")
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
+        try {
+            rpc.invokeDeferred("mouseWheelUp") {
+                repeat(count) { i ->
+                    if (i > 0) {
+                        if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
+                    }
+
+                    mouse?.wheel(deltaX, deltaY)
+                }
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "mouseWheelUp")
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun moveMouseTo(x: Double, y: Double) {
+        try {
+            rpc.invokeDeferred("moveMouseTo") {
+                mouse?.move(x, y)
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "moveMouseTo")
+        }
     }
 
     /**
@@ -338,51 +387,143 @@ class ChromeDevtoolsDriver(
      * multiple elements satisfying the `selector`, the first will be clicked
      * @param count - Click count
      */
+    @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         try {
-            val nodeId = scrollIntoViewIfNeeded(selector) ?: return
+            val nodeId = rpc.invokeDeferred("click") {
+                pageHandler.scrollIntoViewIfNeeded(selector)
+            } ?: return
 
             val offset = OffsetD(4.0, 4.0)
 
-            val p = page
-            val d = dom
+            val p = pageAPI
+            val d = domAPI
             if (p != null && d != null) {
-                val point = ClickableDOM(p, d, nodeId, offset).clickablePoint() ?: return
+                val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
 
-                withIOContext("click") {
+                rpc.invokeDeferred("click") {
                     mouse?.click(point.x, point.y, count, delayPolicy("click"))
                 }
 
-                gap()
+                gap("click")
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "click")
+            rpc.handleRPCException(e, "click")
         }
     }
 
-    override suspend fun type(selector: String, text: String) {
-        if (!refreshState()) return
+    @Throws(WebDriverException::class)
+    private suspend fun click(nodeId: Int, count: Int) {
+        val offset = OffsetD(4.0, 4.0)
 
+        val p = pageAPI
+        val d = domAPI
+        if (p != null && d != null) {
+            val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
+            mouse?.click(point.x, point.y, count, delayPolicy("click"))
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
         try {
-            withIOContext("type") {
+            rpc.invokeDeferred("clickMatches") {
+                pageHandler.evaluate("__pulsar_utils__.clickMatches('$selector', '$pattern')")
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "click")
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+        try {
+            rpc.invokeDeferred("clickMatches") {
+                pageHandler.evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "click")
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun type(selector: String, text: String) {
+        try {
+            rpc.invokeDeferred("type") {
                 val nodeId = focusOnSelector(selector)
                 if (nodeId != 0) {
                     keyboard?.type(nodeId, text, delayPolicy("type"))
                 }
             }
 
-            gap()
+            gap("type")
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "type")
+            rpc.handleRPCException(e, "type")
         }
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
         try {
-            scrollIntoViewIfNeeded(selector)
+            rpc.invokeDeferred("scrollTo") {
+                pageHandler.scrollIntoViewIfNeeded(selector)
+            }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "scrollTo")
+            rpc.handleRPCException(e, "scrollTo")
         }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
+        try {
+            val nodeId = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
+                pageHandler.scrollIntoViewIfNeeded(selector)
+            } ?: return
+
+            val offset = OffsetD(4.0, 4.0)
+            val p = pageAPI
+            val d = domAPI
+            if (p != null && d != null) {
+                rpc.invokeDeferred("dragAndDrop") {
+                    val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value
+                    if (point != null) {
+                        val point2 = PointD(point.x + deltaX, point.y + deltaY)
+                        mouse?.dragAndDrop(point, point2, delayPolicy("dragAndDrop"))
+                    }
+                    gap()
+                }
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "dragAndDrop")
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clickablePoint(selector: String): PointD? {
+        try {
+            return rpc.invokeDeferred("clickablePoint") {
+                val nodeId = pageHandler.scrollIntoViewIfNeeded(selector)
+                ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "clickablePoint")
+        }
+
+        return null
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun boundingBox(selector: String): RectD? {
+        try {
+            return rpc.invokeDeferred("boundingBox") {
+                val nodeId = pageHandler.scrollIntoViewIfNeeded(selector)
+                ClickableDOM.create(pageAPI, domAPI, nodeId)?.boundingBox()
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "boundingBox")
+        }
+
+        return null
     }
 
     /**
@@ -390,120 +531,68 @@ class ChromeDevtoolsDriver(
      * {@link page.captureScreenshot} to take a screenshot of the element.
      * If the element is detached from DOM, the method throws an error.
      */
+    @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(selector: String): String? {
-        val nodeId = scrollIntoViewIfNeeded(selector)
-        if (nodeId == null || nodeId <= 0) {
-            logger.info("Can not find node for selector <{}>", selector)
-            return null
-        }
-
-        val vi = firstAttr(selector, "vi") ?: return captureScreenshotWithoutVi(selector)
-
-        val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
-        if (quad.size != 4) {
-            logger.warn("Invalid node vi information for selector <{}>", selector)
-            return null
-        }
-
-        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
-
-        return captureScreenshot(rect)
-    }
-
-    private suspend fun captureScreenshotWithoutVi(selector: String): String? {
-        val nodeClip = calculateNodeClip(selector)
-
-        if (nodeClip == null) {
-            logger.info("Can not calculate node clip | {}", selector)
-            return null
-        }
-
-        val rect = nodeClip.rect
-        if (rect == null) {
-            logger.info("Can not take clip | {}", selector)
-            return null
-        }
-
-        // val clip = normalizeClip(rect)
-
-        return captureScreenshot(rect)
-    }
-
-    override suspend fun captureScreenshot(clip: RectD): String? {
-        val viewport = Viewport().apply {
-            x = clip.x; y = clip.y
-            width = clip.width; height = clip.height
-            scale = 1.0
-        }
-        return captureScreenshot(viewport)
-    }
-
-    suspend fun captureScreenshot(viewport: Viewport): String? {
-        val format = CaptureScreenshotFormat.JPEG
-        val quality = BrowserSettings.screenshotQuality
-
-        try {
-            return withIOContext("captureScreenshot") {
-                page?.captureScreenshot(format, quality, viewport, true, false)
+        return try {
+            rpc.invokeDeferred("captureScreenshot") {
+                // Force the page stop all navigations and pending resource fetches.
+                rpc.invoke("stopLoading") { pageAPI?.stopLoading() }
+                rpc.invoke("captureScreenshot") { screenshot.captureScreenshot(selector) }
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e)
+            rpc.handleRPCException(e, "captureScreenshot")
+            null
         }
-
-        return null
     }
 
-    /**
-     * TODO: This method is not implemented correctly yet.
-     */
-    private suspend fun calculateNodeClip(selector: String): NodeClip? {
-        val nodeId = querySelector(selector)
-        if (nodeId == null || nodeId <= 0) {
-            logger.info("Can not find node | {}", selector)
-            return null
+    @Throws(WebDriverException::class)
+    override suspend fun captureScreenshot(clip: RectD): String? {
+        return try {
+            rpc.invokeDeferred("captureScreenshot") {
+                // Force the page stop all navigations and pending resource fetches.
+                rpc.invoke("stopLoading") { pageAPI?.stopLoading() }
+                rpc.invoke("captureScreenshot") { screenshot.captureScreenshot(clip) }
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "captureScreenshot")
+            null
         }
-
-        evaluate("__pulsar_utils__.scrollToTop()")
-        val clientRect = evaluate("__pulsar_utils__.queryClientRect('$selector')")?.toString()
-        if (clientRect == null) {
-            logger.info("Can not query client rect for selector <{}>", selector)
-            return null
-        }
-
-        val quad = clientRect.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
-        if (quad.size != 4) {
-            return null
-        }
-
-        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
-
-        val p = page ?: return null
-//        val d = dom ?: return null
-
-        val viewport = p.layoutMetrics.cssLayoutViewport
-        val pageX = viewport.pageX
-        val pageY = viewport.pageY
-
-        return NodeClip(nodeId, pageX, pageY, rect)
     }
 
-    private fun normalizeClip(clip: RectD): RectD {
-        val x = clip.x.roundToInt()
-        val y = clip.y.roundToInt()
-        val width = (clip.width + clip.x - x).roundToInt()
-        val height = (clip.height + clip.y - y).roundToInt()
-        return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
-    }
+    @Throws(WebDriverCancellationException::class)
+    internal fun checkState(action: String = ""): Boolean {
+        if (!isActive) {
+            return false
+        }
 
-    private fun refreshState(action: String = ""): Boolean {
-        lastActiveTime = Instant.now()
-        navigateEntry.refresh(action)
+        if (isCanceled) {
+            // is it good to throw here?
+            throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+        }
+
+        if (action.isNotBlank()) {
+            lastActiveTime = Instant.now()
+            navigateEntry.refresh(action)
+        }
+
         return isActive
     }
 
     private suspend fun gap() {
         if (isActive) {
             delay(delayPolicy("gap"))
+        }
+    }
+
+    private suspend fun gap(type: String) {
+        if (isActive) {
+            delay(delayPolicy(type))
+        }
+    }
+
+    private suspend fun gap(millis: Long) {
+        if (isActive) {
+            delay(millis)
         }
     }
 
@@ -519,17 +608,17 @@ class ChromeDevtoolsDriver(
      * matching selector.
      */
     private fun focusOnSelector(selector: String): Int {
-        if (!refreshState()) return 0
+        if (!checkState()) return 0
 
-        val rootId = dom?.document?.nodeId ?: return 0
-        val nodeId = dom?.querySelector(rootId, selector)
+        val rootId = domAPI?.document?.nodeId ?: return 0
+        val nodeId = domAPI?.querySelector(rootId, selector)
         if (nodeId == 0) {
             logger.warn("No node found for selector: $selector")
             return 0
         }
 
         try {
-            dom?.focus(nodeId, rootId, null)
+            domAPI?.focus(nodeId, rootId, null)
         } catch (e: Exception) {
             logger.warn("Failed to focus #$nodeId | {}", e.message)
         }
@@ -537,76 +626,43 @@ class ChromeDevtoolsDriver(
         return nodeId ?: 0
     }
 
+    @Throws(WebDriverException::class)
     private suspend fun querySelector(selector: String): Int? {
-        if (!refreshState()) return null
+        if (!checkState()) return null
 
         try {
-            return withIOContext("querySelector") {
-                val rootId = dom?.document?.nodeId
-                if (rootId != null && rootId != 0) {
-                    dom?.querySelector(rootId, selector)
-                } else null
-            }
+            return rpc.invokeDeferred("querySelector") { pageHandler?.querySelector(selector) }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "querySelector")
+            rpc.handleRPCException(e, "querySelector")
         }
 
         return null
     }
 
-    private suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
-        if (!refreshState()) return null
-
-        val nodeId = querySelector(selector)
-        if (nodeId == null || nodeId == 0) {
-            logger.info("No node found for selector: $selector")
-            return null
-        }
-
-        val node = withIOContext("describeNode") {
-            dom?.describeNode(nodeId, null, null, null, false)
-        }
-        // see org.w3c.dom.Node.ELEMENT_NODE
-        val ELEMENT_NODE = 1
-        if (node?.nodeType != ELEMENT_NODE) {
-            logger.info("Node is not an element: $selector")
-            return null
-        }
-
-        try {
-            withIOContext("scrollIntoViewIfNeeded") {
-                dom?.scrollIntoViewIfNeeded(nodeId, node.backendNodeId, null, rect)
-            }
-        } catch (t: Throwable) {
-            logger.info("Fallback to Element.scrollIntoView | {}", selector)
-            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
-            evaluate("__pulsar_utils__.scrollIntoView('$selector')")
-        }
-
-        return nodeId
-    }
-
+    @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
-        if (!refreshState()) return null
+        if (!checkState()) return null
 
         try {
-            return withIOContext("pageSource") {
-                dom?.getOuterHTML(dom?.document?.nodeId, null, null)
+            return rpc.invokeDeferred("pageSource") {
+                domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null)
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e, "pageSource")
+            rpc.handleRPCException(e, "pageSource")
         }
 
         return null
     }
 
     override suspend fun bringToFront() {
+        if (!checkState()) return
+
         try {
-            withIOContext("bringToFront") {
-                page?.bringToFront()
+            rpc.invokeDeferred("bringToFront") {
+                pageAPI?.bringToFront()
             }
         } catch (e: ChromeRPCException) {
-            handleRPCException(e)
+            rpc.handleRPCException(e)
         }
     }
 
@@ -617,7 +673,10 @@ class ChromeDevtoolsDriver(
      * */
     override fun quit() {
         close()
-        // browserInstanceManager.closeIfPresent(launchOptions.userDataDir)
+    }
+
+    override fun awaitTermination() {
+        devTools.awaitTermination()
     }
 
     /**
@@ -626,64 +685,68 @@ class ChromeDevtoolsDriver(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                browserInstance.closeTab(chromeTab)
+                browser.closeTab(chromeTab)
+            } catch (e: WebDriverException) {
+                // ignored
+            }
+
+            try {
                 devTools.close()
-            } catch (e: ChromeProtocolException) {
+            } catch (e: WebDriverException) {
                 // ignored
             }
         }
     }
 
     private fun getInvaded(url: String) {
-        page?.enable()
-        dom?.enable()
-        runtime?.enable()
-        network?.enable()
+        pageAPI?.enable()
+        domAPI?.enable()
+        runtimeAPI?.enable()
+        networkAPI?.enable()
 
-        page?.addScriptToEvaluateOnNewDocument(preloadJs)
+        pageAPI?.addScriptToEvaluateOnNewDocument(preloadJs)
 
         if (enableUrlBlocking) {
-            network?.enable()
             setupUrlBlocking(url)
         }
 
-        network?.onRequestWillBeSent {
+        networkAPI?.onRequestWillBeSent {
             if (mainRequestId.isBlank()) {
                 mainRequestId = it.requestId
                 mainRequestHeaders = it.request.headers
             }
         }
 
-        network?.onResponseReceived {
+        networkAPI?.onResponseReceived {
 
         }
 
-        page?.onDocumentOpened {
+        pageAPI?.onDocumentOpened {
             mainRequestCookies = getCookies0()
         }
 
         navigateUrl = url
-        page?.navigate(url)
+        pageAPI?.navigate(url)
     }
 
-    @Throws(WebDriverException::class)
     private fun getNoInvaded(url: String) {
-        page?.enable()
+        pageAPI?.enable()
         navigateUrl = url
-        page?.navigate(url)
+        pageAPI?.navigate(url)
     }
 
     private suspend fun handleRedirect() {
         val finalUrl = currentUrl()
         // redirect
         if (finalUrl.isNotBlank() && finalUrl != navigateUrl) {
-            browserInstance.navigateHistory.add(NavigateEntry(finalUrl))
+            browser.onWillNavigate(NavigateEntry(finalUrl))
         }
     }
 
     // close irrelevant tabs, which might be opened for humanization purpose
+    @Throws(ChromeDriverException::class)
     private fun cleanTabs() {
-        val tabs = browserInstance.listTab()
+        val tabs = browser.listTabs()
         closeTimeoutTabs(tabs)
         closeIrrelevantTabs(tabs)
     }
@@ -701,15 +764,15 @@ class ChromeDevtoolsDriver(
 
     private fun closeTabsIfTimeout(tabUrl: String, oldTab: ChromeTab) {
         val now = Instant.now()
-        val entries = browserInstance.navigateHistory.asSequence()
+        val entries = browser.navigateHistory.asSequence()
             .filter { it.url == tabUrl }
             .filter { it.stopped }
-            .filter { it.activeTime + chromeTabTimeout < now }
+            .filter { it.lastActiveTime + chromeTabTimeout < now }
             .toList()
 
         if (entries.isNotEmpty()) {
-            browserInstance.navigateHistory.removeAll(entries)
-            browserInstance.closeTab(oldTab)
+            // browser.navigateHistory.removeAll(entries)
+            browser.closeTab(oldTab)
         }
     }
 
@@ -717,7 +780,7 @@ class ChromeDevtoolsDriver(
         val now = Instant.now()
         val irrelevantTabs = tabs
             .filter { it.url?.matches("about:".toRegex()) == true }
-            .filter { oldTab -> browserInstance.navigateHistory.none { it.url == oldTab.url } }
+            .filter { oldTab -> browser.navigateHistory.none { it.url == oldTab.url } }
         if (irrelevantTabs.isNotEmpty()) {
             // TODO: might close a tab open just now
             // irrelevantTabs.forEach { browserInstance.closeTab(it) }
@@ -735,9 +798,9 @@ class ChromeDevtoolsDriver(
         }
 
         // TODO: case sensitive or not?
-        network?.setBlockedURLs(blockRules.blockingUrls)
+        networkAPI?.setBlockedURLs(blockRules.blockingUrls)
 
-        network?.takeIf { enableBlockingReport }?.onRequestWillBeSent {
+        networkAPI?.takeIf { enableBlockingReport }?.onRequestWillBeSent {
             val requestUrl = it.request.url
             if (blockRules.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
                 return@onRequestWillBeSent
@@ -761,32 +824,12 @@ class ChromeDevtoolsDriver(
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {
-        return withIOContext("isMainFrame") {
-            mainFrame?.id == frameId
+        return rpc.invokeDeferred("isMainFrame") {
+            mainFrameAPI?.id == frameId
         } ?: false
     }
 
-    private fun handleRPCException(e: ChromeRPCException, message: String? = null) {
-        if (rpcFailures.get() > maxRPCFailures) {
-            throw NoSuchSessionException("Too many RPC failures")
-        }
-        logger.warn("Chrome RPC exception | {}", message ?: e.message)
-    }
-
-    private suspend fun <T> withIOContext(action: String, block: suspend CoroutineScope.() -> T): T? {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (!refreshState(action)) {
-                    return@withContext null
-                }
-
-                val result = block()
-                rpcFailures.decrementAndGet()
-                result
-            } catch (e: ChromeRPCException) {
-                rpcFailures.incrementAndGet()
-                throw e
-            }
-        }
+    private fun viewportToRectD(viewport: Viewport): RectD {
+        return RectD(viewport.x, viewport.y, viewport.width, viewport.height)
     }
 }

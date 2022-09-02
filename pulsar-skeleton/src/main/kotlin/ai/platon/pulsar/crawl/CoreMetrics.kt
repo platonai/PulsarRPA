@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.session.AbstractPulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
+import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -25,6 +26,7 @@ import java.net.MalformedURLException
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
@@ -69,7 +71,7 @@ class CoreMetrics(
         }
     }
 
-    private val log = LoggerFactory.getLogger(CoreMetrics::class.java)!!
+    private val logger = LoggerFactory.getLogger(CoreMetrics::class.java)!!
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()
@@ -85,11 +87,11 @@ class CoreMetrics(
     private var maxUrlLength: Int = conf.getInt(PARSE_MAX_URL_LENGTH, 1024)
 
     /**
-     * The start time of the process
+     * The start time of the program process
      */
     val startTime = Instant.now()
     /**
-     * The elapsed time since the process starts
+     * The elapsed time since the program process starts
      */
     val elapsedTime get() = Duration.between(startTime, Instant.now())
 
@@ -123,6 +125,8 @@ class CoreMetrics(
     val tasks = registry.meter(this, "tasks")
     val successTasks = registry.meter(this, "successTasks")
     val finishedTasks = registry.meter(this, "finishedTasks")
+
+    val proxies = registry.meter(this, "proxies")
 
     val persists = registry.multiMetric(this, "persists")
     val contentPersists = registry.multiMetric(this, "contentPersists")
@@ -168,13 +172,18 @@ class CoreMetrics(
     val successTasksPerSecond
         get() = successTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
 
+    var enableReporter = true
+
     private var lastSystemInfoRefreshTime = 0L
     private val closed = AtomicBoolean()
+    private var reportTimer: Timer? = null
 
     init {
-        Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
+        kotlin.runCatching {
+            Files.readAllLines(PATH_UNREACHABLE_HOSTS).toCollection(unreachableHosts)
+        }.onFailure { logger.warn("[Unexpected]", it) }
 
-        params.withLogger(log).info(true)
+        params.withLogger(logger).info(true)
     }
 
     override fun getParams(): Params {
@@ -184,6 +193,12 @@ class CoreMetrics(
             "failedUrls", failedUrls.size,
             "deadUrls", deadUrls.size
         )
+    }
+
+    fun start() {
+        if (enableReporter) {
+            startReporter()
+        }
     }
 
     fun isReachable(url: String) = !isUnreachable(url)
@@ -247,8 +262,6 @@ class CoreMetrics(
             pageHeights.update(h)
         }
 
-        reportStatus()
-
         val urlStats = urlStatistics.computeIfAbsent(host) { UrlStat(it) }
 
         ++urlStats.urls
@@ -295,7 +308,7 @@ class CoreMetrics(
     fun trackHostUnreachable(url: String, occurrences: Int = 1): Boolean {
         val host = URLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
-            log.warn("Malformed url identified as gone | <{}>", url)
+            logger.warn("Malformed url identified as gone | <{}>", url)
             return false
         }
 
@@ -313,7 +326,7 @@ class CoreMetrics(
         // Only the exception occurs for unknownHostEventCount, it's really add to the black list
         if (failures > maxHostFailureEvents) {
             unreachableHosts.add(host)
-            log.info("Host unreachable | {} failures | {}", failures, host)
+            logger.info("Host unreachable | {} failures | {}", failures, host)
             return true
         }
 
@@ -332,12 +345,15 @@ class CoreMetrics(
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
+        val proxyFmt = if (proxies.count > 0) " using %s proxies" else ""
+        var format = "Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
+        // format += " | net recv: %s, %s/s, %s/p | total net recv: %s"
         return String.format(
-            "Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p" +
-                    " | net recv: %s, %s/s, %s/p | total net recv: %s",
+            format,
             count,
             elapsedTime.readable(),
             successTasks.meanRate,
+            proxies.count,
             Strings.readableBytes(bytes),
             Strings.readableBytes(bytes / seconds),
             Strings.readableBytes(bytes / count),
@@ -350,11 +366,16 @@ class CoreMetrics(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            if (tasks.count > 0) {
-                log.info(formatStatus())
+            reportTimer?.cancel()
+            reportTimer = null
 
-                log.info("There are " + unreachableHosts.size + " unreachable hosts")
-                AppFiles.logUnreachableHosts(this.unreachableHosts)
+            if (tasks.count > 0) {
+                logger.info(formatStatus())
+
+                if (unreachableHosts.isNotEmpty()) {
+                    logger.info("There are " + unreachableHosts.size + " unreachable hosts")
+                    AppFiles.logUnreachableHosts(unreachableHosts)
+                }
 
                 logAvailableHosts()
             }
@@ -362,7 +383,7 @@ class CoreMetrics(
     }
 
     fun updateSystemInfo() {
-        kotlin.runCatching { updateSystemInfo0() }.onFailure { log.warn("Unexpected exception", it) }
+        kotlin.runCatching { updateSystemInfo0() }.onFailure { logger.warn("[Unexpected]", it) }
     }
 
     @Throws(Exception::class)
@@ -381,8 +402,16 @@ class CoreMetrics(
         usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
     }
 
+    private fun startReporter() {
+        if (reportTimer == null) {
+            reportTimer = Timer()
+            val delay = Duration.ofMinutes(1)
+            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { reportStatus() }
+        }
+    }
+
     private fun reportStatus() {
-        if (!log.isInfoEnabled) {
+        if (!logger.isInfoEnabled) {
             return
         }
 
@@ -400,8 +429,10 @@ class CoreMetrics(
         }.toInt()
 
         if (i % period == 0L) {
-            log.info(formatStatus())
+            // logger.info(formatStatus())
         }
+
+        logger.info(formatStatus())
     }
 
     private fun logAvailableHosts() {
@@ -426,6 +457,6 @@ class CoreMetrics(
                 )
             }.joinTo(report, "\n") { it }
 
-        log.info(report.toString())
+        logger.info(report.toString())
     }
 }

@@ -18,12 +18,12 @@ fun main() {
     val options = session.options(args)
 
     val eventHandler = options.ensureEventHandler()
-    eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast { driver ->
+    eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast { page, driver ->
         // TODO: rotate accounts
         val username = System.getenv("PULSAR_TAOBAO_USERNAME") ?: "MustFallUsername"
         val password = System.getenv("PULSAR_TAOBAO_PASSWORD") ?: "MustFallPassword"
         val taobaoLoginHandler = TaobaoLoginHandler(username, password, warnUpUrl = urls.first { it.contains("taobao") })
-        taobaoLoginHandler.invoke(driver)
+        taobaoLoginHandler.invoke(page, driver)
 
         // sign in all websites requiring login
     }

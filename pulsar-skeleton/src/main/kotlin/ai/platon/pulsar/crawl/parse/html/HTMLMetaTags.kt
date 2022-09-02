@@ -84,6 +84,10 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
      */
     val httpEquivTags = Properties()
 
+    init {
+        walk(root)
+    }
+
     /**
      * Sets all boolean values to `false`. Clears all other tags.
      */
@@ -100,27 +104,6 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
     }
 
     /**
-     * Sets `noFollow` to `true`.
-     */
-    fun setNoFollow() {
-        noFollow = true
-    }
-
-    /**
-     * Sets `noIndex` to `true`.
-     */
-    fun setNoIndex() {
-        noIndex = true
-    }
-
-    /**
-     * Sets `noCache` to `true`.
-     */
-    fun setNoCache() {
-        noCache = true
-    }
-
-    /**
      * Utility class with indicators for the robots directives "noindex" and
      * "nofollow", and HTTP-EQUIV/no-cache
      */
@@ -129,6 +112,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
             if ("body".equals(node.nodeName, ignoreCase = true)) { // META tags should not be under body
                 return
             }
+
             if ("meta".equals(node.nodeName, ignoreCase = true)) {
                 val attrs = node.attributes
                 var nameNode: Node? = null
@@ -272,9 +256,5 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
             sb.append("   - " + key + "\t=\t" + httpEquivTags[key] + "\n")
         }
         return sb.toString()
-    }
-
-    init {
-        walk(root)
     }
 }

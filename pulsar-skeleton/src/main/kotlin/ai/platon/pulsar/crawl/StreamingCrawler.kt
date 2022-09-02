@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
@@ -25,6 +24,7 @@ import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.session.AbstractPulsarSession
+import ai.platon.pulsar.session.PulsarSession
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
@@ -73,23 +73,19 @@ open class StreamingCrawler<T : UrlAware>(
     /**
      * The default load options
      * */
-    val defaultOptions: LoadOptions,
+    defaultOptions: LoadOptions,
     /**
      * The default pulsar session to use
      * */
     session: PulsarSession = PulsarContexts.createSession(),
     /**
-     * A optional global cache which will hold the retry tasks
+     * An optional global cache which will hold the retry tasks
      * */
     val globalCacheFactory: GlobalCacheFactory? = null,
     /**
      * The crawl event handler
      * */
     val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
-    /**
-     * The crawl name
-     * */
-    val name: String = StreamingCrawler::class.simpleName!!,
     /**
      * Do not use proxy
      * */
@@ -98,9 +94,8 @@ open class StreamingCrawler<T : UrlAware>(
      * Auto close or not
      * */
     autoClose: Boolean = true,
-) : AbstractCrawler(session, autoClose) {
+) : AbstractCrawler(session, defaultOptions, autoClose) {
     companion object {
-        private val instanceSequencer = AtomicInteger()
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
         private val globalKilledTasks = AtomicInteger()
@@ -151,12 +146,10 @@ open class StreamingCrawler<T : UrlAware>(
     private val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
     private val memoryToReserveLarge get() = conf.getDouble(BROWSER_MEMORY_TO_RESERVE_KEY, DEFAULT_BROWSER_RESERVED_MEMORY)
     private val memoryToReserve = when {
-        totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 2 GiB
+        totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 3 GiB
         totalMemoryGiB >= 30 -> memoryToReserveLarge
         else -> BROWSER_TAB_REQUIRED_MEMORY
     }
-
-    val defaultArgs = defaultOptions.toString()
 
     private val abstractSession get() = session as AbstractPulsarSession
     private val proxyPool: ProxyPool? = if (noProxy) null else abstractSession.context.getBeanOrNull()
@@ -168,10 +161,6 @@ open class StreamingCrawler<T : UrlAware>(
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isOutOfWork get() = idleTime > outOfWorkTimeout
-
-    var delayPolicy: (Int) -> Duration = { nextRetryNumber ->
-        Duration.ofMinutes(1L + 2 * nextRetryNumber)
-    }
 
     private val enableSmartRetry get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
     private val isIdle: Boolean
@@ -189,8 +178,6 @@ open class StreamingCrawler<T : UrlAware>(
     private var flowState = FlowState.CONTINUE
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
-
-    val id = instanceSequencer.incrementAndGet()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() },
@@ -259,7 +246,7 @@ open class StreamingCrawler<T : UrlAware>(
                     globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
                 )
 
-                // The largest disk must have at least 10GiB remaining space
+                // The largest disk must have at least 10 GiB remaining space
                 val freeSpace = AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
                 if (freeSpace < 10.0) {
                     logger.error("Disk space is full!")
@@ -325,12 +312,10 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
 
-        while (isActive && globalRunningTasks.get() > fetchConcurrency) {
+        while (isActive && globalRunningTasks.get() >= fetchConcurrency) {
             if (j % 120 == 0) {
-                logger.info(
-                    "$j. Long time to run $globalRunningTasks tasks" +
-                            " | $lastActiveTime -> {}", idleTime.readable()
-                )
+                logger.info("$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
+                    idleTime.readable())
             }
             delay(1000)
         }
@@ -345,21 +330,21 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
-        if (contextLeaksRate >= 5 / 60f) {
+        if (isActive && contextLeaksRate >= 5 / 60f) {
             criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
             handleContextLeaks()
         }
 
-        if (wrongDistrict.hourlyCounter.count > 60) {
+        if (isActive && wrongDistrict.hourlyCounter.count > 60) {
             handleWrongDistrict()
         }
 
-        if (proxyOutOfService > 0) {
+        if (isActive && proxyOutOfService > 0) {
             criticalWarning = CriticalWarning.NO_PROXY
             handleProxyOutOfService()
         }
 
-        if (FileCommand.check("finish-job")) {
+        if (isActive && FileCommand.check("finish-job")) {
             logger.info("Find finish-job command, quit streaming crawler ...")
             flowState = FlowState.BREAK
             return flowState
@@ -374,15 +359,16 @@ open class StreamingCrawler<T : UrlAware>(
 
         val context = Dispatchers.Default + CoroutineName("w")
         val urlSpec = UrlUtils.splitUrlArgs(url.url).first
+        val isAppActive = isActive
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
+            if (!isAppActive) {
+                return@launch
+            }
+
             try {
                 globalMetrics.tasks.mark()
-                // TODO: temporary solution
-                if (AmazonDiagnosis.isAmazon(urlSpec)) {
-                    AmazonMetrics.tasks.mark(urlSpec)
-                }
                 runUrlTask(url)
             } finally {
                 lastActiveTime = Instant.now()
@@ -391,10 +377,6 @@ open class StreamingCrawler<T : UrlAware>(
                 globalRunningTasks.decrementAndGet()
 
                 globalMetrics.finishes.mark()
-                // TODO: temporary solution
-                if (AmazonDiagnosis.isAmazon(urlSpec)) {
-                    AmazonMetrics.finishes.mark(urlSpec)
-                }
             }
         }
 
@@ -405,30 +387,30 @@ open class StreamingCrawler<T : UrlAware>(
         if (url is ListenableUrl && url is DegenerateUrl) {
             // The url is degenerated, which means it's not a resource in the network to fetch.
             val eventHandler = url.eventHandler.crawlEventHandler
-            eventHandler.onBeforeLoad(url)
-            eventHandler.onLoad(url)
-            eventHandler.onAfterLoad(url, WebPage.NIL)
+            runSafely("onWillLoad") { eventHandler.onWillLoad(url) }
+            runSafely("onLoad") { eventHandler.onLoad(url) }
+            runSafely("onLoaded") { eventHandler.onLoaded(url, WebPage.NIL) }
         } else {
-            val normalizedUrl = beforeUrlLoad(url)
+            val normalizedUrl = onWillLoad(url)
             if (normalizedUrl != null) {
                 val page = loadUrl(normalizedUrl)
-                afterUrlLoad(normalizedUrl, page)
+                onLoaded(normalizedUrl, page)
             }
         }
     }
 
     private suspend fun loadUrl(url: UrlAware): WebPage? {
         var page: WebPage? = null
+        val timeout = fetchTaskTimeout.plusSeconds(30).toMillis()
         try {
-//            val timeout = 20_000 + fetchTaskTimeout.toMillis()
-//            page = withTimeout(timeout) { loadWithEventHandlers(url) }
-            page = loadWithEventHandlers(url)
+            page = withTimeout(timeout) { loadWithEventHandlers(url) }
             if (page != null) {
                 collectStatAfterLoad(page)
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
-            logger.info("{}. Task timeout ({}) to load page | {}", globalMetrics.timeouts.count, fetchTaskTimeout, url)
+            logger.info("{}. Task timeout ({}) to load page, thrown by [withTimeout] | {}",
+                globalMetrics.timeouts.count, timeout, url)
         } catch (e: Throwable) {
             when {
                 // The following exceptions can be caught as a Throwable but not the concrete exception,
@@ -443,7 +425,7 @@ open class StreamingCrawler<T : UrlAware>(
                     logger.warn(e.message)
                 }
                 else -> {
-                    logger.warn("Unexpected exception", e)
+                    logger.warn("[Unexpected]", e)
                 }
             }
         }
@@ -467,39 +449,34 @@ open class StreamingCrawler<T : UrlAware>(
 
         if (page.isFetched) {
             globalMetrics.fetchSuccesses.mark()
-            if (AmazonDiagnosis.isAmazon(page.url)) {
-                AmazonMetrics.fetchSuccesses.mark(page.url)
-            }
         }
         globalMetrics.successes.mark()
-        if (AmazonDiagnosis.isAmazon(page.url)) {
-            AmazonMetrics.successes.mark(page.url)
-        }
     }
 
-    private fun beforeUrlLoad(url: UrlAware): UrlAware? {
+    private fun onWillLoad(url: UrlAware): UrlAware? {
         if (url is ListenableUrl) {
-            url.eventHandler.loadEventHandler.onFilter(url.url) ?: return null
+            runSafely("onFilter") { url.eventHandler.loadEventHandler.onFilter(url.url) } ?: return null
         }
 
-        crawlEventHandler.onFilter(url) ?: return null
+        runSafely("onFilter") { crawlEventHandler.onFilter(url) } ?: return null
 
-        crawlEventHandler.onBeforeLoad(url)
+        runSafely("onWillLoad") { crawlEventHandler.onWillLoad(url) }
 
         if (url is ListenableUrl) {
-            url.eventHandler.crawlEventHandler.onBeforeLoad(url)
+            runSafely("onWillLoad") { url.eventHandler.crawlEventHandler.onWillLoad(url) }
         }
 
         return url
     }
 
-    private fun afterUrlLoad(url: UrlAware, page: WebPage?) {
+    private fun onLoaded(url: UrlAware, page: WebPage?) {
+        // TODO: the event handlers should be merged
         if (url is ListenableUrl) {
-            url.eventHandler.crawlEventHandler.onAfterLoad(url, page)
+            runSafely("onLoaded") { url.eventHandler.crawlEventHandler.onLoaded(url, page) }
         }
 
         if (page != null) {
-            crawlEventHandler.onAfterLoad(url, page)
+            runSafely("onLoaded") { crawlEventHandler.onLoaded(url, page) }
         }
 
         if (enableSmartRetry) {
@@ -522,6 +499,10 @@ open class StreamingCrawler<T : UrlAware>(
 
     @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
+        if (!isActive) {
+            return null
+        }
+
         // apply the default options, arguments in the url has the highest priority, so url.args needs to appear last
         val options = session.options("$defaultArgs ${url.args}")
         if (options.isDead()) {
@@ -530,7 +511,7 @@ open class StreamingCrawler<T : UrlAware>(
             return null
         }
 
-        return session.runCatching { loadDeferred(url, options) }
+        return kotlin.runCatching { session.loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }
             .getOrNull()
     }
@@ -542,7 +523,7 @@ open class StreamingCrawler<T : UrlAware>(
         }
 
         if (!isActive) {
-            logger.info("Process is closing")
+            logger.debug("Process is closing")
             return FlowState.BREAK
         }
 
@@ -565,13 +546,14 @@ open class StreamingCrawler<T : UrlAware>(
                 return FlowState.BREAK
             }
             is ProxyException -> {
-                logger.warn("Unexpected proxy exception | {}", e.simplify())
+                logger.warn("[Unexpected] proxy exception | {}", e.simplify())
             }
             is TimeoutCancellationException -> {
-                logger.warn("Timeout cancellation: {} | {}", e.simplify(), url)
+                logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout]. {} | {}",
+                    e.simplify(), url)
             }
             is CancellationException -> {
-                // Comes after TimeoutCancellationException
+                // Has to come after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
@@ -597,6 +579,10 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry0(url: UrlAware, page: WebPage?) {
+        if (!isActive) {
+            return
+        }
+
         val nextRetryNumber = 1 + (page?.fetchRetries ?: 0)
 
         if (page != null && nextRetryNumber > page.maxRetries) {
@@ -606,7 +592,7 @@ open class StreamingCrawler<T : UrlAware>(
             return
         }
 
-        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: delayPolicy(nextRetryNumber)
+        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: retryDelayPolicy(nextRetryNumber, url)
 //        val delayCache = globalCache.urlPool.delayCache
 //        // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
@@ -640,7 +626,7 @@ open class StreamingCrawler<T : UrlAware>(
             Strings.readableBytes(memoryToReserve.toLong()),
             Strings.readableBytes(availableMemory - memoryToReserve.toLong())
         )
-        abstractSession.context.clearCaches()
+        session.globalCacheFactory.globalCache.clearPDCaches()
         System.gc()
     }
 
@@ -655,11 +641,9 @@ open class StreamingCrawler<T : UrlAware>(
         val contextLeaksRate = contextLeaks.meter.fifteenMinuteRate
         var k = 0
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
-            logger.takeIf { k % 60 == 0 }
-                ?.warn(
+            logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.readableBytes(availableMemory)
-                )
+                    contextLeaksRate, Strings.readableBytes(availableMemory))
             delay(1000)
 
             // trigger the meter updating
@@ -724,5 +708,21 @@ open class StreamingCrawler<T : UrlAware>(
         } catch (e: IOException) {
             logger.error(e.toString())
         }
+    }
+
+    private fun <T> runSafely(name: String, action: () -> T?): T? {
+        if (!isActive) {
+            return null
+        }
+
+        try {
+            return action()
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
+        }
+
+        return null
     }
 }

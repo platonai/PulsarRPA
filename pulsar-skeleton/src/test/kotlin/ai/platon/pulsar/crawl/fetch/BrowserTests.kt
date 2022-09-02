@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-class BrowserInstanceTests {
+class BrowserTests {
     private val contextPath = Files.createTempDirectory("test-")
 
     @AfterTest

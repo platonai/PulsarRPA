@@ -1,17 +1,17 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
+import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
@@ -52,6 +52,33 @@ abstract class AbstractPulsarContext(
     private val logger = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
 
     /**
+     * Registered closable objects, will be closed by Pulsar object
+     * */
+    private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
+
+    private val closed = AtomicBoolean()
+
+    /** Synchronization monitor for the "refresh" and "destroy" */
+    private val startupShutdownMonitor = Any()
+
+    /** Reference to the JVM shutdown hook, if registered */
+    private var shutdownHook: Thread? = null
+
+    private val webDbOrNull: WebDb? get() = if (isActive) webDb else null
+
+    private val loadComponentOrNull: LoadComponent? get() = if (isActive) loadComponent else null
+
+    /**
+     * Return null if everything is OK, or return NIL if something wrong
+     * */
+    private val abnormalPage get() = if (isActive) null else WebPage.NIL
+
+    /**
+     * Return null if everything is OK, or return a empty list if something wrong
+     * */
+    private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
+
+    /**
      * The context id
      * */
     override val id = instanceSequencer.incrementAndGet()
@@ -87,7 +114,7 @@ abstract class AbstractPulsarContext(
     open val fetchComponent: BatchFetchComponent get() = getBean()
 
     /**
-     * The load component
+     * The parse component
      * */
     open val parseComponent: ParseComponent get() = getBean()
 
@@ -127,41 +154,22 @@ abstract class AbstractPulsarContext(
     val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
 
     /**
-     * Registered closable objects, will be closed by Pulsar object
-     * */
-    private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
-
-    private val closed = AtomicBoolean()
-
-    /** Synchronization monitor for the "refresh" and "destroy" */
-    private val startupShutdownMonitor = Any()
-
-    /** Reference to the JVM shutdown hook, if registered */
-    private var shutdownHook: Thread? = null
-
-    private val webDbOrNull: WebDb? get() = if (isActive) webDb else null
-
-    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
-
-    private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
-
-    /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
     @Throws(BeansException::class)
-    fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
+    override fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
+
+    /**
+     * Get a bean with the specified class, returns null if the bean doesn't exist
+     * */
+    override fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
+        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
      * */
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)
-
-    /**
-     * Get a bean with the specified class, returns null if the bean doesn't exist
-     * */
-    fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T? =
-        kotlin.runCatching { applicationContext.getBean(requiredType.java) }.getOrNull()
 
     /**
      * Get a bean with the specified class, returns null if the bean doesn't exist
@@ -187,14 +195,6 @@ abstract class AbstractPulsarContext(
      * */
     override fun registerClosable(closable: AutoCloseable) {
         closableObjects.add(closable)
-    }
-
-    /**
-     * Clear caches
-     * */
-    fun clearCaches() {
-        globalCacheFactory.globalCache.pageCache.clear()
-        globalCacheFactory.globalCache.documentCache.clear()
     }
 
     /**
@@ -299,7 +299,8 @@ abstract class AbstractPulsarContext(
     /**
      * Check the fetch state of a page
      * */
-    override fun fetchState(page: WebPage, options: LoadOptions) = loadComponent.fetchState(page, options)
+    override fun fetchState(page: WebPage, options: LoadOptions) =
+        loadComponentOrNull?.fetchState(page, options) ?: CheckState(FetchState.DO_NOT_FETCH, "closed")
 
     /**
      * Scan pages in the storage
@@ -384,32 +385,32 @@ abstract class AbstractPulsarContext(
 
     override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
         startLoopIfNecessary()
-        return loadComponent.loadAsync(url)
+        return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
 
     override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
         startLoopIfNecessary()
-        return loadComponent.loadAllAsync(urls)
+        return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
     }
 
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
-        crawlPool.add(url)
+        if (isActive) crawlPool.add(url)
         return this
     }
 
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
-        crawlPool.addAll(urls)
+        if (isActive) crawlPool.addAll(urls)
         return this
     }
 
     /**
-     * Parse the WebPage using parseComponent
+     * Parse the WebPage content using parseComponent
      */
     override fun parse(page: WebPage): FeaturedDocument? {
-        val parser = loadComponent.parseComponent
-        return parser.parse(page, noLinkFilter = true).document
+        val parser = loadComponentOrNull?.parseComponent
+        return parser?.parse(page, noLinkFilter = true)?.document
     }
 
     /**
@@ -459,6 +460,7 @@ abstract class AbstractPulsarContext(
      * @see .close
      * @see .doClose
      */
+    @Throws(IllegalStateException::class)
     override fun registerShutdownHook() {
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
             this.shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
@@ -509,17 +511,15 @@ abstract class AbstractPulsarContext(
 
         getBeanOrNull<GlobalCacheFactory>()?.globalCache?.clearCaches()
 
-        sessions.values.forEach {
-            kotlin.runCatching { it.close() }
-                .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+        val nonSyncSessions = sessions.values.toList().also { sessions.clear() }
+        nonSyncSessions.parallelStream().forEach { session ->
+            session.runCatching { close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
         }
-        sessions.clear()
 
-        closableObjects.forEach {
-            kotlin.runCatching { it.close() }
-                .onFailure { logger.warn(it.simplify("Unexpected exception - ")) }
+        val nonSyncObjects = closableObjects.toList().also { closableObjects.clear() }
+        nonSyncObjects.parallelStream().forEach { closable ->
+            closable.runCatching { close() }.onFailure { logger.warn(it.brief("[Unexpected]")) }
         }
-        closableObjects.clear()
     }
 
     private fun startLoopIfNecessary() {

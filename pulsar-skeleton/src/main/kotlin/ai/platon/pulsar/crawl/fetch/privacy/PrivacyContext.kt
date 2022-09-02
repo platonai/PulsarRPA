@@ -20,10 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 open class PrivacyContextException(message: String) : Exception(message)
 
-class FatalPrivacyContextException(message: String) : PrivacyContextException(message)
-
 class PrivacyContextMetrics {
-    private val registry = AppMetrics.defaultMetricRegistry
+    private val registry get() = AppMetrics.defaultMetricRegistry
     val contexts = registry.multiMetric(this, "contexts")
     val tasks = registry.multiMetric(this, "tasks")
     val successes = registry.multiMetric(this, "successes")
@@ -47,7 +45,7 @@ abstract class PrivacyContext(
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
 
-        val globalMetrics = PrivacyContextMetrics()
+        val globalMetrics by lazy { PrivacyContextMetrics() }
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
@@ -144,6 +142,9 @@ abstract class PrivacyContext(
         when {
             status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> markLeaked()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.FORBIDDEN) -> markLeaked()
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK) -> markWarning()
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_2) -> markWarning(2)
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_3) -> markWarning(3)
             status.isRetry(RetryScope.PRIVACY) -> markWarning()
             status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
             status.isSuccess -> markSuccess()

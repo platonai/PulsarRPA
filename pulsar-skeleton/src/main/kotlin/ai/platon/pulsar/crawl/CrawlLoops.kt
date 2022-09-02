@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.StartStopRunnable
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Predicate
 

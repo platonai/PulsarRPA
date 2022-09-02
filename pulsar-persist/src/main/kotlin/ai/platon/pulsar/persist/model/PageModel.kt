@@ -25,6 +25,8 @@ class PageModel(
 
     val isNotEmpty: Boolean get() = !isEmpty
 
+    val boxedFieldGroups get() = fieldGroups.map { FieldGroup.box(it) }
+
     fun unbox() = fieldGroups
 
     fun firstOrNull() = if (isEmpty) null else get(0)

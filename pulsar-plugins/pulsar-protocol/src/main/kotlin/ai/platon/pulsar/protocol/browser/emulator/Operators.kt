@@ -36,16 +36,34 @@ class CombinedPageCategorySniffer(
 
         return OpenPageCategory(PageCategory.UNKNOWN)
     }
+
+    fun addFirst(sniffer: PageCategorySniffer) {
+        sniffers.add(0, sniffer)
+    }
+
+    fun addLast(sniffer: PageCategorySniffer) {
+        sniffers.add(sniffer)
+    }
+
+    fun remove(sniffer: PageCategorySniffer) {
+        sniffers.remove(sniffer)
+    }
 }
 
 interface HtmlIntegrityChecker {
+    fun isRelevant(url: String): Boolean
     operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity
+}
+
+abstract class AbstractHtmlIntegrityChecker: HtmlIntegrityChecker {
+    override fun isRelevant(url: String): Boolean = true
+    override operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity = HtmlIntegrity.OK
 }
 
 open class DefaultHtmlIntegrityChecker(
     val jsEnabled: Boolean,
     val conf: ImmutableConfig
-): HtmlIntegrityChecker {
+): AbstractHtmlIntegrityChecker() {
     private val tracer = getLogger(DefaultHtmlIntegrityChecker::class).takeIf { it.isTraceEnabled }
 
     override operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity {
@@ -94,13 +112,28 @@ open class DefaultHtmlIntegrityChecker(
 
 open class CombinedHtmlIntegrityChecker(
     val conf: ImmutableConfig
-): HtmlIntegrityChecker {
+): AbstractHtmlIntegrityChecker() {
     val checkers = Collections.synchronizedList(mutableListOf<HtmlIntegrityChecker>())
+
+    override fun isRelevant(url: String): Boolean = checkers.any { it.isRelevant(url) }
 
     override fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity {
         return checkers.asSequence()
+            .filter { it.isRelevant(pageDatum.url) }
             .map { it.invoke(pageSource, pageDatum) }
             .firstOrNull { it != HtmlIntegrity.OK }
             ?: HtmlIntegrity.OK
+    }
+
+    fun addFirst(checker: HtmlIntegrityChecker) {
+        checkers.add(0, checker)
+    }
+
+    fun addLast(checker: HtmlIntegrityChecker) {
+        checkers.add(checker)
+    }
+
+    fun remove(checker: HtmlIntegrityChecker) {
+        checkers.remove(checker)
     }
 }

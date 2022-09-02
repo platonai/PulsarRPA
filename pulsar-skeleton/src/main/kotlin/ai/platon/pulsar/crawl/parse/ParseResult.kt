@@ -32,7 +32,6 @@ class ParseResult(
         message: String? = null
 ) : ParseStatus(majorCode, minorCode, message) {
     val hypeLinks = mutableSetOf<HyperlinkPersistable>()
-    var domStatistics: DomStatistics? = null
     var document: FeaturedDocument? = null
     var parsers = mutableListOf<KClass<out Parser>>()
     var flowStatus = FlowState.CONTINUE
@@ -41,7 +40,6 @@ class ParseResult(
     val shouldBreak get() = flowStatus == FlowState.BREAK
 
     companion object {
-        val labeledHypeLinks = ConcurrentSkipListSet<Hyperlink>()
 
         fun failed(minorCode: Int, message: String?): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, minorCode, message)

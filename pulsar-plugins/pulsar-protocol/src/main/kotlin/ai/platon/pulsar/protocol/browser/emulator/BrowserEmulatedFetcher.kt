@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -8,10 +9,13 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORIT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -26,11 +30,11 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulatedFetcher(
-        private val privacyManager: PrivacyManager,
-        private val driverManager: WebDriverPoolManager,
-        private val browserEmulator: BrowserEmulator,
-        private val immutableConfig: ImmutableConfig,
-        private val closeCascaded: Boolean = false
+    private val privacyManager: PrivacyManager,
+    private val driverManager: WebDriverPoolManager,
+    private val browserEmulator: BrowserEmulator,
+    private val immutableConfig: ImmutableConfig,
+    private val closeCascaded: Boolean = false
 ): AutoCloseable {
     private val logger = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
@@ -68,7 +72,7 @@ open class BrowserEmulatedFetcher(
             return ForwardingResponse.canceled(page)
         }
 
-        val task = createFetchTask(page)
+        val task = FetchTask.create(page)
         return fetchTaskDeferred(task)
     }
 
@@ -80,18 +84,18 @@ open class BrowserEmulatedFetcher(
     }
 
     private suspend fun doFetch(task: FetchTask, driver: WebDriver): FetchResult {
+        if (!isActive) {
+            return FetchResult.canceled(task)
+        }
+
         val volatileConfig = task.page.conf
         val eventHandler = volatileConfig.getBeanOrNull(PulsarEventHandler::class)?.simulateEventHandler
 
-        eventHandler?.onBeforeFetch?.runCatching {
-            invoke(task.page, driver)
-        }?.onFailure { logger.warn("Unexpected exception (ignored)", it) }
+        runSafely("onWillFetch") { eventHandler?.onWillFetch?.invoke(task.page, driver) }
 
         val result = browserEmulator.fetch(task, driver)
 
-        eventHandler?.onAfterFetch?.runCatching {
-            invoke(task.page, driver)
-        }?.onFailure { logger.warn("Unexpected exception (ignored)", it) }
+        runSafely("onFetched") { eventHandler?.onWillFetch?.invoke(task.page, driver) }
 
         return result
     }
@@ -108,14 +112,6 @@ open class BrowserEmulatedFetcher(
         TODO("Not implemented")
     }
 
-    internal fun createFetchTask(page: WebPage): FetchTask {
-        val conf = page.conf
-        val priority = conf.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
-        val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
-        val fingerprint = Fingerprint(browserType)
-        return FetchTask(0, priority, page, conf, fingerprint = fingerprint)
-    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (closeCascaded) {
@@ -123,6 +119,24 @@ open class BrowserEmulatedFetcher(
                 driverManager.close()
                 privacyManager.close()
             }
+        }
+    }
+
+    private suspend fun runSafely(name: String, action: suspend () -> Unit) {
+        if (!isActive) {
+            return
+        }
+
+        try {
+            action()
+        } catch (e: WebDriverCancellationException) {
+            logger.info("Web driver is cancelled")
+        } catch (e: WebDriverException) {
+            logger.warn(e.brief("[Ignored][$name] "))
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
         }
     }
 }

@@ -6,13 +6,13 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 
-data class UrlTopic constructor(
+data class UrlTopic(
     /**
      * The topic name
      * */
     val name: String,
     /**
-     * The queue group
+     * The group
      * */
     val group: Int,
     /**
@@ -40,7 +40,7 @@ data class UrlTopic constructor(
     override fun toString(): String = "$name.$group.$priority"
 }
 
-class UrlGroupComparator {
+class UrlTopicComparator {
     companion object : Comparator<UrlTopic> {
         override fun compare(o1: UrlTopic, o2: UrlTopic): Int {
             return o1.toString().compareTo(o2.toString())
@@ -69,15 +69,17 @@ interface ExternalUrlLoader {
      * */
     fun hasMore(): Boolean
     /**
-     * If there are more items in the source
+     * If there are more items with [topic] in the source
      * */
     fun hasMore(topic: UrlTopic): Boolean
     /**
-     * Count remaining size
+     * Count remaining size, this operation might be slow for a large url database,
+     * use estimateRemaining for fast counting.
      * */
     fun countRemaining(): Int
     /**
-     * Count remaining size
+     * Count remaining size with [topic], this operation might be slow for a large url database,
+     * use estimateRemaining for fast counting.
      * */
     fun countRemaining(topic: UrlTopic): Int
     /**
@@ -89,33 +91,31 @@ interface ExternalUrlLoader {
      * */
     fun estimateRemaining(topic: UrlTopic): Int
     /**
-     * Load items from the source to the sink
+     * Load items from the source to the sink immediately
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>, size: Int, topic: UrlTopic): Collection<UrlAware>
     /**
-     * Load items from the source to the sink
+     * Load items from the source to the sink immediately
      * */
     fun <T> loadToNow(sink: MutableCollection<T>, size: Int, topic: UrlTopic, transformer: (UrlAware) -> T): Collection<T>
     /**
-     * Load items from the source to the sink
+     * Load items from the source to the sink safely
      * */
     fun loadTo(sink: MutableCollection<UrlAware>, size: Int, topic: UrlTopic)
     /**
-     * Load items from the source to the sink
+     * Load items from the source to the sink safely
      * */
     fun <T> loadTo(sink: MutableCollection<T>, size: Int, topic: UrlTopic, transformer: (UrlAware) -> T)
-
+    /**
+     * Delete all items with [topic] from the source
+     * */
     fun deleteAll(topic: UrlTopic): Long
 }
 
 abstract class AbstractExternalUrlLoader: ExternalUrlLoader {
-    /**
-     * If there are more items in the source
-     * */
+
     override fun hasMore(): Boolean = countRemaining() > 0
-    /**
-     * If there are more items in the source
-     * */
+
     override fun hasMore(topic: UrlTopic): Boolean = countRemaining(topic) > 0
 
     override fun saveAll(urls: Iterable<UrlAware>, topic: UrlTopic) = urls.forEach { save(it, topic) }

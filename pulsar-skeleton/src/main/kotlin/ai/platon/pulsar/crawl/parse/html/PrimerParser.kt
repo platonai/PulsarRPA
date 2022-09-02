@@ -30,11 +30,13 @@ import ai.platon.pulsar.common.urls.UrlUtils.resolveURL
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.Parser
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Maps
 import org.jsoup.helper.W3CDom
+import org.jsoup.nodes.Document
 import org.slf4j.LoggerFactory
 import org.w3c.dom.DocumentFragment
 import org.w3c.dom.Node
@@ -98,33 +100,40 @@ class PrimerParser(val conf: ImmutableConfig) {
 
     @Throws(Exception::class)
     fun parseHTMLDocument(page: WebPage): ParseContext {
-        tracer?.trace(
-            "{}.\tParsing page | {} | {} | {} | {}",
-            page.id,
-            Strings.readableBytes(page.contentLength),
-            page.protocolStatus,
-            page.htmlIntegrity,
-            page.url
+        tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
+            page.id, Strings.readableBytes(page.contentLength),
+            page.protocolStatus, page.htmlIntegrity, page.url
         )
 
-        val baseUrl = page.baseUrl ?: page.url
-        val baseURL = URL(baseUrl)
         if (page.encoding == null) {
             detectEncoding(page)
         }
 
         val jsoupParser = JsoupParser(page, conf)
         jsoupParser.parse()
-        val document = jsoupParser.document
-        val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
 
-        val metaTags = parseMetaTags(baseURL, fragment, page)
-        val parseResult = initParseResult(metaTags)
-        parseResult.document = document
+        val parseResult = initParseResult(jsoupParser.document)
 
-        return ParseContext(page, parseResult, document)
+        return ParseContext(page, parseResult)
     }
 
+    private fun initParseResult(document: FeaturedDocument): ParseResult {
+        return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK).also { it.document = document }
+    }
+
+    /**
+     * TODO: no need to convert to a W3CDom, we can use the original document directly
+     * */
+    private fun parseMetaTags(page: WebPage, document: FeaturedDocument) {
+        val baseUrl = page.baseUrl ?: page.url
+        val baseURL = URL(baseUrl)
+
+        val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
+        val metaTags = parseMetaTags(baseURL, fragment, page)
+        val parseResult = initParseResult(metaTags)
+    }
+
+    @Deprecated("Just use jsoup to parse meta tags")
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
         val metaTags = HTMLMetaTags(docRoot, baseURL)
         val tags = metaTags.generalTags

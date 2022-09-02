@@ -24,6 +24,8 @@ enum class HtmlIntegrity {
      * the page displays captcha or something similar
      * */
     ROBOT_CHECK,
+    ROBOT_CHECK_2,
+    ROBOT_CHECK_3,
     /**
      * the access is forbidden
      * */
@@ -52,6 +54,8 @@ enum class HtmlIntegrity {
     val isNotEmpty: Boolean get() = !isEmpty
     val isEmptyBody: Boolean get() = this == BLANK_BODY
     val isRobotCheck: Boolean get() = this == ROBOT_CHECK
+    val isRobotCheck2: Boolean get() = this == ROBOT_CHECK_2
+    val isRobotCheck3: Boolean get() = this == ROBOT_CHECK_3
     val isForbidden: Boolean get() = this == FORBIDDEN
     val isVerify: Boolean get() = this == VERIFY
     val isNotFound: Boolean get() = this == NOT_FOUND

@@ -142,7 +142,7 @@ class EventDispatcher : Consumer<String> {
     override fun accept(message: String) {
         logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
 
-        BasicDevTools.numAccepts.inc()
+        DevToolsImpl.numAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
             val idNode = jsonNode.get(ID_PROPERTY)
@@ -215,8 +215,9 @@ class EventDispatcher : Consumer<String> {
     }
 }
 
-abstract class BasicDevTools(
-    private val client: Transport,
+abstract class DevToolsImpl(
+    private val browserClient: Transport,
+    private val pageClient: Transport,
     private val config: DevToolsConfig
 ) : RemoteDevTools, AutoCloseable {
 
@@ -240,19 +241,20 @@ abstract class BasicDevTools(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
+    private val logger = LoggerFactory.getLogger(DevToolsImpl::class.java)
     private val id = instanceSequencer.incrementAndGet()
 
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
-    override val isOpen get() = !closed.get() && !client.isClosed()
+    override val isOpen get() = !closed.get() && !pageClient.isClosed()
 
     private val dispatcher = EventDispatcher()
 
     init {
-        client.addMessageHandler(dispatcher)
+        browserClient.addMessageHandler(dispatcher)
+        pageClient.addMessageHandler(dispatcher)
     }
 
     open operator fun <T> invoke(
@@ -289,9 +291,15 @@ abstract class BasicDevTools(
         val message = dispatcher.serialize(method)
 
         try {
-            client.send(message)
+            // See https://github.com/hardkoded/puppeteer-sharp/issues/796
+            if (method.method.startsWith("Target.")) {
+                browserClient.send(message)
+            } else {
+                pageClient.send(message)
+            }
 
-            val responded = future.await(config.readTimeout)
+            val readTimeout = config.readTimeout
+            val responded = future.await(readTimeout)
             dispatcher.unsubscribe(method.id)
             lastActiveTime = Instant.now()
 
@@ -301,9 +309,13 @@ abstract class BasicDevTools(
                 }
             }
 
+            if (!isOpen) {
+                return null
+            }
+
             if (!responded) {
                 val methodName = method.method
-                throw ChromeRPCTimeoutException("Response #${numInvokes.count} timeout for $methodName")
+                throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
             }
 
             if (future.isSuccess) {
@@ -349,37 +361,43 @@ abstract class BasicDevTools(
         dispatcher.unregisterListener(listener.key, listener)
     }
 
-    override fun waitUntilClosed() {
-        runCatching { closeLatch.await() }.onFailure {
-            if (it is InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
+    override fun awaitTermination() {
+        try {
+            closeLatch.await()
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.message) }
+            kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored]", it.message) }
             closeLatch.countDown()
         }
     }
 
     @Throws(Exception::class)
     private fun doClose() {
-        lock.withLock {
-            try {
+        waitUntilIdle()
+
+        logger.trace("Closing ws client ... | {}", browserClient)
+        browserClient.close()
+
+        logger.trace("Closing ws client ... | {}", pageClient)
+        pageClient.close()
+    }
+
+    private fun waitUntilIdle() {
+        var n = 5
+        try {
+            lock.withLock {
                 // TODO: no need to wait for all futures, just ignore them
-                var i = 0
-                while (i++ < 5 && dispatcher.hasFutures()) {
+                while (n-- > 0 && dispatcher.hasFutures()) {
                     notBusy.await(1, TimeUnit.SECONDS)
                 }
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
             }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
         }
-
-        logger.trace("Closing ws client ... | {}", client)
-
-        client.close()
     }
 }

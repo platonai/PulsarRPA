@@ -227,7 +227,7 @@ class PageParser(
     }
 
     /**
-     * TODO: signature is not useful for pages change rapidly
+     * Note: signature is not useful for pages change rapidly
      * */
     private fun processSuccess(page: WebPage, parseResult: ParseResult) {
         val prevSig = page.signature
@@ -291,7 +291,6 @@ class PageParser(
     }
 
     override fun close() {
-        messageWriter?.reportLabeledHyperlinks(ParseResult.labeledHypeLinks)
     }
 
     companion object {

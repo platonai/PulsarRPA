@@ -28,12 +28,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Write misc messages into misc sinks
  */
 class MiscMessageWriter(
+    /**
+     * TODO: remove WebDb dependency
+     * */
+    val webDb: WebDb,
     conf: ImmutableConfig
 ) : MultiSinkWriter(conf) {
-    private val logger = LoggerFactory.getLogger(MiscMessageWriter::class.java)
     private val hostname = NetUtil.getHostname()
 
-    // job name is set in job setup phrase, so it's not available unless this is a [JobInitialized] class
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val urlPrefix =
         AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimes.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
@@ -43,6 +45,8 @@ class MiscMessageWriter(
     private val metricsPageUrls: MutableSet<CharSequence> = LinkedHashSet()
     private val metricsPages: MutableMap<String, WebPage> = HashMap()
     private val closed = AtomicBoolean()
+
+    constructor(conf: ImmutableConfig) : this(WebDb(conf), conf)
 
     fun report(page: WebPage) {
         var category = page.pageCategory.name.lowercase(Locale.getDefault())
@@ -114,8 +118,8 @@ class MiscMessageWriter(
         }
 
         val sb = StringBuilder()
-        sb.appendLine("-----------------")
-        sb.appendLine(page.url)
+        sb.appendln("-----------------")
+        sb.appendln(page.url)
         val fields = page.pageModel.firstOrNull()?.fields ?: return
         page.pageModel.fieldGroups.forEach {
             sb.append("Group ").append(it.name)
@@ -130,13 +134,15 @@ class MiscMessageWriter(
         // show all javascript DOM urls, we should know the exact differences between them
         // they look like all the same
         val urls = page.activeDomUrls
-        sb.append('\n')
-        // NOTE: it seems they are all the same
-        val location = urls.location
-        if (location != page.url) sb.append("location:    ").appendLine(location)
-        if (urls.URL != location) sb.append("URL:         ").appendLine(urls.URL)
-        if (urls.baseURI != location) sb.append("baseURI:     ").appendLine(urls.baseURI)
-        if (urls.documentURI != location) sb.append("documentURI: ").appendLine(urls.documentURI)
+        if (urls != null) {
+            sb.append('\n')
+            // NOTE: it seems they are all the same
+            val location = urls.location
+            if (location != page.url) sb.append("location:    ").appendln(location)
+            if (urls.URL != location) sb.append("URL:         ").appendln(urls.URL)
+            if (urls.baseURI != location) sb.append("baseURI:     ").appendln(urls.baseURI)
+            if (urls.documentURI != location) sb.append("documentURI: ").appendln(urls.documentURI)
+        }
 
         sb.append("\n").append("Total ${fields.size} fields")
         sb.append("\n\n")
@@ -291,14 +297,17 @@ class MiscMessageWriter(
     }
 
     fun commit() {
-        // TODO: write to the filesystem
+        // TODO : save only if dirty
+        metricsPages.values.forEach { webDb.put(it) }
+        webDb.flush()
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            commit()
+//            commit()
             if (metricsPageUrls.isNotEmpty()) {
-
+//                weakIndexer.indexAll(metricsPageUrls)
+//                weakIndexer.commit()
             }
         }
     }

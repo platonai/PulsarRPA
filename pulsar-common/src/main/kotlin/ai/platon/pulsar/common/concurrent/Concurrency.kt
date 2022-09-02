@@ -4,11 +4,24 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
+interface ShutdownHookRegistry {
+    fun register(thread: Thread) {
+        Runtime.getRuntime().addShutdownHook(thread)
+    }
+
+    fun remove(thread: Thread) {
+        // TODO: java.lang.IllegalStateException: Shutdown in progress
+        // Runtime.getRuntime().removeShutdownHook(thread)
+    }
+}
+
+class RuntimeShutdownHookRegistry : ShutdownHookRegistry
+
 /**
  * Stops the ExecutorService and if shutdownExecutorOnStop is true then shuts down its thread of execution.
  * Uses the shutdown pattern from http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html
  */
-fun stopExecution(executor: ExecutorService, future: Future<*>?, shutdown: Boolean = false) {
+fun stopExecution(name: String, executor: ExecutorService, future: Future<*>?, shutdown: Boolean = false) {
     if (shutdown) {
         // Disable new tasks from being submitted
         executor.shutdown()
@@ -25,7 +38,7 @@ fun stopExecution(executor: ExecutorService, future: Future<*>?, shutdown: Boole
         } catch (e: InterruptedException) {
             // (Re-)Cancel if current thread also interrupted
             // Preserve interrupt status
-            System.err.println("Shutting down executor $executor")
+            System.err.println("Shutting down executor $name")
             Thread.currentThread().interrupt()
             executor.shutdownNow()
         }

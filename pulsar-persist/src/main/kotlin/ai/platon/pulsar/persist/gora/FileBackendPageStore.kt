@@ -2,6 +2,7 @@ package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -34,6 +35,7 @@ class FileBackendPageStore(
     private val logger = LoggerFactory.getLogger(FileBackendPageStore::class.java)
     private val unsafeConf = VolatileConfig.UNSAFE
 
+    @Synchronized
     override fun get(reversedUrl: String, vararg fields: String): GWebPage? {
         var page = map[reversedUrl] as? GWebPage
         if (page == null) {
@@ -42,13 +44,14 @@ class FileBackendPageStore(
         return page
     }
 
+    @Synchronized
     override fun put(reversedUrl: String, page: GWebPage) {
         super.put(reversedUrl, page)
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
             val p = WebPage.box(it, page, unsafeConf)
-            writeHtml(p)
             writeAvro(p)
+            writeHtml(p)
         }
     }
 
@@ -56,6 +59,7 @@ class FileBackendPageStore(
 
     override fun getFields(): Array<String> = GWebPage._ALL_FIELDS
 
+    @Synchronized
     fun readHtml(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".htm")
@@ -75,6 +79,7 @@ class FileBackendPageStore(
         return null
     }
 
+    @Synchronized
     fun readAvro(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
         val filename = AppPaths.fromUri(url, "", ".avro")
@@ -88,6 +93,10 @@ class FileBackendPageStore(
             readAvro(path)
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to read avro file from $path, the file might be corrupted, delete it", e)
+            Files.deleteIfExists(path)
+            null
+        } catch (e: IOException) {
+            logger.warn(e.simplify("readAvro", " | $path"))
             Files.deleteIfExists(path)
             null
         }
@@ -110,6 +119,7 @@ class FileBackendPageStore(
         return page
     }
 
+    @Synchronized
     fun writeHtml(page: WebPage) {
         val content = page.content ?: return
         val directory = getPersistDirectory(page)
@@ -133,6 +143,8 @@ class FileBackendPageStore(
             writeAvro0(page.unbox(), path)
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
+        } catch (e: IOException) {
+            logger.warn(e.simplify("writeAvro", " | $path"))
         }
     }
 

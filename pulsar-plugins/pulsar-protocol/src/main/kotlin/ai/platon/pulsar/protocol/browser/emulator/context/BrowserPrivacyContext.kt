@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -73,15 +74,19 @@ open class BrowserPrivacyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            report()
-            driverContext.shutdown()
-            proxyContext?.close()
+            try {
+                report()
+                driverContext.close()
+                proxyContext?.close()
+            } catch (e: Exception) {
+                logger.warn(e.stringify())
+            }
         }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         return when {
-            !isActive -> FetchResult.privacyRetry(task)
+            !isActive -> FetchResult.canceled(task)
             else -> null
         }
     }
@@ -95,6 +100,7 @@ open class BrowserPrivacyContext(
             // TODO: better initialize fingerprint.proxyServer
             browserInstanceId.fingerprint.proxyServer = proxyEntry?.hostPort
             proxyContext = pc
+            coreMetrics?.proxies?.mark()
         }
         task.page.variables[VAR_PRIVACY_CONTEXT_NAME] = display
     }
