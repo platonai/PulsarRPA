@@ -166,6 +166,9 @@ class CoreMetrics(
     val networkIFsRecvBytesPerPage
         get() = networkIFsRecvBytes / successTasks.count.coerceAtLeast(1)
 
+    val tasksPerSecond
+        get() = tasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
+
     val finishedTasksPerSecond
         get() = finishedTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
 
@@ -177,6 +180,10 @@ class CoreMetrics(
     private var lastSystemInfoRefreshTime = 0L
     private val closed = AtomicBoolean()
     private var reportTimer: Timer? = null
+    var lastTaskTime = Instant.EPOCH
+        private set
+    var lastReportTime = Instant.EPOCH
+        private set
 
     init {
         kotlin.runCatching {
@@ -223,10 +230,11 @@ class CoreMetrics(
     }
 
     fun markTaskStart() {
-        tasks.mark()
+        markTaskStart(1)
     }
 
     fun markTaskStart(size: Int) {
+        lastTaskTime = Instant.now()
         tasks.mark(size.toLong())
     }
 
@@ -291,6 +299,10 @@ class CoreMetrics(
         }
 
         urlStatistics[host] = urlStats
+
+        if (finishedTasksPerSecond > 0.5) {
+            report()
+        }
     }
 
     fun trackTimeout(url: String) {
@@ -339,7 +351,7 @@ class CoreMetrics(
         return numUrls + failedTasks
     }
 
-    fun formatStatus(): String {
+    private fun formatStatus(): String {
         if (tasks.count == 0L) return ""
 
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
@@ -382,7 +394,7 @@ class CoreMetrics(
         }
     }
 
-    fun updateSystemInfo() {
+    private fun updateSystemInfo() {
         kotlin.runCatching { updateSystemInfo0() }.onFailure { logger.warn("[Unexpected]", it) }
     }
 
@@ -404,21 +416,41 @@ class CoreMetrics(
 
     private fun startReporter() {
         if (reportTimer == null) {
-            reportTimer = Timer()
+            reportTimer = Timer("CoreMetrics", true)
             val delay = Duration.ofMinutes(1)
-            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { reportStatus() }
+            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { report() }
         }
     }
 
-    private fun reportStatus() {
+    private fun report() {
         if (!logger.isInfoEnabled) {
             return
         }
 
-        if (tasks.count == 0L) {
+        val now = Instant.now()
+        if (Duration.between(lastReportTime, now).seconds < 60) {
+            return
+        }
+        lastReportTime = Instant.now()
+
+        if (finishedTasksPerSecond > 0.5) {
+            reportWhenHighThroughput()
+        } else {
+            reportWhenLowThroughput()
+        }
+    }
+
+    private fun reportWhenLowThroughput() {
+        val now = Instant.now()
+        if (Duration.between(lastTaskTime, now).seconds > 8 * 60) {
+            // the system is idle
             return
         }
 
+        logger.info(formatStatus())
+    }
+
+    private fun reportWhenHighThroughput() {
         val i = finishedTasks.count
         // successTasksPerSecond is about to be 1.0
         val a = successTasksPerSecond * 60
@@ -429,31 +461,21 @@ class CoreMetrics(
         }.toInt()
 
         if (i % period == 0L) {
-            // logger.info(formatStatus())
+            logger.info(formatStatus())
         }
-
-        logger.info(formatStatus())
     }
 
     private fun logAvailableHosts() {
         val report = StringBuilder("Total " + urlStatistics.size + " available hosts")
         report.append('\n')
 
-        urlStatistics.values.sorted()
-            .map { (hostName, urls, indexUrls, detailUrls, searchUrls, mediaUrls,
-                       bbsUrls, blogUrls, tiebaUrls, _, urlsTooLong) ->
+        urlStatistics.values.sorted().map { (hostName, urls, indexUrls, detailUrls) ->
                 String.format(
-                    "%40s -> %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s",
+                    "%40s -> %-15s %-15s %-15s",
                     hostName,
                     "total : $urls",
                     "index : $indexUrls",
-                    "detail : $detailUrls",
-                    "search : $searchUrls",
-                    "media : $mediaUrls",
-                    "bbs : $bbsUrls",
-                    "tieba : $tiebaUrls",
-                    "blog : $blogUrls",
-                    "long : $urlsTooLong"
+                    "detail : $detailUrls"
                 )
             }.joinTo(report, "\n") { it }
 
