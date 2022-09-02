@@ -166,7 +166,7 @@ interface WebDriver: Closeable {
      * <p> The method will not throw an error when any valid HTTP status code is returned by the remote server,
      * including 404 "Not Found" and 500 "Internal Server Error".
      *
-     * @param url URL to navigate page to.
+     * @param entry NavigateEntry to navigate page to.
      */
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)

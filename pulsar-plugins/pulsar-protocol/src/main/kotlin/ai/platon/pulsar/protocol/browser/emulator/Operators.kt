@@ -36,6 +36,18 @@ class CombinedPageCategorySniffer(
 
         return OpenPageCategory(PageCategory.UNKNOWN)
     }
+
+    fun addFirst(sniffer: PageCategorySniffer) {
+        sniffers.add(0, sniffer)
+    }
+
+    fun addLast(sniffer: PageCategorySniffer) {
+        sniffers.add(sniffer)
+    }
+
+    fun remove(sniffer: PageCategorySniffer) {
+        sniffers.remove(sniffer)
+    }
 }
 
 interface HtmlIntegrityChecker {
@@ -111,5 +123,17 @@ open class CombinedHtmlIntegrityChecker(
             .map { it.invoke(pageSource, pageDatum) }
             .firstOrNull { it != HtmlIntegrity.OK }
             ?: HtmlIntegrity.OK
+    }
+
+    fun addFirst(checker: HtmlIntegrityChecker) {
+        checkers.add(0, checker)
+    }
+
+    fun addLast(checker: HtmlIntegrityChecker) {
+        checkers.add(checker)
+    }
+
+    fun remove(checker: HtmlIntegrityChecker) {
+        checkers.remove(checker)
     }
 }

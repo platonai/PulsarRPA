@@ -46,8 +46,16 @@ open class BrowserResponseHandler(
         sniffers.add(DefaultPageCategorySniffer(immutableConfig))
     }
 
-    var htmlIntegrityChecker: CombinedHtmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
+    val htmlIntegrityChecker: CombinedHtmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
         checkers.add(DefaultHtmlIntegrityChecker(enableStartupScript, immutableConfig))
+    }
+
+    fun onInitPageCategorySniffer(sniffer: CombinedPageCategorySniffer) {
+
+    }
+
+    fun onInitHTMLIntegrityChecker(checker: CombinedHtmlIntegrityChecker) {
+
     }
 
     open fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {

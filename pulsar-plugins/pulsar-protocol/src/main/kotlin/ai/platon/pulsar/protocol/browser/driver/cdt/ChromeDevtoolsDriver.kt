@@ -701,7 +701,6 @@ class ChromeDevtoolsDriver(
     private fun getInvaded(url: String) {
         pageAPI?.enable()
         domAPI?.enable()
-        cssAPI?.enable()
         runtimeAPI?.enable()
         networkAPI?.enable()
 

@@ -10,10 +10,14 @@ class BrowserResponseHandlerFactory(
         private val messageWriter: MiscMessageWriter,
         private val immutableConfig: ImmutableConfig
 ) {
-    val eventHandler by lazy {
+    private val reflectedHandler by lazy {
         val clazz = immutableConfig.getClass(
                 CapabilityTypes.BROWSER_RESPONSE_HANDLER, BrowserResponseHandler::class.java)
         clazz.constructors.first { it.parameters.size == 3 }
                 .newInstance(driverPoolManager, messageWriter, immutableConfig) as BrowserResponseHandler
     }
+
+    var specifiedHandler: BrowserResponseHandler? = null
+
+    val eventHandler get() = specifiedHandler ?: reflectedHandler
 }
