@@ -344,10 +344,7 @@ class LoadComponent(
             logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
         }
 
-        // persist if it's not loaded from the cache so it's not updated
-        // we might persist only when it's fetched
-        // TODO: do not persist content if it's not changed, we can add a contentPage inside a WebPage
-        if (!page.isCached && !status.isCanceled && !options.readonly && options.persist) {
+        if (options.persist && !page.isCached && !status.isCanceled && !options.readonly) {
             persist(page, options)
         }
     }
