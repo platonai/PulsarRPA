@@ -404,7 +404,7 @@ class CoreMetrics(
 
     private fun startReporter() {
         if (reportTimer == null) {
-            reportTimer = Timer()
+            reportTimer = Timer("CoreMetrics", true)
             val delay = Duration.ofMinutes(1)
             reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { reportStatus() }
         }
