@@ -2,7 +2,7 @@
 
 <configuration scan="true" scanPeriod="30 seconds">
     <property name="logging.dir" value="${logging.dir:-logs}" />
-    <property name="logging.prefix" value="${logging.prefix:-exotics}" />
+    <property name="logging.prefix" value="${logging.prefix:-pulsar}" />
     <property name="logging.file" value="${logging.prefix}.log" />
 
     <!-- Special task relative logs -->
@@ -123,6 +123,7 @@
     </appender>
 
     <root level="INFO">
+        <appender-ref ref="Console"/>
         <appender-ref ref="DRFA"/>
     </root>
 
@@ -165,10 +166,10 @@
     </logger>
 
     <logger name="ai.platon.scent.analysis" level="INFO" additivity="true">
-        <appender-ref ref="Console"/>
+        <!--        <appender-ref ref="Console"/>-->
     </logger>
     <logger name="ai.platon.scent.ml" level="INFO" additivity="true">
-        <appender-ref ref="Console"/>
+<!--        <appender-ref ref="Console"/>-->
     </logger>
     <logger name="ai.platon.scent.analysis.corpus.AnalysablePageCorpus.Task" level="INFO" additivity="false">
         <appender-ref ref="HARVEST"/>
@@ -198,7 +199,7 @@
         <appender-ref ref="PAGES"/>
     </logger>
     <logger name="ai.platon.pulsar.crawl.component.LoadComponent.Task" level="INFO" additivity="true">
-        <appender-ref ref="Console"/>
+<!--        <appender-ref ref="Console"/>-->
         <appender-ref ref="PAGES"/>
     </logger>
     <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator.Task" level="INFO" additivity="false">
@@ -227,10 +228,10 @@
     </logger>
 
     <logger name="ai.platon.exotic" level="INFO">
-        <appender-ref ref="Console"/>
+<!--        <appender-ref ref="Console"/>-->
     </logger>
     <logger name="ai.platon.exotic.driver" level="INFO">
-        <appender-ref ref="Console"/>
+<!--        <appender-ref ref="Console"/>-->
     </logger>
 
     <logger name="ch.qos.logback.classic" level="WARN"/>

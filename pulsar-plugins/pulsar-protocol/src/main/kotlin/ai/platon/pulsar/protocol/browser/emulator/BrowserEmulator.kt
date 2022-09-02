@@ -20,7 +20,6 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
-import ai.platon.pulsar.protocol.browser.driver.WebDriverAdapter
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -97,7 +96,7 @@ open class BrowserEmulator(
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
         } catch (e: SessionLostException) {
-            logger.warn("Web driver session of #{} is closed | {}", driver.id, e.simplify())
+            logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.simplify())
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page)
@@ -136,19 +135,15 @@ open class BrowserEmulator(
 
         val navigateTask = NavigateTask(task, driver, driverSettings)
 
-        try {
-            val response = driver.loadResource(task.url)
-                ?: return ForwardingResponse.failed(task.page, SessionLostException("null response"))
+        val response = driver.loadResource(task.url)
+            ?: return ForwardingResponse.failed(task.page, SessionLostException("null response"))
 
-            navigateTask.pageSource = response.body()
-            navigateTask.pageDatum.apply {
-                headers.putAll(response.headers())
-                contentType = response.contentType()
-                content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
-                protocolStatus = ProtocolStatus.STATUS_SUCCESS
-            }
-        } catch (e: WebDriverException) {
-            logger.warn(e.stringify())
+        navigateTask.pageSource = response.body()
+        navigateTask.pageDatum.apply {
+            headers.putAll(response.headers())
+            contentType = response.contentType()
+            content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
+            protocolStatus = ProtocolStatus.STATUS_SUCCESS
         }
 
         responseHandler.onResponseWillBeCreated(task, driver)
@@ -163,7 +158,7 @@ open class BrowserEmulator(
         var response: Response?
 
         try {
-            response = browseWithWebDriverExceptionsHandled(task, driver)
+            response = browseWithWebDriver(task, driver)
 
             // Do something like a human being
 //            interactAfterFetch(task, driver)
@@ -179,30 +174,25 @@ open class BrowserEmulator(
         } catch (e: NavigateTaskCancellationException) {
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
                 task.page.id, task.id, task.batchId)
-            response = ForwardingResponse.crawlRetry(task.page)
+            response = ForwardingResponse.canceled(task.page)
         }
 
         return response
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
-    private suspend fun browseWithWebDriverExceptionsHandled(task: FetchTask, driver: WebDriver): Response {
+    private suspend fun browseWithWebDriver(task: FetchTask, driver: WebDriver): Response {
         checkState(task, driver)
 
         val navigateTask = NavigateTask(task, driver, driverSettings)
 
-        try {
-            val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
-            navigateTask.pageDatum.apply {
-                protocolStatus = interactResult.protocolStatus
-                activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
-                activeDomUrls = interactResult.activeDomMessage?.urls
-            }
-            navigateTask.pageSource = driver.pageSource() ?: ""
-        } catch (e: WebDriverException) {
-            logger.warn(e.message)
-            navigateTask.pageDatum.protocolStatus = ProtocolStatus.retry(RetryScope.PRIVACY)
+        val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
+        navigateTask.pageDatum.apply {
+            protocolStatus = interactResult.protocolStatus
+            activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
+            activeDomUrls = interactResult.activeDomMessage?.urls
         }
+        navigateTask.pageSource = driver.pageSource() ?: ""
 
         responseHandler.onResponseWillBeCreated(task, driver)
         return createResponse(navigateTask).also {

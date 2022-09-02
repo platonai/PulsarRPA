@@ -7,15 +7,18 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class ScheduledMonitor(
         var initialDelay: Duration = Duration.ofMinutes(5),
         var watchInterval: Duration = Duration.ofSeconds(30),
         val executor: ScheduledExecutorService = createDefaultExecutor(),
+        @Deprecated("Not used")
         val autoClose: Boolean = true
 ): AutoCloseable {
     private val logger = LoggerFactory.getLogger(ScheduledMonitor::class.java)
 
+    private val closed = AtomicBoolean()
     protected var scheduledFuture: ScheduledFuture<*>? = null
 
     /**
@@ -60,13 +63,13 @@ abstract class ScheduledMonitor(
      */
     @Synchronized
     open fun start(initialDelay: Long, period: Long, unit: TimeUnit) {
-        start(initialDelay, period, unit, Runnable {
+        start(initialDelay, period, unit) {
             try {
                 watch()
-            } catch (ex: Throwable) {
-                logger.error("Exception thrown from {}#report. Exception was suppressed.", javaClass.simpleName, ex)
+            } catch (e: Throwable) {
+                logger.error("Exception thrown from {} report. Exception was suppressed.", javaClass.simpleName, e)
             }
-        })
+        }
     }
 
     fun start() = start(initialDelay, watchInterval) { watch() }
@@ -74,7 +77,7 @@ abstract class ScheduledMonitor(
     abstract fun watch()
 
     override fun close() {
-        if (autoClose) {
+        if (closed.compareAndSet(false, true)) {
             logger.info("Closing scheduled monitor | $this")
             val name = this.javaClass.simpleName
             stopExecution(name, executor, scheduledFuture, true)

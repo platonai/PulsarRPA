@@ -64,17 +64,25 @@ class ChromeDevtoolsBrowser(
     }
 
     private fun doClose() {
-        logger.info("Closing browser with {} devtools ... | {}", drivers.size, id)
+        closeDrivers()
+
+        chrome.close()
+        launcher.close()
+
+        logger.info("Browser is closed | #{}", id.display)
+    }
+
+    private fun closeDrivers() {
+        if (drivers.isEmpty()) {
+            return
+        }
+
+        logger.info("Closing browser with {} devtools ... | #{}", drivers.size, id)
 
         val nonSynchronized = drivers.toList().also { drivers.clear() }
         nonSynchronized.parallelStream().forEach {
             it.runCatching { close() }.onFailure { logger.warn("Failed to close the devtool", it) }
         }
-
-        chrome.close()
-        launcher.close()
-
-        logger.info("Browser is closed | {}", id.display)
     }
 
     @Synchronized

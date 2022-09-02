@@ -129,13 +129,13 @@ class WebDriverContext(
     }
 
     private fun waitUntilIdle(timeout: Duration) {
-        var ttl = timeout.seconds
         try {
-            while (ttl-- > 0 && runningTasks.isNotEmpty()) {
-                lock.withLock { notBusy.await(1, TimeUnit.SECONDS) }
-            }
+            lock.lockInterruptibly()
+            notBusy.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
+        } finally {
+            lock.unlock()
         }
     }
 

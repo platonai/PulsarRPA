@@ -155,17 +155,17 @@ open class FetchComponent(
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
-        val url = page.url
-        val pageDatum = output.pageDatum
         val protocolStatus = output.protocolStatus
-
-        if (!protocolStatus.isCanceled) {
-            if (pageDatum == null) {
-                logger.warn("No content | {}", page.configuredUrl)
-            }
+        if (protocolStatus.isCanceled) {
+            return page
         }
 
-        // TODO: handle cancellation
+        val url = page.url
+        val pageDatum = output.pageDatum
+
+        if (pageDatum == null) {
+            logger.warn("No content | {}", page.configuredUrl)
+        }
         page.isFetched = true
 
         page.headers.putAll(output.headers.asMultimap())

@@ -12,30 +12,25 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
-open class WebDriverException: IllegalStateException {
-    constructor() : super() {}
+open class WebDriverException(
+    message: String? = null,
+    val driver: WebDriver? = null,
+    cause: Throwable? = null
+): RuntimeException(message, cause) {
 
-    constructor(message: String?) : super(message) {
-    }
+    constructor(message: String?, cause: Throwable) : this(message, null, cause)
 
-    constructor(message: String?, cause: Throwable) : super(message, cause) {
-    }
-
-    constructor(cause: Throwable?) : super(cause) {
-    }
+    constructor(cause: Throwable?) : this(null, null, cause)
 }
 
-open class WebDriverCancellationException: WebDriverException {
-    constructor() : super() {}
+open class WebDriverCancellationException(
+    message: String? = null,
+    driver: WebDriver? = null,
+    cause: Throwable? = null
+): WebDriverException(message, driver, cause) {
+    constructor(message: String?, cause: Throwable) : this(message, null, cause)
 
-    constructor(message: String?) : super(message) {
-    }
-
-    constructor(message: String?, cause: Throwable) : super(message, cause) {
-    }
-
-    constructor(cause: Throwable?) : super(cause) {
-    }
+    constructor(cause: Throwable?) : this(null, null, cause)
 }
 
 /**

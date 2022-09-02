@@ -85,7 +85,6 @@ abstract class AbstractWebDriver(
     override fun retire() = status.set(WebDriver.Status.RETIRED)
     override fun cancel() {
         if (status.compareAndSet(WebDriver.Status.WORKING, WebDriver.Status.CANCELED)) {
-            // stop()
         }
     }
 

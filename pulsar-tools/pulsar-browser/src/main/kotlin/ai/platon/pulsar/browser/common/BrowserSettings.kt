@@ -216,6 +216,12 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        fun supervised(): Companion {
+            System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
+
+            return BrowserSettings
+        }
+
         /**
          * Single page application
          * */

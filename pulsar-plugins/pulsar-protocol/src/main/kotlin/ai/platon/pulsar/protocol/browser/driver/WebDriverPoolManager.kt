@@ -131,7 +131,7 @@ open class WebDriverPoolManager(
     fun cancel(url: String): WebDriver? {
         var driver: WebDriver? = null
         driverPools.values.forEach { driverPool ->
-            driver = driverPool.firstOrNull { it.navigateEntry.pageUrl == url }?.also {
+            driver = driverPool.onlineDrivers.lastOrNull { it.navigateEntry.pageUrl == url }?.also {
                 it.cancel()
             }
         }
@@ -151,9 +151,7 @@ open class WebDriverPoolManager(
      * Cancel all the fetch tasks, stop loading all pages
      * */
     fun cancelAll() {
-        driverPools.values.forEach { driverPool ->
-            driverPool.onlineDrivers.forEach { it.cancel() }
-        }
+        driverPools.values.forEach { it.cancelAll() }
     }
 
     /**
@@ -161,7 +159,7 @@ open class WebDriverPoolManager(
      * */
     fun cancelAll(browserId: BrowserId) {
         val driverPool = driverPools[browserId] ?: return
-        driverPool.onlineDrivers.toList().parallelStream().forEach { it.cancel() }
+        driverPool.cancelAll()
     }
 
     /**
@@ -247,7 +245,7 @@ open class WebDriverPoolManager(
     }
 
     private suspend fun <R> poll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        val notLaunched = driverPool.numTasks.compareAndSet(0, 1)
+        val notLaunched = driverPool.launched.compareAndSet(false, true)
         return if (notLaunched) {
             launchAndPoll(driverPool, task)
         } else {

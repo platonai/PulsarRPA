@@ -201,6 +201,9 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMajorCode() == FAILED;
     }
 
+    /**
+     * If a fetch task is canceled, do not update the page status
+     * */
     public boolean isCanceled() {
         return getMinorCode() == CANCELED;
     }

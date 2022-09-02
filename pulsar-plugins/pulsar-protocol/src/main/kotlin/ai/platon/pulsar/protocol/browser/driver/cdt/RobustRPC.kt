@@ -22,7 +22,7 @@ internal class RobustRPC(
     @Throws(SessionLostException::class)
     fun handleRPCException(e: ChromeRPCException, action: String? = null, url: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
-            throw SessionLostException("Too many RPC failures")
+            throw SessionLostException("Too many RPC failures", driver)
         }
 
         logger.warn("Chrome RPC exception: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
@@ -44,7 +44,7 @@ internal class RobustRPC(
     suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
         var i = maxRetry
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
-        while (result.isFailure && i-- > 0 && isActive) {
+        while (result.isFailure && i-- > 0 && driver.checkState()) {
             result = kotlin.runCatching { invokeDeferred0(action, block) }
         }
 
@@ -52,6 +52,8 @@ internal class RobustRPC(
     }
 
     private suspend fun <T> invokeDeferred0(action: String, block: suspend CoroutineScope.() -> T): T? {
+        if (!driver.checkState()) return null
+
         return withContext(Dispatchers.IO) {
             if (!driver.checkState(action)) {
                 return@withContext null

@@ -1,29 +1,24 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 
-open class SessionException: WebDriverException {
-    constructor() : super() {}
+open class SessionException(
+    message: String? = null,
+    driver: WebDriver? = null,
+    cause: Throwable? = null
+): WebDriverException(message, driver, cause) {
+    constructor(message: String?, cause: Throwable) : this(message, null, cause)
 
-    constructor(message: String?) : super(message) {
-    }
-
-    constructor(message: String?, cause: Throwable) : super(message, cause) {
-    }
-
-    constructor(cause: Throwable?) : super(cause) {
-    }
+    constructor(cause: Throwable?) : this(null, null, cause)
 }
 
-open class SessionLostException: SessionException {
-    constructor() : super() {}
+open class SessionLostException(
+    message: String? = null,
+    driver: WebDriver? = null,
+    cause: Throwable? = null
+): WebDriverException(message, driver, cause) {
+    constructor(message: String?, cause: Throwable) : this(message, null, cause)
 
-    constructor(message: String?) : super(message) {
-    }
-
-    constructor(message: String?, cause: Throwable) : super(message, cause) {
-    }
-
-    constructor(cause: Throwable?) : super(cause) {
-    }
+    constructor(cause: Throwable?) : this(null, null, cause)
 }

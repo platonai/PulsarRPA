@@ -103,8 +103,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
-        checkState("navigateTo")
-
         this.navigateEntry = entry
         navigateHistory.add(entry)
         browser.onWillNavigate(entry)
@@ -160,10 +158,6 @@ class ChromeDevtoolsDriver(
     /** Force the page stop all navigations and pending resource fetches. */
     @Throws(WebDriverException::class)
     override suspend fun stopLoading() {
-        if (!checkState()) {
-            return
-        }
-
         try {
             rpc.invokeDeferred("stopLoading") {
                 pageAPI?.stopLoading()
@@ -176,10 +170,6 @@ class ChromeDevtoolsDriver(
     /** Force the page stop all navigations and releases all resources. */
     @Throws(WebDriverException::class)
     override suspend fun terminate() {
-        if (!checkState()) {
-            return
-        }
-
         navigateEntry.stopped = true
         try {
             if (browser.isGUI) {
@@ -207,8 +197,6 @@ class ChromeDevtoolsDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
-        if (!checkState()) return null
-
         try {
             return rpc.invokeDeferred("evaluate") { pageHandler.evaluate(expression) }
         } catch (e: ChromeRPCException) {
@@ -221,8 +209,6 @@ class ChromeDevtoolsDriver(
     override val sessionId: String?
         @Throws(WebDriverException::class)
         get() {
-            if (!checkState()) return null
-
             lastSessionId = try {
                 if (!isActive) null else mainFrameAPI?.id
             } catch (e: ChromeRPCException) {
@@ -234,8 +220,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
-        if (!checkState()) return navigateUrl
-
         navigateUrl = try {
             return rpc.invokeDeferred("currentUrl") {
                 mainFrameAPI?.url ?: navigateUrl
@@ -250,8 +234,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun exists(selector: String): Boolean {
-        if (!checkState()) return false
-
         try {
             val nodeId = querySelector(selector)
             return nodeId != null && nodeId > 0
@@ -264,8 +246,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun visible(selector: String): Boolean {
-        if (!checkState()) return false
-
         try {
             return pageHandler.visible(selector)
         } catch (e: ChromeRPCException) {
@@ -280,8 +260,6 @@ class ChromeDevtoolsDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
-        if (!checkState()) return -1L
-
         val timeoutMillis = timeout.toMillis()
         val startTime = System.currentTimeMillis()
         var elapsedTime = 0L
@@ -304,16 +282,14 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(timeout: Duration): Long {
-        if (!checkState()) return -1
-
-        val oldUrl = currentUrl()
-        var navigated = isNavigated(oldUrl)
-        val startTime = System.currentTimeMillis()
-        var elapsedTime = 0L
-
-        val timeoutMillis = timeout.toMillis()
-
         try {
+            val oldUrl = currentUrl()
+            var navigated = isNavigated(oldUrl)
+            val startTime = System.currentTimeMillis()
+            var elapsedTime = 0L
+
+            val timeoutMillis = timeout.toMillis()
+
             while (elapsedTime < timeoutMillis && !navigated && isActive) {
                 gap("waitForNavigation")
                 elapsedTime = System.currentTimeMillis() - startTime
@@ -341,34 +317,46 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
-        rpc.invokeDeferred("mouseWheelDown") {
-            repeat(count) { i ->
-                if (i > 0) {
-                    if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
-                }
+        try {
+            rpc.invokeDeferred("mouseWheelDown") {
+                repeat(count) { i ->
+                    if (i > 0) {
+                        if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
+                    }
 
-                mouse?.wheel(deltaX, deltaY)
+                    mouse?.wheel(deltaX, deltaY)
+                }
             }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "mouseWheelDown")
         }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
-        rpc.invokeDeferred("mouseWheelUp") {
-            repeat(count) { i ->
-                if (i > 0) {
-                    if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
-                }
+        try {
+            rpc.invokeDeferred("mouseWheelUp") {
+                repeat(count) { i ->
+                    if (i > 0) {
+                        if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
+                    }
 
-                mouse?.wheel(deltaX, deltaY)
+                    mouse?.wheel(deltaX, deltaY)
+                }
             }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "mouseWheelUp")
         }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
-        rpc.invokeDeferred("moveMouseTo") {
-            mouse?.move(x, y)
+        try {
+            rpc.invokeDeferred("moveMouseTo") {
+                mouse?.move(x, y)
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "moveMouseTo")
         }
     }
 
@@ -390,8 +378,6 @@ class ChromeDevtoolsDriver(
      */
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
-        if (!checkState()) return
-
         try {
             val nodeId = rpc.invokeDeferred("click") {
                 pageHandler.scrollIntoViewIfNeeded(selector)
@@ -429,8 +415,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
-        if (!checkState()) return
-
         try {
             rpc.invokeDeferred("clickMatches") {
                 pageHandler.evaluate("__pulsar_utils__.clickMatches('$selector', '$pattern')")
@@ -442,8 +426,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
-        if (!checkState()) return
-
         try {
             rpc.invokeDeferred("clickMatches") {
                 pageHandler.evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
@@ -455,8 +437,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
-        if (!checkState()) return
-
         try {
             rpc.invokeDeferred("type") {
                 val nodeId = focusOnSelector(selector)
@@ -473,8 +453,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
-        if (!checkState()) return
-
         try {
             rpc.invokeDeferred("scrollTo") {
                 pageHandler.scrollIntoViewIfNeeded(selector)
@@ -572,13 +550,19 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverCancellationException::class)
     internal fun checkState(action: String = ""): Boolean {
-        if (isCanceled) {
-            // is it good to throw here?
-            throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl")
+        if (!isActive) {
+            return false
         }
 
-        lastActiveTime = Instant.now()
-        navigateEntry.refresh(action)
+        if (isCanceled) {
+            // is it good to throw here?
+            throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
+        }
+
+        if (action.isNotBlank()) {
+            lastActiveTime = Instant.now()
+            navigateEntry.refresh(action)
+        }
 
         return isActive
     }
@@ -660,6 +644,8 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun bringToFront() {
+        if (!checkState()) return
+
         try {
             rpc.invokeDeferred("bringToFront") {
                 pageAPI?.bringToFront()
