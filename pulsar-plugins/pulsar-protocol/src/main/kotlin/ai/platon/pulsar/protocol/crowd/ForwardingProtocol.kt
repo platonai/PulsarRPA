@@ -24,10 +24,9 @@ import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
 
 open class ForwardingProtocol : AbstractHttpProtocol() {
-    private val log = LoggerFactory.getLogger(ForwardingProtocol::class.java)
+    private val logger = LoggerFactory.getLogger(ForwardingProtocol::class.java)
     private val cacheTTL = Duration.ofMinutes(5)
     private val cacheCapacity = 200
     private val cache = ConcurrentExpiringLRUCache<String, Response>(cacheTTL, cacheCapacity)
@@ -52,20 +51,20 @@ open class ForwardingProtocol : AbstractHttpProtocol() {
 
     private fun logAfterRemoveResponse(url: String, response: Response?) {
         if (response == null) {
-            if (log.isTraceEnabled) {
-                log.trace("No page in forward cache, total {} | {}", cache.size, url)
+            if (logger.isTraceEnabled) {
+                logger.trace("No page in forward cache, total {} | {}", cache.size, url)
             }
         }
     }
 
     private fun logAfterPutResponse() {
-        if (log.isTraceEnabled) {
-            log.trace("Putting page to forward cache, total {}", cache.size)
+        if (logger.isTraceEnabled) {
+            logger.trace("Putting page to forward cache, total {}", cache.size)
         }
         if (cache.size > 100) {
-            log.warn("Forwarding cache is too large, there might be a bug")
+            logger.warn("Forwarding cache is too large, there might be a bug")
             if (cache.size > 1000) {
-                log.warn("!!!WARNING!!! FORWARDING CACHE IS UNEXPECTED TOO LARGE, CLEAR IT TO PREVENT MEMORY EXHAUSTING")
+                logger.warn("!!!WARNING!!! FORWARDING CACHE IS UNEXPECTED TOO LARGE, CLEAR IT TO PREVENT MEMORY EXHAUSTING")
                 cache.clear()
             }
         }
