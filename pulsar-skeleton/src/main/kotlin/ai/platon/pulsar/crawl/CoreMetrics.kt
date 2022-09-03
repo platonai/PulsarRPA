@@ -94,10 +94,7 @@ class CoreMetrics(
      * The elapsed time since the program process starts
      */
     val elapsedTime get() = Duration.between(startTime, Instant.now())
-    /**
-     * The elapsed time in seconds since the program process starts
-     */
-    val elapsedSeconds get() = elapsedTime.seconds.coerceAtLeast(1)
+
     /**
      * Tracking statistics for each host
      */
@@ -125,9 +122,9 @@ class CoreMetrics(
     /**
      * The total bytes of page content of all success web pages
      * */
-    val fetchTasks = registry.meter(this, "fetchTasks")
-    val successFetchTasks = registry.meter(this, "successFetchTasks")
-    val finishedFetchTasks = registry.meter(this, "finishedFetchTasks")
+    val tasks = registry.meter(this, "tasks")
+    val successTasks = registry.meter(this, "successTasks")
+    val finishedTasks = registry.meter(this, "finishedTasks")
 
     val proxies = registry.meter(this, "proxies")
 
@@ -164,22 +161,22 @@ class CoreMetrics(
      * */
     val networkIFsRecvBytes
         get() = (totalNetworkIFsRecvBytes - initNetworkIFsRecvBytes).coerceAtLeast(0L)
-    val networkIFsRecvBytesPerSecond get() = networkIFsRecvBytes / elapsedSeconds
-    val networkIFsRecvBytesPerPage get() = networkIFsRecvBytes / successFetchTasks.count
+    val networkIFsRecvBytesPerSecond
+        get() = networkIFsRecvBytes / elapsedTime.seconds.coerceAtLeast(1)
+    val networkIFsRecvBytesPerPage
+        get() = networkIFsRecvBytes / successTasks.count.coerceAtLeast(1)
 
-    val fetchTasksPerSecond get() = fetchTasks.count.toFloat() / elapsedSeconds
-    val finishedFetchTasksPerSecond get() = finishedFetchTasks.count.toFloat() / elapsedSeconds
-    val successFetchTasksPerSecond get() = successFetchTasks.count.toFloat() / elapsedSeconds
+    val finishedTasksPerSecond
+        get() = finishedTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
+
+    val successTasksPerSecond
+        get() = successTasks.count.toFloat() / elapsedTime.seconds.coerceAtLeast(1)
 
     var enableReporter = true
-    var lastTaskTime = Instant.EPOCH
-        private set
-    var lastReportTime = Instant.EPOCH
-        private set
 
     private var lastSystemInfoRefreshTime = 0L
-    private var reportTimer: Timer? = null
     private val closed = AtomicBoolean()
+    private var reportTimer: Timer? = null
 
     init {
         kotlin.runCatching {
@@ -225,13 +222,12 @@ class CoreMetrics(
         return timeoutUrls.contains(url)
     }
 
-    fun markFetchTaskStart() {
-        markFetchTaskStart(1)
+    fun markTaskStart() {
+        tasks.mark()
     }
 
-    fun markFetchTaskStart(size: Int) {
-        lastTaskTime = Instant.now()
-        fetchTasks.mark(size.toLong())
+    fun markTaskStart(size: Int) {
+        tasks.mark(size.toLong())
     }
 
     /**
@@ -245,11 +241,11 @@ class CoreMetrics(
         unreachableHosts.remove(host)
         failedHosts.remove(host)
 
-        successFetchTasks.mark()
-        finishedFetchTasks.mark()
+        successTasks.mark()
+        finishedTasks.mark()
 
         // update system info for about every 30 seconds
-        if (finishedFetchTasks.count % 30 == 0L) {
+        if (finishedTasks.count % 30 == 0L) {
             updateSystemInfo()
         }
 
@@ -258,7 +254,7 @@ class CoreMetrics(
         meterContentBytes.mark(bytes)
         meterContentMBytes.inc(ByteUnitConverter.convert(bytes, "M").toLong())
 
-        page.activeDOMStatTrace["lastStat"]?.apply {
+        page.activeDomStats["lastStat"]?.apply {
             pageAnchors.update(na)
             pageImages.update(ni)
             pageNumbers.update(nnm)
@@ -271,6 +267,7 @@ class CoreMetrics(
         ++urlStats.urls
         ++urlStats.pageViews
 
+        // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
         val pageCategory = page.pageCategory
         when {
             pageCategory.isIndex -> ++urlStats.indexUrls
@@ -294,10 +291,6 @@ class CoreMetrics(
         }
 
         urlStatistics[host] = urlStats
-
-        if (finishedFetchTasksPerSecond > 0.5) {
-            report()
-        }
     }
 
     fun trackTimeout(url: String) {
@@ -346,11 +339,11 @@ class CoreMetrics(
         return numUrls + failedTasks
     }
 
-    private fun formatStatus(): String {
-        if (fetchTasks.count == 0L) return ""
+    fun getSuccessReport(): String {
+        if (successTasks.count == 0L) return ""
 
-        val seconds = elapsedSeconds.coerceAtLeast(1)
-        val count = successFetchTasks.count.coerceAtLeast(1)
+        val seconds = elapsedTime.seconds.coerceAtLeast(1)
+        val count = successTasks.count
         val bytes = meterContentBytes.count
         val proxyFmt = if (proxies.count > 0) " using %s proxies" else ""
         var format = "Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
@@ -359,7 +352,7 @@ class CoreMetrics(
             format,
             count,
             elapsedTime.readable(),
-            successFetchTasks.meanRate,
+            successTasks.meanRate,
             proxies.count,
             Strings.readableBytes(bytes),
             Strings.readableBytes(bytes / seconds),
@@ -376,20 +369,22 @@ class CoreMetrics(
             reportTimer?.cancel()
             reportTimer = null
 
-            if (fetchTasks.count > 0) {
-                logger.info(formatStatus())
+            if (successTasks.count > 0) {
+                logger.info(getSuccessReport())
+            }
 
-                if (unreachableHosts.isNotEmpty()) {
-                    logger.debug("There are " + unreachableHosts.size + " unreachable hosts")
-                    AppFiles.logUnreachableHosts(unreachableHosts)
-                }
-
+            if (tasks.count > 0) {
                 logAvailableHosts()
+            }
+
+            if (unreachableHosts.isNotEmpty()) {
+                logger.info("There are " + unreachableHosts.size + " unreachable hosts")
+                AppFiles.logUnreachableHosts(unreachableHosts)
             }
         }
     }
 
-    private fun updateSystemInfo() {
+    fun updateSystemInfo() {
         kotlin.runCatching { updateSystemInfo0() }.onFailure { logger.warn("[Unexpected]", it) }
     }
 
@@ -413,42 +408,22 @@ class CoreMetrics(
         if (reportTimer == null) {
             reportTimer = Timer("CoreMetrics", true)
             val delay = Duration.ofMinutes(1)
-            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { report() }
+            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { reportSuccessTasks() }
         }
     }
 
-    private fun report() {
+    private fun reportSuccessTasks() {
         if (!logger.isInfoEnabled) {
             return
         }
 
-        val now = Instant.now()
-        if (Duration.between(lastReportTime, now).seconds < 60) {
-            return
-        }
-        lastReportTime = Instant.now()
-
-        if (finishedFetchTasksPerSecond > 0.5) {
-            reportWhenHighThroughput()
-        } else {
-            reportWhenLowThroughput()
-        }
-    }
-
-    private fun reportWhenLowThroughput() {
-        val now = Instant.now()
-        if (Duration.between(lastTaskTime, now).seconds > 8 * 60) {
-            // the system is idle
+        if (successTasks.count == 0L) {
             return
         }
 
-        logger.info(formatStatus())
-    }
-
-    private fun reportWhenHighThroughput() {
-        val i = finishedFetchTasks.count
+        val i = finishedTasks.count
         // successTasksPerSecond is about to be 1.0
-        val a = successFetchTasksPerSecond * 60
+        val a = successTasksPerSecond * 60
         val period = 10 + when {
             i < 100 -> a / 3
             i < 10000 -> a
@@ -456,21 +431,31 @@ class CoreMetrics(
         }.toInt()
 
         if (i % period == 0L) {
-            logger.info(formatStatus())
+            // logger.info(formatStatus())
         }
+
+        logger.info(getSuccessReport())
     }
 
     private fun logAvailableHosts() {
         val report = StringBuilder("Total " + urlStatistics.size + " available hosts")
         report.append('\n')
 
-        urlStatistics.values.sorted().map { (hostName, urls, indexUrls, detailUrls) ->
+        urlStatistics.values.sorted()
+            .map { (hostName, urls, indexUrls, detailUrls, searchUrls, mediaUrls,
+                       bbsUrls, blogUrls, tiebaUrls, _, urlsTooLong) ->
                 String.format(
-                    "%40s -> %-15s %-15s %-15s",
+                    "%40s -> %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s",
                     hostName,
                     "total : $urls",
                     "index : $indexUrls",
-                    "detail : $detailUrls"
+                    "detail : $detailUrls",
+                    "search : $searchUrls",
+                    "media : $mediaUrls",
+                    "bbs : $bbsUrls",
+                    "tieba : $tiebaUrls",
+                    "blog : $blogUrls",
+                    "long : $urlsTooLong"
                 )
             }.joinTo(report, "\n") { it }
 
