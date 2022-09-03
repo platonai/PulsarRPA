@@ -339,11 +339,11 @@ class CoreMetrics(
         return numUrls + failedTasks
     }
 
-    fun formatStatus(): String {
-        if (tasks.count == 0L) return ""
+    fun getSuccessReport(): String {
+        if (successTasks.count == 0L) return ""
 
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
-        val count = successTasks.count.coerceAtLeast(1)
+        val count = successTasks.count
         val bytes = meterContentBytes.count
         val proxyFmt = if (proxies.count > 0) " using %s proxies" else ""
         var format = "Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
@@ -369,15 +369,17 @@ class CoreMetrics(
             reportTimer?.cancel()
             reportTimer = null
 
+            if (successTasks.count > 0) {
+                logger.info(getSuccessReport())
+            }
+
             if (tasks.count > 0) {
-                logger.info(formatStatus())
-
-                if (unreachableHosts.isNotEmpty()) {
-                    logger.info("There are " + unreachableHosts.size + " unreachable hosts")
-                    AppFiles.logUnreachableHosts(unreachableHosts)
-                }
-
                 logAvailableHosts()
+            }
+
+            if (unreachableHosts.isNotEmpty()) {
+                logger.info("There are " + unreachableHosts.size + " unreachable hosts")
+                AppFiles.logUnreachableHosts(unreachableHosts)
             }
         }
     }
@@ -406,16 +408,16 @@ class CoreMetrics(
         if (reportTimer == null) {
             reportTimer = Timer("CoreMetrics", true)
             val delay = Duration.ofMinutes(1)
-            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { reportStatus() }
+            reportTimer?.scheduleAtFixedRate(delay, Duration.ofMinutes(1)) { reportSuccessTasks() }
         }
     }
 
-    private fun reportStatus() {
+    private fun reportSuccessTasks() {
         if (!logger.isInfoEnabled) {
             return
         }
 
-        if (tasks.count == 0L) {
+        if (successTasks.count == 0L) {
             return
         }
 
@@ -432,7 +434,7 @@ class CoreMetrics(
             // logger.info(formatStatus())
         }
 
-        logger.info(formatStatus())
+        logger.info(getSuccessReport())
     }
 
     private fun logAvailableHosts() {
