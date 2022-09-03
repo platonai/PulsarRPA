@@ -112,7 +112,7 @@ open class ParsableHyperlink(
             this(url, { page, document -> onParse.accept(page, document) })
 
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler().also {
-        it.loadEventHandler.onAfterHtmlParse.addLast(object: HtmlDocumentHandler() {
+        it.loadEventHandler.onHTMLDocumentParsed.addLast(object: HtmlDocumentHandler() {
             override fun invoke(page: WebPage, document: FeaturedDocument) {
                 onParse(page, document.document)
                 Unit
@@ -153,6 +153,12 @@ open class CompletableHyperlink<T>(
 ): UrlAware, Comparable<UrlAware>, StatefulUrl, CompletableFuture<T>() {
 
     override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
+
+    override val isStandard get() = UrlUtils.isValidUrl(url)
+
+    override val toURL get() = URL(url)
+
+    override val toURLOrNull get() = UrlUtils.getURLOrNull(url)
 
     override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
 

@@ -380,7 +380,7 @@ class CoreMetrics(
                 logger.info(formatStatus())
 
                 if (unreachableHosts.isNotEmpty()) {
-                    logger.info("There are " + unreachableHosts.size + " unreachable hosts")
+                    logger.debug("There are " + unreachableHosts.size + " unreachable hosts")
                     AppFiles.logUnreachableHosts(unreachableHosts)
                 }
 

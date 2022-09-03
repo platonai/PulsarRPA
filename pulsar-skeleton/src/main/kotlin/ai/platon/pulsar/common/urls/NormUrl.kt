@@ -32,8 +32,6 @@ open class NormUrl constructor(
     val args = options.toString()
     val configuredUrl = "$spec $args".trim()
 
-    val isEmpty get() = spec.isEmpty()
-    val isNotEmpty get() = !isEmpty
     val isNil get() = this == NIL
     val isNotNil get() = !isNil
 

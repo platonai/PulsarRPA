@@ -95,6 +95,10 @@ class LoadComponent(
     }
 
     fun loadWithRetry(normUrl: NormUrl): WebPage {
+        if (normUrl.isNil) {
+            return WebPage.NIL
+        }
+
         var page = load0(normUrl)
         var n = normUrl.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
@@ -104,6 +108,10 @@ class LoadComponent(
     }
 
     suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
+        if (normUrl.isNil) {
+            return WebPage.NIL
+        }
+
         var page = loadDeferred0(normUrl)
         var n = normUrl.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
@@ -120,7 +128,7 @@ class LoadComponent(
             return listOf()
         }
 
-        val futures = loadAllAsync(normUrls)
+        val futures = loadAllAsync(normUrls.filter { !it.isNil })
 
         logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
 
@@ -132,38 +140,6 @@ class LoadComponent(
         logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
 
         return pages
-    }
-
-    /**
-     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
-     * */
-    fun loadAll2(normUrls: Iterable<NormUrl>): List<WebPage> {
-        if (!normUrls.iterator().hasNext()) {
-            return listOf()
-        }
-
-        val links = loadAllAsync(normUrls)
-
-        logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
-            globalCache.javaClass.name, globalCache.hashCode(), globalCache.urlPool.hashCode())
-
-        var i = 90
-        val pendingLinks = links.toMutableList()
-        while (i-- > 0 && pendingLinks.isNotEmpty()) {
-            val finishedLinks = pendingLinks.filter { it.isDone }
-            if (finishedLinks.isNotEmpty()) {
-                logger.debug("Has finished {} links", finishedLinks.size)
-            }
-
-            if (i % 30 == 0) {
-                logger.debug("Still {} pending links", pendingLinks.size)
-            }
-
-            pendingLinks.removeIf { it.isDone }
-            sleepSeconds(1)
-        }
-
-        return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
     /**
@@ -186,7 +162,8 @@ class LoadComponent(
             return listOf()
         }
 
-        val linkFutures = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
+        val linkFutures = normUrls.filter { !it.isNil }.distinctBy { it.spec }
+            .map { it.toCompletableListenableHyperlink() }
         globalCache.urlPool.addAll(linkFutures)
         return linkFutures
     }

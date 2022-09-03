@@ -395,13 +395,13 @@ abstract class AbstractPulsarContext(
 
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
-        if (isActive) crawlPool.add(url)
+        if (isActive && url.isStandard) crawlPool.add(url)
         return this
     }
 
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
-        if (isActive) crawlPool.addAll(urls)
+        if (isActive) crawlPool.addAll(urls.filter { it.isStandard })
         return this
     }
 

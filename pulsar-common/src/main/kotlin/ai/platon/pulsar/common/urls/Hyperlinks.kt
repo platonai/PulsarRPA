@@ -51,6 +51,18 @@ interface UrlAware {
     val configuredUrl: String
 
     /**
+     * The url is a standard URL and can be converted to a java.Util.URL
+     * */
+    val isStandard: Boolean
+
+    /**
+     * Converted to a java.Util.URL
+     * */
+    val toURL: URL
+
+    val toURLOrNull: URL?
+
+    /**
      * An url is Nil if it equals to AppConstants.NIL_PAGE_URL
      * */
     val isNil: Boolean
@@ -114,7 +126,13 @@ abstract class AbstractUrl(
 
     override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
 
-    override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
+    override val isStandard get() = UrlUtils.isValidUrl(url)
+
+    override val toURL get() = URL(url)
+
+    override val toURLOrNull get() = UrlUtils.getURLOrNull(url)
+
+    override val isNil get() = url == AppConstants.NIL_PAGE_URL
 
     /**
      * If this url is persistable
