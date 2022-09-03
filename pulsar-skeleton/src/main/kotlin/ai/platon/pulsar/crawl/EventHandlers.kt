@@ -362,7 +362,7 @@ interface LoadEventHandler {
     val onBeforeFetch: WebPageHandlerPipeline get() = onWillFetch
 
     val onWillLaunchBrowser: WebPageHandlerPipeline
-    @Deprecated("Old fashioned name", ReplaceWith("onWillBrowserLaunch"))
+    @Deprecated("Old fashioned name", ReplaceWith("onWillLaunchBrowser"))
     val onBeforeBrowserLaunch: WebPageHandlerPipeline get() = onWillLaunchBrowser
 
     val onBrowserLaunched: WebPageWebDriverHandlerPipeline

@@ -38,7 +38,7 @@ open class DegenerateXSQLScrapeHyperlink(
     }
 
     private fun registerEventHandler() {
-        eventHandler.crawlEventHandler.onAfterLoad.addLast { url, page ->
+        eventHandler.crawlEventHandler.onLoaded.addLast { url, page ->
             try {
                 executeQuery()
             } catch (t: Throwable) {

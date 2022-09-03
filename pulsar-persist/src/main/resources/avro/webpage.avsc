@@ -46,7 +46,7 @@
     {
       "name": "resource",
       "type": ["null","int"],
-      "default": 0
+      "default": null
     },
     {
       "name": "crawlStatus",
@@ -133,22 +133,22 @@
     },
     {
       "name": "contentLength",
-      "type": ["null","long"],
+      "type": "long",
       "default": 0
     },
     {
       "name": "lastContentLength",
-      "type": ["null","long"],
+      "type": "long",
       "default": 0
     },
     {
       "name": "aveContentLength",
-      "type": ["null","long"],
+      "type": "long",
       "default": 0
     },
     {
       "name": "persistedContentLength",
-      "type": ["null","long"],
+      "type": "long",
       "default": 0
     },
     {

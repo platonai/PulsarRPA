@@ -1,7 +1,6 @@
 package ai.platon.pulsar.persist.model
 
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
-import org.apache.commons.collections4.CollectionUtils
 
 /**
  * Created by vincent on 17-8-3.

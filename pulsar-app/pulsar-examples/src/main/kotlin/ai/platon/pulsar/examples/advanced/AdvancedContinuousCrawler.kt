@@ -18,55 +18,55 @@ fun main() {
             onNormalize.addLast { url ->
                 url
             }
-            onBeforeLoad.addLast { url ->
+            onWillLoad.addLast { url ->
 
             }
-            onBeforeFetch.addLast { page ->
+            onWillFetch.addLast { page ->
 
             }
-            onBeforeBrowserLaunch.addLast { page ->
+            onWillLaunchBrowser.addLast { page ->
 
             }
-            onAfterBrowserLaunch.addLast { page, driver ->
+            onBrowserLaunched.addLast { page, driver ->
 
             }
-            onAfterFetch.addLast { page ->
+            onFetched.addLast { page ->
 
             }
-            onBeforeParse.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
 
             }
-            onBeforeHtmlParse.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
 
             }
-            onBeforeExtract.addLast { page ->
+            onWillExtract.addLast { page ->
 
             }
-            onAfterExtract.addLast { page: WebPage, document: FeaturedDocument ->
+            onExtracted.addLast { page: WebPage, document: FeaturedDocument ->
 
             }
-            onAfterHtmlParse.addLast { page: WebPage, document: FeaturedDocument ->
+            onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
 
             }
-            onAfterParse.addLast { page ->
+            onParsed.addLast { page ->
 
             }
-            onAfterLoad.addLast { page ->
+            onLoaded.addLast { page ->
 
             }
         }
 
         link.eventHandler.simulateEventHandler.apply {
-            onBeforeCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
 
             }
-            onAfterCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onDOMStateChecked.addLast { page: WebPage, driver: WebDriver ->
 
             }
-            onBeforeComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
 
             }
-            onAfterComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onFeatureComputed.addLast { page: WebPage, driver: WebDriver ->
 
             }
         }
@@ -78,10 +78,10 @@ fun main() {
             onNormalize.addLast { url: UrlAware ->
                 url
             }
-            onBeforeLoad.addLast { url: UrlAware ->
+            onWillLoad.addLast { url: UrlAware ->
 
             }
-            onAfterLoad.addLast { url, page ->
+            onLoaded.addLast { url, page ->
 
             }
         }

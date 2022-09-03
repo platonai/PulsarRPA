@@ -283,7 +283,7 @@ class KWebPage(
 
     var protocolStatus: ProtocolStatus
         get() {
-            val protocolStatus = page.protocolStatus?:GProtocolStatus.newBuilder().build()
+            val protocolStatus = page.protocolStatus?: GProtocolStatus.newBuilder().build()
             return ProtocolStatus.box(protocolStatus)
         }
         set(value) { page.protocolStatus = value.unbox() }

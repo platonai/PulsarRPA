@@ -746,9 +746,13 @@ class ChromeDevtoolsDriver(
     // close irrelevant tabs, which might be opened for humanization purpose
     @Throws(ChromeDriverException::class)
     private fun cleanTabs() {
-        val tabs = browser.listTabs()
-        closeTimeoutTabs(tabs)
-        closeIrrelevantTabs(tabs)
+        try {
+            val tabs = browser.listTabs()
+            closeTimeoutTabs(tabs)
+            closeIrrelevantTabs(tabs)
+        } catch (e: WebDriverException) {
+            // ignored
+        }
     }
 
     // close timeout tabs

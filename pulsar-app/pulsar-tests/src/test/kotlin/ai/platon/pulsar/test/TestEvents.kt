@@ -37,12 +37,12 @@ class TestEvents : TestBase() {
         val firedEvents = mutableListOf<String>()
         val eventHandler = hyperlink.eventHandler.loadEventHandler
         eventHandler.apply {
-            onBeforeLoad.addLast { url ->
+            onWillLoad.addLast { url ->
                 firedEvents.add("onBeforeLoad")
                 assertEquals(0, metrics.fetchTasks.count)
             }
 
-            onAfterFetch.addLast { page ->
+            onFetched.addLast { page ->
                 firedEvents.add("onAfterFetch")
                 assertTrue { page.crawlStatus.isFetched }
                 assertEquals(1, metrics.fetchTasks.count)
@@ -50,7 +50,7 @@ class TestEvents : TestBase() {
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
 
-            onAfterLoad.addLast { page ->
+            onLoaded.addLast { page ->
                 firedEvents.add("onAfterLoad")
 
                 assertTrue { page.protocolStatus.isSuccess }

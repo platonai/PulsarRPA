@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
@@ -545,7 +544,7 @@ class LoadComponent(
     fun flush() = webDb.flush()
 
     override fun close() {
-        closed.set(true)
+        closed.compareAndSet(false, true)
     }
 
     private fun assertSame(a: Any?, b: Any?, lazyMessage: () -> String) {

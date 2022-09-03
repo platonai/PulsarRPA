@@ -23,55 +23,55 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
                 println("$seq. onNormalize")
                 url
             }
-            onBeforeLoad.addLast { url ->
+            onWillLoad.addLast { url ->
                 println("$seq. onBeforeLoad")
             }
-            onBeforeFetch.addLast { page ->
+            onWillFetch.addLast { page ->
                 println("$seq. onBeforeFetch")
             }
-            onBeforeBrowserLaunch.addLast { page ->
+            onWillLaunchBrowser.addLast { page ->
                 println("$seq. onBeforeBrowserLaunch")
             }
-            onAfterBrowserLaunch.addLast { page, driver ->
+            onBrowserLaunched.addLast { page, driver ->
                 println("$seq. onAfterBrowserLaunch")
             }
-            onAfterFetch.addLast { page ->
+            onFetched.addLast { page ->
                 println("$seq. onAfterFetch")
             }
-            onBeforeParse.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
                 println("$seq. onBeforeParse")
             }
-            onBeforeHtmlParse.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
                 println("$seq. onBeforeHtmlParse")
             }
-            onBeforeExtract.addLast { page ->
+            onWillExtract.addLast { page ->
                 println("$seq. onBeforeExtract")
             }
-            onAfterExtract.addLast { page: WebPage, document: FeaturedDocument ->
+            onExtracted.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. onAfterExtract")
             }
-            onAfterHtmlParse.addLast { page: WebPage, document: FeaturedDocument ->
+            onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. onAfterHtmlParse")
             }
-            onAfterParse.addLast { page ->
+            onParsed.addLast { page ->
                 println("$seq. onAfterParse")
             }
-            onAfterLoad.addLast { page ->
+            onLoaded.addLast { page ->
                 println("$seq. onAfterLoad")
             }
         }
 
         simulateEventHandler.apply {
-            onBeforeCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onBeforeCheckDOMState")
             }
-            onAfterCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onDOMStateChecked.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onAfterCheckDOMState")
             }
-            onBeforeComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onBeforeComputeFeature")
             }
-            onAfterComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onFeatureComputed.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onAfterComputeFeature")
             }
         }
@@ -85,10 +85,10 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
                 println("$seq. onNormalize")
                 url
             }
-            onBeforeLoad.addLast { url: UrlAware ->
+            onWillLoad.addLast { url: UrlAware ->
                 println("$seq. onBeforeLoad")
             }
-            onAfterLoad.addLast { url, page ->
+            onLoaded.addLast { url, page ->
                 println("$seq. onAfterLoad")
             }
         }

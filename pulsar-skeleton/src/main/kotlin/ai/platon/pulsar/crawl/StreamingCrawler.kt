@@ -84,6 +84,7 @@ open class StreamingCrawler<T : UrlAware>(
     val globalCacheFactory: GlobalCacheFactory? = null,
     /**
      * The crawl event handler
+     * TODO: may not be the right way to register CrawlEventHandler
      * */
     val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
     /**
@@ -470,7 +471,6 @@ open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun onLoaded(url: UrlAware, page: WebPage?) {
-        // TODO: the event handlers should be merged
         if (url is ListenableUrl) {
             runSafely("onLoaded") { url.eventHandler.crawlEventHandler.onLoaded(url, page) }
         }

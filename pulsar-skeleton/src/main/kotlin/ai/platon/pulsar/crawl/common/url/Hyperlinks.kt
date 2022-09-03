@@ -261,7 +261,7 @@ open class CompletableListenableHyperlink<T>(
 internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHyperlink<WebPage>): WebPageHandler() {
     override fun invoke(page: WebPage) {
         link.complete(page)
-        link.eventHandler.loadEventHandler.onAfterLoad.remove(this)
+        link.eventHandler.loadEventHandler.onLoaded.remove(this)
     }
 }
 
@@ -275,7 +275,7 @@ fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<W
     link.eventHandler = DefaultPulsarEventHandler()
 
     val handler = CompleteWebPageHyperlinkHandler(link)
-    link.eventHandler.loadEventHandler.onAfterLoad.addLast(handler)
+    link.eventHandler.loadEventHandler.onLoaded.addLast(handler)
     options.eventHandler?.let { link.eventHandler.combine(it) }
 
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)

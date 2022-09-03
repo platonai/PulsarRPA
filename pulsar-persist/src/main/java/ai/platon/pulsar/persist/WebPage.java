@@ -32,8 +32,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
@@ -56,11 +54,11 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
  */
 final public class WebPage implements Comparable<WebPage> {
 
-    public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
+    private static final AtomicInteger SEQUENCER = new AtomicInteger();
 
-    private static AtomicInteger sequencer = new AtomicInteger();
+    public static final WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
-    private Integer id = sequencer.incrementAndGet();
+    private Integer id = SEQUENCER.incrementAndGet();
     /**
      * The url is the permanent internal address, and the location is the last working address
      */
@@ -1037,7 +1035,7 @@ final public class WebPage implements Comparable<WebPage> {
      * @return The length of the content in bytes.
      */
     public long getContentLength() {
-        return page.getContentLength();
+        return page.getContentLength() != null ? page.getContentLength() : 0;
     }
 
     /**
@@ -1066,7 +1064,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public long getPersistedContentLength() {
-        return page.getPersistedContentLength();
+        return page.getPersistedContentLength() != null ? page.getPersistedContentLength() : 0;
     }
 
     private void setPersistedContentLength(long bytes) {
@@ -1074,11 +1072,11 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public long getLastContentLength() {
-        return page.getLastContentLength();
+        return page.getLastContentLength() != null ? page.getLastContentLength() : 0;
     }
 
     public long getAveContentLength() {
-        return page.getAveContentLength();
+        return page.getAveContentLength() != null ? page.getAveContentLength() : 0;
     }
 
     @NotNull

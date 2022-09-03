@@ -24,7 +24,6 @@ import ai.platon.pulsar.session.PulsarEnvironment
 import ai.platon.pulsar.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
-import org.springframework.beans.factory.BeanCreationNotAllowedException
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
 import java.util.*

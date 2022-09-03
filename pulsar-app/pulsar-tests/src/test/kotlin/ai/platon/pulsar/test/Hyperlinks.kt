@@ -76,7 +76,7 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     fun await() = isDone.await()
 
     private fun registerEventHandler() {
-        eventHandler.crawlEventHandler.onAfterLoad.addFirst { url, page ->
+        eventHandler.crawlEventHandler.onLoaded.addFirst { url, page ->
             if (page == null) {
                 return@addFirst
             }

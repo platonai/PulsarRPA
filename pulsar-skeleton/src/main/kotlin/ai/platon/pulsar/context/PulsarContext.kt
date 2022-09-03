@@ -16,7 +16,6 @@ import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
 import java.net.URL
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
 import kotlin.reflect.KClass
 
 /**

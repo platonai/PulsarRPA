@@ -68,6 +68,7 @@ http://gora.apache.org/current/gora-hbase.html
         <field name="fetchInterval" family="f" qualifier="fi" />
         <field name="zoneId" family="f" qualifier="zn" />
         <field name="options" family="f" qualifier="op" />
+        <field name="resource" family="f" qualifier="rs" />
 
         <field name="batchId" family="f" qualifier="bid" />
         <field name="crawlStatus" family="f" qualifier="st" />
