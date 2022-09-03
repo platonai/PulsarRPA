@@ -64,8 +64,8 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
         clone.nMaxRetry = url.nMaxRetry
 
         if (url is ListenableUrl) {
-            url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
-            clone.eventHandler = url.eventHandler
+            // url.eventHandler.loadEventHandler.onAfterFetch.addFirst(AddRefererAfterFetchHandler(url))
+            clone.ensureEventHandler().combine(url.eventHandler)
         }
 
         return clone
