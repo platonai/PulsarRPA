@@ -99,7 +99,7 @@ class WebDriverContext(
         // close underlying IO based modules asynchronously
         cancelAllAndCloseUnderlyingLayer()
 
-        waitUntilNoRunningTasks(Duration.ofSeconds(20))
+        waitUntilNoRunningTasks(Duration.ofSeconds(5))
 
         if (runningTasks.isNotEmpty()) {
             logger.info("Still {} running tasks after context close | {}",
@@ -131,7 +131,10 @@ class WebDriverContext(
     private fun waitUntilIdle(timeout: Duration) {
         try {
             lock.lockInterruptibly()
-            notBusy.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
+            var n = timeout.seconds
+            while (n-- > 0 && runningTasks.isNotEmpty()) {
+                notBusy.await(1, TimeUnit.SECONDS)
+            }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         } finally {

@@ -50,11 +50,10 @@ class StaticPulsarContext(
      * */
     override val loadComponent = getBeanOrNull() ?: LoadComponent(
         webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
-
     /**
      * The main loop
      * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(mutableListOf(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)))
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig))
 
     init {
         applicationContext.refresh()
