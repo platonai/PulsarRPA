@@ -35,10 +35,10 @@ import kotlin.random.Random
  * Copyright @ 2013-2017 Platon AI. All rights reserved.
  */
 open class BrowserEmulator(
-    val driverManager: WebDriverPoolManager,
+    val driverPoolManager: WebDriverPoolManager,
     responseHandler: BrowserResponseHandler,
     immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(driverManager.driverFactory.driverSettings, responseHandler, immutableConfig) {
+): BrowserEmulatorBase(driverPoolManager.driverFactory.driverSettings, responseHandler, immutableConfig) {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
@@ -62,13 +62,13 @@ open class BrowserEmulator(
     open fun cancelNow(task: FetchTask) {
         counterCancels.inc()
         task.cancel()
-        driverManager.cancel(task.url)
+        driverPoolManager.cancel(task.url)
     }
 
     open suspend fun cancel(task: FetchTask) {
         counterCancels.inc()
         task.cancel()
-        driverManager.cancel(task.url)
+        driverPoolManager.cancel(task.url)
     }
 
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {

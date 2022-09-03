@@ -2,13 +2,8 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -21,7 +16,7 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import kotlinx.coroutines.*
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -30,9 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulatedFetcher(
-    private val privacyManager: PrivacyManager,
-    private val driverManager: WebDriverPoolManager,
-    private val browserEmulator: BrowserEmulator,
+    val privacyManager: PrivacyManager,
+    val driverPoolManager: WebDriverPoolManager,
+    val browserEmulator: BrowserEmulator,
     private val immutableConfig: ImmutableConfig,
     private val closeCascaded: Boolean = false
 ): AutoCloseable {
@@ -116,7 +111,7 @@ open class BrowserEmulatedFetcher(
         if (closed.compareAndSet(false, true)) {
             if (closeCascaded) {
                 browserEmulator.close()
-                driverManager.close()
+                driverPoolManager.close()
                 privacyManager.close()
             }
         }
