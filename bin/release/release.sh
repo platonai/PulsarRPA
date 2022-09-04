@@ -16,9 +16,21 @@ TAG="v$VERSION"
 function restore_working_branch() {
   echo "Ready to restore"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo    # (optional) move to a new line
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     git restore .
+  else
+    echo "Bye."
+    exit 0
+  fi
+}
+
+function pull() {
+  echo "Ready to pull"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git pull
   else
     echo "Bye."
     exit 0
@@ -28,7 +40,7 @@ function restore_working_branch() {
 function add_tag() {
   echo "Ready to add tag $TAG on $LAST_COMMIT_ID"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo    # (optional) move to a new line
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     git tag "$TAG" "$LAST_COMMIT_ID"
     push_with_tags
@@ -40,7 +52,7 @@ function add_tag() {
 function push_with_tags() {
   echo "Ready to push with tags to $BRANCH"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo    # (optional) move to a new line
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     git push --tags
   else
@@ -49,9 +61,12 @@ function push_with_tags() {
 }
 
 function merge_to_main_branch() {
+  echo
+  git status
+
   echo "Ready to merge to main branch"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo    # (optional) move to a new line
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     git checkout main
 
@@ -62,7 +77,6 @@ function merge_to_main_branch() {
     git merge "$BRANCH"
 
     push_to_main_branch
-    checkout_working_branch
   else
     echo "Do do merge to main branch."
   fi
@@ -71,7 +85,7 @@ function merge_to_main_branch() {
 function push_to_main_branch() {
   echo "Ready to push to main branch"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo    # (optional) move to a new line
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     git push
   else
@@ -83,7 +97,7 @@ function push_to_main_branch() {
 function checkout_working_branch() {
   echo "Ready to checkout working branch $BRANCH"
   read -p "Are you sure to continue? [Y/n]" -n 1 -r
-  echo    # (optional) move to a new line
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     git checkout "$BRANCH"
   else
@@ -92,5 +106,7 @@ function checkout_working_branch() {
 }
 
 restore_working_branch
+pull
 add_tag
 merge_to_main_branch
+checkout_working_branch
