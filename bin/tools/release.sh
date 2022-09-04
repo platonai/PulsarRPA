@@ -13,68 +13,100 @@ LAST_COMMIT_ID=$(git log --format="%H" -n 1)
 BRANCH=$(git branch --show-current)
 TAG="v$VERSION"
 
-echo "Ready to checkout HEAD"
-read -p "Are you sure to continue? [Y/n]" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git checkout HEAD
-else
-  echo "Bye."
-  exit 0
-fi
+function restore_working_branch() {
+  echo "Ready to restore"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git restore .
+  else
+    echo "Bye."
+    exit 0
+  fi
+}
 
-echo "Ready to add tag $TAG on $LAST_COMMIT_ID"
-read -p "Are you sure to continue? [Y/n]" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git tag "$TAG" "$LAST_COMMIT_ID"
-else
-  echo "Bye."
-  exit 0
-fi
+function pull() {
+  echo "Ready to pull"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git pull
+  else
+    echo "Bye."
+    exit 0
+  fi
+}
 
-echo "Ready to push with tags to $BRANCH"
-read -p "Are you sure to continue? [Y/n]" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git push --tags
-else
-  echo "Bye."
-  exit 0
-fi
+function add_tag() {
+  echo "Ready to add tag $TAG on $LAST_COMMIT_ID"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git tag "$TAG" "$LAST_COMMIT_ID"
+    push_with_tags
+  else
+    echo "Do not add tag."
+  fi
+}
 
-echo "Ready to merge to main branch"
-read -p "Are you sure to continue? [Y/n]" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git checkout main
+function push_with_tags() {
+  echo "Ready to push with tags to $BRANCH"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git push --tags
+  else
+    echo "Do not push with tags"
+  fi
+}
 
-  # The main branch name is master
-  exitCode=$?
-  [ ! $exitCode -eq 0 ] && git checkout master
+function merge_to_main_branch() {
+  echo
+  git status
 
-  git merge "$BRANCH"
-else
-  echo "Bye."
-  exit 0
-fi
+  echo "Ready to merge to main branch"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git checkout main
 
-echo "Ready to push to main branch"
-read -p "Are you sure to continue? [Y/n]" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git push
-else
-  echo "Bye."
-  exit 0
-fi
+    # The main branch name is master
+    exitCode=$?
+    [ ! $exitCode -eq 0 ] && git checkout master
 
-echo "Ready to checkout $BRANCH"
-read -p "Are you sure to continue? [Y/n]" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  git checkout "$BRANCH"
-else
-  echo "Bye."
-  exit 0
-fi
+    git merge "$BRANCH"
+
+    push_to_main_branch
+  else
+    echo "Do do merge to main branch."
+  fi
+}
+
+function push_to_main_branch() {
+  echo "Ready to push to main branch"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git push
+  else
+    echo "Bye."
+    exit 0
+  fi
+}
+
+function checkout_working_branch() {
+  echo "Ready to checkout working branch $BRANCH"
+  read -p "Are you sure to continue? [Y/n]" -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git checkout "$BRANCH"
+  else
+    echo "Remain on main branch"
+  fi
+}
+
+restore_working_branch
+pull
+add_tag
+merge_to_main_branch
+checkout_working_branch
