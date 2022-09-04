@@ -67,6 +67,7 @@ class LoadStatusFormatter(
     private val location get() = page.location
     private val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
     private val proxy get() = page.metadata[Name.PROXY]
+    private val protocolStatus get() = page.protocolStatus
     private val activeDomStats = page.activeDomStats
     private val m get() = page.pageModel
 
@@ -84,18 +85,18 @@ class LoadStatusFormatter(
 
     private val fetchReason get() = buildFetchReason()
     private val prefix01 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "⚡"
-        page.isFetched -> "⬆"
-        page.isCached -> "✿"
-        page.isLoaded -> "✅"
-        else -> "\uD83D\uDC94 " // Broken Heart
+        page.isFetched && page.fetchCount == 1 -> "⚡" // fetched new
+        page.isFetched -> "⬆" // fetched updated
+        page.isCached -> "♲"  // load from cache
+        page.isLoaded -> "✅"  // load from db
+        else -> "☠"
     }
     private val prefix02 get() = when {
         page.isFetched && page.fetchCount == 1 -> "New ⚡"
         page.isFetched -> "Updated ⬆"
         page.isCached -> "Cached ✿"
         page.isLoaded -> "Loaded ✅"
-        else -> "Unknown \uD83D\uDC94" // Broken Heart
+        else -> "Unknown ☠"
     }
     private val prefix0: String get() {
         return when {
@@ -104,7 +105,9 @@ class LoadStatusFormatter(
             else -> prefix01
         }
     }
+
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
+    private val brokenSymbol get() = if (protocolStatus.isFailed) "\uD83D\uDC94 " else "" // Broken Heart or empty
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
     private val category get() = page.pageCategory.symbol()
@@ -131,7 +134,7 @@ class LoadStatusFormatter(
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
-    private val fmt get() = "%3d. $prefix1 %s $fetchReason got %d %s in %s," +
+    private val fmt get() = "%3d. $brokenSymbol$prefix1 %s $fetchReason got %d %s in %s," +
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
 
