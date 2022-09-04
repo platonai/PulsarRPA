@@ -128,15 +128,20 @@ class WebDriverContext(
         waitUntilIdle(timeout)
     }
 
+
+    /**
+     * Wait until idle.
+     * @see [ArrayBlockingQueue#take]
+     * @throws InterruptedException if the current thread is interrupted
+     * */
+    @Throws(InterruptedException::class)
     private fun waitUntilIdle(timeout: Duration) {
+        var n = timeout.seconds
+        lock.lockInterruptibly()
         try {
-            lock.lockInterruptibly()
-            var n = timeout.seconds
             while (n-- > 0 && runningTasks.isNotEmpty()) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
         } finally {
             lock.unlock()
         }

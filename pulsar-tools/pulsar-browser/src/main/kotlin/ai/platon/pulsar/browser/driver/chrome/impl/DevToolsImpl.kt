@@ -378,7 +378,7 @@ abstract class DevToolsImpl(
 
     @Throws(Exception::class)
     private fun doClose() {
-        waitUntilIdle()
+        waitUntilIdle(Duration.ofSeconds(5))
 
         logger.trace("Closing ws client ... | {}", browserClient)
         browserClient.close()
@@ -387,17 +387,21 @@ abstract class DevToolsImpl(
         pageClient.close()
     }
 
-    private fun waitUntilIdle() {
-        var n = 5
+    /**
+     * Wait until idle.
+     * @see [ArrayBlockingQueue#take]
+     * @throws InterruptedException if the current thread is interrupted
+     * */
+    @Throws(InterruptedException::class)
+    private fun waitUntilIdle(timeout: Duration) {
+        var n = timeout.seconds
+        lock.lockInterruptibly()
         try {
-            lock.withLock {
-                // TODO: no need to wait for all futures, just ignore them
-                while (n-- > 0 && dispatcher.hasFutures()) {
-                    notBusy.await(1, TimeUnit.SECONDS)
-                }
+            while (n-- > 0 && dispatcher.hasFutures()) {
+                notBusy.await(1, TimeUnit.SECONDS)
             }
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
+        } finally {
+            lock.unlock()
         }
     }
 }

@@ -278,12 +278,16 @@ class LoadingWebDriverPool(
         }
     }
 
+    /**
+     * Wait until idle.
+     * @see [ArrayBlockingQueue#take]
+     * @throws InterruptedException if the current thread is interrupted
+     * */
+    @Throws(InterruptedException::class)
     private fun waitUntilIdle(timeout: Duration) {
+        lock.lockInterruptibly()
         try {
-            lock.lockInterruptibly()
             notBusy.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
         } finally {
             lock.unlock()
         }
