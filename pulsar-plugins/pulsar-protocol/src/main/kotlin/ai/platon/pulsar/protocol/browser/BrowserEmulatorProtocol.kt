@@ -22,7 +22,6 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.Defaults
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol

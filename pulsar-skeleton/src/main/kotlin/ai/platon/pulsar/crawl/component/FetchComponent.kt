@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -49,7 +50,7 @@ open class FetchComponent(
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     /**
@@ -103,10 +104,10 @@ open class FetchComponent(
         val page = fetchEntry.page
         require(page.isNotInternal) { "Internal page ${page.url}" }
 
-        return try {
-            onWillFetch(page)
+        coreMetrics?.markFetchTaskStart()
+        onWillFetch(page)
 
-            coreMetrics?.markFetchTaskStart()
+        return try {
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
