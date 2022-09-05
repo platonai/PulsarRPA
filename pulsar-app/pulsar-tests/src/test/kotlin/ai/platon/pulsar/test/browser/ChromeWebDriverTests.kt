@@ -228,6 +228,28 @@ class ChromeWebDriverTests: TestBase() {
         }
     }
 
+    @Test
+    fun testDragAndHold() {
+        val walmartUrl = "https://www.walmart.com/ip/584284401"
+        // 2022.09.06:
+        // override the user agent, and walmart shows robot check page.
+        BrowserSettings.enableUserAgentOverriding()
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(walmartUrl, driver)
+
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+            driver.scrollDown(5)
+
+            val result = driver.evaluate("__pulsar_utils__.findMatches('HOLD')")
+            println(result)
+        }
+
+        readLine()
+    }
+
     private suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 5) {
         driver.navigateTo(url)
         driver.waitForSelector("body")

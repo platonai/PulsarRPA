@@ -241,6 +241,16 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        fun enableUserAgentOverriding(): Companion {
+            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
+            return BrowserSettings
+        }
+
+        fun disableUserAgentOverriding(): Companion {
+            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
+            return BrowserSettings
+        }
+
         // TODO: not implemented
         fun blockImages(): Companion {
             // enableUrlBlocking()
@@ -317,6 +327,17 @@ open class BrowserSettings(
 
     val enableStartupScript get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
+    /**
+     * If user agent overriding is enabled. User agent overriding disabled by default,
+     * since target websites can read the user agent and check specified browser features
+     * to determine if they match or not.
+     *
+     * Code to read user agent:
+     * <code>
+     *     let userAgent = navigator.userAgent;
+     * </code>
+     * */
+    val enableUserAgentOverriding get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
 
     // We will wait for document ready manually using javascript
     var pageLoadStrategy = "none"
@@ -352,6 +373,10 @@ open class BrowserSettings(
 
     open fun formatViewPort(delimiter: String = ","): String {
         return "${viewPort.width}$delimiter${viewPort.height}"
+    }
+
+    open fun randomUserAgentOrNull(): String? {
+        return if (enableUserAgentOverriding) randomUserAgent() else null
     }
 
     /**

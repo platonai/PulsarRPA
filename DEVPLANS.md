@@ -8,6 +8,8 @@
         1. onWillCheckHTML/onRegisterHTMLChecker
         2. onWillRetry
         3. onWillSniffPageCategory/onRegisterPageCategorySniffer
+        4. onRegisterUserAgent
+        5. onRegisterUrlBlockingRules
     6. RPA supports
         1. frames
         2. create webdriver for existing tab

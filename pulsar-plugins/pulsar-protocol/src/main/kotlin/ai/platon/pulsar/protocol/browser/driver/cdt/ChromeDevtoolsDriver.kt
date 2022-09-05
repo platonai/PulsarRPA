@@ -41,7 +41,6 @@ class ChromeDevtoolsDriver(
     val openSequence = 1 + browser.drivers.size
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
-    val userAgent get() = BrowserSettings.randomUserAgent()
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
@@ -70,6 +69,10 @@ class ChromeDevtoolsDriver(
     private val mouse get() = pageHandler.mouse.takeIf { isActive }
     private val keyboard get() = pageHandler.keyboard.takeIf { isActive }
 
+    private var contextId: Int? = null
+    private var frameId: String? = null
+    private var parentFrameId: String? = null
+    private var frameIds: MutableList<String> = mutableListOf()
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
@@ -93,9 +96,7 @@ class ChromeDevtoolsDriver(
     val implementation get() = devTools
 
     init {
-        if (userAgent.isNotEmpty()) {
-            emulationAPI?.setUserAgentOverride(userAgent)
-        }
+        setUserAgentOverride()
     }
 
     override suspend fun addInitScript(script: String) {
@@ -725,8 +726,38 @@ class ChromeDevtoolsDriver(
             mainRequestCookies = getCookies0()
         }
 
+        pageAPI?.onFrameAttached {
+            if (frameId == null) {
+                frameId = it.frameId
+                parentFrameId = it.parentFrameId
+            }
+
+            frameIds.add(it.frameId)
+        }
+
+        runtimeAPI?.onExecutionContextCreated {
+            if (contextId == null) {
+                contextId = it.context.id
+            }
+        }
+
+        pageAPI?.frameTree?.childFrames?.forEach { frameTree ->
+            val frame = frameTree.frame
+            frame.url
+            println(frame.name)
+        }
+
         navigateUrl = url
         pageAPI?.navigate(url)
+    }
+
+    /**
+     *
+     *
+     * @see https://github.com/ChromeDevTools/devtools-protocol/issues/72
+     * */
+    private fun expectLoadFrame() {
+
     }
 
     private fun getNoInvaded(url: String) {
@@ -831,6 +862,13 @@ class ChromeDevtoolsDriver(
         return rpc.invokeDeferred("isMainFrame") {
             mainFrameAPI?.id == frameId
         } ?: false
+    }
+
+    private fun setUserAgentOverride() {
+        val userAgent = browser.userAgent
+        if (userAgent != null && userAgent.isNotBlank()) {
+            emulationAPI?.setUserAgentOverride(userAgent)
+        }
     }
 
     private fun viewportToRectD(viewport: Viewport): RectD {

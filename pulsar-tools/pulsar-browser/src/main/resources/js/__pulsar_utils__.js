@@ -541,6 +541,34 @@ __pulsar_utils__.allAttrs = function(selector, attrName) {
 };
 
 /**
+ * Select elements and extract the texts
+ *
+ * @param  {string} pattern
+ * @param  {string} frameNameOrId
+ * @return {string|null}
+ */
+__pulsar_utils__.findMatches = function(pattern, frameNameOrId) {
+    let expression = `(//frame|//iframe)[@name="${frameNameOrId}" or @id="${frameNameOrId}"]`
+    let frameContext = document.evaluate(expression, document,null,
+        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null
+    ).snapshotItem(0).contentDocument;
+    let element = frameContext.__pulsar_findMatches(pattern)
+    return element?.textContent
+};
+
+/**
+ * Select elements and extract the texts
+ *
+ * @param  {String} selector
+ * @param  {String} attrName
+ * @return {Array}
+ */
+__pulsar_utils__.findMatchesForAttrs = function(selector, attrName) {
+    let elements = document.querySelectorAll(selector)
+    return elements.map(e => e.getAttribute(attrName))
+};
+
+/**
  * Clones an object.
  *
  * @param  {Object} o

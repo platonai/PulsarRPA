@@ -16,6 +16,7 @@ import kotlin.concurrent.withLock
  */
 interface Browser: AutoCloseable {
     val id: BrowserId
+    val userAgent: String?
 
     // remember, navigate history is small, so search is very fast for a list
     val navigateHistory: List<NavigateEntry>
@@ -52,6 +53,8 @@ abstract class AbstractBrowser(
 
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
+
+    override val userAgent = browserSettings.randomUserAgentOrNull()
 
     // remember, navigate history is small, so search is very fast for a list
     override val navigateHistory: List<NavigateEntry> get() = _navigateHistory

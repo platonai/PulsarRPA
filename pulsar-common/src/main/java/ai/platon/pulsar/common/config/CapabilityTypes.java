@@ -278,6 +278,7 @@ public interface CapabilityTypes {
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_RESPONSE_HANDLER = "browser.response.handler";
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
+    String BROWSER_ENABLE_UA_OVERRIDING = "browser.enable.ua.overriding";
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     /**

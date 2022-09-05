@@ -3,13 +3,10 @@ package ai.platon.pulsar.protocol.browser.driver.test
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
@@ -60,18 +57,22 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
+    @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) {
         backupDriverOrNull?.addInitScript(script)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
         backupDriverOrNull?.navigateTo(entry)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeout: Duration): Long {
         return backupDriverOrNull?.waitForSelector(selector, timeout) ?: 0
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(timeout: Duration): Long {
         return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
     }
@@ -79,6 +80,7 @@ class MockWebDriver(
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) {
         logger.info("Mock navigate to {}", url)
 
@@ -94,105 +96,133 @@ class MockWebDriver(
         backupDriverOrNull?.navigateTo(url)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders(): Map<String, Any> {
         return backupDriverOrNull?.mainRequestHeaders() ?: mapOf()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun mainRequestCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.mainRequestCookies() ?: listOf()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return backupDriverOrNull?.getCookies() ?: listOf()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(selector: String): String? {
         return backupDriverOrNull?.captureScreenshot(selector)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(rect: RectD): String? {
         return backupDriverOrNull?.captureScreenshot(rect)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
         return backupDriverOrNull?.evaluate(expression)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
         backupDriverOrNull?.scrollTo(selector)
     }
 
     override val sessionId: String?
+        @Throws(WebDriverException::class)
         get() = backupDriverOrNull?.sessionId
 
+    @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String = backupDriverOrNull?.currentUrl() ?: navigateUrl
 
+    @Throws(WebDriverException::class)
     override suspend fun pageSource(): String = mockPageSource ?: (backupDriverOrNull?.pageSource()) ?: ""
 
+    @Throws(WebDriverException::class)
     override suspend fun bringToFront() {
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun exists(selector: String) = backupDriverOrNull?.exists(selector) ?: false
 
+    @Throws(WebDriverException::class)
     override suspend fun visible(selector: String) = backupDriverOrNull?.visible(selector) ?: false
 
+    @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         backupDriverOrNull?.type(selector, text)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         backupDriverOrNull?.click(selector, count)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
         backupDriverOrNull?.clickMatches(selector, pattern, count)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
         backupDriverOrNull?.clickMatches(selector, attrName, pattern, count)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         backupDriverOrNull?.mouseWheelDown(count, deltaX, deltaY, delayMillis)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         backupDriverOrNull?.mouseWheelUp(count, deltaX, deltaY, delayMillis)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
         backupDriverOrNull?.moveMouseTo(x, y)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         backupDriverOrNull?.dragAndDrop(selector, deltaX, deltaY)
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String) = backupDriverOrNull?.clickablePoint(selector)
 
+    @Throws(WebDriverException::class)
     override suspend fun boundingBox(selector: String) = backupDriverOrNull?.boundingBox(selector)
 
     override fun toString() = "Mock driver ($lastSessionId)"
 
+    @Throws(WebDriverException::class)
     override suspend fun stop() {
         backupDriverOrNull?.stop()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun terminate() {
         backupDriverOrNull?.terminate()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun stopLoading() {
         backupDriverOrNull?.stopLoading()
     }
 
+    @Throws(WebDriverException::class)
     override fun awaitTermination() {
         backupDriverOrNull?.awaitTermination()
     }
-    
+
     /**
      * Quit the browser instance
      * */
+    @Throws(WebDriverException::class)
     override fun quit() {
         close()
     }
@@ -200,6 +230,7 @@ class MockWebDriver(
     /**
      * Close the tab hold by this driver
      * */
+    @Throws(Exception::class)
     override fun close() {
         backupDriverOrNull?.close()
     }
