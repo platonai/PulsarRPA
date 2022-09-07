@@ -2,8 +2,10 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.stringify
@@ -38,9 +40,8 @@ class WebDriverContext(
         private val numGlobalRunningTasks = AtomicInteger()
         private val globalTasks = AppMetrics.reg.meter(this, "globalTasks")
         private val globalFinishedTasks = AppMetrics.reg.meter(this, "globalFinishedTasks")
-
-        private val lock = ReentrantLock()
-        private val notBusy = lock.newCondition()
+        private val availableMemory get() = AppMetrics.availableMemory
+        private val memoryToReserve = ByteUnit.GIB.toBytes(2.0)
 
         init {
             AppMetrics.reg.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
@@ -49,6 +50,9 @@ class WebDriverContext(
 
     private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
+    private val lock = ReentrantLock()
+    private val notBusy = lock.newCondition()
+
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
 
@@ -91,7 +95,7 @@ class WebDriverContext(
     }
 
     private fun doClose() {
-        // not shutdown
+        // not shutdown, wait longer
         if (AppContext.isActive) {
             waitUntilAllDoneNormally(Duration.ofMinutes(3))
         }
@@ -128,7 +132,6 @@ class WebDriverContext(
         waitUntilIdle(timeout)
     }
 
-
     /**
      * Wait until idle.
      * @see [ArrayBlockingQueue#take]
@@ -141,6 +144,12 @@ class WebDriverContext(
         try {
             while (n-- > 0 && runningTasks.isNotEmpty()) {
                 notBusy.await(1, TimeUnit.SECONDS)
+                if (availableMemory < memoryToReserve) {
+                    val am = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
+                    logger.info(String.format("Low memory ($.2f), close %d retired browsers immediately",
+                        am, runningTasks.size))
+                    break
+                }
             }
         } finally {
             lock.unlock()
