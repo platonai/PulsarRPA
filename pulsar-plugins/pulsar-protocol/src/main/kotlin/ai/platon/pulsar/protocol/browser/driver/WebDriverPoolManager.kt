@@ -49,6 +49,7 @@ open class WebDriverPoolManager(
     private val logger = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
+    private val browserManager: BrowserManager get() = driverFactory.browserManager
     private val _driverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
     private val _retiredDriverPools = ConcurrentSkipListSet<BrowserId>()
 
@@ -298,11 +299,10 @@ open class WebDriverPoolManager(
                 logger.info(driverPool.formatStatus(verbose = true))
                 logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
                 driverPool.close()
+                browserManager.close(browserId)
             } else {
                 logger.info("Web drivers are in {} mode, please close it manually | {} ", displayMode, browserId)
             }
-
-            driverFactory.browserManager.close(browserId)
         }
     }
 

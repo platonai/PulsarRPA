@@ -88,8 +88,6 @@ class ChromeDevtoolsDriver(
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
 
-    val tabId get() = chromeTab.id
-
     /**
      * Expose the underlying implementation, used for development purpose
      * */
@@ -741,11 +739,11 @@ class ChromeDevtoolsDriver(
             }
         }
 
-        pageAPI?.frameTree?.childFrames?.forEach { frameTree ->
-            val frame = frameTree.frame
-            frame.url
-            println(frame.name)
-        }
+//        pageAPI?.frameTree?.childFrames?.forEach { frameTree ->
+//            val frame = frameTree.frame
+//            frame.url
+//            println(frame.name)
+//        }
 
         navigateUrl = url
         pageAPI?.navigate(url)

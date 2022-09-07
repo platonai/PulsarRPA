@@ -177,45 +177,45 @@ enum class ByteUnit {
 
     abstract fun toBytes(d: Double): Double
 
-    fun toKiB(d: Double): Double {
-        return toBytes(d) / C_KIB
-    }
+    fun toKiB(d: Double) = toBytes(d) / C_KIB
 
-    fun toMiB(d: Double): Double {
-        return toBytes(d) / C_MIB
-    }
+    fun toKiB(d: Long) = toKiB(d.toDouble())
 
-    fun toGiB(d: Double): Double {
-        return toBytes(d) / C_GIB
-    }
+    fun toMiB(d: Double) = toBytes(d) / C_MIB
 
-    fun toTiB(d: Double): Double {
-        return toBytes(d) / C_TIB
-    }
+    fun toMiB(d: Long) = toMiB(d.toDouble())
 
-    fun toPiB(d: Double): Double {
-        return toBytes(d) / C_PIB
-    }
+    fun toGiB(d: Double) = toBytes(d) / C_GIB
 
-    fun toKB(d: Double): Double {
-        return toBytes(d) / C_KB
-    }
+    fun toGiB(d: Long) = toGiB(d.toDouble())
 
-    fun toMB(d: Double): Double {
-        return toBytes(d) / C_MB
-    }
+    fun toTiB(d: Double) = toBytes(d) / C_TIB
 
-    fun toGB(d: Double): Double {
-        return toBytes(d) / C_GB
-    }
+    fun toTiB(d: Long) = toTiB(d.toDouble())
 
-    fun toTB(d: Double): Double {
-        return toBytes(d) / C_TB
-    }
+    fun toPiB(d: Double) = toBytes(d) / C_PIB
 
-    fun toPB(d: Double): Double {
-        return toBytes(d) / C_PB
-    }
+    fun toPiB(d: Long) = toPiB(d.toDouble())
+
+    fun toKB(d: Double) = toBytes(d) / C_KB
+
+    fun toKB(d: Long) = toKB(d.toDouble())
+
+    fun toMB(d: Double) = toBytes(d) / C_MB
+
+    fun toMB(d: Long) = toMB(d.toDouble())
+
+    fun toGB(d: Double) = toBytes(d) / C_GB
+
+    fun toGB(d: Long) = toGB(d.toDouble())
+
+    fun toTB(d: Double) = toBytes(d) / C_TB
+
+    fun toTB(d: Long) = toTB(d.toDouble())
+
+    fun toPB(d: Double) = toBytes(d) / C_PB
+
+    fun toPB(d: Long) = toPB(d.toDouble())
 
     abstract fun convert(d: Double, u: ByteUnit): Double
 
@@ -226,7 +226,7 @@ enum class ByteUnit {
     }
 
     /*
-     * Komfort-Methoden f�r Cross-Konvertierung
+     * Komfort-Methoden for Cross-Konvertierung
      */
     fun toBits(d: Double): Double {
         return BitUnit.BIT.convert(d, this)

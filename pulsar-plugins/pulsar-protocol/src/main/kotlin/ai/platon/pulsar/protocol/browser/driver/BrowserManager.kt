@@ -17,6 +17,7 @@ open class BrowserManager(
     private val logger = getLogger(this)
     private val closed = AtomicBoolean()
     private val browserFactory = BrowserFactory()
+    // TODO: use browser id as the key directly
     private val _browsers = ConcurrentHashMap<String, Browser>()
 
     val browsers: Map<String, Browser> = _browsers

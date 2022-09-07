@@ -241,9 +241,8 @@ class ChromeWebDriverTests: TestBase() {
 
             driver.waitForNavigation()
             driver.waitForSelector("body")
-            driver.scrollDown(5)
 
-            val result = driver.evaluate("__pulsar_utils__.findMatches('HOLD')")
+            val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
             println(result)
         }
 

@@ -2,8 +2,10 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.stringify
@@ -30,17 +32,16 @@ import kotlin.concurrent.withLock
 import kotlin.random.Random
 
 class WebDriverContext(
-        val browserId: BrowserId,
-        private val driverPoolManager: WebDriverPoolManager,
-        private val unmodifiedConfig: ImmutableConfig
+    val browserId: BrowserId,
+    private val driverPoolManager: WebDriverPoolManager,
+    private val unmodifiedConfig: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
         private val globalTasks = AppMetrics.reg.meter(this, "globalTasks")
         private val globalFinishedTasks = AppMetrics.reg.meter(this, "globalFinishedTasks")
-
-        private val lock = ReentrantLock()
-        private val notBusy = lock.newCondition()
+        private val availableMemory get() = AppMetrics.availableMemory
+        private val memoryToReserve = ByteUnit.GIB.toBytes(2.0)
 
         init {
             AppMetrics.reg.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
@@ -49,6 +50,9 @@ class WebDriverContext(
 
     private val logger = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
+    private val lock = ReentrantLock()
+    private val notBusy = lock.newCondition()
+
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
 
@@ -91,7 +95,7 @@ class WebDriverContext(
     }
 
     private fun doClose() {
-        // not shutdown
+        // not shutdown, wait longer
         if (AppContext.isActive) {
             waitUntilAllDoneNormally(Duration.ofMinutes(3))
         }
@@ -99,11 +103,11 @@ class WebDriverContext(
         // close underlying IO based modules asynchronously
         cancelAllAndCloseUnderlyingLayer()
 
-        waitUntilNoRunningTasks(Duration.ofSeconds(5))
+        waitUntilNoRunningTasks(Duration.ofSeconds(20))
 
         if (runningTasks.isNotEmpty()) {
             logger.info("Still {} running tasks after context close | {}",
-                    runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
+                runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
         } else {
             logger.info("Web driver context is closed successfully | {}", browserId)
         }
@@ -116,7 +120,7 @@ class WebDriverContext(
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
-        driverPoolManager.cancelAll()
+        driverPoolManager.cancelAll(browserId)
         driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
@@ -129,20 +133,30 @@ class WebDriverContext(
     }
 
     /**
-     * Wait until idle.
+     * Wait until there is no running tasks.
      * @see [ArrayBlockingQueue#take]
      * @throws InterruptedException if the current thread is interrupted
      * */
+    @Throws(InterruptedException::class)
     private fun waitUntilIdle(timeout: Duration) {
         var n = timeout.seconds
         lock.lockInterruptibly()
         try {
-            while (n-- > 0 && runningTasks.isNotEmpty()) {
+            while (n-- > 0 && runningTasks.isNotEmpty() && availableMemory > memoryToReserve) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
         } finally {
             lock.unlock()
         }
+
+        val message = when {
+            availableMemory < memoryToReserve ->
+                String.format("Low memory (%.2fGiB), close %d retired browsers immediately",
+                    ByteUnit.BYTE.toGiB(availableMemory), runningTasks.size)
+            n == 0L -> String.format("Timeout (still %d running tasks)", runningTasks.size)
+            else -> String.format("All finished in %d seconds", timeout.seconds - n)
+        }
+        logger.info(message)
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
@@ -159,10 +173,10 @@ class WebDriverContext(
 }
 
 class ProxyContext(
-        var proxyEntry: ProxyEntry? = null,
-        private val proxyPoolManager: ProxyPoolManager,
-        private val driverContext: WebDriverContext,
-        private val conf: ImmutableConfig
+    var proxyEntry: ProxyEntry? = null,
+    private val proxyPoolManager: ProxyPoolManager,
+    private val driverContext: WebDriverContext,
+    private val conf: ImmutableConfig
 ): AutoCloseable {
 
     companion object {
@@ -173,17 +187,17 @@ class ProxyContext(
 
         init {
             mapOf(
-                    "proxyAbsences" to Gauge { numProxyAbsence.get() },
-                    "runningTasks" to Gauge { numRunningTasks.get() }
+                "proxyAbsences" to Gauge { numProxyAbsence.get() },
+                "runningTasks" to Gauge { numRunningTasks.get() }
             ).forEach { AppMetrics.reg.register(this, it.key, it.value) }
         }
 
         @Throws(ProxyException::class)
         fun create(
-                id: PrivacyContextId,
-                driverContext: WebDriverContext,
-                proxyPoolManager: ProxyPoolManager,
-                conf: ImmutableConfig
+            id: PrivacyContextId,
+            driverContext: WebDriverContext,
+            proxyPoolManager: ProxyPoolManager,
+            conf: ImmutableConfig
         ): ProxyContext {
             val proxyPool = proxyPoolManager.proxyPool
             val proxy = proxyPool.take()
@@ -240,7 +254,7 @@ class ProxyContext(
 
     @Throws(ProxyException::class)
     private suspend fun run0(
-            task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         var success = false
         return try {
             beforeTaskStart(task)
