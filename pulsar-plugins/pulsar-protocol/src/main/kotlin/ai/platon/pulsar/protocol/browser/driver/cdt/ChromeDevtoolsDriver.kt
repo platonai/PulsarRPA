@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class ChromeDevtoolsDriver(
     private val chromeTab: ChromeTab,
@@ -72,7 +73,7 @@ class ChromeDevtoolsDriver(
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
-    private var numResponseReceived = 0
+    private var numResponseReceived = AtomicInteger()
 
     private val rpc = RobustRPC(this)
 
@@ -724,10 +725,13 @@ class ChromeDevtoolsDriver(
         }
 
         networkAPI?.onResponseReceived {
-            numResponseReceived++
-            if (numResponseReceived > 1000) {
-                // Disables network tracking, prevents network events from being sent to the client.
-                networkAPI?.disable()
+            if (mainRequestId != null) {
+                // split the `if` to make it clearer
+                if (numResponseReceived.incrementAndGet() == 100) {
+                    // Disables network tracking, prevents network events from being sent to the client.
+                    networkAPI?.disable()
+                    // logger.info("Network tracking for driver #{} is disabled", id)
+                }
             }
         }
 
