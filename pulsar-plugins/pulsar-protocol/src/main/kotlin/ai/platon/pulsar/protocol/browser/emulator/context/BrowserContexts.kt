@@ -141,8 +141,9 @@ class WebDriverContext(
     private fun waitUntilIdle(timeout: Duration) {
         var n = timeout.seconds
         lock.lockInterruptibly()
+
         try {
-            while (n-- > 0 && runningTasks.isNotEmpty() && availableMemory > memoryToReserve) {
+            while (runningTasks.isNotEmpty() && availableMemory > memoryToReserve && n-- > 0) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
         } finally {
@@ -154,10 +155,13 @@ class WebDriverContext(
                 String.format("Low memory (%.2fGiB), close %d retired browsers immediately",
                     ByteUnit.BYTE.toGiB(availableMemory.toDouble()), runningTasks.size)
             n == 0L -> String.format("Timeout (still %d running tasks)", runningTasks.size)
-            else -> String.format("All finished in %d seconds", timeout.seconds - n)
+            n < timeout.seconds -> String.format("All finished in %d seconds", timeout.seconds - n)
+            else -> ""
         }
 
-        logger.info(message)
+        if (message.isNotBlank()) {
+            logger.info(message)
+        }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {

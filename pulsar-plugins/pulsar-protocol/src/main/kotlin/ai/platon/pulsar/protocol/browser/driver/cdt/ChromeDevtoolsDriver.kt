@@ -49,7 +49,6 @@ class ChromeDevtoolsDriver(
 
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val blockingUrls = mutableListOf<String>()
-    val blockRules = BlockRules()
 
     private val pageHandler = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(pageHandler, devTools)
@@ -76,6 +75,7 @@ class ChromeDevtoolsDriver(
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
+    private var numResponseReceived = 0
 
     private val rpc = RobustRPC(this)
 
@@ -157,7 +157,9 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
         networkAPI?.enable()
-        return networkAPI?.cookies?.map { serialize(it) }?: listOf()
+        val cookies = networkAPI?.cookies?.map { serialize(it) }
+        networkAPI?.disable()
+        return cookies ?: listOf()
     }
 
     private fun serialize(cookie: Cookie): Map<String, String> {
@@ -725,7 +727,11 @@ class ChromeDevtoolsDriver(
         }
 
         networkAPI?.onResponseReceived {
-
+            numResponseReceived++
+            if (numResponseReceived > 1000) {
+                // Disables network tracking, prevents network events from being sent to the client.
+                networkAPI?.disable()
+            }
         }
 
         pageAPI?.onDocumentOpened {
