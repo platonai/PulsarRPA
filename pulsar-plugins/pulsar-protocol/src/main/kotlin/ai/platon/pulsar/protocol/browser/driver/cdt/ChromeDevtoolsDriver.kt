@@ -42,11 +42,14 @@ class ChromeDevtoolsDriver(
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
     val userAgent get() = BrowserSettings.randomUserAgent()
-    val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
     //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
+
+    val enableUrlBlocking get() = browserSettings.enableUrlBlocking
+    val blockingUrls = mutableListOf<String>()
+    val blockRules = BlockRules()
 
     private val pageHandler = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(pageHandler, devTools)
@@ -107,6 +110,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "addInitScript")
         }
+    }
+
+    override suspend fun addBlockingUrls(urls: List<String>) {
+        blockingUrls.addAll(urls)
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
@@ -706,8 +713,8 @@ class ChromeDevtoolsDriver(
 
         pageAPI?.addScriptToEvaluateOnNewDocument(preloadJs)
 
-        if (enableUrlBlocking) {
-            setupUrlBlocking(url)
+        if (enableUrlBlocking && blockingUrls.isNotEmpty()) {
+            networkAPI?.setBlockedURLs(blockingUrls)
         }
 
         networkAPI?.onRequestWillBeSent {
@@ -788,37 +795,6 @@ class ChromeDevtoolsDriver(
         if (irrelevantTabs.isNotEmpty()) {
             // TODO: might close a tab open just now
             // irrelevantTabs.forEach { browserInstance.closeTab(it) }
-        }
-    }
-
-    /**
-     * TODO: load blocking rules from config files
-     * */
-    private fun setupUrlBlocking(url: String) {
-        val blockRules = when {
-            "amazon.com" in url -> AmazonBlockRules()
-            "jd.com" in url -> JdBlockRules()
-            else -> BlockRules()
-        }
-
-        // TODO: case sensitive or not?
-        networkAPI?.setBlockedURLs(blockRules.blockingUrls)
-
-        networkAPI?.takeIf { enableBlockingReport }?.onRequestWillBeSent {
-            val requestUrl = it.request.url
-            if (blockRules.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
-                return@onRequestWillBeSent
-            }
-
-            if (it.type in blockRules.blockingResourceTypes) {
-                if (blockRules.blockingUrlPatterns.none { requestUrl.matches(it) }) {
-                    logger.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
-                }
-
-                // TODO: when fetch is enabled, no resources is return, find out the reason
-                // fetch.failRequest(it.requestId, ErrorReason.BLOCKED_BY_RESPONSE)
-                // fetch.fulfillRequest(it.requestId, 200, listOf())
-            }
         }
     }
 

@@ -52,6 +52,8 @@ class WebDriverAdapter(
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
 
+    override suspend fun addBlockingUrls(urls: List<String>) = driverOrNull?.addBlockingUrls(urls) ?: Unit
+
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
 
