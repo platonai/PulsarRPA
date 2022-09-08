@@ -81,7 +81,7 @@ data class EmulateSettings(
 /**
  * The block rules of urls and resources
  * */
-open class BlockRules {
+open class BlockRule {
 
     open val blockingResourceTypes: MutableList<ResourceType>
         get() = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()

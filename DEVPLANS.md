@@ -8,8 +8,8 @@
     1. onWillCheckHTML/onRegisterHTMLChecker
     2. onWillRetry
     3. onWillSniffPageCategory/onRegisterPageCategorySniffer
-    4. onRegisterUserAgent
-    5. onRegisterUrlBlockingRules
+    4. onRegisterUserAgent?
+    5. onInitUrlBlockingRules
     6. onInitRetryDelayPolicy
 1. RPA supports
     1. frames

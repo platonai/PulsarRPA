@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
-import ai.platon.pulsar.browser.common.BlockRules
+import ai.platon.pulsar.browser.common.BlockRule
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
@@ -15,8 +15,6 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
-import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
-import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
@@ -41,11 +39,12 @@ class ChromeDevtoolsDriver(
     val openSequence = 1 + browser.drivers.size
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
-    val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     val isSPA get() = browserSettings.isSPA
 
     //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
+    val enableUrlBlocking get() = browserSettings.enableUrlBlocking
+    private val blockingUrls = mutableListOf<String>()
 
     private val pageHandler = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(pageHandler, devTools)
@@ -97,6 +96,7 @@ class ChromeDevtoolsDriver(
         setUserAgentOverride()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) {
         try {
             rpc.invokeDeferred("addInitScript") {
@@ -106,6 +106,10 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "addInitScript")
         }
+    }
+
+    override suspend fun addBlockingUrls(urls: List<String>) {
+        blockingUrls.addAll(urls)
     }
 
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
@@ -820,27 +824,19 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    /**
-     * TODO: load blocking rules from config files
-     * */
     private fun setupUrlBlocking(url: String) {
-        val blockRules = when {
-            "amazon.com" in url -> AmazonBlockRules()
-            "jd.com" in url -> JdBlockRules()
-            else -> BlockRules()
-        }
+        networkAPI?.setBlockedURLs(blockingUrls)
 
-        // TODO: case sensitive or not?
-        networkAPI?.setBlockedURLs(blockRules.blockingUrls)
+        val blockRule = BlockRule()
 
         networkAPI?.takeIf { enableBlockingReport }?.onRequestWillBeSent {
             val requestUrl = it.request.url
-            if (blockRules.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
+            if (blockRule.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
                 return@onRequestWillBeSent
             }
 
-            if (it.type in blockRules.blockingResourceTypes) {
-                if (blockRules.blockingUrlPatterns.none { requestUrl.matches(it) }) {
+            if (it.type in blockRule.blockingResourceTypes) {
+                if (blockRule.blockingUrlPatterns.none { requestUrl.matches(it) }) {
                     logger.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
                 }
 
