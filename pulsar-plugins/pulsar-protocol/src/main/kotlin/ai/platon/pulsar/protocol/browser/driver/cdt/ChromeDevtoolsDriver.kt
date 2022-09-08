@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
-import ai.platon.pulsar.browser.common.BlockRule
+import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
@@ -15,6 +15,8 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
+import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
@@ -39,12 +41,14 @@ class ChromeDevtoolsDriver(
     val openSequence = 1 + browser.drivers.size
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
+    val userAgent get() = BrowserSettings.randomUserAgent()
     val isSPA get() = browserSettings.isSPA
 
     //    private val preloadJs by lazy { generatePreloadJs() }
     private val preloadJs get() = generatePreloadJs()
+
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
-    private val blockingUrls = mutableListOf<String>()
+    val blockingUrls = mutableListOf<String>()
 
     private val pageHandler = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(pageHandler, devTools)
@@ -68,13 +72,10 @@ class ChromeDevtoolsDriver(
     private val mouse get() = pageHandler.mouse.takeIf { isActive }
     private val keyboard get() = pageHandler.keyboard.takeIf { isActive }
 
-    private var contextId: Int? = null
-    private var frameId: String? = null
-    private var parentFrameId: String? = null
-    private var frameIds: MutableList<String> = mutableListOf()
     private var mainRequestId = ""
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
+    private var numResponseReceived = 0
 
     private val rpc = RobustRPC(this)
 
@@ -87,16 +88,19 @@ class ChromeDevtoolsDriver(
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
 
+    val tabId get() = chromeTab.id
+
     /**
      * Expose the underlying implementation, used for development purpose
      * */
     val implementation get() = devTools
 
     init {
-        setUserAgentOverride()
+        if (userAgent.isNotEmpty()) {
+            emulationAPI?.setUserAgentOverride(userAgent)
+        }
     }
 
-    @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) {
         try {
             rpc.invokeDeferred("addInitScript") {
@@ -153,7 +157,9 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
         networkAPI?.enable()
-        return networkAPI?.cookies?.map { serialize(it) }?: listOf()
+        val cookies = networkAPI?.cookies?.map { serialize(it) }
+        networkAPI?.disable()
+        return cookies ?: listOf()
     }
 
     private fun serialize(cookie: Cookie): Map<String, String> {
@@ -709,8 +715,8 @@ class ChromeDevtoolsDriver(
 
         pageAPI?.addScriptToEvaluateOnNewDocument(preloadJs)
 
-        if (enableUrlBlocking) {
-            setupUrlBlocking(url)
+        if (enableUrlBlocking && blockingUrls.isNotEmpty()) {
+            networkAPI?.setBlockedURLs(blockingUrls)
         }
 
         networkAPI?.onRequestWillBeSent {
@@ -721,45 +727,19 @@ class ChromeDevtoolsDriver(
         }
 
         networkAPI?.onResponseReceived {
-
+            numResponseReceived++
+            if (numResponseReceived > 1000) {
+                // Disables network tracking, prevents network events from being sent to the client.
+                networkAPI?.disable()
+            }
         }
 
         pageAPI?.onDocumentOpened {
             mainRequestCookies = getCookies0()
         }
 
-        pageAPI?.onFrameAttached {
-            if (frameId == null) {
-                frameId = it.frameId
-                parentFrameId = it.parentFrameId
-            }
-
-            frameIds.add(it.frameId)
-        }
-
-        runtimeAPI?.onExecutionContextCreated {
-            if (contextId == null) {
-                contextId = it.context.id
-            }
-        }
-
-//        pageAPI?.frameTree?.childFrames?.forEach { frameTree ->
-//            val frame = frameTree.frame
-//            frame.url
-//            println(frame.name)
-//        }
-
         navigateUrl = url
         pageAPI?.navigate(url)
-    }
-
-    /**
-     *
-     *
-     * @see https://github.com/ChromeDevTools/devtools-protocol/issues/72
-     * */
-    private fun expectLoadFrame() {
-
     }
 
     private fun getNoInvaded(url: String) {
@@ -824,29 +804,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun setupUrlBlocking(url: String) {
-        networkAPI?.setBlockedURLs(blockingUrls)
-
-        val blockRule = BlockRule()
-
-        networkAPI?.takeIf { enableBlockingReport }?.onRequestWillBeSent {
-            val requestUrl = it.request.url
-            if (blockRule.mustPassUrlPatterns.any { requestUrl.matches(it) }) {
-                return@onRequestWillBeSent
-            }
-
-            if (it.type in blockRule.blockingResourceTypes) {
-                if (blockRule.blockingUrlPatterns.none { requestUrl.matches(it) }) {
-                    logger.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
-                }
-
-                // TODO: when fetch is enabled, no resources is return, find out the reason
-                // fetch.failRequest(it.requestId, ErrorReason.BLOCKED_BY_RESPONSE)
-                // fetch.fulfillRequest(it.requestId, 200, listOf())
-            }
-        }
-    }
-
     private fun generatePreloadJs(): String {
         val js = browserSettings.generatePreloadJs(false)
         return browserSettings.nameMangling(js)
@@ -856,13 +813,6 @@ class ChromeDevtoolsDriver(
         return rpc.invokeDeferred("isMainFrame") {
             mainFrameAPI?.id == frameId
         } ?: false
-    }
-
-    private fun setUserAgentOverride() {
-        val userAgent = browser.userAgent
-        if (userAgent != null && userAgent.isNotBlank()) {
-            emulationAPI?.setUserAgentOverride(userAgent)
-        }
     }
 
     private fun viewportToRectD(viewport: Viewport): RectD {
