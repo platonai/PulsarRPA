@@ -12,6 +12,8 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
+import org.apache.commons.collections4.list.FixedSizeList
+import org.apache.commons.collections4.map.PassiveExpiringMap
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -73,7 +75,7 @@ abstract class PrivacyContext(
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     val numRunningTasks = AtomicInteger()
 
-    val historyUrl = mutableSetOf<String>()
+//    val historyUrls = PassiveExpiringMap<String, String>()
 
     val closed = AtomicBoolean()
     val isGood get() = meterSuccesses.meanRate >= minimumThroughput
@@ -132,7 +134,7 @@ abstract class PrivacyContext(
 
     protected fun afterRun(result: FetchResult) {
         numRunningTasks.decrementAndGet()
-        historyUrl.add(result.task.url)
+//        historyUrls.add(result.task.url)
 
         lastActiveTime = Instant.now()
         meterFinishes.mark()

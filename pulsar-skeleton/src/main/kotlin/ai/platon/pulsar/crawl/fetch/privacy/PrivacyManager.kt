@@ -4,6 +4,8 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -25,6 +27,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
     private val isClosed get() = closed.get()
+    private val availableMemory get() = AppMetrics.availableMemory
+    private val memoryToReserve = ByteUnit.GIB.toBytes(2.0)
 
     private val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
 
@@ -71,7 +75,12 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             if (activeContexts.containsKey(id)) {
                 activeContexts.remove(id)
                 zombieContexts.add(privacyContext)
-                cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
+
+                if (availableMemory > memoryToReserve) {
+                    cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
+                } else {
+                    closeZombieContexts()
+                }
             }
         }
     }
