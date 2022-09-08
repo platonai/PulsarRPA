@@ -569,6 +569,59 @@ __pulsar_utils__.findMatchesForAttrs = function(selector, attrName) {
 };
 
 /**
+ * Select elements and extract the texts
+ *
+ * @param  {string} selector
+ * @param  {string} attrName
+ * @return {any}
+ */
+__pulsar_utils__.doForAllFrames = function(selector, attrName) {
+    __pulsar_utils__.__doForAllFramesRecursively(window, 0, selector, attrName)
+    return "hello"
+};
+
+/**
+ * Select elements and extract the texts.
+ *
+ * @param  {Window} rootFrame
+ * @param  {string} selector
+ * @param  {string} attrName
+ * @return {any}
+ */
+__pulsar_utils__.__doForAllFramesRecursively = function(rootFrame, depth, selector, attrName) {
+    let doc = rootFrame.document
+    doc.body.style.background = "green";
+    doc.body.setAttribute("data-user", "vincent")
+    doc.body.setAttribute("data-depth", depth.toString())
+    doc.body.setAttribute("data-frames", rootFrame.frames.length.toString())
+
+    console.log(rootFrame.name)
+
+    // doc.body.__pulsar_forEachElement(e => {
+    //     let textContent = e.textContent
+    //     if (textContent.contains("PRESS")) {
+    //         // e.textContent = "PRESSED"
+    //     }
+    // })
+
+    let dep = window.document.body.getAttribute("data-depth") || 0
+    if (depth > dep) {
+        window.document.body.setAttribute("data-depth", depth.toString())
+    }
+
+    const frames = rootFrame.frames; // or const frames = window.parent.frames;
+    for (let i = 0; i < frames.length; i++) {
+        // do something with each subframe as frames[i]
+        let frame = frames[i]
+        let doc1 = frame.document
+
+        __pulsar_utils__.__doForAllFramesRecursively(frame, depth + 1, selector, attrName)
+    }
+
+    return frames.length
+};
+
+/**
  * Clones an object.
  *
  * @param  {Object} o

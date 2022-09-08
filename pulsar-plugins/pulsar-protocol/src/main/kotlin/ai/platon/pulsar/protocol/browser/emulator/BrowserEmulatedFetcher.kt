@@ -90,7 +90,7 @@ open class BrowserEmulatedFetcher(
 
         val result = browserEmulator.fetch(task, driver)
 
-        runSafely("onFetched") { eventHandler?.onWillFetch?.invoke(task.page, driver) }
+        runSafely("onFetched") { eventHandler?.onFetched?.invoke(task.page, driver) }
 
         return result
     }
