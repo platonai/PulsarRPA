@@ -328,7 +328,7 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
-            rpc.invokeDeferred("mouseWheelDown") {
+            rpc.invokeDeferred("mouseWheelDown", 1) {
                 repeat(count) { i ->
                     if (i > 0) {
                         if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
@@ -345,7 +345,7 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
-            rpc.invokeDeferred("mouseWheelUp") {
+            rpc.invokeDeferred("mouseWheelUp", 1) {
                 repeat(count) { i ->
                     if (i > 0) {
                         if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
