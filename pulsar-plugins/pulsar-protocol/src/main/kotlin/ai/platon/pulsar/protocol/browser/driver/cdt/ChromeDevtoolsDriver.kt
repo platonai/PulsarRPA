@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
-import ai.platon.pulsar.browser.common.BlockRules
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
@@ -15,8 +14,6 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
-import ai.platon.pulsar.protocol.browser.hotfix.sites.amazon.AmazonBlockRules
-import ai.platon.pulsar.protocol.browser.hotfix.sites.jd.JdBlockRules
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
@@ -26,6 +23,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class ChromeDevtoolsDriver(
     private val chromeTab: ChromeTab,
@@ -72,10 +70,10 @@ class ChromeDevtoolsDriver(
     private val mouse get() = pageHandler.mouse.takeIf { isActive }
     private val keyboard get() = pageHandler.keyboard.takeIf { isActive }
 
-    private var mainRequestId = ""
+    private var mainRequestId: String? = null
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
-    private var numResponseReceived = 0
+    private var numResponseReceived = AtomicInteger()
 
     private val rpc = RobustRPC(this)
 
@@ -112,7 +110,7 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    override suspend fun addBlockingUrls(urls: List<String>) {
+    override suspend fun addBlockedURLs(urls: List<String>) {
         blockingUrls.addAll(urls)
     }
 
@@ -720,17 +718,21 @@ class ChromeDevtoolsDriver(
         }
 
         networkAPI?.onRequestWillBeSent {
-            if (mainRequestId.isBlank()) {
+            if (mainRequestId == null) {
+                // TODO: handle redirection
                 mainRequestId = it.requestId
                 mainRequestHeaders = it.request.headers
             }
         }
 
         networkAPI?.onResponseReceived {
-            numResponseReceived++
-            if (numResponseReceived > 1000) {
-                // Disables network tracking, prevents network events from being sent to the client.
-                networkAPI?.disable()
+            if (mainRequestId != null) {
+                // split the checks to make it clearer
+                if (numResponseReceived.incrementAndGet() == 100) {
+                    // Disables network tracking, prevents network events from being sent to the client.
+                    networkAPI?.disable()
+                    // logger.info("Network tracking for driver #{} is disabled", id)
+                }
             }
         }
 
