@@ -110,7 +110,7 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    override suspend fun addBlockingUrls(urls: List<String>) {
+    override suspend fun addBlockedURLs(urls: List<String>) {
         blockingUrls.addAll(urls)
     }
 

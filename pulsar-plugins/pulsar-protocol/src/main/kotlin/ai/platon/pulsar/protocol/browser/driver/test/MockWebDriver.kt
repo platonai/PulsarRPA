@@ -62,7 +62,7 @@ class MockWebDriver(
         backupDriverOrNull?.addInitScript(script)
     }
 
-    override suspend fun addBlockingUrls(urls: List<String>) = backupDriverOrNull?.addBlockingUrls(urls) ?: Unit
+    override suspend fun addBlockedURLs(urls: List<String>) = backupDriverOrNull?.addBlockedURLs(urls) ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {

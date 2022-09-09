@@ -154,7 +154,7 @@ interface WebDriver: Closeable {
      * @param urls URL patterns to block. Wildcards ('*') are allowed.
      */
     @Throws(WebDriverException::class)
-    suspend fun addBlockingUrls(urls: List<String>)
+    suspend fun addBlockedURLs(urls: List<String>)
     /**
      * Returns the main resource response. In case of multiple redirects, the navigation will resolve with the first
      * non-redirect response.
