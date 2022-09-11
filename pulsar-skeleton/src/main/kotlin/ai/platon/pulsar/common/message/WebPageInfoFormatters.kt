@@ -86,16 +86,16 @@ class LoadStatusFormatter(
     private val fetchReason get() = buildFetchReason()
     private val prefix01 get() = when {
         page.isFetched && page.fetchCount == 1 -> "⚡" // fetched new
-        page.isFetched -> "⬆"  // fetched updated
-        page.isCached -> "♲"   // load from cache
-        page.isLoaded -> "✅"   // load from db
+        page.isFetched -> "⟳"  // fetched updated, clockwise gapped circle arrow
+        page.isCached -> "☕"   // load from cache, hot beverage
+        page.isLoaded -> "\uD83D\uDDB4"   // load from db, hard driver symbol
         else -> "\uD83D\uDC1B"  // BUG symbol
     }
     private val prefix02 get() = when {
         page.isFetched && page.fetchCount == 1 -> "New ⚡"
-        page.isFetched -> "Updated ⬆"
-        page.isCached -> "Cached ✿"
-        page.isLoaded -> "Loaded ✅"
+        page.isFetched -> "Updated ⟳" // fetched updated, clockwise gapped circle arrow
+        page.isCached -> "Cached ☕"  // load from cache, hot beverage
+        page.isLoaded -> "Loaded \uD83D\uDDB4" // load from db, hard driver symbol
         else -> "Unknown \uD83D\uDC1B" // BUG symbol
     }
     private val prefix0: String get() {
