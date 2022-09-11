@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -9,6 +10,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
@@ -88,6 +90,10 @@ object Runtimes {
         if (SystemUtils.IS_OS_LINUX) {
             exec("find -L $directory -type l -delete")
         }
+    }
+
+    suspend fun randomDelay(timeMillis: Long, delta: Int) {
+        delay(timeMillis + Random.nextInt(delta))
     }
 
     private fun destroyChildProcess(process: ProcessHandle) {

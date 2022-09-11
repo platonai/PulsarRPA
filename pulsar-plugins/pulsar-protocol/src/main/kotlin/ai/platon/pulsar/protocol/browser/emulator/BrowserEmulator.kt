@@ -304,7 +304,7 @@ open class BrowserEmulator(
 
         // make sure the document is ready
         val initialScroll = 5
-        val maxRound = scriptTimeout.seconds - 5 // leave some time to wait for script finish
+        val maxRound = scriptTimeout.seconds // leave some time to wait for script finish
 
         // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
         val expression = "__pulsar_utils__.waitForReady($maxRound, $initialScroll)"
