@@ -83,7 +83,7 @@ class RestaurantCrawler(
         val eh = options.ensureEventHandler()
 
         val seh = eh.simulateEventHandler
-        seh.onBeforeComputeFeature.addLast { page, driver ->
+        seh.onWillComputeFeature.addLast { page, driver ->
             commentSelectors.entries.mapIndexed { i, _ ->
                 "#reviewlist-wrapper .comment-item:nth-child($i) .more"
             }.asFlow().flowOn(Dispatchers.IO).collect { selector ->
@@ -92,7 +92,7 @@ class RestaurantCrawler(
             }
         }
 
-        seh.onAfterComputeFeature.addLast { page, driver ->
+        seh.onFeatureComputed.addLast { page, driver ->
             fieldSelectors.entries.asFlow().flowOn(Dispatchers.IO).collect { (name, selector) ->
                 delay(1500)
 

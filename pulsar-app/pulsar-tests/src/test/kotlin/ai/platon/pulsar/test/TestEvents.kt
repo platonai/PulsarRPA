@@ -40,6 +40,7 @@ class TestEvents : TestBase() {
             onWillLoad.addLast { url ->
                 firedEvents.add("onBeforeLoad")
                 assertEquals(0, metrics.fetchTasks.count)
+                null
             }
 
             onFetched.addLast { page ->

@@ -149,7 +149,7 @@ class PageParser(
         }
 
         return try {
-            beforeParse(page)
+            onWillParse(page)
             applyParsers(page)
         } catch (e: ParserNotFound) {
             unparsableTypes.add(page.contentType)
@@ -159,23 +159,23 @@ class PageParser(
             LOG.warn("Failed to parse | ${page.configuredUrl}", e)
             return ParseResult.failed(e)
         } finally {
-            afterParse(page)
+            onParsed(page)
         }
     }
 
-    private fun beforeParse(page: WebPage) {
+    private fun onWillParse(page: WebPage) {
         try {
             page.loadEventHandler?.onWillParse?.invoke(page)
         } catch (e: Throwable) {
-            LOG.warn("Failed to invoke beforeParser handler", e)
+            LOG.warn("[onWillParse]", e)
         }
     }
 
-    private fun afterParse(page: WebPage) {
+    private fun onParsed(page: WebPage) {
         try {
             page.loadEventHandler?.onParsed?.invoke(page)
         } catch (e: Throwable) {
-            LOG.warn("Failed to invoke afterParser handler", e)
+            LOG.warn("[onParsed]", e)
         }
     }
 
@@ -213,6 +213,7 @@ class PageParser(
                 break
             }
         }
+
         return parseResult
     }
 

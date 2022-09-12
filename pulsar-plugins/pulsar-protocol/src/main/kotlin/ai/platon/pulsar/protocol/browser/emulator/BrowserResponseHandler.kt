@@ -42,11 +42,11 @@ open class BrowserResponseHandler(
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
-    val pageCategorySniffer: CombinedPageCategorySniffer = CombinedPageCategorySniffer(immutableConfig).apply {
+    val pageCategorySniffer = CombinedPageCategorySniffer(immutableConfig).apply {
         sniffers.add(DefaultPageCategorySniffer(immutableConfig))
     }
 
-    val htmlIntegrityChecker: CombinedHtmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
+    val htmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
         checkers.add(DefaultHtmlIntegrityChecker(enableStartupScript, immutableConfig))
     }
 

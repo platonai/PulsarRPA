@@ -14,7 +14,7 @@ fun main() {
     val options = session.options(args)
 
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
-    options.ensureEventHandler().simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
+    options.ensureEventHandler().simulateEventHandler.onDOMStateChecked.addLast(closeMaskLayerHandler)
 
     session.loadOutPages(portalUrl, options)
 }

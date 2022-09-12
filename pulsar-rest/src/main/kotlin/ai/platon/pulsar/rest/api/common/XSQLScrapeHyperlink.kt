@@ -28,21 +28,23 @@ class ScrapeLoadEventHandler(
     val response: ScrapeResponse,
 ) : DefaultLoadEventHandler() {
     init {
-        onBeforeLoad.addLast {
+        onWillLoad.addLast {
             response.pageStatusCode = ResourceStatus.SC_PROCESSING
+            null
         }
-        onBeforeParse.addLast { page ->
+        onWillParseHTMLDocument.addLast { page ->
             require(page.loadEventHandler === this)
             page.variables[VAR_IS_SCRAPE] = true
+            null
         }
-        onBeforeHtmlParse.addLast { page ->
+        onWillParseHTMLDocument.addLast { page ->
         }
-        onAfterHtmlParse.addLast { page, document ->
+        onHTMLDocumentParsed.addLast { page, document ->
             require(page.loadEventHandler === this)
             require(page.hasVar(VAR_IS_SCRAPE))
             hyperlink.extract(page, document)
         }
-        onAfterLoad.addLast { page ->
+        onLoaded.addLast { page ->
             require(page.loadEventHandler === this)
             hyperlink.complete(page)
         }

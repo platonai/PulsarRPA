@@ -18,7 +18,7 @@ fun main() {
     val options = session.options(args)
 
     val eventHandler = options.ensureEventHandler()
-    eventHandler.loadEventHandler.onAfterBrowserLaunch.addLast { page, driver ->
+    eventHandler.loadEventHandler.onBrowserLaunched.addLast { page, driver ->
         // TODO: rotate accounts
         val username = System.getenv("PULSAR_TAOBAO_USERNAME") ?: "MustFallUsername"
         val password = System.getenv("PULSAR_TAOBAO_PASSWORD") ?: "MustFallPassword"
@@ -28,7 +28,7 @@ fun main() {
         // sign in all websites requiring login
     }
 
-    eventHandler.loadEventHandler.onAfterHtmlParse.addLast { page, document ->
+    eventHandler.loadEventHandler.onHTMLDocumentParsed.addLast { page, document ->
         println(document.title + " | " + document.baseUri)
     }
     urls.forEach { session.submitOutPages(it, options) }

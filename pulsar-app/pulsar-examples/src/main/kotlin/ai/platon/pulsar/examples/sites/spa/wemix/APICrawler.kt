@@ -1,11 +1,9 @@
 package ai.platon.pulsar.examples.sites.spa.wemix
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.AbstractWebDriverHandler
 import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.session.PulsarSession
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -30,7 +28,7 @@ private class APICrawler {
     suspend fun crawl() {
         val initBrowserHandler = InitBrowserHandler(mainUrl)
         val options = session.options("-refresh")
-        options.ensureEventHandler().loadEventHandler.onAfterBrowserLaunch.addLast(initBrowserHandler)
+        options.ensureEventHandler().loadEventHandler.onBrowserLaunched.addLast(initBrowserHandler)
 
         IntRange(1, 100).forEach { pageNo ->
             val url = "$apiTemplate?page=$pageNo&pageSize=20"

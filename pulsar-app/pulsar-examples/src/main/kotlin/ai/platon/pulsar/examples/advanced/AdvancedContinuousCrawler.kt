@@ -19,7 +19,7 @@ fun main() {
                 url
             }
             onWillLoad.addLast { url ->
-
+                url
             }
             onWillFetch.addLast { page ->
 
@@ -39,10 +39,10 @@ fun main() {
             onWillParseHTMLDocument.addLast { page ->
 
             }
-            onWillExtract.addLast { page ->
+            onWillExtractData.addLast { page ->
 
             }
-            onExtracted.addLast { page: WebPage, document: FeaturedDocument ->
+            onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
 
             }
             onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
@@ -79,7 +79,7 @@ fun main() {
                 url
             }
             onWillLoad.addLast { url: UrlAware ->
-
+                url
             }
             onLoaded.addLast { url, page ->
 

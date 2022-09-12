@@ -27,9 +27,8 @@ class WebDriverTests: TestBase() {
     @Test
     fun testScrollDown() {
         val options = session.options("-refresh")
-        options.ensureEventHandler().simulateEventHandler.onBeforeFetch.addLast { page, driver ->
+        options.ensureEventHandler().simulateEventHandler.onWillFetch.addLast { page, driver ->
             visit(url2, driver)
-            null
         }
         session.load(url, options)
     }

@@ -46,7 +46,7 @@ fun main() {
     val cx = PulsarContexts.create()
     val i = cx.createSession()
     val opts = i.options("-i 0s")
-    opts.ensureEventHandler().simulateEventHandler.onAfterComputeFeature
+    opts.ensureEventHandler().simulateEventHandler.onFeatureComputed
         .addLast(AmazonSearcherJsEventHandler())
     i.load(portalUrl, opts)
 

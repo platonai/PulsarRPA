@@ -45,10 +45,10 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
             onWillParseHTMLDocument.addLast { page ->
                 println("$seq. onBeforeHtmlParse")
             }
-            onWillExtract.addLast { page ->
+            onWillExtractData.addLast { page ->
                 println("$seq. onBeforeExtract")
             }
-            onExtracted.addLast { page: WebPage, document: FeaturedDocument ->
+            onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. onAfterExtract")
             }
             onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->

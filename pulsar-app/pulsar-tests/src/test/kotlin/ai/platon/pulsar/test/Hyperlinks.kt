@@ -36,21 +36,21 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
                     println("............onBeforeHtmlParse " + page.id)
                 }
             })
-            onAfterHtmlParse.addFirst(object: HTMLDocumentHandler() {
+            onHTMLDocumentParsed.addFirst(object: HTMLDocumentHandler() {
                 override fun invoke(page: WebPage, document: FeaturedDocument) {
                     println("............onAfterHtmlParse " + page.id)
                     assertSame(thisHandler, page.loadEventHandler)
                     assertTrue(page.hasVar(VAR_IS_SCRAPE))
                 }
             })
-            onAfterParse.addFirst(object: WebPageHandler() {
+            onParsed.addFirst(object: WebPageHandler() {
                 override fun invoke(page: WebPage) {
                     println("............onAfterParse " + page.id)
                     println("$thisHandler " + page.loadEventHandler)
                     assertSame(thisHandler, page.loadEventHandler)
                 }
             })
-            onAfterLoad.addFirst(object: WebPageHandler() {
+            onLoaded.addFirst(object: WebPageHandler() {
                 override fun invoke(page: WebPage) {
                     assertSame(thisHandler, page.loadEventHandler)
                     hyperlink.page = page
