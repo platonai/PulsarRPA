@@ -25,6 +25,7 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
             }
             onWillLoad.addLast { url ->
                 println("$seq. onBeforeLoad")
+                null
             }
             onWillFetch.addLast { page ->
                 println("$seq. onBeforeFetch")
@@ -87,6 +88,7 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
             }
             onWillLoad.addLast { url: UrlAware ->
                 println("$seq. onBeforeLoad")
+                null
             }
             onLoaded.addLast { url, page ->
                 println("$seq. onAfterLoad")

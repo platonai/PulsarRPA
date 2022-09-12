@@ -32,14 +32,17 @@ interface EventHandlerPipeline {
     val size: Int
     val isEmpty: Boolean get() = size == 0
     val isNotEmpty: Boolean get() = !isEmpty
+
+    fun remove(handler: Any): Boolean
+    fun clear()
 }
 
 abstract class VoidEventHandler: () -> Unit, AbstractEventHandler() {
     abstract override operator fun invoke()
 }
 
-abstract class UrlAwareHandler: (UrlAware) -> Any?, AbstractEventHandler() {
-    abstract override operator fun invoke(url: UrlAware)
+abstract class UrlAwareHandler: (UrlAware) -> UrlAware?, AbstractEventHandler() {
+    abstract override operator fun invoke(url: UrlAware): UrlAware?
 }
 
 abstract class UrlAwareFilter: (UrlAware) -> UrlAware?, AbstractEventHandler() {
@@ -62,20 +65,8 @@ abstract class UrlAwareWebPageHandler: (UrlAware, WebPage?) -> Any?, AbstractEve
     abstract override operator fun invoke(url: UrlAware, page: WebPage?): Any?
 }
 
-abstract class HtmlDocumentHandler: (WebPage, FeaturedDocument) -> Any?, AbstractEventHandler() {
+abstract class HTMLDocumentHandler: (WebPage, FeaturedDocument) -> Any?, AbstractEventHandler() {
     abstract override operator fun invoke(page: WebPage, document: FeaturedDocument): Any?
-}
-
-abstract class FetchResultHandler: (FetchResult) -> Any?, AbstractEventHandler() {
-    abstract override operator fun invoke(page: FetchResult): Any?
-}
-
-abstract class WebPageBatchHandler: (Iterable<WebPage>) -> Any?, AbstractEventHandler() {
-    abstract override operator fun invoke(pages: Iterable<WebPage>): Any?
-}
-
-abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Any?, AbstractEventHandler() {
-    abstract override operator fun invoke(pages: Iterable<FetchResult>): Any?
 }
 
 abstract class PrivacyContextHandler: (PrivacyContext) -> Any?, AbstractEventHandler() {
@@ -84,6 +75,7 @@ abstract class PrivacyContextHandler: (PrivacyContext) -> Any?, AbstractEventHan
 
 abstract class WebDriverHandler: (WebDriver) -> Any?, AbstractEventHandler() {
     abstract override operator fun invoke(driver: WebDriver): Any?
+    abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any?
 }
 
 abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractEventHandler() {
@@ -112,39 +104,39 @@ class VoidEventHandlerPipeline: VoidEventHandler(), EventHandlerPipeline {
         return this
     }
 
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
+
     override operator fun invoke() {
         registeredHandlers.forEach { it() }
     }
 }
 
 class UrlAwareHandlerPipeline: UrlAwareHandler(), EventHandlerPipeline {
-    private val registeredHandlers = CopyOnWriteArrayList<(UrlAware) -> Any?>()
+    private val registeredHandlers = CopyOnWriteArrayList<(UrlAware) -> UrlAware?>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: (UrlAware) -> Any?): UrlAwareHandlerPipeline {
+    fun addFirst(handler: (UrlAware) -> UrlAware?): UrlAwareHandlerPipeline {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addFirst(vararg handlers: (UrlAware) -> Any?): UrlAwareHandlerPipeline {
-        handlers.forEach { addFirst(it) }
-        return this
-    }
-
-    fun addLast(handler: (UrlAware) -> Any?): UrlAwareHandlerPipeline {
+    fun addLast(handler: (UrlAware) -> UrlAware?): UrlAwareHandlerPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: (UrlAware) -> Any?): UrlAwareHandlerPipeline {
-        handlers.toCollection(registeredHandlers)
-        return this
-    }
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
 
-    override operator fun invoke(url: UrlAware) {
-        registeredHandlers.forEach { it(url) }
+    override fun clear() = registeredHandlers.clear()
+
+    override operator fun invoke(url: UrlAware): UrlAware? {
+        var result: UrlAware? = null
+        registeredHandlers.forEach { result = it(url) }
+        return result
     }
 }
 
@@ -159,20 +151,14 @@ class UrlAwareFilterPipeline: UrlAwareFilter(), EventHandlerPipeline {
         return this
     }
 
-    fun addFirst(vararg handlers: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
-        handlers.forEach { addFirst(it) }
-        return this
-    }
-
     fun addLast(handler: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: (UrlAware) -> UrlAware?): UrlAwareFilterPipeline {
-        handlers.toCollection(registeredHandlers)
-        return this
-    }
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
 
     override operator fun invoke(url: UrlAware): UrlAware? {
         var result: UrlAware? = url
@@ -206,6 +192,10 @@ class UrlFilterPipeline: UrlFilter(), EventHandlerPipeline {
         registeredHandlers.removeIf { it == handler }
     }
 
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
+
     override operator fun invoke(url: String): String? {
         var result: String? = url
         registeredHandlers.forEach { result = it(url) }
@@ -232,6 +222,10 @@ class UrlHandlerPipeline: UrlHandler(), EventHandlerPipeline {
     fun remove(handler: (String) -> String?) {
         registeredHandlers.removeIf { it == handler }
     }
+
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
 
     override operator fun invoke(url: String): String? {
         var result: String? = null
@@ -262,6 +256,10 @@ class WebPageHandlerPipeline: WebPageHandler(), EventHandlerPipeline {
         registeredHandlers.removeIf { it == handler }
     }
 
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
+
     override operator fun invoke(page: WebPage): Any? {
         var result: Any? = null
         registeredHandlers.forEach { result = it(page) }
@@ -280,24 +278,14 @@ class UrlAwareWebPageHandlerPipeline: UrlAwareWebPageHandler(), EventHandlerPipe
         return this
     }
 
-    fun addFirst(vararg handlers: (UrlAware, WebPage?) -> Any?): UrlAwareWebPageHandlerPipeline {
-        handlers.forEach { addFirst(it) }
-        return this
-    }
-
     fun addLast(handler: (UrlAware, WebPage?) -> Any?): UrlAwareWebPageHandlerPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: (UrlAware, WebPage?) -> Any?): UrlAwareWebPageHandlerPipeline {
-        handlers.toCollection(registeredHandlers)
-        return this
-    }
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
 
-    fun remove(handler: (UrlAware, WebPage?) -> Any?) {
-        registeredHandlers.removeIf { it == handler }
-    }
+    override fun clear() = registeredHandlers.clear()
 
     override operator fun invoke(url: UrlAware, page: WebPage?): Any? {
         var result: Any? = null
@@ -326,6 +314,10 @@ class HtmlDocumentHandlerPipeline: (WebPage, FeaturedDocument) -> Any?, EventHan
         registeredHandlers.removeIf { it == handler }
     }
 
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
+
     override fun invoke(page: WebPage, document: FeaturedDocument): Any? {
         var result: Any? = null
         registeredHandlers.forEach { result = it(page, document) }
@@ -352,6 +344,10 @@ class WebDriverHandlerPipeline: (WebDriver) -> Any?, EventHandlerPipeline {
     fun remove(handler: (WebDriver) -> Any?) {
         registeredHandlers.removeIf { it == handler }
     }
+
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
 
     override operator fun invoke(driver: WebDriver): Any? {
         var result: Any? = null
@@ -650,8 +646,11 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
     }
 }
 
-class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
-    private val registeredHandlers = mutableListOf<WebPageWebDriverHandler>()
+class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler(), EventHandlerPipeline {
+    private val registeredHandlers = CopyOnWriteArrayList<WebPageWebDriverHandler>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: suspend (WebPage, WebDriver) -> Any?): WebPageWebDriverHandlerPipeline {
         registeredHandlers.add(0, object: AbstractWebPageWebDriverHandler() {
@@ -664,11 +663,6 @@ class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
 
     fun addFirst(handler: WebPageWebDriverHandler): WebPageWebDriverHandlerPipeline {
         registeredHandlers.add(0, handler)
-        return this
-    }
-
-    fun addFirst(vararg handlers: WebPageWebDriverHandler): WebPageWebDriverHandlerPipeline {
-        handlers.forEach { addFirst(it) }
         return this
     }
 
@@ -686,13 +680,14 @@ class WebPageWebDriverHandlerPipeline: AbstractWebPageWebDriverHandler() {
         return this
     }
 
-    fun addLast(vararg handlers: WebPageWebDriverHandler): WebPageWebDriverHandlerPipeline {
-        handlers.toCollection(registeredHandlers)
-        return this
-    }
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
 
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver) {
-        registeredHandlers.forEach { it.invokeDeferred(page, driver) }
+    override fun clear() = registeredHandlers.clear()
+
+    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+        var result: Any? = null
+        registeredHandlers.forEach { result = it.invokeDeferred(page, driver) }
+        return result
     }
 }
 
@@ -704,8 +699,11 @@ abstract class AbstractWebDriverFetchResultHandler: WebDriverFetchResultHandler(
     }
 }
 
-class WebDriverFetchResultHandlerPipeline: AbstractWebDriverFetchResultHandler() {
-    private val registeredHandlers = mutableListOf<WebDriverFetchResultHandler>()
+class WebDriverFetchResultHandlerPipeline: AbstractWebDriverFetchResultHandler(), EventHandlerPipeline {
+    private val registeredHandlers = CopyOnWriteArrayList<WebDriverFetchResultHandler>()
+
+    override val size: Int
+        get() = registeredHandlers.size
 
     fun addFirst(handler: suspend (WebPage, WebDriver) -> FetchResult?): WebDriverFetchResultHandlerPipeline {
         registeredHandlers.add(0, object: AbstractWebDriverFetchResultHandler() {
@@ -718,11 +716,6 @@ class WebDriverFetchResultHandlerPipeline: AbstractWebDriverFetchResultHandler()
 
     fun addFirst(handler: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
         registeredHandlers.add(0, handler)
-        return this
-    }
-
-    fun addFirst(vararg handlers: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
-        handlers.forEach { addFirst(it) }
         return this
     }
 
@@ -740,10 +733,9 @@ class WebDriverFetchResultHandlerPipeline: AbstractWebDriverFetchResultHandler()
         return this
     }
 
-    fun addLast(vararg handlers: WebDriverFetchResultHandler): WebDriverFetchResultHandlerPipeline {
-        handlers.toCollection(registeredHandlers)
-        return this
-    }
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
 
     override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult? {
         var result: FetchResult? = null
@@ -759,19 +751,19 @@ class ExpressionSimulateEventHandler(
     constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
         bcExpressions.split(delimiters), acExpressions2.split(delimiters))
 
-    init {
-        onWillComputeFeature.addFirst(object: AbstractWebPageWebDriverHandler() {
+    override val onWillComputeFeature = WebPageWebDriverHandlerPipeline()
+        .addFirst(object: AbstractWebPageWebDriverHandler() {
             override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
                 return evaluate(driver, beforeComputeExpressions)
             }
         })
 
-        onFeatureComputed.addFirst(object: AbstractWebPageWebDriverHandler() {
+    override val onFeatureComputed = WebPageWebDriverHandlerPipeline()
+        .addFirst(object: AbstractWebPageWebDriverHandler() {
             override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
                 return evaluate(driver, afterComputeExpressions)
             }
         })
-    }
 }
 
 abstract class PageDatumHandler: (String, PageDatum) -> Any?, AbstractEventHandler() {
@@ -789,19 +781,17 @@ class PageDatumHandlerPipeline: PageDatumHandler(), EventHandlerPipeline {
         return this
     }
 
-    fun addFirst(vararg handlers: (String, PageDatum) -> Any?): PageDatumHandlerPipeline {
-        handlers.forEach { addFirst(it) }
-        return this
-    }
-
     fun addLast(handler: (String, PageDatum) -> Any?): PageDatumHandlerPipeline {
         registeredHandlers.add(handler)
         return this
     }
 
-    fun addLast(vararg handlers: (String, PageDatum) -> Any?): PageDatumHandlerPipeline {
-        handlers.toCollection(registeredHandlers)
-        return this
+    override fun remove(handler: Any): Boolean {
+        return registeredHandlers.remove(handler)
+    }
+
+    override fun clear() {
+        registeredHandlers.clear()
     }
 
     override operator fun invoke(pageSource: String, pageDatum: PageDatum): Any? {
@@ -846,7 +836,7 @@ open class DefaultBrowseRPA: BrowseRPA {
         var checkState = checkPreviousPage(driver)
         while (tick++ <= 180 && checkState.code == PREV_PAGE_WILL_READY) {
             if (checkState.message.isBlank()) {
-                // The browser has just started, don't crowd into.
+                // No previous page, the browser has just started, don't crowd into.
                 randomDelay(1_000, 10_000)
                 break
             }
@@ -1060,10 +1050,18 @@ open class PulsarEventHandlerTemplate(
         }
 
         simulateEventHandler.apply {
-            onWillCheckDOMState.addLast()
-            onDOMStateChecked.addLast()
-            onWillComputeFeature.addLast()
-            onFeatureComputed.addLast()
+            onWillCheckDOMState.addLast { page, driver ->
+
+            }
+            onDOMStateChecked.addLast { page, driver ->
+
+            }
+            onWillComputeFeature.addLast { page, driver ->
+
+            }
+            onFeatureComputed.addLast { page, driver ->
+
+            }
         }
 
         crawlEventHandler.apply {
@@ -1074,10 +1072,10 @@ open class PulsarEventHandlerTemplate(
                 url
             }
             onWillLoad.addLast { url: UrlAware ->
-
+                url
             }
             onLoaded.addLast { url, page ->
-
+                url
             }
         }
     }

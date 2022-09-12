@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.HtmlDocumentHandler
+import ai.platon.pulsar.crawl.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -112,7 +112,7 @@ open class ParsableHyperlink(
             this(url, { page, document -> onParse.accept(page, document) })
 
     override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler().also {
-        it.loadEventHandler.onHTMLDocumentParsed.addLast(object: HtmlDocumentHandler() {
+        it.loadEventHandler.onHTMLDocumentParsed.addLast(object: HTMLDocumentHandler() {
             override fun invoke(page: WebPage, document: FeaturedDocument) {
                 onParse(page, document.document)
                 Unit

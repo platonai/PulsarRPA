@@ -2,7 +2,6 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -19,10 +18,11 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
         private val thisHandler = this
 
         init {
-            onBeforeLoad.addFirst {
+            onWillLoad.addFirst {
                 println("............onBeforeLoad")
+                it
             }
-            onBeforeParse.addFirst(object: WebPageHandler() {
+            onWillParseHTMLDocument.addFirst(object: WebPageHandler() {
                 override fun invoke(page: WebPage) {
                     println("............onBeforeParse " + page.id)
                     println("$this " + page.loadEventHandler)
@@ -30,13 +30,13 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
                     page.variables[VAR_IS_SCRAPE] = true
                 }
             })
-            onBeforeHtmlParse.addFirst(object: WebPageHandler() {
+            onWillParseHTMLDocument.addFirst(object: WebPageHandler() {
                 override fun invoke(page: WebPage) {
                     assertSame(thisHandler, page.loadEventHandler)
                     println("............onBeforeHtmlParse " + page.id)
                 }
             })
-            onAfterHtmlParse.addFirst(object: HtmlDocumentHandler() {
+            onAfterHtmlParse.addFirst(object: HTMLDocumentHandler() {
                 override fun invoke(page: WebPage, document: FeaturedDocument) {
                     println("............onAfterHtmlParse " + page.id)
                     assertSame(thisHandler, page.loadEventHandler)
@@ -78,7 +78,7 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     private fun registerEventHandler() {
         eventHandler.crawlEventHandler.onLoaded.addFirst { url, page ->
             if (page == null) {
-                return@addFirst
+                return@addFirst null
             }
 
             println("............SinkAwareCrawlEventHandler onAfterLoad " + page.id)
