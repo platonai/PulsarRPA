@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import org.slf4j.LoggerFactory
+import java.net.MalformedURLException
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -51,15 +52,19 @@ interface UrlAware {
     val configuredUrl: String
 
     /**
-     * The url is a standard URL and can be converted to a java.Util.URL
+     * If true, the url is a standard URL and can be converted to a java.Util.URL
      * */
     val isStandard: Boolean
 
     /**
      * Converted to a java.Util.URL
      * */
+    @get:Throws(MalformedURLException::class)
     val toURL: URL
 
+    /**
+     * Converted to a java.Util.URL, if the url is invalid, return null
+     * */
     val toURLOrNull: URL?
 
     /**
@@ -128,6 +133,7 @@ abstract class AbstractUrl(
 
     override val isStandard get() = UrlUtils.isValidUrl(url)
 
+    @get:Throws(MalformedURLException::class)
     override val toURL get() = URL(url)
 
     override val toURLOrNull get() = UrlUtils.getURLOrNull(url)
@@ -168,7 +174,7 @@ abstract class AbstractUrl(
     override var nMaxRetry: Int = 3
 
     /**
-     * A abstract url can be compare to one of the following types:
+     * An abstract url can compare to one of the following types:
      * 1. a [String]
      * 2. a [URL]
      * 3. a [UrlAware]
@@ -236,7 +242,7 @@ data class HyperlinkDatum(
     /**
      * If this link is persistable
      * */
-    val isPersistable: Boolean = false,
+    val isPersistable: Boolean = true,
     /**
      * The depth
      * */

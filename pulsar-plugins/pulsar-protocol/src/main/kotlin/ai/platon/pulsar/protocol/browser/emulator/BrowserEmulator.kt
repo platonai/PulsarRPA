@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
+import ai.platon.pulsar.common.persist.ext.simulateEventHandler
 import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.SimulateEventHandler
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -156,6 +157,7 @@ open class BrowserEmulator(
         checkState(task, driver)
 
         var response: Response?
+        val page = task.page
 
         try {
             response = browseWithWebDriver(task, driver)
@@ -163,8 +165,7 @@ open class BrowserEmulator(
             // Do something like a human being
 //            interactAfterFetch(task, driver)
 
-            val page = task.page
-            val eventHandler = simulateEventHandler(page.conf)
+            val eventHandler = page.simulateEventHandler
             runSafely("onWillStopTab") { eventHandler?.onWillStopTab?.invokeDeferred(page, driver) }
 
             // Force the page stop all navigations and releases all resources
@@ -173,8 +174,8 @@ open class BrowserEmulator(
             runSafely("onTabStopped") { eventHandler?.onTabStopped?.invokeDeferred(page, driver) }
         } catch (e: NavigateTaskCancellationException) {
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
-                task.page.id, task.id, task.batchId)
-            response = ForwardingResponse.canceled(task.page)
+                page.id, task.id, task.batchId)
+            response = ForwardingResponse.canceled(page)
         }
 
         return response
@@ -204,6 +205,8 @@ open class BrowserEmulator(
     private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
         checkState(task, driver)
 
+        val page = task.page
+
         logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
@@ -212,12 +215,11 @@ open class BrowserEmulator(
         meterNavigates.mark()
         numDeferredNavigates.mark()
 
-        tracer?.trace("{}. Navigating | {}", task.page.id, task.url)
+        tracer?.trace("{}. Navigating | {}", page.id, task.url)
 
         checkState(task, driver)
 
-        val page = task.page
-        val eventHandler = simulateEventHandler(task.page.conf)
+        val eventHandler = page.simulateEventHandler
         runSafely("onWillNavigate") { eventHandler?.onWillNavigate?.invokeDeferred(page, driver) }
 
         // href has the higher priority to locate a resource

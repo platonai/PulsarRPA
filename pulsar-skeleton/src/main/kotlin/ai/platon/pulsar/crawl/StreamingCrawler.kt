@@ -627,12 +627,14 @@ open class StreamingCrawler<T : UrlAware>(
             Strings.readableBytes(availableMemory - memoryToReserve.toLong())
         )
         session.globalCacheFactory.globalCache.clearPDCaches()
+
+        // When control returns from the method call, the Java Virtual Machine
+        // has made a best effort to reclaim space from all unused objects.
         System.gc()
     }
 
     /**
-     * Proxies should live for more than 5 minutes.
-     * If proxy is not enabled, the rate is always 0.
+     * Proxies should live for more than 5 minutes. If proxy is not enabled, the rate is always 0.
      *
      * 5 / 60f = 0.083
      * */

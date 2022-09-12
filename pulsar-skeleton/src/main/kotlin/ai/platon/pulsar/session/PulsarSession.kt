@@ -387,18 +387,21 @@ interface PulsarSession : AutoCloseable {
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
+
     /**
      * Scrape a webpage
      * */
     fun scrape(
         url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
+
     /**
      * Scrape a webpage
      * */
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
+
     /**
      * Scrape a webpage
      * */
@@ -407,19 +410,35 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -427,7 +446,13 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -435,62 +460,95 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields with their name from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields with their name from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
+
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
+
     /**
      * Get a variable associated with this session
      * */
     fun getVariable(name: String): Any?
+
     /**
      * Set a variable associated with this session
      * */
     fun setVariable(name: String, value: Any)
+
     /**
      * Put session scope bean
      * */
     fun putSessionBean(obj: Any)
+
     /**
      * Delete a webpage from the backend storage
      * */
     fun delete(url: String)
+
     /**
      * Flush to the backend storage
      * */
     fun flush()
+
     /**
      * Persist to the backend storage
      * */
     fun persist(page: WebPage): Boolean
+
     /**
      * Export a webpage
      * */
     fun export(page: WebPage, ident: String = ""): Path
+
     /**
      * Export a document
      * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
+
     /**
      * Export a document to the given path
      * */

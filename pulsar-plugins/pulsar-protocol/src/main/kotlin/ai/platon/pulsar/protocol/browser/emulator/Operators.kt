@@ -8,6 +8,7 @@ import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
 interface PageCategorySniffer {
     operator fun invoke(pageDatum: PageDatum): OpenPageCategory
@@ -24,7 +25,7 @@ open class DefaultPageCategorySniffer(
 class CombinedPageCategorySniffer(
     val conf: ImmutableConfig
 ): PageCategorySniffer {
-    val sniffers = Collections.synchronizedList(ArrayList<PageCategorySniffer>())
+    val sniffers = CopyOnWriteArrayList<PageCategorySniffer>()
 
     override fun invoke(pageDatum: PageDatum): OpenPageCategory {
         for (sniffer in sniffers) {
@@ -113,7 +114,7 @@ open class DefaultHtmlIntegrityChecker(
 open class CombinedHtmlIntegrityChecker(
     val conf: ImmutableConfig
 ): AbstractHtmlIntegrityChecker() {
-    val checkers = Collections.synchronizedList(mutableListOf<HtmlIntegrityChecker>())
+    val checkers = CopyOnWriteArrayList<HtmlIntegrityChecker>()
 
     override fun isRelevant(url: String): Boolean = checkers.any { it.isRelevant(url) }
 

@@ -474,9 +474,6 @@ abstract class AbstractPulsarSession(
     override fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>) =
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
-    /**
-     * Scrape out pages
-     * */
     @ExperimentalApi
     override fun scrapeOutPages(portalUrl: String,
                        options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>> =

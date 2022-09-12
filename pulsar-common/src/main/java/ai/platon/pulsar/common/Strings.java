@@ -20,16 +20,12 @@ package ai.platon.pulsar.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
@@ -930,66 +926,60 @@ public final class Strings {
     }
 
     /**
-     * <p>readableBytes.</p>
+     * Formats a decimal number in its compact, readable form.
      *
-     * @param bytes a long.
-     * @return a {@link java.lang.String} object.
+     * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
+     *   CompactNumberFormat</a>
      */
     public static String readableBytes(int bytes) {
         return readableBytes(bytes, -1, false);
     }
 
     /**
-     * <p>readableBytes.</p>
+     * Formats a decimal number in its compact, readable form.
      *
-     * @param bytes a long.
-     * @return a {@link java.lang.String} object.
+     * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
+     *   CompactNumberFormat</a>
      */
     public static String readableBytes(long bytes) {
         return readableBytes(bytes, -1, false);
     }
 
     /**
-     * <p>readableBytes.</p>
+     * Formats a decimal number in its compact, readable form.
      *
-     * @param bytes a long.
-     * @param si    a boolean.
-     * @return a {@link java.lang.String} object.
+     * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
+     *   CompactNumberFormat</a>
      */
     public static String readableBytes(int bytes, boolean si) {
         return readableBytes(bytes, -1, si);
     }
 
     /**
-     * <p>readableBytes.</p>
+     * Formats a decimal number in its compact, readable form.
      *
-     * @param bytes a long.
-     * @param si    a boolean.
-     * @return a {@link java.lang.String} object.
+     * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
+     *   CompactNumberFormat</a>
      */
     public static String readableBytes(long bytes, boolean si) {
         return readableBytes(bytes, -1, si);
     }
 
     /**
-     * <p>readableBytes.</p>
+     * Formats a decimal number in its compact, readable form.
      *
-     * @param bytes a long.
-     * @param scale a int.
-     * @param si    a boolean.
-     * @return a {@link java.lang.String} object.
+     * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
+     *   CompactNumberFormat</a>
      */
     public static String readableBytes(int bytes, int scale, boolean si) {
         return readableBytes((long) bytes, scale, si);
     }
 
     /**
-     * <p>readableBytes.</p>
+     * Formats a decimal number in its compact, readable form.
      *
-     * @param bytes a long.
-     * @param scale a int.
-     * @param si    a boolean.
-     * @return a {@link java.lang.String} object.
+     * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
+     *   CompactNumberFormat</a>
      */
     public static String readableBytes(long bytes, int scale, boolean si) {
         int unit = si ? 1000 : 1024;

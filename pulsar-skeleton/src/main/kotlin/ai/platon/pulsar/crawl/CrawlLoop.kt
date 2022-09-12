@@ -26,7 +26,7 @@ abstract class AbstractCrawlLoop(
     override val config: ImmutableConfig
 ) : CrawlLoop {
     companion object {
-        val idGen = AtomicInteger()
+        private val idGen = AtomicInteger()
     }
 
     override val id: Int = idGen.incrementAndGet()

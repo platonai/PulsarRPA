@@ -528,6 +528,15 @@ open class EmptyWebPageWebDriverHandler: AbstractWebPageWebDriverHandler() {
     }
 }
 
+/**
+ * @see [EmulateEventHandler].
+ *
+ * About emulate, simulate, mimic and imitate:
+ * 1. Emulate is usually used with someone as an object.
+ * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
+ * 3. Mimic, a person who imitate mannerisms of others.
+ * 4. Imitate is the most general of the four words, can be used in all the three senses.
+ * */
 interface SimulateEventHandler {
     @Deprecated("Old fashioned name", ReplaceWith("onWillFetch"))
     val onBeforeFetch: WebPageWebDriverHandlerPipeline get() = onWillFetch
@@ -926,6 +935,15 @@ abstract class AbstractCrawlEventHandler(
 
 class DefaultCrawlEventHandler: AbstractCrawlEventHandler()
 
+/**
+ * @see [SimulateEventHandler]
+ *
+ * About emulate, simulate, mimic and imitate:
+ * 1. Emulate is usually used with someone as an object.
+ * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
+ * 3. Mimic, a person who imitate mannerisms of others.
+ * 4. Imitate is the most general of the four words, can be used in all the three senses.
+ * */
 interface EmulateEventHandler {
     val onSniffPageCategory: PageDatumHandlerPipeline
     val onCheckHtmlIntegrity: PageDatumHandlerPipeline
@@ -1038,15 +1056,19 @@ open class PulsarEventHandlerTemplate(
 
             onWillCheckDOMState.addLast { page, driver ->
             }
+
             onDOMStateChecked.addLast { page, driver ->
             }
+
             onWillComputeFeature.addLast { page, driver ->
             }
+
             onFeatureComputed.addLast { page, driver ->
             }
 
             onWillInteract.addLast { page, driver ->
             }
+
             onDidInteract.addLast { page, driver ->
             }
         }
