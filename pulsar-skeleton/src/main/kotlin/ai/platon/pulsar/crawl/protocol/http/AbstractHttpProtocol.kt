@@ -37,7 +37,6 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import crawlercommons.robots.BaseRobotRules
-import org.apache.http.HttpStatus
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -101,7 +100,7 @@ abstract class AbstractHttpProtocol: Protocol {
         val response = getResponseDeferred(page, false)
                 ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL))
         setResponseTime(startTime, page, response)
-        return getOutputWithHttpStatusTransformed(page.url, response)
+        return getOutputWithHttpCodeTranslated(page.url, response)
     }
 
     private fun getProtocolOutputWithRetry(page: WebPage): ProtocolOutput {
@@ -141,14 +140,14 @@ abstract class AbstractHttpProtocol: Protocol {
         }
 
         setResponseTime(startTime, page, response)
-        return getOutputWithHttpStatusTransformed(page.url, response)
+        return getOutputWithHttpCodeTranslated(page.url, response)
     }
 
     private fun shouldRetry(response: Response): Boolean {
         return response !is ForwardingResponse && response.status.isRetry(RetryScope.PROTOCOL)
     }
 
-    private fun getOutputWithHttpStatusTransformed(url: String, response: Response): ProtocolOutput {
+    private fun getOutputWithHttpCodeTranslated(url: String, response: Response): ProtocolOutput {
         var u = URL(url)
         val httpCode = response.httpCode
         val pageDatum = response.pageDatum
@@ -158,44 +157,14 @@ abstract class AbstractHttpProtocol: Protocol {
         pageDatum.contentType = resolveMimeType(contentType, url, content)
 
         val headers = pageDatum.headers
-        val status: ProtocolStatus
-        // got a good response
+        val status = ProtocolStatusTranslator.translateHttpCode(httpCode)
         when (httpCode) {
-            200 -> return ProtocolOutput(pageDatum)
-            304 -> return ProtocolOutput(pageDatum, pageDatum.headers, ProtocolStatus.STATUS_NOTMODIFIED)
             in 300..399 -> {
                 // handle redirect
                 // some broken servers, such as MS IIS, use lowercase header name...
                 val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
                 u = URL(u, redirect)
-                val code = when (httpCode) {
-                    HttpStatus.SC_MULTIPLE_CHOICES -> ProtocolStatus.MOVED_PERMANENTLY
-                    HttpStatus.SC_MOVED_PERMANENTLY, HttpStatus.SC_USE_PROXY -> ProtocolStatus.MOVED_PERMANENTLY
-                    HttpStatus.SC_MOVED_TEMPORARILY, HttpStatus.SC_SEE_OTHER, HttpStatus.SC_TEMPORARY_REDIRECT -> ProtocolStatus.MOVED_TEMPORARILY
-                    else -> ProtocolStatus.MOVED_PERMANENTLY
-                }
-                // handle redirection in the higher layer.
-                // page.getMetadata().set(ARG_REDIRECT_TO_URL, url.toString());
-                status = ProtocolStatus.failed(code, ARG_HTTP_CODE, httpCode, ProtocolStatus.ARG_REDIRECT_TO_URL, u)
-            }
-            HttpStatus.SC_BAD_REQUEST -> {
-                log.warn("400 Bad request | {}", u)
-                status = ProtocolStatus.failed(ProtocolStatusCodes.GONE, ARG_HTTP_CODE, httpCode)
-            }
-            HttpStatus.SC_UNAUTHORIZED -> { // requires authorization, but no valid auth provided.
-                status = ProtocolStatus.failed(ProtocolStatusCodes.UNAUTHORIZED, ARG_HTTP_CODE, httpCode)
-            }
-            HttpStatus.SC_NOT_FOUND -> { // GONE
-                status = ProtocolStatus.failed(ProtocolStatusCodes.NOT_FOUND, ARG_HTTP_CODE, httpCode)
-            }
-            HttpStatus.SC_REQUEST_TIMEOUT -> { // TIMEOUT
-                status = ProtocolStatus.failed(ProtocolStatusCodes.REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode)
-            }
-            HttpStatus.SC_GONE -> { // permanently GONE
-                status = ProtocolStatus.failed(ProtocolStatusCodes.GONE, ARG_HTTP_CODE, httpCode)
-            }
-            else -> {
-                status = response.status
+                status.args[ProtocolStatus.ARG_REDIRECT_TO_URL] = u.toString()
             }
         }
 
@@ -258,6 +227,5 @@ abstract class AbstractHttpProtocol: Protocol {
 
     companion object {
         private const val MAX_REY_GUARD = 10
-        private const val ARG_HTTP_CODE = ProtocolStatus.ARG_HTTP_CODE
     }
 }

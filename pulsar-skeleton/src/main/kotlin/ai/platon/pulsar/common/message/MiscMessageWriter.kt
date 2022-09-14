@@ -1,22 +1,14 @@
 package ai.platon.pulsar.common.message
 
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.MultiSinkWriter
-import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.common.WeakPageIndexer
-import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.PageCounters.Self
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.model.ActiveDomUrls
+import ai.platon.pulsar.persist.model.ActiveDOMUrls
 import ai.platon.pulsar.persist.model.DomStatistics
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -112,7 +104,7 @@ class MiscMessageWriter(
         write(report, "illegal-last-fetch-time.txt")
     }
 
-    fun debugRedirects(url: String, urls: ActiveDomUrls) {
+    fun debugRedirects(url: String, urls: ActiveDOMUrls) {
         val location = urls.location
         if (location == url && urls.URL == url && urls.baseURI == url && urls.documentURI == url) {
             // no redirect

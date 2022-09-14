@@ -15,7 +15,7 @@ import ai.platon.pulsar.persist.gora.generated.GProtocolStatus
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.*
 import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
-import ai.platon.pulsar.persist.model.ActiveDomUrls
+import ai.platon.pulsar.persist.model.ActiveDOMUrls
 import ai.platon.pulsar.persist.model.PageModel
 import org.apache.avro.util.Utf8
 import org.apache.commons.collections4.CollectionUtils
@@ -448,15 +448,15 @@ class KWebPage(
         }
     }
 
-    fun getActiveDomUrls(): ActiveDomUrls? { // cached
+    fun getActiveDomUrls(): ActiveDOMUrls? { // cached
         val name = Name.ACTIVE_DOM_URLS
         val value = variables[name]
-        if (value is ActiveDomUrls) {
+        if (value is ActiveDOMUrls) {
             return value
         } else {
             val json = metadata[name]
             if (json != null) {
-                val status = ActiveDomUrls.fromJson(json)
+                val status = ActiveDOMUrls.fromJson(json)
                 variables[name] = status
                 return status
             }
@@ -464,7 +464,7 @@ class KWebPage(
         return null
     }
 
-    fun setActiveDomUrls(urls: ActiveDomUrls?) {
+    fun setActiveDomUrls(urls: ActiveDOMUrls?) {
         if (urls != null) {
             variables[Name.ACTIVE_DOM_URLS] = urls
             metadata[Name.ACTIVE_DOM_URLS] = urls.toJson()

@@ -62,7 +62,7 @@ object Converters {
 /**
  * URLs of a document.
  * */
-data class ActiveDomUrls(
+data class ActiveDOMUrls(
     /**
      * The entire URL of the document, including the protocol (like http://)
      */
@@ -104,10 +104,10 @@ data class ActiveDomUrls(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDomUrls()
+        val default = ActiveDOMUrls()
 
-        fun fromJson(json: String): ActiveDomUrls {
-            return gson.fromJson(json, ActiveDomUrls::class.java)
+        fun fromJson(json: String): ActiveDOMUrls {
+            return gson.fromJson(json, ActiveDOMUrls::class.java)
         }
     }
 }
@@ -157,7 +157,7 @@ data class ActiveDOMStatTrace(
 
 data class ActiveDomMessage(
     var multiStatus: ActiveDOMStatTrace? = null,
-    var urls: ActiveDomUrls? = null
+    var urls: ActiveDOMUrls? = null
 ) {
     fun toJson(): String {
         return gson.toJson(this)

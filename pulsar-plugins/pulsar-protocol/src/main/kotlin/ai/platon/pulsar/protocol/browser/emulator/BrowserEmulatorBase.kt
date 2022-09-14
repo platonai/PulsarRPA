@@ -24,7 +24,6 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BrowserEmulatorBase(
     val driverSettings: WebDriverSettings,
@@ -119,7 +118,7 @@ abstract class BrowserEmulatorBase(
         headers.put(HttpHeaders.Q_TRUSTED_CONTENT_ENCODING, utf8)
         headers.put(HttpHeaders.Q_RESPONSE_TIME, System.currentTimeMillis().toString())
 
-        val urls = pageDatum.activeDomUrls
+        val urls = pageDatum.activeDOMUrls
         if (urls != null) {
             pageDatum.location = urls.location
             if (pageDatum.url != pageDatum.location) {

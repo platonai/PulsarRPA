@@ -19,17 +19,16 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEventHandler
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.FetchEntry
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
+import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -161,7 +160,6 @@ open class FetchComponent(
             return page
         }
 
-        val url = page.url
         val pageDatum = output.pageDatum
 
         if (pageDatum == null) {
@@ -171,80 +169,25 @@ open class FetchComponent(
 
         page.headers.putAll(output.headers.asMultimap())
 
-        val crawlStatus = when (protocolStatus.minorCode) {
-            ProtocolStatus.SUCCESS_OK -> CrawlStatus.STATUS_FETCHED
-            ProtocolStatus.NOT_MODIFIED -> CrawlStatus.STATUS_NOTMODIFIED
-            ProtocolStatus.CANCELED -> CrawlStatus.STATUS_UNFETCHED
-
-            ProtocolStatus.MOVED_PERMANENTLY,
-            ProtocolStatus.MOVED_TEMPORARILY,
-            -> handleMoved(page, protocolStatus).also { coreMetrics?.trackMoved(url) }
-
-            ProtocolStatus.UNAUTHORIZED,
-            ProtocolStatus.ROBOTS_DENIED,
-            ProtocolStatus.UNKNOWN_HOST,
-            ProtocolStatus.GONE,
-            ProtocolStatus.NOT_FOUND,
-            -> CrawlStatus.STATUS_GONE.also { coreMetrics?.trackHostUnreachable(url) }
-
-            ProtocolStatus.EXCEPTION,
-            ProtocolStatus.RETRY,
-            ProtocolStatus.BLOCKED,
-            -> CrawlStatus.STATUS_RETRY.also { coreMetrics?.trackHostUnreachable(url) }
-
-            ProtocolStatus.REQUEST_TIMEOUT,
-            ProtocolStatus.THREAD_TIMEOUT,
-            ProtocolStatus.WEB_DRIVER_TIMEOUT,
-            ProtocolStatus.SCRIPT_TIMEOUT,
-            -> CrawlStatus.STATUS_RETRY.also { coreMetrics?.trackTimeout(url) }
-
-            else -> CrawlStatus.STATUS_RETRY.also { logger.warn("Unknown protocol status $protocolStatus") }
-        }
+        val crawlStatus = ProtocolStatusTranslator.translateToCrawlStatus(protocolStatus, page)
 
         when (crawlStatus) {
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
-            CrawlStatus.STATUS_REDIR_PERM,
-            -> updateFetchedPage(page, pageDatum, protocolStatus, crawlStatus)
+            CrawlStatus.STATUS_REDIR_PERM -> updateFetchedPage(page, pageDatum, protocolStatus, crawlStatus)
             else -> updateFetchedPage(page, null, protocolStatus, crawlStatus)
         }
 
-        if (crawlStatus.isFetched) {
-            coreMetrics?.trackSuccess(page)
-        } else if (crawlStatus.isFailed) {
-            coreMetrics?.trackFailedUrl(url)
-        }
+        coreMetrics?.let { logMetrics(crawlStatus, page, it) }
 
         return page
     }
 
-    private fun handleMoved(page: WebPage, protocolStatus: ProtocolStatus): CrawlStatus {
-        val crawlStatus: CrawlStatus
-        val url = page.url
-        val minorCode = protocolStatus.minorCode
-        val temp: Boolean
-        if (minorCode == ProtocolStatus.MOVED_PERMANENTLY) {
-            crawlStatus = CrawlStatus.STATUS_REDIR_PERM
-            temp = false
-        } else {
-            crawlStatus = CrawlStatus.STATUS_REDIR_TEMP
-            temp = true
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
         }
-
-        val newUrl = protocolStatus.getArgOrDefault(ProtocolStatus.ARG_REDIRECT_TO_URL, "")
-        if (newUrl.isNotEmpty()) {
-            // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
-            val reprUrl = URLUtil.chooseRepr(url, newUrl, temp)
-            if (reprUrl.length >= AppConstants.SHORTEST_VALID_URL_LENGTH) {
-                page.reprUrl = reprUrl
-            }
-        }
-        return crawlStatus
     }
 
-    /**
-     * TODO: do this in update phrase
-     * */
     private fun updateFetchedPage(
         page: WebPage, pageDatum: PageDatum?,
         protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus,
@@ -254,7 +197,7 @@ open class FetchComponent(
         pageDatum?.also {
             page.location = it.location
             page.proxy = it.proxyEntry?.outIp
-            val ms = it.activeDomMultiStatus
+            val ms = it.activeDOMStatTrace
             if (ms != null) {
                 page.activeDOMStatus = ms.status
                 page.activeDOMStatTrace = mapOf(
@@ -277,8 +220,18 @@ open class FetchComponent(
         return page
     }
 
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
+    private fun logMetrics(crawlStatus: CrawlStatus, page: WebPage, metrics: CoreMetrics) {
+        val url = page.url
+        when (crawlStatus) {
+            CrawlStatus.STATUS_REDIR_PERM,
+            CrawlStatus.STATUS_REDIR_TEMP -> metrics.trackMoved(url)
+            CrawlStatus.STATUS_GONE -> metrics.trackHostUnreachable(url)
+        }
+
+        if (crawlStatus.isFetched) {
+            metrics.trackSuccess(page)
+        } else if (crawlStatus.isFailed) {
+            metrics.trackFailedUrl(url)
         }
     }
 

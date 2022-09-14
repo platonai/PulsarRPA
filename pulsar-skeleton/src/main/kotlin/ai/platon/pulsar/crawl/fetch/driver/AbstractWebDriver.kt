@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.urls.UrlUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -78,6 +79,7 @@ abstract class AbstractWebDriver(
     override val isFree get() = status.get().isFree
     override val isCrashed get() = status.get().isCrashed
 
+    private val jsoupCreateDestroyMonitor = Any()
     private var jsoupSession: Connection? = null
 
     override fun free() = status.set(WebDriver.Status.FREE)
@@ -178,6 +180,49 @@ abstract class AbstractWebDriver(
     override suspend fun newSession(): Connection {
         val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
         val cookies = getCookies()
+
+        return newSession(headers, cookies)
+    }
+
+    @Throws(IOException::class)
+    override suspend fun loadResource(url: String): Connection.Response? {
+        synchronized(jsoupCreateDestroyMonitor) {
+            if (jsoupSession == null) {
+                val (headers, cookies) = getHeadersAndCookies()
+                jsoupSession = newSession(headers, cookies)
+            }
+        }
+
+        val response = withContext(Dispatchers.IO) {
+            jsoupSession?.newRequest()?.url(url)?.execute()
+        }
+
+        return response
+    }
+
+    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
+
+    override fun hashCode(): Int = id
+
+    override fun compareTo(other: AbstractWebDriver): Int = id - other.id
+
+    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
+
+    private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
+        return runBlocking {
+            val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
+            val cookies = getCookies()
+
+            headers to cookies
+        }
+    }
+
+    /**
+     * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
+     * The browser should be initialized by opening a page before the session is created.
+     * */
+    private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
+        // TODO: use the same user agent as this browser
         val userAgent = BrowserSettings.randomUserAgent()
 
         val httpTimeout = Duration.ofSeconds(20)
@@ -202,25 +247,4 @@ abstract class AbstractWebDriver(
 
         return session
     }
-
-    @Throws(IOException::class)
-    override suspend fun loadResource(url: String): Connection.Response? {
-        if (jsoupSession == null) {
-            jsoupSession = newSession()
-        }
-
-        val response = withContext(Dispatchers.IO) {
-            jsoupSession?.newRequest()?.url(url)?.execute()
-        }
-
-        return response
-    }
-
-    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
-
-    override fun hashCode(): Int = id
-
-    override fun compareTo(other: AbstractWebDriver): Int = id - other.id
-
-    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
 }

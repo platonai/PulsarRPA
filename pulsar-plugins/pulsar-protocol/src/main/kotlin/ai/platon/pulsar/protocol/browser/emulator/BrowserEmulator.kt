@@ -17,6 +17,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
@@ -139,12 +140,13 @@ open class BrowserEmulator(
         val response = driver.loadResource(task.url)
             ?: return ForwardingResponse.failed(task.page, SessionLostException("null response"))
 
+        val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.statusCode())
         navigateTask.pageSource = response.body()
-        navigateTask.pageDatum.apply {
-            headers.putAll(response.headers())
-            contentType = response.contentType()
-            content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
-            protocolStatus = ProtocolStatus.STATUS_SUCCESS
+        navigateTask.pageDatum.also {
+            it.protocolStatus = protocolStatus
+            it.headers.putAll(response.headers())
+            it.contentType = response.contentType()
+            it.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
         }
 
         responseHandler.onWillCreateResponse(task, driver)
@@ -190,8 +192,8 @@ open class BrowserEmulator(
         val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
         navigateTask.pageDatum.apply {
             protocolStatus = interactResult.protocolStatus
-            activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
-            activeDomUrls = interactResult.activeDomMessage?.urls
+            activeDOMStatTrace = interactResult.activeDomMessage?.multiStatus
+            activeDOMUrls = interactResult.activeDomMessage?.urls
         }
         navigateTask.pageSource = driver.pageSource() ?: ""
 
