@@ -81,7 +81,7 @@ private class AjaxCrawler(
 
         val apiFetcherHandler = AjaxFetchHandler(initPageNumber, reportDirectory)
         val options = session.options("-refresh")
-        options.ensureEventHandler().simulateEventHandler.onWillComputeFeature.addLast(apiFetcherHandler)
+        options.enableEvent().simulateEvent.onWillComputeFeature.addLast(apiFetcherHandler)
 
         try {
             session.load(url, options)

@@ -2,19 +2,19 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEvent
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.atomic.AtomicInteger
 
-class PrintFlowEventHandler: DefaultPulsarEventHandler() {
+class PrintFlowEvent: DefaultPulsarEvent() {
     private val sequencer = AtomicInteger()
     private val seq get() = sequencer.incrementAndGet()
 
     init {
-        loadEventHandler.apply {
+        loadEvent.apply {
             onFilter.addLast { url ->
                 println("$seq. onFilter")
                 url
@@ -62,7 +62,7 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
             }
         }
 
-        simulateEventHandler.apply {
+        simulateEvent.apply {
             onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onBeforeCheckDOMState")
             }
@@ -77,7 +77,7 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
             }
         }
 
-        crawlEventHandler.apply {
+        crawlEvent.apply {
             onFilter.addLast { url: UrlAware ->
                 println("$seq. onFilter")
                 url
@@ -104,7 +104,7 @@ fun main() {
     val portalUrl = "https://list.jd.com/list.html?cat=652,12345,12349"
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(
-        portalUrl, args = "-refresh -parse", eventHandler = PrintFlowEventHandler())
+        portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 
     // submit the link to the fetch pool.
     session.submit(link)

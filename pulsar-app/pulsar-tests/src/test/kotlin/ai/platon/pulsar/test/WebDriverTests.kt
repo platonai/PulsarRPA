@@ -1,19 +1,9 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.session.PulsarSession
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 16-7-20.
@@ -27,7 +17,7 @@ class WebDriverTests: TestBase() {
     @Test
     fun testScrollDown() {
         val options = session.options("-refresh")
-        options.ensureEventHandler().simulateEventHandler.onWillFetch.addLast { page, driver ->
+        options.enableEvent().simulateEvent.onWillFetch.addLast { page, driver ->
             visit(url2, driver)
         }
         session.load(url, options)

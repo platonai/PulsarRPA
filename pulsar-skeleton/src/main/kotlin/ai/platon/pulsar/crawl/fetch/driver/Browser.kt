@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * A Browser is created via {@link BrowserFactory#launch BrowserFactory.launch()}.
+ * The Browser defines methods and events for to manage the real browser.
  */
 interface Browser: AutoCloseable {
     val id: BrowserId

@@ -16,7 +16,7 @@ fun main() {
 
     val options = session.options(args)
     val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
-    options.ensureEventHandler().loadEventHandler.onBrowserLaunched.addLast(loginHandler)
+    options.enableEvent().loadEvent.onBrowserLaunched.addLast(loginHandler)
 
     session.loadOutPages(portalUrl, options)
 

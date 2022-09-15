@@ -7,10 +7,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating

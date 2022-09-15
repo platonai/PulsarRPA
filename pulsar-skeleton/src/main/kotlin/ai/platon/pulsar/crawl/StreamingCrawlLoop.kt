@@ -36,7 +36,7 @@ open class StreamingCrawlLoop(
 
     val isRunning get() = running.get()
 
-    var crawlEventHandler = DefaultCrawlEventHandler()
+    var crawlEventHandler = DefaultCrawlEvent()
 
     override val urlFeeder by lazy { createUrlFeeder() }
 

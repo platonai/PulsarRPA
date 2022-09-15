@@ -49,7 +49,8 @@ data class NavigateEntry(
      * */
     val pageId: Int = 0,
     /**
-     * The page url which can be used to retrieve the WebPage from database. An empty string means there is no WebPage.
+     * The page url which can be used to retrieve the WebPage from database.
+     * An empty string means there is no WebPage.
      * */
     val pageUrl: String = "",
     /**
@@ -108,9 +109,21 @@ interface WebDriver: Closeable {
         val isQuit get() = this == QUIT
     }
 
+    /**
+     * The unique driver id.
+     * */
     val id: Int
+    /**
+     * The driver name.
+     * */
     val name: String
+    /**
+     * The browser of the driver. The Browser defines methods and events for to manage the real browser.
+     * */
     val browser: Browser
+    /**
+     * The unique browser id.
+     * */
     val browserId: BrowserId get() = browser.id
 
     var navigateEntry: NavigateEntry
@@ -286,19 +299,29 @@ interface WebDriver: Closeable {
     suspend fun captureScreenshot(selector: String): String?
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
-    /** Force the page stop all navigations and pending resource fetches. */
+    /**
+     * Force the page stop all navigations and pending resource fetches.
+     * If the page loading stops, the user can still interact with the page,
+     * and therefore resources can continue to load.
+     * */
     @Throws(WebDriverException::class)
     suspend fun stopLoading()
-
-    /** Force the page stop all navigations and releases all resources. */
-    @Throws(Exception::class)
+    /**
+     * Force the page stop all navigations and releases all resources.
+     * If a tab stops, it can later navigate to any url.
+     * */
+    @Throws(WebDriverException::class)
     suspend fun stop()
-    /** Force the page stop all navigations and releases all resources. */
-    @Throws(Exception::class)
+    /**
+     * Force the page stop all navigations and releases all resources.
+     * If a tab is terminated, it should not navigate to any url.
+     * */
+    @Throws(WebDriverException::class)
     suspend fun terminate()
-    /** Quit the tab, clicking the close button. */
+    /** Quit the tab, just like clicking the close button on the tab. */
     @Throws(Exception::class)
     fun quit()
+    /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()
 

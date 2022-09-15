@@ -8,8 +8,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.PulsarEvent
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -94,10 +93,10 @@ abstract class AbstractPulsarSession(
     /**
      * Create a new options, with a new volatile config
      * */
-    override fun options(args: String, eventHandler: PulsarEventHandler?): LoadOptions {
+    override fun options(args: String, event: PulsarEvent?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
-        if (eventHandler != null) {
-            opts.eventHandler = eventHandler
+        if (event != null) {
+            opts.event = event
         }
         return opts
     }
@@ -229,7 +228,7 @@ abstract class AbstractPulsarSession(
         }
 
         // We have events to handle, so do not use the cached version
-        if (normUrl.options.eventHandler != null) {
+        if (normUrl.options.event != null) {
             return null
         }
 
@@ -323,8 +322,8 @@ abstract class AbstractPulsarSession(
         val opts = normUrl.options
         val itemOpts = normUrl.options.createItemOptions()
 
-        require(normUrl.options.eventHandler == options.eventHandler)
-        require(options.itemEventHandler == itemOpts.eventHandler)
+        require(normUrl.options.event == options.event)
+        require(options.itemEvent == itemOpts.event)
 
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
 
@@ -350,7 +349,7 @@ abstract class AbstractPulsarSession(
             .mapNotNullTo(mutableSetOf()) { it }
             .take(opts.topLinks)
             .map { ListenableHyperlink("$it $itemOpts") }
-            .onEach { link -> itemOpts.eventHandler?.let { link.eventHandler = it } }
+            .onEach { link -> itemOpts.event?.let { link.event = it } }
 
         submitAll(outLinks)
 

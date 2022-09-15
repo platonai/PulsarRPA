@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.persist.ext.simulateEventHandler
+import ai.platon.pulsar.common.persist.ext.simulateEvent
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -83,13 +83,13 @@ open class BrowserEmulatedFetcher(
             return FetchResult.canceled(task)
         }
 
-        val eventHandler = task.page.simulateEventHandler
+        val event = task.page.simulateEvent
 
-        runSafely("onWillFetch") { eventHandler?.onWillFetch?.invoke(task.page, driver) }
+        runSafely("onWillFetch") { event?.onWillFetch?.invoke(task.page, driver) }
 
         val result = browserEmulator.fetch(task, driver)
 
-        runSafely("onFetched") { eventHandler?.onFetched?.invoke(task.page, driver) }
+        runSafely("onFetched") { event?.onFetched?.invoke(task.page, driver) }
 
         return result
     }

@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.JobInitialized
@@ -165,7 +165,7 @@ class PageParser(
 
     private fun onWillParse(page: WebPage) {
         try {
-            page.loadEventHandler?.onWillParse?.invoke(page)
+            page.loadEvent?.onWillParse?.invoke(page)
         } catch (e: Throwable) {
             LOG.warn("[onWillParse]", e)
         }
@@ -173,7 +173,7 @@ class PageParser(
 
     private fun onParsed(page: WebPage) {
         try {
-            page.loadEventHandler?.onParsed?.invoke(page)
+            page.loadEvent?.onParsed?.invoke(page)
         } catch (e: Throwable) {
             LOG.warn("[onParsed]", e)
         }

@@ -2,25 +2,25 @@ package ai.platon.pulsar.common.persist.ext
 
 import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.CrawlEventHandler
-import ai.platon.pulsar.crawl.LoadEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
-import ai.platon.pulsar.crawl.SimulateEventHandler
+import ai.platon.pulsar.crawl.CrawlEvent
+import ai.platon.pulsar.crawl.LoadEvent
+import ai.platon.pulsar.crawl.PulsarEvent
+import ai.platon.pulsar.crawl.SimulateEvent
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import java.time.Instant
 
-val WebPage.pulsarEventHandler: PulsarEventHandler?
-    get() = this.options.eventHandler
+val WebPage.pulsarEvent: PulsarEvent?
+    get() = this.options.event
 
-val WebPage.crawlEventHandler: CrawlEventHandler?
-    get() = this.options.eventHandler?.crawlEventHandler
+val WebPage.crawlEvent: CrawlEvent?
+    get() = this.options.event?.crawlEvent
 
-val WebPage.loadEventHandler: LoadEventHandler?
-    get() = this.options.eventHandler?.loadEventHandler
+val WebPage.loadEvent: LoadEvent?
+    get() = this.options.event?.loadEvent
 
-val WebPage.simulateEventHandler: SimulateEventHandler?
-    get() = this.options.eventHandler?.simulateEventHandler
+val WebPage.simulateEvent: SimulateEvent?
+    get() = this.options.event?.simulateEvent
 
 /**
  * Get or create a LoadOptions from the args

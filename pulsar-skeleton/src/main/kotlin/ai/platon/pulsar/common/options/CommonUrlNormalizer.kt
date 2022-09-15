@@ -3,7 +3,6 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
 import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
@@ -27,9 +26,9 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
 
         // TODO: the normalization order might not be the best
         var normalizedUrl: String
-        val eventHandler = finalOptions.eventHandler
-        if (eventHandler?.loadEventHandler?.onNormalize?.isNotEmpty == true) {
-            normalizedUrl = eventHandler.loadEventHandler.onNormalize(spec) ?: return NormUrl.NIL
+        val event = finalOptions.event
+        if (event?.loadEvent?.onNormalize?.isNotEmpty == true) {
+            normalizedUrl = event.loadEvent.onNormalize(spec) ?: return NormUrl.NIL
         } else {
             val ignoreQuery = options.ignoreUrlQuery
             normalizedUrl = UrlUtils.normalizeOrNull(spec, ignoreQuery) ?: return NormUrl.NIL
@@ -57,14 +56,14 @@ class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = nul
 
     private fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
         val clone = options.clone()
-        require(options.eventHandler == clone.eventHandler)
-        require(options.itemEventHandler == clone.itemEventHandler)
+        require(options.event == clone.event)
+        require(options.itemEvent == clone.itemEvent)
 
         clone.conf.name = clone.label
         clone.nMaxRetry = url.nMaxRetry
 
         if (url is ListenableUrl) {
-            clone.ensureEventHandler().combine(url.eventHandler)
+            clone.enableEvent().combine(url.event)
         }
 
         return clone

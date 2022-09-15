@@ -115,7 +115,7 @@ A ListenableHyperlink help us to register event handlers for the scraping:
 ----
 val session = PulsarContexts.createSession()
 val link = ListenableHyperlink(
-portalUrl, args = "-refresh -parse", eventHandler = PrintFlowEventHandler())
+portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 session.submit(link)
 ----
 The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[kotlin].

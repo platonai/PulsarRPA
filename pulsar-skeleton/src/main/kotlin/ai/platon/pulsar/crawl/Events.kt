@@ -376,7 +376,7 @@ class HTMLDocumentHandlerPipeline: HTMLDocumentHandler(), EventHandlerPipeline {
     }
 }
 
-interface LoadEventHandler {
+interface LoadEvent {
     val onFilter: UrlFilterPipeline
 
     val onNormalize: UrlFilterPipeline
@@ -429,10 +429,10 @@ interface LoadEventHandler {
     @Deprecated("Old fashioned name", ReplaceWith("onLoaded"))
     val onAfterLoad: WebPageHandlerPipeline get() = onLoaded
 
-    fun combine(other: LoadEventHandler): LoadEventHandler
+    fun combine(other: LoadEvent): LoadEvent
 }
 
-abstract class AbstractLoadEventHandler(
+abstract class AbstractLoadEvent(
     override val onFilter: UrlFilterPipeline = UrlFilterPipeline(),
     override val onNormalize: UrlFilterPipeline = UrlFilterPipeline(),
     override val onWillLoad: UrlHandlerPipeline = UrlHandlerPipeline(),
@@ -447,9 +447,9 @@ abstract class AbstractLoadEventHandler(
     override val onHTMLDocumentParsed: HTMLDocumentHandlerPipeline = HTMLDocumentHandlerPipeline(),
     override val onParsed: WebPageHandlerPipeline = WebPageHandlerPipeline(),
     override val onLoaded: WebPageHandlerPipeline = WebPageHandlerPipeline()
-): LoadEventHandler {
+): LoadEvent {
 
-    override fun combine(other: LoadEventHandler): AbstractLoadEventHandler {
+    override fun combine(other: LoadEvent): AbstractLoadEvent {
         onFilter.addLast(other.onFilter)
         onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
@@ -469,9 +469,9 @@ abstract class AbstractLoadEventHandler(
     }
 }
 
-open class DefaultLoadEventHandler(
+open class DefaultLoadEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()
-): AbstractLoadEventHandler() {
+): AbstractLoadEvent() {
     override val onBrowserLaunched = WebPageWebDriverHandlerPipeline()
         .addLast { page, driver ->
             rpa.warnUpBrowser(page, driver)
@@ -529,7 +529,7 @@ open class EmptyWebPageWebDriverHandler: AbstractWebPageWebDriverHandler() {
 }
 
 /**
- * @see [EmulateEventHandler].
+ * @see [EmulateEvent].
  *
  * About emulate, simulate, mimic and imitate:
  * 1. Emulate is usually used with someone as an object.
@@ -537,7 +537,7 @@ open class EmptyWebPageWebDriverHandler: AbstractWebPageWebDriverHandler() {
  * 3. Mimic, a person who imitate mannerisms of others.
  * 4. Imitate is the most general of the four words, can be used in all the three senses.
  * */
-interface SimulateEventHandler {
+interface SimulateEvent {
     @Deprecated("Old fashioned name", ReplaceWith("onWillFetch"))
     val onBeforeFetch: WebPageWebDriverHandlerPipeline get() = onWillFetch
     val onWillFetch: WebPageWebDriverHandlerPipeline
@@ -572,10 +572,10 @@ interface SimulateEventHandler {
     val onWillStopTab: WebPageWebDriverHandlerPipeline
     val onTabStopped: WebPageWebDriverHandlerPipeline
 
-    fun combine(other: SimulateEventHandler): SimulateEventHandler
+    fun combine(other: SimulateEvent): SimulateEvent
 }
 
-abstract class AbstractSimulateEventHandler: SimulateEventHandler {
+abstract class AbstractSimulateEvent: SimulateEvent {
     open val delayPolicy: (String) -> Long get() = { type ->
         when (type) {
             "click" -> 500L + Random.nextInt(500)
@@ -608,7 +608,7 @@ abstract class AbstractSimulateEventHandler: SimulateEventHandler {
     override val onWillStopTab: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
     override val onTabStopped: WebPageWebDriverHandlerPipeline = WebPageWebDriverHandlerPipeline()
 
-    override fun combine(other: SimulateEventHandler): SimulateEventHandler {
+    override fun combine(other: SimulateEvent): SimulateEvent {
         onWillFetch.addLast(other.onWillFetch)
         onFetched.addLast(other.onFetched)
 
@@ -728,10 +728,10 @@ class WebDriverFetchResultHandlerPipeline: AbstractWebDriverFetchResultHandler()
     }
 }
 
-class ExpressionSimulateEventHandler(
+class ExpressionSimulateEvent(
     val beforeComputeExpressions: Iterable<String> = listOf(),
     val afterComputeExpressions: Iterable<String> = listOf()
-): AbstractSimulateEventHandler() {
+): AbstractSimulateEvent() {
     constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
         bcExpressions.split(delimiters), acExpressions2.split(delimiters))
 
@@ -892,9 +892,9 @@ open class DefaultBrowseRPA: BrowseRPA {
     }
 }
 
-class DefaultSimulateEventHandler(
+class DefaultSimulateEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()
-): AbstractSimulateEventHandler() {
+): AbstractSimulateEvent() {
 
     override val onWillFetch = WebPageWebDriverHandlerPipeline().addLast { page, driver ->
         rpa.waitForReferrer(page, driver)
@@ -902,7 +902,7 @@ class DefaultSimulateEventHandler(
     }
 }
 
-interface CrawlEventHandler {
+interface CrawlEvent {
     val onFilter: UrlAwareFilterPipeline
 
     val onNormalize: UrlAwareFilterPipeline
@@ -913,17 +913,17 @@ interface CrawlEventHandler {
 
     val onLoaded: UrlAwareWebPageHandlerPipeline
 
-    fun combine(other: CrawlEventHandler): CrawlEventHandler
+    fun combine(other: CrawlEvent): CrawlEvent
 }
 
-abstract class AbstractCrawlEventHandler(
+abstract class AbstractCrawlEvent(
     override val onFilter: UrlAwareFilterPipeline = UrlAwareFilterPipeline(),
     override val onNormalize: UrlAwareFilterPipeline = UrlAwareFilterPipeline(),
     override val onWillLoad: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
     override val onLoad: UrlAwareHandlerPipeline = UrlAwareHandlerPipeline(),
     override val onLoaded: UrlAwareWebPageHandlerPipeline = UrlAwareWebPageHandlerPipeline()
-): CrawlEventHandler {
-    override fun combine(other: CrawlEventHandler): CrawlEventHandler {
+): CrawlEvent {
+    override fun combine(other: CrawlEvent): CrawlEvent {
         onFilter.addLast(other.onFilter)
         onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
@@ -933,10 +933,10 @@ abstract class AbstractCrawlEventHandler(
     }
 }
 
-class DefaultCrawlEventHandler: AbstractCrawlEventHandler()
+class DefaultCrawlEvent: AbstractCrawlEvent()
 
 /**
- * @see [SimulateEventHandler]
+ * @see [SimulateEvent]
  *
  * About emulate, simulate, mimic and imitate:
  * 1. Emulate is usually used with someone as an object.
@@ -944,65 +944,65 @@ class DefaultCrawlEventHandler: AbstractCrawlEventHandler()
  * 3. Mimic, a person who imitate mannerisms of others.
  * 4. Imitate is the most general of the four words, can be used in all the three senses.
  * */
-interface EmulateEventHandler {
+interface EmulateEvent {
     val onSniffPageCategory: PageDatumHandlerPipeline
     val onCheckHtmlIntegrity: PageDatumHandlerPipeline
 
-    fun combine(other: EmulateEventHandler): EmulateEventHandler
+    fun combine(other: EmulateEvent): EmulateEvent
 }
 
-abstract class AbstractEmulateEventHandler(
+abstract class AbstractEmulateEvent(
     override val onSniffPageCategory: PageDatumHandlerPipeline = PageDatumHandlerPipeline(),
     override val onCheckHtmlIntegrity: PageDatumHandlerPipeline = PageDatumHandlerPipeline(),
-): EmulateEventHandler {
-    override fun combine(other: EmulateEventHandler): EmulateEventHandler {
+): EmulateEvent {
+    override fun combine(other: EmulateEvent): EmulateEvent {
         onSniffPageCategory.addLast(other.onSniffPageCategory)
         onCheckHtmlIntegrity.addLast(other.onCheckHtmlIntegrity)
         return this
     }
 }
 
-class DefaultEmulateEventHandler: AbstractEmulateEventHandler() {
+class DefaultEmulateEvent: AbstractEmulateEvent() {
     override val onSniffPageCategory: PageDatumHandlerPipeline = PageDatumHandlerPipeline()
     override val onCheckHtmlIntegrity: PageDatumHandlerPipeline = PageDatumHandlerPipeline()
 }
 
-interface PulsarEventHandler {
-    val loadEventHandler: LoadEventHandler
-    val simulateEventHandler: SimulateEventHandler
-    val crawlEventHandler: CrawlEventHandler
+interface PulsarEvent {
+    val loadEvent: LoadEvent
+    val simulateEvent: SimulateEvent
+    val crawlEvent: CrawlEvent
 
-    fun combine(other: PulsarEventHandler): PulsarEventHandler
+    fun combine(other: PulsarEvent): PulsarEvent
 }
 
-abstract class AbstractPulsarEventHandler(
-    override val loadEventHandler: AbstractLoadEventHandler,
-    override val simulateEventHandler: AbstractSimulateEventHandler,
-    override val crawlEventHandler: AbstractCrawlEventHandler
-): PulsarEventHandler {
-    override fun combine(other: PulsarEventHandler): PulsarEventHandler {
-        loadEventHandler.combine(other.loadEventHandler)
-        simulateEventHandler.combine(other.simulateEventHandler)
-        crawlEventHandler.combine(other.crawlEventHandler)
+abstract class AbstractPulsarEvent(
+    override val loadEvent: AbstractLoadEvent,
+    override val simulateEvent: AbstractSimulateEvent,
+    override val crawlEvent: AbstractCrawlEvent
+): PulsarEvent {
+    override fun combine(other: PulsarEvent): PulsarEvent {
+        loadEvent.combine(other.loadEvent)
+        simulateEvent.combine(other.simulateEvent)
+        crawlEvent.combine(other.crawlEvent)
         return this
     }
 }
 
-open class DefaultPulsarEventHandler(
-    loadEventHandler: DefaultLoadEventHandler = DefaultLoadEventHandler(),
-    simulateEventHandler: DefaultSimulateEventHandler = DefaultSimulateEventHandler(),
-    crawlEventHandler: DefaultCrawlEventHandler = DefaultCrawlEventHandler()
-): AbstractPulsarEventHandler(loadEventHandler, simulateEventHandler, crawlEventHandler) {
+open class DefaultPulsarEvent(
+    loadEvent: DefaultLoadEvent = DefaultLoadEvent(),
+    simulateEvent: DefaultSimulateEvent = DefaultSimulateEvent(),
+    crawlEvent: DefaultCrawlEvent = DefaultCrawlEvent()
+): AbstractPulsarEvent(loadEvent, simulateEvent, crawlEvent) {
 
 }
 
-open class PulsarEventHandlerTemplate(
-    loadEventHandler: DefaultLoadEventHandler = DefaultLoadEventHandler(),
-    simulateEventHandler: DefaultSimulateEventHandler = DefaultSimulateEventHandler(),
-    crawlEventHandler: DefaultCrawlEventHandler = DefaultCrawlEventHandler()
-): AbstractPulsarEventHandler(loadEventHandler, simulateEventHandler, crawlEventHandler) {
+open class PulsarEventTemplate(
+    loadEvent: DefaultLoadEvent = DefaultLoadEvent(),
+    simulateEvent: DefaultSimulateEvent = DefaultSimulateEvent(),
+    crawlEvent: DefaultCrawlEvent = DefaultCrawlEvent()
+): AbstractPulsarEvent(loadEvent, simulateEvent, crawlEvent) {
     init {
-        loadEventHandler.apply {
+        loadEvent.apply {
             onFilter.addLast { url ->
                 url
             }
@@ -1047,7 +1047,7 @@ open class PulsarEventHandlerTemplate(
             }
         }
 
-        simulateEventHandler.apply {
+        simulateEvent.apply {
             onWillNavigate.addLast { page, driver ->
             }
 
@@ -1073,7 +1073,7 @@ open class PulsarEventHandlerTemplate(
             }
         }
 
-        crawlEventHandler.apply {
+        crawlEvent.apply {
             onFilter.addLast { url: UrlAware ->
                 url
             }

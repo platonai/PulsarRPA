@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
@@ -275,7 +275,7 @@ class LoadComponent(
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
-            page.loadEventHandler?.onWillLoad?.invoke(page.url)
+            page.loadEvent?.onWillLoad?.invoke(page.url)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
         }
@@ -311,11 +311,11 @@ class LoadComponent(
         try {
             // we might use the cached page's content in after load handler
             if (normUrl.detail is CompletableHyperlink<*>) {
-                require(page.loadEventHandler?.onLoaded?.isNotEmpty == true) {
+                require(page.loadEvent?.onLoaded?.isNotEmpty == true) {
                     "A completable hyperlink must have a onLoaded handler"
                 }
             }
-            page.loadEventHandler?.onLoaded?.invoke(page)
+            page.loadEvent?.onLoaded?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
         }

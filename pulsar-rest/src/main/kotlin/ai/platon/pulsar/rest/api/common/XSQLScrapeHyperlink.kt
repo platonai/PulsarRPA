@@ -3,10 +3,10 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.crawl.DefaultLoadEventHandler
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.crawl.DefaultLoadEvent
+import ai.platon.pulsar.crawl.DefaultPulsarEvent
+import ai.platon.pulsar.crawl.PulsarEvent
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -23,29 +23,29 @@ import java.time.Instant
 import java.util.*
 import kotlin.system.measureTimeMillis
 
-class ScrapeLoadEventHandler(
+class ScrapeLoadEvent(
     val hyperlink: XSQLScrapeHyperlink,
     val response: ScrapeResponse,
-) : DefaultLoadEventHandler() {
+) : DefaultLoadEvent() {
     init {
         onWillLoad.addLast {
             response.pageStatusCode = ResourceStatus.SC_PROCESSING
             null
         }
         onWillParseHTMLDocument.addLast { page ->
-            require(page.loadEventHandler === this)
+            require(page.loadEvent === this)
             page.variables[VAR_IS_SCRAPE] = true
             null
         }
         onWillParseHTMLDocument.addLast { page ->
         }
         onHTMLDocumentParsed.addLast { page, document ->
-            require(page.loadEventHandler === this)
+            require(page.loadEvent === this)
             require(page.hasVar(VAR_IS_SCRAPE))
             hyperlink.extract(page, document)
         }
         onLoaded.addLast { page ->
-            require(page.loadEventHandler === this)
+            require(page.loadEvent === this)
             hyperlink.complete(page)
         }
     }
@@ -68,8 +68,8 @@ open class XSQLScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler(
-        loadEventHandler = ScrapeLoadEventHandler(this, response)
+    override var event: PulsarEvent = DefaultPulsarEvent(
+        loadEvent = ScrapeLoadEvent(this, response)
     )
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)

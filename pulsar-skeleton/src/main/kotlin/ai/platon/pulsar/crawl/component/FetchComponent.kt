@@ -21,7 +21,7 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.FetchEntry
@@ -140,7 +140,7 @@ open class FetchComponent(
 
     private fun onWillFetch(page: WebPage) {
         try {
-            page.loadEventHandler?.onWillFetch?.invoke(page)
+            page.loadEvent?.onWillFetch?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillFetch | ${page.configuredUrl}", e)
         }
@@ -148,7 +148,7 @@ open class FetchComponent(
 
     private fun onFetched(page: WebPage) {
         try {
-            page.loadEventHandler?.onFetched?.invoke(page)
+            page.loadEvent?.onFetched?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onFetched | ${page.configuredUrl}", e)
         }

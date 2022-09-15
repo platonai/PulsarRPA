@@ -5,9 +5,9 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEvent
 import ai.platon.pulsar.crawl.HTMLDocumentHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.PulsarEvent
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 
 interface ListenableUrl: UrlAware {
-    val eventHandler: PulsarEventHandler
+    val event: PulsarEvent
 }
 
 open class ListenableHyperlink(
@@ -52,7 +52,7 @@ open class ListenableHyperlink(
     /**
      * The event handler
      * */
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler(),
+    override var event: PulsarEvent = DefaultPulsarEvent(),
 ): Hyperlink(url, text, order, referer, args, href), ListenableUrl {
     /**
      * A listenable url is not a persistence object because the event handler is not persistent
@@ -89,7 +89,7 @@ open class StatefulListenableHyperlink(
         /**
          * The event handler
          * */
-        override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
+        override var event: PulsarEvent = DefaultPulsarEvent()
 ): StatefulHyperlink(url, text, order, referer, args, href), ListenableUrl {
 
     override val isPersistable: Boolean = false
@@ -111,8 +111,8 @@ open class ParsableHyperlink(
     constructor(url: String, onParse: BiConsumer<WebPage, Document>):
             this(url, { page, document -> onParse.accept(page, document) })
 
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler().also {
-        it.loadEventHandler.onHTMLDocumentParsed.addLast(object: HTMLDocumentHandler() {
+    override var event: PulsarEvent = DefaultPulsarEvent().also {
+        it.loadEvent.onHTMLDocumentParsed.addLast(object: HTMLDocumentHandler() {
             override fun invoke(page: WebPage, document: FeaturedDocument) {
                 onParse(page, document.document)
                 Unit
@@ -254,14 +254,14 @@ open class CompletableListenableHyperlink<T>(
     /**
      * The event handler
      * */
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler()
+    override var event: PulsarEvent = DefaultPulsarEvent()
 ): UrlAware, Comparable<UrlAware>, ListenableUrl,
     CompletableHyperlink<T>(url, text, order, referer, args, href)
 
 internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHyperlink<WebPage>): WebPageHandler() {
     override fun invoke(page: WebPage) {
         link.complete(page)
-        link.eventHandler.loadEventHandler.onLoaded.remove(this)
+        link.event.loadEvent.onLoaded.remove(this)
     }
 }
 
@@ -272,11 +272,11 @@ fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<W
     val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
 
     // make sure every option has its own event handler
-    link.eventHandler = DefaultPulsarEventHandler()
+    link.event = DefaultPulsarEvent()
 
     val handler = CompleteWebPageHyperlinkHandler(link)
-    link.eventHandler.loadEventHandler.onLoaded.addLast(handler)
-    options.eventHandler?.let { link.eventHandler.combine(it) }
+    link.event.loadEvent.onLoaded.addLast(handler)
+    options.event?.let { link.event.combine(it) }
 
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 

@@ -58,8 +58,9 @@ data class PrivacyContextId(
 }
 
 /**
- * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
- * TODO: rename to BrowserId
+ * The unique browser id.
+ *
+ * Every browser instance have a unique fingerprint and a context directory.
  * */
 data class BrowserInstanceId constructor(
     val contextDir: Path,

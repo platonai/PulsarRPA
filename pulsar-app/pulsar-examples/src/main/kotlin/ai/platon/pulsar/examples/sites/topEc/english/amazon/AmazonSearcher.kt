@@ -1,7 +1,6 @@
 package ai.platon.pulsar.examples.sites.topEc.english.amazon
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.Documents
@@ -46,7 +45,7 @@ fun main() {
     val cx = PulsarContexts.create()
     val i = cx.createSession()
     val opts = i.options("-i 0s")
-    opts.ensureEventHandler().simulateEventHandler.onFeatureComputed.addLast(AmazonSearcherJsEventHandler())
+    opts.enableEvent().simulateEvent.onFeatureComputed.addLast(AmazonSearcherJsEventHandler())
     i.load(portalUrl, opts)
 
     readLine()

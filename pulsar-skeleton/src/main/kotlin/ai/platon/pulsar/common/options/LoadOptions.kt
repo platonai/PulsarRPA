@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.DefaultPulsarEvent
+import ai.platon.pulsar.crawl.PulsarEvent
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -94,8 +94,8 @@ object LoadOptionDefaults {
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var eventHandler: PulsarEventHandler? = null,
-    var itemEventHandler: PulsarEventHandler? = null
+    var event: PulsarEvent? = null,
+    var itemEvent: PulsarEvent? = null
 ): CommonOptions(argv) {
 
     /**
@@ -597,22 +597,28 @@ open class LoadOptions(
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.eventHandler, other.itemEventHandler)
+            this(split(args), other.conf, other.event, other.itemEvent)
 
     /**
      * Ensure the EventHandler is created.
      * */
-    fun ensureEventHandler(): PulsarEventHandler {
-        val eh = eventHandler ?: DefaultPulsarEventHandler()
-        eventHandler = eh
+    fun enableEvent(): PulsarEvent {
+        val eh = event ?: DefaultPulsarEvent()
+        event = eh
         return eh
     }
 
-    fun ensureItemEventHandler(): PulsarEventHandler {
-        val eh = eventHandler ?: DefaultPulsarEventHandler()
-        itemEventHandler = eh
+    @Deprecated("Inappropriate name", ReplaceWith("ensureEvent"))
+    fun ensureEventHandler() = enableEvent()
+
+    fun enableItemEvent(): PulsarEvent {
+        val eh = event ?: DefaultPulsarEvent()
+        itemEvent = eh
         return eh
     }
+
+    @Deprecated("Inappropriate name", ReplaceWith("ensureItemEvent"))
+    fun ensureItemEventHandler() = enableItemEvent()
 
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
@@ -643,7 +649,7 @@ open class LoadOptions(
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
-        itemOptions.eventHandler = itemEventHandler
+        itemOptions.event = itemEvent
 
         return itemOptions
     }
@@ -687,7 +693,7 @@ open class LoadOptions(
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
 
-        eventHandler = itemEventHandler
+        event = itemEvent
     }
 
     /**
@@ -718,7 +724,7 @@ open class LoadOptions(
 
         emulateSettings.overrideConfiguration(conf)
 
-        eventHandler?.let { putBean(it) }
+        event?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         // not used since the browser is always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)

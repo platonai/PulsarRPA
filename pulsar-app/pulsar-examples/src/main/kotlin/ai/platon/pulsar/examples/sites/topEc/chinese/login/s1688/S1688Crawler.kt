@@ -23,7 +23,7 @@ class S1688Crawler(
 
         val loginHandler = LoginHandler(loginUrl,
             usernameSelector, username, passwordSelector, password, submitSelector, activateSelector)
-        options.ensureEventHandler().loadEventHandler.onBrowserLaunched.addLast(loginHandler)
+        options.enableEvent().loadEvent.onBrowserLaunched.addLast(loginHandler)
 
         session.loadOutPages(portalUrl, options)
     }

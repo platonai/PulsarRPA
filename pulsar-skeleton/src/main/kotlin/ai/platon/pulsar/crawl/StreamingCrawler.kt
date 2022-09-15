@@ -86,7 +86,7 @@ open class StreamingCrawler<T : UrlAware>(
      * The crawl event handler
      * TODO: may not be the right way to register CrawlEventHandler
      * */
-    val crawlEventHandler: CrawlEventHandler = DefaultCrawlEventHandler(),
+    val crawlEvent: CrawlEvent = DefaultCrawlEvent(),
     /**
      * Do not use proxy
      * */
@@ -387,7 +387,7 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun runUrlTask(url: UrlAware) {
         if (url is ListenableUrl && url is DegenerateUrl) {
             // The url is degenerated, which means it's not a resource in the network to fetch.
-            val eventHandler = url.eventHandler.crawlEventHandler
+            val eventHandler = url.event.crawlEvent
             runSafely("onWillLoad") { eventHandler.onWillLoad(url) }
             runSafely("onLoad") { eventHandler.onLoad(url) }
             runSafely("onLoaded") { eventHandler.onLoaded(url, WebPage.NIL) }
@@ -456,15 +456,15 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun onWillLoad(url: UrlAware): UrlAware? {
         if (url is ListenableUrl) {
-            runSafely("onFilter") { url.eventHandler.loadEventHandler.onFilter(url.url) } ?: return null
+            runSafely("onFilter") { url.event.loadEvent.onFilter(url.url) } ?: return null
         }
 
-        runSafely("onFilter") { crawlEventHandler.onFilter(url) } ?: return null
+        runSafely("onFilter") { crawlEvent.onFilter(url) } ?: return null
 
-        runSafely("onWillLoad") { crawlEventHandler.onWillLoad(url) }
+        runSafely("onWillLoad") { crawlEvent.onWillLoad(url) }
 
         if (url is ListenableUrl) {
-            runSafely("onWillLoad") { url.eventHandler.crawlEventHandler.onWillLoad(url) }
+            runSafely("onWillLoad") { url.event.crawlEvent.onWillLoad(url) }
         }
 
         return url
@@ -472,11 +472,11 @@ open class StreamingCrawler<T : UrlAware>(
 
     private fun onLoaded(url: UrlAware, page: WebPage?) {
         if (url is ListenableUrl) {
-            runSafely("onLoaded") { url.eventHandler.crawlEventHandler.onLoaded(url, page) }
+            runSafely("onLoaded") { url.event.crawlEvent.onLoaded(url, page) }
         }
 
         if (page != null) {
-            runSafely("onLoaded") { crawlEventHandler.onLoaded(url, page) }
+            runSafely("onLoaded") { crawlEvent.onLoaded(url, page) }
         }
 
         if (enableSmartRetry) {

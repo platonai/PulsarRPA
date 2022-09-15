@@ -11,7 +11,7 @@ import ai.platon.pulsar.persist.WebPage
 fun main() {
     val hyperlinkCreator = { url: String ->
         val link = ListenableHyperlink(url)
-        link.eventHandler.loadEventHandler.apply {
+        link.event.loadEvent.apply {
             onFilter.addLast { url ->
                 url
             }
@@ -56,7 +56,7 @@ fun main() {
             }
         }
 
-        link.eventHandler.simulateEventHandler.apply {
+        link.event.simulateEvent.apply {
             onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
 
             }
@@ -71,7 +71,7 @@ fun main() {
             }
         }
 
-        link.eventHandler.crawlEventHandler.apply {
+        link.event.crawlEvent.apply {
             onFilter.addLast { url: UrlAware ->
                 url
             }

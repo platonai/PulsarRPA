@@ -203,9 +203,8 @@ abstract class AbstractPulsarContext(
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
-     * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
-     * but default values in LoadOptions are ignored.
+     * An url can be configured by appending arguments to the url, and it also can be used with load options,
+     * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
@@ -221,8 +220,8 @@ abstract class AbstractPulsarContext(
      * Normalize urls, remove invalid ones
      *
      * @param urls The urls to normalize
-     * @param options The LoadOptions applied to each url
-     * @param toItemOption If the LoadOptions is converted to item load options
+     * @param options The load options applied to each url
+     * @param toItemOption If true, [options] will be converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
@@ -232,8 +231,7 @@ abstract class AbstractPulsarContext(
     /**
      * Normalize an url.
      *
-     * If both url arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
-     * but default values in LoadOptions are ignored.
+     * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
         return CommonUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
