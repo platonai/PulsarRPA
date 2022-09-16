@@ -14,7 +14,7 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 
-class PlaywrightBrowserInstance(
+class SeleniumBrowser(
     id: BrowserInstanceId,
     launcherOptions: LauncherOptions,
     launchOptions: ChromeOptions
@@ -29,7 +29,7 @@ class PlaywrightBrowserInstance(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(PlaywrightBrowserInstance::class.java)
+    private val logger = LoggerFactory.getLogger(SeleniumBrowser::class.java)
 
     private val browserSettings get() = launcherOptions.browserSettings
     private lateinit var context: BrowserContext

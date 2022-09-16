@@ -64,6 +64,7 @@ interface WebDriver: Closeable {
     val isFree: Boolean
     val isCrashed: Boolean
 
+    @Deprecated("Not used any more")
     val sessionId: String?
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 

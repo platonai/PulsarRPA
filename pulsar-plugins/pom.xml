@@ -31,6 +31,21 @@
         <module>pulsar-schedule</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>protocol-selenium</id>
+            <modules>
+                <module>pulsar-protocol-selenium</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>protocol-playwright</id>
+            <modules>
+                <module>pulsar-protocol-playwright</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <dependencyManagement>
         <dependencies>
             <dependency>

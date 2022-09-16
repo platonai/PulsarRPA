@@ -426,28 +426,6 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
-        try {
-            rpc.invokeDeferred("clickMatches") {
-                page.evaluate("__pulsar_utils__.clickMatches('$selector', '$pattern')")
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "click")
-        }
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
-        try {
-            rpc.invokeDeferred("clickMatches") {
-                page.evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "click")
-        }
-    }
-
-    @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         try {
             rpc.invokeDeferred("type") {
@@ -665,13 +643,6 @@ class ChromeDevtoolsDriver(
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e)
         }
-    }
-
-    /**
-     * Quit the browser instance
-     * */
-    override fun quit() {
-        close()
     }
 
     override fun awaitTermination() {

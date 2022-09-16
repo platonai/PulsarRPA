@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.urls.UrlUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -90,6 +91,9 @@ abstract class AbstractWebDriver(
         }
     }
 
+    override val sessionId: String?
+        get() = id.toString()
+
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
 
@@ -172,6 +176,16 @@ abstract class AbstractWebDriver(
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
+        evaluate("__pulsar_utils__.clickMatches('$selector', '$pattern')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+        evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
+    }
+
     /**
      * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
      * The browser should be initialized by opening a page before the session is created.
@@ -198,6 +212,13 @@ abstract class AbstractWebDriver(
         }
 
         return response
+    }
+
+    /**
+     * Quit the browser instance
+     * */
+    override fun quit() {
+        close()
     }
 
     override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id

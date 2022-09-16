@@ -119,6 +119,15 @@
         </profile>
 
         <profile>
+            <id>develop-plugins</id>
+
+            <modules>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-plugins</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>platon-release</id>
             <properties>
                 <platon-release-active>true</platon-release-active>
