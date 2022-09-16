@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.persist.ext.options
+import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory

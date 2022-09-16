@@ -2,14 +2,14 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEvent
+import ai.platon.pulsar.crawl.DefaultPageEvent
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.atomic.AtomicInteger
 
-class PrintFlowEvent: DefaultPulsarEvent() {
+class PrintFlowEvent: DefaultPageEvent() {
     private val sequencer = AtomicInteger()
     private val seq get() = sequencer.incrementAndGet()
 

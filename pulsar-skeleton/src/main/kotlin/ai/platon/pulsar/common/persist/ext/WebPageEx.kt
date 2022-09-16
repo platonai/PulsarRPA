@@ -4,13 +4,13 @@ import ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.CrawlEvent
 import ai.platon.pulsar.crawl.LoadEvent
-import ai.platon.pulsar.crawl.PulsarEvent
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.SimulateEvent
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import java.time.Instant
 
-val WebPage.pulsarEvent: PulsarEvent?
+val WebPage.event: PageEvent?
     get() = this.options.event
 
 val WebPage.crawlEvent: CrawlEvent?

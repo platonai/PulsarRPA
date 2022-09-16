@@ -3,12 +3,9 @@ package ai.platon.pulsar.protocol.browser.emulator
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.persist.ext.simulateEvent
-import ai.platon.pulsar.crawl.PulsarEvent
-import ai.platon.pulsar.crawl.SimulateEvent
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
@@ -27,10 +24,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
-import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
@@ -40,11 +35,10 @@ open class BrowserEmulator(
     val driverPoolManager: WebDriverPoolManager,
     responseHandler: BrowserResponseHandler,
     immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(driverPoolManager.driverFactory.driverSettings, responseHandler, immutableConfig) {
+): BrowserEmulatorBase(driverPoolManager.driverFactory.driverSettings, responseHandler, immutableConfig), EventListener {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
-
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
     init {
@@ -167,13 +161,16 @@ open class BrowserEmulator(
             // Do something like a human being
 //            interactAfterFetch(task, driver)
 
-            val event = page.simulateEvent
-            runSafely("onWillStopTab") { event?.onWillStopTab?.invokeDeferred(page, driver) }
+            dispatchEvent(EventType.willStopTab, page, driver)
+//            listeners.notify(EventType.willStopTab, page, driver)
+//            val event = page.simulateEvent
+//            notify("onWillStopTab") { event?.onWillStopTab?.invokeDeferred(page, driver) }
 
             // Force the page stop all navigations and releases all resources
             driver.stop()
 
-            runSafely("onTabStopped") { event?.onTabStopped?.invokeDeferred(page, driver) }
+            dispatchEvent(EventType.tabStopped, page, driver)
+//            notify("onTabStopped") { event?.onTabStopped?.invokeDeferred(page, driver) }
         } catch (e: NavigateTaskCancellationException) {
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
                 page.id, task.id, task.batchId)
@@ -221,8 +218,10 @@ open class BrowserEmulator(
 
         checkState(task, driver)
 
-        val event = page.simulateEvent
-        runSafely("onWillNavigate") { event?.onWillNavigate?.invokeDeferred(page, driver) }
+        dispatchEvent(EventType.willNavigate, page, driver)
+//        listeners.notify(EventType.willNavigate, page, driver)
+//        val event = page.simulateEvent
+//        notify("onWillNavigate") { event?.onWillNavigate?.invokeDeferred(page, driver) }
 
         // href has the higher priority to locate a resource
         require(task.url == page.url)
@@ -233,7 +232,8 @@ open class BrowserEmulator(
         try {
             driver.navigateTo(navigateEntry)
         } finally {
-            runSafely("onNavigated") { event?.onNavigated?.invokeDeferred(page, driver) }
+            dispatchEvent(EventType.navigated, page, driver)
+//            notify("onNavigated") { event?.onNavigated?.invokeDeferred(page, driver) }
         }
 
         if (!driver.supportJavascript) {
@@ -242,10 +242,12 @@ open class BrowserEmulator(
 
         val interactTask = InteractTask(task, driverConfig, driver)
         return if (driverConfig.enableStartupScript) {
-            runSafely("onWillInteract") { event?.onWillInteract?.invokeDeferred(page, driver) }
+            dispatchEvent(EventType.willInteract, page, driver)
+//            notify("onWillInteract") { event?.onWillInteract?.invokeDeferred(page, driver) }
 
             interact(interactTask).also {
-                runSafely("onDidInteract") { event?.onDidInteract?.invokeDeferred(page, driver) }
+                dispatchEvent(EventType.didInteract, page, driver)
+//                notify("onDidInteract") { event?.onDidInteract?.invokeDeferred(page, driver) }
             }
         } else {
             interactNoJsInvaded(interactTask)
@@ -270,31 +272,35 @@ open class BrowserEmulator(
         checkState(task.fetchTask, task.driver)
 
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
-        val event = simulateEvent(task.fetchTask.page.conf)
         val page = task.fetchTask.page
+        val event = page.simulateEvent
         val driver = task.driver
 
         tracer?.trace("{}", task.emulateSettings)
 
-        runSafely("onWillCheckDOMState") { event?.onWillCheckDOMState?.invokeDeferred(page, driver) }
+        dispatchEvent(EventType.willCheckDOMState, page, driver)
+//        notify("onWillCheckDOMState") { event?.onWillCheckDOMState?.invokeDeferred(page, driver) }
 
         jsCheckDOMState(task, result)
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
         }
 
-        runSafely("onDOMStateChecked") { event?.onDOMStateChecked?.invokeDeferred(page, driver) }
+        dispatchEvent(EventType.didDOMStateCheck, page, driver)
+//        notify("onDOMStateChecked") { event?.onDOMStateChecked?.invokeDeferred(page, driver) }
 
         if (result.state.isContinue) {
             jsScrollDown(task, result)
         }
 
         if (result.state.isContinue) {
-            runSafely("onWillComputeFeature") { event?.onWillComputeFeature?.invokeDeferred(page, driver) }
+            dispatchEvent(EventType.willComputeFeature, page, driver)
+//            notify("onWillComputeFeature") { event?.onWillComputeFeature?.invokeDeferred(page, driver) }
 
             jsComputeFeature(task, result)
 
-            runSafely("onFeatureComputed") { event?.onFeatureComputed?.invokeDeferred(page, driver) }
+            dispatchEvent(EventType.featureComputed, page, driver)
+//            notify("onFeatureComputed") { event?.onFeatureComputed?.invokeDeferred(page, driver) }
         }
 
         return result
@@ -400,94 +406,5 @@ open class BrowserEmulator(
                 taskLogger.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
             }
         }
-    }
-
-    /**
-     * Do something like a human being
-     * */
-    protected suspend fun interactAfterFetch(task: FetchTask, driver: WebDriver) {
-        // must perform the interaction for the 1st and 2nd page
-        // for the other pages, there is a change to do the interaction
-        if (driver.navigateHistory.size > 1) {
-            val rand = Random.nextInt(10)
-            if (rand != 0) {
-                return
-            }
-        }
-
-        val anchorCount = task.page.activeDOMStatTrace.values.firstOrNull()?.na?: return
-        if (anchorCount < 10) {
-            return
-        }
-
-        val clickN = (0.2 * anchorCount + Random.nextInt((anchorCount * 0.8).toInt())).toInt()
-        driver.evaluateSilently("__pulsar_utils__.clickNthAnchor($clickN)")
-    }
-
-    private fun simulateEvent(conf: VolatileConfig): SimulateEvent? {
-        return conf.getBeanOrNull(PulsarEvent::class)?.simulateEvent
-    }
-
-    private suspend fun runSafely(name: String, action: suspend () -> Unit) {
-        if (!isActive) {
-            return
-        }
-
-        try {
-            action()
-        } catch (e: WebDriverCancellationException) {
-            logger.info("Web driver is cancelled")
-        } catch (e: WebDriverException) {
-            logger.warn(e.brief("[Ignored][$name] "))
-        } catch (e: Exception) {
-            logger.warn(e.stringify("[Ignored][$name] "))
-        } catch (e: Throwable) {
-            logger.error(e.stringify("[Unexpected][$name] "))
-        }
-    }
-
-    private suspend fun evaluate(interactTask: InteractTask,
-                                 expressions: Iterable<String>, delay: Duration, verbose: Boolean = false) {
-        return evaluate(interactTask, expressions, delay.toMillis(), verbose)
-    }
-
-    private suspend fun evaluate(interactTask: InteractTask,
-        expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
-        expressions.asSequence()
-            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
-            .filterNot { it.startsWith("//") }
-            .filterNot { it.startsWith("#") }
-            .forEach { expression ->
-                evaluate(interactTask, expression, verbose)
-                delay(delayMillis)
-            }
-    }
-
-    private suspend fun evaluate(
-        interactTask: InteractTask, expression: String, verbose: Boolean
-    ): Any? {
-        logger.takeIf { verbose }?.info("Evaluate expression >>>$expression<<<")
-        val value = evaluate(interactTask, expression)
-        if (value is String) {
-            val s = Strings.stripNonPrintableChar(value)
-            logger.takeIf { verbose }?.info("Result >>>$s<<<")
-        } else if (value is Int || value is Long) {
-            logger.takeIf { verbose }?.info("Result >>>$value<<<")
-        }
-        return value
-    }
-
-    @Throws(WebDriverCancellationException::class)
-    private suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
-        if (!isActive) return null
-
-        counterRequests.inc()
-        counterJsEvaluates.inc()
-        checkState(interactTask.fetchTask, interactTask.driver)
-        val result = interactTask.driver.evaluate(expression)
-        if (delayMillis > 0) {
-            delay(delayMillis)
-        }
-        return result
     }
 }

@@ -19,7 +19,7 @@ import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.delay
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -32,8 +32,8 @@ abstract class BrowserEmulatorBase(
      * */
     val responseHandler: BrowserResponseHandler,
     val immutableConfig: ImmutableConfig
-): Parameterized, AutoCloseable {
-    private val logger = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
+): AbstractEventListener(), Parameterized, AutoCloseable {
+    private val logger = getLogger(BrowserEmulatorBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
@@ -44,20 +44,20 @@ abstract class BrowserEmulatorBase(
     private val registry = AppMetrics.reg
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
 
-    val meterNavigates by lazy { registry.meter(this,"navigates") }
-    val counterRequests by lazy { registry.counter(this,"requests") }
-    val counterJsEvaluates by lazy { registry.counter(this,"jsEvaluates") }
-    val counterJsWaits by lazy { registry.counter(this,"jsWaits") }
-    val counterCancels by lazy { registry.counter(this,"cancels") }
+    val meterNavigates by lazy { registry.meter(this, "navigates") }
+    val counterRequests by lazy { registry.counter(this, "requests") }
+    val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
+    val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
+    val counterCancels by lazy { registry.counter(this, "cancels") }
 
     override fun getParams(): Params {
         val emulateSettings = EmulateSettings(immutableConfig)
         return Params.of(
-                "pageLoadTimeout", emulateSettings.pageLoadTimeout,
-                "scriptTimeout", emulateSettings.scriptTimeout,
-                "scrollDownCount", emulateSettings.scrollCount,
-                "scrollInterval", emulateSettings.scrollInterval,
-                "enableStartupScript", driverSettings.enableStartupScript
+            "pageLoadTimeout", emulateSettings.pageLoadTimeout,
+            "scriptTimeout", emulateSettings.scriptTimeout,
+            "scrollDownCount", emulateSettings.scrollCount,
+            "scrollInterval", emulateSettings.scrollInterval,
+            "enableStartupScript", driverSettings.enableStartupScript
         )
     }
 
@@ -184,7 +184,8 @@ abstract class BrowserEmulatorBase(
     fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
             val emulateSettings = EmulateSettings(task.volatileConfig)
-            logger.trace("Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
+            logger.trace(
+                "Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
                 task.batchTaskId, task.batchSize, task.id,
                 Thread.currentThread().id,
                 if (task.nRetries <= 1) "" else "(${task.nRetries})",
@@ -212,7 +213,8 @@ abstract class BrowserEmulatorBase(
 
         val id = page.id
         val test = page.options.test
-        val shouldExport = id < 200 || id % 100 == 0 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
+        val shouldExport =
+            id < 200 || id % 100 == 0 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             val path = AppFiles.export(status, pageSource, page)
 
@@ -236,12 +238,61 @@ abstract class BrowserEmulatorBase(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            logger.warn("{}. Page is {}({}) with {} in {}({}) | file://{}",
+            logger.warn(
+                "{}. Page is {}({}) with {} in {}({}) | file://{}",
                 task.page.id,
                 integrity.name, readableLength,
-                proxyEntry.display, domain, count, link, task.url)
+                proxyEntry.display, domain, count, link, task.url
+            )
         } else {
-            logger.warn("{}. Page is {}({}) | file://{} | {}", task.page.id, integrity.name, readableLength, link, task.url)
+            logger.warn(
+                "{}. Page is {}({}) | file://{} | {}",
+                task.page.id,
+                integrity.name,
+                readableLength,
+                link,
+                task.url
+            )
         }
+    }
+
+    protected suspend fun evaluate(interactTask: InteractTask,
+                                   expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
+        expressions.asSequence()
+            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
+            .filterNot { it.startsWith("//") }
+            .filterNot { it.startsWith("#") }
+            .forEach { expression ->
+                evaluate(interactTask, expression, verbose)
+                delay(delayMillis)
+            }
+    }
+
+    protected suspend fun evaluate(
+        interactTask: InteractTask, expression: String, verbose: Boolean
+    ): Any? {
+        logger.takeIf { verbose }?.info("Evaluate expression >>>$expression<<<")
+        val value = evaluate(interactTask, expression)
+        if (value is String) {
+            val s = Strings.stripNonPrintableChar(value)
+            logger.takeIf { verbose }?.info("Result >>>$s<<<")
+        } else if (value is Int || value is Long) {
+            logger.takeIf { verbose }?.info("Result >>>$value<<<")
+        }
+        return value
+    }
+
+    @Throws(WebDriverCancellationException::class)
+    protected suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
+        if (!isActive) return null
+
+        counterRequests.inc()
+        counterJsEvaluates.inc()
+        checkState(interactTask.fetchTask, interactTask.driver)
+        val result = interactTask.driver.evaluate(expression)
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
+        return result
     }
 }

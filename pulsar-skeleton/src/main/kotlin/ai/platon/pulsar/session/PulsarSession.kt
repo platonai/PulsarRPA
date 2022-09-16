@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.crawl.PulsarEvent
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.DocumentCatch
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
@@ -59,7 +59,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Create a new options, with a new volatile config
      * */
-    fun options(args: String = "", event: PulsarEvent? = null): LoadOptions
+    fun options(args: String = "", event: PageEvent? = null): LoadOptions
 
     /**
      * Get a property

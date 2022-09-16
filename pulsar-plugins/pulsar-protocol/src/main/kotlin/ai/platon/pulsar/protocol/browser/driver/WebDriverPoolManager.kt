@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.crawl.PulsarEvent
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
@@ -30,7 +30,6 @@ class WebDriverTask<R> (
         val runWith: suspend (driver: WebDriver) -> R
 ) {
     val volatileConfig get() = page.conf
-    val event get() = volatileConfig.getBeanOrNull(PulsarEvent::class)
 }
 
 /**
@@ -255,13 +254,13 @@ open class WebDriverPoolManager(
     }
 
     private suspend fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
-        val event = task.event?.loadEvent
         val page = task.page
+        val event = page.loadEvent
 
-        runSafely("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
+        dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
 
         return pollWebDriver(driverPool, task).also { driver ->
-            runSafely("onBrowserLaunched") { event?.onBrowserLaunched?.invoke(page, driver) }
+            dispatchEvent("onBrowserLaunched") { event?.onBrowserLaunched?.invoke(page, driver) }
         }
     }
 
@@ -314,7 +313,7 @@ open class WebDriverPoolManager(
         return sb.toString()
     }
 
-    private suspend fun runSafely(name: String, action: suspend () -> Unit) {
+    private suspend fun dispatchEvent(name: String, action: suspend () -> Unit) {
         if (!isActive) {
             return
         }

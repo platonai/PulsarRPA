@@ -1,10 +1,7 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.Runtimes.randomDelay
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
@@ -23,6 +20,13 @@ import kotlin.random.Random
 interface EventHandler {
     val name: String
     val isRelevant: Boolean
+}
+
+/**
+ * Event listener interface.
+ */
+interface EventListener {
+
 }
 
 abstract class AbstractEventHandler: EventHandler {
@@ -967,20 +971,21 @@ class DefaultEmulateEvent: AbstractEmulateEvent() {
     override val onCheckHtmlIntegrity: PageDatumHandlerPipeline = PageDatumHandlerPipeline()
 }
 
-interface PulsarEvent {
+interface PageEvent {
     val loadEvent: LoadEvent
     val simulateEvent: SimulateEvent
     val crawlEvent: CrawlEvent
 
-    fun combine(other: PulsarEvent): PulsarEvent
+    fun combine(other: PageEvent): PageEvent
 }
 
-abstract class AbstractPulsarEvent(
+abstract class AbstractPageEvent(
     override val loadEvent: AbstractLoadEvent,
     override val simulateEvent: AbstractSimulateEvent,
     override val crawlEvent: AbstractCrawlEvent
-): PulsarEvent {
-    override fun combine(other: PulsarEvent): PulsarEvent {
+): PageEvent {
+
+    override fun combine(other: PageEvent): PageEvent {
         loadEvent.combine(other.loadEvent)
         simulateEvent.combine(other.simulateEvent)
         crawlEvent.combine(other.crawlEvent)
@@ -988,19 +993,19 @@ abstract class AbstractPulsarEvent(
     }
 }
 
-open class DefaultPulsarEvent(
+open class DefaultPageEvent(
     loadEvent: DefaultLoadEvent = DefaultLoadEvent(),
     simulateEvent: DefaultSimulateEvent = DefaultSimulateEvent(),
     crawlEvent: DefaultCrawlEvent = DefaultCrawlEvent()
-): AbstractPulsarEvent(loadEvent, simulateEvent, crawlEvent) {
+): AbstractPageEvent(loadEvent, simulateEvent, crawlEvent) {
 
 }
 
-open class PulsarEventTemplate(
+open class PageEventTemplate(
     loadEvent: DefaultLoadEvent = DefaultLoadEvent(),
     simulateEvent: DefaultSimulateEvent = DefaultSimulateEvent(),
     crawlEvent: DefaultCrawlEvent = DefaultCrawlEvent()
-): AbstractPulsarEvent(loadEvent, simulateEvent, crawlEvent) {
+): AbstractPageEvent(loadEvent, simulateEvent, crawlEvent) {
     init {
         loadEvent.apply {
             onFilter.addLast { url ->

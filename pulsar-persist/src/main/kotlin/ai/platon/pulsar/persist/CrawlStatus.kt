@@ -21,6 +21,7 @@ import java.util.*
 
 class CrawlStatus constructor(private val status: Byte) : CrawlStatusCodes {
     companion object {
+        @JvmField
         val STATUS_UNFETCHED = CrawlStatus(CrawlStatusCodes.UNFETCHED)
         val STATUS_FETCHED = CrawlStatus(CrawlStatusCodes.FETCHED)
         val STATUS_NOTMODIFIED = CrawlStatus(CrawlStatusCodes.NOTMODIFIED)

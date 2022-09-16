@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
-import ai.platon.pulsar.crawl.PulsarEvent
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -93,7 +93,7 @@ abstract class AbstractPulsarSession(
     /**
      * Create a new options, with a new volatile config
      * */
-    override fun options(args: String, event: PulsarEvent?): LoadOptions {
+    override fun options(args: String, event: PageEvent?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
         if (event != null) {
             opts.event = event

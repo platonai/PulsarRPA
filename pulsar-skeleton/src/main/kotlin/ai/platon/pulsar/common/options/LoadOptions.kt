@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.DefaultPulsarEvent
-import ai.platon.pulsar.crawl.PulsarEvent
+import ai.platon.pulsar.crawl.DefaultPageEvent
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -94,8 +94,8 @@ object LoadOptionDefaults {
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var event: PulsarEvent? = null,
-    var itemEvent: PulsarEvent? = null
+    var event: PageEvent? = null,
+    var itemEvent: PageEvent? = null
 ): CommonOptions(argv) {
 
     /**
@@ -602,8 +602,8 @@ open class LoadOptions(
     /**
      * Ensure the EventHandler is created.
      * */
-    fun enableEvent(): PulsarEvent {
-        val eh = event ?: DefaultPulsarEvent()
+    fun enableEvent(): PageEvent {
+        val eh = event ?: DefaultPageEvent()
         event = eh
         return eh
     }
@@ -611,8 +611,8 @@ open class LoadOptions(
     @Deprecated("Inappropriate name", ReplaceWith("ensureEvent"))
     fun ensureEventHandler() = enableEvent()
 
-    fun enableItemEvent(): PulsarEvent {
-        val eh = event ?: DefaultPulsarEvent()
+    fun enableItemEvent(): PageEvent {
+        val eh = event ?: DefaultPageEvent()
         itemEvent = eh
         return eh
     }

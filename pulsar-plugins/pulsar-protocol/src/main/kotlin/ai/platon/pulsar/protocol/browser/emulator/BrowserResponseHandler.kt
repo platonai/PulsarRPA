@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.EmulateSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.event.ListenerCollection
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -51,11 +52,9 @@ open class BrowserResponseHandler(
     }
 
     fun onInitPageCategorySniffer(sniffer: CombinedPageCategorySniffer) {
-
     }
 
     fun onInitHTMLIntegrityChecker(checker: CombinedHtmlIntegrityChecker) {
-
     }
 
     open fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {

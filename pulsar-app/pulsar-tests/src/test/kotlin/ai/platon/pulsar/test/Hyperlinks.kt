@@ -61,7 +61,7 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
     }
 
     override var args: String? = "-cacheContent true -storeContent false -parse"
-    override var event: PulsarEvent = DefaultPulsarEvent(
+    override var event: PageEvent = DefaultPageEvent(
         loadEvent = MockLoadEvent(this)
     )
 

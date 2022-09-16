@@ -111,7 +111,7 @@ interface UrlAware {
 interface ComparableUrlAware : UrlAware, Comparable<UrlAware>
 
 /**
- * The StatefulUrl interface. A StatefulUrl is an UrlAware and has status.
+ * The StatefulUrl interface. A StatefulUrl is an UrlAware with status.
  * */
 interface StatefulUrl : ComparableUrlAware {
     var authToken: String?
