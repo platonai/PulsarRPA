@@ -56,6 +56,7 @@ open class FeaturedDocument(val document: Document) {
         }
     }
 
+    @Deprecated("Fragment is no longer used")
     val fragments by lazy { DocumentFragments(this) }
 
     val documentOrNull get() = document.takeIf { isNotInternal() }
@@ -65,38 +66,7 @@ open class FeaturedDocument(val document: Document) {
     constructor(other: FeaturedDocument): this(other.unbox())
 
     init {
-        // TODO: Only one thread is allow to access the document
-        document.threadIds.add(Thread.currentThread().id)
-        if(document.threadIds.size != 1) {
-            val threads = document.threadIds.joinToString()
-            System.err.println("Warning: multiple threads ($threads) are process document | $location")
-        }
-
-        if (document.isInitialized.compareAndSet(false, true)) {
-            FeatureCalculatorFactory.calculator.calculate(document)
-            require(features.isNotEmpty)
-
-            globalNumDocuments.incrementAndGet()
-
-            document.unitArea = densityUnitArea
-            document.primaryGrid = primaryGridDimension
-            document.secondaryGrid = secondaryGridDimension
-            document.grid = document.primaryGrid
-
-            calculateInducedFeatures()
-        }
-    }
-
-    /**
-     * Calculate features depend on other features
-     * */
-    private fun calculateInducedFeatures() {
-        // Calculate text node density
-        val unitArea = document.unitArea
-        document.forEach {
-            // add a smooth number to make sure the dividend is not zero
-            it.textNodeDensity = 1.0 * it.numTextNodes / it.area.coerceAtLeast(1) * unitArea
-        }
+        initialize()
     }
 
     var title: String
@@ -237,4 +207,39 @@ open class FeaturedDocument(val document: Document) {
     override fun hashCode() = location.hashCode()
 
     override fun toString() = document.uniqueName
+
+    private fun initialize() {
+        // TODO: Only one thread is allow to access the document
+        document.threadIds.add(Thread.currentThread().id)
+        if(document.threadIds.size != 1) {
+            val threads = document.threadIds.joinToString()
+            System.err.println("Warning: multiple threads ($threads) are process document | $location")
+        }
+
+        if (document.isInitialized.compareAndSet(false, true)) {
+            FeatureCalculatorFactory.calculator.calculate(document)
+            require(features.isNotEmpty)
+
+            globalNumDocuments.incrementAndGet()
+
+            document.unitArea = densityUnitArea
+            document.primaryGrid = primaryGridDimension
+            document.secondaryGrid = secondaryGridDimension
+            document.grid = document.primaryGrid
+
+            calculateInducedFeatures()
+        }
+    }
+
+    /**
+     * Calculate features depend on other features
+     * */
+    private fun calculateInducedFeatures() {
+        // Calculate text node density
+        val unitArea = document.unitArea
+        document.forEach {
+            // add a smooth number to make sure the dividend is not zero
+            it.textNodeDensity = 1.0 * it.numTextNodes / it.area.coerceAtLeast(1) * unitArea
+        }
+    }
 }

@@ -11,6 +11,7 @@ import org.jsoup.nodes.Element
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
+@Deprecated("Fragment is no longer used")
 open class DocumentFragment(
         val element: Element = Element("div"),
         var fragments: DocumentFragments = DocumentFragments.EMPTY
