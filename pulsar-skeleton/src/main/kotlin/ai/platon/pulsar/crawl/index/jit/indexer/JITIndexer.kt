@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch.indexer
+package ai.platon.pulsar.crawl.index.jit.indexer
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT

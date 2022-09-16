@@ -15,7 +15,7 @@ import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
-import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
+import ai.platon.pulsar.crawl.index.jit.indexer.JITIndexer
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark

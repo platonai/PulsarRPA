@@ -65,21 +65,3 @@ object PulsarContexts {
         activeContext = null
     }
 }
-
-fun withContext(block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.create(StaticPulsarContext()).use {
-        block(it)
-    }
-}
-
-fun withContext(contextLocation: String, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.create(ClassPathXmlPulsarContext(contextLocation)).use {
-        block(it)
-    }
-}
-
-fun withContext(applicationContext: ApplicationContext, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.create(applicationContext).use {
-        block(it)
-    }
-}

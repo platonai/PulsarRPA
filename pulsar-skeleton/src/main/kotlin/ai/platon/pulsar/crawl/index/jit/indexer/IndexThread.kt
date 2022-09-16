@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.fetch.indexer
+package ai.platon.pulsar.crawl.index.jit.indexer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.slf4j.LoggerFactory
@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * This class picks items from queues and fetches the pages.
  */
 class IndexThread(
-        private val jitIndexer: JITIndexer,
-        private val conf: ImmutableConfig
+    private val jitIndexer: JITIndexer,
+    private val conf: ImmutableConfig
 ) : Thread(), Comparable<IndexThread> {
 
     private val log = LoggerFactory.getLogger(IndexThread::class.java)
