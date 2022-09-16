@@ -2,7 +2,7 @@ package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.CrawlLoops
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.crawl.impl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers

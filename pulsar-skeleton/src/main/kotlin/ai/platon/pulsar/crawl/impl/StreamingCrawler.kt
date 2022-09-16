@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl
+package ai.platon.pulsar.crawl.impl
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-class StreamingCrawlerMetrics {
+private class StreamingCrawlerMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
 
     val retries = registry.multiMetric(this, "retries")
@@ -57,7 +57,7 @@ class StreamingCrawlerMetrics {
     val timeouts = registry.meter(this, "timeouts")
 }
 
-enum class CriticalWarning(val message: String) {
+private enum class CriticalWarning(val message: String) {
     OUT_OF_MEMORY("OUT OF MEMORY"),
     OUT_OF_DISK_STORAGE("OUT OF DISK STORAGE"),
     NO_PROXY("NO PROXY AVAILABLE"),
@@ -65,7 +65,7 @@ enum class CriticalWarning(val message: String) {
     WRONG_DISTRICT("WRONG DISTRICT! ALL RESIDENT TASKS ARE PAUSED"),
 }
 
-open class StreamingCrawler<T : UrlAware>(
+internal open class StreamingCrawler<T : UrlAware>(
     /**
      * The url sequence
      * */

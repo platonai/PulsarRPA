@@ -44,7 +44,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.StreamingCrawlLoop">
+    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.impl.StreamingCrawlLoop">
         <constructor-arg ref="globalCacheFactory"/>
         <constructor-arg ref="conf"/>
         <constructor-arg value="DefaultCrawlLoop"/>

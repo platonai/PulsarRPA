@@ -180,7 +180,7 @@
     <logger name="ai.platon.pulsar" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
-    <logger name="ai.platon.pulsar.crawl.StreamingCrawler" level="INFO">
+    <logger name="ai.platon.pulsar.crawl.impl.StreamingCrawler" level="INFO">
         <appender-ref ref="SERVER"/>
     </logger>
     <logger name="ai.platon.pulsar.crawl.component" level="INFO">
@@ -194,7 +194,7 @@
         <appender-ref ref="SERVER"/>
     </logger>
 
-    <logger name="ai.platon.pulsar.crawl.StreamingCrawler.Task" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.crawl.impl.StreamingCrawler.Task" level="INFO" additivity="false">
         <appender-ref ref="PAGES"/>
     </logger>
     <logger name="ai.platon.pulsar.crawl.component.LoadComponent.Task" level="INFO" additivity="true">

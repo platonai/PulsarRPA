@@ -1,10 +1,11 @@
-package ai.platon.pulsar.crawl
+package ai.platon.pulsar.crawl.impl
 
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ENABLE_DEFAULT_DATA_COLLECTORS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.Crawler
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -38,8 +39,9 @@ open class StreamingCrawlLoop(
 
     override val urlFeeder by lazy { createUrlFeeder() }
 
-    override lateinit var crawler: StreamingCrawler<UrlAware>
-        protected set
+    private lateinit var actualCrawler: StreamingCrawler<UrlAware>
+
+    override val crawler: Crawler get() = actualCrawler
 
     init {
         logger.info("Crawl loop is created | @{}", hashCode())
@@ -60,7 +62,7 @@ open class StreamingCrawlLoop(
     @Synchronized
     override fun stop() {
         if (running.compareAndSet(true, false)) {
-            crawler.quit()
+            actualCrawler.quit()
             runBlocking {
                 crawlJob?.cancelAndJoin()
                 crawlJob = null
@@ -84,12 +86,12 @@ open class StreamingCrawlLoop(
         val session = PulsarContexts.createSession()
 
         val urls = urlFeeder.asSequence()
-        crawler = StreamingCrawler(urls, defaultOptions, session, globalCacheFactory, noProxy = false)
+        actualCrawler = StreamingCrawler(urls, defaultOptions, session, globalCacheFactory, noProxy = false)
 
         crawlJob = scope.launch {
             supervisorScope {
                 started.countDown()
-                crawler.run(this)
+                actualCrawler.run(this)
             }
         }
     }
