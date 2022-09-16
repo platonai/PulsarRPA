@@ -971,6 +971,9 @@ class DefaultEmulateEvent: AbstractEmulateEvent() {
     override val onCheckHtmlIntegrity: PageDatumHandlerPipeline = PageDatumHandlerPipeline()
 }
 
+/**
+ * Manage all events of a web page life cycle. The page events are visible to the end users.
+ * */
 interface PageEvent {
     val loadEvent: LoadEvent
     val simulateEvent: SimulateEvent

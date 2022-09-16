@@ -83,11 +83,6 @@ open class StreamingCrawler<T : UrlAware>(
      * */
     val globalCacheFactory: GlobalCacheFactory? = null,
     /**
-     * The crawl event handler
-     * TODO: may not be the right way to register CrawlEventHandler
-     * */
-    val crawlEvent: CrawlEvent = DefaultCrawlEvent(),
-    /**
      * Do not use proxy
      * */
     val noProxy: Boolean = true,
@@ -387,15 +382,14 @@ open class StreamingCrawler<T : UrlAware>(
     private suspend fun runUrlTask(url: UrlAware) {
         if (url is ListenableUrl && url is DegenerateUrl) {
             // The url is degenerated, which means it's not a resource in the network to fetch.
-            val eventHandler = url.event.crawlEvent
-            runSafely("onWillLoad") { eventHandler.onWillLoad(url) }
-            runSafely("onLoad") { eventHandler.onLoad(url) }
-            runSafely("onLoaded") { eventHandler.onLoaded(url, WebPage.NIL) }
+            dispatchEvent(EventType.willLoad, url)
+            dispatchEvent(EventType.load, url)
+            dispatchEvent(EventType.loaded, url)
         } else {
-            val normalizedUrl = onWillLoad(url)
+            val normalizedUrl = notifyWillLoad(url)
             if (normalizedUrl != null) {
                 val page = loadUrl(normalizedUrl)
-                onLoaded(normalizedUrl, page)
+                notifyLoaded(normalizedUrl, page)
             }
         }
     }
@@ -454,29 +448,18 @@ open class StreamingCrawler<T : UrlAware>(
         globalMetrics.successes.mark()
     }
 
-    private fun onWillLoad(url: UrlAware): UrlAware? {
+    private fun notifyWillLoad(url: UrlAware): UrlAware? {
         if (url is ListenableUrl) {
-            runSafely("onFilter") { url.event.loadEvent.onFilter(url.url) } ?: return null
-        }
-
-        runSafely("onFilter") { crawlEvent.onFilter(url) } ?: return null
-
-        runSafely("onWillLoad") { crawlEvent.onWillLoad(url) }
-
-        if (url is ListenableUrl) {
-            runSafely("onWillLoad") { url.event.crawlEvent.onWillLoad(url) }
+            url.event.crawlEvent.onFilter(url) ?: return null
+            dispatchEvent(EventType.willLoad, url)
         }
 
         return url
     }
 
-    private fun onLoaded(url: UrlAware, page: WebPage?) {
+    private fun notifyLoaded(url: UrlAware, page: WebPage?) {
         if (url is ListenableUrl) {
-            runSafely("onLoaded") { url.event.crawlEvent.onLoaded(url, page) }
-        }
-
-        if (page != null) {
-            runSafely("onLoaded") { crawlEvent.onLoaded(url, page) }
+            dispatchEvent(EventType.loaded, url, page)
         }
 
         if (enableSmartRetry) {
@@ -712,19 +695,15 @@ open class StreamingCrawler<T : UrlAware>(
         }
     }
 
-    private fun <T> runSafely(name: String, action: () -> T?): T? {
-        if (!isActive) {
-            return null
-        }
+    private fun dispatchEvent(type: EventType, url: ListenableUrl, page: WebPage? = null) {
+        super.dispatchEvent(type, url, page)
 
-        try {
-            return action()
-        } catch (e: Exception) {
-            logger.warn(e.stringify("[Ignored][$name] "))
-        } catch (e: Throwable) {
-            logger.error(e.stringify("[Unexpected][$name] "))
+        val event = url.event.crawlEvent
+        when(type) {
+            EventType.willLoad -> notify(type.name) { event.onWillLoad(url) }
+            EventType.load -> notify(type.name) { event.onLoad(url) }
+            EventType.loaded -> notify(type.name) { event.onLoaded(url, page) }
+            else -> {}
         }
-
-        return null
     }
 }

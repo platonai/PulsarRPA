@@ -37,6 +37,11 @@ open class BrowserEmulatedFetcher(
     private val illegalState = AtomicBoolean()
     private val isActive get() = !illegalState.get() && !closed.get() && AppContext.isActive
 
+    enum class EventType {
+        willFetch,
+        fetched
+    }
+
     fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPage.newWebPage(url, conf))
@@ -83,13 +88,13 @@ open class BrowserEmulatedFetcher(
             return FetchResult.canceled(task)
         }
 
-        val event = task.page.simulateEvent
-
-        runSafely("onWillFetch") { event?.onWillFetch?.invoke(task.page, driver) }
+        dispatchEvent(EventType.willFetch, task.page, driver)
+//        notify("onWillFetch") { event?.onWillFetch?.invoke(task.page, driver) }
 
         val result = browserEmulator.fetch(task, driver)
 
-        runSafely("onFetched") { event?.onFetched?.invoke(task.page, driver) }
+        dispatchEvent(EventType.fetched, task.page, driver)
+//        notify("onFetched") { event?.onFetched?.invoke(task.page, driver) }
 
         return result
     }
@@ -116,7 +121,16 @@ open class BrowserEmulatedFetcher(
         }
     }
 
-    private suspend fun runSafely(name: String, action: suspend () -> Unit) {
+    private suspend fun dispatchEvent(type: EventType, page: WebPage, driver: WebDriver) {
+        val event = page.simulateEvent ?: return
+        when(type) {
+            EventType.willFetch -> notify(type.name) { event.onWillFetch(page, driver) }
+            EventType.fetched -> notify(type.name) { event.onFetched(page, driver) }
+            else -> {}
+        }
+    }
+
+    private suspend fun notify(name: String, action: suspend () -> Unit) {
         if (!isActive) {
             return
         }

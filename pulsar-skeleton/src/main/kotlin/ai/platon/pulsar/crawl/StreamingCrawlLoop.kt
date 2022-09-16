@@ -36,8 +36,6 @@ open class StreamingCrawlLoop(
 
     val isRunning get() = running.get()
 
-    var crawlEventHandler = DefaultCrawlEvent()
-
     override val urlFeeder by lazy { createUrlFeeder() }
 
     override lateinit var crawler: StreamingCrawler<UrlAware>
@@ -86,10 +84,7 @@ open class StreamingCrawlLoop(
         val session = PulsarContexts.createSession()
 
         val urls = urlFeeder.asSequence()
-        crawler = StreamingCrawler(urls,
-            defaultOptions, session, globalCacheFactory, crawlEventHandler,
-            noProxy = false
-        )
+        crawler = StreamingCrawler(urls, defaultOptions, session, globalCacheFactory, noProxy = false)
 
         crawlJob = scope.launch {
             supervisorScope {

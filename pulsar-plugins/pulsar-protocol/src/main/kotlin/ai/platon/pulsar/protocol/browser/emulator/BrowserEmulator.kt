@@ -201,13 +201,13 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
-    private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, driverConfig: BrowserSettings): InteractResult {
+    private suspend fun navigateAndInteract(task: FetchTask, driver: WebDriver, settings: BrowserSettings): InteractResult {
         checkState(task, driver)
 
         val page = task.page
 
-        logBeforeNavigate(task, driverConfig)
-        driver.setTimeouts(driverConfig)
+        logBeforeNavigate(task, settings)
+        driver.setTimeouts(settings)
         // TODO: handle frames
         // driver.switchTo().frame(1);
 
@@ -240,8 +240,8 @@ open class BrowserEmulator(
             return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         }
 
-        val interactTask = InteractTask(task, driverConfig, driver)
-        return if (driverConfig.enableStartupScript) {
+        val interactTask = InteractTask(task, settings, driver)
+        return if (settings.enableStartupScript) {
             dispatchEvent(EventType.willInteract, page, driver)
 //            notify("onWillInteract") { event?.onWillInteract?.invokeDeferred(page, driver) }
 
