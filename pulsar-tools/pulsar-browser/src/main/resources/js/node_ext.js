@@ -6,7 +6,7 @@
  * @param attrValue {String}
  * */
 Node.prototype.__pulsar_setAttributeIfNotBlank = function(attrName, attrValue) {
-    if (this.__pulsar_isElement() && attrValue && attrValue.trim().length > 0) {
+    if (this instanceof HTMLElement && attrValue && attrValue.trim().length > 0) {
         this.setAttribute(attrName, attrValue.trim())
     }
 };

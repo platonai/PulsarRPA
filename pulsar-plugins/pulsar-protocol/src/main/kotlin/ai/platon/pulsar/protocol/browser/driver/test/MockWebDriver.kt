@@ -7,7 +7,6 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
-import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -151,7 +150,7 @@ class MockWebDriver(
     override suspend fun exists(selector: String) = backupDriverOrNull?.exists(selector) ?: false
 
     @Throws(WebDriverException::class)
-    override suspend fun visible(selector: String) = backupDriverOrNull?.visible(selector) ?: false
+    override suspend fun isVisible(selector: String) = backupDriverOrNull?.isVisible(selector) ?: false
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
@@ -212,8 +211,8 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun stopLoading() {
-        backupDriverOrNull?.stopLoading()
+    override suspend fun pause() {
+        backupDriverOrNull?.pause()
     }
 
     @Throws(WebDriverException::class)

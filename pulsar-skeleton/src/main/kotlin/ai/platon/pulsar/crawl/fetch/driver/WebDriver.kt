@@ -4,7 +4,6 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
@@ -13,8 +12,19 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
- * Similar to puppeteer's Page
- * */
+ * WebDriver defines a concise interface to access and interact with web pages,
+ * all behaviors are optimized to mimic real people as closely as possible.
+ *
+ * The methods in this interface fall into three categories:
+ * <ul>
+ * <li>Control of the browser itself</li>
+ * <li>Selection of textContent and attributes of Elements</li>
+ * <li>Interact with the webpage</li>
+ * </ul>
+ * <p>
+ *
+ * Key methods are [WebDriver.navigateTo], which is used to load a new web page.
+ */
 interface WebDriver: Closeable {
     enum class Status {
         UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
@@ -36,25 +46,49 @@ interface WebDriver: Closeable {
      * */
     val name: String
     /**
-     * The browser of the driver. The Browser defines methods and events for to manage the real browser.
+     * The browser of the driver. The browser defines methods and events for to manage the real browser.
      * */
     val browser: Browser
     /**
-     * The unique browser id.
+     * The current navigation entry.
      * */
-    val browserId: BrowserId get() = browser.id
-
     var navigateEntry: NavigateEntry
+    /**
+     * The navigation history.
+     * */
     val navigateHistory: MutableList<NavigateEntry>
-
+    /**
+     * The browser type.
+     * */
     val browserType: BrowserType
+    /**
+     * Indicate the driver support javascript or not. Some web driver such as MockDriver does not
+     * support javascript.
+     * */
     val supportJavascript: Boolean
+    /**
+     * Indicate the page source is mocked or not.
+     * */
     val isMockedPageSource: Boolean
+    /**
+     * The driver status.
+     * */
     val status: AtomicReference<Status>
-
+    /**
+     * The time of the last action.
+     * */
     val lastActiveTime: Instant
+    /**
+     * The idle timeout.
+     * */
     var idleTimeout: Duration
+    /**
+     * The driver is idle if no action in [idleTimeout].
+     * */
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+    /**
+     * The timeout to wait for some object.
+     * */
     var waitForTimeout: Duration
 
     val isCanceled: Boolean
@@ -66,6 +100,10 @@ interface WebDriver: Closeable {
 
     @Deprecated("Not used any more")
     val sessionId: String?
+    /**
+     * Delay policy defines the delay time between actions, it is used to mimic real people
+     * to interact with webpages.
+     * */
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
     /**
@@ -88,11 +126,8 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun addBlockedURLs(urls: List<String>)
     /**
-     * Returns the main resource response. In case of multiple redirects, the navigation will resolve with the first
-     * non-redirect response.
-     *
-     * <p> The method will not throw an error when any valid HTTP status code is returned by the remote server,
-     * including 404 "Not Found" and 500 "Internal Server Error".
+     * Returns the main resource response. In case of multiple redirects, the navigation
+     * will resolve with the first non-redirect response.
      *
      * @param url URL to navigate page to.
      */
@@ -102,9 +137,6 @@ interface WebDriver: Closeable {
      * Returns the main resource response. In case of multiple redirects, the navigation will resolve with the first
      * non-redirect response.
      *
-     * <p> The method will not throw an error when any valid HTTP status code is returned by the remote server,
-     * including 404 "Not Found" and 500 "Internal Server Error".
-     *
      * @param entry NavigateEntry to navigate page to.
      */
     @Throws(WebDriverException::class)
@@ -113,10 +145,24 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun setTimeouts(browserSettings: BrowserSettings)
 
+    /**
+     * Get a string representing the current URL that the browser is looking at.
+     *
+     * @return The URL of the page currently loaded in the browser
+     */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
+
+    /**
+     * Get the source of the last loaded page. If the page has been modified after loading (for
+     * example, by Javascript) there is no guarantee that the returned text is that of the modified
+     * page.
+     *
+     * @return The source of the current page
+     */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
+
     @Throws(WebDriverException::class)
     suspend fun mainRequestHeaders(): Map<String, Any>
     @Throws(WebDriverException::class)
@@ -157,7 +203,13 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
     @Throws(WebDriverException::class)
-    suspend fun visible(selector: String): Boolean
+    suspend fun isHidden(selector: String): Boolean = !isVisible(selector)
+    @Throws(WebDriverException::class)
+    suspend fun isVisible(selector: String): Boolean
+    @Throws(WebDriverException::class)
+    suspend fun visible(selector: String): Boolean = isVisible(selector)
+    @Throws(WebDriverException::class)
+    suspend fun isChecked(selector: String): Boolean
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
     @Throws(WebDriverException::class)
@@ -168,6 +220,10 @@ interface WebDriver: Closeable {
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)
     suspend fun clickNthAnchor(n: Int, rootSelector: String = "body"): String?
+    @Throws(WebDriverException::class)
+    suspend fun check(selector: String)
+    @Throws(WebDriverException::class)
+    suspend fun uncheck(selector: String)
     @Throws(WebDriverException::class)
     suspend fun scrollTo(selector: String)
     @Throws(WebDriverException::class)
@@ -200,6 +256,10 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun allAttrs(selector: String, attrName: String): List<String>
 
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     * */
     @Throws(WebDriverException::class)
     suspend fun evaluate(expression: String): Any?
     @Throws(WebDriverException::class)
@@ -219,33 +279,53 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
     /**
-     * Force the page stop all navigations and pending resource fetches.
+     * Force the page pauses all navigations and PENDING resource fetches.
      * If the page loading stops, the user can still interact with the page,
      * and therefore resources can continue to load.
      * */
     @Throws(WebDriverException::class)
-    suspend fun stopLoading()
+    suspend fun pause()
+    @Deprecated("Inappropriate name", ReplaceWith("pause"))
+    @Throws(WebDriverException::class)
+    suspend fun stopLoading() = pause()
     /**
-     * Force the page stop all navigations and releases all resources.
-     * If a tab stops, it can later navigate to any url.
+     * Force the page stop all navigations and RELEASES all resources. Interaction with the
+     * stop page results in undefined behavior and the results should not be trusted.
+     *
+     * If a web driver stops, it can later be used to visit new pages.
      * */
     @Throws(WebDriverException::class)
     suspend fun stop()
     /**
      * Force the page stop all navigations and releases all resources.
-     * If a tab is terminated, it should not navigate to any url.
+     * If a web driver is terminated, it should not be used any more and should be quit
+     * as soon as possible.
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
-    /** Quit the tab, just like clicking the close button on the tab. */
+    /** Quits this driver, closing every associated window. */
     @Throws(Exception::class)
     fun quit()
     /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()
 
+    /**
+     * Mark the driver as free, so it can be used to fetch a new page.
+     * */
     fun free()
+    /**
+     * Mark the driver as working, so it can not be used to fetch another page.
+     * */
     fun startWork()
+    /**
+     * Mark the driver as retired, so it can not be used to fetch any page,
+     * and should be quit as soon as possible.
+     * */
     fun retire()
+    /**
+     * Mark the driver as canceled, so the fetch process should return as soon as possible,
+     * and the fetch result should be dropped.
+     * */
     fun cancel()
 }

@@ -70,7 +70,7 @@ class SeleniumDriver(
         return select(selector) != null
     }
 
-    override suspend fun visible(selector: String): Boolean {
+    override suspend fun isVisible(selector: String): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -136,7 +136,7 @@ class SeleniumDriver(
         TODO("Not yet implemented")
     }
 
-    override suspend fun stopLoading() {
+    override suspend fun pause() {
         TODO("Not yet implemented")
     }
 

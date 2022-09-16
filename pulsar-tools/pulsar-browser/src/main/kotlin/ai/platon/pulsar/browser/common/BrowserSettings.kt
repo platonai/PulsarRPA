@@ -445,10 +445,7 @@ open class BrowserSettings(
 
     private fun reportPreloadJs(script: String) {
         val dir = AppPaths.REPORT_DIR.resolve("browser/js")
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir)
-        }
-
+        Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.js"), script)
         logger.info("Generated js: file://$report")
     }

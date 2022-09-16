@@ -73,7 +73,6 @@ abstract class AbstractWebDriver(
     override var lastActiveTime: Instant = Instant.now()
 
     override val isWorking get() = status.get().isWorking
-    val isNotWorking get() = !isWorking
     override val isRetired get() = status.get().isRetired
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
@@ -112,6 +111,15 @@ abstract class AbstractWebDriver(
 
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
+
+    @Throws(WebDriverException::class)
+    override suspend fun isVisible(selector: String): Boolean {
+        return evaluate("__pulsar_utils__.isVisible('$selector')") == "true"
+    }
+
+    override suspend fun isChecked(selector: String): Boolean {
+        return evaluate("__pulsar_utils__.isChecked('$selector')") == "true"
+    }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollDown(count: Int) {
@@ -184,6 +192,16 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
         evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun check(selector: String) {
+        evaluate("__pulsar_utils__.check('$selector')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun uncheck(selector: String) {
+        evaluate("__pulsar_utils__.uncheck('$selector')")
     }
 
     /**

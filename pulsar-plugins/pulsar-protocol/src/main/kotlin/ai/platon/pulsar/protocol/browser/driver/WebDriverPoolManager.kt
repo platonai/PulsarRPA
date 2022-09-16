@@ -236,7 +236,7 @@ open class WebDriverPoolManager(
             numTimeout.mark()
 
             // This should not happen since the task itself should handle the timeout event
-            val browserId = driver.browserId
+            val browserId = driver.browser.id
             logger.warn("Coroutine timeout({}) (by [withTimeoutOrNull]) | {} | {}",
                 fetchTaskTimeout.readable(), formatStatus(browserId), browserId)
         }

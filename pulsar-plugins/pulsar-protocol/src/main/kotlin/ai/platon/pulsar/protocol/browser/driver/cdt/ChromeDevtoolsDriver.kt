@@ -169,13 +169,13 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun stopLoading() {
+    override suspend fun pause() {
         try {
-            rpc.invokeDeferred("stopLoading") {
+            rpc.invokeDeferred("pause") {
                 pageAPI?.stopLoading()
             }
         } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "stopLoading")
+            rpc.handleRPCException(e, "pause")
         }
     }
 
@@ -204,6 +204,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun terminate() {
+
         stop()
     }
 
@@ -257,7 +258,7 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun visible(selector: String): Boolean {
+    override suspend fun isVisible(selector: String): Boolean {
         try {
             return page.visible(selector)
         } catch (e: ChromeRPCException) {
