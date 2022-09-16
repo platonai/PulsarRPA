@@ -107,14 +107,11 @@
                 <module>pulsar-skeleton</module>
                 <module>pulsar-resources</module>
                 <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
+                <module>pulsar-plugins/pulsar-protocol</module>
 
-                <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
+                <module>pulsar-tools/pulsar-browser</module>
 
                 <module>pulsar-spring-support</module>
-                <module>pulsar-rest</module>
             </modules>
         </profile>
 

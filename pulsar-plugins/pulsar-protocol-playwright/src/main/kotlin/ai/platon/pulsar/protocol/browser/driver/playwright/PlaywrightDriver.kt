@@ -96,6 +96,14 @@ class PlaywrightDriver(
         return 0
     }
 
+    override suspend fun click(selector: String, count: Int) {
+        page.click(selector)
+    }
+
+    override suspend fun type(selector: String, text: String) {
+        page.type(selector, text)
+    }
+
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         page.mouse().wheel(deltaX, deltaY)
     }
@@ -106,14 +114,6 @@ class PlaywrightDriver(
 
     override suspend fun moveMouseTo(x: Double, y: Double) {
         page.mouse().move(x, y)
-    }
-
-    override suspend fun click(selector: String, count: Int) {
-        page.click(selector)
-    }
-
-    override suspend fun type(selector: String, text: String) {
-        page.type(selector, text)
     }
 
     override suspend fun scrollTo(selector: String) {
