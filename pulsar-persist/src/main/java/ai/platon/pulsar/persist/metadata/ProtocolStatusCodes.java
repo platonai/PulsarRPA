@@ -88,6 +88,11 @@ public interface ProtocolStatusCodes {
     //
 
     /**
+     * Code >= {@code INCOMPATIBLE_CODE_START} are NOT compatible with HTTP status codes
+     */
+    int INCOMPATIBLE_CODE_START = 1000;
+
+    /**
      * Failed to find the target host.
      */
     int UNKNOWN_HOST = 1460;

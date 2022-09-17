@@ -153,7 +153,7 @@ class MultiPrivacyContextManager(
             privacyContext.report()
         }
 
-        val status = result.response.status
+        val status = result.response.protocolStatus
         when {
             status.isRetry(RetryScope.PRIVACY) -> logPrivacyLeakWarning(privacyContext, result)
             status.isSuccess -> metrics.successes.mark()

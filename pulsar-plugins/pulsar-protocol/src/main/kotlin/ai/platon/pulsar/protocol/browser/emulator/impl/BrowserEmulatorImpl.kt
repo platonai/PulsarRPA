@@ -38,9 +38,9 @@ open class BrowserEmulatorImpl(
 ): BrowserEmulator,
     BrowserEmulatorImplBase(driverPoolManager.driverFactory.driverSettings, responseHandler, immutableConfig)
 {
-    private val logger = LoggerFactory.getLogger(BrowserEmulatorImpl::class.java)!!
+    private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
-    private val taskLogger = LoggerFactory.getLogger(BrowserEmulatorImpl::class.java.name + ".Task")!!
+    private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
     init {
@@ -136,6 +136,7 @@ open class BrowserEmulatorImpl(
         val response = driver.loadResource(task.url)
             ?: return ForwardingResponse.failed(task.page, SessionLostException("null response"))
 
+        // TODO: transform in AbstractHttpProtocol
         val protocolStatus = ProtocolStatusTranslator.translateHttpCode(response.statusCode())
         navigateTask.pageSource = response.body()
         navigateTask.pageDatum.also {
@@ -168,7 +169,11 @@ open class BrowserEmulatorImpl(
 //            val event = page.simulateEvent
 //            notify("onWillStopTab") { event?.onWillStopTab?.invokeDeferred(page, driver) }
 
-            // Force the page stop all navigations and releases all resources
+            /**
+             * Force the page stop all navigations and releases all resources.
+             * If a web driver is terminated, it should not be used any more and should be quit
+             * as soon as possible.
+             * */
             driver.stop()
 
             dispatchEvent(EventType.tabStopped, page, driver)
@@ -191,7 +196,7 @@ open class BrowserEmulatorImpl(
         val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
         navigateTask.pageDatum.apply {
             protocolStatus = interactResult.protocolStatus
-            activeDOMStatTrace = interactResult.activeDomMessage?.multiStatus
+            activeDOMStatTrace = interactResult.activeDomMessage?.trace
             activeDOMUrls = interactResult.activeDomMessage?.urls
         }
         navigateTask.pageSource = driver.pageSource() ?: ""
@@ -315,35 +320,35 @@ open class BrowserEmulatorImpl(
 
         // make sure the document is ready
         val initialScroll = 5
-        val maxRound = scriptTimeout.seconds // leave some time to wait for script finish
+        val delayMillis = 500L * 2
+//        val maxRound = scriptTimeout.toMillis() / delayMillis
+        val maxRound = 60
 
-        // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
-        val expression = "__pulsar_utils__.waitForReady($maxRound, $initialScroll)"
+        // TODO: wait for expected data, ni, na, nn, nst, etc; required element
+        val expression = String.format("__pulsar_utils__.waitForReady(%d)", initialScroll)
         var i = 0
         var message: Any? = null
         try {
             var msg: Any? = null
+            // TODO: driver.isWorking
             while ((msg == null || msg == false) && i++ < maxRound && isActive && !fetchTask.isCanceled) {
-                // TODO: do only when working
-//                if (fetchTask.isWorking) {
-//
-//                }
-
                 msg = evaluate(interactTask, expression)
 
                 if (msg == null || msg == false) {
-                    delay(500)
+                    delay(delayMillis)
                 }
             }
             message = msg
         } finally {
             if (message == null) {
                 if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
-                    logger.warn("WaitForReady returns null after $i round, retry is supposed | {}", interactTask.url)
+                    logger.warn("Timeout to wait for document ready after ${i.dec()} round, " +
+                            "retry is supposed | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK
                 }
             } else if (message == "timeout") {
+                // this will never happen since 1.10.0
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
                 val browserError = responseHandler.onChromeErrorPageReturn(message)
@@ -405,7 +410,7 @@ open class BrowserEmulatorImpl(
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (taskLogger.isDebugEnabled) {
                 val page = interactTask.fetchTask.page
-                taskLogger.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
+                taskLogger.debug("{}. {} | {}", page.id, result.activeDomMessage?.trace, interactTask.url)
             }
         }
     }

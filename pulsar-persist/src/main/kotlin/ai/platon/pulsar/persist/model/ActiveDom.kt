@@ -156,7 +156,7 @@ data class ActiveDOMStatTrace(
 }
 
 data class ActiveDomMessage(
-    var multiStatus: ActiveDOMStatTrace? = null,
+    var trace: ActiveDOMStatTrace? = null,
     var urls: ActiveDOMUrls? = null
 ) {
     fun toJson(): String {

@@ -43,7 +43,8 @@ open class BrowserManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _browsers.values.forEach {
-                it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
+                // managed by [WebDriverPoolManager]
+                // it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
             }
         }
     }

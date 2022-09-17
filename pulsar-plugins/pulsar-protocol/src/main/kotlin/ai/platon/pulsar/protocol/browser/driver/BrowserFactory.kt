@@ -21,7 +21,12 @@ class BrowserFactory {
 //            BrowserType.PLAYWRIGHT_CHROME -> PlaywrightBrowserInstance(instanceId, launcherOptions, launchOptions)
             else -> launchChromeDevtoolsBrowser(browserId, launcherOptions, launchOptions)
         }
-        browser.registerShutdownHook()
+
+        if (!launcherOptions.browserSettings.isGUI) {
+            // Web drivers are in GUI mode, please close it manually
+            // browser.registerShutdownHook()
+        }
+
         return browser
     }
 

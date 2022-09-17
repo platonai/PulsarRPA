@@ -73,8 +73,11 @@ class WebDb(
         accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
 
         if (page != null) {
-            tracer?.trace("Got $key")
-            return WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+
+            tracer?.trace("Got ${p.fetchCount} ${p.prevFetchTime} ${p.fetchTime} $key")
+
+            return p
         }
 
         return null
@@ -125,7 +128,7 @@ class WebDb(
             dataStore.delete(key)
         }
 
-        tracer?.trace("Putting $key")
+        tracer?.trace("Putting ${page.fetchCount} ${page.prevFetchTime} ${page.fetchTime} $key")
 
         val startTime = System.nanoTime()
         dataStore.put(key, page.unbox())

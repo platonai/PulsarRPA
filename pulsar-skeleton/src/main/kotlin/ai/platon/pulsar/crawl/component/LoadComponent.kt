@@ -320,7 +320,7 @@ class LoadComponent(
             logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
         }
 
-        if (options.persist && !page.isCached && !status.isCanceled && !options.readonly) {
+        if (options.persist && !status.isCanceled && !options.readonly) {
             persist(page, options)
         }
     }

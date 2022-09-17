@@ -150,7 +150,7 @@ class FetchResult(
     operator fun component2() = response
     operator fun component3() = exception
 
-    val status get() = response.status
+    val status get() = response.protocolStatus
     val isSuccess get() = status.isSuccess
     val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
     val isCrawlRetry get() = status.isRetry(RetryScope.CRAWL)

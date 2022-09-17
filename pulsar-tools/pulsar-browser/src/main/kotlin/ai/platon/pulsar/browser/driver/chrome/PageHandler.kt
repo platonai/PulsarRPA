@@ -104,10 +104,12 @@ class PageHandler(
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-//                logger.warn(exception.value?.toString())
-//                logger.warn(exception.unserializableValue)
+//            logger.warn(exception.value?.toString())
+//            logger.warn(exception.unserializableValue)
             logger.info(exception.description + "\n>>>$expression<<<")
         }
+
+//        println(Gson().toJson(evaluate))
 
         val result = evaluate?.result
         return result?.value

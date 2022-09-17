@@ -23,7 +23,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import kotlin.jvm.Throws
 
 /**
  * A very simple file backend storage for webpages
@@ -62,10 +61,9 @@ class FileBackendPageStore(
     @Synchronized
     fun readHtml(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
-        val filename = AppPaths.fromUri(url, "", ".htm")
-        val path = persistDirectory.resolve(filename)
+        val path = getPersistPath(url, ".html")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl $filename " + Files.exists(path))
+        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl " + Files.exists(path) + " | $path")
 
         if (Files.exists(path)) {
             val content = Files.readAllBytes(path)
@@ -82,13 +80,13 @@ class FileBackendPageStore(
     @Synchronized
     fun readAvro(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
-        val filename = AppPaths.fromUri(url, "", ".avro")
-        val path = persistDirectory.resolve(filename)
+        val path = getPersistPath(url, ".avro")
+
         if (!Files.exists(path)) {
             return null
         }
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl $filename " + Files.exists(path))
+        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl " + Files.exists(path) + " | $path")
         return try {
             readAvro(path)
         } catch (e: AvroRuntimeException) {
@@ -96,7 +94,7 @@ class FileBackendPageStore(
             Files.deleteIfExists(path)
             null
         } catch (e: IOException) {
-            logger.warn(e.simplify("readAvro", " | $path"))
+            // logger.warn(Throwable.simplify())
             Files.deleteIfExists(path)
             null
         }
@@ -122,21 +120,17 @@ class FileBackendPageStore(
     @Synchronized
     fun writeHtml(page: WebPage) {
         val content = page.content ?: return
-        val directory = getPersistDirectory(page)
-        val filename = AppPaths.fromUri(page.url, "", ".htm")
-        val path = directory.resolve(filename)
+        val path = getPersistPath(page.url, ".htm")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
+        logger.takeIf { it.isTraceEnabled }?.trace("Putting ${page.content?.array()?.size} | $path")
         Files.write(path, content.array())
     }
 
     @Synchronized
     fun writeAvro(page: WebPage) {
-        val directory = getPersistDirectory(page)
-        val filename = AppPaths.fromUri(page.url, "", ".avro")
-        val path = directory.resolve(filename)
+        val path = getPersistPath(page.url, ".avro")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
+        logger.takeIf { it.isTraceEnabled }?.trace("Putting ${page.content?.array()?.size} | $path")
 
         Files.deleteIfExists(path)
         try {
@@ -148,8 +142,14 @@ class FileBackendPageStore(
         }
     }
 
-    private fun getPersistDirectory(page: WebPage): Path {
-        val dirForDomain = AppPaths.fromDomain(page.url)
+    fun getPersistPath(url: String, suffix: String): Path {
+        val directory = getPersistDirectory(url)
+        val filename = AppPaths.fromUri(url, "", suffix)
+        return directory.resolve(filename)
+    }
+
+    private fun getPersistDirectory(url: String): Path {
+        val dirForDomain = AppPaths.fromDomain(url)
         val path = persistDirectory.resolve(dirForDomain)
         Files.createDirectories(path)
         return path

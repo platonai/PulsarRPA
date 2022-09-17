@@ -267,7 +267,7 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public String getReversedUrl() {
-        return reversedUrl != null ? reversedUrl : "";
+        return reversedUrl;
     }
 
     public int getId() {
@@ -533,7 +533,8 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public BrowserType getLastBrowser() {
-        return BrowserType.fromString(page.getBrowser().toString());
+        String browser = page.getBrowser() != null ? page.getBrowser().toString() : "";
+        return BrowserType.fromString(browser);
     }
 
     public void setLastBrowser(@NotNull BrowserType browser) {
@@ -552,7 +553,8 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
-        return HtmlIntegrity.Companion.fromString(page.getHtmlIntegrity().toString());
+        String integrity = page.getHtmlIntegrity() != null ? page.getHtmlIntegrity().toString() : "";
+        return HtmlIntegrity.Companion.fromString(integrity);
     }
 
     public void setHtmlIntegrity(@NotNull HtmlIntegrity integrity) {

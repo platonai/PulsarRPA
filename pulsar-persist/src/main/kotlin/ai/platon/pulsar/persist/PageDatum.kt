@@ -42,7 +42,7 @@ class PageDatum(
      */
     var location: String = url,
     /**
-     * The protocol status
+     * The protocol status without translation
      * */
     var protocolStatus: ProtocolStatus = ProtocolStatus.STATUS_CANCELED,
     /**

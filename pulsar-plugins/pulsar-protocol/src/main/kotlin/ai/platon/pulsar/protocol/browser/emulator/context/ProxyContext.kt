@@ -105,7 +105,7 @@ class ProxyContext(
         return try {
             beforeTaskStart(task)
             proxyPoolManager.runWith(proxyEntry) { driverContext.run(task, browseFun) }.also {
-                success = it.response.status.isSuccess
+                success = it.response.protocolStatus.isSuccess
                 it.response.pageDatum.proxyEntry = proxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
             }

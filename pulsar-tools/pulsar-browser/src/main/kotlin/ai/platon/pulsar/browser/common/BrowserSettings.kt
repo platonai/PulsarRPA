@@ -117,8 +117,6 @@ open class BrowserSettings(
             feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
 
-        val confuser = ScriptConfuser()
-
         /**
          * Check if the current environment supports only headless mode.
          * */
@@ -385,6 +383,8 @@ open class BrowserSettings(
      * interacts with webpages to mimic the behavior of real people.
      * */
     var interactSettings = InteractSettings.DEFAULT
+
+    val confuser = ScriptConfuser()
 
     val scriptLoader = ScriptLoader(confuser, jsParameters, conf)
 

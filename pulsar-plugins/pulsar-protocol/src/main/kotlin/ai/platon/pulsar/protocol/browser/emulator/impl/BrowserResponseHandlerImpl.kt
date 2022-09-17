@@ -4,7 +4,6 @@ import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -56,15 +55,15 @@ open class BrowserResponseHandlerImpl(
     fun onInitHTMLIntegrityChecker(checker: CombinedHtmlIntegrityChecker) {
     }
 
-    override open fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {
+    override fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {
         numNavigates.incrementAndGet()
     }
 
-    override open fun onResponseCreated(task: FetchTask, driver: WebDriver, response: Response) {
+    override fun onResponseCreated(task: FetchTask, driver: WebDriver, response: Response) {
 
     }
 
-    override open fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus {
+    override fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus {
         return status
     }
 
@@ -74,11 +73,11 @@ open class BrowserResponseHandlerImpl(
      * The browser has already converted source code to be UTF-8, so we replace the charset meta tags to be UTF-8.
      * TODO: or we insert a new metadata to indicate the charset
      */
-    override open fun normalizePageSource(url: String, pageSource: String): StringBuilder {
+    override fun normalizePageSource(url: String, pageSource: String): StringBuilder {
         return HtmlUtils.replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
     }
 
-    override open fun onBrowseTimeout(task: NavigateTask) {
+    override fun onBrowseTimeout(task: NavigateTask) {
         if (logger.isInfoEnabled) {
             val elapsed = Duration.between(task.startTime, Instant.now())
             val length = task.pageSource.length
@@ -101,7 +100,7 @@ open class BrowserResponseHandlerImpl(
      * */
     override fun onChromeErrorPageReturn(message: String): BrowserError {
         val activeDomMessage = ActiveDomMessage.fromJson(message)
-        val ec = activeDomMessage.multiStatus?.status?.ec
+        val ec = activeDomMessage.trace?.status?.ec
         // chrome can not connect to the peer, it probably be caused by a bad proxy
         // convert to retry in PRIVACY_CONTEXT later
         val status = when (ec) {
@@ -109,7 +108,7 @@ open class BrowserResponseHandlerImpl(
             BrowserError.EMPTY_RESPONSE -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
             else -> {
                 // unexpected exception
-                ProtocolStatus.retry(RetryScope.CRAWL, ec)
+                ProtocolStatus.retry(RetryScope.CRAWL, ec ?: "Unknown error")
             }
         }
 

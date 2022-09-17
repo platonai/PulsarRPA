@@ -144,7 +144,7 @@ abstract class AbstractHttpProtocol: Protocol {
     }
 
     private fun shouldRetry(response: Response): Boolean {
-        return response !is ForwardingResponse && response.status.isRetry(RetryScope.PROTOCOL)
+        return response !is ForwardingResponse && response.protocolStatus.isRetry(RetryScope.PROTOCOL)
     }
 
     private fun getOutputWithHttpCodeTranslated(url: String, response: Response): ProtocolOutput {
@@ -157,18 +157,23 @@ abstract class AbstractHttpProtocol: Protocol {
         pageDatum.contentType = resolveMimeType(contentType, url, content)
 
         val headers = pageDatum.headers
-        val status = ProtocolStatusTranslator.translateHttpCode(httpCode)
+        val finalProtocolStatus = if (httpCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
+            response.protocolStatus
+        } else {
+            ProtocolStatusTranslator.translateHttpCode(httpCode)
+        }
+
         when (httpCode) {
             in 300..399 -> {
                 // handle redirect
                 // some broken servers, such as MS IIS, use lowercase header name...
                 val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
                 u = URL(u, redirect)
-                status.args[ProtocolStatus.ARG_REDIRECT_TO_URL] = u.toString()
+                finalProtocolStatus.args[ProtocolStatus.ARG_REDIRECT_TO_URL] = u.toString()
             }
         }
 
-        return ProtocolOutput(pageDatum, headers, status)
+        return ProtocolOutput(pageDatum, headers, finalProtocolStatus)
     }
 
     private fun resolveMimeType(contentType: String?, url: String, data: ByteArray?): String? {

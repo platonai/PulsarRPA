@@ -101,7 +101,8 @@ class ChromeDevtoolsDriver(
         try {
             rpc.invokeDeferred("addInitScript") {
                 pageAPI?.enable()
-                pageAPI?.addScriptToEvaluateOnNewDocument(script)
+                val script0 = browserSettings.confuser.confuse(script)
+                pageAPI?.addScriptToEvaluateOnNewDocument(script0)
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "addInitScript")
