@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -45,4 +46,17 @@ object Browsers {
     }
 
     fun searchChromeBinaryOrNull() = kotlin.runCatching { searchChromeBinary() }.getOrNull()
+
+    /**
+     * Find BROWSER_CHROME_PATH in all config files
+     * */
+    private fun searchChromeBinaryPathAllAround(conf: ImmutableConfig) {
+        val chromeBinaryPath = conf.get(CapabilityTypes.BROWSER_CHROME_PATH)
+        if (chromeBinaryPath != null) {
+            val path = Paths.get(chromeBinaryPath).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
+            if (path != null) {
+                System.setProperty(CapabilityTypes.BROWSER_CHROME_PATH, chromeBinaryPath)
+            }
+        }
+    }
 }

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.UnsupportedWebDriverException
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsBrowser
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
@@ -25,19 +25,19 @@ open class WebDriverFactory(
     /**
      * Create a WebDriver
      */
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     fun create(start: Boolean = true) = create(immutableConfig.toVolatileConfig(), start)
 
     /**
      * Create a WebDriver
      */
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     fun create(conf: VolatileConfig, start: Boolean = true) = create(BrowserId.DEFAULT, 0, conf, start)
 
     /**
      * Create a WebDriver
      */
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     @Synchronized
     fun create(
         browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
@@ -63,13 +63,13 @@ open class WebDriverFactory(
             }
 
             return WebDriverAdapter(driver, priority)
-        } catch (e: DriverLaunchException) {
+        } catch (e: BrowserLaunchException) {
             logger.error("Can not launch browser $browserType | {}", e.message)
             throw e
         }
     }
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     private fun createChromeDevtoolsDriver(
         instanceId: BrowserId, capabilities: Map<String, Any>,
     ): ChromeDevtoolsDriver {
@@ -86,7 +86,7 @@ open class WebDriverFactory(
 //        return PlaywrightDriver(driverSettings, browser as PlaywrightBrowserInstance)
 //    }
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     private fun createMockChromeDevtoolsDriver(
         instanceId: BrowserId, capabilities: Map<String, Any>,
     ): MockWebDriver {

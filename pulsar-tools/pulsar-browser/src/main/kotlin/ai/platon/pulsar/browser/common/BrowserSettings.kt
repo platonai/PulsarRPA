@@ -116,31 +116,57 @@ open class BrowserSettings(
             node_traversor.js
             feature_calculator.js
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
-        private val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
 
-        private val confuser = ScriptConfuser()
+        val confuser = ScriptConfuser()
 
+        /**
+         * Check if the current environment supports only headless mode.
+         * */
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
+        /**
+         * Specify the browser type for all fetches.
+         * */
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
             return BrowserSettings
         }
 
+        /**
+         * Indicate the network condition.
+         *
+         * The system adjusts its behavior according to different network conditions
+         * to obtain the best data quality and data collection speed.
+         * */
         fun withGoodNetwork(): Companion {
             return BrowserSettings
         }
 
+        /**
+         * Indicate the network condition.
+         *
+         * The system adjusts its behavior according to different network conditions
+         * to obtain the best data quality and data collection speed.
+         * */
         fun withWorseNetwork(): Companion {
             InteractSettings.worseNetSettings.toSystemProperties()
             return BrowserSettings
         }
 
+        /**
+         * Indicate the network condition.
+         *
+         * The system adjusts its behavior according to different network conditions
+         * to obtain the best data quality and data collection speed.
+         * */
         fun withWorstNetwork(): Companion {
             InteractSettings.worstNetSettings.toSystemProperties()
             return BrowserSettings
         }
 
+        /**
+         * Launch the browser in GUI mode.
+         * */
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
                 logger.info("GUI is not available")
@@ -157,6 +183,9 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Launch the browser in headless mode.
+         * */
         fun headless(): Companion {
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
@@ -168,6 +197,9 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Launch the browser in supervised mode.
+         * */
         fun supervised(): Companion {
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
 
@@ -175,7 +207,8 @@ open class BrowserSettings(
         }
 
         /**
-         * Single page application
+         * Tell the system to work with single page application.
+         * To collect SPA data, the execution needs to have no timeout limit.
          * */
         fun withSPA(): Companion {
             System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
@@ -183,34 +216,57 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Enable url blocking. If url blocking is enabled and the blocking rules are set,
+         * resources matching the rules will be blocked by the browser.
+         * */
         fun enableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
             return BrowserSettings
         }
 
+        /**
+         * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
+         * */
         fun disableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "false")
             return BrowserSettings
         }
 
-        fun enableUserAgentOverriding(): Companion {
-            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
-            return BrowserSettings
-        }
-
-        fun disableUserAgentOverriding(): Companion {
-            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
-            return BrowserSettings
-        }
-
-        // TODO: not implemented
+        /**
+         * Block all images.
+         * TODO: not implemented
+         * */
         fun blockImages(): Companion {
             // enableUrlBlocking()
             return BrowserSettings
         }
 
-        fun defaultUserDataDir() = AppPaths.CHROME_TMP_DIR
+        /**
+         * Enable user agent overriding.
+         *
+         * Inappropriate user agent overriding will be detected by the target website and
+         * the visits will be blocked.
+         * */
+        fun enableUserAgentOverriding(): Companion {
+            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
+            return BrowserSettings
+        }
 
+        /**
+         * Disable user agent overriding.
+         *
+         * Inappropriate user agent overriding will be detected by the target website and
+         * the visits will be blocked.
+         * */
+        fun disableUserAgentOverriding(): Companion {
+            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
+            return BrowserSettings
+        }
+
+        /**
+         * Generate a random user agent
+         * */
         fun randomUserAgent(): String {
             if (userAgents.isEmpty()) {
                 loadUserAgents()
@@ -223,7 +279,10 @@ open class BrowserSettings(
             return ""
         }
 
-        // also see https://github.com/arouel/uadetector
+        /**
+         * Generate a random user agent,
+         * also see <a href='https://github.com/arouel/uadetector'>uadetector</a>
+         * */
         fun loadUserAgents() {
             if (userAgents.isNotEmpty()) return
 
@@ -238,6 +297,9 @@ open class BrowserSettings(
             usa.toCollection(userAgents)
         }
 
+        /**
+         * Generate a user data directory.
+         * */
         fun generateUserDataDir(): Path {
             val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
@@ -245,9 +307,14 @@ open class BrowserSettings(
         }
     }
 
+    /**
+     * The supervisor process
+     * */
     val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
+    /**
+     * The supervisor process arguments
+     * */
     val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-
     /**
      * Chrome has to run without sandbox in a virtual machine
      * */
@@ -259,55 +326,67 @@ open class BrowserSettings(
      * */
     val noSandbox get() = forceNoSandbox || conf.getBoolean(BROWSER_LAUNCH_NO_SANDBOX, true)
 
+    /**
+     * The browser's display mode, can be one of:
+     * headless,
+     * GUI,
+     * supervised
+     * */
     val displayMode
         get() = if (isHeadlessOnly) DisplayMode.HEADLESS
         else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
 
+    /**
+     * If true, the browser will run in supervised mode.
+     * */
     val isSupervised get() = supervisorProcess != null && displayMode == DisplayMode.SUPERVISED
+    /**
+     * If true, the browser will run in headless mode.
+     * */
     val isHeadless get() = displayMode == DisplayMode.HEADLESS
+    /**
+     * If true, the browser will run in GUI mode as normal.
+     * */
     val isGUI get() = displayMode == DisplayMode.GUI
+    /**
+     * If true, the system will work with a single page application and the
+     * execution of fetches has no timeout limit.
+     * */
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
-
+    /**
+     * If true, the system injects scripts into the browser before loading a page.
+     * */
     val enableStartupScript get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    /**
+     * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
+     * */
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
     /**
      * If user agent overriding is enabled. User agent overriding disabled by default,
-     * since target websites can read the user agent and check specified browser features
-     * to determine if they match or not.
+     * since inappropriate user agent overriding will be detected by the target website and
+     * the visits will be blocked.
      * */
     val enableUserAgentOverriding get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
 
-    // We will wait for document ready manually using javascript
+    /**
+     * Page load strategy.
+     *
+     * The system checks document ready using javascript so just set the strategy to be none.
+     * */
     var pageLoadStrategy = "none"
 
-    // The javascript to execute by Web browsers
-    val propertyNames
-        get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
-
     /**
-     * The js to inject to the browser
+     * The javascript code to inject into the browser.
      * */
     var preloadJs = ""
 
+    /**
+     * The interaction settings. Interaction settings define how the system
+     * interacts with webpages to mimic the behavior of real people.
+     * */
     var interactSettings = InteractSettings.DEFAULT
 
-    init {
-        mapOf(
-            "propertyNames" to propertyNames,
-            "viewPortWidth" to screenViewport.width,
-            "viewPortHeight" to screenViewport.height,
-
-            "META_INFORMATION_ID" to AppConstants.PULSAR_META_INFORMATION_ID,
-            "SCRIPT_SECTION_ID" to AppConstants.PULSAR_SCRIPT_SECTION_ID,
-            "ATTR_HIDDEN" to AppConstants.PULSAR_ATTR_HIDDEN,
-            "ATTR_OVERFLOW_HIDDEN" to AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN,
-            "ATTR_OVERFLOW_VISIBLE" to AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE,
-            "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
-            "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
-        ).also { jsParameters.putAll(it) }
-
-        searchChromeBinaryPathAllAround()
-    }
+    val scriptLoader = ScriptLoader(confuser, jsParameters, conf)
 
     open fun formatViewPort(delimiter: String = ","): String {
         return "${screenViewport.width}$delimiter${screenViewport.height}"
@@ -318,86 +397,7 @@ open class BrowserSettings(
     }
 
     /**
-     * Make sure generatePreloadJs is thread safe
-     * */
-    @Synchronized
-    open fun generatePreloadJs(reload: Boolean = false): String {
-        if (reload) {
-            preloadJavaScripts.clear()
-            preloadJs = ""
-        }
-
-        if (preloadJs.isEmpty()) {
-            loadJs()
-        }
-
-        return preloadJs
-    }
-
-    open fun generatePredefinedJsConfig(): String {
-        // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
-        val configs = GsonBuilder().create().toJson(jsParameters.toMap())
-
-        // set predefined variables shared between javascript and jvm program
-        val configVar = confuse( "${scriptNamePrefix}CONFIGS")
-        return """
-            ;
-            let $configVar = $configs;
-        """.trimIndent()
-    }
-
-    private fun loadDefaultResource() {
-        preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
-            ResourceLoader.readAllLines(it).joinToString("\n") { confuse(it) }
-        }
-    }
-
-    /**
      * Confuse script
      * */
     open fun confuse(script: String): String = confuser.confuse(script)
-
-    private fun loadJs() {
-        val sb = StringBuilder()
-
-        val jsVariables = generatePredefinedJsConfig()
-        sb.appendLine(jsVariables).appendLine("\n\n\n")
-
-        loadExternalResource()
-        loadDefaultResource()
-        preloadJavaScripts.values.joinTo(sb, ";\n")
-
-        preloadJs = sb.toString()
-        reportPreloadJs(preloadJs)
-    }
-
-    private fun loadExternalResource() {
-        val dir = AppPaths.BROWSER_DATA_DIR.resolve("browser/js/preload")
-        if (Files.isDirectory(dir)) {
-            dir.listDirectoryEntries()
-                .filter { it.isReadable() }
-                .filter { it.toString().endsWith(".js") }
-                .associateTo(preloadJavaScripts) { it.toString() to Files.readString(it) }
-        }
-    }
-
-    private fun reportPreloadJs(script: String) {
-        val dir = AppPaths.REPORT_DIR.resolve("browser/js")
-        Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.gen.js"), script)
-        logger.info("Generated js: file://$report")
-    }
-
-    /**
-     * Find BROWSER_CHROME_PATH in all config files
-     * */
-    private fun searchChromeBinaryPathAllAround() {
-        val chromeBinaryPath = conf.get(BROWSER_CHROME_PATH)
-        if (chromeBinaryPath != null) {
-            val path = Paths.get(chromeBinaryPath).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
-            if (path != null) {
-                System.setProperty(BROWSER_CHROME_PATH, chromeBinaryPath)
-            }
-        }
-    }
 }

@@ -23,7 +23,7 @@ enum class EventType {
     tabStopped,
 }
 
-interface EventListener {
+interface EmulateEventListener {
 
     fun onWillNavigate(handler: (WebPage, WebDriver) -> Unit)
 
@@ -52,8 +52,8 @@ interface EventListener {
     suspend fun dispatchEvent(type: EventType, page: WebPage, driver: WebDriver)
 }
 
-abstract class AbstractEventListener: EventListener {
-    private val logger = getLogger(AbstractEventListener::class)
+abstract class AbstractEmulateEventListener: EmulateEventListener {
+    private val logger = getLogger(AbstractEmulateEventListener::class)
 
     protected val listeners = ListenerCollection<EventType>()
 

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.emulator
+package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.InteractSettings
@@ -19,21 +19,22 @@ import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
+import ai.platon.pulsar.protocol.browser.emulator.*
 import kotlinx.coroutines.delay
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class BrowserEmulatorBase(
+abstract class BrowserEmulatorImplBase(
     val driverSettings: WebDriverSettings,
     /**
      * Handle the response
      * */
     val responseHandler: BrowserResponseHandler,
     val immutableConfig: ImmutableConfig
-): AbstractEventListener(), Parameterized, AutoCloseable {
-    private val logger = getLogger(BrowserEmulatorBase::class)
+): AbstractEmulateEventListener(), Parameterized, AutoCloseable {
+    private val logger = getLogger(BrowserEmulatorImplBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
@@ -45,7 +46,6 @@ abstract class BrowserEmulatorBase(
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
 
     val meterNavigates by lazy { registry.meter(this, "navigates") }
-    val counterRequests by lazy { registry.counter(this, "requests") }
     val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
     val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     val counterCancels by lazy { registry.counter(this, "cancels") }
@@ -176,7 +176,7 @@ abstract class BrowserEmulatorBase(
         }
     }
 
-    fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
+    protected fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
             val settings = InteractSettings(task.volatileConfig)
             logger.trace(
@@ -251,16 +251,13 @@ abstract class BrowserEmulatorBase(
         }
     }
 
-    protected suspend fun evaluate(interactTask: InteractTask,
-                                   expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
-        expressions.asSequence()
-            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
-            .filterNot { it.startsWith("//") }
-            .filterNot { it.startsWith("#") }
-            .forEach { expression ->
-                evaluate(interactTask, expression, verbose)
-                delay(delayMillis)
-            }
+    protected suspend fun evaluate(
+        interactTask: InteractTask, expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false
+    ) {
+        expressions.forEach { expression ->
+            evaluate(interactTask, expression, verbose)
+            delay(delayMillis)
+        }
     }
 
     protected suspend fun evaluate(
@@ -281,7 +278,6 @@ abstract class BrowserEmulatorBase(
     protected suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
         if (!isActive) return null
 
-        counterRequests.inc()
         counterJsEvaluates.inc()
         checkState(interactTask.fetchTask, interactTask.driver)
         val result = interactTask.driver.evaluate(expression)

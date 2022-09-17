@@ -42,9 +42,6 @@ class ChromeDevtoolsDriver(
     val userAgent get() = BrowserSettings.randomUserAgent()
     val isSPA get() = browserSettings.isSPA
 
-    //    private val preloadJs by lazy { generatePreloadJs() }
-    private val preloadJs get() = generatePreloadJs()
-
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking
     private val _blockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
@@ -677,7 +674,7 @@ class ChromeDevtoolsDriver(
         runtimeAPI?.enable()
         networkAPI?.enable()
 
-        pageAPI?.addScriptToEvaluateOnNewDocument(preloadJs)
+        pageAPI?.addScriptToEvaluateOnNewDocument(getInjectJs())
 
         if (enableUrlBlocking && blockedURLs.isNotEmpty()) {
             networkAPI?.setBlockedURLs(blockedURLs)
@@ -771,8 +768,8 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun generatePreloadJs(): String {
-        val js = browserSettings.generatePreloadJs(false)
+    private fun getInjectJs(): String {
+        val js = browserSettings.scriptLoader.getInjectJs(false)
         return browserSettings.confuse(js)
     }
 

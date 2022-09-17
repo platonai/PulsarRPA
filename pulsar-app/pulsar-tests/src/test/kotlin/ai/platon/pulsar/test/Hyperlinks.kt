@@ -2,8 +2,12 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEvent
-import ai.platon.pulsar.crawl.*
+import ai.platon.pulsar.crawl.DefaultLoadEvent
+import ai.platon.pulsar.crawl.DefaultPageEvent
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
+import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
+import ai.platon.pulsar.crawl.event.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch

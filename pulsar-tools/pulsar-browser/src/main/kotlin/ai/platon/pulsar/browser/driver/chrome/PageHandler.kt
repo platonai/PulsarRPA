@@ -93,6 +93,12 @@ class PageHandler(
         return nodeId
     }
 
+    /**
+     * Evaluates expression on global object.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
     fun evaluate(expression: String): Any? {
         val evaluate = runtime?.evaluate(browserSettings.confuse(expression))
 

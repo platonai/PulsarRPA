@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -22,7 +22,7 @@ open class BrowserManager(
 
     val browsers: Map<String, Browser> = _browsers
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     fun launch(browserId: BrowserId, driverSettings: WebDriverSettings, capabilities: Map<String, Any>): Browser {
         val launcherOptions = LauncherOptions(driverSettings)
         if (driverSettings.isSupervised) {
@@ -48,7 +48,7 @@ open class BrowserManager(
         }
     }
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     @Synchronized
     private fun launchIfAbsent(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions

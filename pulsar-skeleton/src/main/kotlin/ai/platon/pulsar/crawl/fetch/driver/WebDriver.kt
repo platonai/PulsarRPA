@@ -24,9 +24,11 @@ import kotlin.random.Random
  * <p>
  *
  * Key methods:
- * [WebDriver.navigateTo], used to load a new web page.
- * [WebDriver.scrollDown], used to scroll down on a web page to load ajax content.
- * [WebDriver.pageSource], used to retrieve the source code of a webpage.
+ * [WebDriver.navigateTo], load a new web page.
+ * [WebDriver.scrollDown], scroll down on a web page to fully load the page,
+ * most modern webpages support lazy loading using ajax tech, where the web
+ * content only starts to load when it is scrolled into view.
+ * [WebDriver.pageSource], retrieve the source code of a webpage.
  */
 interface WebDriver: Closeable {
     enum class Status {
@@ -185,7 +187,7 @@ interface WebDriver: Closeable {
     suspend fun waitForSelector(selector: String): Long
     /**
      * Returns when element specified by selector satisfies {@code state} option.
-     * Returns the time remaining until timeout
+     * Returns the time remaining until timeout.
      * */
     @Throws(WebDriverException::class)
     suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long
@@ -199,11 +201,6 @@ interface WebDriver: Closeable {
     suspend fun waitForNavigation(timeout: Duration): Long
 
     @Throws(WebDriverException::class)
-    suspend fun clickablePoint(selector: String): PointD?
-    @Throws(WebDriverException::class)
-    suspend fun boundingBox(selector: String): RectD?
-
-    @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
     @Throws(WebDriverException::class)
     suspend fun isHidden(selector: String): Boolean = !isVisible(selector)
@@ -213,6 +210,7 @@ interface WebDriver: Closeable {
     suspend fun visible(selector: String): Boolean = isVisible(selector)
     @Throws(WebDriverException::class)
     suspend fun isChecked(selector: String): Boolean
+
     @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
     @Throws(WebDriverException::class)
@@ -227,6 +225,7 @@ interface WebDriver: Closeable {
     suspend fun check(selector: String)
     @Throws(WebDriverException::class)
     suspend fun uncheck(selector: String)
+
     @Throws(WebDriverException::class)
     suspend fun scrollTo(selector: String)
     @Throws(WebDriverException::class)
@@ -258,29 +257,58 @@ interface WebDriver: Closeable {
     suspend fun firstAttr(selector: String, attrName: String): String?
     @Throws(WebDriverException::class)
     suspend fun allAttrs(selector: String, attrName: String): List<String>
-
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     @Throws(WebDriverException::class)
     suspend fun evaluate(expression: String): Any?
-    @Throws(WebDriverException::class)
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * All possible exceptions are suppressed and do not throw.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
     suspend fun evaluateSilently(expression: String): Any?
-
-    @Throws(WebDriverException::class)
-    suspend fun newSession(): Connection
-    @Throws(WebDriverException::class)
-    suspend fun loadResource(url: String): Connection.Response?
 
     /**
      * This method scrolls element into view if needed, and then ake a screenshot of the element.
-     * If the element is detached from DOM, the method throws an error.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
+
+    /**
+     * Calculate the clickable point of an element located by [selector].
+     * If the element does not exist, or is not clickable, returns null.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun clickablePoint(selector: String): PointD?
+    /**
+     * Return the bounding box of an element located by [selector].
+     * If the element does not exist, returns null.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun boundingBox(selector: String): RectD?
+    /**
+     * Create a new Jsoup session with the last page's context, which means, the same
+     * headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun newSession(): Connection
+    /**
+     * Load url as a resource without browser rendering, with the last page's context,
+     * which means, the same headers and cookies.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun loadResource(url: String): Connection.Response?
     /**
      * Force the page pauses all navigations and PENDING resource fetches.
      * If the page loading stops, the user can still interact with the page,
