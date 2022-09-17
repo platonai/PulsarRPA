@@ -773,7 +773,7 @@ class ChromeDevtoolsDriver(
 
     private fun generatePreloadJs(): String {
         val js = browserSettings.generatePreloadJs(false)
-        return browserSettings.nameMangling(js)
+        return browserSettings.confuse(js)
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {

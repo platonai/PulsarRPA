@@ -1,14 +1,13 @@
 package ai.platon.pulsar.browser.common
 
+import ai.platon.pulsar.browser.common.BrowserSettings.Companion.screenViewport
 import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.scriptNamePrefix
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.google.gson.GsonBuilder
-import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,13 +28,26 @@ enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 /**
  * The emulation settings
  * */
-data class EmulateSettings(
+data class InteractSettings(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     // TODO: use fetch task timeout instead
     var pageLoadTimeout: Duration = Duration.ofMinutes(3)
 ) {
+    var delayPolicy: (String) -> Long = { type ->
+        when (type) {
+            "gap" -> 500L + Random.nextInt(500)
+            "click" -> 500L + Random.nextInt(1000)
+            "type" -> 50L + Random.nextInt(500)
+            "mouseWheel" -> 800L + Random.nextInt(500)
+            "dragAndDrop" -> 800L + Random.nextInt(500)
+            "waitForNavigation" -> 500L
+            "waitForSelector" -> 500L
+            else -> 100L + Random.nextInt(500)
+        }
+    }
+
     constructor(conf: ImmutableConfig) : this(
         scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
         scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
@@ -58,83 +70,23 @@ data class EmulateSettings(
     }
 
     companion object {
-        val DEFAULT = EmulateSettings()
+        val DEFAULT = InteractSettings()
 
-        var goodNetSettings = EmulateSettings()
+        var goodNetSettings = InteractSettings()
 
-        var worseNetSettings = EmulateSettings(
+        var worseNetSettings = InteractSettings(
             scrollCount = 10,
             scrollInterval = Duration.ofSeconds(1),
             scriptTimeout = Duration.ofMinutes(2),
             Duration.ofMinutes(3),
         )
 
-        var worstNetSettings = EmulateSettings(
+        var worstNetSettings = InteractSettings(
             scrollCount = 15,
             scrollInterval = Duration.ofSeconds(3),
             scriptTimeout = Duration.ofMinutes(3),
             Duration.ofMinutes(4),
         )
-    }
-}
-
-/**
- * The block rules of urls and resources
- * */
-open class BlockRule {
-
-    open val blockingResourceTypes: MutableList<ResourceType>
-        get() = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
-
-    /**
-     * amazon.com note:
-     * The following have to pass, or the site refuses to serve:
-     * .woff,
-     * .mp4
-     * */
-    open val mustPassUrls: MutableList<String>
-        get() = mutableListOf()
-
-    /**
-     * Blocking urls patten using widcards
-     * */
-    open val blockingUrls: MutableList<String>
-        get() = listOf(
-            "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
-            "*.woff", "*.woff2",
-            "*.mp4", "*.svg",
-            "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
-            "https://img*"
-        ).filterNot { it in mustPassUrls }.toMutableList()
-
-    open val mustPassUrlPatterns: MutableList<Regex>
-        get() = listOf(
-            "about:blank",
-            "data:.+",
-        ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() }).toMutableList()
-
-    open val blockingUrlPatterns: MutableList<Regex>
-        get() = blockingUrls.map { Wildchar(it).toRegex() }.toMutableList()
-}
-
-class ScriptConfuser {
-    companion object {
-        val scriptNamePrefix = "__pulsar_"
-        /**
-         * The name cipher for all injected scripts.
-         * All names in injected scripts must not be detected by javascript,
-         * the name mangling technology helps to achieve this purpose.
-         * */
-        val CIPHER = RandomStringUtils.randomAlphabetic(6)
-        val DEFAULT_NAME_MANGLER: (String) -> String = { script ->
-            script.replace(scriptNamePrefix, CIPHER)
-        }
-    }
-
-    var nameMangler: (String) -> String = DEFAULT_NAME_MANGLER
-
-    fun reset() {
-        nameMangler = DEFAULT_NAME_MANGLER
     }
 }
 
@@ -147,9 +99,9 @@ open class BrowserSettings(
         private val logger = getLogger(BrowserSettings::class)
 
         // The viewport size for browser to rendering all webpages
-        @Deprecated("Use screenViewport instead")
+        @Deprecated("Use screenViewport instead", ReplaceWith("screenViewport"))
         var viewPort = AppConstants.DEFAULT_VIEW_PORT
-        val screenViewport get() = viewPort
+        var screenViewport = AppConstants.DEFAULT_VIEW_PORT
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
         // Available user agents
@@ -166,7 +118,7 @@ open class BrowserSettings(
         """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
         private val preloadJavaScripts: MutableMap<String, String> = LinkedHashMap()
 
-        val confuser = ScriptConfuser()
+        private val confuser = ScriptConfuser()
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
@@ -180,12 +132,12 @@ open class BrowserSettings(
         }
 
         fun withWorseNetwork(): Companion {
-            EmulateSettings.worseNetSettings.toSystemProperties()
+            InteractSettings.worseNetSettings.toSystemProperties()
             return BrowserSettings
         }
 
         fun withWorstNetwork(): Companion {
-            EmulateSettings.worstNetSettings.toSystemProperties()
+            InteractSettings.worstNetSettings.toSystemProperties()
             return BrowserSettings
         }
 
@@ -286,15 +238,6 @@ open class BrowserSettings(
             usa.toCollection(userAgents)
         }
 
-        fun buildChromeUserAgent(
-            mozilla: String = "5.0",
-            appleWebKit: String = "537.36",
-            chrome: String = "70.0.3538.77",
-            safari: String = "537.36"
-        ): String {
-            return "Mozilla/$mozilla (X11; Linux x86_64) AppleWebKit/$appleWebKit (KHTML, like Gecko) Chrome/$chrome Safari/$safari"
-        }
-
         fun generateUserDataDir(): Path {
             val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
@@ -331,11 +274,6 @@ open class BrowserSettings(
      * If user agent overriding is enabled. User agent overriding disabled by default,
      * since target websites can read the user agent and check specified browser features
      * to determine if they match or not.
-     *
-     * Code to read user agent:
-     * <code>
-     *     let userAgent = navigator.userAgent;
-     * </code>
      * */
     val enableUserAgentOverriding get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
 
@@ -346,18 +284,18 @@ open class BrowserSettings(
     val propertyNames
         get() = conf.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
-    var clientJsVersion = "0.2.3"
-
     /**
      * The js to inject to the browser
      * */
     var preloadJs = ""
 
+    var interactSettings = InteractSettings.DEFAULT
+
     init {
         mapOf(
             "propertyNames" to propertyNames,
-            "viewPortWidth" to viewPort.width,
-            "viewPortHeight" to viewPort.height,
+            "viewPortWidth" to screenViewport.width,
+            "viewPortHeight" to screenViewport.height,
 
             "META_INFORMATION_ID" to AppConstants.PULSAR_META_INFORMATION_ID,
             "SCRIPT_SECTION_ID" to AppConstants.PULSAR_SCRIPT_SECTION_ID,
@@ -372,7 +310,7 @@ open class BrowserSettings(
     }
 
     open fun formatViewPort(delimiter: String = ","): String {
-        return "${viewPort.width}$delimiter${viewPort.height}"
+        return "${screenViewport.width}$delimiter${screenViewport.height}"
     }
 
     open fun randomUserAgentOrNull(): String? {
@@ -401,7 +339,7 @@ open class BrowserSettings(
         val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
-        val configVar = nameMangling( "${scriptNamePrefix}CONFIGS")
+        val configVar = confuse( "${scriptNamePrefix}CONFIGS")
         return """
             ;
             let $configVar = $configs;
@@ -410,14 +348,14 @@ open class BrowserSettings(
 
     private fun loadDefaultResource() {
         preloadJavaScriptResources.associateWithTo(preloadJavaScripts) {
-            ResourceLoader.readAllLines(it).joinToString("\n") { nameMangling(it) }
+            ResourceLoader.readAllLines(it).joinToString("\n") { confuse(it) }
         }
     }
 
     /**
-     * A simple name mangling policy
+     * Confuse script
      * */
-    open fun nameMangling(script: String): String = confuser.nameMangler(script)
+    open fun confuse(script: String): String = confuser.confuse(script)
 
     private fun loadJs() {
         val sb = StringBuilder()
@@ -446,7 +384,7 @@ open class BrowserSettings(
     private fun reportPreloadJs(script: String) {
         val dir = AppPaths.REPORT_DIR.resolve("browser/js")
         Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.js"), script)
+        val report = Files.writeString(dir.resolve("preload.gen.js"), script)
         logger.info("Generated js: file://$report")
     }
 

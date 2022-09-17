@@ -94,7 +94,7 @@ class PageHandler(
     }
 
     fun evaluate(expression: String): Any? {
-        val evaluate = runtime?.evaluate(browserSettings.nameMangling(expression))
+        val evaluate = runtime?.evaluate(browserSettings.confuse(expression))
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {

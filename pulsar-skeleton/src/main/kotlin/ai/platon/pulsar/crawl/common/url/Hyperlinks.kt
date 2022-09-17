@@ -6,9 +6,9 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.DefaultPageEvent
-import ai.platon.pulsar.crawl.HTMLDocumentHandler
+import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.WebPageHandler
+import ai.platon.pulsar.crawl.event.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document

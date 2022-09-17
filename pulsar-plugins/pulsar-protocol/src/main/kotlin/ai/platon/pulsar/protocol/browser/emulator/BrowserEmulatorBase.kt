@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.common.EmulateSettings
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -51,12 +51,7 @@ abstract class BrowserEmulatorBase(
     val counterCancels by lazy { registry.counter(this, "cancels") }
 
     override fun getParams(): Params {
-        val emulateSettings = EmulateSettings(immutableConfig)
         return Params.of(
-            "pageLoadTimeout", emulateSettings.pageLoadTimeout,
-            "scriptTimeout", emulateSettings.scriptTimeout,
-            "scrollDownCount", emulateSettings.scrollCount,
-            "scrollInterval", emulateSettings.scrollInterval,
             "enableStartupScript", driverSettings.enableStartupScript
         )
     }
@@ -183,14 +178,14 @@ abstract class BrowserEmulatorBase(
 
     fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
-            val emulateSettings = EmulateSettings(task.volatileConfig)
+            val settings = InteractSettings(task.volatileConfig)
             logger.trace(
                 "Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
                 task.batchTaskId, task.batchSize, task.id,
                 Thread.currentThread().id,
                 if (task.nRetries <= 1) "" else "(${task.nRetries})",
                 task.page.configuredUrl,
-                emulateSettings.pageLoadTimeout, emulateSettings.scriptTimeout, emulateSettings.scrollInterval
+                settings.pageLoadTimeout, settings.scriptTimeout, settings.scrollInterval
             )
         }
     }

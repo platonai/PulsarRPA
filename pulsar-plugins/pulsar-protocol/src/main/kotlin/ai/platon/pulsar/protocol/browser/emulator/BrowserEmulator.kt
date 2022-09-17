@@ -273,10 +273,9 @@ open class BrowserEmulator(
 
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
         val page = task.fetchTask.page
-        val event = page.simulateEvent
         val driver = task.driver
 
-        tracer?.trace("{}", task.emulateSettings)
+        tracer?.trace("{}", task.interactSettings)
 
         dispatchEvent(EventType.willCheckDOMState, page, driver)
 //        notify("onWillCheckDOMState") { event?.onWillCheckDOMState?.invokeDeferred(page, driver) }
@@ -309,7 +308,7 @@ open class BrowserEmulator(
     @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun jsCheckDOMState(interactTask: InteractTask, result: InteractResult) {
         var status = ProtocolStatus.STATUS_SUCCESS
-        val scriptTimeout = interactTask.emulateSettings.scriptTimeout
+        val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.fetchTask
 
         // make sure the document is ready
@@ -362,9 +361,10 @@ open class BrowserEmulator(
     }
 
     protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
+        val interactSettings = interactTask.interactSettings
         val random = ThreadLocalRandom.current().nextInt(3)
-        val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
-        val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
+        val scrollDownCount = (interactSettings.scrollCount + random - 1).coerceAtLeast(1)
+        val scrollInterval = interactSettings.scrollInterval.toMillis()
 
         val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4)
             .map { "__pulsar_utils__.scrollToMiddle($it)" }
@@ -385,7 +385,7 @@ open class BrowserEmulator(
         val expressions = requiredElements.map { "!!document.querySelector('$it')" }
         var scrollCount = 0
 
-        val delayMillis = interactTask.emulateSettings.scrollInterval.toMillis()
+        val delayMillis = interactTask.interactSettings.scrollInterval.toMillis()
         var exists: Any? = null
         while (scrollCount-- > 0 && (exists == null || exists == false)) {
             counterJsWaits.inc()

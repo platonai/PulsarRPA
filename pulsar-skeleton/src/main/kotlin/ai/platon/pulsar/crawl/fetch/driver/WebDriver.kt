@@ -23,7 +23,10 @@ import kotlin.random.Random
  * </ul>
  * <p>
  *
- * Key methods are [WebDriver.navigateTo], which is used to load a new web page.
+ * Key methods:
+ * [WebDriver.navigateTo], used to load a new web page.
+ * [WebDriver.scrollDown], used to scroll down on a web page to load ajax content.
+ * [WebDriver.pageSource], used to retrieve the source code of a webpage.
  */
 interface WebDriver: Closeable {
     enum class Status {

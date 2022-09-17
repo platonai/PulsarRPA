@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.common.EmulateSettings
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -37,14 +37,14 @@ class InteractResult(
 
 class InteractTask(
     val fetchTask: FetchTask,
-    val driverConfig: BrowserSettings,
+    val browserSettings: BrowserSettings,
     val driver: WebDriver
 ) {
     val url get() = fetchTask.url
     val isCanceled get() = fetchTask.isCanceled
 
     val conf get() = fetchTask.volatileConfig
-    val emulateSettings = EmulateSettings(conf)
+    val interactSettings get() = browserSettings.interactSettings
 }
 
 class BrowserStatus(

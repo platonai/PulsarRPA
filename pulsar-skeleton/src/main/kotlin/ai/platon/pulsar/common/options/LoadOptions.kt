@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.browser.common.EmulateSettings
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
@@ -298,28 +298,28 @@ open class LoadOptions(
      * */
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page being opened in a browser")
-    var scrollCount = EmulateSettings.DEFAULT.scrollCount
+    var scrollCount = InteractSettings.DEFAULT.scrollCount
 
     /**
      * The interval to scroll down after a page being opened in a browser.
      * */
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page being opened in a browser")
-    var scrollInterval = EmulateSettings.DEFAULT.scrollInterval
+    var scrollInterval = InteractSettings.DEFAULT.scrollInterval
 
     /**
      * The maximum time to perform javascript injected into the browser.
      * */
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into the browser")
-    var scriptTimeout = EmulateSettings.DEFAULT.scriptTimeout
+    var scriptTimeout = InteractSettings.DEFAULT.scriptTimeout
 
     /**
      * The maximum time to wait for a page to finish.
      * */
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to finish")
-    var pageLoadTimeout = EmulateSettings.DEFAULT.pageLoadTimeout
+    var pageLoadTimeout = InteractSettings.DEFAULT.pageLoadTimeout
 
     /**
      * The browser used to visit the item pages.
@@ -711,18 +711,18 @@ open class LoadOptions(
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
-        val emulateSettings = when (netCondition) {
-            Condition.WORSE -> EmulateSettings.worseNetSettings
-            Condition.WORST -> EmulateSettings.worstNetSettings
-            else -> EmulateSettings.goodNetSettings
+        val interactSettings = when (netCondition) {
+            Condition.WORSE -> InteractSettings.worseNetSettings
+            Condition.WORST -> InteractSettings.worstNetSettings
+            else -> InteractSettings.goodNetSettings
         }.copy()
 
-        if (!isDefault("scrollCount")) emulateSettings.scrollCount = scrollCount
-        if (!isDefault("scrollInterval")) emulateSettings.scrollInterval = scrollInterval
-        if (!isDefault("scriptTimeout")) emulateSettings.scriptTimeout = scriptTimeout
-        if (!isDefault("pageLoadTimeout")) emulateSettings.pageLoadTimeout = pageLoadTimeout
+        if (!isDefault("scrollCount")) interactSettings.scrollCount = scrollCount
+        if (!isDefault("scrollInterval")) interactSettings.scrollInterval = scrollInterval
+        if (!isDefault("scriptTimeout")) interactSettings.scriptTimeout = scriptTimeout
+        if (!isDefault("pageLoadTimeout")) interactSettings.pageLoadTimeout = pageLoadTimeout
 
-        emulateSettings.overrideConfiguration(conf)
+        interactSettings.overrideConfiguration(conf)
 
         event?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)

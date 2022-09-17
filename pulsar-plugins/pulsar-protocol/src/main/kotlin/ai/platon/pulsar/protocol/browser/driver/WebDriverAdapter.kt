@@ -87,9 +87,6 @@ class WebDriverAdapter(
     override suspend fun exists(selector: String) = driverOrNull?.exists(selector) ?: false
 
     @Throws(WebDriverException::class)
-    override suspend fun isEnabled(selector: String) = driverOrNull?.isEnabled(selector) ?: false
-
-    @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String) = driverOrNull?.isVisible(selector) ?: false
 
     @Throws(WebDriverException::class)

@@ -1,10 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.browser.common.EmulateSettings
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.event.ListenerCollection
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -84,13 +83,14 @@ open class BrowserResponseHandler(
             val elapsed = Duration.between(task.startTime, Instant.now())
             val length = task.pageSource.length
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
-            val emulateSettings = EmulateSettings(task.task.volatileConfig)
+
+            val settings = InteractSettings(task.task.volatileConfig)
             logger.info(
                 "Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                 task.pageDatum.protocolStatus.minorName,
                 elapsed,
                 Strings.readableBytes(length),
-                emulateSettings.pageLoadTimeout, emulateSettings.scriptTimeout, emulateSettings.scrollInterval,
+                settings.pageLoadTimeout, settings.scriptTimeout, settings.scrollInterval,
                 link)
         }
     }
