@@ -3,15 +3,15 @@ package ai.platon.pulsar.examples.sites.spa.wemix
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.event.AbstractWebPageWebDriverHandler
+import ai.platon.pulsar.crawl.event.WebPageWebDriverEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
-private class RPAPaginateHandler(val initPageNumber: Int) : AbstractWebPageWebDriverHandler() {
+private class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEventHandler() {
 
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         driver.waitForSelector("#tab-transactions")
         driver.click("#tab-transactions")
 

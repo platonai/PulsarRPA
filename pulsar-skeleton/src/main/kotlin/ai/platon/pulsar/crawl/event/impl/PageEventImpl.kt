@@ -5,10 +5,8 @@ import ai.platon.pulsar.crawl.LoadEvent
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.SimulateEvent
 import ai.platon.pulsar.crawl.event.*
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.rpa.BrowseRPA
 import ai.platon.pulsar.crawl.fetch.driver.rpa.DefaultBrowseRPA
-import ai.platon.pulsar.persist.WebPage
 
 abstract class AbstractLoadEvent(
     override val onFilter: UrlFilterEventHandler = UrlFilterEventHandler(),

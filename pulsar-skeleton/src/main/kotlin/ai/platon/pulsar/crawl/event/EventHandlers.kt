@@ -291,7 +291,7 @@ abstract class PrivacyContextHandler: (PrivacyContext) -> Any?, AbstractHandler(
 
 abstract class WebDriverHandler: (WebDriver) -> Any?, AbstractHandler() {
     abstract override operator fun invoke(driver: WebDriver): Any?
-    abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any?
+    abstract suspend fun invoke(page: WebPage, driver: WebDriver): Any?
 }
 
 abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractHandler() {

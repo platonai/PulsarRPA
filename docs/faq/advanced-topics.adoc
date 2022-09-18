@@ -76,8 +76,8 @@ session.loadResource(url)
 === RPA mode
 ```kotlin
 
-class RPAPaginateHandler(val initPageNumber: Int) : AbstractWebPageWebDriverHandler() {
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEventHandler() {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         // ...
         // extract the text
         val text = driver.firstText(selector)

@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.event.AbstractWebPageWebDriverHandler
+import ai.platon.pulsar.crawl.event.WebPageWebDriverEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.session.PulsarSession
@@ -15,10 +15,10 @@ import java.nio.file.StandardOpenOption
 private class AjaxFetchHandler(
     val initPageNumber: Int,
     val exportDirectory: Path
-): AbstractWebPageWebDriverHandler() {
+): WebPageWebDriverEventHandler() {
     private val logger = getLogger(this)
 
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         val session = driver.newSession()
 
         val u = "https://scopi.wemixnetwork.com/api/v1/chain/1003/account/0xcb7615cb4322cddc518f670b4da042dbefc69500/tx"

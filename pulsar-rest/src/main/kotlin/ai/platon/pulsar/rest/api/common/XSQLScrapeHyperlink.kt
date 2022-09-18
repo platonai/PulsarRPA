@@ -4,8 +4,8 @@ import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEvent
-import ai.platon.pulsar.crawl.DefaultLoadEvent
-import ai.platon.pulsar.crawl.DefaultPageEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultLoadEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink

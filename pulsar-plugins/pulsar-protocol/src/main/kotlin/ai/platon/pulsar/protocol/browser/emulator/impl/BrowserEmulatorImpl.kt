@@ -167,7 +167,7 @@ open class BrowserEmulatorImpl(
             dispatchEvent(EventType.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
 //            val event = page.simulateEvent
-//            notify("onWillStopTab") { event?.onWillStopTab?.invokeDeferred(page, driver) }
+//            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
 
             /**
              * Force the page stop all navigations and releases all resources.
@@ -177,7 +177,7 @@ open class BrowserEmulatorImpl(
             driver.stop()
 
             dispatchEvent(EventType.tabStopped, page, driver)
-//            notify("onTabStopped") { event?.onTabStopped?.invokeDeferred(page, driver) }
+//            notify("onTabStopped") { event?.onTabStopped?.invoke(page, driver) }
         } catch (e: NavigateTaskCancellationException) {
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
                 page.id, task.id, task.batchId)
@@ -228,7 +228,7 @@ open class BrowserEmulatorImpl(
         dispatchEvent(EventType.willNavigate, page, driver)
 //        listeners.notify(EventType.willNavigate, page, driver)
 //        val event = page.simulateEvent
-//        notify("onWillNavigate") { event?.onWillNavigate?.invokeDeferred(page, driver) }
+//        notify("onWillNavigate") { event?.onWillNavigate?.invoke(page, driver) }
 
         // href has the higher priority to locate a resource
         require(task.url == page.url)
@@ -240,7 +240,7 @@ open class BrowserEmulatorImpl(
             driver.navigateTo(navigateEntry)
         } finally {
             dispatchEvent(EventType.navigated, page, driver)
-//            notify("onNavigated") { event?.onNavigated?.invokeDeferred(page, driver) }
+//            notify("onNavigated") { event?.onNavigated?.invoke(page, driver) }
         }
 
         if (!driver.supportJavascript) {
@@ -250,11 +250,11 @@ open class BrowserEmulatorImpl(
         val interactTask = InteractTask(task, settings, driver)
         return if (settings.enableStartupScript) {
             dispatchEvent(EventType.willInteract, page, driver)
-//            notify("onWillInteract") { event?.onWillInteract?.invokeDeferred(page, driver) }
+//            notify("onWillInteract") { event?.onWillInteract?.invoke(page, driver) }
 
             interact(interactTask).also {
                 dispatchEvent(EventType.didInteract, page, driver)
-//                notify("onDidInteract") { event?.onDidInteract?.invokeDeferred(page, driver) }
+//                notify("onDidInteract") { event?.onDidInteract?.invoke(page, driver) }
             }
         } else {
             interactNoJsInvaded(interactTask)
@@ -285,7 +285,7 @@ open class BrowserEmulatorImpl(
         tracer?.trace("{}", task.interactSettings)
 
         dispatchEvent(EventType.willCheckDOMState, page, driver)
-//        notify("onWillCheckDOMState") { event?.onWillCheckDOMState?.invokeDeferred(page, driver) }
+//        notify("onWillCheckDOMState") { event?.onWillCheckDOMState?.invoke(page, driver) }
 
         jsCheckDOMState(task, result)
         if (result.protocolStatus.isSuccess) {
@@ -293,7 +293,7 @@ open class BrowserEmulatorImpl(
         }
 
         dispatchEvent(EventType.didDOMStateCheck, page, driver)
-//        notify("onDOMStateChecked") { event?.onDOMStateChecked?.invokeDeferred(page, driver) }
+//        notify("onDOMStateChecked") { event?.onDOMStateChecked?.invoke(page, driver) }
 
         if (result.state.isContinue) {
             jsScrollDown(task, result)
@@ -301,12 +301,12 @@ open class BrowserEmulatorImpl(
 
         if (result.state.isContinue) {
             dispatchEvent(EventType.willComputeFeature, page, driver)
-//            notify("onWillComputeFeature") { event?.onWillComputeFeature?.invokeDeferred(page, driver) }
+//            notify("onWillComputeFeature") { event?.onWillComputeFeature?.invoke(page, driver) }
 
             jsComputeFeature(task, result)
 
             dispatchEvent(EventType.featureComputed, page, driver)
-//            notify("onFeatureComputed") { event?.onFeatureComputed?.invokeDeferred(page, driver) }
+//            notify("onFeatureComputed") { event?.onFeatureComputed?.invoke(page, driver) }
         }
 
         return result

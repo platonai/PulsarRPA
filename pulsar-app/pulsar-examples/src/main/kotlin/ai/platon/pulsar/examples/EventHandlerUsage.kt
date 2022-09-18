@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPageEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -88,7 +88,7 @@ class PrintFlowEvent: DefaultPageEvent() {
             }
             onWillLoad.addLast { url: UrlAware ->
                 println("$seq. onBeforeLoad")
-                null
+                url
             }
             onLoaded.addLast { url, page ->
                 println("$seq. onAfterLoad")
