@@ -1,9 +1,6 @@
-package ai.platon.pulsar.crawl.event.impl
+package ai.platon.pulsar.crawl.event
 
-import ai.platon.pulsar.crawl.CrawlEvent
-import ai.platon.pulsar.crawl.LoadEvent
-import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.SimulateEvent
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.crawl.event.*
 import ai.platon.pulsar.crawl.fetch.driver.rpa.BrowseRPA
 import ai.platon.pulsar.crawl.fetch.driver.rpa.DefaultBrowseRPA
@@ -45,14 +42,6 @@ abstract class AbstractLoadEvent(
     }
 }
 
-open class DefaultLoadEvent(
-    val rpa: BrowseRPA = DefaultBrowseRPA()
-): AbstractLoadEvent() {
-    override val onBrowserLaunched = WebPageWebDriverEventHandler().also {
-        it.addLast { page, driver -> rpa.warnUpBrowser(page, driver) }
-    }
-}
-
 abstract class AbstractCrawlEvent(
     override val onFilter: UrlAwareEventFilter = UrlAwareEventFilter(),
     override val onNormalize: UrlAwareEventFilter = UrlAwareEventFilter(),
@@ -69,8 +58,6 @@ abstract class AbstractCrawlEvent(
         return this
     }
 }
-
-class DefaultCrawlEvent: AbstractCrawlEvent()
 
 abstract class AbstractSimulateEvent(
     override val onWillFetch: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
@@ -113,34 +100,6 @@ abstract class AbstractSimulateEvent(
     }
 }
 
-class DefaultSimulateEvent(
-    val rpa: BrowseRPA = DefaultBrowseRPA()
-): AbstractSimulateEvent() {
-
-    override val onWillFetch = WebPageWebDriverEventHandler().also {
-        it.addLast { page, driver ->
-            rpa.waitForReferrer(page, driver)
-            rpa.waitForPreviousPage(page, driver)
-        }
-    }
-}
-
-/**
- * @see [SimulateEvent]
- *
- * About emulate, simulate, mimic and imitate:
- * 1. Emulate is usually used with someone as an object.
- * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
- * 3. Mimic, a person who imitate mannerisms of others.
- * 4. Imitate is the most general of the four words, can be used in all the three senses.
- * */
-interface EmulateEvent {
-    val onSniffPageCategory: PageDatumEventHandler
-    val onCheckHtmlIntegrity: PageDatumEventHandler
-
-    fun combine(other: EmulateEvent): EmulateEvent
-}
-
 abstract class AbstractEmulateEvent(
     override val onSniffPageCategory: PageDatumEventHandler = PageDatumEventHandler(),
     override val onCheckHtmlIntegrity: PageDatumEventHandler = PageDatumEventHandler(),
@@ -150,11 +109,6 @@ abstract class AbstractEmulateEvent(
         onCheckHtmlIntegrity.addLast(other.onCheckHtmlIntegrity)
         return this
     }
-}
-
-class DefaultEmulateEvent: AbstractEmulateEvent() {
-    override val onSniffPageCategory: PageDatumEventHandler = PageDatumEventHandler()
-    override val onCheckHtmlIntegrity: PageDatumEventHandler = PageDatumEventHandler()
 }
 
 abstract class AbstractPageEvent(
@@ -170,9 +124,3 @@ abstract class AbstractPageEvent(
         return this
     }
 }
-
-open class DefaultPageEvent(
-    loadEvent: LoadEvent = DefaultLoadEvent(),
-    simulateEvent: SimulateEvent = DefaultSimulateEvent(),
-    crawlEvent: CrawlEvent = DefaultCrawlEvent()
-): AbstractPageEvent(loadEvent, simulateEvent, crawlEvent)

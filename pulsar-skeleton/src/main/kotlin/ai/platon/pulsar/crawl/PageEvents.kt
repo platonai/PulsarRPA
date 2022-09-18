@@ -80,6 +80,22 @@ interface SimulateEvent {
 }
 
 /**
+ * @see [SimulateEvent]
+ *
+ * About emulate, simulate, mimic and imitate:
+ * 1. Emulate is usually used with someone as an object.
+ * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
+ * 3. Mimic, a person who imitate mannerisms of others.
+ * 4. Imitate is the most general of the four words, can be used in all the three senses.
+ * */
+interface EmulateEvent {
+    val onSniffPageCategory: PageDatumEventHandler
+    val onCheckHtmlIntegrity: PageDatumEventHandler
+
+    fun combine(other: EmulateEvent): EmulateEvent
+}
+
+/**
  * Manage all events of a web page life cycle. The page events are visible to the end users.
  * */
 interface PageEvent {

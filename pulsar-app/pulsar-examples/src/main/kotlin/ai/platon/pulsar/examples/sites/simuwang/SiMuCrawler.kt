@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.crawl.event.CloseMaskLayerHandler
-import ai.platon.pulsar.crawl.event.LoginHandler
+import ai.platon.pulsar.crawl.event.impl.CloseMaskLayerHandler
+import ai.platon.pulsar.crawl.event.impl.LoginHandler
 import ai.platon.pulsar.ql.context.SQLContexts
 
 class SiMuLoginHandler(
