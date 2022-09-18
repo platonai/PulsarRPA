@@ -10,7 +10,7 @@ import ai.platon.pulsar.persist.WebDb
 import org.springframework.context.support.StaticApplicationContext
 
 class StaticPulsarContext(
-    override val applicationContext: StaticApplicationContext = StaticApplicationContext()
+    applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : BasicPulsarContext(applicationContext) {
 
     /**

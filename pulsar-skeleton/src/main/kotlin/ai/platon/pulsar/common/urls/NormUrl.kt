@@ -27,10 +27,10 @@ open class NormUrl constructor(
     constructor(spec: String, options: LoadOptions, hrefSpec: String? = null, detail: UrlAware? = null):
             this(URL(spec), options, hrefSpec?.let { URL(hrefSpec) }, detail)
 
-    val spec = url.toString()
-    val hrefSpec = href?.toString()
-    val args = options.toString()
-    val configuredUrl = "$spec $args".trim()
+    val spec get() = url.toString()
+    val hrefSpec get() = href?.toString()
+    val args get() = options.toString()
+    val configuredUrl get() = "$spec $args".trim()
 
     val isNil get() = this == NIL
     val isNotNil get() = !isNil

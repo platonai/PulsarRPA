@@ -24,7 +24,6 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
-import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
@@ -78,9 +77,9 @@ class PrimerHtmlParser(
 
             parseContext.parseResult
         } catch (e: MalformedURLException) {
-            failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
+            ParseResult.failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
         } catch (e: Exception) {
-            failed(ParseStatusCodes.FAILED_INVALID_FORMAT, e.message)
+            ParseResult.failed(ParseStatusCodes.FAILED_INVALID_FORMAT, e.message)
         }
     }
 

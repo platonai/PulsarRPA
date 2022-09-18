@@ -310,13 +310,29 @@ abstract class PageDatumHandler: (String, PageDatum) -> Any?, AbstractHandler() 
 
 open class VoidEventHandler: AbstractCombinedHandler0<Unit>()
 
-open class UrlAwareEventHandler: AbstractCombinedHandler1<UrlAware, UrlAware>()
+open class UrlAwareEventHandler: AbstractCombinedHandler1<UrlAware, UrlAware>() {
+    override fun invoke(url: UrlAware): UrlAware? {
+        return if (isEmpty) url else super.invoke(url)
+    }
+}
 
-open class UrlAwareEventFilter: AbstractCombinedHandler1<UrlAware, UrlAware>()
+open class UrlAwareEventFilter: AbstractCombinedHandler1<UrlAware, UrlAware>() {
+    override fun invoke(url: UrlAware): UrlAware? {
+        return if (isEmpty) url else super.invoke(url)
+    }
+}
 
-open class UrlFilterEventHandler: AbstractCombinedHandler1<String, String?>()
+open class UrlFilterEventHandler: AbstractCombinedHandler1<String, String?>() {
+    override fun invoke(url: String): String? {
+        return if (isEmpty) url else super.invoke(url)
+    }
+}
 
-open class UrlEventHandler: AbstractCombinedHandler1<String, String?>()
+open class UrlEventHandler: AbstractCombinedHandler1<String, String?>() {
+    override fun invoke(url: String): String? {
+        return if (isEmpty) url else super.invoke(url)
+    }
+}
 
 open class WebPageEventHandler: AbstractCombinedHandler1<WebPage, Any?>()
 

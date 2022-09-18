@@ -28,8 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * The abstract SQL context, every X-SQL staff should be within the SQL context
  */
 abstract class AbstractSQLContext constructor(
-    override val applicationContext: AbstractApplicationContext,
-    override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment(),
+    applicationContext: AbstractApplicationContext,
+    pulsarEnvironment: PulsarEnvironment = PulsarEnvironment(),
 ) : AbstractPulsarContext(applicationContext, pulsarEnvironment), SQLContext {
 
     private val logger = LoggerFactory.getLogger(AbstractSQLContext::class.java)

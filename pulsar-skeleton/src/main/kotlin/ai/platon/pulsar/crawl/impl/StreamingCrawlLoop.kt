@@ -78,7 +78,7 @@ open class StreamingCrawlLoop(
     }
 
     private fun start0() {
-        logger.info("Registered {} hyperlink collectors | #{} @{}", urlFeeder.collectors.size, id, hashCode())
+        logger.info("Registered {} link collectors | loop#{} @{}", urlFeeder.collectors.size, id, hashCode())
 
         /**
          * The pulsar session

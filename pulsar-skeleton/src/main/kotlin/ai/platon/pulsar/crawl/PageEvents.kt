@@ -2,6 +2,22 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.crawl.event.*
 
+interface CrawlEvent {
+    @Deprecated("No need to filter in a crawler")
+    val onFilter: UrlAwareEventFilter
+
+    @Deprecated("No need to normalize in a crawler")
+    val onNormalize: UrlAwareEventFilter
+
+    val onWillLoad: UrlAwareEventHandler
+
+    val onLoad: UrlAwareEventHandler
+
+    val onLoaded: UrlAwareWebPageEventHandler
+
+    fun combine(other: CrawlEvent): CrawlEvent
+}
+
 interface LoadEvent {
     val onFilter: UrlFilterEventHandler
 
@@ -32,20 +48,6 @@ interface LoadEvent {
     val onLoaded: WebPageEventHandler
 
     fun combine(other: LoadEvent): LoadEvent
-}
-
-interface CrawlEvent {
-    val onFilter: UrlAwareEventFilter
-
-    val onNormalize: UrlAwareEventFilter
-
-    val onWillLoad: UrlAwareEventHandler
-
-    val onLoad: UrlAwareEventHandler
-
-    val onLoaded: UrlAwareWebPageEventHandler
-
-    fun combine(other: CrawlEvent): CrawlEvent
 }
 
 /**

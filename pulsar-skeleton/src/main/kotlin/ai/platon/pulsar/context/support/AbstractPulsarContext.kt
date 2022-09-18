@@ -1,6 +1,8 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.CommonUrlNormalizer
@@ -12,6 +14,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.FetchState
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
@@ -40,8 +43,8 @@ import kotlin.reflect.KClass
  * A PulsarContext can be used to inject, fetch, load, parse, store webpages.
  */
 abstract class AbstractPulsarContext(
-        override val applicationContext: AbstractApplicationContext,
-        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
+        val applicationContext: AbstractApplicationContext,
+        val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
 
     companion object {
@@ -78,6 +81,11 @@ abstract class AbstractPulsarContext(
     private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
     /**
+     * Check if the context is active
+     * */
+    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
+
+    /**
      * The context id
      * */
     override val id = instanceSequencer.incrementAndGet()
@@ -97,55 +105,28 @@ abstract class AbstractPulsarContext(
      * */
     open val webDb: WebDb get() = getBean()
 
-    /**
-     * The global cache manager
-     * */
     open val globalCacheFactory: GlobalCacheFactory get() = getBean()
 
-    /**
-     * The injection component
-     * */
     open val injectComponent: InjectComponent get() = getBean()
 
-    /**
-     * The fetch component
-     * */
     open val fetchComponent: BatchFetchComponent get() = getBean()
 
-    /**
-     * The parse component
-     * */
     open val parseComponent: ParseComponent get() = getBean()
 
-    /**
-     * The update component
-     * */
     open val updateComponent: UpdateComponent get() = getBean()
 
-    /**
-     * The load component
-     * */
     open val loadComponent: LoadComponent get() = getBean()
 
-    /**
-     * The url pool to fetch
-     * */
-    override val crawlPool: UrlPool get() = globalCacheFactory.globalCache.urlPool
+    override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
 
-    /**
-     * The main loops
-     * */
+    override val crawlPool: UrlPool get() = globalCache.urlPool
+
     override val crawlLoops: CrawlLoops get() = getBean()
 
     /**
      * The start time
      * */
     val startTime = System.currentTimeMillis()
-
-    /**
-     * Check if the context is active
-     * */
-    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
      * All open sessions
@@ -454,8 +435,8 @@ abstract class AbstractPulsarContext(
      * Delegates to `doClose()` for the actual closing procedure.
      * @see Runtime.addShutdownHook
      *
-     * @see .close
-     * @see .doClose
+     * @see close
+     * @see doClose
      */
     @Throws(IllegalStateException::class)
     override fun registerShutdownHook() {
@@ -470,8 +451,8 @@ abstract class AbstractPulsarContext(
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
-     * @see .doClose
-     * @see .registerShutdownHook
+     * @see doClose
+     * @see registerShutdownHook
      */
     override fun close() {
         synchronized(startupShutdownMonitor) {

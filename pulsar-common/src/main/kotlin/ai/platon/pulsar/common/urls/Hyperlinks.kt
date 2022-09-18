@@ -265,7 +265,7 @@ open class Hyperlink(
      * */
     url: String,
     /**
-     * The anchor text of this hyperlink
+     * The anchor text
      * */
     var text: String = "",
     /**

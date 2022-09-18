@@ -1,7 +1,5 @@
 package ai.platon.pulsar.context
 
-import ai.platon.pulsar.session.PulsarEnvironment
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -9,11 +7,12 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.CrawlLoops
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.session.PulsarSession
 import org.springframework.beans.BeansException
-import org.springframework.context.ApplicationContext
 import java.net.URL
 import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
@@ -30,17 +29,24 @@ interface PulsarContext: AutoCloseable {
      * */
     val id: Int
 
-    val pulsarEnvironment: PulsarEnvironment
-
-    val applicationContext: ApplicationContext
-
     /**
      * An immutable config is loaded from the config file at process startup, and never changes
      * */
     val unmodifiedConfig: ImmutableConfig
 
+    /**
+     * The global cache
+     * */
+    val globalCache: GlobalCache
+
+    /**
+     * The url pool to fetch
+     * */
     val crawlPool: UrlPool
 
+    /**
+     * The main loops
+     * */
     val crawlLoops: CrawlLoops
 
     /**

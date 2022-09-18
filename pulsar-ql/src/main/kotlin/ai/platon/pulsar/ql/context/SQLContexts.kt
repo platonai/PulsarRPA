@@ -50,7 +50,7 @@ open class H2SQLContext(
 }
 
 class StaticH2SQLContext(
-    override val applicationContext: StaticApplicationContext = StaticApplicationContext()
+    applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
 
     /**

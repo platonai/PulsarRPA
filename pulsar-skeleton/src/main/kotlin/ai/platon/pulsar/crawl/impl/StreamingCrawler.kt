@@ -450,7 +450,6 @@ internal open class StreamingCrawler<T : UrlAware>(
 
     private fun notifyWillLoad(url: UrlAware): UrlAware? {
         if (url is ListenableUrl) {
-            url.event.crawlEvent.onFilter(url) ?: return null
             dispatchEvent(EventType.willLoad, url)
         }
 

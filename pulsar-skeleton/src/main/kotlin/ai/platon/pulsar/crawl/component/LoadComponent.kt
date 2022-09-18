@@ -129,12 +129,12 @@ class LoadComponent(
 
         val futures = loadAllAsync(normUrls.filter { !it.isNil })
 
-        logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
+        logger.info("Waiting for {} completable links | @{}", futures.size, futures.hashCode())
 
         val future = CompletableFuture.allOf(*futures.toTypedArray())
         future.join()
 
-        val pages = futures.mapNotNull { it.get() }
+        val pages = futures.mapNotNull { it.get().takeIf { it.isNotNil } }
 
         logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
 
@@ -161,8 +161,9 @@ class LoadComponent(
             return listOf()
         }
 
-        val linkFutures = normUrls.filter { !it.isNil }.distinctBy { it.spec }
+        val linkFutures = normUrls.asSequence().filter { !it.isNil }.distinctBy { it.spec }
             .map { it.toCompletableListenableHyperlink() }
+            .toList()
         globalCache.urlPool.addAll(linkFutures)
         return linkFutures
     }
@@ -312,12 +313,13 @@ class LoadComponent(
             // we might use the cached page's content in after load handler
             if (normUrl.detail is CompletableHyperlink<*>) {
                 require(page.loadEvent?.onLoaded?.isNotEmpty == true) {
-                    "A completable hyperlink must have a onLoaded handler"
+                    "A completable link must have a onLoaded handler"
                 }
             }
+
             page.loadEvent?.onLoaded?.invoke(page)
         } catch (e: Throwable) {
-            logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke onLoaded | ${page.configuredUrl}", e)
         }
 
         if (options.persist && !status.isCanceled && !options.readonly) {
