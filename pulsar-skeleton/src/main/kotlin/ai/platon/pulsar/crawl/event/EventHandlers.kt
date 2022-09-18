@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.event
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.AbstractSimulateEvent
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -17,17 +16,19 @@ import java.time.Instant
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 
-interface EventHandler {
+interface NamedHandler {
     val name: String
+    val priority: Int
     val isRelevant: Boolean
 }
 
-abstract class AbstractEventHandler: EventHandler {
+abstract class AbstractNamedHandler: NamedHandler {
     override val name: String = ""
+    override val priority: Int = 0
     override val isRelevant: Boolean = true
 }
 
-interface EventHandlerPipeline {
+interface CombinedEventHandler {
     val size: Int
     val isEmpty: Boolean get() = size == 0
     val isNotEmpty: Boolean get() = !isEmpty
@@ -36,58 +37,81 @@ interface EventHandlerPipeline {
     fun clear()
 }
 
-abstract class VoidHandler: () -> Unit, AbstractEventHandler() {
+abstract class VoidHandler: () -> Unit, AbstractNamedHandler() {
     abstract override operator fun invoke()
 }
 
-abstract class UrlAwareHandler: (UrlAware) -> UrlAware?, AbstractEventHandler() {
+abstract class UrlAwareHandler: (UrlAware) -> UrlAware?, AbstractNamedHandler() {
     abstract override operator fun invoke(url: UrlAware): UrlAware?
 }
 
-abstract class UrlAwareFilter: (UrlAware) -> UrlAware?, AbstractEventHandler() {
+abstract class UrlAwareFilter: (UrlAware) -> UrlAware?, AbstractNamedHandler() {
     abstract override operator fun invoke(url: UrlAware): UrlAware?
 }
 
-abstract class UrlHandler: (String) -> String?, AbstractEventHandler() {
+abstract class UrlHandler: (String) -> String?, AbstractNamedHandler() {
     abstract override operator fun invoke(url: String): String?
 }
 
-abstract class UrlFilter: (String) -> String?, AbstractEventHandler() {
+abstract class UrlFilter: (String) -> String?, AbstractNamedHandler() {
     abstract override operator fun invoke(url: String): String?
 }
 
-abstract class WebPageHandler: (WebPage) -> Any?, AbstractEventHandler() {
+abstract class WebPageHandler: (WebPage) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(page: WebPage): Any?
 }
 
-abstract class UrlAwareWebPageHandler: (UrlAware, WebPage?) -> Any?, AbstractEventHandler() {
+abstract class UrlAwareWebPageHandler: (UrlAware, WebPage?) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(url: UrlAware, page: WebPage?): Any?
 }
 
-abstract class HTMLDocumentHandler: (WebPage, FeaturedDocument) -> Any?, AbstractEventHandler() {
+abstract class HTMLDocumentHandler: (WebPage, FeaturedDocument) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(page: WebPage, document: FeaturedDocument): Any?
 }
 
-abstract class PrivacyContextHandler: (PrivacyContext) -> Any?, AbstractEventHandler() {
+abstract class PrivacyContextHandler: (PrivacyContext) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(privacyContext: PrivacyContext): Any?
 }
 
-abstract class WebDriverHandler: (WebDriver) -> Any?, AbstractEventHandler() {
+abstract class WebDriverHandler: (WebDriver) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(driver: WebDriver): Any?
     abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any?
 }
 
-abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractEventHandler() {
+abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(page: WebPage, driver: WebDriver): Any?
     abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any?
 }
 
-abstract class WebDriverFetchResultHandler: (WebPage, WebDriver) -> FetchResult?, AbstractEventHandler() {
+abstract class WebDriverFetchResultHandler: (WebPage, WebDriver) -> FetchResult?, AbstractNamedHandler() {
     abstract override operator fun invoke(page: WebPage, driver: WebDriver): FetchResult?
     abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult?
 }
 
-class VoidEventHandler: VoidHandler(), EventHandlerPipeline {
+abstract class AbstractCombinedEventHandler<T: NamedHandler>: CombinedEventHandler {
+    private val registeredHandlers = CopyOnWriteArrayList<T>()
+
+    override val size: Int
+        get() = registeredHandlers.size
+
+    fun addFirst(handler: T): AbstractCombinedEventHandler<T> {
+        registeredHandlers.add(0, handler)
+        return this
+    }
+
+    fun addLast(handler: T): AbstractCombinedEventHandler<T> {
+        registeredHandlers.add(handler)
+        return this
+    }
+
+    override fun remove(handler: Any) = registeredHandlers.remove(handler)
+
+    override fun clear() = registeredHandlers.clear()
+
+    abstract operator fun invoke()
+}
+
+class VoidEventHandler: VoidHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<VoidHandler>()
 
     override val size: Int
@@ -120,7 +144,7 @@ class VoidEventHandler: VoidHandler(), EventHandlerPipeline {
     }
 }
 
-class UrlAwareEventHandler: UrlAwareHandler(), EventHandlerPipeline {
+class UrlAwareEventHandler: UrlAwareHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<UrlAwareHandler>()
 
     override val size: Int
@@ -155,7 +179,7 @@ class UrlAwareEventHandler: UrlAwareHandler(), EventHandlerPipeline {
     }
 }
 
-class UrlAwareEventFilter: UrlAwareFilter(), EventHandlerPipeline {
+class UrlAwareEventFilter: UrlAwareFilter(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<UrlAwareFilter>()
 
     override val size: Int
@@ -190,7 +214,7 @@ class UrlAwareEventFilter: UrlAwareFilter(), EventHandlerPipeline {
     }
 }
 
-class UrlFilterEventHandler: UrlFilter(), EventHandlerPipeline {
+class UrlFilterEventHandler: UrlFilter(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<UrlFilter>()
 
     override val size: Int
@@ -229,7 +253,7 @@ class UrlFilterEventHandler: UrlFilter(), EventHandlerPipeline {
     }
 }
 
-class UrlEventHandler: UrlHandler(), EventHandlerPipeline {
+class UrlEventHandler: UrlHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<UrlHandler>()
 
     override val size: Int
@@ -268,7 +292,7 @@ class UrlEventHandler: UrlHandler(), EventHandlerPipeline {
     }
 }
 
-class WebPageEventHandler: WebPageHandler(), EventHandlerPipeline {
+class WebPageEventHandler: WebPageHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<WebPageHandler>()
 
     override val size: Int
@@ -303,7 +327,7 @@ class WebPageEventHandler: WebPageHandler(), EventHandlerPipeline {
     }
 }
 
-class UrlAwareWebPageEventHandler: UrlAwareWebPageHandler(), EventHandlerPipeline {
+class UrlAwareWebPageEventHandler: UrlAwareWebPageHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<UrlAwareWebPageHandler>()
 
     override val size: Int
@@ -338,7 +362,7 @@ class UrlAwareWebPageEventHandler: UrlAwareWebPageHandler(), EventHandlerPipelin
     }
 }
 
-class HTMLDocumentEventHandler: HTMLDocumentHandler(), EventHandlerPipeline {
+class HTMLDocumentEventHandler: HTMLDocumentHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<HTMLDocumentHandler>()
 
     override val size: Int
@@ -373,7 +397,7 @@ class HTMLDocumentEventHandler: HTMLDocumentHandler(), EventHandlerPipeline {
     }
 }
 
-class WebPageWebDriverEventHandler: AbstractWebPageWebDriverHandler(), EventHandlerPipeline {
+class WebPageWebDriverEventHandler: AbstractWebPageWebDriverHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<WebPageWebDriverHandler>()
 
     override val size: Int
@@ -426,32 +450,11 @@ abstract class AbstractWebDriverFetchResultHandler: WebDriverFetchResultHandler(
     }
 }
 
-class ExpressionSimulateEvent(
-    val beforeComputeExpressions: Iterable<String> = listOf(),
-    val afterComputeExpressions: Iterable<String> = listOf()
-): AbstractSimulateEvent() {
-    constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
-        bcExpressions.split(delimiters), acExpressions2.split(delimiters))
-
-    override val onWillComputeFeature = WebPageWebDriverEventHandler()
-        .addFirst(object: AbstractWebPageWebDriverHandler() {
-            override suspend fun invokeDeferred(page: WebPage, driver: WebDriver) =
-                evaluate(driver, beforeComputeExpressions)
-        })
-
-    override val onFeatureComputed = WebPageWebDriverEventHandler()
-        .addFirst(object: AbstractWebPageWebDriverHandler() {
-            override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
-                return evaluate(driver, afterComputeExpressions)
-            }
-        })
-}
-
-abstract class PageDatumHandler: (String, PageDatum) -> Any?, AbstractEventHandler() {
+abstract class PageDatumHandler: (String, PageDatum) -> Any?, AbstractNamedHandler() {
     abstract override operator fun invoke(pageSource: String, pageDatum: PageDatum): Any?
 }
 
-class PageDatumEventHandler: PageDatumHandler(), EventHandlerPipeline {
+class PageDatumEventHandler: PageDatumHandler(), CombinedEventHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PageDatumHandler>()
 
     override val size: Int

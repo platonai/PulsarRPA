@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
-import ai.platon.pulsar.crawl.DefaultPageEvent
 import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.event.WebPageHandler
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
@@ -271,11 +271,7 @@ internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHy
 fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
     val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
 
-    // make sure every option has its own event handler
-    link.event = DefaultPageEvent()
-
-    val handler = CompleteWebPageHyperlinkHandler(link)
-    link.event.loadEvent.onLoaded.addLast(handler)
+    link.event.loadEvent.onLoaded.addLast(CompleteWebPageHyperlinkHandler(link))
     options.event?.let { link.event.combine(it) }
 
     link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)

@@ -3,7 +3,7 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.event.ExpressionSimulateEvent
+import ai.platon.pulsar.crawl.event.impl.ExpressionSimulateEvent
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS

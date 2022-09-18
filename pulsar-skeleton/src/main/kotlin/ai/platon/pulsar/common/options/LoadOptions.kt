@@ -2,12 +2,12 @@ package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.DefaultPageEvent
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter

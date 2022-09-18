@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl
+package ai.platon.pulsar.crawl.experimental
 
 import ai.platon.pulsar.common.event.ListenerCollection
 import ai.platon.pulsar.common.urls.UrlAware
@@ -7,6 +7,8 @@ import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
 
 enum class EventType {
+    crawlWillLoad,
+
     willNavigate,
     navigated,
     willInteract,
@@ -73,7 +75,9 @@ interface GlobalEventListener {
 abstract class AbstractGlobalEventListener: GlobalEventListener {
     protected val listeners = ListenerCollection<EventType>()
 
-    override fun onCrawlWillLoad(handler: (UrlAware) -> Unit) {}
+    override fun onCrawlWillLoad(handler: (UrlAware) -> Unit) {
+        listeners.on(EventType.crawlWillLoad, handler)
+    }
 
     override fun onCrawlLoad(handler: (UrlAware) -> Unit) {}
 
