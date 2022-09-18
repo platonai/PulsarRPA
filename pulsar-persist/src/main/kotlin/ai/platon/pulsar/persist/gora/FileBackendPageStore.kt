@@ -1,8 +1,8 @@
 package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -94,7 +94,7 @@ class FileBackendPageStore(
             Files.deleteIfExists(path)
             null
         } catch (e: IOException) {
-            // logger.warn(Throwable.simplify())
+            // logger.warn(Throwable.brief())
             Files.deleteIfExists(path)
             null
         }
@@ -138,7 +138,7 @@ class FileBackendPageStore(
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
         } catch (e: IOException) {
-            logger.warn(e.simplify("writeAvro", " | $path"))
+            logger.warn(e.brief())
         }
     }
 

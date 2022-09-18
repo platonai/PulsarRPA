@@ -40,7 +40,7 @@ class Screenshot(
 
             return path.toString()
         } catch (t: Throwable) {
-            logger.warn(t.simplify())
+            logger.warn(t.brief())
         }
 
         return null

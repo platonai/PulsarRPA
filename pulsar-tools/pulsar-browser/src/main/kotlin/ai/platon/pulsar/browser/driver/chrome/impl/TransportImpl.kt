@@ -4,8 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.simplify
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -143,7 +143,7 @@ class TransportImpl : Transport {
     }
 
     private fun onError(session: Session, e: Throwable?) {
-        logger.error("WS session error | {}\n>>>{}<<<", session.requestURI, e?.simplify())
+        logger.error("WS session error | {}\n>>>{}<<<", session.requestURI, e?.brief())
     }
 
     override fun close() {

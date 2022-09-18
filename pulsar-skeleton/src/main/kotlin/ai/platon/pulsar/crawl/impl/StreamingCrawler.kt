@@ -528,11 +528,11 @@ internal open class StreamingCrawler<T : UrlAware>(
                 return FlowState.BREAK
             }
             is ProxyException -> {
-                logger.warn("[Unexpected] proxy exception | {}", e.simplify())
+                logger.warn("[Unexpected] proxy exception | {}", e.brief())
             }
             is TimeoutCancellationException -> {
                 logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout]. {} | {}",
-                    e.simplify(), url)
+                    e.brief(), url)
             }
             is CancellationException -> {
                 // Has to come after TimeoutCancellationException

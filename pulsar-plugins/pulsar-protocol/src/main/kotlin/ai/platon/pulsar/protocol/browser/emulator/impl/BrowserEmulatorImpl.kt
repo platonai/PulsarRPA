@@ -94,13 +94,13 @@ open class BrowserEmulatorImpl(
             // The web driver is canceled
             response = ForwardingResponse.canceled(task.page)
         } catch (e: SessionLostException) {
-            logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.simplify())
+            logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.brief())
             driver.retire()
             exception = e
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
-                logger.warn("Web driver is disconnected - {}", e.simplify())
+                logger.warn("Web driver is disconnected - {}", e.brief())
             } else {
                 logger.warn("[Unexpected]", e)
             }
@@ -109,7 +109,7 @@ open class BrowserEmulatorImpl(
             exception = e
             response = ForwardingResponse.crawlRetry(task.page)
         } catch (e: TimeoutCancellationException) {
-            logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.simplify())
+            logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.brief())
             response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: Exception) {
             when {

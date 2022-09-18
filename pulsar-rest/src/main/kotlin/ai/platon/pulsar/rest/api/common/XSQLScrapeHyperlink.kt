@@ -117,10 +117,10 @@ open class XSQLScrapeHyperlink(
             response.resultSet = resultSet
         } catch (e: JdbcSQLException) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}{}", e.simplify())
+            logger.warn("Failed to execute sql #${response.uuid}{}", e.brief())
         } catch (e: Throwable) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}\n{}", e.simplify())
+            logger.warn("Failed to execute sql #${response.uuid}\n{}", e.brief())
         }
 
         return rs
