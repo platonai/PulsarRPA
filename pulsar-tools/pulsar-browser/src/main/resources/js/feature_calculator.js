@@ -10,7 +10,7 @@
 let __pulsar_NodeFeatureCalculator = function() {
     this.stopped = false;
 
-    this.config = __pulsar_CONFIGS || DEFAULT_CONFIGS;
+    this.config = __pulsar_CONFIGS || __pulsar_DEFAULT_CONFIGS;
 
     this.debug = this.config.debug;
 

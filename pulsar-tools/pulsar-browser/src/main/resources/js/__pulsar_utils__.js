@@ -1,7 +1,7 @@
 "use strict";
 
 let __pulsar_utils__ = function () {
-    this.config = __pulsar_CONFIGS || DEFAULT_CONFIGS;
+    this.config = __pulsar_CONFIGS || __pulsar_DEFAULT_CONFIGS;
 
     this.fineHeight = 4000;
     this.fineNumAnchor = 100;

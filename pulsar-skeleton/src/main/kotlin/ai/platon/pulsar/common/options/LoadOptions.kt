@@ -220,8 +220,7 @@ open class LoadOptions(
     var requireNotBlank: String = ""
 
     /**
-     * The minimum page size expected, if it is less than that,
-     * it will need to be re-fetched.
+     * The minimum page size expected, if it is less than that, it will need to be re-fetched.
      *
      * The unit is byte.
      * */

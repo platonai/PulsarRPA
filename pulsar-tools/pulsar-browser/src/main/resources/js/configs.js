@@ -1,4 +1,4 @@
-const DEFAULT_CONFIGS = {
+const __pulsar_DEFAULT_CONFIGS = {
     "propertyNames": ["font-size, color, background-color"],
     "viewPortWidth": 1920,
     "viewPortHeight": 1080,
