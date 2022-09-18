@@ -18,9 +18,14 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * LoadOptions represent the controlling arguments which effects how we load a webpage:
+ * A [LoadOptions] object contains a set of control parameters that affect how we load a webpage.
+ *
+ * The load options, or load arguments, can be a plain string in the form of command line parameters,
+ * and can be parsed into a [LoadOptions] object.
  *
  * ```kotlin
+ * // parse a string into a LoadOptions object
+ * val options = session.options('-expires 1d -itemExpires 1d -ignoreFailure -parse -storeContent')
  * // fetch after 1d since last fetch
  * session.load('https://www.jd.com', '-expires 1d')
  * // fetch immediately ignoring errors
@@ -41,95 +46,106 @@ open class LoadOptions(
 ): CommonOptions(argv) {
 
     /**
-     * The label of this load task.
+     * The task label, it's optional and can be used to group tasks.
      * */
     @ApiPublic
-    @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
+    @Parameter(names = ["-l", "-label", "--label"],
+        description = "The task label, it's optional and can be used to group tasks")
     var label = ""
 
     /**
-     * The task id. A task can contain multiple loads.
+     * The task id, it's optional and can be used to distinguish tasks.
      * */
     @ApiPublic
     @Parameter(names = ["-taskId", "--task-id"],
-        description = "The task id. A task can contain multiple loads")
+        description = "The task id, it's optional and can be used to distinguish tasks")
     var taskId = ""
 
     /**
-     * The task time, we usually use a task time to indicate the name of a batch task.
+     * The task time, we usually use task time to indicate the name of a task batch.
      * */
     @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
-            description = "The task time, we usually use a task time to indicate the name of a batch task")
+            description = "The task time, we usually use task time to indicate the name of a task batch")
     var taskTime = LoadOptionDefaults.taskTime
 
     /**
-     * The dead time, if now > deadTime, the task should be discarded as soon as possible.
+     * The deadline to finish the task, if the deadline is exceeded, the task should be discarded
+     * as soon as possible.
      * */
     @ApiPublic
     @Parameter(names = ["-deadTime", "--dead-time"], converter = InstantConverter::class,
-        description = "The dead time, if now > deadTime, the task should be discarded as soon as possible")
+        description = "The deadline to finish the task, if the deadline is exceeded, " +
+                " the task should be discarded as soon as possible.")
     var deadTime = DateTimes.doomsday
 
     /**
-     * The auth token for this task.
+     * The auth token, can be used for authorization purpose.
      * */
     @ApiPublic
-    @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this task")
+    @Parameter(names = ["-authToken", "--auth-token"],
+        description = "The auth token, can be used for authorization purpose.")
     var authToken = ""
 
     /**
-     * If true, get a copy of the webpage and do not modify it.
+     * If true, use a copy of the webpage when required and do not modify the persisted version.
      * */
     @ApiPublic
-    @Parameter(names = ["-readonly"], description = "If true, get a copy of the webpage and do not modify it")
+    @Parameter(names = ["-readonly"],
+        description = "If true, use a copy of the webpage when required and do not modify the persisted version.")
     var readonly = false
 
     /**
-     * If true, fetch the page content as a resource without browser rendering.
+     * If true, fetch the url as a resource without browser rendering.
      * */
     @ApiPublic
     @Parameter(names = ["-resource", "-isResource"],
-        description = "If true, fetch the page content as a resource without browser rendering")
+        description = "If true, fetch the url as a resource without browser rendering.")
     var isResource = false
 
     /**
-     * The expiry time. If a page is expired, it should be fetched from the web.
+     * The expiry duration. If the expiry time is exceeded, the page should be fetched from the Internet.
      *
      * The term "expires" usually be used for an expiry time, for example, http-equiv, or in cookie specification,
      * guess it means "expires at".
      *
      * The expires field supports both ISO-8601 standard and hadoop time duration format:
-     * ISO-8601 standard : PnDTnHnMn.nS
-     * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
+     * 1. ISO-8601 standard : PnDTnHnMn.nS
+     * 2. Hadoop time duration format: 100s, 1m, 1h, 1d, valid units are : ns, us, ms, s, m, h, d.
      * */
     @ApiPublic
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
-            description = "The expiry time. If a page is expired, it should be fetched from the web")
+            description = "The expiry duration. " +
+                    "If the expiry time is exceeded, the page should be fetched from the Internet.")
     var expires = LoadOptionDefaults.expires
 
     /**
-     * The time point to expire. If a page is expired, it should be fetched from the web.
+     * The expiry time point. If the expiry time is exceeded, the page should be fetched from the Internet.
+     *
+     * Accept the following format:
+     * 1. yyyy-MM-dd[ HH[:mm[:ss]]]
+     * 2. ISO_INSTANT, or yyyy-MM-ddTHH:mm:ssZ
      * */
     @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
-            description = "The time point to expire. If a page is expired, it should be fetched from the web")
+            description = "The expiry time point. " +
+                    "If the expiry time is exceeded, the page should be fetched from the Internet.")
     var expireAt = LoadOptionDefaults.expireAt
 
     /**
-     * The fetch interval, used for periodically tasks.
+     * The fetch interval, used for periodically fetch tasks.
      * */
     @ApiPublic
     @Parameter(names = ["-fi", "-fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
-        description = "The fetch interval, used for periodically tasks")
+        description = "The fetch interval, used for periodically fetch tasks.")
     var fetchInterval = ChronoUnit.DECADES.duration
 
     /**
-     * The CSS selector to select out links in the portal page.
+     * The selector to extract links in portal pages.
      * */
     @ApiPublic
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
-            description = "The CSS selector to select out links in the portal page")
+            description = "The selector to extract links in portal pages.")
     var outLinkSelector = ""
 
     /**
@@ -141,18 +157,18 @@ open class LoadOptions(
     var outLinkPattern = ".+"
 
     /**
-     * The selector of the element to click for out links, if it's blank, no element should be clicked.
+     * The selector for element to click.
      * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(
         names = ["-click", "-clickTarget", "--click-target"],
-        description = "The selector of the element to click for out links, if it's blank, no element should be clicked"
+        description = "The selector for element to click."
     )
     var clickTarget = ""
 
     /**
-     * The css selector of next page anchor.
+     * The selector for next page anchor.
      * TODO: not implemented yet
      * */
     @ApiPublic
@@ -162,17 +178,18 @@ open class LoadOptions(
 
     /**
      * The iframe id to switch to.
+     * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The iframe id to switch to")
     var iframe = 0
 
     /**
-     * Specify how many links to select if we deal with out-pages.
+     * Specify how many links to extract for out pages.
      * */
     @ApiPublic
     @Parameter(names = ["-tl", "-topLinks", "--top-links"],
-        description = "Specify how many links to select if we deal with out-pages.")
+        description = "Specify how many links to extract for out pages.")
     var topLinks = 20
 
     /**
@@ -183,41 +200,52 @@ open class LoadOptions(
     var topNAnchorGroups = 3
 
     /**
-     * Wait for ajax content until the element is filled by a non-blank text.
+     * The selector specified element should have a non-blank text, the system should
+     * wait until the element is filled by a non-blank text, or until it times out.
+     * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(names = ["-wnb", "-waitNonBlank"],
-            description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
+            description = "The selector specified element should have a non-blank text")
     var waitNonBlank: String = ""
 
     /**
-     * Keep the pages only if the required text is not blank.
+     * The selector specified element should have a non-blank text, the task should
+     * be retried if the element's text content is empty or blank.
+     * TODO: not implemented yet
      * */
     @ApiPublic
-    @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
+    @Parameter(names = ["-rnb", "-requireNotBlank"],
+        description = "The selector specified element should have a non-blank text")
     var requireNotBlank: String = ""
 
     /**
-     * Fetch pages smaller than requireSize in bytes.
+     * The minimum page size expected, if it is less than that,
+     * it will need to be re-fetched.
+     *
+     * The unit is byte.
      * */
     @ApiPublic
-    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
+    @Parameter(names = ["-rs", "-requireSize", "--require-size"],
+        description = "The minimum page size expected")
     var requireSize = 0
 
     /**
-     * Re-fetch a page who's images less than requireImages.
+     * The minimum number of images expected in the page, if it is less than that,
+     * it will need to be re-fetched.
      * */
     @ApiPublic
     @Parameter(names = ["-ri", "-requireImages", "--require-images"],
-        description = "Re-fetch a page who's images less than requireImages")
+        description = "The minimum number of images expected in the page")
     var requireImages = 0
 
     /**
-     * Re-fetch a page who's anchors less than requireAnchors.
+     * The minimum number of anchors expected in the page, if it is less than that,
+     * it will need to be re-fetched.
      * */
     @ApiPublic
     @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"],
-        description = "Re-fetch a page who's anchors less than requireAnchors")
+        description = "The minimum number of anchors expected in the page")
     var requireAnchors = 0
 
     /**
@@ -236,14 +264,14 @@ open class LoadOptions(
     var browser = LoadOptionDefaults.browser
 
     /**
-     * The count to scroll down after a page being opened in a browser.
+     * The number of times the page should be scrolled down after it has just been opened in a browser.
      * */
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page being opened in a browser")
     var scrollCount = InteractSettings.DEFAULT.scrollCount
 
     /**
-     * The interval to scroll down after a page being opened in a browser.
+     * The interval to scroll down.
      * */
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page being opened in a browser")
@@ -409,16 +437,8 @@ open class LoadOptions(
     var lazyFlush = LoadOptionDefaults.lazyFlush
 
     /**
-     * Parallel fetch pages whenever applicable.
-     * */
-    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
-            description = "Parallel fetch pages whenever applicable")
-    @Deprecated("Not used since there is no non-parallel fetching")
-    var preferParallel = true
-
-    /**
      * Run browser in incognito mode.
-     * Not used since the browser is always running in temporary contexts
+     * Not used since the browser always running in temporary contexts.
      * */
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
@@ -442,15 +462,15 @@ open class LoadOptions(
     var hardRedirect = false
 
     /**
-     * If true, run the parse phrase.
+     * If true, parse the page when it's just be fetched.
      * */
-    @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page after fetch")
+    @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page when it's just be fetched.")
     var parse = LoadOptionDefaults.parse
 
     /**
-     * Re-parse all links if the page is parsed.
+     * Re-parse links if the page has been parsed before.
      * */
-    @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
+    @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse links if the page has been parsed before.")
     var reparseLinks = false
 
     /**
@@ -460,19 +480,21 @@ open class LoadOptions(
     var ignoreUrlQuery = false
 
     /**
-     * No normalizer is applied to parse links.
+     * If true, no normalizer will be applied when parse links.
      * */
-    @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
+    @Parameter(names = ["-noNorm", "--no-link-normalizer"],
+        description = "If true, no normalizer will be applied when parse links.")
     var noNorm = false
 
     /**
-     * No filter is applied to parse links.
+     * If true, no filter will be applied when parse links.
      * */
-    @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
+    @Parameter(names = ["-noFilter", "--no-link-filter"],
+        description = "If true, no filter will be applied when parse links.")
     var noFilter = false
 
     /**
-     * Specify the network condition.
+     * Indicates the network condition.
      * */
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
@@ -491,7 +513,7 @@ open class LoadOptions(
      * The load option version.
      * */
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
-    var version = "20210321"
+    var version = "20220918"
 
     /**
      * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.

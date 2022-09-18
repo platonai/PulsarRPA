@@ -247,7 +247,6 @@ class TestLoadOptions {
         val options = normUrl.options
         assertTrue(options.incognito)
         assertEquals(1, options.expires.seconds)
-        assertTrue(options.preferParallel)
         assertTrue(options.ignoreFailure)
     }
 
@@ -302,7 +301,6 @@ class TestLoadOptions {
         assertEquals(1, options.expires.seconds)
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)
-        assertTrue(options.preferParallel)
         assertTrue(options.ignoreFailure)
     }
 

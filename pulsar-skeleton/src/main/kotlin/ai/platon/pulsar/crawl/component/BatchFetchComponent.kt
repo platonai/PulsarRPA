@@ -96,11 +96,7 @@ class BatchFetchComponent(
      * Or else parallel fetch pages in a ExecutorService
      */
     private fun fetchAllInternal(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (options.preferParallel) {
-            parallelFetchAll(urls, options)
-        } else {
-            optimizeBatchSize(urls, options).map { fetch(it, options) }
-        }
+        return parallelFetchAll(urls, options)
     }
 
     /**
