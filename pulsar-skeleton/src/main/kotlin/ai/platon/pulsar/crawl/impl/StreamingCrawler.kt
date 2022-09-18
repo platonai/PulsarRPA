@@ -609,7 +609,7 @@ internal open class StreamingCrawler<T : UrlAware>(
             Strings.readableBytes(memoryToReserve.toLong()),
             Strings.readableBytes(availableMemory - memoryToReserve.toLong())
         )
-        session.globalCacheFactory.globalCache.clearPDCaches()
+        session.globalCache.clearPDCaches()
 
         // When control returns from the method call, the Java Virtual Machine
         // has made a best effort to reclaim space from all unused objects.

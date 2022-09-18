@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.FetchEntry
+import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.firstTextOrNull
@@ -74,6 +75,7 @@ abstract class AbstractPulsarSession(
     private val variables = ConcurrentHashMap<String, Any>()
     private var enablePDCache = true
     override val globalCacheFactory get() = context.globalCacheFactory
+    override val globalCache get() = context.globalCacheFactory.globalCache
     override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
     override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
 

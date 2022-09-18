@@ -160,7 +160,7 @@ object Queries {
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
      * */
     private fun loadAll2(session: PulsarSession, normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        val globalCache = session.globalCacheFactory.globalCache
+        val globalCache = session.globalCache
         val queue = globalCache.urlPool.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
         val links = normUrls

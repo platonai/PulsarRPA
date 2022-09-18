@@ -12,8 +12,9 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
- * WebDriver defines a concise interface to access and interact with web pages,
- * all behaviors are optimized to mimic real people as closely as possible.
+ * WebDriver defines a concise interface to visit and interact with web pages,
+ * all actions and behaviors are optimized to mimic real people as closely as possible,
+ * such as scrolling, clicking, typing text, dragging and dropping, etc.
  *
  * The methods in this interface fall into three categories:
  * <ul>

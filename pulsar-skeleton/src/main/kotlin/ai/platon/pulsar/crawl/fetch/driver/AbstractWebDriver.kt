@@ -245,7 +245,7 @@ abstract class AbstractWebDriver(
 
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
 
-    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
+    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id"
 
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
         return runBlocking {

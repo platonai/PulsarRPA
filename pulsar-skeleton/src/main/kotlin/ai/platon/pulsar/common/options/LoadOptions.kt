@@ -18,68 +18,12 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * The default load options, be careful to change the default behaviour.
- * */
-object LoadOptionDefaults {
-    /**
-     * The default task time.
-     * */
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-    /**
-     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
-     * */
-    var expires = ChronoUnit.DECADES.duration
-    /**
-     * The default time to expire
-     * */
-    var expireAt = DateTimes.doomsday
-    /**
-     * Lazy flush.
-     * */
-    var lazyFlush = true
-    /**
-     * Trigger the parse phrase or not.
-     *
-     * Do not parse by default, since there are may ways to trigger a webpage parsing:
-     * 1. use session.parse()
-     * 2. add a -parse option
-     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
-     * */
-    var parse = false
-    /**
-     * Store webpage content or not.
-     *
-     * Store webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     * */
-    var storeContent = true
-    /**
-     * If true, still fetch the page even if it is gone.
-     * */
-    var ignoreFailure = false
-    /**
-     * There are several cases to enable jit retry.
-     * For example, in a test environment.
-     * */
-    var nJitRetry = -1
-    /**
-     * The default browser is chrome with pulsar implemented web driver.
-     * */
-    var browser = BrowserType.PULSAR_CHROME
-    /**
-     * Set to be > 0 if we are doing unit test or other test.
-     * We will talk more, log more and trace more in test mode.
-     * */
-    var test = 0
-}
-
-/**
- * LoadOptions can represent the controling arguments which effects how we load a webpage:
+ * LoadOptions represent the controlling arguments which effects how we load a webpage:
  *
  * ```kotlin
- * // fetch only when after 1d since last fetch
+ * // fetch after 1d since last fetch
  * session.load('https://www.jd.com', '-expires 1d')
- * // fetch now ignoring errors
+ * // fetch immediately ignoring errors
  * session.load('https://www.jd.com', '-refresh')
  * // do not fetch after dead time
  * session.load('https://www.jd.com', '-deadTime 2022-04-15T18:36:54.941Z')
@@ -88,8 +32,6 @@ object LoadOptionDefaults {
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- *
- * NOTICE: every option with name `optionName` has to take a [Parameter] name [-optionName].
  */
 open class LoadOptions(
     argv: Array<String>,
@@ -984,4 +926,60 @@ open class LoadOptions(
             return normalizedArgs.trim()
         }
     }
+}
+
+/**
+ * The default load options, be careful to change the default behaviour.
+ * */
+object LoadOptionDefaults {
+    /**
+     * The default task time.
+     * */
+    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
+    /**
+     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
+     * */
+    var expires = ChronoUnit.DECADES.duration
+    /**
+     * The default time to expire
+     * */
+    var expireAt = DateTimes.doomsday
+    /**
+     * Lazy flush.
+     * */
+    var lazyFlush = true
+    /**
+     * Trigger the parse phrase or not.
+     *
+     * Do not parse by default, since there are may ways to trigger a webpage parsing:
+     * 1. use session.parse()
+     * 2. add a -parse option
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
+     * */
+    var parse = false
+    /**
+     * Store webpage content or not.
+     *
+     * Store webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     * */
+    var storeContent = true
+    /**
+     * If true, still fetch the page even if it is gone.
+     * */
+    var ignoreFailure = false
+    /**
+     * There are several cases to enable jit retry.
+     * For example, in a test environment.
+     * */
+    var nJitRetry = -1
+    /**
+     * The default browser is chrome with pulsar implemented web driver.
+     * */
+    var browser = BrowserType.PULSAR_CHROME
+    /**
+     * Set to be > 0 if we are doing unit test or other test.
+     * We will talk more, log more and trace more in test mode.
+     * */
+    var test = 0
 }

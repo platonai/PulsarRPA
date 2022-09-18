@@ -399,7 +399,7 @@ __pulsar_utils__.isVisibleTextNode = function (node) {
 }
 
 /**
- * Check if a element be checked
+ * Test if a element is checked.
  *
  * @param  {String} selector
  * @return boolean
@@ -413,7 +413,7 @@ __pulsar_utils__.isChecked = function(selector) {
 }
 
 /**
- * Check if a element be checked
+ * Test if a element is checked.
  *
  * @param  {Element} element
  * @return boolean
@@ -438,6 +438,8 @@ __pulsar_utils__.isElementChecked = function(element) {
 }
 
 /**
+ * Scroll into view.
+ *
  * @param {String} selector The element to scroll to
  * */
 __pulsar_utils__.scrollIntoView = function(selector) {
@@ -549,6 +551,36 @@ __pulsar_utils__.clickNthAnchor = function(n, rootSelector) {
     new __pulsar_NodeTraversor(visitor).traverse(rootNode)
 
     return href
+}
+
+/**
+ * Select the first element and check it if not checked.
+ *
+ * @param  {String} selector
+ * @return
+ */
+__pulsar_utils__.check = function(selector) {
+    if (!this.isChecked(selector)) {
+        let ele = document.querySelector(selector)
+        if (ele instanceof HTMLElement) {
+            ele.click()
+        }
+    }
+}
+
+/**
+ * Select the first element and uncheck it if checked.
+ *
+ * @param  {String} selector
+ * @return
+ */
+__pulsar_utils__.uncheck = function(selector) {
+    if (this.isChecked(selector)) {
+        let ele = document.querySelector(selector)
+        if (ele instanceof HTMLElement) {
+            ele.click()
+        }
+    }
 }
 
 /**
