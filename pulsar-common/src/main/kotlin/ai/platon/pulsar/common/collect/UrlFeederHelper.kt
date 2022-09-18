@@ -39,7 +39,15 @@ class UrlFeederHelper(val feeder: UrlFeeder) {
         addAll(listOf(collector))
     }
 
-    fun add(
+    fun addAll(collectors: Iterable<PriorityDataCollector<UrlAware>>) {
+        collectors.filterIsInstance<UrlCacheCollector>().forEach {
+            urlPool.orderedCaches[it.priority] = it.urlCache
+        }
+        collectors.forEach { report(it) }
+        feeder.addCollectors(collectors)
+    }
+
+    fun create(
         name: String, priority: Int = Priority13.NORMAL.value, queue: Queue<UrlAware> = ConcurrentLinkedQueue()
     ): QueueCollector {
         val collector = QueueCollector(queue, priority).also { it.name = name }
@@ -48,14 +56,6 @@ class UrlFeederHelper(val feeder: UrlFeeder) {
         report(collector)
 
         return collector
-    }
-
-    fun addAll(collectors: Iterable<PriorityDataCollector<UrlAware>>) {
-        collectors.filterIsInstance<UrlCacheCollector>().forEach {
-            urlPool.orderedCaches[it.priority] = it.urlCache
-        }
-        collectors.forEach { report(it) }
-        feeder.addCollectors(collectors)
     }
 
     fun create(priority: Int, urlLoader: ExternalUrlLoader): UrlCacheCollector {
