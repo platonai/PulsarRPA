@@ -6,6 +6,8 @@ import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.SimulateEvent
 import ai.platon.pulsar.crawl.event.*
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.rpa.BrowseRPA
+import ai.platon.pulsar.crawl.fetch.driver.rpa.DefaultBrowseRPA
 import ai.platon.pulsar.persist.WebPage
 
 abstract class AbstractLoadEvent(
@@ -48,10 +50,9 @@ abstract class AbstractLoadEvent(
 open class DefaultLoadEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()
 ): AbstractLoadEvent() {
-    override val onBrowserLaunched = WebPageWebDriverEventHandler()
-        .addLast { page, driver ->
-            rpa.warnUpBrowser(page, driver)
-        }
+    override val onBrowserLaunched = WebPageWebDriverEventHandler().also {
+        it.addLast { page, driver -> rpa.warnUpBrowser(page, driver) }
+    }
 }
 
 abstract class AbstractCrawlEvent(
@@ -118,9 +119,11 @@ class DefaultSimulateEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()
 ): AbstractSimulateEvent() {
 
-    override val onWillFetch = WebPageWebDriverEventHandler().addLast { page, driver ->
-        rpa.waitForReferrer(page, driver)
-        rpa.waitForPreviousPage(page, driver)
+    override val onWillFetch = WebPageWebDriverEventHandler().also {
+        it.addLast { page, driver ->
+            rpa.waitForReferrer(page, driver)
+            rpa.waitForPreviousPage(page, driver)
+        }
     }
 }
 
@@ -151,27 +154,6 @@ abstract class AbstractEmulateEvent(
     }
 }
 
-class ExpressionSimulateEvent(
-    val beforeComputeExpressions: Iterable<String> = listOf(),
-    val afterComputeExpressions: Iterable<String> = listOf()
-): AbstractSimulateEvent() {
-    constructor(bcExpressions: String, acExpressions2: String, delimiters: String = ";"): this(
-        bcExpressions.split(delimiters), acExpressions2.split(delimiters))
-
-    override val onWillComputeFeature = WebPageWebDriverEventHandler()
-        .addFirst(object: AbstractWebPageWebDriverHandler() {
-            override suspend fun invokeDeferred(page: WebPage, driver: WebDriver) =
-                evaluate(driver, beforeComputeExpressions)
-        })
-
-    override val onFeatureComputed = WebPageWebDriverEventHandler()
-        .addFirst(object: AbstractWebPageWebDriverHandler() {
-            override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
-                return evaluate(driver, afterComputeExpressions)
-            }
-        })
-}
-
 class DefaultEmulateEvent: AbstractEmulateEvent() {
     override val onSniffPageCategory: PageDatumEventHandler = PageDatumEventHandler()
     override val onCheckHtmlIntegrity: PageDatumEventHandler = PageDatumEventHandler()
@@ -195,6 +177,4 @@ open class DefaultPageEvent(
     loadEvent: LoadEvent = DefaultLoadEvent(),
     simulateEvent: SimulateEvent = DefaultSimulateEvent(),
     crawlEvent: CrawlEvent = DefaultCrawlEvent()
-): AbstractPageEvent(loadEvent, simulateEvent, crawlEvent) {
-
-}
+): AbstractPageEvent(loadEvent, simulateEvent, crawlEvent)

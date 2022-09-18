@@ -2,12 +2,12 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
 import ai.platon.pulsar.common.persist.ext.loadEvent
-import ai.platon.pulsar.crawl.DefaultLoadEvent
-import ai.platon.pulsar.crawl.DefaultPageEvent
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
 import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.event.WebPageHandler
+import ai.platon.pulsar.crawl.event.impl.DefaultLoadEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch
@@ -26,41 +26,32 @@ open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(ur
                 println("............onBeforeLoad")
                 it
             }
-            onWillParseHTMLDocument.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    println("............onBeforeParse " + page.id)
-                    println("$this " + page.loadEvent)
-                    assertSame(thisHandler, page.loadEvent)
-                    page.variables[VAR_IS_SCRAPE] = true
-                }
-            })
-            onWillParseHTMLDocument.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    assertSame(thisHandler, page.loadEvent)
-                    println("............onBeforeHtmlParse " + page.id)
-                }
-            })
-            onHTMLDocumentParsed.addFirst(object: HTMLDocumentHandler() {
-                override fun invoke(page: WebPage, document: FeaturedDocument) {
-                    println("............onAfterHtmlParse " + page.id)
-                    assertSame(thisHandler, page.loadEvent)
-                    assertTrue(page.hasVar(VAR_IS_SCRAPE))
-                }
-            })
-            onParsed.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    println("............onAfterParse " + page.id)
-                    println("$thisHandler " + page.loadEvent)
-                    assertSame(thisHandler, page.loadEvent)
-                }
-            })
-            onLoaded.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    assertSame(thisHandler, page.loadEvent)
-                    hyperlink.page = page
-                    hyperlink.isDone.countDown()
-                }
-            })
+            onWillParseHTMLDocument.addFirst { page ->
+                println("............onBeforeParse " + page.id)
+                println("$this " + page.loadEvent)
+                assertSame(thisHandler, page.loadEvent)
+                page.variables[VAR_IS_SCRAPE] = true
+                null
+            }
+            onWillParseHTMLDocument.addFirst { page ->
+                assertSame(thisHandler, page.loadEvent)
+                println("............onBeforeHtmlParse " + page.id)
+            }
+            onHTMLDocumentParsed.addFirst { page, document ->
+                println("............onAfterHtmlParse " + page.id)
+                assertSame(thisHandler, page.loadEvent)
+                assertTrue(page.hasVar(VAR_IS_SCRAPE))
+            }
+            onParsed.addFirst { page ->
+                println("............onAfterParse " + page.id)
+                println("$thisHandler " + page.loadEvent)
+                assertSame(thisHandler, page.loadEvent)
+            }
+            onLoaded.addFirst { page ->
+                assertSame(thisHandler, page.loadEvent)
+                hyperlink.page = page
+                hyperlink.isDone.countDown()
+            }
         }
     }
 

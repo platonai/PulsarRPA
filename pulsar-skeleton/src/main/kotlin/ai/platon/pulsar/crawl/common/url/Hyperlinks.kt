@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
-import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.event.WebPageHandler
 import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.dom.FeaturedDocument

@@ -16,11 +16,11 @@ open class LoginHandler(
     val warnUpUrl: String? = null,
     val activateSelector: String? = null,
     val activateTimeout: Duration = Duration.ofMinutes(3),
-) : AbstractWebPageWebDriverHandler() {
+) : WebPageWebDriverEventHandler() {
 
     private val logger = getLogger(this)
 
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         logger.info("Navigating to login page ... | {}", loginUrl)
 
         warnUpUrl?.let {
@@ -58,10 +58,10 @@ open class LoginHandler(
 
 class CloseMaskLayerHandler(
     val closeSelector: String
-) : AbstractWebPageWebDriverHandler() {
+) : WebPageWebDriverEventHandler() {
     private val logger = getLogger(this)
 
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         logger.info("Closing mask layer... | {}", closeSelector)
         var n = 5
         while (n-- > 0 && driver.exists(closeSelector)) {
