@@ -9,9 +9,9 @@ import ai.platon.pulsar.persist.WebPage
 
 interface BrowserResponseHandler {
 
-    val pageCategorySniffer: CombinedPageCategorySniffer
+    val pageCategorySniffer: ChainedPageCategorySniffer
 
-    val htmlIntegrityChecker: CombinedHtmlIntegrityChecker
+    val htmlIntegrityChecker: ChainedHtmlIntegrityChecker
 
     fun onWillCreateResponse(task: FetchTask, driver: WebDriver)
 

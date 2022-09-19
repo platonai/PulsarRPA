@@ -19,7 +19,7 @@ abstract class AbstractFeatureCalculator: FeatureCalculator {
 /**
  * The combined feature calculator
  * */
-class CombinedFeatureCalculator(
+class ChainedFeatureCalculator(
         val calculators: MutableList<FeatureCalculator> = mutableListOf()
 ): AbstractFeatureCalculator() {
 

@@ -22,7 +22,7 @@ open class DefaultPageCategorySniffer(
     }
 }
 
-class CombinedPageCategorySniffer(
+class ChainedPageCategorySniffer(
     val conf: ImmutableConfig
 ): PageCategorySniffer {
     val sniffers = CopyOnWriteArrayList<PageCategorySniffer>()
@@ -111,7 +111,7 @@ open class DefaultHtmlIntegrityChecker(
     }
 }
 
-open class CombinedHtmlIntegrityChecker(
+open class ChainedHtmlIntegrityChecker(
     val conf: ImmutableConfig
 ): AbstractHtmlIntegrityChecker() {
     val checkers = CopyOnWriteArrayList<HtmlIntegrityChecker>()

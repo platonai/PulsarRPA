@@ -41,18 +41,18 @@ open class BrowserResponseHandlerImpl(
     protected val smallPageRateHistogram by lazy { registry.histogram(this, "smallPageRate") }
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
-    override val pageCategorySniffer = CombinedPageCategorySniffer(immutableConfig).apply {
+    override val pageCategorySniffer = ChainedPageCategorySniffer(immutableConfig).apply {
         sniffers.add(DefaultPageCategorySniffer(immutableConfig))
     }
 
-    override val htmlIntegrityChecker = CombinedHtmlIntegrityChecker(immutableConfig).apply {
+    override val htmlIntegrityChecker = ChainedHtmlIntegrityChecker(immutableConfig).apply {
         checkers.add(DefaultHtmlIntegrityChecker(enableStartupScript, immutableConfig))
     }
 
-    fun onInitPageCategorySniffer(sniffer: CombinedPageCategorySniffer) {
+    fun onInitPageCategorySniffer(sniffer: ChainedPageCategorySniffer) {
     }
 
-    fun onInitHTMLIntegrityChecker(checker: CombinedHtmlIntegrityChecker) {
+    fun onInitHTMLIntegrityChecker(checker: ChainedHtmlIntegrityChecker) {
     }
 
     override fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {

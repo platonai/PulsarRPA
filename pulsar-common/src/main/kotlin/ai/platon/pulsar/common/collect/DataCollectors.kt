@@ -24,13 +24,13 @@ interface CrawlableFatLinkCollector {
     fun removeAll(fatLinks: List<FatLink>): Int = fatLinks.count { remove(it) != null }
 }
 
-open class CombinedDataCollector<E>(
+open class ChainedDataCollector<E>(
         priority: Priority13 = Priority13.NORMAL,
 ): AbstractPriorityDataCollector<E>(priority) {
 
     private val logger = getLogger(this)
 
-    override var name: String = "CombinedDC"
+    override var name: String = "ChainedDC"
 
     val collectors: Queue<PriorityDataCollector<E>> = ConcurrentLinkedQueue()
 

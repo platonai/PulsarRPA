@@ -34,7 +34,7 @@ abstract class AbstractDHandler2<T, T2, R>: AbstractHandler(), PDFunction2<T, T2
 
 abstract class AbstractDHandler3<T, T2, T3, R>: AbstractHandler(), PDFunction3<T, T2, T3, R>
 
-interface CombinedHandler {
+interface ChainedHandler {
     val size: Int
     val isEmpty: Boolean get() = size == 0
     val isNotEmpty: Boolean get() = !isEmpty
@@ -43,18 +43,18 @@ interface CombinedHandler {
     fun clear()
 }
 
-abstract class AbstractCombinedHandler0<R>: AbstractHandler0<R>(), CombinedHandler {
+abstract class AbstractChainedHandler0<R>: AbstractHandler0<R>(), ChainedHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PFunction0<R>>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: PFunction0<R>): AbstractCombinedHandler0<R> {
+    fun addFirst(handler: PFunction0<R>): AbstractChainedHandler0<R> {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: PFunction0<R>): AbstractCombinedHandler0<R> {
+    fun addLast(handler: PFunction0<R>): AbstractChainedHandler0<R> {
         registeredHandlers.add(handler)
         return this
     }
@@ -78,18 +78,18 @@ abstract class AbstractCombinedHandler0<R>: AbstractHandler0<R>(), CombinedHandl
     }
 }
 
-abstract class AbstractCombinedHandler1<T, R>: AbstractHandler1<T, R>(), CombinedHandler {
+abstract class AbstractChainedHandler1<T, R>: AbstractHandler1<T, R>(), ChainedHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PFunction1<T, R>>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: PFunction1<T, R>): AbstractCombinedHandler1<T, R> {
+    fun addFirst(handler: PFunction1<T, R>): AbstractChainedHandler1<T, R> {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: PFunction1<T, R>): AbstractCombinedHandler1<T, R> {
+    fun addLast(handler: PFunction1<T, R>): AbstractChainedHandler1<T, R> {
         registeredHandlers.add(handler)
         return this
     }
@@ -113,18 +113,18 @@ abstract class AbstractCombinedHandler1<T, R>: AbstractHandler1<T, R>(), Combine
     }
 }
 
-abstract class AbstractCombinedHandler2<T, T2, R>: AbstractHandler2<T, T2, R>(), CombinedHandler {
+abstract class AbstractChainedHandler2<T, T2, R>: AbstractHandler2<T, T2, R>(), ChainedHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PFunction2<T, T2, R>>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: PFunction2<T, T2, R>): AbstractCombinedHandler2<T, T2, R> {
+    fun addFirst(handler: PFunction2<T, T2, R>): AbstractChainedHandler2<T, T2, R> {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: PFunction2<T, T2, R>): AbstractCombinedHandler2<T, T2, R> {
+    fun addLast(handler: PFunction2<T, T2, R>): AbstractChainedHandler2<T, T2, R> {
         registeredHandlers.add(handler)
         return this
     }
@@ -148,18 +148,18 @@ abstract class AbstractCombinedHandler2<T, T2, R>: AbstractHandler2<T, T2, R>(),
     }
 }
 
-abstract class AbstractCombinedDHandler0<R>: AbstractDHandler0<R>(), CombinedHandler {
+abstract class AbstractChainedDHandler0<R>: AbstractDHandler0<R>(), ChainedHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PDFunction0<R>>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: PDFunction0<R>): AbstractCombinedDHandler0<R> {
+    fun addFirst(handler: PDFunction0<R>): AbstractChainedDHandler0<R> {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: PDFunction0<R>): AbstractCombinedDHandler0<R> {
+    fun addLast(handler: PDFunction0<R>): AbstractChainedDHandler0<R> {
         registeredHandlers.add(handler)
         return this
     }
@@ -183,18 +183,18 @@ abstract class AbstractCombinedDHandler0<R>: AbstractDHandler0<R>(), CombinedHan
     }
 }
 
-abstract class AbstractCombinedDHandler1<T, R>: AbstractDHandler1<T, R>(), CombinedHandler {
+abstract class AbstractChainedDHandler1<T, R>: AbstractDHandler1<T, R>(), ChainedHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PDFunction1<T, R>>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: PDFunction1<T, R>): AbstractCombinedDHandler1<T, R> {
+    fun addFirst(handler: PDFunction1<T, R>): AbstractChainedDHandler1<T, R> {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: PDFunction1<T, R>): AbstractCombinedDHandler1<T, R> {
+    fun addLast(handler: PDFunction1<T, R>): AbstractChainedDHandler1<T, R> {
         registeredHandlers.add(handler)
         return this
     }
@@ -218,18 +218,18 @@ abstract class AbstractCombinedDHandler1<T, R>: AbstractDHandler1<T, R>(), Combi
     }
 }
 
-abstract class AbstractCombinedDHandler2<T, T2, R>: AbstractDHandler2<T, T2, R>(), CombinedHandler {
+abstract class AbstractChainedDHandler2<T, T2, R>: AbstractDHandler2<T, T2, R>(), ChainedHandler {
     private val registeredHandlers = CopyOnWriteArrayList<PDFunction2<T, T2, R>>()
 
     override val size: Int
         get() = registeredHandlers.size
 
-    fun addFirst(handler: PDFunction2<T, T2, R>): AbstractCombinedDHandler2<T, T2, R> {
+    fun addFirst(handler: PDFunction2<T, T2, R>): AbstractChainedDHandler2<T, T2, R> {
         registeredHandlers.add(0, handler)
         return this
     }
 
-    fun addLast(handler: PDFunction2<T, T2, R>): AbstractCombinedDHandler2<T, T2, R> {
+    fun addLast(handler: PDFunction2<T, T2, R>): AbstractChainedDHandler2<T, T2, R> {
         registeredHandlers.add(handler)
         return this
     }
@@ -308,38 +308,38 @@ abstract class PageDatumHandler: (String, PageDatum) -> Any?, AbstractHandler() 
     abstract override operator fun invoke(pageSource: String, pageDatum: PageDatum): Any?
 }
 
-open class VoidEventHandler: AbstractCombinedHandler0<Unit>()
+open class VoidEventHandler: AbstractChainedHandler0<Unit>()
 
-open class UrlAwareEventHandler: AbstractCombinedHandler1<UrlAware, UrlAware>() {
+open class UrlAwareEventHandler: AbstractChainedHandler1<UrlAware, UrlAware>() {
     override fun invoke(url: UrlAware): UrlAware? {
         return if (isEmpty) url else super.invoke(url)
     }
 }
 
-open class UrlAwareEventFilter: AbstractCombinedHandler1<UrlAware, UrlAware>() {
+open class UrlAwareEventFilter: AbstractChainedHandler1<UrlAware, UrlAware>() {
     override fun invoke(url: UrlAware): UrlAware? {
         return if (isEmpty) url else super.invoke(url)
     }
 }
 
-open class UrlFilterEventHandler: AbstractCombinedHandler1<String, String?>() {
+open class UrlFilterEventHandler: AbstractChainedHandler1<String, String?>() {
     override fun invoke(url: String): String? {
         return if (isEmpty) url else super.invoke(url)
     }
 }
 
-open class UrlEventHandler: AbstractCombinedHandler1<String, String?>() {
+open class UrlEventHandler: AbstractChainedHandler1<String, String?>() {
     override fun invoke(url: String): String? {
         return if (isEmpty) url else super.invoke(url)
     }
 }
 
-open class WebPageEventHandler: AbstractCombinedHandler1<WebPage, Any?>()
+open class WebPageEventHandler: AbstractChainedHandler1<WebPage, Any?>()
 
-open class UrlAwareWebPageEventHandler: AbstractCombinedHandler2<UrlAware, WebPage?, Any?>()
+open class UrlAwareWebPageEventHandler: AbstractChainedHandler2<UrlAware, WebPage?, Any?>()
 
-open class HTMLDocumentEventHandler: AbstractCombinedHandler2<WebPage, FeaturedDocument, Any?>()
+open class HTMLDocumentEventHandler: AbstractChainedHandler2<WebPage, FeaturedDocument, Any?>()
 
-open class PageDatumEventHandler: AbstractCombinedHandler2<String, PageDatum, Any?>()
+open class PageDatumEventHandler: AbstractChainedHandler2<String, PageDatum, Any?>()
 
-open class WebPageWebDriverEventHandler: AbstractCombinedDHandler2<WebPage, WebDriver, Any?>()
+open class WebPageWebDriverEventHandler: AbstractChainedDHandler2<WebPage, WebDriver, Any?>()
