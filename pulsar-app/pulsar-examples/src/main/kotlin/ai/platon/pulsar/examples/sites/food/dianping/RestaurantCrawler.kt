@@ -65,9 +65,9 @@ class RestaurantCrawler(
 
     fun options(args: String): LoadOptions {
         val options = session.options(args)
-        val eh = options.enableEvent()
+        val eh = options.event
 
-        val seh = eh.simulateEvent
+        val seh = eh.browseEvent
         seh.onWillComputeFeature.addLast { page, driver ->
             commentSelectors.entries.mapIndexed { i, _ ->
                 "#reviewlist-wrapper .comment-item:nth-child($i) .more"

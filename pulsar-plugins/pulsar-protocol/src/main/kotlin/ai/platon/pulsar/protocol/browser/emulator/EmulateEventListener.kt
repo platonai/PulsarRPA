@@ -23,6 +23,13 @@ enum class EventType {
     tabStopped,
 }
 
+/**
+ * About emulate, simulate, mimic and imitate:
+ * 1. Emulate is usually used with someone as an object.
+ * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
+ * 3. Mimic, a person who imitate mannerisms of others.
+ * 4. Imitate is the most general of the four words, can be used in all the three senses.
+ * */
 interface EmulateEventListener {
 
     fun onWillNavigate(handler: (WebPage, WebDriver) -> Unit)
@@ -122,7 +129,7 @@ abstract class AbstractEmulateEventListener: EmulateEventListener {
             else -> {}
         }
 
-        val event = page.event?.simulateEvent ?: return
+        val event = page.event?.browseEvent ?: return
         when (type) {
             EventType.willNavigate -> notify(type) { event.onWillNavigate(page, driver) }
             EventType.navigated -> notify(type) { event.onNavigated(page, driver) }

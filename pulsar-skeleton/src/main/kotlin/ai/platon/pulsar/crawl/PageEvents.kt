@@ -2,6 +2,9 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.crawl.event.*
 
+/**
+ * Manage all events in the crawl phrase of the webpage lifecycle.
+ * */
 interface CrawlEvent {
     @Deprecated("No need to filter in a crawler")
     val onFilter: UrlAwareEventFilter
@@ -15,9 +18,12 @@ interface CrawlEvent {
 
     val onLoaded: UrlAwareWebPageEventHandler
 
-    fun combine(other: CrawlEvent): CrawlEvent
+    fun chain(other: CrawlEvent): CrawlEvent
 }
 
+/**
+ * Manage all events in the load phrase of the webpage lifecycle.
+ * */
 interface LoadEvent {
     val onFilter: UrlFilterEventHandler
 
@@ -26,10 +32,6 @@ interface LoadEvent {
     val onWillLoad: UrlEventHandler
 
     val onWillFetch: WebPageEventHandler
-
-    val onWillLaunchBrowser: WebPageEventHandler
-
-    val onBrowserLaunched: WebPageWebDriverEventHandler
 
     val onFetched: WebPageEventHandler
 
@@ -47,24 +49,24 @@ interface LoadEvent {
 
     val onLoaded: WebPageEventHandler
 
-    fun combine(other: LoadEvent): LoadEvent
+    fun chain(other: LoadEvent): LoadEvent
 }
 
 /**
- * The simulate events.
- *
- * About emulate, simulate, mimic and imitate:
- * 1. Emulate is usually used with someone as an object.
- * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
- * 3. Mimic, a person who imitate mannerisms of others.
- * 4. Imitate is the most general of the four words, can be used in all the three senses.
+ * Manage all events in the browse phrase of the webpage lifecycle.
  * */
-interface SimulateEvent {
+interface BrowseEvent {
+    val onWillLaunchBrowser: WebPageEventHandler
+    val onBrowserLaunched: WebPageWebDriverEventHandler
+
     val onWillFetch: WebPageWebDriverEventHandler
     val onFetched: WebPageWebDriverEventHandler
 
     val onWillNavigate: WebPageWebDriverEventHandler
     val onNavigated: WebPageWebDriverEventHandler
+
+    val onWillInteract: WebPageWebDriverEventHandler
+    val onDidInteract: WebPageWebDriverEventHandler
 
     val onWillCheckDOMState: WebPageWebDriverEventHandler
     val onDOMStateChecked: WebPageWebDriverEventHandler
@@ -72,38 +74,24 @@ interface SimulateEvent {
     val onWillComputeFeature: WebPageWebDriverEventHandler
     val onFeatureComputed: WebPageWebDriverEventHandler
 
-    val onWillInteract: WebPageWebDriverEventHandler
-    val onDidInteract: WebPageWebDriverEventHandler
-
     val onWillStopTab: WebPageWebDriverEventHandler
     val onTabStopped: WebPageWebDriverEventHandler
 
-    fun combine(other: SimulateEvent): SimulateEvent
+    fun chain(other: BrowseEvent): BrowseEvent
 }
 
 /**
- * @see [SimulateEvent]
+ * Manage all events in the webpage lifecycle.
  *
- * About emulate, simulate, mimic and imitate:
- * 1. Emulate is usually used with someone as an object.
- * 2. Simulate has the idea of copying something so that the copy pretends to be the original thing.
- * 3. Mimic, a person who imitate mannerisms of others.
- * 4. Imitate is the most general of the four words, can be used in all the three senses.
- * */
-interface EmulateEvent {
-    val onSniffPageCategory: PageDatumEventHandler
-    val onCheckHtmlIntegrity: PageDatumEventHandler
-
-    fun combine(other: EmulateEvent): EmulateEvent
-}
-
-/**
- * Manage all events of a web page life cycle.
+ * The events are separated into three groups:
+ * 1. LoadEvent for load phrase
+ * 2. BrowseEvent for browse phrase
+ * 3. CrawlEvent for crawl phrase
  * */
 interface PageEvent {
     val loadEvent: LoadEvent
-    val simulateEvent: SimulateEvent
+    val browseEvent: BrowseEvent
     val crawlEvent: CrawlEvent
 
-    fun combine(other: PageEvent): PageEvent
+    fun chain(other: PageEvent): PageEvent
 }

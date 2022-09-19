@@ -17,8 +17,8 @@ fun main() {
     val session = PulsarContexts.createSession()
     val options = session.options(args)
 
-    val event = options.enableEvent()
-    event.loadEvent.onBrowserLaunched.addLast { page, driver ->
+    val event = options.event
+    event.browseEvent.onBrowserLaunched.addLast { page, driver ->
         // TODO: rotate accounts
         val username = System.getenv("PULSAR_TAOBAO_USERNAME") ?: "MustFallUsername"
         val password = System.getenv("PULSAR_TAOBAO_PASSWORD") ?: "MustFallPassword"

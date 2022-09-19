@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
@@ -255,7 +255,7 @@ open class WebDriverPoolManager(
 
     private suspend fun <R> launchAndPoll(driverPool: LoadingWebDriverPool, task: WebDriverTask<R>): WebDriver {
         val page = task.page
-        val event = page.loadEvent
+        val event = page.browseEvent
 
         dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
 

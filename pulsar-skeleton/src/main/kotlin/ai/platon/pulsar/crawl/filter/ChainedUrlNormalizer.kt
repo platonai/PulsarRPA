@@ -70,8 +70,6 @@ class ChainedUrlNormalizer(
     val scope: String = SCOPE_DEFAULT,
     val conf: ImmutableConfig
 ) {
-    private val LOG = LoggerFactory.getLogger(ChainedUrlNormalizer::class.java)
-
     // Reserved
     private val scopedUrlNormalizers: Map<String, UrlNormalizer> = HashMap()
     private val maxLoops = conf.getInt("urlnormalizer.loop.count", 1)

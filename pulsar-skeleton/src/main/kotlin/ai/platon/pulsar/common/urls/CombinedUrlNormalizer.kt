@@ -19,11 +19,11 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         val args = "$args3 $args2 $args1".trim()
 
         val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options), toItemOption)
-        val event = finalOptions.event
+        val rawEvent = finalOptions.rawEvent
 
-        var normUrl = if (event?.loadEvent?.onNormalize?.isNotEmpty == true) {
+        var normUrl = if (rawEvent?.loadEvent?.onNormalize?.isNotEmpty == true) {
             // 1. normalizer in event listener has the #1 priority
-            event.loadEvent.onNormalize(spec) ?: return NormUrl.NIL
+            rawEvent.loadEvent.onNormalize(spec) ?: return NormUrl.NIL
         } else {
             // 2. global normalizers has the #2 priority
             val normalizers = urlNormalizers
@@ -53,14 +53,18 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
 
     private fun createLoadOptions0(url: UrlAware, options: LoadOptions): LoadOptions {
         val clone = options.clone()
-        require(options.event == clone.event)
-        require(options.itemEvent == clone.itemEvent)
+
+        // TODO: disable in product environment
+        require(options.toString() == clone.toString())
+
+        require(options.rawEvent == clone.rawEvent)
+        require(options.rawItemEvent == clone.rawItemEvent)
 
         clone.conf.name = clone.label
         clone.nMaxRetry = url.nMaxRetry
 
         if (url is ListenableUrl) {
-            clone.enableEvent().combine(url.event)
+            clone.event.chain(url.event)
         }
 
         return clone

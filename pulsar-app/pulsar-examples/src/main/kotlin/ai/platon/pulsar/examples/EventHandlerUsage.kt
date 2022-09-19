@@ -30,12 +30,6 @@ class PrintFlowEvent: DefaultPageEvent() {
             onWillFetch.addLast { page ->
                 println("$seq. onBeforeFetch")
             }
-            onWillLaunchBrowser.addLast { page ->
-                println("$seq. onBeforeBrowserLaunch")
-            }
-            onBrowserLaunched.addLast { page, driver ->
-                println("$seq. onAfterBrowserLaunch")
-            }
             onFetched.addLast { page ->
                 println("$seq. onAfterFetch")
             }
@@ -62,7 +56,13 @@ class PrintFlowEvent: DefaultPageEvent() {
             }
         }
 
-        simulateEvent.apply {
+        browseEvent.apply {
+            onWillLaunchBrowser.addLast { page ->
+                println("$seq. onBeforeBrowserLaunch")
+            }
+            onBrowserLaunched.addLast { page, driver ->
+                println("$seq. onAfterBrowserLaunch")
+            }
             onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onBeforeCheckDOMState")
             }

@@ -100,10 +100,6 @@ open class ChainedDataCollector<E>(
     }
 }
 
-/**
- * A infinite multi source data collector, the collector always has a chance to collect the next items,
- * and if no item actually collected, wait for a while
- * */
 open class PauseDataCollector<E>(
         val nilElement: E,
         val n: Int = 1,

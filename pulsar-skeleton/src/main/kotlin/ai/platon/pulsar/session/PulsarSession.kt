@@ -68,7 +68,7 @@ import java.util.concurrent.CompletableFuture
  *
  * ```kotlin
  * val options = session.options(args)
- * options.enableEvent().simulateEvent.onDidDOMStateCheck.addLast { page, driver ->
+ * options.event.simulateEvent.onDidDOMStateCheck.addLast { page, driver ->
  *   driver.scrollDown()
  * }
  * session.load(url, options)

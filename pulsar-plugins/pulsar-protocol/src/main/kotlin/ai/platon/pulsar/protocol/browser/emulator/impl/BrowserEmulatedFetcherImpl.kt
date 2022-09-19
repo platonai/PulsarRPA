@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.persist.ext.simulateEvent
+import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -124,7 +124,7 @@ open class BrowserEmulatedFetcherImpl(
     }
 
     private suspend fun dispatchEvent(type: EventType, page: WebPage, driver: WebDriver) {
-        val event = page.simulateEvent ?: return
+        val event = page.browseEvent ?: return
         when(type) {
             EventType.willFetch -> notify(type.name) { event.onWillFetch(page, driver) }
             EventType.fetched -> notify(type.name) { event.onFetched(page, driver) }

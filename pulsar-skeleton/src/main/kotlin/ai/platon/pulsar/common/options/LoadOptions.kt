@@ -41,8 +41,8 @@ import kotlin.reflect.jvm.kotlinProperty
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var event: PageEvent? = null,
-    var itemEvent: PageEvent? = null
+    var rawEvent: PageEvent? = null,
+    var rawItemEvent: PageEvent? = null
 ): CommonOptions(argv) {
 
     /**
@@ -525,6 +525,10 @@ open class LoadOptions(
      * */
     var referrer: String? = null
 
+    val event: PageEvent get() = enableEvent()
+
+    val itemEvent: PageEvent get() = enableItemEvent()
+
     /**
      * Find out the modified fields and return a [Params].
      * */
@@ -560,28 +564,7 @@ open class LoadOptions(
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.event, other.itemEvent)
-
-    /**
-     * Ensure the EventHandler is created.
-     * */
-    fun enableEvent(): PageEvent {
-        val eh = event ?: DefaultPageEvent()
-        event = eh
-        return eh
-    }
-
-    @Deprecated("Inappropriate name", ReplaceWith("ensureEvent"))
-    fun ensureEventHandler() = enableEvent()
-
-    fun enableItemEvent(): PageEvent {
-        val eh = event ?: DefaultPageEvent()
-        itemEvent = eh
-        return eh
-    }
-
-    @Deprecated("Inappropriate name", ReplaceWith("ensureItemEvent"))
-    fun ensureItemEventHandler() = enableItemEvent()
+            this(split(args), other.conf, other.rawEvent, other.rawItemEvent)
 
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
@@ -612,7 +595,7 @@ open class LoadOptions(
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
-        itemOptions.event = itemEvent
+        itemOptions.rawEvent = rawItemEvent
 
         return itemOptions
     }
@@ -656,7 +639,7 @@ open class LoadOptions(
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
 
-        event = itemEvent
+        rawEvent = rawItemEvent
     }
 
     /**
@@ -687,7 +670,7 @@ open class LoadOptions(
 
         interactSettings.overrideConfiguration(conf)
 
-        event?.let { putBean(it) }
+        rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
         // not used since the browser is always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
@@ -772,6 +755,21 @@ open class LoadOptions(
             ignoreFailure = true
         }
         refresh = value
+    }
+
+    /**
+     * Ensure the EventHandler is created.
+     * */
+    private fun enableEvent(): PageEvent {
+        val eh = rawEvent ?: DefaultPageEvent()
+        rawEvent = eh
+        return eh
+    }
+
+    private fun enableItemEvent(): PageEvent {
+        val eh = rawEvent ?: DefaultPageEvent()
+        rawItemEvent = eh
+        return eh
     }
 
     companion object {

@@ -24,12 +24,6 @@ fun main() {
             onWillFetch.addLast { page ->
 
             }
-            onWillLaunchBrowser.addLast { page ->
-
-            }
-            onBrowserLaunched.addLast { page, driver ->
-
-            }
             onFetched.addLast { page ->
 
             }
@@ -56,7 +50,13 @@ fun main() {
             }
         }
 
-        link.event.simulateEvent.apply {
+        link.event.browseEvent.apply {
+            onWillLaunchBrowser.addLast { page ->
+
+            }
+            onBrowserLaunched.addLast { page, driver ->
+
+            }
             onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
 
             }
