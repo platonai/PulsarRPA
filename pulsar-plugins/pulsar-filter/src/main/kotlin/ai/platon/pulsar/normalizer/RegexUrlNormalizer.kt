@@ -19,11 +19,10 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizer
+import ai.platon.pulsar.crawl.filter.UrlNormalizer
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Text
@@ -50,7 +49,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * @author Luke Baker
  * @author Andrzej Bialecki
  */
-class RegexUrlNormalizer(private val conf: ImmutableConfig) : CrawlUrlNormalizer {
+class RegexUrlNormalizer(private val conf: ImmutableConfig) : UrlNormalizer {
     private val scopedRulesThreadLocal = object : ThreadLocal<HashMap<String, List<Rule>>>() {
         override fun initialValue(): HashMap<String, List<Rule>> {
             return HashMap()

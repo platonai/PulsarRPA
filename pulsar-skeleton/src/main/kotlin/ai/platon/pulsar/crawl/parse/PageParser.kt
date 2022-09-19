@@ -28,7 +28,7 @@ import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
@@ -246,7 +246,7 @@ class PageParser(
      * */
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
-        val newUrl = crawlFilters.normalizeToNull(refreshHref, CrawlUrlNormalizers.SCOPE_FETCHER)?:return
+        val newUrl = crawlFilters.normalizeToNull(refreshHref, ChainedUrlNormalizer.SCOPE_FETCHER)?:return
 
         page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING

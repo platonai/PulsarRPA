@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.UrlNormalizer
+import ai.platon.pulsar.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -17,7 +17,7 @@ import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -98,7 +98,7 @@ abstract class AbstractPulsarContext(
     /**
      * Url normalizers
      * */
-    open val urlNormalizers: CrawlUrlNormalizers get() = getBean()
+    open val urlNormalizers: ChainedUrlNormalizer get() = getBean()
 
     /**
      * The web db
@@ -215,7 +215,7 @@ abstract class AbstractPulsarContext(
      * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return UrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
+        return CombinedUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {

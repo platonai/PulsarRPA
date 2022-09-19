@@ -2,9 +2,9 @@ package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.common.url.ListenableUrl
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 
-class UrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
+class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = null) {
     /**
      * Normalize an url.
      *

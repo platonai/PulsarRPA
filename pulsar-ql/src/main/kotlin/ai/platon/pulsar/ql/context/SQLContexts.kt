@@ -7,7 +7,7 @@ import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.crawl.impl.StreamingCrawlLoop
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.ql.AbstractSQLSession
@@ -60,7 +60,7 @@ class StaticH2SQLContext(
     /**
      * Url normalizers
      * */
-    override val urlNormalizers = getBeanOrNull() ?: CrawlUrlNormalizers(unmodifiedConfig)
+    override val urlNormalizers = getBeanOrNull() ?: ChainedUrlNormalizer(unmodifiedConfig)
     /**
      * The web db
      * */

@@ -31,7 +31,7 @@ import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.CrawlUrlFilters
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -51,7 +51,7 @@ class GenerateComponent(
     val crawlFilters: CrawlFilters,
     val webDb: WebDb,
     val urlFilters: CrawlUrlFilters,
-    val urlNormalizers: CrawlUrlNormalizers,
+    val urlNormalizers: ChainedUrlNormalizer,
     val fetchSchedule: FetchSchedule,
     val messageWriter: MiscMessageWriter,
     val conf: ImmutableConfig
@@ -236,7 +236,7 @@ class GenerateComponent(
         var u2: String? = u
         // If filtering is on don't generate URLs that don't pass UrlFilters
         if (normalise) {
-            u2 = urlNormalizers.normalize(u, CrawlUrlNormalizers.SCOPE_GENERATE_HOST_COUNT)
+            u2 = urlNormalizers.normalize(u, ChainedUrlNormalizer.SCOPE_GENERATE_HOST_COUNT)
         }
 
         if (u2 == null) {

@@ -19,7 +19,7 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.ResourceLoader.getResource
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -66,7 +66,7 @@ class TestRegexUrlNormalizer {
     @Test
     @Throws(Exception::class)
     fun testNormalizerDefault() {
-        normalizeTest(testData[CrawlUrlNormalizers.SCOPE_DEFAULT]!!, CrawlUrlNormalizers.SCOPE_DEFAULT)
+        normalizeTest(testData[ChainedUrlNormalizer.SCOPE_DEFAULT]!!, ChainedUrlNormalizer.SCOPE_DEFAULT)
     }
 
     @Test
