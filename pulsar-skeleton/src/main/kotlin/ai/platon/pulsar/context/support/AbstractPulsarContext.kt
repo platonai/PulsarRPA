@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.options.CommonUrlNormalizer
+import ai.platon.pulsar.common.urls.UrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -215,7 +215,7 @@ abstract class AbstractPulsarContext(
      * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return CommonUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
+        return UrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {

@@ -1,12 +1,10 @@
-package ai.platon.pulsar.common.options
+package ai.platon.pulsar.common.urls
 
-import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
 
-class CommonUrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
+class UrlNormalizer(private val urlNormalizers: CrawlUrlNormalizers? = null) {
     /**
      * Normalize an url.
      *
