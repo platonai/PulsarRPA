@@ -16,7 +16,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
@@ -196,8 +196,8 @@ open class BrowserEmulatorImpl(
         val interactResult = navigateAndInteract(task, driver, navigateTask.driverSettings)
         navigateTask.pageDatum.apply {
             protocolStatus = interactResult.protocolStatus
-            activeDOMStatTrace = interactResult.activeDomMessage?.trace
-            activeDOMUrls = interactResult.activeDomMessage?.urls
+            activeDOMStatTrace = interactResult.activeDOMMessage?.trace
+            activeDOMUrls = interactResult.activeDOMMessage?.urls
         }
         navigateTask.pageSource = driver.pageSource() ?: ""
 
@@ -353,7 +353,7 @@ open class BrowserEmulatorImpl(
             } else if (message is String && message.contains("chrome-error://")) {
                 val browserError = responseHandler.onChromeErrorPageReturn(message)
                 status = browserError.status
-                result.activeDomMessage = browserError.activeDomMessage
+                result.activeDOMMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK
             } else {
                 if (tracer != null) {
@@ -407,10 +407,10 @@ open class BrowserEmulatorImpl(
         val message = evaluate(interactTask, expression)
 
         if (message is String) {
-            result.activeDomMessage = ActiveDomMessage.fromJson(message)
+            result.activeDOMMessage = ActiveDOMMessage.fromJson(message)
             if (taskLogger.isDebugEnabled) {
                 val page = interactTask.fetchTask.page
-                taskLogger.debug("{}. {} | {}", page.id, result.activeDomMessage?.trace, interactTask.url)
+                taskLogger.debug("{}. {} | {}", page.id, result.activeDOMMessage?.trace, interactTask.url)
             }
         }
     }

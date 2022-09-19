@@ -1,14 +1,13 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import java.time.Duration
 import java.time.Instant
 
@@ -30,9 +29,9 @@ class NavigateTask(
 }
 
 class InteractResult(
-        var protocolStatus: ProtocolStatus,
-        var activeDomMessage: ActiveDomMessage? = null,
-        var state: FlowState = FlowState.CONTINUE
+    var protocolStatus: ProtocolStatus,
+    var activeDOMMessage: ActiveDOMMessage? = null,
+    var state: FlowState = FlowState.CONTINUE
 )
 
 class InteractTask(
@@ -54,7 +53,7 @@ class BrowserStatus(
 
 class BrowserError(
         val status: ProtocolStatus,
-        val activeDomMessage: ActiveDomMessage
+        val activeDomMessage: ActiveDOMMessage
 ) {
     companion object {
         const val CONNECTION_TIMED_OUT = "ERR_CONNECTION_TIMED_OUT"

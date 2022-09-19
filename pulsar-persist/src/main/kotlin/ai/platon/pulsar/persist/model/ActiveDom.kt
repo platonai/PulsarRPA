@@ -28,39 +28,8 @@ data class ActiveDOMStat(
         val h: Int = 0
 )
 
-object Converters {
-    fun convert(s: GActiveDOMStat): ActiveDOMStat {
-        return ActiveDOMStat(s.ni, s.na, s.nnm, s.nst, s.w, s.h)
-    }
-
-    fun convert(s: ActiveDOMStat): GActiveDOMStat {
-        return GActiveDOMStat().apply {
-            ni = s.ni
-            na = s.na
-            nnm = s.nnm
-            nst = s.nst
-            w = s.w
-            h = s.h
-        }
-    }
-
-    fun convert(s: GActiveDOMStatus): ActiveDOMStatus {
-        return ActiveDOMStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
-    }
-
-    fun convert(s: ActiveDOMStatus): GActiveDOMStatus {
-        return GActiveDOMStatus().apply {
-            n = s.n
-            st = s.st
-            r = s.r
-            idl = s.idl
-            ec = s.ec
-        }
-    }
-}
-
 /**
- * URLs of a document.
+ * URLs of a document computed by javascript in a real browser.
  * */
 data class ActiveDOMUrls(
     /**
@@ -68,7 +37,7 @@ data class ActiveDOMUrls(
      */
     var URL: String = "",
     /**
-     * The baseURI is a property of Node, it's the absolute base URL of the
+     * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
      * document containing the node. A baseURI is used to resolve relative URLs.
      *
      * The base URL is determined as follows:
@@ -78,7 +47,7 @@ data class ActiveDOMUrls(
      * */
     var baseURI: String = "",
     /**
-     * The `window.location`, or `document.location`, is a read-only property
+     * In javascript, the `window.location`, or `document.location`, is a read-only property
      * returns a Location object, which contains information about the URL of the
      * document and provides methods for changing that URL and loading another URL.
      *
@@ -92,10 +61,13 @@ data class ActiveDOMUrls(
      * The documentURI property can be used on any document types. The document.URL
      * property can only be used on HTML documents.
      *
-     * @see https://www.w3schools.com/jsref/prop_document_documenturi.asp
+     * @see <a href='https://www.w3schools.com/jsref/prop_document_documenturi.asp'>
+     *     HTML DOM Document documentURI</a>
      * */
     var documentURI: String = "",
-    /** Returns the URI of the page that linked to this page. */
+    /**
+     * Returns the URI of the page that linked to this page.
+     */
     var referrer: String = "",
 ) {
     fun toJson(): String{
@@ -155,7 +127,7 @@ data class ActiveDOMStatTrace(
     }
 }
 
-data class ActiveDomMessage(
+data class ActiveDOMMessage(
     var trace: ActiveDOMStatTrace? = null,
     var urls: ActiveDOMUrls? = null
 ) {
@@ -165,10 +137,41 @@ data class ActiveDomMessage(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDomMessage()
+        val default = ActiveDOMMessage()
 
-        fun fromJson(json: String): ActiveDomMessage {
-            return gson.fromJson(json, ActiveDomMessage::class.java)
+        fun fromJson(json: String): ActiveDOMMessage {
+            return gson.fromJson(json, ActiveDOMMessage::class.java)
+        }
+    }
+}
+
+object Converters {
+    fun convert(s: GActiveDOMStat): ActiveDOMStat {
+        return ActiveDOMStat(s.ni, s.na, s.nnm, s.nst, s.w, s.h)
+    }
+
+    fun convert(s: ActiveDOMStat): GActiveDOMStat {
+        return GActiveDOMStat().apply {
+            ni = s.ni
+            na = s.na
+            nnm = s.nnm
+            nst = s.nst
+            w = s.w
+            h = s.h
+        }
+    }
+
+    fun convert(s: GActiveDOMStatus): ActiveDOMStatus {
+        return ActiveDOMStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
+    }
+
+    fun convert(s: ActiveDOMStatus): GActiveDOMStatus {
+        return GActiveDOMStatus().apply {
+            n = s.n
+            st = s.st
+            r = s.r
+            idl = s.idl
+            ec = s.ec
         }
     }
 }

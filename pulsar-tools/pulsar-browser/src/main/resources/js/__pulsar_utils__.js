@@ -31,7 +31,7 @@ __pulsar_utils__.checkStatus = function(scroll = 3) {
         this.updateStat(true);
     }
 
-    let status = document.__pulsar__Data.multiStatus.status;
+    let status = document.__pulsar__Data.trace.status;
     status.n += 1;
 
     if (status.scroll < scroll) {
@@ -45,7 +45,7 @@ __pulsar_utils__.checkStatus = function(scroll = 3) {
     }
 
     if (this.isBrowserError()) {
-        document.__pulsar__Data.multiStatus.status.ec = document.querySelector(".error-code").textContent
+        document.__pulsar__Data.trace.status.ec = document.querySelector(".error-code").textContent
     }
 
     // The document is ready
@@ -70,7 +70,7 @@ __pulsar_utils__.createDataIfAbsent = function() {
         }
 
         document.__pulsar__Data = {
-            multiStatus: {
+            trace: {
                 status: { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" },
                 initStat: null,
                 lastStat: {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
@@ -81,7 +81,8 @@ __pulsar_utils__.createDataIfAbsent = function() {
                 URL: document.URL,
                 baseURI: document.baseURI,
                 location: location,
-                documentURI: document.documentURI
+                documentURI: document.documentURI,
+                referrer: document.referrer
             }
         };
     }
@@ -124,9 +125,9 @@ __pulsar_utils__.isActuallyReady = function() {
     }
 
     let ready = false;
-    let multiStatus = document.__pulsar__Data.multiStatus;
-    let status = multiStatus.status;
-    let d = multiStatus.lastD;
+    let trace = document.__pulsar__Data.trace;
+    let status = trace.status;
+    let d = trace.lastD;
 
     // all sub resources are loaded, the document is ready now
     if (status.st === "c") {
@@ -136,7 +137,7 @@ __pulsar_utils__.isActuallyReady = function() {
     }
 
     // The DOM is very good for analysis, no wait for more information
-    let stat = multiStatus.lastStat;
+    let stat = trace.lastStat;
     if (status.n > 20 && stat.h >= this.fineHeight
         && stat.na >= this.fineNumAnchor
         && stat.ni >= this.fineNumImage
@@ -157,9 +158,9 @@ __pulsar_utils__.isActuallyReady = function() {
 
 __pulsar_utils__.isIdle = function(init = false) {
     let idle = false;
-    let multiStatus = document.__pulsar__Data.multiStatus;
-    let status = multiStatus.status;
-    let d = multiStatus.lastD;
+    let trace = document.__pulsar__Data.trace;
+    let status = trace.status;
+    let d = trace.lastD;
     if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
         // DOM changed since last check, store the latest stat and return false to wait for the next check
         ++status.idl;
@@ -233,14 +234,14 @@ __pulsar_utils__.updateStat = function(init = false) {
         return
     }
 
-    let multiStatus = document.__pulsar__Data.multiStatus;
-    let initStat = multiStatus.initStat;
+    let trace = document.__pulsar__Data.trace;
+    let initStat = trace.initStat;
     if (!initStat) {
         initStat = { w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm };
-        multiStatus.initStat = initStat
+        trace.initStat = initStat
     }
-    let lastStat = multiStatus.lastStat;
-    let lastStatus = multiStatus.status;
+    let lastStat = trace.lastStat;
+    let lastStatus = trace.status;
     let state = document.readyState.substr(0, 1);
     let newMultiStatus = {
         status: {n: lastStatus.n, scroll: lastStatus.scroll, idl: lastStatus.idl, st: state, r: lastStatus.r},
@@ -265,7 +266,7 @@ __pulsar_utils__.updateStat = function(init = false) {
         }
     };
 
-    document.__pulsar__Data.multiStatus = Object.assign(multiStatus, newMultiStatus)
+    document.__pulsar__Data.trace = Object.assign(trace, newMultiStatus)
 };
 
 /**
@@ -335,7 +336,7 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
         // return false
     }
 
-    let status = document.__pulsar__Data.multiStatus.status;
+    let status = document.__pulsar__Data.trace.status;
 
     window.scrollBy(0, 500);
     status.scroll += 1;

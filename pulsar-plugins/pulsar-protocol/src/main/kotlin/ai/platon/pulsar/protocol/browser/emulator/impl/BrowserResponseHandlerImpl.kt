@@ -11,7 +11,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
 import org.slf4j.LoggerFactory
@@ -99,7 +99,7 @@ open class BrowserResponseHandlerImpl(
      * This page should be text analyzed to determine the actual error.
      * */
     override fun onChromeErrorPageReturn(message: String): BrowserError {
-        val activeDomMessage = ActiveDomMessage.fromJson(message)
+        val activeDomMessage = ActiveDOMMessage.fromJson(message)
         val ec = activeDomMessage.trace?.status?.ec
         // chrome can not connect to the peer, it probably be caused by a bad proxy
         // convert to retry in PRIVACY_CONTEXT later
