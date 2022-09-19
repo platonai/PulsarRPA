@@ -210,7 +210,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     /**
      * the page displays "404 Not Found" or something similar,
-     * the the server should issue a 404 error code, but not guaranteed
+     * the server should issue a 404 error code, but not guaranteed
      * */
     public boolean isNotFound() {
         return getMinorCode() == NOT_FOUND;

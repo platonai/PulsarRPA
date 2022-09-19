@@ -39,7 +39,7 @@
       "default": null
     },
     {
-      "name": "args",
+      "name": "params",
       "type": ["null","string"],
       "default": null
     },

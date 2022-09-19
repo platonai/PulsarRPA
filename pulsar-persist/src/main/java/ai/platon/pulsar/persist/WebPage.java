@@ -147,6 +147,10 @@ final public class WebPage implements Comparable<WebPage> {
         return newWebPage(url, conf, null);
     }
 
+    /**
+     * @deprecated Use WebPageEx.newTestWebPage instead
+     * */
+    @Deprecated
     @NotNull
     public static WebPage newTestWebPage(@NotNull String url) {
         return newWebPage(url, new VolatileConfig(), null);
@@ -431,10 +435,14 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The load arguments is variant task by task, so the local version is the first choice,
      * while the persisted version is used for historical check only
+     *
+     * The underlying field should not use name 'args' since it exists already
+     * with another gora type, see GProtocolStatus.args and GParseStatus.args
      */
     @NotNull
     public String getArgs() {
-        CharSequence args = page.getArgs();
+        // The underlying field should not use name 'args'
+        CharSequence args = page.getParams();
         return args != null ? args.toString() : "";
     }
 
@@ -443,7 +451,7 @@ final public class WebPage implements Comparable<WebPage> {
      * */
     public void setArgs(@NotNull String args) {
         variables.remove(VAR_LOAD_OPTIONS);
-        page.setArgs(args);
+        page.setParams(args);
     }
 
     @NotNull

@@ -26,7 +26,7 @@
         <field name="fetchPriority" docfield="fetchPriority" type="int32" />
         <field name="fetchInterval" docfield="fetchInterval" type="int32" />
         <field name="zoneId" docfield="zoneId" type="string" />
-        <field name="args" docfield="args" type="string" />
+        <field name="params" docfield="params" type="string" />
 
         <field name="batchId" docfield="batchId" type="string" />
         <field name="resource" docfield="resource" type="int32" />
@@ -64,6 +64,7 @@
         <field name="contentText" docfield="contentText" type="string" />
         <field name="contentTextLen" docfield="contentTextLen" type="int32" />
         <field name="pageCategory" docfield="pageCategory" type="string" />
+
 
         <field name="contentModifiedTime" docfield="contentModifiedTime" type="int64" />
         <field name="prevContentModifiedTime" docfield="prevContentModifiedTime" type="int64" />

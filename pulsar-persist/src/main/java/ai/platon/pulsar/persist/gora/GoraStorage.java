@@ -55,7 +55,7 @@ public class GoraStorage {
         Object o = dataStores.get(schema);
         if (o == null) {
             org.apache.hadoop.conf.Configuration hadoopConf = HadoopUtils.INSTANCE.toHadoopConfiguration(conf);
-            String realSchema = schemaPrefix + "webpage";
+            String realSchema = schemaPrefix + schema;
             hadoopConf.set(STORAGE_PREFERRED_SCHEMA_NAME, realSchema);
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
                     keyClass, persistentClass, hadoopConf, properties, schema);

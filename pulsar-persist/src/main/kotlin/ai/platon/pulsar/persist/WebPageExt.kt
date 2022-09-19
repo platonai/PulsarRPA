@@ -3,11 +3,29 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.model.ActiveDOMStat
+import ai.platon.pulsar.persist.model.ActiveDOMStatus
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class WebPageExt(private val page: WebPage) {
+
+    companion object {
+
+        fun newTestWebPage(url: String): WebPage {
+            val page = WebPage.newWebPage(url, VolatileConfig(), null)
+
+            page.vividLinks = mapOf("$url?t=a" to "a", "$url?t=b" to "b")
+            page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
+            page.activeDOMStatTrace = mapOf("a" to ActiveDOMStat(), "b" to ActiveDOMStat())
+            page.pageModel.emplace(1, "g", mapOf("a" to "b"))
+
+            return page
+        }
+
+    }
 
     fun increaseDistance(newDistance: Int) {
         val oldDistance: Int = page.distance

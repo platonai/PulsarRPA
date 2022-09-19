@@ -16,7 +16,7 @@ class TestFileBackendStore {
 
     @Before
     fun setup() {
-        page = WebPage.newTestWebPage(url)
+        page = WebPageExt.newTestWebPage(url)
     }
 
     @Test

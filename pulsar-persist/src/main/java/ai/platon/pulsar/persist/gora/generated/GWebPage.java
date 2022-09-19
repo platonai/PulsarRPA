@@ -18,8 +18,8 @@
 package ai.platon.pulsar.persist.gora.generated;  
 
 public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchInterval\",\"type\":\"int\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"args\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"resource\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"browser\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"proxy\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevCrawlTime1\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"contentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"lastContentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"aveContentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"persistedContentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"htmlIntegrity\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"pageModelUpdateTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"activeDOMStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"activeDOMStatTrace\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}]},\"default\":null},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
-  private static final long serialVersionUID = -1929816713459636078L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchInterval\",\"type\":\"long\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"params\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"resource\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"browser\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"proxy\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevCrawlTime1\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"contentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"lastContentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"aveContentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"persistedContentLength\",\"type\":\"long\",\"default\":0},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"htmlIntegrity\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"pageModelUpdateTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"activeDOMStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStatus\",\"fields\":[{\"name\":\"n\",\"type\":\"int\",\"default\":0},{\"name\":\"scroll\",\"type\":\"int\",\"default\":0},{\"name\":\"st\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"r\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"idl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"ec\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"activeDOMStatTrace\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GActiveDOMStat\",\"fields\":[{\"name\":\"ni\",\"type\":\"int\",\"default\":0},{\"name\":\"na\",\"type\":\"int\",\"default\":0},{\"name\":\"nnm\",\"type\":\"int\",\"default\":0},{\"name\":\"nst\",\"type\":\"int\",\"default\":0},{\"name\":\"w\",\"type\":\"int\",\"default\":0},{\"name\":\"h\",\"type\":\"int\",\"default\":0}]}]},\"default\":null},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
+  private static final long serialVersionUID = 5320449610853668415L;
   /** Enum containing all data bean's fields. */
   public static enum Field {
     BASE_URL(0, "baseUrl"),
@@ -29,7 +29,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     FETCH_PRIORITY(4, "fetchPriority"),
     FETCH_INTERVAL(5, "fetchInterval"),
     ZONE_ID(6, "zoneId"),
-    ARGS(7, "args"),
+    PARAMS(7, "params"),
     BATCH_ID(8, "batchId"),
     RESOURCE(9, "resource"),
     CRAWL_STATUS(10, "crawlStatus"),
@@ -130,7 +130,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   "fetchPriority",
   "fetchInterval",
   "zoneId",
-  "args",
+  "params",
   "batchId",
   "resource",
   "crawlStatus",
@@ -203,7 +203,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   private int fetchPriority;
   private int fetchInterval;
   private java.lang.CharSequence zoneId;
-  private java.lang.CharSequence args;
+  private java.lang.CharSequence params;
   private java.lang.CharSequence batchId;
   private java.lang.Integer resource;
   private int crawlStatus;
@@ -271,7 +271,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     case 4: return fetchPriority;
     case 5: return fetchInterval;
     case 6: return zoneId;
-    case 7: return args;
+    case 7: return params;
     case 8: return batchId;
     case 9: return resource;
     case 10: return crawlStatus;
@@ -342,7 +342,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     case 4: fetchPriority = (java.lang.Integer)(value); break;
     case 5: fetchInterval = (java.lang.Integer)(value); break;
     case 6: zoneId = (java.lang.CharSequence)(value); break;
-    case 7: args = (java.lang.CharSequence)(value); break;
+    case 7: params = (java.lang.CharSequence)(value); break;
     case 8: batchId = (java.lang.CharSequence)(value); break;
     case 9: resource = (java.lang.Integer)(value); break;
     case 10: crawlStatus = (java.lang.Integer)(value); break;
@@ -571,26 +571,26 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   }
 
   /**
-   * Gets the value of the 'args' field.
+   * Gets the value of the 'params' field.
    */
-  public java.lang.CharSequence getArgs() {
-    return args;
+  public java.lang.CharSequence getParams() {
+    return params;
   }
 
   /**
-   * Sets the value of the 'args' field.
+   * Sets the value of the 'params' field.
    * @param value the value to set.
    */
-  public void setArgs(java.lang.CharSequence value) {
-    this.args = value;
+  public void setParams(java.lang.CharSequence value) {
+    this.params = value;
     setDirty(7);
   }
   
   /**
-   * Checks the dirty status of the 'args' field. A field is dirty if it represents a change that has not yet been written to the database.
+   * Checks the dirty status of the 'params' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
    */
-  public boolean isArgsDirty() {
+  public boolean isParamsDirty() {
     return isDirty(7);
   }
 
@@ -1965,7 +1965,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     private int fetchPriority;
     private int fetchInterval;
     private java.lang.CharSequence zoneId;
-    private java.lang.CharSequence args;
+    private java.lang.CharSequence params;
     private java.lang.CharSequence batchId;
     private java.lang.Integer resource;
     private int crawlStatus;
@@ -2063,8 +2063,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
         this.zoneId = (java.lang.CharSequence) data().deepCopy(fields()[6].schema(), other.zoneId);
         fieldSetFlags()[6] = true;
       }
-      if (isValidValue(fields()[7], other.args)) {
-        this.args = (java.lang.CharSequence) data().deepCopy(fields()[7].schema(), other.args);
+      if (isValidValue(fields()[7], other.params)) {
+        this.params = (java.lang.CharSequence) data().deepCopy(fields()[7].schema(), other.params);
         fieldSetFlags()[7] = true;
       }
       if (isValidValue(fields()[8], other.batchId)) {
@@ -2459,27 +2459,27 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
       return this;
     }
     
-    /** Gets the value of the 'args' field */
-    public java.lang.CharSequence getArgs() {
-      return args;
+    /** Gets the value of the 'params' field */
+    public java.lang.CharSequence getParams() {
+      return params;
     }
     
-    /** Sets the value of the 'args' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setArgs(java.lang.CharSequence value) {
+    /** Sets the value of the 'params' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder setParams(java.lang.CharSequence value) {
       validate(fields()[7], value);
-      this.args = value;
+      this.params = value;
       fieldSetFlags()[7] = true;
       return this; 
     }
     
-    /** Checks whether the 'args' field has been set */
-    public boolean hasArgs() {
+    /** Checks whether the 'params' field has been set */
+    public boolean hasParams() {
       return fieldSetFlags()[7];
     }
     
-    /** Clears the value of the 'args' field */
-    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearArgs() {
-      args = null;
+    /** Clears the value of the 'params' field */
+    public ai.platon.pulsar.persist.gora.generated.GWebPage.Builder clearParams() {
+      params = null;
       fieldSetFlags()[7] = false;
       return this;
     }
@@ -3848,7 +3848,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
         record.fetchPriority = fieldSetFlags()[4] ? this.fetchPriority : (java.lang.Integer) defaultValue(fields()[4]);
         record.fetchInterval = fieldSetFlags()[5] ? this.fetchInterval : (java.lang.Integer) defaultValue(fields()[5]);
         record.zoneId = fieldSetFlags()[6] ? this.zoneId : (java.lang.CharSequence) defaultValue(fields()[6]);
-        record.args = fieldSetFlags()[7] ? this.args : (java.lang.CharSequence) defaultValue(fields()[7]);
+        record.params = fieldSetFlags()[7] ? this.params : (java.lang.CharSequence) defaultValue(fields()[7]);
         record.batchId = fieldSetFlags()[8] ? this.batchId : (java.lang.CharSequence) defaultValue(fields()[8]);
         record.resource = fieldSetFlags()[9] ? this.resource : (java.lang.Integer) defaultValue(fields()[9]);
         record.crawlStatus = fieldSetFlags()[10] ? this.crawlStatus : (java.lang.Integer) defaultValue(fields()[10]);
@@ -4087,25 +4087,25 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 	  }
 	
 				  /**
-	   * Gets the value of the 'args' field.
+	   * Gets the value of the 'params' field.
 		   */
-	  public java.lang.CharSequence getArgs() {
+	  public java.lang.CharSequence getParams() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
 	
 	  /**
-	   * Sets the value of the 'args' field.
+	   * Sets the value of the 'params' field.
 		   * @param value the value to set.
 	   */
-	  public void setArgs(java.lang.CharSequence value) {
+	  public void setParams(java.lang.CharSequence value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
 	  
 	  /**
-	   * Checks the dirty status of the 'args' field. A field is dirty if it represents a change that has not yet been written to the database.
+	   * Checks the dirty status of the 'params' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
 	   */
-	  public boolean isArgsDirty() {
+	  public boolean isParamsDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
 	

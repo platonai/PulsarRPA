@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.persist.WebDb
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,9 +30,9 @@ class TestBase {
     lateinit var session: PulsarSession
 
     @Autowired
-    lateinit var globalCacheFactory: GlobalCacheFactory
+    lateinit var webDB: WebDb
 
-    val globalCache get() = globalCacheFactory.globalCache
+    val globalCache get() = session.globalCache
 
     @Test
     fun smoke() {
