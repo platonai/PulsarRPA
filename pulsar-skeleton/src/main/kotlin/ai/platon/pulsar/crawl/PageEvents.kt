@@ -98,7 +98,7 @@ interface EmulateEvent {
 }
 
 /**
- * Manage all events of a web page life cycle. The page events are visible to the end users.
+ * Manage all events of a web page life cycle.
  * */
 interface PageEvent {
     val loadEvent: LoadEvent

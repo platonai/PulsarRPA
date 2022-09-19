@@ -15,41 +15,140 @@ object UrlUtils {
 
     fun isNotInternal(url: String) = !isInternal(url)
 
+    /**
+     * Creates a {@code URL} object from the {@code String}
+     * representation.
+     *
+     * @param      spec   the {@code String} to parse as a URL.
+     * @return     the URL parsed from [spec],
+     *             or null if no protocol is specified, or an
+     *               unknown protocol is found, or {@code spec} is {@code null},
+     *               or the parsed URL fails to comply with the specific syntax
+     *               of the associated protocol.
+     * @see        java.net.URL#URL(java.net.URL)
+     */
     @JvmStatic
-    fun getURLOrNull(url: String?): URL? {
-        if (url.isNullOrBlank()) return null
+    fun getURLOrNull(spec: String?): URL? {
+        if (spec.isNullOrBlank()) return null
 
-        return kotlin.runCatching { URL(url) }.getOrNull()
-    }
-
-    @JvmStatic
-    fun isValidUrl(url: String?): Boolean {
-        return getURLOrNull(url) != null
+        return kotlin.runCatching { URL(spec) }.getOrNull()
     }
 
     /**
-     * Simple normalization
-     * TODO: move to general normalize module
+     * Test if the str is a standard URL.
+     *
+     * @param  str   The string to test
+     * @return true if the given str is a a standard URL, false otherwise
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("isStandard"))
     @JvmStatic
-    fun normalize(url: String, ignoreQuery: Boolean = false): String {
-        var u = splitUrlArgs(url).first
-        u = getURLOrNull(u)?.toString() ?: return ""
-        u = u.substringBefore("#")
-        if (ignoreQuery) {
-            u = getUrlWithoutParameters(u)
-        }
-        return u
+    fun isValidUrl(str: String?): Boolean {
+        return getURLOrNull(str) != null
     }
 
+    /**
+     * Test if the str is a standard URL.
+     *
+     * @param  str   The string to test
+     * @return true if the given str is a a standard URL, false otherwise
+     * */
+    @JvmStatic
+    fun isStandard(str: String?): Boolean {
+        return getURLOrNull(str) != null
+    }
+
+    /**
+     * Normalize a url spec.
+     *
+     * A URL may have appended to it a "fragment", also known as a "ref" or a "reference".
+     * The fragment is indicated by the sharp sign character "#" followed by more characters.
+     * For example: http://java.sun.com/index.html#chapter1
+     *
+     * The fragment will be removed after the normalization.
+     * If ignoreQuery is true, the query string will be removed.
+     *
+     * @param url
+     *        The url to normalize, a tailing argument list is allowed and will be removed
+     *
+     * @param ignoreQuery
+     *        If true, the result url does not contain a query string
+     *
+     * @return The normalized URL
+     * @throws URISyntaxException
+     *         If the given string violates RFC&nbsp;2396
+     * */
+    @JvmStatic
+    @Throws(URISyntaxException::class)
+    fun normalize(url: String, ignoreQuery: Boolean = false): URL {
+        val (url0, _) = splitUrlArgs(url)
+
+        val uriBuilder = URIBuilder(url0)
+        uriBuilder.fragment = null
+        if (ignoreQuery) {
+            uriBuilder.removeQuery()
+        }
+        return uriBuilder.build().toURL()
+    }
+
+    /**
+     * Normalize a url spec.
+     *
+     * A URL may have appended to it a "fragment", also known as a "ref" or a "reference".
+     * The fragment is indicated by the sharp sign character "#" followed by more characters.
+     * For example: http://java.sun.com/index.html#chapter1
+     *
+     * The fragment will be removed after the normalization.
+     * If ignoreQuery is true, the query string will be removed.
+     *
+     * @param url
+     *        The url to normalize, a tailing argument list is allowed and will be removed
+     *
+     * @param ignoreQuery
+     *        If true, the result url does not contain a query string
+     *
+     * @return The normalized url,
+     *         or an empty string ("") if the given string violates RFC&nbsp;2396
+     * */
+    @JvmStatic
+    fun normalizeOrEmpty(url: String, ignoreQuery: Boolean = false): String {
+        return try {
+            normalize(url, ignoreQuery).toString()
+        } catch (e: URISyntaxException) {
+            ""
+        }
+    }
+
+    /**
+     * Normalize a url spec.
+     *
+     * A URL may have appended to it a "fragment", also known as a "ref" or a "reference".
+     * The fragment is indicated by the sharp sign character "#" followed by more characters.
+     * For example: http://java.sun.com/index.html#chapter1
+     *
+     * The fragment will be removed after the normalization.
+     * If ignoreQuery is true, the query string will be removed.
+     *
+     * @param url
+     *        The url to normalize, a tailing argument list is allowed and will be removed
+     *
+     * @param ignoreQuery
+     *        If true, the result url does not contain a query string
+     *
+     * @return The normalized url,
+     *         or null if the given string violates RFC&nbsp;2396
+     * */
     @JvmStatic
     fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
-        return normalize(url, ignoreQuery).takeUnless { it.isBlank() }
+        return try {
+            normalize(url, ignoreQuery).toString()
+        } catch (e: URISyntaxException) {
+            null
+        }
     }
 
     @JvmStatic
     fun normalizeUrls(urls: Iterable<String>, ignoreQuery: Boolean = false): List<String> {
-        return urls.mapNotNull { normalize(it, ignoreQuery).takeIf { it.isNotBlank() } }
+        return urls.mapNotNull { normalizeOrNull(it, ignoreQuery) }
     }
 
     @Throws(URISyntaxException::class)
@@ -155,7 +254,7 @@ object UrlUtils {
 
     @JvmStatic
     fun normalizedUrlAndKey(originalUrl: String, norm: Boolean = false): Pair<String, String> {
-        val url = if (norm) normalize(originalUrl) else originalUrl
+        val url = if (norm) (normalizeOrNull(originalUrl) ?: "") else originalUrl
         val key = reverseUrlOrEmpty(url)
         return url to key
     }

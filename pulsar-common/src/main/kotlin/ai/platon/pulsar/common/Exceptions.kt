@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common
 
-import org.slf4j.Logger
-
 open class NoSuchCriticalObjectException : RuntimeException {
 
     constructor() : super() {}
