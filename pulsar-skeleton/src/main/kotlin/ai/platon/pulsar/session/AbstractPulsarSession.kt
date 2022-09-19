@@ -324,7 +324,7 @@ abstract class AbstractPulsarSession(
         val itemOpts = normUrl.options.createItemOptions()
 
         require(normUrl.options.rawEvent == options.rawEvent)
-        require(options.rawItemEvent == itemOpts.itemEvent)
+        require(options.rawItemEvent == itemOpts.rawEvent)
 
         val selector = opts.outLinkSelectorOrNull ?: return listOf()
 
