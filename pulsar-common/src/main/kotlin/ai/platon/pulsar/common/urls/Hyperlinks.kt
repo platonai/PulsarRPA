@@ -5,12 +5,6 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 
-open class PlainUrl(
-    url: String,
-    args: String? = null,
-    referer: String? = null
-) : AbstractUrl(url, args, referer)
-
 data class HyperlinkDatum(
     val url: String,
     /**

@@ -26,7 +26,7 @@ open class ProxyPoolManager(
     // Set the active proxy idle, for test purpose
     private val isForceIdle get() = FileCommand.check(AppConstants.CMD_PROXY_FORCE_IDLE, 15)
 
-    var lastActiveTime = Instant.now()
+    var lastActiveTime = Instant.EPOCH
     var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(10))
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     open val isIdle get() = (numRunningTasks.get() == 0 && idleTime > idleTimeout) || isForceIdle

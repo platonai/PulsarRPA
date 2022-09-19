@@ -13,7 +13,7 @@ class BrowserResponseHandlerFactory(
     private val reflectedHandler by lazy {
         val clazz = immutableConfig.getClass(
                 CapabilityTypes.BROWSER_RESPONSE_HANDLER, BrowserResponseHandlerImpl::class.java)
-        clazz.constructors.first { it.parameters.size == 3 }
+        clazz.constructors.first { it.parameters.size == 2 }
                 .newInstance(driverPoolManager, immutableConfig) as BrowserResponseHandler
     }
 

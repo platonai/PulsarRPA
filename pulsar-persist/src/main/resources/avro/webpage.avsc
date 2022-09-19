@@ -29,6 +29,11 @@
       "default": 0
     },
     {
+      "name": "fetchInterval",
+      "type": "int",
+      "default": 0
+    },
+    {
       "name": "zoneId",
       "type": ["null","string"],
       "default": null
@@ -54,11 +59,6 @@
       "default": 0
     },
     {
-      "name": "fetchRetries",
-      "type": "int",
-      "default": 0
-    },
-    {
       "name": "browser",
       "type": ["null","string"],
       "default": null
@@ -67,11 +67,6 @@
       "name": "proxy",
       "type": ["null","string"],
       "default": null
-    },
-    {
-      "name": "fetchInterval",
-      "type": "int",
-      "default": 0
     },
     {
       "name": "prevFetchTime",
@@ -87,6 +82,16 @@
       "name": "fetchTime",
       "type": "long",
       "default": 0
+    },
+    {
+      "name": "fetchRetries",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "reprUrl",
+      "type": ["null","string"],
+      "default": null
     },
     {
       "name": "prevModifiedTime",
@@ -155,12 +160,6 @@
       "name": "referrer",
       "type": ["null","string"],
       "default": null
-    },
-    {
-      "name": "reprUrl",
-      "type": ["null","string"],
-      "default": null,
-      "doc": "Given two urls, a src and a destination of a redirect, it returns the representative url."
     },
     {
       "name": "htmlIntegrity",
@@ -255,6 +254,11 @@
       "default": 0
     },
     {
+      "name": "pageModelUpdateTime",
+      "type": "long",
+      "default": 0
+    },
+    {
       "name": "prevSignature",
       "type": ["null","bytes"],
       "default": null
@@ -295,6 +299,11 @@
       "default": []
     },
     {
+      "name": "deadLinks",
+      "type" : { "type" : "array", "items" : "string"},
+      "default": []
+    },
+    {
       "name": "liveLinks",
       "type": {
         "type": "map",
@@ -317,11 +326,6 @@
       "name": "vividLinks",
       "type": {"type": "map","values": ["null","string"]},
       "default": {}
-    },
-    {
-      "name": "deadLinks",
-      "type" : { "type" : "array", "items" : "string"},
-      "default": []
     },
     {
       "name": "inlinks",
@@ -379,11 +383,6 @@
         ]
       },
       "default": null
-    },
-    {
-      "name": "pageModelUpdateTime",
-      "type": "long",
-      "default": 0
     },
     {
       "name": "pageModel",
