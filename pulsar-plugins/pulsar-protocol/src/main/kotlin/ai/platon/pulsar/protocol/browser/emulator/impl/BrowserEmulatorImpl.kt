@@ -284,41 +284,39 @@ open class BrowserEmulatorImpl(
 
         tracer?.trace("{}", task.interactSettings)
 
-        dispatchEvent(EventType.willCheckDOMState, page, driver)
-//        notify("onWillCheckDOMState") { event?.onWillCheckDOMState?.invoke(page, driver) }
+        dispatchEvent(EventType.willCheckDocumentState, page, driver)
 
-        jsCheckDOMState(task, result)
+        waitForDocumentActuallyReady(task, result)
+
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
+            dispatchEvent(EventType.documentActuallyReady, page, driver)
         }
 
-        dispatchEvent(EventType.didDOMStateCheck, page, driver)
-//        notify("onDOMStateChecked") { event?.onDOMStateChecked?.invoke(page, driver) }
-
         if (result.state.isContinue) {
-            jsScrollDown(task, result)
+            scrollDown(task, result)
         }
 
         if (result.state.isContinue) {
             dispatchEvent(EventType.willComputeFeature, page, driver)
-//            notify("onWillComputeFeature") { event?.onWillComputeFeature?.invoke(page, driver) }
 
-            jsComputeFeature(task, result)
+            computeDocumentFeatures(task, result)
 
             dispatchEvent(EventType.featureComputed, page, driver)
-//            notify("onFeatureComputed") { event?.onFeatureComputed?.invoke(page, driver) }
         }
 
         return result
     }
 
+    /**
+     * Wait until the document is actually ready, or timeout.
+     * */
     @Throws(NavigateTaskCancellationException::class)
-    protected open suspend fun jsCheckDOMState(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun waitForDocumentActuallyReady(interactTask: InteractTask, result: InteractResult) {
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.fetchTask
 
-        // make sure the document is ready
         val initialScroll = 5
         val delayMillis = 500L * 2
 //        val maxRound = scriptTimeout.toMillis() / delayMillis
@@ -353,7 +351,7 @@ open class BrowserEmulatorImpl(
             } else if (message is String && message.contains("chrome-error://")) {
                 val browserError = responseHandler.onChromeErrorPageReturn(message)
                 status = browserError.status
-                result.activeDOMMessage = browserError.activeDomMessage
+                result.activeDOMMessage = browserError.activeDOMMessage
                 result.state = FlowState.BREAK
             } else {
                 if (tracer != null) {
@@ -367,7 +365,7 @@ open class BrowserEmulatorImpl(
         result.protocolStatus = status
     }
 
-    protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun scrollDown(interactTask: InteractTask, result: InteractResult) {
         val interactSettings = interactTask.interactSettings
         val random = ThreadLocalRandom.current().nextInt(3)
         val scrollDownCount = (interactSettings.scrollCount + random - 1).coerceAtLeast(1)
@@ -382,7 +380,7 @@ open class BrowserEmulatorImpl(
         evaluate(interactTask, expressions, scrollInterval)
     }
 
-    protected open suspend fun jsWaitForElement(
+    protected open suspend fun waitForElement(
         interactTask: InteractTask, requiredElements: List<String>
     ) {
         if (requiredElements.isNotEmpty()) {
@@ -402,7 +400,7 @@ open class BrowserEmulatorImpl(
         }
     }
 
-    protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun computeDocumentFeatures(interactTask: InteractTask, result: InteractResult) {
         val expression = "__pulsar_utils__.compute()"
         val message = evaluate(interactTask, expression)
 

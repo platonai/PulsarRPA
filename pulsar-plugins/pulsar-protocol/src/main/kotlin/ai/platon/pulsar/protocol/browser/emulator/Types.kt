@@ -53,7 +53,7 @@ class BrowserStatus(
 
 class BrowserError(
         val status: ProtocolStatus,
-        val activeDomMessage: ActiveDOMMessage
+        val activeDOMMessage: ActiveDOMMessage
 ) {
     companion object {
         const val CONNECTION_TIMED_OUT = "ERR_CONNECTION_TIMED_OUT"

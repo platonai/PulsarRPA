@@ -12,15 +12,16 @@ import java.time.Duration
 import kotlin.random.Random
 
 /**
- * The browser display mode
- * SUPERVISED: supervised by other programs
- * GUI: open as a normal browser
- * HEADLESS: open in headless mode
+ * The browser display mode.
+ *
+ * Three display modes are supported:
+ * 1. GUI: open as a normal browser
+ * 2. HEADLESS: open in headless mode
+ * 3. SUPERVISED: supervised by other programs
  * */
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
 open class BrowserSettings(
-    parameters: Map<String, Any> = mapOf(),
     var jsDirectory: String = "js",
     val conf: ImmutableConfig = ImmutableConfig()
 ) {

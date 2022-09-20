@@ -57,16 +57,15 @@ import java.time.Duration
     }
  * */
 open class WebDriverSettings(
-    parameters: Map<String, Any> = mapOf(),
     jsDirectory: String = "js",
     conf: ImmutableConfig
-): BrowserSettings(parameters, jsDirectory, conf) {
+): BrowserSettings(jsDirectory, conf) {
 
     companion object {
         val POLLING_DRIVER_TIMEOUT = Duration.ofSeconds(60)
     }
 
-    constructor(config: ImmutableConfig): this(mapOf(), "js", config)
+    constructor(config: ImmutableConfig): this("js", config)
 
     val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(10))
     val pollingDriverTimeout get() = conf.getDuration("polling.driver.timeout", POLLING_DRIVER_TIMEOUT)

@@ -21,7 +21,7 @@ import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 /**
- * PulsarSession defines a concise interface to fetch webpages, ether from the local storage
+ * PulsarSession defines a concise interface to fetch webpages, from the local storage
  * or the Internet, and methods to parse, extract, persist, index, export them.
  *
  * Key methods:

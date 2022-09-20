@@ -170,8 +170,7 @@ class WebPageFormatter(val page: WebPage) {
         if (withEntities) {
             val pageModel = page.pageModel
             if (pageModel != null) {
-                val pageEntities = pageModel.unbox()
-                    .map { FieldGroupFormatter(it).fields.entries }
+                val pageEntities = pageModel.fieldGroups.map { FieldGroupFormatter(it).fields.entries }
                 fields["pageEntities"] = pageEntities
             }
         }
@@ -294,7 +293,7 @@ class WebPageFormatter(val page: WebPage) {
             val pageModel = page.pageModel
             if (pageModel != null) {
                 sb.append("\n").append("entityField:START>>>\n")
-                pageModel.unbox()
+                pageModel.fieldGroups
                     .flatMap { FieldGroupFormatter(it).fields.entries }
                     .joinTo(sb) { it.key + ": " + it.value }
                 sb.append("\n<<<END:pageText\n")

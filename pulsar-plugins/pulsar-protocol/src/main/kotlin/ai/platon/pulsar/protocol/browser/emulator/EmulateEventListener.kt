@@ -15,8 +15,8 @@ enum class EventType {
     navigated,
     willInteract,
     didInteract,
-    willCheckDOMState,
-    didDOMStateCheck,
+    willCheckDocumentState,
+    documentActuallyReady,
     willComputeFeature,
     featureComputed,
     willStopTab,
@@ -40,13 +40,13 @@ interface EmulateEventListener {
 
     fun offNavigated(handler: (WebPage, WebDriver) -> Unit)
 
-    fun onWillCheckDOMState(handler: (WebPage, WebDriver) -> Unit)
+    fun onWillCheckDocumentState(handler: (WebPage, WebDriver) -> Unit)
 
-    fun offWillCheckDOMState(handler: (WebPage, WebDriver) -> Unit)
+    fun offWillCheckDocumentState(handler: (WebPage, WebDriver) -> Unit)
 
-    fun onDOMStateChecked(handler: (WebPage, WebDriver) -> Unit)
+    fun onDocumentActuallyReady(handler: (WebPage, WebDriver) -> Unit)
 
-    fun offDOMStateChecked(handler: (WebPage, WebDriver) -> Unit)
+    fun offDocumentActuallyReady(handler: (WebPage, WebDriver) -> Unit)
 
     fun onWillStopTab(handler: (WebPage, WebDriver) -> Unit)
 
@@ -80,20 +80,20 @@ abstract class AbstractEmulateEventListener: EmulateEventListener {
         listeners.off(EventType.navigated, handler)
     }
 
-    override fun onWillCheckDOMState(handler: (WebPage, WebDriver) -> Unit) {
-        listeners.on(EventType.willCheckDOMState, handler)
+    override fun onWillCheckDocumentState(handler: (WebPage, WebDriver) -> Unit) {
+        listeners.on(EventType.willCheckDocumentState, handler)
     }
 
-    override fun offWillCheckDOMState(handler: (WebPage, WebDriver) -> Unit) {
-        listeners.off(EventType.willCheckDOMState, handler)
+    override fun offWillCheckDocumentState(handler: (WebPage, WebDriver) -> Unit) {
+        listeners.off(EventType.willCheckDocumentState, handler)
     }
 
-    override fun onDOMStateChecked(handler: (WebPage, WebDriver) -> Unit) {
-        listeners.on(EventType.didDOMStateCheck, handler)
+    override fun onDocumentActuallyReady(handler: (WebPage, WebDriver) -> Unit) {
+        listeners.on(EventType.documentActuallyReady, handler)
     }
 
-    override fun offDOMStateChecked(handler: (WebPage, WebDriver) -> Unit) {
-        listeners.off(EventType.didDOMStateCheck, handler)
+    override fun offDocumentActuallyReady(handler: (WebPage, WebDriver) -> Unit) {
+        listeners.off(EventType.documentActuallyReady, handler)
     }
 
     override fun onWillStopTab(handler: (WebPage, WebDriver) -> Unit) {
@@ -117,8 +117,8 @@ abstract class AbstractEmulateEventListener: EmulateEventListener {
             EventType.willNavigate -> listeners.notify(EventType.willNavigate, page, driver)
             EventType.navigated -> listeners.notify(EventType.navigated, page, driver)
 
-            EventType.willCheckDOMState -> listeners.notify(EventType.willCheckDOMState, page, driver)
-            EventType.didDOMStateCheck -> listeners.notify(EventType.didDOMStateCheck, page, driver)
+            EventType.willCheckDocumentState -> listeners.notify(EventType.willCheckDocumentState, page, driver)
+            EventType.documentActuallyReady -> listeners.notify(EventType.documentActuallyReady, page, driver)
 
             EventType.willComputeFeature -> listeners.notify(EventType.willComputeFeature, page, driver)
             EventType.featureComputed -> listeners.notify(EventType.featureComputed, page, driver)
@@ -134,8 +134,8 @@ abstract class AbstractEmulateEventListener: EmulateEventListener {
             EventType.willNavigate -> notify(type) { event.onWillNavigate(page, driver) }
             EventType.navigated -> notify(type) { event.onNavigated(page, driver) }
 
-            EventType.willCheckDOMState -> notify(type) { event.onWillCheckDOMState(page, driver) }
-            EventType.didDOMStateCheck -> notify(type) { event.onDOMStateChecked(page, driver) }
+            EventType.willCheckDocumentState -> notify(type) { event.onWillCheckDocumentState(page, driver) }
+            EventType.documentActuallyReady -> notify(type) { event.onDocumentActuallyReady(page, driver) }
 
             EventType.willComputeFeature -> notify(type) { event.onWillComputeFeature(page, driver) }
             EventType.featureComputed -> notify(type) { event.onFeatureComputed(page, driver) }

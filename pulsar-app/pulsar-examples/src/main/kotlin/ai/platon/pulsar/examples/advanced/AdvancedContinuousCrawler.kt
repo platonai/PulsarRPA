@@ -57,10 +57,10 @@ fun main() {
             onBrowserLaunched.addLast { page, driver ->
 
             }
-            onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onWillCheckDocumentState.addLast { page: WebPage, driver: WebDriver ->
 
             }
-            onDOMStateChecked.addLast { page: WebPage, driver: WebDriver ->
+            onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
 
             }
             onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
