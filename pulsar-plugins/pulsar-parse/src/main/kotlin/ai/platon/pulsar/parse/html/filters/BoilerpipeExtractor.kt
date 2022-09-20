@@ -60,7 +60,7 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
         pageExt.updateContentPublishTime(doc.publishTime)
         pageExt.updateContentModifiedTime(doc.modifiedTime)
         val id = 1000
-        page.pageModel.emplace(id, 0, "boilerpipe", doc.fields)
+        page.ensurePageModel().emplace(id, 0, "boilerpipe", doc.fields)
         return doc
     }
 

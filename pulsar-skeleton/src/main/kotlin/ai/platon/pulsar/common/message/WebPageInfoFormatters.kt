@@ -119,7 +119,16 @@ class LoadStatusFormatter(
             }
             return " last fetched ${prevFetchTimeDuration.readable()} ago,"
         }
-    private val fieldCount get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
+    private val fieldCount: String
+        get() {
+            val model = m
+            return when {
+                model == null -> ""
+                model.numFields == 0 -> ""
+                else -> String.format("%d/%d/%d", model.numNonBlankFields, model.numNonNullFields, model.numFields)
+            }
+        }
+
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
     private val fetchCount get() =
@@ -128,7 +137,7 @@ class LoadStatusFormatter(
         } else {
             String.format("%d", page.fetchCount)
         }
-    private val fieldCountFmt get() = if (m.numFields == 0) "%s" else " | nf:%-10s"
+    private val fieldCountFmt get() = if (m?.numFields == 0) "%s" else " | nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
@@ -145,7 +154,7 @@ class LoadStatusFormatter(
                 buildContentBytes(),
                 DateTimes.readableDuration(responseTime),
                 jsSate,
-                if (m.numFields == 0) "" else fieldCount,
+                fieldCount,
                 proxy?:"",
                 buildLocation()
         )

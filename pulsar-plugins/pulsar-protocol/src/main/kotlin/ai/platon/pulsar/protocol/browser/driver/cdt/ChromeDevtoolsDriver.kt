@@ -39,7 +39,7 @@ class ChromeDevtoolsDriver(
     val openSequence = 1 + browser.drivers.size
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
-    val userAgent get() = BrowserSettings.randomUserAgent()
+    val userAgent get() = BrowserSettings.generateRandomUserAgent()
     val isSPA get() = browserSettings.isSPA
 
     val enableUrlBlocking get() = browserSettings.enableUrlBlocking

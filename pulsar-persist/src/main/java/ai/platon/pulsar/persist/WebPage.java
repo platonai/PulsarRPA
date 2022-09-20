@@ -43,6 +43,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -1424,9 +1425,23 @@ final public class WebPage implements Comparable<WebPage> {
         page.setPageModelUpdateTime(time == null ? 0 : time.toEpochMilli());
     }
 
-    @NotNull
+    @Nullable
     public PageModel getPageModel() {
-        return PageModel.box(page.getPageModel());
+        if (page.getPageModel() != null) {
+            return PageModel.box(page.getPageModel());
+        }
+        else {
+            return null;
+        }
+    }
+
+    @NotNull
+    public PageModel ensurePageModel() {
+        if (page.getPageModel() == null) {
+            page.setPageModel(GPageModel.newBuilder().build());
+        }
+
+        return Objects.requireNonNull(getPageModel());
     }
 
     /**

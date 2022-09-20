@@ -20,7 +20,7 @@ class WebPageExt(private val page: WebPage) {
             page.vividLinks = mapOf("$url?t=a" to "a", "$url?t=b" to "b")
             page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
             page.activeDOMStatTrace = mapOf("a" to ActiveDOMStat(), "b" to ActiveDOMStat())
-            page.pageModel.emplace(1, "g", mapOf("a" to "b"))
+            page.ensurePageModel().emplace(1, "g", mapOf("a" to "b"))
 
             return page
         }

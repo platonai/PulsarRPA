@@ -386,21 +386,35 @@
     },
     {
       "name": "pageModel",
-      "type": {
-        "type": "array",
-        "items": {
-          "name": "GFieldGroup",
+      "type": [
+        "null",
+        {
+          "name": "GPageModel",
           "type": "record",
           "namespace": "ai.platon.pulsar.persist.gora.generated",
-          "fields" : [
-            {"name": "id", "type": "long", "default": 0},
-            {"name": "parentId", "type": "long", "default": 0},
-            {"name": "name", "type": ["null", "string"], "default": null},
-            {"name": "fields","type": {"type": "map","values": ["null","string"]},"default": {}}
+          "fields": [
+            {
+              "name": "fieldGroups",
+              "type": {
+                "type": "array",
+                "items": {
+                  "name": "GFieldGroup",
+                  "type": "record",
+                  "namespace": "ai.platon.pulsar.persist.gora.generated",
+                  "fields" : [
+                    {"name": "id", "type": "long", "default": 0},
+                    {"name": "parentId", "type": "long", "default": 0},
+                    {"name": "name", "type": ["null", "string"], "default": null},
+                    {"name": "fields","type": {"type": "map","values": ["null","string"]},"default": {}}
+                  ]
+                }
+              },
+              "default": []
+            }
           ]
         }
-      },
-      "default": []
+      ],
+      "default": null
     }
   ]
 }

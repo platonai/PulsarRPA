@@ -202,8 +202,8 @@ class PageParser(
             }
             parseResult.parsers.add(parser::class)
 
-            if (log.isDebugEnabled && millis > 10_000) {
-                val m = page.pageModel
+            val m = page.pageModel
+            if (log.isDebugEnabled && millis > 10_000 && m != null) {
                 log.debug("It takes {} to parse {}/{}/{} fields | {}", Duration.ofMillis(millis).readable(),
                         m.numNonBlankFields, m.numNonNullFields, m.numFields, page.url)
             }

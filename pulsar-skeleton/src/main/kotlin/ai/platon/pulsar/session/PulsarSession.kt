@@ -209,7 +209,7 @@ interface PulsarSession : AutoCloseable {
      * Check if a page exists in the database
      *
      * @param url The url
-     * @return true if the page exists in the database
+     * @return true if the page exists in the storage
      */
     fun exists(url: String): Boolean
 
@@ -225,7 +225,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Open a url.
      *
-     * This method opens the link immediately, regardless of the previous state of the page.
+     * This method opens the url immediately, regardless of the previous state of the page.
      *
      * @param url The url to open
      * @return The webpage
@@ -305,7 +305,7 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadDeferred(url: String, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with specified options.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -317,7 +317,7 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadDeferred(url: UrlAware, args: String): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with specified options.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -630,6 +630,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Put session scope bean
      * */
+    @Deprecated("Not used any more")
     fun putSessionBean(obj: Any)
 
     /**
@@ -638,27 +639,39 @@ interface PulsarSession : AutoCloseable {
     fun delete(url: String)
 
     /**
-     * Flush to the backend storage
+     * Flush to the storage
      * */
     fun flush()
 
     /**
-     * Persist to the backend storage
+     * Persist to the storage
      * */
     fun persist(page: WebPage): Boolean
 
     /**
-     * Export a webpage
+     * Export the content of a webpage.
+     *
+     * @param page Page to export
+     * @param ident File name identifier used to distinguish from other names
+     * @return The path of the exported page
      * */
     fun export(page: WebPage, ident: String = ""): Path
 
     /**
-     * Export a document
+     * Export the outer HTML of the document.
+     *
+     * @param doc Document to export
+     * @param ident File name identifier used to distinguish from other names
+     * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
 
     /**
-     * Export a document to the given path
+     * Export the whole HTML of the document to the given path.
+     *
+     * @param doc Document to export
+     * @param path Path to save the exported content
+     * @return The path of the exported document
      * */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
 }

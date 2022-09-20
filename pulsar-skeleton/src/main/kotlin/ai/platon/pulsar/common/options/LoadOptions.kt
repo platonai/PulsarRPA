@@ -80,7 +80,7 @@ open class LoadOptions(
     var deadTime = DateTimes.doomsday
 
     /**
-     * The auth token, can be used for authorization purpose.
+     * The auth token, used for authorization purpose.
      * */
     @ApiPublic
     @Parameter(names = ["-authToken", "--auth-token"],
@@ -88,11 +88,12 @@ open class LoadOptions(
     var authToken = ""
 
     /**
-     * If true, use a copy of the webpage when required and do not modify the persisted version.
+     * Specify if the load execution is read only or not.
+     * If a load execution is read only, the webpage loaded should not be changed by the execution.
      * */
     @ApiPublic
     @Parameter(names = ["-readonly"],
-        description = "If true, use a copy of the webpage when required and do not modify the persisted version.")
+        description = "Specify if the load execution is read only or not.")
     var readonly = false
 
     /**
@@ -193,10 +194,11 @@ open class LoadOptions(
     var topLinks = 20
 
     /**
-     * Try the top N anchor groups.
+     * Choose the top N anchor groups for further process. Used by auto web mining project.
      * */
     @ApiPublic
-    @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
+    @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"],
+        description = "Try the top N anchor groups")
     var topNAnchorGroups = 3
 
     /**
@@ -580,13 +582,14 @@ open class LoadOptions(
                     it.isAccessible = true
                     it.set(this, true)
                 }
+            // fix out link parsing (remove surrounding symbols)
             outLinkSelector = correctOutLinkSelector() ?: ""
         }
         return b
     }
 
     /**
-     * Create options for item pages.
+     * Create a new [LoadOptions] object for item pages.
      * */
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
@@ -601,10 +604,11 @@ open class LoadOptions(
     }
 
     /**
-     * Check if the page has been expired.
-     * A page is expired if
+     * Check if the page expires.
+     *
+     * A page is expired when:
      * 1. the last fetch time is before [expireAt] and now is after [expireAt]
-     * 2. (the last fetch time + [expires]) is passed
+     * 2. (the last fetch time + [expires]) is exceeded
      * */
     fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
@@ -617,7 +621,7 @@ open class LoadOptions(
     }
 
     /**
-     * If the page is dead, do not fetch it from the web.
+     * If the page is dead, drop the task as soon as possible.
      * */
     fun isDead(): Boolean {
         return deadTime < Instant.now()
@@ -643,17 +647,17 @@ open class LoadOptions(
     }
 
     /**
-     * Write some option values to [conf].
+     * Write option values to [conf].
      *
-     * [LoadOptions] is not globally visible, we have to pass some values to modules who can not see it
+     * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration() = overrideConfiguration(this.conf)
 
     /**
-     * Write some option values to [conf].
+     * Write option values to [conf].
      *
-     * [LoadOptions] is not globally visible, we have to pass some values to modules who can not see it
+     * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
@@ -672,7 +676,7 @@ open class LoadOptions(
 
         rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
-        // not used since the browser is always running in temporary contexts
+        // incognito is not used since the browser is always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 
@@ -697,8 +701,8 @@ open class LoadOptions(
     }
 
     /**
-     * Convert the [LoadOptions] to be a string.
-     * The operation should be reversible:
+     * Convert the [LoadOptions] to a string.
+     * The two operations [parse] and [toString] are reversible:
      *
      * val args = "..."
      * val options1 = LoadOptions.parse(args)
@@ -730,7 +734,7 @@ open class LoadOptions(
     }
 
     /**
-     * Create a new [LoadOptions] object.
+     * Create a new [LoadOptions] object with the same arguments string and event handlers.
      * */
     open fun clone() = parse(toString(), this)
 
@@ -758,7 +762,7 @@ open class LoadOptions(
     }
 
     /**
-     * Ensure the EventHandler is created.
+     * Ensure [event] is created.
      * */
     private fun enableEvent(): PageEvent {
         val eh = rawEvent ?: DefaultPageEvent()
@@ -766,6 +770,9 @@ open class LoadOptions(
         return eh
     }
 
+    /**
+     * Ensure [rawItemEvent] is created.
+     * */
     private fun enableItemEvent(): PageEvent {
         val eh = rawEvent ?: DefaultPageEvent()
         rawItemEvent = eh
@@ -776,7 +783,7 @@ open class LoadOptions(
         /**
          * The default option.
          * */
-        val DEFAULT = LoadOptions("", VolatileConfig.DEFAULT)
+        val DEFAULT = LoadOptions("", VolatileConfig.UNSAFE)
 
         /**
          * A list of all option fields.

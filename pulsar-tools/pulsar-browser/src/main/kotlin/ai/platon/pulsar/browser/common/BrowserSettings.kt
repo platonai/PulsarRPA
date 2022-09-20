@@ -1,20 +1,14 @@
 package ai.platon.pulsar.browser.common
 
-import ai.platon.pulsar.browser.common.BrowserSettings.Companion.screenViewport
-import ai.platon.pulsar.browser.common.ScriptConfuser.Companion.scriptNamePrefix
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Duration
-import kotlin.io.path.isReadable
-import kotlin.io.path.listDirectoryEntries
 import kotlin.random.Random
 
 /**
@@ -25,71 +19,6 @@ import kotlin.random.Random
  * */
 enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
-/**
- * The emulation settings
- * */
-data class InteractSettings(
-    var scrollCount: Int = 10,
-    var scrollInterval: Duration = Duration.ofMillis(500),
-    var scriptTimeout: Duration = Duration.ofMinutes(1),
-    // TODO: use fetch task timeout instead
-    var pageLoadTimeout: Duration = Duration.ofMinutes(3)
-) {
-    var delayPolicy: (String) -> Long = { type ->
-        when (type) {
-            "gap" -> 500L + Random.nextInt(500)
-            "click" -> 500L + Random.nextInt(1000)
-            "type" -> 50L + Random.nextInt(500)
-            "mouseWheel" -> 800L + Random.nextInt(500)
-            "dragAndDrop" -> 800L + Random.nextInt(500)
-            "waitForNavigation" -> 500L
-            "waitForSelector" -> 500L
-            else -> 100L + Random.nextInt(500)
-        }
-    }
-
-    constructor(conf: ImmutableConfig) : this(
-        scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
-        scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
-        scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofMinutes(1)),
-        pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
-    )
-
-    fun toSystemProperties() {
-        Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-    }
-
-    fun overrideConfiguration(conf: MutableConfig) {
-        conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-    }
-
-    companion object {
-        val DEFAULT = InteractSettings()
-
-        var goodNetSettings = InteractSettings()
-
-        var worseNetSettings = InteractSettings(
-            scrollCount = 10,
-            scrollInterval = Duration.ofSeconds(1),
-            scriptTimeout = Duration.ofMinutes(2),
-            Duration.ofMinutes(3),
-        )
-
-        var worstNetSettings = InteractSettings(
-            scrollCount = 15,
-            scrollInterval = Duration.ofSeconds(3),
-            scriptTimeout = Duration.ofMinutes(3),
-            Duration.ofMinutes(4),
-        )
-    }
-}
-
 open class BrowserSettings(
     parameters: Map<String, Any> = mapOf(),
     var jsDirectory: String = "js",
@@ -99,8 +28,6 @@ open class BrowserSettings(
         private val logger = getLogger(BrowserSettings::class)
 
         // The viewport size for browser to rendering all webpages
-        @Deprecated("Use screenViewport instead", ReplaceWith("screenViewport"))
-        var viewPort = AppConstants.DEFAULT_VIEW_PORT
         var screenViewport = AppConstants.DEFAULT_VIEW_PORT
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
@@ -147,7 +74,7 @@ open class BrowserSettings(
          * to obtain the best data quality and data collection speed.
          * */
         fun withWorseNetwork(): Companion {
-            InteractSettings.worseNetSettings.toSystemProperties()
+            InteractSettings.worseNetSettings.overrideSystemProperties()
             return BrowserSettings
         }
 
@@ -158,7 +85,7 @@ open class BrowserSettings(
          * to obtain the best data quality and data collection speed.
          * */
         fun withWorstNetwork(): Companion {
-            InteractSettings.worstNetSettings.toSystemProperties()
+            InteractSettings.worstNetSettings.overrideSystemProperties()
             return BrowserSettings
         }
 
@@ -265,7 +192,7 @@ open class BrowserSettings(
         /**
          * Generate a random user agent
          * */
-        fun randomUserAgent(): String {
+        fun generateRandomUserAgent(): String {
             if (userAgents.isEmpty()) {
                 loadUserAgents()
             }
@@ -347,20 +274,23 @@ open class BrowserSettings(
      * */
     val isGUI get() = displayMode == DisplayMode.GUI
     /**
-     * If true, the system will work with a single page application and the
-     * execution of fetches has no timeout limit.
+     * Check if it's SPA mode, SPA stands for single page application.
+     *
+     * If pulsar works in SPA mode:
+     * 1. execution of fetches has no timeout limit
      * */
     val isSPA get() = conf.getBoolean(BROWSER_SPA_MODE, false)
     /**
-     * If true, the system injects scripts into the browser before loading a page.
+     * Check if startup scripts are allowed. If true, pulsar injects scripts into the browser
+     * before loading a page, and custom scripts are also allowed.
      * */
     val enableStartupScript get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     /**
-     * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
+     * Check if true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
     val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
     /**
-     * If user agent overriding is enabled. User agent overriding disabled by default,
+     * Check if user agent overriding is enabled. User agent overriding disabled by default,
      * since inappropriate user agent overriding will be detected by the target website and
      * the visits will be blocked.
      * */
@@ -369,7 +299,9 @@ open class BrowserSettings(
     /**
      * Page load strategy.
      *
-     * The system checks document ready using javascript so just set the strategy to be none.
+     * Pulsar checks document ready using javascript so just set the strategy to be none.
+     *
+     * @see <a href='https://blog.knoldus.com/page-loading-strategy-in-the-selenium-webdriver/'>Page Loading Strategy</a>
      * */
     var pageLoadStrategy = "none"
 
@@ -393,11 +325,75 @@ open class BrowserSettings(
     }
 
     open fun randomUserAgentOrNull(): String? {
-        return if (enableUserAgentOverriding) randomUserAgent() else null
+        return if (enableUserAgentOverriding) generateRandomUserAgent() else null
     }
 
     /**
      * Confuse script
      * */
     open fun confuse(script: String): String = confuser.confuse(script)
+}
+
+/**
+ * The interaction settings
+ * */
+data class InteractSettings(
+    var scrollCount: Int = 10,
+    var scrollInterval: Duration = Duration.ofMillis(500),
+    var scriptTimeout: Duration = Duration.ofMinutes(1),
+    var pageLoadTimeout: Duration = Duration.ofMinutes(3)
+) {
+    var delayPolicy: (String) -> Long = { type ->
+        when (type) {
+            "gap" -> 500L + Random.nextInt(500)
+            "click" -> 500L + Random.nextInt(1000)
+            "type" -> 50L + Random.nextInt(500)
+            "mouseWheel" -> 800L + Random.nextInt(500)
+            "dragAndDrop" -> 800L + Random.nextInt(500)
+            "waitForNavigation" -> 500L
+            "waitForSelector" -> 500L
+            else -> 100L + Random.nextInt(500)
+        }
+    }
+
+    constructor(conf: ImmutableConfig) : this(
+        scrollCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
+        scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500)),
+        scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofMinutes(1)),
+        pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
+    )
+
+    fun overrideSystemProperties() {
+        Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+    }
+
+    fun overrideConfiguration(conf: MutableConfig) {
+        conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+    }
+
+    companion object {
+        val DEFAULT = InteractSettings()
+
+        var goodNetSettings = InteractSettings()
+
+        var worseNetSettings = InteractSettings(
+            scrollCount = 10,
+            scrollInterval = Duration.ofSeconds(1),
+            scriptTimeout = Duration.ofMinutes(2),
+            Duration.ofMinutes(3),
+        )
+
+        var worstNetSettings = InteractSettings(
+            scrollCount = 15,
+            scrollInterval = Duration.ofSeconds(3),
+            scriptTimeout = Duration.ofMinutes(3),
+            Duration.ofMinutes(4),
+        )
+    }
 }

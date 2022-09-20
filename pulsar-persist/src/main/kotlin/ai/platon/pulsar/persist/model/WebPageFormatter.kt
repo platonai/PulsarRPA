@@ -168,17 +168,16 @@ class WebPageFormatter(val page: WebPage) {
             fields["content"] = page.contentAsString
         }
         if (withEntities) {
-            val pageEntities = page.pageModel.unbox().stream()
-                    .map { fg: GFieldGroup? -> FieldGroupFormatter(fg!!).fields }
-                    .collect(Collectors.toList())
-            fields["pageEntities"] = pageEntities
+            val pageModel = page.pageModel
+            if (pageModel != null) {
+                val pageEntities = pageModel.unbox()
+                    .map { FieldGroupFormatter(it).fields.entries }
+                fields["pageEntities"] = pageEntities
+            }
         }
         return fields
     }
 
-    /**
-     * TODO: Optimization
-     */
     fun toMap(fields: Set<String>): Map<String, Any> {
         return toMap().entries.filter { fields.contains(it.key) }.associate { it.key to it.value }
     }
@@ -292,13 +291,14 @@ class WebPageFormatter(val page: WebPage) {
             }
         }
         if (withEntities) {
-            sb.append("\n")
-                    .append("entityField:START>>>\n")
-            page.pageModel.unbox().stream()
-                    .map { fg: GFieldGroup? -> FieldGroupFormatter(fg!!).fields }
-                    .flatMap { m: Map<String, Any> -> m.entries.stream() }
-                    .forEach { e: Map.Entry<String, Any> -> sb.append(e.key + ": " + e.value) }
-            sb.append("\n<<<END:pageText\n")
+            val pageModel = page.pageModel
+            if (pageModel != null) {
+                sb.append("\n").append("entityField:START>>>\n")
+                pageModel.unbox()
+                    .flatMap { FieldGroupFormatter(it).fields.entries }
+                    .joinTo(sb) { it.key + ": " + it.value }
+                sb.append("\n<<<END:pageText\n")
+            }
         }
         sb.append("\n")
         return sb.toString()
