@@ -112,10 +112,8 @@ class MetadataIndexer(
         val contentType = page.contentType
         if (!contentType.contains("html")) {
             IndexingFilter.LOG.warn("Content type $contentType is not fully supported")
-            // return doc;
         }
 
-        // get content type
         doc.add("content_type", contentType)
     }
 
@@ -123,26 +121,19 @@ class MetadataIndexer(
         if (doc == null || parseFieldnames.isEmpty()) {
             return doc
         }
+
         for (metatag in parseFieldnames.entries) {
             var k = metatag.value
             var metadata = page.metadata[metatag.key]
-            if (k != null && metadata != null) {
+            if (metadata != null) {
                 k = k.trim { it <= ' ' }
                 metadata = metadata.trim { it <= ' ' }
-                if (!k.isEmpty() && !metadata.isEmpty()) {
-                    val finalK = k
-
-                    // TODO : avoid this dirty hard coding
-                    if (finalK.equals("meta_description", ignoreCase = true)) {
-                        Arrays.stream(metadata.split("\t".toRegex()).toTypedArray())
-                            .forEach { v: String? -> doc.addIfAbsent(finalK, v!!) }
-                    } else {
-                        Arrays.stream(metadata.split("\t".toRegex()).toTypedArray())
-                            .forEach { v: String? -> doc.add(finalK, v) }
-                    }
+                if (k.isNotEmpty() && metadata.isNotEmpty()) {
+                    metadata.split("\t".toRegex()).forEach { doc.addIfAbsent(k, it) }
                 }
-            } // if
-        } // for
+            }
+        }
+
         return doc
     }
 

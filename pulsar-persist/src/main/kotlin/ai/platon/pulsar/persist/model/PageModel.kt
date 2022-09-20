@@ -12,7 +12,7 @@ import ai.platon.pulsar.persist.gora.generated.GPageModel
 class PageModel(
         val pageModel: GPageModel
 ) {
-    private val fieldGroups get() = pageModel.fieldGroups
+    val fieldGroups get() = pageModel.fieldGroups
 
     val numGroups get() = fieldGroups.size
 
@@ -28,7 +28,7 @@ class PageModel(
 
     val boxedFieldGroups get() = fieldGroups.map { FieldGroup.box(it) }
 
-    fun unbox() = fieldGroups
+    fun unbox() = pageModel
 
     fun firstOrNull() = if (isEmpty) null else get(0)
 

@@ -43,30 +43,14 @@ abstract class AbstractWebDriver(
         }
     }
 
-    /**
-     * The url to navigate
-     * The browser might redirect, so it might not be the same with currentUrl()
-     * */
     override var navigateEntry: NavigateEntry = NavigateEntry("")
 
     override val navigateHistory: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
 
-    /**
-     * The url to navigate
-     * The browser might redirect, so it might not be the same with currentUrl()
-     * */
-//    override var url: String = navigateEntry.url
-    /**
-     * Whether the web driver has javascript support
-     * */
     override val supportJavascript: Boolean = true
-    /**
-     * Whether the web page source is mocked
-     * */
+
     override val isMockedPageSource: Boolean = false
-    /**
-     * Driver status
-     * */
+
     override val status = AtomicReference(WebDriver.Status.UNKNOWN)
 
     override var lastActiveTime: Instant = Instant.now()

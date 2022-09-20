@@ -12,6 +12,7 @@ import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
+import java.net.MalformedURLException
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -156,6 +157,7 @@ open class CompletableHyperlink<T>(
 
     override val isStandard get() = UrlUtils.isValidUrl(url)
 
+    @get: Throws(MalformedURLException::class)
     override val toURL get() = URL(url)
 
     override val toURLOrNull get() = UrlUtils.getURLOrNull(url)
@@ -199,7 +201,7 @@ open class CompletableHyperlink<T>(
     override val createdAt: Instant = Instant.now()
 
     /**
-     * A abstract url can be compare to one of the following types:
+     * A abstract url can compare to one of the following types:
      * 1. a [String]
      * 2. a [URL]
      * 3. a [UrlAware]
