@@ -15,7 +15,6 @@ import kotlin.random.Random
  * The [BrowserSettings] class defines a convenient interface to control the behavior of browsers.
  * */
 open class BrowserSettings(
-    var jsDirectory: String = "js",
     val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
@@ -23,15 +22,6 @@ open class BrowserSettings(
         var screenViewport = AppConstants.DEFAULT_VIEW_PORT
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
-
-        val preloadJavaScriptResources = """
-            stealth.js
-            __pulsar_utils__.js
-            configs.js
-            node_ext.js
-            node_traversor.js
-            feature_calculator.js
-        """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
 
         /**
          * Check if the current environment supports only headless mode.

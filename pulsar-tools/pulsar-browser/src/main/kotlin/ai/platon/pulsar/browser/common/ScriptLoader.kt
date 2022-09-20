@@ -20,6 +20,15 @@ class ScriptLoader(
 
     private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
 
+    private val resources = """
+            stealth.js
+            __pulsar_utils__.js
+            configs.js
+            node_ext.js
+            node_traversor.js
+            feature_calculator.js
+        """.trimIndent().split("\n").map { "js/" + it.trim() }.toMutableList()
+
     /**
      * The javascript to execute by Web browsers.
      * */
@@ -88,7 +97,7 @@ class ScriptLoader(
     }
 
     private fun loadDefaultResource() {
-        BrowserSettings.preloadJavaScriptResources.associateWithTo(jsCache) {
+        resources.associateWithTo(jsCache) {
             ResourceLoader.readAllLines(it).joinToString("\n") { confuser.confuse(it) }
         }
     }
