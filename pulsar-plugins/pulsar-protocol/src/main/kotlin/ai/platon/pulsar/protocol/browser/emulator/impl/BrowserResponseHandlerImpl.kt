@@ -28,7 +28,7 @@ open class BrowserResponseHandlerImpl(
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
-    protected val enableStartupScript get() = driverPoolManager.driverFactory.driverSettings.enableStartupScript
+    protected val enableStartupScript get() = driverPoolManager.driverFactory.driverSettings.isStartupScriptEnabled
 
     private val registry = AppMetrics.defaultMetricRegistry
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.experimental
 
-import ai.platon.pulsar.common.event.ListenerCollection
+import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.WebPage
@@ -73,7 +73,7 @@ interface GlobalEventListener {
 }
 
 abstract class AbstractGlobalEventListener: GlobalEventListener {
-    protected val listeners = ListenerCollection<EventType>()
+    protected val listeners = AbstractEventEmitter<EventType>()
 
     override fun onCrawlWillLoad(handler: (UrlAware) -> Unit) {
         listeners.on(EventType.crawlWillLoad, handler)
@@ -125,7 +125,7 @@ abstract class AbstractGlobalEventListener: GlobalEventListener {
     override fun onWillStopTab(handler: (WebPage, WebDriver) -> Unit) {}
     override fun onTabStopped(handler: (WebPage, WebDriver) -> Unit) {}
 
-    fun <T> notify(type: EventType, param: T) = listeners.notify(type, param)
-    fun <T, T2> notify(type: EventType, param: T, param2: T2) = listeners.notify(type, param, param2)
-    fun <T, T2, T3> notify(type: EventType, param: T, param2: T2, param3: T3) = listeners.notify(type, param, param2, param3)
+    fun <T> notify(type: EventType, param: T) = listeners.emit(type, param)
+    fun <T, T2> notify(type: EventType, param: T, param2: T2) = listeners.emit(type, param, param2)
+    fun <T, T2, T3> notify(type: EventType, param: T, param2: T2, param3: T3) = listeners.emit(type, param, param2, param3)
 }

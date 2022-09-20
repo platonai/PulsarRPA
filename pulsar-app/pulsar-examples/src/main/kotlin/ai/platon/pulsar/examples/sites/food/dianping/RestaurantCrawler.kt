@@ -67,21 +67,23 @@ class RestaurantCrawler(
         val options = session.options(args)
         val eh = options.event
 
-        val seh = eh.browseEvent
-        seh.onWillComputeFeature.addLast { page, driver ->
+        val be = eh.browseEvent
+        be.onWillComputeFeature.addLast { page, driver ->
             commentSelectors.entries.mapIndexed { i, _ ->
                 "#reviewlist-wrapper .comment-item:nth-child($i) .more"
             }.asFlow().flowOn(Dispatchers.IO).collect { selector ->
                 if (driver.exists(selector)) {
+println("Click on $selector")
                     driver.click(selector)
                     delay(500)
                 }
             }
         }
 
-        seh.onFeatureComputed.addLast { page, driver ->
+        be.onFeatureComputed.addLast { page, driver ->
             fieldSelectors.entries.asFlow().flowOn(Dispatchers.IO).collect { (name, selector) ->
                 if (driver.exists(selector)) {
+println("Screenshot for $selector")
                     Screenshot(page, driver).screenshot(name, selector)
                     delay(1500)
                 }
@@ -101,6 +103,4 @@ fun main() {
 
     val fields = session.scrape(url, crawler.options(args), crawler.fieldSelectors)
     println(GsonBuilder().setPrettyPrinting().create().toJson(fields))
-
-    readLine()
 }

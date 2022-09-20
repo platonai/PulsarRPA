@@ -8,9 +8,8 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
 import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserEmulatedFetcherImpl
-import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserEmulatorImpl
+import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImpl
-import java.util.concurrent.atomic.AtomicReference
 
 class DefaultWebDriverSettings(conf: ImmutableConfig): WebDriverSettings(conf)
 
@@ -25,7 +24,7 @@ class DefaultWebDriverPoolManager(conf: ImmutableConfig)
 class DefaultBrowserEmulator(
         driverPoolManager: WebDriverPoolManager,
         conf: ImmutableConfig
-): BrowserEmulatorImpl(
+): InteractiveBrowserEmulator(
         driverPoolManager,
         BrowserResponseHandlerImpl(driverPoolManager, conf),
         conf
@@ -40,7 +39,11 @@ class DefaultBrowserEmulatedFetcher(
         DefaultBrowserEmulator(driverPoolManager, conf),
         conf,
         closeCascaded = true
-)
+) {
+    init {
+        browserEmulator.attach()
+    }
+}
 
 class Defaults(val conf: ImmutableConfig) {
     companion object {

@@ -90,6 +90,7 @@ abstract class AbstractBrowseEvent(
 
         onWillCheckDocumentState.addLast(other.onWillCheckDocumentState)
         onDocumentActuallyReady.addLast(other.onDocumentActuallyReady)
+
         onWillComputeFeature.addLast(other.onWillComputeFeature)
         onFeatureComputed.addLast(other.onFeatureComputed)
 

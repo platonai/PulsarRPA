@@ -52,7 +52,8 @@ interface WebDriver: Closeable {
      * */
     val name: String
     /**
-     * The browser of the driver. The browser defines methods and events for to manage the real browser.
+     * The browser of the driver.
+     * The browser defines methods and events to manipulate a real browser.
      * */
     val browser: Browser
     /**

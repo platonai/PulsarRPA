@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.impl
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.event.ListenerCollection
+import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.stringify
@@ -41,7 +41,7 @@ abstract class AbstractCrawler(
         Duration.ofMinutes(1L + 2 * nextRetryNumber)
     }
 
-    private val listeners = ListenerCollection<EventType>()
+    private val listeners = AbstractEventEmitter<EventType>()
 
     val closed = AtomicBoolean()
 
@@ -67,8 +67,8 @@ abstract class AbstractCrawler(
 
     open fun dispatchEvent(type: EventType, url: UrlAware, page: WebPage? = null) {
         when (type) {
-            EventType.willLoad -> notify(type.name) { listeners.notify(EventType.willLoad, url) }
-            EventType.loaded -> notify(type.name) { listeners.notify(EventType.loaded, url, page) }
+            EventType.willLoad -> notify(type.name) { listeners.emit(EventType.willLoad, url) }
+            EventType.loaded -> notify(type.name) { listeners.emit(EventType.loaded, url, page) }
             else -> {}
         }
     }

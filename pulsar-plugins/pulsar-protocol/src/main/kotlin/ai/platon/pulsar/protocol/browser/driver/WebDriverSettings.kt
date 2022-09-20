@@ -73,7 +73,11 @@ open class WebDriverSettings(
     // Special
     // var mobileEmulationEnabled = true
 
-    fun createGeneralOptions(): MutableMap<String, Any> {
+    open fun formatViewPort(delimiter: String = ","): String {
+        return "${screenViewport.width}$delimiter${screenViewport.height}"
+    }
+
+    open fun createGeneralOptions(): MutableMap<String, Any> {
         val generalOptions = mutableMapOf<String, Any>()
 
         // generalOptions.setCapability("browserLanguage", "zh_CN")
@@ -82,7 +86,7 @@ open class WebDriverSettings(
         return generalOptions
     }
 
-    fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
+    open fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
         val chromeOptions = ChromeOptions()
         chromeOptions.merge(generalOptions)
 

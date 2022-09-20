@@ -245,7 +245,7 @@ abstract class AbstractWebDriver(
      * */
     private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
         // TODO: use the same user agent as this browser
-        val userAgent = BrowserSettings.generateRandomUserAgent()
+        val userAgent = browser.userAgent ?: (browser as AbstractBrowser).browserSettings.userAgent.getRandomUserAgent()
 
         val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()

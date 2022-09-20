@@ -4,18 +4,18 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
+import ai.platon.pulsar.common.persist.ext.browseEvent
+import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
@@ -31,12 +31,12 @@ import java.util.concurrent.ThreadLocalRandom
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved.
  */
-open class BrowserEmulatorImpl(
+open class InteractiveBrowserEmulator(
     val driverPoolManager: WebDriverPoolManager,
     responseHandler: BrowserResponseHandler,
     immutableConfig: ImmutableConfig
 ): BrowserEmulator,
-    BrowserEmulatorImplBase(driverPoolManager.driverFactory.driverSettings, responseHandler, immutableConfig)
+    BrowserEmulatorImplBase(driverPoolManager.driverSettings, responseHandler, immutableConfig)
 {
     private val logger = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
@@ -67,6 +67,75 @@ open class BrowserEmulatorImpl(
         counterCancels.inc()
         task.cancel()
         driverPoolManager.cancel(task.url)
+    }
+
+    override fun attach() {
+        on1(EmulateEvents.willNavigate) { page: WebPage, driver: WebDriver ->
+            this.onWillNavigate(page, driver)
+        }
+        on1(EmulateEvents.navigated) { page: WebPage, driver: WebDriver ->
+            this.onNavigated(page, driver)
+        }
+        on1(EmulateEvents.willCheckDocumentState) { page: WebPage, driver: WebDriver ->
+            this.onWillCheckDocumentState(page, driver)
+        }
+        on1(EmulateEvents.documentActuallyReady) { page: WebPage, driver: WebDriver ->
+            this.onDocumentActuallyReady(page, driver)
+        }
+        on1(EmulateEvents.willComputeFeature) { page: WebPage, driver: WebDriver ->
+            this.onWillComputeFeature(page, driver)
+        }
+        on1(EmulateEvents.featureComputed) { page: WebPage, driver: WebDriver ->
+            this.onFeatureComputed(page, driver)
+        }
+        on1(EmulateEvents.willStopTab) { page: WebPage, driver: WebDriver ->
+            this.onWillStopTab(page, driver)
+        }
+        on1(EmulateEvents.tabStopped) { page: WebPage, driver: WebDriver ->
+            this.onTabStopped(page, driver)
+        }
+    }
+
+    override fun detach() {
+        EmulateEvents.values().forEach { off(it) }
+    }
+
+    override suspend fun onWillNavigate(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onWillNavigate?.invoke(page, driver)
+    }
+
+    override suspend fun onNavigated(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onNavigated?.invoke(page, driver)
+    }
+
+    override suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onWillCheckDocumentState?.invoke(page, driver)
+    }
+
+    override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onDocumentActuallyReady?.invoke(page, driver)
+    }
+
+    override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onWillComputeFeature?.invoke(page, driver)
+    }
+
+    override suspend fun onFeatureComputed(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onFeatureComputed?.invoke(page, driver)
+    }
+
+    override suspend fun onWillStopTab(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onWillStopTab?.invoke(page, driver)
+    }
+
+    override suspend fun onTabStopped(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onTabStopped?.invoke(page, driver)
+    }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            detach()
+        }
     }
 
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
@@ -164,7 +233,7 @@ open class BrowserEmulatorImpl(
             // Do something like a human being
 //            interactAfterFetch(task, driver)
 
-            dispatchEvent(EventType.willStopTab, page, driver)
+            emit1(EmulateEvents.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
 //            val event = page.simulateEvent
 //            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
@@ -176,7 +245,7 @@ open class BrowserEmulatorImpl(
              * */
             driver.stop()
 
-            dispatchEvent(EventType.tabStopped, page, driver)
+            emit1(EmulateEvents.tabStopped, page, driver)
 //            notify("onTabStopped") { event?.onTabStopped?.invoke(page, driver) }
         } catch (e: NavigateTaskCancellationException) {
             logger.info("{}. Try canceled task {}/{} again later (privacy scope suggested)",
@@ -225,7 +294,6 @@ open class BrowserEmulatorImpl(
 
         checkState(task, driver)
 
-        dispatchEvent(EventType.willNavigate, page, driver)
 //        listeners.notify(EventType.willNavigate, page, driver)
 //        val event = page.simulateEvent
 //        notify("onWillNavigate") { event?.onWillNavigate?.invoke(page, driver) }
@@ -235,11 +303,13 @@ open class BrowserEmulatorImpl(
         val finalUrl = task.href ?: task.url
         val navigateEntry = NavigateEntry(finalUrl, page.id, task.url, pageReferrer = page.referrer)
 
+        emit1(EmulateEvents.willNavigate, page, driver)
+
         checkState(task, driver)
         try {
             driver.navigateTo(navigateEntry)
         } finally {
-            dispatchEvent(EventType.navigated, page, driver)
+            emit1(EmulateEvents.navigated, page, driver)
 //            notify("onNavigated") { event?.onNavigated?.invoke(page, driver) }
         }
 
@@ -248,12 +318,12 @@ open class BrowserEmulatorImpl(
         }
 
         val interactTask = InteractTask(task, settings, driver)
-        return if (settings.enableStartupScript) {
-            dispatchEvent(EventType.willInteract, page, driver)
+        return if (settings.isStartupScriptEnabled) {
+            emit1(EmulateEvents.willInteract, page, driver)
 //            notify("onWillInteract") { event?.onWillInteract?.invoke(page, driver) }
 
             interact(interactTask).also {
-                dispatchEvent(EventType.didInteract, page, driver)
+                emit1(EmulateEvents.didInteract, page, driver)
 //                notify("onDidInteract") { event?.onDidInteract?.invoke(page, driver) }
             }
         } else {
@@ -284,13 +354,13 @@ open class BrowserEmulatorImpl(
 
         tracer?.trace("{}", task.interactSettings)
 
-        dispatchEvent(EventType.willCheckDocumentState, page, driver)
+        emit1(EmulateEvents.willCheckDocumentState, page, driver)
 
         waitForDocumentActuallyReady(task, result)
 
         if (result.protocolStatus.isSuccess) {
             task.driver.navigateEntry.documentReadyTime = Instant.now()
-            dispatchEvent(EventType.documentActuallyReady, page, driver)
+            emit1(EmulateEvents.documentActuallyReady, page, driver)
         }
 
         if (result.state.isContinue) {
@@ -298,11 +368,11 @@ open class BrowserEmulatorImpl(
         }
 
         if (result.state.isContinue) {
-            dispatchEvent(EventType.willComputeFeature, page, driver)
+            emit1(EmulateEvents.willComputeFeature, page, driver)
 
             computeDocumentFeatures(task, result)
 
-            dispatchEvent(EventType.featureComputed, page, driver)
+            emit1(EmulateEvents.featureComputed, page, driver)
         }
 
         return result

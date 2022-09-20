@@ -100,7 +100,7 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     fun evaluate(expression: String): Any? {
-        val evaluate = runtime?.evaluate(browserSettings.confuse(expression))
+        val evaluate = runtime?.evaluate(browserSettings.confuser.confuse(expression))
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {

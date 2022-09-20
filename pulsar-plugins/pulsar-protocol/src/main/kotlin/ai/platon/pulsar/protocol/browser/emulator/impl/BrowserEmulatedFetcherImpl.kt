@@ -90,12 +90,12 @@ open class BrowserEmulatedFetcherImpl(
             return FetchResult.canceled(task)
         }
 
-        dispatchEvent(EventType.willFetch, task.page, driver)
+        emit(EventType.willFetch, task.page, driver)
 //        notify("onWillFetch") { event?.onWillFetch?.invoke(task.page, driver) }
 
         val result = browserEmulator.fetch(task, driver)
 
-        dispatchEvent(EventType.fetched, task.page, driver)
+        emit(EventType.fetched, task.page, driver)
 //        notify("onFetched") { event?.onFetched?.invoke(task.page, driver) }
 
         return result
@@ -123,7 +123,7 @@ open class BrowserEmulatedFetcherImpl(
         }
     }
 
-    private suspend fun dispatchEvent(type: EventType, page: WebPage, driver: WebDriver) {
+    private suspend fun emit(type: EventType, page: WebPage, driver: WebDriver) {
         val event = page.browseEvent ?: return
         when(type) {
             EventType.willFetch -> notify(type.name) { event.onWillFetch(page, driver) }

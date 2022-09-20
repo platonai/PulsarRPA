@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.options
@@ -33,7 +34,7 @@ abstract class BrowserEmulatorImplBase(
      * */
     val responseHandler: BrowserResponseHandler,
     val immutableConfig: ImmutableConfig
-): AbstractEmulateEventListener(), Parameterized, AutoCloseable {
+): AbstractEventEmitter<EmulateEvents>(), Parameterized, AutoCloseable {
     private val logger = getLogger(BrowserEmulatorImplBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
@@ -52,7 +53,7 @@ abstract class BrowserEmulatorImplBase(
 
     override fun getParams(): Params {
         return Params.of(
-            "enableStartupScript", driverSettings.enableStartupScript
+            "enableStartupScript", driverSettings.isStartupScriptEnabled
         )
     }
 

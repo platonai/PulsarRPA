@@ -40,6 +40,6 @@ class BrowserFactory {
         val chrome = launcher.runCatching { launch(launchOptions) }
             .getOrElse { throw BrowserLaunchException("launch", it) }
 
-        return ChromeDevtoolsBrowser(browserId, chrome, launcher)
+        return ChromeDevtoolsBrowser(browserId, chrome, launcher).also { it.attach() }
     }
 }

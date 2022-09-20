@@ -12,30 +12,18 @@ import java.time.Duration
 import kotlin.random.Random
 
 /**
- * The browser display mode.
- *
- * Three display modes are supported:
- * 1. GUI: open as a normal browser
- * 2. HEADLESS: open in headless mode
- * 3. SUPERVISED: supervised by other programs
+ * The [BrowserSettings] class defines a convenient interface to control the behavior of browsers.
  * */
-enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
-
 open class BrowserSettings(
     var jsDirectory: String = "js",
     val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
-        private val logger = getLogger(BrowserSettings::class)
-
         // The viewport size for browser to rendering all webpages
         var screenViewport = AppConstants.DEFAULT_VIEW_PORT
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
-        // Available user agents
-        val userAgents = mutableListOf<String>()
 
-        val jsParameters = mutableMapOf<String, Any>()
         val preloadJavaScriptResources = """
             stealth.js
             __pulsar_utils__.js
@@ -95,7 +83,7 @@ open class BrowserSettings(
          * */
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
-                logger.info("GUI is not available")
+                System.err.println("GUI is not available")
                 return BrowserSettings
             }
 
@@ -191,39 +179,6 @@ open class BrowserSettings(
         }
 
         /**
-         * Generate a random user agent
-         * */
-        fun generateRandomUserAgent(): String {
-            if (userAgents.isEmpty()) {
-                loadUserAgents()
-            }
-
-            if (userAgents.isNotEmpty()) {
-                return userAgents[Random.nextInt(userAgents.size)]
-            }
-
-            return ""
-        }
-
-        /**
-         * Generate a random user agent,
-         * also see <a href='https://github.com/arouel/uadetector'>uadetector</a>
-         * */
-        fun loadUserAgents() {
-            if (userAgents.isNotEmpty()) return
-
-            var usa = ResourceLoader.readAllLines("ua/chrome-user-agents.txt")
-                .filter { it.startsWith("Mozilla/5.0") }
-            if (SystemUtils.IS_OS_LINUX) {
-                usa = usa.filter { it.contains("X11") }
-            } else if (SystemUtils.IS_OS_WINDOWS) {
-                usa = usa.filter { it.contains("Windows") }
-            }
-
-            usa.toCollection(userAgents)
-        }
-
-        /**
          * Generate a user data directory.
          * */
         fun generateUserDataDir(): Path {
@@ -285,17 +240,18 @@ open class BrowserSettings(
      * Check if startup scripts are allowed. If true, pulsar injects scripts into the browser
      * before loading a page, and custom scripts are also allowed.
      * */
-    val enableStartupScript get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    val isStartupScriptEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     /**
-     * Check if true and blocking rules are set, resources matching the rules will be blocked by the browser.
+     * Check if url blocking is enabled.
+     * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
-    val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
+    val isUrlBlockingEnabled get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
     /**
      * Check if user agent overriding is enabled. User agent overriding disabled by default,
      * since inappropriate user agent overriding will be detected by the target website and
      * the visits will be blocked.
      * */
-    val enableUserAgentOverriding get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
+    val isUserAgentOverridingEnabled get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
 
     /**
      * Page load strategy.
@@ -317,23 +273,20 @@ open class BrowserSettings(
      * */
     var interactSettings = InteractSettings.DEFAULT
 
+    val userAgent = UserAgent()
     val confuser = ScriptConfuser()
-
-    val scriptLoader = ScriptLoader(confuser, jsParameters, conf)
-
-    open fun formatViewPort(delimiter: String = ","): String {
-        return "${screenViewport.width}$delimiter${screenViewport.height}"
-    }
-
-    open fun randomUserAgentOrNull(): String? {
-        return if (enableUserAgentOverriding) generateRandomUserAgent() else null
-    }
-
-    /**
-     * Confuse script
-     * */
-    open fun confuse(script: String): String = confuser.confuse(script)
+    val scriptLoader = ScriptLoader(confuser, conf)
 }
+
+/**
+ * The browser display mode.
+ *
+ * Three display modes are supported:
+ * 1. GUI: open as a normal browser
+ * 2. HEADLESS: open in headless mode
+ * 3. SUPERVISED: supervised by other programs
+ * */
+enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 
 /**
  * The interaction settings

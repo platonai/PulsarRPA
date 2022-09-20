@@ -10,10 +10,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
@@ -39,10 +36,9 @@ class ChromeDevtoolsDriver(
     val openSequence = 1 + browser.drivers.size
     //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
     val chromeTabTimeout get() = Duration.ofMinutes(2)
-    val userAgent get() = BrowserSettings.generateRandomUserAgent()
     val isSPA get() = browserSettings.isSPA
 
-    val enableUrlBlocking get() = browserSettings.enableUrlBlocking
+    val enableUrlBlocking get() = browserSettings.isUrlBlockingEnabled
     private val _blockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
 
@@ -72,27 +68,22 @@ class ChromeDevtoolsDriver(
     private var mainRequestHeaders: Map<String, Any> = mapOf()
     private var mainRequestCookies: List<Map<String, String>> = listOf()
     private var numResponseReceived = AtomicInteger()
-
     private val rpc = RobustRPC(this)
 
-    private val enableStartupScript get() = browserSettings.enableStartupScript
-    private val enableBlockingReport = false
-
+    private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val closed = AtomicBoolean()
 
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
-
-    val tabId get() = chromeTab.id
-
     /**
      * Expose the underlying implementation, used for development purpose
      * */
     val implementation get() = devTools
 
     init {
-        if (userAgent.isNotEmpty()) {
+        val userAgent = browser.userAgent
+        if (userAgent != null && userAgent.isNotEmpty()) {
             emulationAPI?.setUserAgentOverride(userAgent)
         }
     }
@@ -118,9 +109,10 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
-        this.navigateEntry = entry
+        browser.emit1(BrowserEvents.willNavigate, entry)
         navigateHistory.add(entry)
-        browser.onWillNavigate(entry)
+
+        this.navigateEntry = entry
 
         try {
             rpc.invokeDeferred("navigateTo") {
@@ -717,7 +709,7 @@ class ChromeDevtoolsDriver(
         val finalUrl = currentUrl()
         // redirect
         if (finalUrl.isNotBlank() && finalUrl != navigateUrl) {
-            browser.onWillNavigate(NavigateEntry(finalUrl))
+            // browser.addHistory(NavigateEntry(finalUrl))
         }
     }
 
@@ -770,8 +762,8 @@ class ChromeDevtoolsDriver(
     }
 
     private fun getInjectJs(): String {
-        val js = browserSettings.scriptLoader.getInjectJs(false)
-        return browserSettings.confuse(js)
+        val js = browserSettings.scriptLoader.getPreloadJs(false)
+        return browserSettings.confuser.confuse(js)
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {

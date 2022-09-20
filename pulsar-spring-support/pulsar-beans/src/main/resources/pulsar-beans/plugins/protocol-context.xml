@@ -52,7 +52,10 @@
           factory-method="getEventHandler"
     />
 
-    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.impl.BrowserEmulatorImpl" destroy-method="close">
+    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator"
+          init-method="attach"
+          destroy-method="close"
+    >
         <constructor-arg ref="driverPoolManager"/>
         <constructor-arg ref="browserResponseHandler"/>
         <constructor-arg ref="conf"/>

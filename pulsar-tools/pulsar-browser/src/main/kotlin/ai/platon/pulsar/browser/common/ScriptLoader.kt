@@ -14,10 +14,11 @@ import kotlin.io.path.listDirectoryEntries
 
 class ScriptLoader(
     val confuser: ScriptConfuser = ScriptConfuser(),
-    val jsParameters: MutableMap<String, Any> = mutableMapOf(),
     val conf: ImmutableConfig
 ) {
     private val logger = getLogger(this)
+
+    private val jsInitParameters: MutableMap<String, Any> = mutableMapOf()
 
     /**
      * The javascript to execute by Web browsers.
@@ -35,11 +36,15 @@ class ScriptLoader(
         initDefaultJsParameters()
     }
 
+    fun addInitParameter(name: String, value: String) {
+        jsInitParameters[name] = value
+    }
+
     /**
      * Make sure generatePreloadJs is thread safe
      * */
     @Synchronized
-    fun getInjectJs(reload: Boolean = false): String {
+    fun getPreloadJs(reload: Boolean = false): String {
         if (reload) {
             preloadJs = ""
         }
@@ -72,7 +77,7 @@ class ScriptLoader(
 
     private fun generatePredefinedJsConfig(): String {
         // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
-        val configs = GsonBuilder().create().toJson(jsParameters.toMap())
+        val configs = GsonBuilder().create().toJson(jsInitParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
         val configVar = confuser.confuse( "${ScriptConfuser.scriptNamePrefix}CONFIGS")
@@ -118,6 +123,6 @@ class ScriptLoader(
             "ATTR_OVERFLOW_VISIBLE" to AppConstants.PULSAR_ATTR_OVERFLOW_VISIBLE,
             "ATTR_ELEMENT_NODE_VI" to AppConstants.PULSAR_ATTR_ELEMENT_NODE_VI,
             "ATTR_TEXT_NODE_VI" to AppConstants.PULSAR_ATTR_TEXT_NODE_VI,
-        ).also { jsParameters.putAll(it) }
+        ).also { jsInitParameters.putAll(it) }
     }
 }
