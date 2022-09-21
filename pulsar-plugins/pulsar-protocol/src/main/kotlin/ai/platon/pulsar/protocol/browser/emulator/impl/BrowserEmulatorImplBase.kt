@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -83,7 +82,7 @@ abstract class BrowserEmulatorImplBase(
             task.pageSource = responseHandler.normalizePageSource(task.url, task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
-            pageDatum.protocolStatus = responseHandler.onPageSourceIsBroken(task.task, integrity)
+            pageDatum.protocolStatus = responseHandler.createProtocolStatusForBrokenContent(task.task, integrity)
             logBrokenPage(task.task, task.pageSource, integrity)
         }
 

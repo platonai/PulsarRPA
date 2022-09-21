@@ -46,7 +46,7 @@ interface BrowserResponseHandler: EventEmitter<BrowserResponseEvents> {
      * Chrome redirected to the error page chrome-error://
      * This page should be text analyzed to determine the actual error.
      * */
-    fun onChromeErrorPageReturn(message: String): BrowserError
+    fun createBrowserError(message: String): BrowserError
 
-    fun onPageSourceIsBroken(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus
+    fun createProtocolStatusForBrokenContent(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus
 }

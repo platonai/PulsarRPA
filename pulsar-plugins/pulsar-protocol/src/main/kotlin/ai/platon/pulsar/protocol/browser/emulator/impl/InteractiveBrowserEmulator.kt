@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.browseEvent
-import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -415,7 +414,7 @@ open class InteractiveBrowserEmulator(
                 // this will never happen since 1.10.0
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val browserError = responseHandler.onChromeErrorPageReturn(message)
+                val browserError = responseHandler.createBrowserError(message)
                 status = browserError.status
                 result.activeDOMMessage = browserError.activeDOMMessage
                 result.state = FlowState.BREAK

@@ -120,7 +120,7 @@ open class BrowserResponseHandlerImpl(
      * Chrome redirected to the error page chrome-error://
      * This page should be text analyzed to determine the actual error.
      * */
-    override fun onChromeErrorPageReturn(message: String): BrowserError {
+    override fun createBrowserError(message: String): BrowserError {
         val activeDomMessage = ActiveDOMMessage.fromJson(message)
         val ec = activeDomMessage.trace?.status?.ec
         // chrome can not connect to the peer, it probably be caused by a bad proxy
@@ -137,7 +137,7 @@ open class BrowserResponseHandlerImpl(
         return BrowserError(status, activeDomMessage)
     }
 
-    override fun onPageSourceIsBroken(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
+    override fun createProtocolStatusForBrokenContent(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
         return when {
             // should cancel all running tasks and reset the privacy context and then re-fetch them
             htmlIntegrity.isRobotCheck || htmlIntegrity.isRobotCheck2 || htmlIntegrity.isRobotCheck3 ->
