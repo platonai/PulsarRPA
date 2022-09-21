@@ -73,11 +73,12 @@ The core Pulsar concepts include the following:
 
 * Web Scraping: the process of using bots to extract content and data from a website
 * Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI solutions
+* RPA: stands for robotic process automation which is the only way to scrape modern webpages
 * Network As A Database: access the Web just like a local database
 * X-SQL: query the Web using SQL directly
 * Browser Rendering: fetch webpages using real browsers
 * Pulsar Session: a Pulsar session provides a set of simple, powerful and flexible APIs to do web scraping tasks
-* Pulsar Context: a Pulsar context consists of a set of highly customizable components that do the actual jobs in the system.
+* Web Driver: the web driver defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
 * URLs: a URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in Pulsar is defined as some form of URL
 * Hyperlinks: a Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task
 * Load Options: load options, or load arguments are control parameters that affect how Pulsar loads, fetches and crawls webpages

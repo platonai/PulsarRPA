@@ -113,6 +113,21 @@ session.load(url, options)
 Pulsar [WebDriver] provides a complete method set for RPA, just like selenium, playwright
 and puppeteer, all actions and behaviors are optimized to mimic real people as closely as possible.
 
+=== Web Driver
+WebDriver defines a concise interface to visit and interact with web pages, all actions and behaviors are optimized to mimic real people as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
+
+The methods in this interface fall into three categories:
+
+. Control of the browser itself
+. Selection of textContent and attributes of Elements
+. Interact with the webpage
+
+Key methods:
+
+* WebDriver.navigateTo: load a new web page.
+* WebDriver.scrollDown: scroll down on a web page to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
+* WebDriver.pageSource: retrieve the source code of a webpage.
+
 === URLs
 A Uniform Resource Locator (URL), colloquially termed a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
 
@@ -245,23 +260,6 @@ One of the biggest difficulties in web scraping tasks is the bot stealth. For sc
 
 === Proxy Management
 Smart rotating proxies.
-
-=== Web Driver
-WebDriver defines a concise interface to visit and interact with web pages,
-all actions and behaviors are optimized to mimic real people as closely as possible,
-such as scrolling, clicking, typing text, dragging and dropping, etc.
-
-The methods in this interface fall into three categories:
-
-. Control of the browser itself
-. Selection of textContent and attributes of Elements
-. Interact with the webpage
-
-Key methods:
-
-* WebDriver.navigateTo: load a new web page.
-* WebDriver.scrollDown: scroll down on a web page to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
-* WebDriver.pageSource: retrieve the source code of a webpage.
 
 === Web Driver Stealth
 When controlling a browser programmatically to visit a webpage, the website might detect if the visit is automated, the web driver stealth technology is used to prevent the bot from be detected.
