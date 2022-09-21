@@ -10,8 +10,6 @@ interface CrawlLoop: StartStopRunnable {
     val id: Int
     val name: String
     val config: ImmutableConfig
-    @Deprecated("Crawl loop level default option is not necessary")
-    val defaultOptions: LoadOptions
     val urlFeeder: Iterable<UrlAware>
     val collectors: List<out DataCollector<UrlAware>>
     val crawler: Crawler

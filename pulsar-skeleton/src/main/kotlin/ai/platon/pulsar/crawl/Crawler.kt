@@ -15,16 +15,6 @@ interface Crawler: AutoCloseable {
      * */
     val name: String
     /**
-     * The default load options
-     * */
-    @Deprecated("No need to set default options")
-    val defaultOptions: LoadOptions
-    /**
-     * The default load arguments
-     * */
-    @Deprecated("No need to set default args")
-    val defaultArgs: String get() = defaultOptions.toString()
-    /**
      * Delay policy for retry tasks
      * */
     var retryDelayPolicy: (Int, UrlAware?) -> Duration
@@ -33,11 +23,9 @@ interface Crawler: AutoCloseable {
      * */
     fun await()
 
-    fun onWillLoad(handler: (UrlAware) -> Unit)
+    fun onWillLoad(url: UrlAware)
 
-    fun offWillLoad(handler: (UrlAware) -> Unit)
+    fun onLoad(url: UrlAware)
 
-    fun onLoaded(handler: (UrlAware, WebPage) -> Unit)
-
-    fun offLoaded(handler: (UrlAware, WebPage) -> Unit)
+    fun onLoaded(url: UrlAware, page: WebPage?)
 }

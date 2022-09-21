@@ -19,11 +19,9 @@ import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.session.AbstractPulsarSession
 import ai.platon.pulsar.session.PulsarSession
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
@@ -65,23 +63,15 @@ private enum class CriticalWarning(val message: String) {
     WRONG_DISTRICT("WRONG DISTRICT! ALL RESIDENT TASKS ARE PAUSED"),
 }
 
-internal open class StreamingCrawler<T : UrlAware>(
+open class StreamingCrawler(
     /**
      * The url sequence
      * */
-    var urls: Sequence<T>,
-    /**
-     * The default load options
-     * */
-    defaultOptions: LoadOptions,
+    var urls: Sequence<UrlAware>,
     /**
      * The default pulsar session to use
      * */
     session: PulsarSession = PulsarContexts.createSession(),
-    /**
-     * An optional global cache which will hold the retry tasks
-     * */
-    val globalCacheFactory: GlobalCacheFactory? = null,
     /**
      * Do not use proxy
      * */
@@ -90,7 +80,7 @@ internal open class StreamingCrawler<T : UrlAware>(
      * Auto close or not
      * */
     autoClose: Boolean = true,
-) : AbstractCrawler(session, defaultOptions, autoClose) {
+) : AbstractCrawler(session, autoClose) {
     companion object {
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
@@ -147,8 +137,8 @@ internal open class StreamingCrawler<T : UrlAware>(
         else -> BROWSER_TAB_REQUIRED_MEMORY
     }
 
-    private val abstractSession get() = session as AbstractPulsarSession
-    private val proxyPool: ProxyPool? = if (noProxy) null else abstractSession.context.getBeanOrNull()
+    private val globalCache get() = session.globalCache
+    private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull(ProxyPool::class)
     private var proxyOutOfService = 0
 
     val outOfWorkTimeout = Duration.ofMinutes(10)
@@ -185,7 +175,6 @@ internal open class StreamingCrawler<T : UrlAware>(
     init {
         AppMetrics.reg.registerAll(this, "$id.g", gauges)
 
-        val globalCache = globalCacheFactory?.globalCache
         if (globalCache != null) {
             val cacheGauges = mapOf(
                 "pageCacheSize" to Gauge { globalCache.pageCache.size },
@@ -215,10 +204,16 @@ internal open class StreamingCrawler<T : UrlAware>(
 
     fun quit() {
         forceQuit = true
+        detach()
+    }
+
+    override fun close() {
+        quit()
+        super.close()
     }
 
     protected suspend fun startCrawlLoop(scope: CoroutineScope) {
-        logger.info("Starting {} #{} ... {}", name, id, defaultOptions)
+        logger.info("Starting {} #{} ...", name, id)
 
         globalRunningInstances.incrementAndGet()
 
@@ -365,7 +360,7 @@ internal open class StreamingCrawler<T : UrlAware>(
 
             try {
                 globalMetrics.tasks.mark()
-                runUrlTask(url)
+                runLoadTask(url)
             } finally {
                 lastActiveTime = Instant.now()
 
@@ -379,28 +374,34 @@ internal open class StreamingCrawler<T : UrlAware>(
         return flowState
     }
 
-    private suspend fun runUrlTask(url: UrlAware) {
+    private suspend fun runLoadTask(url: UrlAware) {
+        emit(CrawlEvents.willLoad, url)
+
         if (url is ListenableUrl && url is DegenerateUrl) {
-            // The url is degenerated, which means it's not a resource in the network to fetch.
-            dispatchEvent(EventType.willLoad, url)
-            dispatchEvent(EventType.load, url)
-            dispatchEvent(EventType.loaded, url)
+            // The url is degenerated, which means it's not a resource on the Internet but a normal executable task.
+            emit(CrawlEvents.load, url)
+            emit(CrawlEvents.loaded, url, null)
         } else {
-            val normalizedUrl = notifyWillLoad(url)
-            if (normalizedUrl != null) {
-                val page = loadUrl(normalizedUrl)
-                notifyLoaded(normalizedUrl, page)
+            val page = loadWithTimeout(url)
+
+            if (enableSmartRetry) {
+                handleRetry(url, page)
             }
+
+            if (page != null) {
+                collectStatAfterLoad(page)
+            }
+
+            emit(CrawlEvents.loaded, url, page)
         }
     }
 
-    private suspend fun loadUrl(url: UrlAware): WebPage? {
+    private suspend fun loadWithTimeout(url: UrlAware): WebPage? {
         var page: WebPage? = null
         val timeout = fetchTaskTimeout.plusSeconds(30).toMillis()
         try {
-            page = withTimeout(timeout) { loadWithEventHandlers(url) }
-            if (page != null) {
-                collectStatAfterLoad(page)
+            page = withTimeout(timeout) {
+                loadWithMinorExceptionHandled(url)
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
@@ -448,24 +449,6 @@ internal open class StreamingCrawler<T : UrlAware>(
         globalMetrics.successes.mark()
     }
 
-    private fun notifyWillLoad(url: UrlAware): UrlAware? {
-        if (url is ListenableUrl) {
-            dispatchEvent(EventType.willLoad, url)
-        }
-
-        return url
-    }
-
-    private fun notifyLoaded(url: UrlAware, page: WebPage?) {
-        if (url is ListenableUrl) {
-            dispatchEvent(EventType.loaded, url, page)
-        }
-
-        if (enableSmartRetry) {
-            handleRetry(url, page)
-        }
-    }
-
     private fun handleRetry(url: UrlAware, page: WebPage?) {
         when {
             !isActive -> return
@@ -480,13 +463,9 @@ internal open class StreamingCrawler<T : UrlAware>(
     }
 
     @Throws(Exception::class)
-    private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
-        if (!isActive) {
-            return null
-        }
-
+    private suspend fun loadWithMinorExceptionHandled(url: UrlAware): WebPage? {
         // apply the default options, arguments in the url has the highest priority, so url.args needs to appear last
-        val options = session.options("$defaultArgs ${url.args}")
+        val options = session.options(url.args ?: "")
         if (options.isDead()) {
             // The url is dead, drop the task
             globalKilledTasks.incrementAndGet()
@@ -548,8 +527,6 @@ internal open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun doLaterIfProcessing(urlSpec: String, url: UrlAware, delay: Duration): Boolean {
-        val globalCache = globalCacheFactory?.globalCache ?: return false
-
         if (urlSpec in globalLoadingUrls || urlSpec in globalCache.fetchingCache) {
             // process later, hope the page is fetched
             logger.debug("Task is in process, do it {} later | {}", delay.readable(), url.configuredUrl)
@@ -561,10 +538,6 @@ internal open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun handleRetry0(url: UrlAware, page: WebPage?) {
-        if (!isActive) {
-            return
-        }
-
         val nextRetryNumber = 1 + (page?.fetchRetries ?: 0)
 
         if (page != null && nextRetryNumber > page.maxRetries) {
@@ -589,8 +562,6 @@ internal open class StreamingCrawler<T : UrlAware>(
     }
 
     private fun fetchDelayed(url: UrlAware, delay: Duration) {
-        val globalCache = globalCacheFactory?.globalCache ?: return
-
         val delayCache = globalCache.urlPool.delayCache
         // erase -refresh options
 //        url.args = url.args?.replace("-refresh", "-refresh-erased")
@@ -691,18 +662,6 @@ internal open class StreamingCrawler<T : UrlAware>(
             Files.setPosixFilePermissions(finishScriptPath, PosixFilePermissions.fromString("rwxrw-r--"))
         } catch (e: IOException) {
             logger.error(e.toString())
-        }
-    }
-
-    private fun dispatchEvent(type: EventType, url: ListenableUrl, page: WebPage? = null) {
-        super.dispatchEvent(type, url, page)
-
-        val event = url.event.crawlEvent
-        when(type) {
-            EventType.willLoad -> notify(type.name) { event.onWillLoad(url) }
-            EventType.load -> notify(type.name) { event.onLoad(url) }
-            EventType.loaded -> notify(type.name) { event.onLoaded(url, page) }
-            else -> {}
         }
     }
 }

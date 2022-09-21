@@ -1,11 +1,13 @@
 package ai.platon.pulsar.browser.common
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import org.apache.commons.lang3.SystemUtils
+import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -166,6 +168,16 @@ open class BrowserSettings(
         fun disableUserAgentOverriding(): Companion {
             System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
             return BrowserSettings
+        }
+
+        fun enableProxy(): Companion {
+            ProxyPoolManager.enableProxy()
+            return this
+        }
+
+        fun disableProxy(): Companion {
+            ProxyPoolManager.disableProxy()
+            return this
         }
 
         /**

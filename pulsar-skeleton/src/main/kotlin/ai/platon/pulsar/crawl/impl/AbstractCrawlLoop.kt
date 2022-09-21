@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl.impl
 import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.CrawlLoop
 import ai.platon.pulsar.crawl.Crawler
@@ -14,15 +13,10 @@ abstract class AbstractCrawlLoop(
     override val config: ImmutableConfig
 ) : CrawlLoop {
     companion object {
-        private val idGen = AtomicInteger()
+        private val sequencer = AtomicInteger()
     }
 
-    override val id: Int = idGen.incrementAndGet()
-
-    /**
-     * Data collector lower capacity
-     * */
-    override var defaultOptions: LoadOptions = LoadOptions.create(config.toVolatileConfig())
+    override val id: Int = sequencer.incrementAndGet()
 
     /**
      * The fetch iterable from which all fetch tasks are taken

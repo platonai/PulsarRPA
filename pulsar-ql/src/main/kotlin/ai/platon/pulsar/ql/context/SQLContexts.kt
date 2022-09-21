@@ -72,7 +72,7 @@ class StaticH2SQLContext(
     /**
      * The main loop
      * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig))
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(unmodifiedConfig))
     /**
      * The injection component
      * */

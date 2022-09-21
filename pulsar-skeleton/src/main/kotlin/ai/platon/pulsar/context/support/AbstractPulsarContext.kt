@@ -5,12 +5,8 @@ import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.PlainUrl
-import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.FetchState
@@ -373,13 +369,15 @@ abstract class AbstractPulsarContext(
 
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
-        if (isActive && url.isStandard) crawlPool.add(url)
+        if (url.isStandard || url is DegenerateUrl) {
+            crawlPool.add(url)
+        }
         return this
     }
 
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
-        if (isActive) crawlPool.addAll(urls.filter { it.isStandard })
+        crawlPool.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
 

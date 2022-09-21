@@ -33,9 +33,6 @@ class LoadComponentTests: TestBase() {
     private val args = "-i 5s -ignoreFailure"
 
     @Autowired
-    lateinit var crawlLoops: CrawlLoops
-
-    @Autowired
     lateinit var loadComponent: LoadComponent
 
     @Before

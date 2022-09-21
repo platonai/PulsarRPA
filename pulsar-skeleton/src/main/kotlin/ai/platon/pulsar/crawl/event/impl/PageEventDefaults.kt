@@ -11,7 +11,7 @@ open class DefaultLoadEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()
 ): AbstractLoadEvent()
 
-class DefaultCrawlEvent: AbstractCrawlEvent()
+open class DefaultCrawlEvent: AbstractCrawlEvent()
 
 class DefaultBrowseEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()

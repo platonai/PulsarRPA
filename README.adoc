@@ -11,9 +11,9 @@ English | link:README-CN.adoc[简体中文]
 
 PulsarR is the ultimate open source solution to scrape web data at scale.
 
-PulsarR stands for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
+PulsarR [ˈpʌlsɑr] stands for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
 
-Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar provides a series of advanced features to solve this problem.
+Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar has developed a range of cutting-edge technologies to solve this problem.
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
 

@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.proxy
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.AVAILABLE_PROVIDER_DIR
+import ai.platon.pulsar.common.AppPaths.ENABLED_PROVIDER_DIR
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -98,6 +99,14 @@ open class ProxyPoolManager(
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
+
+        fun enableProxy() {
+            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "yes")
+        }
+
+        fun disableProxy() {
+            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
+        }
 
         /**
          * Proxy system can be enabled/disabled at runtime
