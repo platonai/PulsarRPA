@@ -1,4 +1,4 @@
-= What is Pulsar?
+= What is PulsarR?
 Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: Pulsar README
 :toc:
@@ -9,7 +9,9 @@ English | link:README-CN.adoc[简体中文]
 
 == Introduction
 
-Pulsar is the ultimate open source solution to scrape web data at scale.
+PulsarR is the ultimate open source solution to scrape web data at scale.
+
+PulsarR stands for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
 
 Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar provides a series of advanced features to solve this problem.
 
@@ -20,20 +22,20 @@ We also have a plan to release an advanced AI to automatically extract every fie
 == Features
 
 * Web spider: browser rendering, ajax data crawling
+* RPA: robotic process automation, mimic human behaviors, SPA crawling, or do something else awesome
+* Simple API: single line of code to scrape, or single SQL to turn a website into a table
+* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
+* Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
 * High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
 * Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
 * Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
 * Large scale: fully distributed, designed for large scale crawling
-* Simple API: single line of code to scrape, or single SQL to turn a website into a table
-* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-* Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
-* RPA: simulating human behaviors, SPA crawling, or do something else awesome
 * Big data: various backend storage support: MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
 
 == Get started
 
-*Most scraping attempt can start with (almost) a single line of code:*
+*Most scraping attempts can start with (almost) a single line of code:*
 
 *Kotlin*
 [source,kotlin,options="nowrap"]
@@ -42,9 +44,9 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-The code above scrapes fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages. The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+The code above will scrape fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages. The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
 
-*Most #real world# scraping projects can start with the following code snippet:*
+*Most #real world# crawl projects can start with the following code snippet:*
 
 *Kotlin*
 [source,kotlin]
@@ -64,22 +66,22 @@ fun main() {
 }
 ----
 
-The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin].
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 == Core concepts
 The core Pulsar concepts include the following:
 
-* Web Scraping
-* Network As A Database
-* Auto Extract
-* Browser Rendering
-* Pulsar Context
-* Pulsar Session
-* URLs
-* Hyperlinks
-* Load Options
-* Event Handler
-* X-SQL
+* Web Scraping: the process of using bots to extract content and data from a website
+* Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI solutions
+* Network As A Database: access the Web just like a local database
+* X-SQL: query the Web using SQL directly
+* Browser Rendering: fetch webpages using real browsers
+* Pulsar Session: a Pulsar session provides a set of simple, powerful and flexible APIs to do web scraping tasks
+* Pulsar Context: a Pulsar context consists of a set of highly customizable components that do the actual jobs in the system.
+* URLs: a URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in Pulsar is defined as some form of URL
+* Hyperlinks: a Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task
+* Load Options: load options, or load arguments are control parameters that affect how Pulsar loads, fetches and crawls webpages
+* Event Handler: capture and process events throughout the lifecycle of webpages
 
 Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
 
@@ -112,7 +114,7 @@ implementation("ai.platon.pulsar:pulsar-all:1.10.0")
 val session = PulsarContexts.createSession()
 // the main url we are playing with
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-// load a page, fetch it from the web if it has expired or if it's the first time to fetch
+// load a page, fetch it from the Web if it expires
 val page = session.load(url, "-expires 1d")
 // parse the page content into a Jsoup document
 val document = session.parse(page)
@@ -136,7 +138,7 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 
 *Load options*
 
-Note that most of our scraping methods accept a parameter called load arguments, or load options, to control how to load/fetch a webpage.
+Most of our scrape methods accept a parameter called load options, or load arguments, to control how to load, fetch and scrape a webpage.
 
     -expires     // The expiry time of a page
     -itemExpires // The expiry time of item pages in some batch scraping methods
@@ -149,7 +151,7 @@ Check link:docs/concepts.adoc#_load_options[Load Options] for details.
 
 === Extracting web data
 
-Pulsar uses https://jsoup.org/[jsoup] to extract data from html documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
+Pulsar uses https://jsoup.org/[jsoup] to extract data from HTML documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
 *Kotlin*
 
@@ -178,7 +180,7 @@ fun main() {
     context.submitAll(urls)
     // feel free to submit millions of urls here
     context.submitAll(urls)
-    // ...
+    // wait until all tasks are done
     context.await()
 }
 ----
@@ -204,7 +206,7 @@ public class ContinuousCrawler {
         context.submitAll(urls);
         // feel free to submit millions of urls here
         context.submitAll(urls);
-        // ...
+        // wait until all tasks are done
         context.await();
     }
 }

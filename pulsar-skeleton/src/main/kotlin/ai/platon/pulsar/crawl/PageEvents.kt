@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.crawl.event.*
 
 /**
- * Manage all events in the crawl phrase of the webpage lifecycle.
+ * Manage all events in crawl phrase of the webpage lifecycle.
  * */
 interface CrawlEvent {
     @Deprecated("No need to filter in a crawler")
@@ -92,9 +92,9 @@ interface BrowseEvent {
  * Manage all events in the webpage lifecycle.
  *
  * The events are separated into three groups:
- * 1. LoadEvent for load phrase
- * 2. BrowseEvent for browse phrase
- * 3. CrawlEvent for crawl phrase
+ * 1. [LoadEvent] in load phrase
+ * 2. [BrowseEvent] in browse phrase
+ * 3. [CrawlEvent] in crawl phrase
  * */
 interface PageEvent {
     val loadEvent: LoadEvent

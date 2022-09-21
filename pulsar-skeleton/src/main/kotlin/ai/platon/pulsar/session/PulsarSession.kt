@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture
  *
  * Key methods:
  *
- * [PulsarSession.load], load a new webpage from local storage, or fetch it from the Internet.
+ * [PulsarSession.load], load a webpage from local storage, or fetch it from the Internet.
  * [PulsarSession.parse], parse a webpage into a document.
  * [PulsarSession.scrape], load a webpage, parse it into a document and then extract
  * fields from the document.

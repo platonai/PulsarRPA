@@ -72,12 +72,23 @@ open class LoadOptions(
     /**
      * The deadline to finish the task, if the deadline is exceeded, the task should be discarded
      * as soon as possible.
+     *
+     * :::
+     *
+     * NOTICE:
+     * The arguments "-deadTime", "--dead-time" are deprecated, will be removed in the further.
+     *
+     * :::
+     *
      * */
     @ApiPublic
-    @Parameter(names = ["-deadTime", "--dead-time"], converter = InstantConverter::class,
+    @Parameter(names = ["-deadline", "-deadTime", "--dead-time"], converter = InstantConverter::class,
         description = "The deadline to finish the task, if the deadline is exceeded, " +
                 " the task should be discarded as soon as possible.")
-    var deadTime = DateTimes.doomsday
+    var deadline = DateTimes.doomsday
+
+    @Deprecated("Inappropriate name", ReplaceWith("deadline"))
+    val deadTime get() = deadline
 
     /**
      * The auth token, used for authorization purpose.

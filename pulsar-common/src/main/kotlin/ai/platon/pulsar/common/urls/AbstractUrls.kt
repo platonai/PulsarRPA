@@ -8,7 +8,6 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.time.Instant
 
-
 abstract class AbstractUrl(
     override var url: String,
     override var args: String? = null,

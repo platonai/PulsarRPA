@@ -69,7 +69,7 @@ interface WebDriver: Closeable {
      * */
     val browserType: BrowserType
     /**
-     * Indicate the driver support javascript or not. Some web driver such as MockDriver does not
+     * Indicate the driver has javascript support or not. Web drivers such as MockDriver does not
      * support javascript.
      * */
     val supportJavascript: Boolean
