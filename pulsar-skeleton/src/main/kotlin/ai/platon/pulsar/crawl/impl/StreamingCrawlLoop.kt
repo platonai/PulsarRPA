@@ -76,7 +76,6 @@ open class StreamingCrawlLoop(
 
         val urls = urlFeeder.asSequence()
         _crawler = StreamingCrawler(urls, context.createSession(), noProxy = false)
-            .also { it.attach() }
 
         crawlJob = scope.launch {
             supervisorScope {

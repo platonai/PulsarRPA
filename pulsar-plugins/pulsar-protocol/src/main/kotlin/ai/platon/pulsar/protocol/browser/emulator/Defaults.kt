@@ -28,11 +28,7 @@ class DefaultBrowserEmulator(
         driverPoolManager,
         BrowserResponseHandlerImpl(conf),
         conf
-) {
-    init {
-        responseHandler.attach()
-    }
-}
+)
 
 class DefaultBrowserEmulatedFetcher(
         conf: ImmutableConfig,
@@ -43,11 +39,7 @@ class DefaultBrowserEmulatedFetcher(
         DefaultBrowserEmulator(driverPoolManager, conf),
         conf,
         closeCascaded = true
-) {
-    init {
-        browserEmulator.attach()
-    }
-}
+)
 
 class Defaults(val conf: ImmutableConfig) {
     companion object {

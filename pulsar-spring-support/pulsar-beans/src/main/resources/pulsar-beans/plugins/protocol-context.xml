@@ -48,14 +48,11 @@
 
     <bean id="browserResponseHandler"
           class="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandler"
-          init-method="attach"
-          destroy-method="detach"
           factory-bean="browserResponseHandlerFactory"
           factory-method="getEventHandler"
     />
 
     <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator"
-          init-method="attach"
           destroy-method="close"
     >
         <constructor-arg ref="driverPoolManager"/>
