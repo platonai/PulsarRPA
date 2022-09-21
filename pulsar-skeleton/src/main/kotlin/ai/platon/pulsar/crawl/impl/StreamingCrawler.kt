@@ -204,7 +204,6 @@ open class StreamingCrawler(
 
     fun quit() {
         forceQuit = true
-        detach()
     }
 
     override fun close() {
