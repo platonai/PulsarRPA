@@ -1,17 +1,30 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.event.EventEmitter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 
-interface BrowserResponseHandler {
+enum class BrowserResponseEvents {
+    initPageCategorySniffer,
+    initHTMLIntegrityChecker,
+    willCreateResponse,
+    responseCreated,
+    browseTimeout,
+}
+
+interface BrowserResponseHandler: EventEmitter<BrowserResponseEvents> {
 
     val pageCategorySniffer: ChainedPageCategorySniffer
 
     val htmlIntegrityChecker: ChainedHtmlIntegrityChecker
+
+    fun onInitPageCategorySniffer(sniffer: PageCategorySniffer)
+
+    fun onInitHTMLIntegrityChecker(checker: HtmlIntegrityChecker)
 
     fun onWillCreateResponse(task: FetchTask, driver: WebDriver)
 

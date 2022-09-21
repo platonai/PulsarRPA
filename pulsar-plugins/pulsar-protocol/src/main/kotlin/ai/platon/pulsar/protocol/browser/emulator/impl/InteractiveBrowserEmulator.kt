@@ -43,10 +43,6 @@ open class InteractiveBrowserEmulator(
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
-    init {
-        params.withLogger(logger).info(true)
-    }
-
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts.
      *
@@ -215,9 +211,9 @@ open class InteractiveBrowserEmulator(
             it.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
         }
 
-        responseHandler.onWillCreateResponse(task, driver)
+        responseHandler.emit(BrowserResponseEvents.willCreateResponse)
         return createResponseWithDatum(navigateTask, navigateTask.pageDatum).also {
-            responseHandler.onResponseCreated(task, driver, it)
+            responseHandler.emit(BrowserResponseEvents.responseCreated)
         }
     }
 

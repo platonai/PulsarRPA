@@ -18,10 +18,7 @@
  */
 package ai.platon.pulsar.crawl.protocol.http
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.HttpHeaders
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.MimeTypeResolver
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -124,10 +121,14 @@ abstract class AbstractHttpProtocol: Protocol {
                 log.warn(e.message)
                 response = null
                 lastThrowable = e
-            } catch (e: Throwable) {
+            } catch (e: Exception) {
                 response = null
                 lastThrowable = e
-                log.warn("Unexpected protocol exception", e)
+                log.warn(e.brief("[Unexpected]"))
+            } catch (t: Throwable) {
+                response = null
+                lastThrowable = t
+                log.warn(t.stringify("[Unexpected]"))
             }
         } while (retry && ++i < maxTry && isActive)
 

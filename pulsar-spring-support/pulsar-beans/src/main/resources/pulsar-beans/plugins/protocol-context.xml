@@ -48,6 +48,8 @@
 
     <bean id="browserResponseHandler"
           class="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandler"
+          init-method="attach"
+          destroy-method="detach"
           factory-bean="browserResponseHandlerFactory"
           factory-method="getEventHandler"
     />

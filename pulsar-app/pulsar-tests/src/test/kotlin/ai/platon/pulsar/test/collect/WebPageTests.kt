@@ -1,12 +1,11 @@
-package ai.platon.pulsar.crawl.common.collect
+package ai.platon.pulsar.test.collect
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.session.AbstractPulsarSession
+import ai.platon.pulsar.test.TestBase
 import org.junit.Before
 import org.junit.Test
 import java.time.Duration
@@ -18,13 +17,12 @@ import kotlin.test.assertTrue
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-class WebPageTests {
-    private val session = PulsarContexts.createSession() as AbstractPulsarSession
+class WebPageTests: TestBase() {
     val url = "https://www.amazon.com/dp/B082P8J28M"
 
     @Before
     fun setup() {
-        session.context.webDb.delete(url)
+        session.context.delete(url)
     }
 
     @Test

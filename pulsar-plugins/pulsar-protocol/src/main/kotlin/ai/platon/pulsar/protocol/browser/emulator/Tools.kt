@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.HtmlUtils
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_JS_INVADING_ENABLED
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.PageDatum
@@ -14,18 +15,14 @@ interface PageCategorySniffer {
     operator fun invoke(pageDatum: PageDatum): OpenPageCategory
 }
 
-open class DefaultPageCategorySniffer(
-    val conf: ImmutableConfig
-): PageCategorySniffer {
+open class DefaultPageCategorySniffer(val conf: ImmutableConfig): PageCategorySniffer {
     override fun invoke(pageDatum: PageDatum): OpenPageCategory {
         return OpenPageCategory(PageCategory.UNKNOWN)
     }
 }
 
-class ChainedPageCategorySniffer(
-    val conf: ImmutableConfig
-): PageCategorySniffer {
-    val sniffers = CopyOnWriteArrayList<PageCategorySniffer>()
+class ChainedPageCategorySniffer(val conf: ImmutableConfig): PageCategorySniffer {
+    private val sniffers = CopyOnWriteArrayList<PageCategorySniffer>()
 
     override fun invoke(pageDatum: PageDatum): OpenPageCategory {
         for (sniffer in sniffers) {
@@ -61,11 +58,9 @@ abstract class AbstractHtmlIntegrityChecker: HtmlIntegrityChecker {
     override operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity = HtmlIntegrity.OK
 }
 
-open class DefaultHtmlIntegrityChecker(
-    val jsEnabled: Boolean,
-    val conf: ImmutableConfig
-): AbstractHtmlIntegrityChecker() {
+open class DefaultHtmlIntegrityChecker(val conf: ImmutableConfig): AbstractHtmlIntegrityChecker() {
     private val tracer = getLogger(DefaultHtmlIntegrityChecker::class).takeIf { it.isTraceEnabled }
+    private val jsEnabled = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
 
     override operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity {
         return checkHtmlIntegrity(pageSource)
@@ -111,10 +106,8 @@ open class DefaultHtmlIntegrityChecker(
     }
 }
 
-open class ChainedHtmlIntegrityChecker(
-    val conf: ImmutableConfig
-): AbstractHtmlIntegrityChecker() {
-    val checkers = CopyOnWriteArrayList<HtmlIntegrityChecker>()
+open class ChainedHtmlIntegrityChecker(val conf: ImmutableConfig): AbstractHtmlIntegrityChecker() {
+    private val checkers = CopyOnWriteArrayList<HtmlIntegrityChecker>()
 
     override fun isRelevant(url: String): Boolean = checkers.any { it.isRelevant(url) }
 

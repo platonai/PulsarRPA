@@ -9,9 +9,9 @@ import org.springframework.context.support.AbstractApplicationContext
 
 class PulsarTestContextInitializer : ApplicationContextInitializer<AbstractApplicationContext> {
     override fun initialize(applicationContext: AbstractApplicationContext) {
-        PulsarContextInitializer().initialize(applicationContext)
-
         BrowserSettings.disableProxy()
+
+        PulsarContextInitializer().initialize(applicationContext)
 
         /**
          * Load options are in webpage scope, so it should be initialized after PulsarContextInitializer

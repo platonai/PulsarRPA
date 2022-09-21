@@ -26,9 +26,13 @@ class DefaultBrowserEmulator(
         conf: ImmutableConfig
 ): InteractiveBrowserEmulator(
         driverPoolManager,
-        BrowserResponseHandlerImpl(driverPoolManager, conf),
+        BrowserResponseHandlerImpl(conf),
         conf
-)
+) {
+    init {
+        responseHandler.attach()
+    }
+}
 
 class DefaultBrowserEmulatedFetcher(
         conf: ImmutableConfig,

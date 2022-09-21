@@ -51,12 +51,6 @@ abstract class BrowserEmulatorImplBase(
     val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     val counterCancels by lazy { registry.counter(this, "cancels") }
 
-    override fun getParams(): Params {
-        return Params.of(
-            "enableStartupScript", driverSettings.isStartupScriptEnabled
-        )
-    }
-
     open fun createResponse(task: NavigateTask): Response {
         val pageDatum = task.pageDatum
         val length = task.pageSource.length
@@ -80,7 +74,7 @@ abstract class BrowserEmulatorImplBase(
                 // fetch timeout but content is OK
                 pageDatum.protocolStatus = ProtocolStatus.STATUS_SUCCESS
             }
-            responseHandler.onBrowseTimeout(task)
+            responseHandler.emit(BrowserResponseEvents.browseTimeout)
         }
 
         pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())

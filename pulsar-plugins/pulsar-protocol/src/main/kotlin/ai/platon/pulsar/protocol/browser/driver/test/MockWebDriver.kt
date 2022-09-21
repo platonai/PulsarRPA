@@ -3,10 +3,10 @@ package ai.platon.pulsar.protocol.browser.driver.test
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 //import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import org.slf4j.LoggerFactory
@@ -17,7 +17,7 @@ import java.time.Duration
 import java.util.*
 
 class MockBrowser(
-    id: BrowserInstanceId,
+    id: BrowserId,
     launcherOptions: LauncherOptions
 ): AbstractBrowser(id, launcherOptions.browserSettings) {
     override fun newDriver(): WebDriver {
@@ -26,9 +26,9 @@ class MockBrowser(
 }
 
 class MockWebDriver(
-    browserInstance: MockBrowser,
+    browser: MockBrowser,
     backupDriverCreator: () -> WebDriver,
-) : AbstractWebDriver(browserInstance) {
+) : AbstractWebDriver(browser) {
     private val logger = LoggerFactory.getLogger(MockWebDriver::class.java)!!
 
     private val backupDriver by lazy { backupDriverCreator() }

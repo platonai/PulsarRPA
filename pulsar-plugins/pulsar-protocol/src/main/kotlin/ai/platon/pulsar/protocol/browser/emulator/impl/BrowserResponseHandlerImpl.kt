@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -20,15 +21,12 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 open class BrowserResponseHandlerImpl(
-        private val driverPoolManager: WebDriverPoolManager,
         private val immutableConfig: ImmutableConfig
-): BrowserResponseHandler {
+): BrowserResponseHandler, AbstractEventEmitter<BrowserResponseEvents>() {
     protected val logger = LoggerFactory.getLogger(BrowserResponseHandlerImpl::class.java)!!
     protected val tracer = logger.takeIf { it.isTraceEnabled }
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-
-    protected val enableStartupScript get() = driverPoolManager.driverFactory.driverSettings.isStartupScriptEnabled
 
     private val registry = AppMetrics.defaultMetricRegistry
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
@@ -42,17 +40,41 @@ open class BrowserResponseHandlerImpl(
     protected val emptyPages by lazy { registry.meter(this, "emptyPages") }
 
     override val pageCategorySniffer = ChainedPageCategorySniffer(immutableConfig).apply {
-        sniffers.add(DefaultPageCategorySniffer(immutableConfig))
+        addLast(DefaultPageCategorySniffer(immutableConfig))
     }
 
     override val htmlIntegrityChecker = ChainedHtmlIntegrityChecker(immutableConfig).apply {
-        checkers.add(DefaultHtmlIntegrityChecker(enableStartupScript, immutableConfig))
+        addLast(DefaultHtmlIntegrityChecker(immutableConfig))
     }
 
-    fun onInitPageCategorySniffer(sniffer: ChainedPageCategorySniffer) {
+    override fun attach() {
+        on(BrowserResponseEvents.initPageCategorySniffer) { sniffer: PageCategorySniffer ->
+            this.onInitPageCategorySniffer(sniffer)
+        }
+        on(BrowserResponseEvents.initHTMLIntegrityChecker) { checker: HtmlIntegrityChecker ->
+            this.onInitHTMLIntegrityChecker(checker)
+        }
+        on(BrowserResponseEvents.willCreateResponse) { task: FetchTask, driver: WebDriver ->
+            this.onWillCreateResponse(task, driver)
+        }
+        on(BrowserResponseEvents.responseCreated) { task: FetchTask, driver: WebDriver, response: Response ->
+            this.onResponseCreated(task, driver, response)
+        }
+        on(BrowserResponseEvents.browseTimeout) { task: NavigateTask ->
+            this.onBrowseTimeout(task)
+        }
     }
 
-    fun onInitHTMLIntegrityChecker(checker: ChainedHtmlIntegrityChecker) {
+    override fun detach() {
+        BrowserResponseEvents.values().forEach { off(it) }
+    }
+
+    override fun onInitPageCategorySniffer(sniffer: PageCategorySniffer) {
+        pageCategorySniffer.addLast(sniffer)
+    }
+
+    override fun onInitHTMLIntegrityChecker(checker: HtmlIntegrityChecker) {
+        htmlIntegrityChecker.addLast(checker)
     }
 
     override fun onWillCreateResponse(task: FetchTask, driver: WebDriver) {

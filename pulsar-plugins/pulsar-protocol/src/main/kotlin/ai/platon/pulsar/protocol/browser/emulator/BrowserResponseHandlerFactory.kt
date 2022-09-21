@@ -2,7 +2,6 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImpl
 

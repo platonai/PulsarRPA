@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.common.collect
+package ai.platon.pulsar.test.collect
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.ResourceLoader
@@ -27,7 +27,7 @@ class HyperlinkCollectorTests {
         val options = session.options("-i 1000d -ol a[href~=/dp/] -ignoreFailure -storeContent true")
         val seeds = LinkExtractors.fromResource("categories.txt")
             .take(10)
-            .mapTo(LinkedList()) { session.normalize(it, options) as NormUrl }
+            .mapTo(LinkedList()) { session.normalize(it, options) }
 
         val collector = HyperlinkCollector(session, seeds)
         val sink = mutableListOf<UrlAware>()
