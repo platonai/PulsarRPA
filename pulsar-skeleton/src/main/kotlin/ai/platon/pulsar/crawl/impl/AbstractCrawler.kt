@@ -40,16 +40,8 @@ abstract class AbstractCrawler(
 
     open val isActive get() = !closed.get() && AppContext.isActive
 
-    override fun attach() {
-        on(CrawlEvents.willLoad) { url: UrlAware -> this.onWillLoad(url) }
-        on(CrawlEvents.load) { url: UrlAware -> this.onLoad(url) }
-        on(CrawlEvents.loaded) { url: UrlAware, page: WebPage? -> this.onLoaded(url, page) }
-    }
-
-    override fun detach() {
-        off(CrawlEvents.willLoad)
-        off(CrawlEvents.load)
-        off(CrawlEvents.loaded)
+    init {
+        attach()
     }
 
     override fun onWillLoad(url: UrlAware) {
@@ -74,9 +66,22 @@ abstract class AbstractCrawler(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            detach()
             if (autoClose) {
                 session.close()
             }
         }
+    }
+
+    private fun attach() {
+        on(CrawlEvents.willLoad) { url: UrlAware -> this.onWillLoad(url) }
+        on(CrawlEvents.load) { url: UrlAware -> this.onLoad(url) }
+        on(CrawlEvents.loaded) { url: UrlAware, page: WebPage? -> this.onLoaded(url, page) }
+    }
+
+    private fun detach() {
+        off(CrawlEvents.willLoad)
+        off(CrawlEvents.load)
+        off(CrawlEvents.loaded)
     }
 }

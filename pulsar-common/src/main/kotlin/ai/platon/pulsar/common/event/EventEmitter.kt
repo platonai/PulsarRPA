@@ -1,14 +1,6 @@
 package ai.platon.pulsar.common.event
 
 interface EventEmitter<EventType> {
-    /**
-     * Attach event handlers
-     * */
-    fun attach()
-    /**
-     * Detach event handlers
-     * */
-    fun detach()
 
     /**
      * Bind an event listener to fire when an event occurs.

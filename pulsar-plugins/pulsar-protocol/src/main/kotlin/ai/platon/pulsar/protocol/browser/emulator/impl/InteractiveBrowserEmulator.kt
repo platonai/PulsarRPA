@@ -42,6 +42,10 @@ open class InteractiveBrowserEmulator(
     private val taskLogger = LoggerFactory.getLogger(BrowserEmulator::class.java.name + ".Task")!!
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
+    init {
+        attach()
+    }
+
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts.
      *
@@ -64,7 +68,7 @@ open class InteractiveBrowserEmulator(
         driverPoolManager.cancel(task.url)
     }
 
-    override fun attach() {
+    private fun attach() {
         on1(EmulateEvents.willNavigate) { page: WebPage, driver: WebDriver ->
             this.onWillNavigate(page, driver)
         }
@@ -91,7 +95,7 @@ open class InteractiveBrowserEmulator(
         }
     }
 
-    override fun detach() {
+    private fun detach() {
         EmulateEvents.values().forEach { off(it) }
     }
 

@@ -35,12 +35,8 @@ abstract class AbstractBrowser(
     val isGUI get() = browserSettings.isGUI
     val idleTimeout = Duration.ofMinutes(10)
 
-    override fun attach() {
-        on(BrowserEvents.willNavigate) { entry: NavigateEntry -> onWillNavigate(entry) }
-    }
-
-    override fun detach() {
-        off(BrowserEvents.willNavigate)
+    init {
+        attach()
     }
 
     override fun close() {
@@ -55,4 +51,18 @@ abstract class AbstractBrowser(
     private fun getRandomUserAgentOrNull() = if (browserSettings.isUserAgentOverridingEnabled) {
         browserSettings.userAgent.getRandomUserAgent()
     } else null
+
+    /**
+     * Attach default event handlers
+     * */
+    private fun attach() {
+        on(BrowserEvents.willNavigate) { entry: NavigateEntry -> onWillNavigate(entry) }
+    }
+
+    /**
+     * Detach default event handlers
+     * */
+    private fun detach() {
+        off(BrowserEvents.willNavigate)
+    }
 }

@@ -48,26 +48,8 @@ open class BrowserResponseHandlerImpl(
         addLast(DefaultHtmlIntegrityChecker(immutableConfig))
     }
 
-    override fun attach() {
-        on(BrowserResponseEvents.initPageCategorySniffer) { sniffer: PageCategorySniffer ->
-            this.onInitPageCategorySniffer(sniffer)
-        }
-        on(BrowserResponseEvents.initHTMLIntegrityChecker) { checker: HtmlIntegrityChecker ->
-            this.onInitHTMLIntegrityChecker(checker)
-        }
-        on(BrowserResponseEvents.willCreateResponse) { task: FetchTask, driver: WebDriver ->
-            this.onWillCreateResponse(task, driver)
-        }
-        on(BrowserResponseEvents.responseCreated) { task: FetchTask, driver: WebDriver, response: Response ->
-            this.onResponseCreated(task, driver, response)
-        }
-        on(BrowserResponseEvents.browseTimeout) { task: NavigateTask ->
-            this.onBrowseTimeout(task)
-        }
-    }
-
-    override fun detach() {
-        BrowserResponseEvents.values().forEach { off(it) }
+    init {
+        attach()
     }
 
     override fun onInitPageCategorySniffer(sniffer: PageCategorySniffer) {
@@ -153,5 +135,27 @@ open class BrowserResponseHandlerImpl(
             }
             else -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
         }
+    }
+
+    private fun attach() {
+        on(BrowserResponseEvents.initPageCategorySniffer) { sniffer: PageCategorySniffer ->
+            this.onInitPageCategorySniffer(sniffer)
+        }
+        on(BrowserResponseEvents.initHTMLIntegrityChecker) { checker: HtmlIntegrityChecker ->
+            this.onInitHTMLIntegrityChecker(checker)
+        }
+        on(BrowserResponseEvents.willCreateResponse) { task: FetchTask, driver: WebDriver ->
+            this.onWillCreateResponse(task, driver)
+        }
+        on(BrowserResponseEvents.responseCreated) { task: FetchTask, driver: WebDriver, response: Response ->
+            this.onResponseCreated(task, driver, response)
+        }
+        on(BrowserResponseEvents.browseTimeout) { task: NavigateTask ->
+            this.onBrowseTimeout(task)
+        }
+    }
+
+    private fun detach() {
+        BrowserResponseEvents.values().forEach { off(it) }
     }
 }

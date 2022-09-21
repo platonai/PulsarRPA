@@ -8,15 +8,6 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
 
     protected var onFailure = { t: Throwable -> t.printStackTrace() }
 
-    /**
-     * Attach event handlers
-     * */
-    abstract override fun attach()
-    /**
-     * Detach event handlers
-     * */
-    abstract override fun detach()
-
     override fun on(event: EventType, handler: () -> Unit): AbstractEventEmitter<EventType> {
         events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
