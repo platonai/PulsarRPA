@@ -15,6 +15,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
+import ai.platon.pulsar.protocol.browser.emulator.util.*
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant

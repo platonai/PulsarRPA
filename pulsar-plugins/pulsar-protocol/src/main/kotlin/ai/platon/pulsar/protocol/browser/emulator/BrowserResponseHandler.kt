@@ -7,6 +7,10 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.emulator.util.ChainedHtmlIntegrityChecker
+import ai.platon.pulsar.protocol.browser.emulator.util.ChainedPageCategorySniffer
+import ai.platon.pulsar.protocol.browser.emulator.util.HtmlIntegrityChecker
+import ai.platon.pulsar.protocol.browser.emulator.util.PageCategorySniffer
 
 enum class BrowserResponseEvents {
     initPageCategorySniffer,
