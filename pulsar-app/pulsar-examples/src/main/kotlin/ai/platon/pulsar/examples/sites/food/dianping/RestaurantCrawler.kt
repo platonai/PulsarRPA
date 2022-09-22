@@ -73,7 +73,6 @@ class RestaurantCrawler(
                 "#reviewlist-wrapper .comment-item:nth-child($i) .more"
             }.asFlow().flowOn(Dispatchers.IO).collect { selector ->
                 if (driver.exists(selector)) {
-println("Click on $selector")
                     driver.click(selector)
                     delay(500)
                 }
