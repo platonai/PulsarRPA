@@ -1,16 +1,13 @@
 package ai.platon.pulsar.examples.sites.topEc.english.amazon
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.crawl.AbstractWebPageWebDriverHandler
+import ai.platon.pulsar.crawl.event.WebPageWebDriverEventHandler
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.WebPage
 
-class AmazonSearcherJsEventHandler: AbstractWebPageWebDriverHandler() {
-    override var verbose: Boolean = true
-
-    override suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any? {
+class AmazonSearcherJsEventHandler: WebPageWebDriverEventHandler() {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         val selector = "input#twotabsearchtextbox"
         val expressions = "document.querySelector('$selector').value = 'cup';" +
                 "document.querySelector('$selector').click();" +
@@ -19,10 +16,10 @@ class AmazonSearcherJsEventHandler: AbstractWebPageWebDriverHandler() {
                 "var b = 1+2;" +
                 "let c = 1+3;"
 
-        evaluate(driver, expressions.split(";"))
+        expressions.split(";").forEach { driver.evaluate(it) }
 
         val expression = "document.querySelector('#suggestions').outerHTML;"
-        val value = evaluate(driver, expression)
+        val value = driver.evaluate(expression)
 
         if (value is String && value.contains("<div")) {
             val doc = Documents.parseBodyFragment(value)
@@ -46,8 +43,7 @@ fun main() {
     val cx = PulsarContexts.create()
     val i = cx.createSession()
     val opts = i.options("-i 0s")
-    opts.ensureEventHandler().simulateEventHandler.onAfterComputeFeature
-        .addLast(AmazonSearcherJsEventHandler())
+    opts.event.browseEvent.onFeatureComputed.addLast(AmazonSearcherJsEventHandler())
     i.load(portalUrl, opts)
 
     readLine()

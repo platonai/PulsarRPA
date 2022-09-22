@@ -11,77 +11,77 @@ import ai.platon.pulsar.persist.WebPage
 fun main() {
     val hyperlinkCreator = { url: String ->
         val link = ListenableHyperlink(url)
-        link.eventHandler.loadEventHandler.apply {
+        link.event.loadEvent.apply {
             onFilter.addLast { url ->
                 url
             }
             onNormalize.addLast { url ->
                 url
             }
-            onBeforeLoad.addLast { url ->
+            onWillLoad.addLast { url ->
+                url
+            }
+            onWillFetch.addLast { page ->
 
             }
-            onBeforeFetch.addLast { page ->
+            onFetched.addLast { page ->
 
             }
-            onBeforeBrowserLaunch.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
 
             }
-            onAfterBrowserLaunch.addLast { page, driver ->
+            onWillParseHTMLDocument.addLast { page ->
 
             }
-            onAfterFetch.addLast { page ->
+            onWillExtractData.addLast { page ->
 
             }
-            onBeforeParse.addLast { page ->
+            onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
 
             }
-            onBeforeHtmlParse.addLast { page ->
+            onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
 
             }
-            onBeforeExtract.addLast { page ->
+            onParsed.addLast { page ->
 
             }
-            onAfterExtract.addLast { page: WebPage, document: FeaturedDocument ->
-
-            }
-            onAfterHtmlParse.addLast { page: WebPage, document: FeaturedDocument ->
-
-            }
-            onAfterParse.addLast { page ->
-
-            }
-            onAfterLoad.addLast { page ->
+            onLoaded.addLast { page ->
 
             }
         }
 
-        link.eventHandler.simulateEventHandler.apply {
-            onBeforeCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+        link.event.browseEvent.apply {
+            onWillLaunchBrowser.addLast { page ->
 
             }
-            onAfterCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onBrowserLaunched.addLast { page, driver ->
 
             }
-            onBeforeComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onWillCheckDocumentState.addLast { page: WebPage, driver: WebDriver ->
 
             }
-            onAfterComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
+
+            }
+            onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+
+            }
+            onFeatureComputed.addLast { page: WebPage, driver: WebDriver ->
 
             }
         }
 
-        link.eventHandler.crawlEventHandler.apply {
+        link.event.crawlEvent.apply {
             onFilter.addLast { url: UrlAware ->
                 url
             }
             onNormalize.addLast { url: UrlAware ->
                 url
             }
-            onBeforeLoad.addLast { url: UrlAware ->
-
+            onWillLoad.addLast { url: UrlAware ->
+                url
             }
-            onAfterLoad.addLast { url, page ->
+            onLoaded.addLast { url, page ->
 
             }
         }

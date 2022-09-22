@@ -1,13 +1,13 @@
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.gora.generated.GActiveDomStat
-import ai.platon.pulsar.persist.gora.generated.GActiveDomStatus
+import ai.platon.pulsar.persist.gora.generated.GActiveDOMStat
+import ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus
 import com.google.gson.Gson
 
 /**
- * An active DOM is a DOM inside a real browser
+ * Records the status of the DOM in a real browser.
  * */
-data class ActiveDomStatus(
+data class ActiveDOMStatus(
         val n: Int = 0,
         val scroll: Int = 0,
         val st: String = "",
@@ -16,7 +16,10 @@ data class ActiveDomStatus(
         val ec: String = ""
 )
 
-data class ActiveDomStat(
+/**
+ * The statistics of the DOM in a real browser.
+ * */
+data class ActiveDOMStat(
         val ni: Int = 0,
         val na: Int = 0,
         val nnm: Int = 0,
@@ -25,43 +28,47 @@ data class ActiveDomStat(
         val h: Int = 0
 )
 
-object Converters {
-    fun convert(s: GActiveDomStat): ActiveDomStat {
-        return ActiveDomStat(s.ni, s.na, s.nnm, s.nst, s.w, s.h)
-    }
-
-    fun convert(s: ActiveDomStat): GActiveDomStat {
-        return GActiveDomStat().apply {
-            ni = s.ni
-            na = s.na
-            nnm = s.nnm
-            nst = s.nst
-            w = s.w
-            h = s.h
-        }
-    }
-
-    fun convert(s: GActiveDomStatus): ActiveDomStatus {
-        return ActiveDomStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
-    }
-
-    fun convert(s: ActiveDomStatus): GActiveDomStatus {
-        return GActiveDomStatus().apply {
-            n = s.n
-            st = s.st
-            r = s.r
-            idl = s.idl
-            ec = s.ec
-        }
-    }
-}
-
-// NOTE: it seems they are all the same
-data class ActiveDomUrls(
-        var URL: String = "",
-        var baseURI: String = "",
-        var location: String = "",
-        var documentURI: String = ""
+/**
+ * URLs of a document computed by javascript in a real browser.
+ * */
+data class ActiveDOMUrls(
+    /**
+     * The entire URL of the document, including the protocol (like http://)
+     */
+    var URL: String = "",
+    /**
+     * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
+     * document containing the node. A baseURI is used to resolve relative URLs.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    var baseURI: String = "",
+    /**
+     * In javascript, the `window.location`, or `document.location`, is a read-only property
+     * returns a Location object, which contains information about the URL of the
+     * document and provides methods for changing that URL and loading another URL.
+     *
+     * To retrieve just the URL as a string, the read-only `document.URL` property can
+     * also be used.
+     * */
+    var location: String = "",
+    /**
+     * Returns the document location as a string.
+     *
+     * The documentURI property can be used on any document types. The document.URL
+     * property can only be used on HTML documents.
+     *
+     * @see <a href='https://www.w3schools.com/jsref/prop_document_documenturi.asp'>
+     *     HTML DOM Document documentURI</a>
+     * */
+    var documentURI: String = "",
+    /**
+     * Returns the URI of the page that linked to this page.
+     */
+    var referrer: String = "",
 ) {
     fun toJson(): String{
         return gson.toJson(this)
@@ -69,26 +76,26 @@ data class ActiveDomUrls(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDomUrls()
+        val default = ActiveDOMUrls()
 
-        fun fromJson(json: String): ActiveDomUrls {
-            return gson.fromJson(json, ActiveDomUrls::class.java)
+        fun fromJson(json: String): ActiveDOMUrls {
+            return gson.fromJson(json, ActiveDOMUrls::class.java)
         }
     }
 }
 
-data class ActiveDomMultiStatus(
-        val status: ActiveDomStatus? = ActiveDomStatus(),
-        val initStat: ActiveDomStat? = ActiveDomStat(),
-        val lastStat: ActiveDomStat? = ActiveDomStat(),
-        val initD: ActiveDomStat? = ActiveDomStat(),
-        val lastD: ActiveDomStat? = ActiveDomStat()
+data class ActiveDOMStatTrace(
+    val status: ActiveDOMStatus? = ActiveDOMStatus(),
+    val initStat: ActiveDOMStat? = ActiveDOMStat(),
+    val lastStat: ActiveDOMStat? = ActiveDOMStat(),
+    val initD: ActiveDOMStat? = ActiveDOMStat(),
+    val lastD: ActiveDOMStat? = ActiveDOMStat()
 ) {
     override fun toString(): String {
-        val s1 = initStat?:ActiveDomStat()
-        val s2 = lastStat?:ActiveDomStat()
-        val s3 = initD?:ActiveDomStat()
-        val s4 = lastD?:ActiveDomStat()
+        val s1 = initStat?:ActiveDOMStat()
+        val s2 = lastStat?:ActiveDOMStat()
+        val s3 = initD?:ActiveDOMStat()
+        val s4 = lastD?:ActiveDOMStat()
 
         val s = String.format(
                 "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
@@ -101,7 +108,7 @@ data class ActiveDomMultiStatus(
                 s1.h, s2.h, s3.h, s4.h
         )
 
-        val st = status?:ActiveDomStatus()
+        val st = status?:ActiveDOMStatus()
         return String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
                 st.n, st.scroll, st.st, st.r, st.idl, s)
     }
@@ -112,17 +119,17 @@ data class ActiveDomMultiStatus(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDomMultiStatus()
+        val default = ActiveDOMStatTrace()
 
-        fun fromJson(json: String): ActiveDomMultiStatus {
-            return gson.fromJson(json, ActiveDomMultiStatus::class.java)
+        fun fromJson(json: String): ActiveDOMStatTrace {
+            return gson.fromJson(json, ActiveDOMStatTrace::class.java)
         }
     }
 }
 
-data class ActiveDomMessage(
-        var multiStatus: ActiveDomMultiStatus? = null,
-        var urls: ActiveDomUrls? = null
+data class ActiveDOMMessage(
+    var trace: ActiveDOMStatTrace? = null,
+    var urls: ActiveDOMUrls? = null
 ) {
     fun toJson(): String {
         return gson.toJson(this)
@@ -130,10 +137,41 @@ data class ActiveDomMessage(
 
     companion object {
         private val gson = Gson()
-        val default = ActiveDomMessage()
+        val default = ActiveDOMMessage()
 
-        fun fromJson(json: String): ActiveDomMessage {
-            return gson.fromJson(json, ActiveDomMessage::class.java)
+        fun fromJson(json: String): ActiveDOMMessage {
+            return gson.fromJson(json, ActiveDOMMessage::class.java)
+        }
+    }
+}
+
+object Converters {
+    fun convert(s: GActiveDOMStat): ActiveDOMStat {
+        return ActiveDOMStat(s.ni, s.na, s.nnm, s.nst, s.w, s.h)
+    }
+
+    fun convert(s: ActiveDOMStat): GActiveDOMStat {
+        return GActiveDOMStat().apply {
+            ni = s.ni
+            na = s.na
+            nnm = s.nnm
+            nst = s.nst
+            w = s.w
+            h = s.h
+        }
+    }
+
+    fun convert(s: GActiveDOMStatus): ActiveDOMStatus {
+        return ActiveDOMStatus(s.n, s.scroll, s.st.toString(), s.r.toString(), s.idl.toString(), s.ec.toString())
+    }
+
+    fun convert(s: ActiveDOMStatus): GActiveDOMStatus {
+        return GActiveDOMStatus().apply {
+            n = s.n
+            st = s.st
+            r = s.r
+            idl = s.idl
+            ec = s.ec
         }
     }
 }

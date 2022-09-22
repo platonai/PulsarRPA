@@ -112,13 +112,7 @@ class PrimerParser(val conf: ImmutableConfig) {
         val jsoupParser = JsoupParser(page, conf)
         jsoupParser.parse()
 
-        val parseResult = initParseResult(jsoupParser.document)
-
-        return ParseContext(page, parseResult)
-    }
-
-    private fun initParseResult(document: FeaturedDocument): ParseResult {
-        return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK).also { it.document = document }
+        return ParseContext(page, jsoupParser.document)
     }
 
     /**

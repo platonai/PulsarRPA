@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
@@ -104,18 +104,18 @@ class LoadingWebDriverPool(
         return _freeDrivers.poll().also { numWaiting.decrementAndGet() }
     }
 
-    @Throws(DriverLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     fun poll(conf: VolatileConfig): WebDriver = poll(0, conf, POLLING_TIMEOUT.seconds, TimeUnit.SECONDS)
 
-    @Throws(DriverLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     fun poll(conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver = poll(0, conf, timeout, unit)
 
-    @Throws(DriverLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Duration): WebDriver {
         return poll(0, conf, timeout.seconds, TimeUnit.SECONDS)
     }
 
-    @Throws(DriverLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         return poll0(priority, conf, timeout, unit).also {
             numWorking.incrementAndGet()
@@ -205,7 +205,7 @@ class LoadingWebDriverPool(
         _onlineDrivers.remove(driver)
     }
 
-    @Throws(DriverLaunchException::class, WebDriverPoolExhaustedException::class)
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     private fun poll0(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         createDriverIfNecessary(priority, conf)
 
@@ -222,14 +222,14 @@ class LoadingWebDriverPool(
         return driver ?: throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + formatStatus() + ")")
     }
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     private fun createDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
         synchronized(driverFactory) {
             try {
                 if (shouldCreateDriver()) {
                     createWebDriver(volatileConfig)
                 }
-            } catch (e: DriverLaunchException) {
+            } catch (e: BrowserLaunchException) {
                 logger.debug("[Unexpected]", e)
 
                 if (isActive) {
@@ -243,7 +243,7 @@ class LoadingWebDriverPool(
         return isActive && availableMemory > BROWSER_TAB_REQUIRED_MEMORY && onlineDrivers.size < capacity
     }
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     private fun createWebDriver(volatileConfig: VolatileConfig) {
         val driver = driverFactory.create(browserId, priority, volatileConfig, start = false)
 
@@ -283,10 +283,9 @@ class LoadingWebDriverPool(
      * @see [ArrayBlockingQueue#take]
      * @throws InterruptedException if the current thread is interrupted
      * */
-    @Throws(InterruptedException::class)
     private fun waitUntilIdle(timeout: Duration) {
-        lock.lockInterruptibly()
         try {
+            lock.lockInterruptibly()
             notBusy.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
         } finally {
             lock.unlock()

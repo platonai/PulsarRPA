@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,19 +28,19 @@ import org.springframework.test.context.junit4.SpringRunner
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 class TestUrlNormalizers {
     @Autowired
-    private val urlNormalizers: CrawlUrlNormalizers? = null
+    private val urlNormalizers: ChainedUrlNormalizer? = null
     @Test
     fun testURLNormalizers() {
-        Assert.assertEquals(3, urlNormalizers!!.getURLNormalizers(CrawlUrlNormalizers.SCOPE_DEFAULT).size.toLong())
+        Assert.assertEquals(3, urlNormalizers!!.getURLNormalizers(ChainedUrlNormalizer.SCOPE_DEFAULT).size.toLong())
         var url = "http://www.example.com/"
-        val normalizedUrl = urlNormalizers.normalize(url, CrawlUrlNormalizers.SCOPE_DEFAULT)
+        val normalizedUrl = urlNormalizers.normalize(url, ChainedUrlNormalizer.SCOPE_DEFAULT)
         Assert.assertEquals(url, normalizedUrl)
         url = "http://www.example.org//path/to//somewhere.html"
-        val normalizedSlashes = urlNormalizers.normalize(url, CrawlUrlNormalizers.SCOPE_DEFAULT)
+        val normalizedSlashes = urlNormalizers.normalize(url, ChainedUrlNormalizer.SCOPE_DEFAULT)
         Assert.assertEquals("http://www.example.org/path/to/somewhere.html", normalizedSlashes)
 
         // check the order
-        val impls = urlNormalizers.getURLNormalizers(CrawlUrlNormalizers.SCOPE_DEFAULT)
+        val impls = urlNormalizers.getURLNormalizers(ChainedUrlNormalizer.SCOPE_DEFAULT)
                 .map { it.javaClass.name }
                 .toTypedArray()
         Assert.assertArrayEquals(impls, registeredNormalizers)

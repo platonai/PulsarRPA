@@ -10,8 +10,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
@@ -22,7 +21,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.persist.model.ActiveDomStat
+import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -95,6 +94,10 @@ class LoadComponent(
     }
 
     fun loadWithRetry(normUrl: NormUrl): WebPage {
+        if (normUrl.isNil) {
+            return WebPage.NIL
+        }
+
         var page = load0(normUrl)
         var n = normUrl.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
@@ -104,6 +107,10 @@ class LoadComponent(
     }
 
     suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
+        if (normUrl.isNil) {
+            return WebPage.NIL
+        }
+
         var page = loadDeferred0(normUrl)
         var n = normUrl.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
@@ -120,50 +127,18 @@ class LoadComponent(
             return listOf()
         }
 
-        val futures = loadAllAsync(normUrls)
+        val futures = loadAllAsync(normUrls.filter { !it.isNil })
 
-        logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
+        logger.info("Waiting for {} completable links | @{}", futures.size, futures.hashCode())
 
         val future = CompletableFuture.allOf(*futures.toTypedArray())
         future.join()
 
-        val pages = futures.mapNotNull { it.get() }
+        val pages = futures.mapNotNull { it.get().takeIf { it.isNotNil } }
 
         logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
 
         return pages
-    }
-
-    /**
-     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
-     * */
-    fun loadAll2(normUrls: Iterable<NormUrl>): List<WebPage> {
-        if (!normUrls.iterator().hasNext()) {
-            return listOf()
-        }
-
-        val links = loadAllAsync(normUrls)
-
-        logger.info("Waiting for {} completable hyperlinks, {}@{}, {}", links.size,
-            globalCache.javaClass.name, globalCache.hashCode(), globalCache.urlPool.hashCode())
-
-        var i = 90
-        val pendingLinks = links.toMutableList()
-        while (i-- > 0 && pendingLinks.isNotEmpty()) {
-            val finishedLinks = pendingLinks.filter { it.isDone }
-            if (finishedLinks.isNotEmpty()) {
-                logger.debug("Has finished {} links", finishedLinks.size)
-            }
-
-            if (i % 30 == 0) {
-                logger.debug("Still {} pending links", pendingLinks.size)
-            }
-
-            pendingLinks.removeIf { it.isDone }
-            sleepSeconds(1)
-        }
-
-        return links.filter { it.isDone }.mapNotNull { it.get() }.filter { it.isNotInternal }
     }
 
     /**
@@ -186,7 +161,9 @@ class LoadComponent(
             return listOf()
         }
 
-        val linkFutures = normUrls.distinctBy { it.spec }.map { it.toCompletableListenableHyperlink() }
+        val linkFutures = normUrls.asSequence().filter { !it.isNil }.distinctBy { it.spec }
+            .map { it.toCompletableListenableHyperlink() }
+            .toList()
         globalCache.urlPool.addAll(linkFutures)
         return linkFutures
     }
@@ -197,11 +174,11 @@ class LoadComponent(
     }
 
     private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
-        beforeLoad(normUrl, page)
+        onWillLoad(normUrl, page)
 
         fetchContentIfNecessary(normUrl, page)
 
-        afterLoad(page, normUrl)
+        onLoaded(page, normUrl)
 
         return page
     }
@@ -212,11 +189,11 @@ class LoadComponent(
     }
 
     private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
-        beforeLoad(normUrl, page)
+        onWillLoad(normUrl, page)
 
         fetchContentIfNecessaryDeferred(normUrl, page)
 
-        afterLoad(page, normUrl)
+        onLoaded(page, normUrl)
 
         return page
     }
@@ -293,19 +270,19 @@ class LoadComponent(
         return state
     }
 
-    private fun beforeLoad(normUrl: NormUrl, page: WebPage) {
+    private fun onWillLoad(normUrl: NormUrl, page: WebPage) {
         val options = normUrl.options
 
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
         try {
-            page.loadEventHandler?.onBeforeLoad?.invoke(page.url)
+            page.loadEvent?.onWillLoad?.invoke(page.url)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke beforeLoad | ${page.configuredUrl}", e)
         }
     }
 
-    private fun afterLoad(page: WebPage, normUrl: NormUrl) {
+    private fun onLoaded(page: WebPage, normUrl: NormUrl) {
         val options = normUrl.options
         val status = page.protocolStatus
 
@@ -335,19 +312,17 @@ class LoadComponent(
         try {
             // we might use the cached page's content in after load handler
             if (normUrl.detail is CompletableHyperlink<*>) {
-                require(page.loadEventHandler?.onLoaded?.isNotEmpty == true) {
-                    "A completable hyperlink must have a onLoaded handler"
+                require(page.loadEvent?.onLoaded?.isNotEmpty == true) {
+                    "A completable link must have a onLoaded handler"
                 }
             }
-            page.loadEventHandler?.onLoaded?.invoke(page)
+
+            page.loadEvent?.onLoaded?.invoke(page)
         } catch (e: Throwable) {
-            logger.warn("Failed to invoke afterLoad | ${page.configuredUrl}", e)
+            logger.warn("Failed to invoke onLoaded | ${page.configuredUrl}", e)
         }
 
-        // persist if it's not loaded from the cache so it's not updated
-        // we might persist only when it's fetched
-        // TODO: do not persist content if it's not changed, we can add a contentPage inside a WebPage
-        if (!page.isCached && !status.isCanceled && !options.readonly && options.persist) {
+        if (options.persist && !status.isCanceled && !options.readonly) {
             persist(page, options)
         }
     }
@@ -465,7 +440,7 @@ class LoadComponent(
             return CheckState(FetchState.REFRESH, "refresh")
         }
 
-        val ignoreFailure = options.ignoreFailure || options.retryFailed
+        val ignoreFailure = options.ignoreFailure
         if (protocolStatus.isRetry) {
             return CheckState(FetchState.RETRY, "retry")
         } else if (protocolStatus.isFailed && !ignoreFailure) {
@@ -493,17 +468,18 @@ class LoadComponent(
             return CheckState(FetchState.SCHEDULED, "scheduled")
         }
 
-        if (page.persistContentLength == 0L) {
+        // no content
+        if (page.persistedContentLength == 0L) {
             // do not enable this feature by default
             // return CheckState(FetchState.NO_CONTENT, "no content")
         }
 
-        if (page.persistContentLength < options.requireSize) {
+        if (page.persistedContentLength < options.requireSize) {
             return CheckState(FetchState.SMALL_CONTENT, "small content")
         }
 
-        val domStats = page.activeDomStats
-        val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
+        val domStats = page.activeDOMStatTrace
+        val (ni, na) = domStats["lastStat"] ?: ActiveDOMStat()
         if (ni < options.requireImages) {
             return CheckState(FetchState.MISS_FIELD, "miss image")
         }
@@ -570,7 +546,7 @@ class LoadComponent(
     fun flush() = webDb.flush()
 
     override fun close() {
-        closed.set(true)
+        closed.compareAndSet(false, true)
     }
 
     private fun assertSame(a: Any?, b: Any?, lazyMessage: () -> String) {

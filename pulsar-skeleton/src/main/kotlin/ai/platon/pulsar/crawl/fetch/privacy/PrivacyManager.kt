@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class PrivacyContextMonitor(
-        initialDelay: Long = 300,
-        watchInterval: Long = 30
+    initialDelay: Long = 300,
+    watchInterval: Long = 30
 ): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
 
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
@@ -117,8 +117,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             val prefix = "The latest context throughput: "
             val postfix = " (success/sec)"
             zombieContexts.take(15)
-                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.meterSuccesses.meanRate) }
-                    .let { logger.info(it) }
+                .joinToString(", ", prefix, postfix) { String.format("%.2f", it.meterSuccesses.meanRate) }
+                .let { logger.info(it) }
         }
     }
 }

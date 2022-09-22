@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS;
+import static ai.platon.pulsar.common.config.AppConstants.WEBPAGE_SCHEMA;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 
 public class GoraStorage {
@@ -47,7 +48,7 @@ public class GoraStorage {
 
         String schema;
         if (GWebPage.class.equals(persistentClass)) {
-            schema = conf.get(STORAGE_SCHEMA_WEBPAGE, "webpage");
+            schema = conf.get(STORAGE_SCHEMA_WEBPAGE, WEBPAGE_SCHEMA);
         } else {
             throw new UnsupportedOperationException("Unable to create storage for class " + persistentClass);
         }
@@ -55,7 +56,7 @@ public class GoraStorage {
         Object o = dataStores.get(schema);
         if (o == null) {
             org.apache.hadoop.conf.Configuration hadoopConf = HadoopUtils.INSTANCE.toHadoopConfiguration(conf);
-            String realSchema = schemaPrefix + "webpage";
+            String realSchema = schemaPrefix + schema;
             hadoopConf.set(STORAGE_PREFERRED_SCHEMA_NAME, realSchema);
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
                     keyClass, persistentClass, hadoopConf, properties, schema);

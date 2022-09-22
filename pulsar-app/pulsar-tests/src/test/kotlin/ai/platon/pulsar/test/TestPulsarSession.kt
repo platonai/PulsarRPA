@@ -2,19 +2,26 @@ package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.persist.model.WebPageFormatter
+import com.google.gson.Gson
+import org.junit.Before
 import org.junit.Test
 import java.time.Instant
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Created by vincent on 16-7-20.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestPulsarSession: TestBase() {
-    private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
+    private val url = "https://www.amazon.com/Best-Sellers/zgbs/"
+    private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
+
+    @Before
+    fun setup() {
+//        webDB.delete(url)
+//        webDB.delete(url2)
+    }
 
     @Test
     fun testNormalize() {
@@ -25,13 +32,33 @@ class TestPulsarSession: TestBase() {
     }
 
     @Test
+    fun testLoad() {
+        val page = session.load(url)
+        val page2 = webDB.getOrNull(url)
+
+        if (page.protocolStatus.isSuccess) {
+            assertNotNull(page2)
+            assertTrue { page2.fetchCount > 0 }
+            assertTrue { page2.protocolStatus.isSuccess }
+        }
+
+        if (page2 != null) {
+            println(WebPageFormatter(page2))
+            println(page2.vividLinks)
+            val gson = Gson()
+            println(gson.toJson(page2.activeDOMStatus))
+            println(gson.toJson(page2.activeDOMStatTrace))
+        }
+    }
+
+    @Test
     fun testFetchForExpires() {
         val seconds = 5L
         val args = "-i ${seconds}s"
         var startTime = Instant.now()
         println("Start time: $startTime")
 
-        val page = session.load(url, args = args)
+        val page = session.load(url2, args = args)
         val prevFetchTime1 = page.prevFetchTime
         val fetchTime1 = page.fetchTime
         val fetchCount1 = page.fetchCount
@@ -72,7 +99,7 @@ class TestPulsarSession: TestBase() {
         var startTime = Instant.now()
         println("Start time: $startTime")
 
-        val page = session.load(url, options)
+        val page = session.load(url2, options)
         val prevFetchTime1 = page.prevFetchTime
         val fetchTime1 = page.fetchTime
         val fetchCount1 = page.fetchCount

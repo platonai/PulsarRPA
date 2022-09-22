@@ -28,7 +28,6 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.*
 import java.util.function.Consumer
 import java.util.stream.Collectors
@@ -116,7 +115,6 @@ class WebPageFormatter(val page: WebPage) {
         fields["prevModifiedTime"] = format(page.prevModifiedTime)
         fields["modifiedTime"] = format(page.modifiedTime)
         fields["baseUrl"] = page.location
-        fields["reprUrl"] = page.reprUrl
         fields["batchId"] = page.batchId
         /* Parse */fields["parseStatus"] = page.parseStatus.name
         fields["parseStatusMessage"] = page.parseStatus.toString()
@@ -170,17 +168,15 @@ class WebPageFormatter(val page: WebPage) {
             fields["content"] = page.contentAsString
         }
         if (withEntities) {
-            val pageEntities = page.pageModel.unbox().stream()
-                    .map { fg: GFieldGroup? -> FieldGroupFormatter(fg!!).fields }
-                    .collect(Collectors.toList())
-            fields["pageEntities"] = pageEntities
+            val pageModel = page.pageModel
+            if (pageModel != null) {
+                val pageEntities = pageModel.fieldGroups.map { FieldGroupFormatter(it).fields.entries }
+                fields["pageEntities"] = pageEntities
+            }
         }
         return fields
     }
 
-    /**
-     * TODO: Optimization
-     */
     fun toMap(fields: Set<String>): Map<String, Any> {
         return toMap().entries.filter { fields.contains(it.key) }.associate { it.key to it.value }
     }
@@ -225,20 +221,18 @@ class WebPageFormatter(val page: WebPage) {
                 .append("contentScore:\t" + page.contentScore + "\n")
                 .append("score:\t" + page.score + "\n")
                 .append("cash:\t" + page.cash + "\n")
-        if (page.reprUrl.isNotBlank()) {
-            sb.append("\n\n").append("reprUrl:\t" + page.reprUrl + "\n")
-        }
+
         val crawlMarks = page.marks
-        if (!crawlMarks.unbox().isEmpty()) {
+        if (crawlMarks.unbox().isNotEmpty()) {
             sb.append("\n")
             crawlMarks.unbox().forEach { (key, value) -> sb.append("mark $key:\t$value\n") }
         }
-        if (!page.pageCounters.unbox().isEmpty()) {
+        if (page.pageCounters.unbox().isNotEmpty()) {
             sb.append("\n")
             page.pageCounters.unbox().forEach { (key, value) -> sb.append("counter $key : $value\n") }
         }
         val metadata = page.metadata.asStringMap()
-        if (!metadata.isEmpty()) {
+        if (metadata.isNotEmpty()) {
             sb.append("\n")
             metadata.entries.stream().filter { it.value.startsWith("meta_") }
                     .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
@@ -246,7 +240,7 @@ class WebPageFormatter(val page: WebPage) {
                     .forEach { (key, value) -> sb.append("metadata " + key + ":\t" + value + "\n") }
         }
         val headers = page.headers.unbox()
-        if (headers != null && !headers.isEmpty()) {
+        if (headers != null && headers.isNotEmpty()) {
             sb.append("\n")
             headers.forEach { (key, value) -> sb.append("header $key:\t$value\n") }
         }
@@ -296,13 +290,14 @@ class WebPageFormatter(val page: WebPage) {
             }
         }
         if (withEntities) {
-            sb.append("\n")
-                    .append("entityField:START>>>\n")
-            page.pageModel.unbox().stream()
-                    .map { fg: GFieldGroup? -> FieldGroupFormatter(fg!!).fields }
-                    .flatMap { m: Map<String, Any> -> m.entries.stream() }
-                    .forEach { e: Map.Entry<String, Any> -> sb.append(e.key + ": " + e.value) }
-            sb.append("\n<<<END:pageText\n")
+            val pageModel = page.pageModel
+            if (pageModel != null) {
+                sb.append("\n").append("entityField:START>>>\n")
+                pageModel.fieldGroups
+                    .flatMap { FieldGroupFormatter(it).fields.entries }
+                    .joinTo(sb) { it.key + ": " + it.value }
+                sb.append("\n<<<END:pageText\n")
+            }
         }
         sb.append("\n")
         return sb.toString()

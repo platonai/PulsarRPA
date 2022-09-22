@@ -8,31 +8,31 @@ package ai.platon.pulsar.persist;
  */
 public enum RetryScope {
     /**
-     * Retry at crawl schedule level
+     * Retry in crawl schedule scope
      * */
     CRAWL,
     /**
-     * Retry at job schedule level
+     * Retry in job schedule scope
      * */
     JOB,
     /**
-     * Retry at fetch protocol, ignored in browser emulation mode
+     * Retry in fetch protocol scope, ignored in browser emulation mode
      * */
     PROTOCOL,
     /**
-     * Change proxy and close all web drivers and retry
+     * Change the privacy context and retry
      * */
     PRIVACY,
     /**
-     * Change proxy and retry
+     * Change the proxy ip and retry
      * */
     PROXY,
     /**
-     * Just refresh or load again using web driver
+     * Refresh in the same web driver
      * */
     WEB_DRIVER,
     /**
-     * Retry inside browser, this can be done using javascript
+     * Retry in the same browser instance
      * */
     BROWSER
 }

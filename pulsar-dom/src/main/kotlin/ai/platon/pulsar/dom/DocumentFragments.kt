@@ -14,6 +14,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.HashMap
 
+@Deprecated("Fragment is no longer used")
 class DocumentFragments(
         val document: FeaturedDocument = FeaturedDocument.NIL,
         val fragments: TreeMap<Int, DocumentFragment> = TreeMap(),

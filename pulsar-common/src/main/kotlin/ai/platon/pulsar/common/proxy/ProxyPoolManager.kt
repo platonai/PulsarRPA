@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.proxy
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.AVAILABLE_PROVIDER_DIR
+import ai.platon.pulsar.common.AppPaths.ENABLED_PROVIDER_DIR
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -26,7 +27,7 @@ open class ProxyPoolManager(
     // Set the active proxy idle, for test purpose
     private val isForceIdle get() = FileCommand.check(AppConstants.CMD_PROXY_FORCE_IDLE, 15)
 
-    var lastActiveTime = Instant.now()
+    var lastActiveTime = Instant.EPOCH
     var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(10))
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     open val isIdle get() = (numRunningTasks.get() == 0 && idleTime > idleTimeout) || isForceIdle
@@ -37,8 +38,6 @@ open class ProxyPoolManager(
 
     val activeProxyEntries = ConcurrentSkipListMap<Path, ProxyEntry>()
     val workingProxyEntries = ConcurrentSkipListSet<ProxyEntry>()
-    open val localPort = -1
-    open val currentInterceptProxyEntry: ProxyEntry? = null
     val isEnabled get() = isProxyEnabled(conf)
     val isDisabled get() = !isEnabled
 
@@ -46,7 +45,7 @@ open class ProxyPoolManager(
     val isActive get() = !closed.get()
 
     /**
-     * Run the task, if it's disabled, call the innovation directly
+     * Run the task, if the proxy is disabled, call the innovation directly
      * */
     @Throws(NoProxyException::class)
     open suspend fun <R> runWith(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
@@ -99,8 +98,24 @@ open class ProxyPoolManager(
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
 
+        fun enableProxy() {
+            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "yes")
+        }
+
+        fun disableProxy() {
+            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
+        }
+
         /**
          * Proxy system can be enabled/disabled at runtime
+         * Check if the proxy is enabled.
+         *
+         * The proxy system is enabled if:
+         *
+         * 1. PROXY_USE_PROXY is set to "yes" or "true"
+         * 2. PROXY_USE_PROXY is not set
+         *    1. PROXY_ENABLE_DEFAULT_PROVIDERS is set to "true"
+         *    2. and there are proxy providers in AVAILABLE_PROVIDER_DIR
          * */
         fun isProxyEnabled(conf: ImmutableConfig): Boolean {
             // explicit set system environment property

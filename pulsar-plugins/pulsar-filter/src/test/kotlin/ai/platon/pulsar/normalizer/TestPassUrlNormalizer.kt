@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,7 +32,7 @@ class TestPassUrlNormalizer {
     @Test
     fun testPassURLNormalizer() {
         val url = "http://www.example.com/test/..//"
-        val result = normalizer!!.normalize(url, CrawlUrlNormalizers.SCOPE_DEFAULT)
+        val result = normalizer!!.normalize(url, ChainedUrlNormalizer.SCOPE_DEFAULT)
         Assert.assertEquals(url, result)
     }
 }

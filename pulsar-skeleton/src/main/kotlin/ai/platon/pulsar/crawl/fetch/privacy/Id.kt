@@ -13,7 +13,9 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The privacy context id
+ * The privacy context id defines a unique id of a privacy context.
+ * Website visits through different privacy contexts should not be detected
+ * as the same person, even if the visits are from the same host.
  * */
 data class PrivacyContextId(
     val contextDir: Path,
@@ -58,13 +60,14 @@ data class PrivacyContextId(
 }
 
 /**
- * Every browser instance have a unique data dir, proxy is required to be unique too if it is enabled
- * TODO: rename to BrowserId
+ * The unique browser id.
+ *
+ * Every browser instance have a unique fingerprint and a context directory.
  * */
-data class BrowserInstanceId constructor(
+data class BrowserId constructor(
     val contextDir: Path,
     val fingerprint: Fingerprint,
-): Comparable<BrowserInstanceId> {
+): Comparable<BrowserId> {
 
     val browserType: BrowserType get() = fingerprint.browserType
     val proxyServer: String? get() = fingerprint.proxyServer
@@ -76,7 +79,7 @@ data class BrowserInstanceId constructor(
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     override fun equals(other: Any?): Boolean {
-        return other is BrowserInstanceId
+        return other is BrowserId
                 && other.contextDir == contextDir
                 && other.fingerprint.toString() == fingerprint.toString()
     }
@@ -85,7 +88,7 @@ data class BrowserInstanceId constructor(
         return 31 * contextDir.hashCode() + fingerprint.toString().hashCode()
     }
 
-    override fun compareTo(other: BrowserInstanceId): Int {
+    override fun compareTo(other: BrowserId): Int {
         val r = contextDir.compareTo(other.contextDir)
         if (r != 0) {
             return r
@@ -98,11 +101,12 @@ data class BrowserInstanceId constructor(
     }
 
     companion object {
-        val DEFAULT = BrowserInstanceId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
+        val DEFAULT = BrowserId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
     }
 }
 
-typealias BrowserId = BrowserInstanceId
+@Deprecated("Inappropriate name", ReplaceWith("BrowserId"))
+typealias BrowserInstanceId = BrowserId
 
 interface PrivacyContextIdGenerator {
     operator fun invoke(fingerprint: Fingerprint): PrivacyContextId

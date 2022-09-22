@@ -93,15 +93,23 @@ class PageHandler(
         return nodeId
     }
 
+    /**
+     * Evaluates expression on global object.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
     fun evaluate(expression: String): Any? {
-        val evaluate = runtime?.evaluate(browserSettings.nameMangling(expression))
+        val evaluate = runtime?.evaluate(browserSettings.confuser.confuse(expression))
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-//                logger.warn(exception.value?.toString())
-//                logger.warn(exception.unserializableValue)
+//            logger.warn(exception.value?.toString())
+//            logger.warn(exception.unserializableValue)
             logger.info(exception.description + "\n>>>$expression<<<")
         }
+
+//        println(Gson().toJson(evaluate))
 
         val result = evaluate?.result
         return result?.value

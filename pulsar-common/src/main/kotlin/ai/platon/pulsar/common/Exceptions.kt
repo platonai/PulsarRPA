@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common
 
-import org.slf4j.Logger
-
 open class NoSuchCriticalObjectException : RuntimeException {
 
     constructor() : super() {}
@@ -26,6 +24,7 @@ open class NotSupportedException : RuntimeException {
 
 fun Throwable.stringify(prefix: String = "", postfix: String = "") = stringifyException(this, prefix, postfix)
 
+@Deprecated("Inappropriate name.", ReplaceWith("brief()"))
 fun Throwable.simplify(prefix: String = "", postfix: String = "") = simplifyException(this, prefix, postfix)
 
 fun Throwable.brief(prefix: String = "", postfix: String = "") = simplifyException(this, prefix, postfix)

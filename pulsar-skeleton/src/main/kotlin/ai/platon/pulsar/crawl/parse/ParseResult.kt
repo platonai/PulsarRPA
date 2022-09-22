@@ -26,7 +26,7 @@ import ai.platon.pulsar.persist.model.DomStatistics
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.reflect.KClass
 
-class ParseResult(
+class ParseResult constructor(
         majorCode: Short = NOTPARSED,
         minorCode: Int = SUCCESS_OK,
         message: String? = null
@@ -40,6 +40,10 @@ class ParseResult(
     val shouldBreak get() = flowStatus == FlowState.BREAK
 
     companion object {
+
+        fun success(document: FeaturedDocument): ParseResult {
+            return ParseResult(SUCCESS, SUCCESS_OK).also { it.document = document }
+        }
 
         fun failed(minorCode: Int, message: String?): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, minorCode, message)

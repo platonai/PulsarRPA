@@ -7,10 +7,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
-import ai.platon.pulsar.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureRegistry.registeredFeatures
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
@@ -163,7 +160,7 @@ object Queries {
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
      * */
     private fun loadAll2(session: PulsarSession, normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        val globalCache = session.globalCacheFactory.globalCache
+        val globalCache = session.globalCache
         val queue = globalCache.urlPool.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
         val links = normUrls

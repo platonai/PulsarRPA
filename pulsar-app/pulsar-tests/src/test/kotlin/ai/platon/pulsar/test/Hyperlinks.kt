@@ -1,97 +1,166 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.crawl.*
+import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
+import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
-import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.crawl.event.AbstractCrawlEvent
+import ai.platon.pulsar.crawl.event.AbstractLoadEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-open class MockListenableHyperlink(url: String) : StatefulListenableHyperlink(url) {
+open class MockListenableHyperlink(url: String): ListenableHyperlink(url) {
+    val sequencer = AtomicInteger()
+    val triggeredEvents = mutableListOf<String>()
+    val expectedEvents = listOf(
+        "1. CrawlEvent.onWillLoad",
+        "2. LoadEvent.onWillLoad",
+        "3. LoadEvent.onWillParseHTMLDocument 2",
+        "4. LoadEvent.onWillParseHTMLDocument",
+        "5. LoadEvent.onHTMLDocumentParsed",
+        "6. LoadEvent.onParsed",
+        "7. LoadEvent.onLoaded",
+        "8. LoadEvent.onLoaded - 2",
+        "9. CrawlEvent.onLoaded",
+        "10. CrawlEvent.onLoaded"
+    )
 
-    class MockLoadEventHandler(hyperlink: MockListenableHyperlink) : DefaultLoadEventHandler() {
-        private val thisHandler = this
+    class MockCrawlEvent(val hyperlink: MockListenableHyperlink): AbstractCrawlEvent() {
+        val seq get() = hyperlink.sequencer.incrementAndGet()
 
         init {
-            onBeforeLoad.addFirst {
-                println("............onBeforeLoad")
+            onWillLoad.addFirst {
+                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onWillLoad")
+                it
             }
-            onBeforeParse.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    println("............onBeforeParse " + page.id)
-                    println("$this " + page.loadEventHandler)
-                    assertSame(thisHandler, page.loadEventHandler)
-                    page.variables[VAR_IS_SCRAPE] = true
+            onLoad.addFirst {
+                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
+                it
+            }
+            onLoaded.addFirst { url: UrlAware, page: WebPage? ->
+                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoaded")
+
+                if (page == null) {
+                    return@addFirst null
                 }
-            })
-            onBeforeHtmlParse.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    assertSame(thisHandler, page.loadEventHandler)
-                    println("............onBeforeHtmlParse " + page.id)
+
+                println("............onLoaded " + page.id)
+                page.variables.variables.forEach { (t, u) -> println("$t $u") }
+
+                if (page.protocolStatus.isSuccess) {
+                    assertTrue(page.isLoaded || page.isContentUpdated)
+                    assertNull(page.persistContent)
+                    if (page.isContentUpdated) {
+                        assertNotNull(page.tmpContent) { "if the page is fetched, the content must be cached" }
+                    }
                 }
-            })
-            onAfterHtmlParse.addFirst(object: HtmlDocumentHandler() {
-                override fun invoke(page: WebPage, document: FeaturedDocument) {
-                    println("............onAfterHtmlParse " + page.id)
-                    assertSame(thisHandler, page.loadEventHandler)
-                    assertTrue(page.hasVar(VAR_IS_SCRAPE))
-                }
-            })
-            onAfterParse.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    println("............onAfterParse " + page.id)
-                    println("$thisHandler " + page.loadEventHandler)
-                    assertSame(thisHandler, page.loadEventHandler)
-                }
-            })
-            onAfterLoad.addFirst(object: WebPageHandler() {
-                override fun invoke(page: WebPage) {
-                    assertSame(thisHandler, page.loadEventHandler)
-                    hyperlink.page = page
-                    hyperlink.isDone.countDown()
-                }
-            })
+                assertTrue(page.hasVar(VAR_IS_SCRAPE))
+            }
         }
     }
 
-    override var args: String? = "-cacheContent true -storeContent false -parse"
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler(
-        loadEventHandler = MockLoadEventHandler(this)
-    )
+    class MockLoadEvent(val hyperlink: MockListenableHyperlink) : AbstractLoadEvent() {
+        val seq get() = hyperlink.sequencer.incrementAndGet()
+        private val thisHandler = this
 
-    init {
-        registerEventHandler()
+        init {
+            onWillLoad.addFirst {
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillLoad")
+                println("............onWillLoad")
+                it
+            }
+            onWillParseHTMLDocument.addFirst { page ->
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument")
+                println("............onWillParseHTMLDocument " + page.id)
+                println("$this " + page.loadEvent)
+                page.variables[VAR_IS_SCRAPE] = true
+                null
+            }
+            onWillParseHTMLDocument.addFirst { page ->
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument 2")
+//                assertSame(thisHandler, page.loadEvent)
+                println("............onWillParseHTMLDocument " + page.id)
+            }
+            onHTMLDocumentParsed.addFirst { page, document ->
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onHTMLDocumentParsed")
+                println("............onHTMLDocumentParsed " + page.id)
+//                assertSame(thisHandler, page.loadEvent)
+                assertTrue(page.hasVar(VAR_IS_SCRAPE))
+            }
+            onParsed.addFirst { page ->
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onParsed")
+                println("............onParsed " + page.id)
+                println("$thisHandler " + page.loadEvent)
+//                assertSame(thisHandler, page.loadEvent)
+            }
+            onLoaded.addFirst { page ->
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onLoaded")
+//                assertSame(thisHandler, page.loadEvent)
+            }
+            onLoaded.addLast { page ->
+                hyperlink.triggeredEvents.add("$seq. LoadEvent.onLoaded - 2")
+                hyperlink.page = page
+                hyperlink.isDone.countDown()
+            }
+        }
     }
+
+    override var args: String? = "-cacheContent true -storeContent false -parse -refresh"
+    override var event: PageEvent = DefaultPageEvent(
+        loadEvent = MockLoadEvent(this),
+        crawlEvent = MockCrawlEvent(this)
+    )
 
     var page: WebPage? = null
 
     private val isDone = CountDownLatch(1)
     fun isDone() = isDone.count == 0L
     fun await() = isDone.await()
+}
 
-    private fun registerEventHandler() {
-        eventHandler.crawlEventHandler.onAfterLoad.addFirst { url, page ->
-            if (page == null) {
-                return@addFirst
+open class MockDegeneratedListenableHyperlink : ListenableHyperlink(""), DegenerateUrl {
+    val sequencer = AtomicInteger()
+    val triggeredEvents = mutableListOf<String>()
+    val expectedEvents = listOf(
+        "1. CrawlEvent.onWillLoad",
+        "2. CrawlEvent.onLoad",
+        "3. CrawlEvent.onLoaded"
+    )
+
+    class MockCrawlEvent(val hyperlink: MockDegeneratedListenableHyperlink): AbstractCrawlEvent() {
+        val seq get() = hyperlink.sequencer.incrementAndGet()
+
+        init {
+            onWillLoad.addFirst {
+                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onWillLoad")
+                it
             }
-
-            println("............SinkAwareCrawlEventHandler onAfterLoad " + page.id)
-            page.variables.variables.forEach { (t, u) -> println("$t $u") }
-
-            if (page.protocolStatus.isSuccess) {
-                assertTrue(page.isLoaded || page.isContentUpdated)
-                assertNull(page.persistContent)
-                if (page.isContentUpdated) {
-                    assertNotNull(page.tmpContent) { "if the page is fetched, the content must be cached" }
-                }
+            onLoad.addFirst {
+                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
+                println("Hello! I'm here!")
+                it
             }
-            assertTrue(page.hasVar(VAR_IS_SCRAPE))
+            onLoaded.addFirst { url: UrlAware, page: WebPage? ->
+                assertNull(page)
+                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoaded")
+                hyperlink.isDone.countDown()
+            }
         }
     }
+
+    override var event: PageEvent = DefaultPageEvent(
+        crawlEvent = MockCrawlEvent(this)
+    )
+
+    private val isDone = CountDownLatch(1)
+    fun await() = isDone.await()
 }

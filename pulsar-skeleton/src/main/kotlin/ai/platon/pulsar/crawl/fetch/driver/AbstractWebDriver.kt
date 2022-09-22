@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.urls.UrlUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
@@ -42,42 +43,26 @@ abstract class AbstractWebDriver(
         }
     }
 
-    /**
-     * The url to navigate
-     * The browser might redirect, so it might not be the same with currentUrl()
-     * */
     override var navigateEntry: NavigateEntry = NavigateEntry("")
 
     override val navigateHistory: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
 
-    /**
-     * The url to navigate
-     * The browser might redirect, so it might not be the same with currentUrl()
-     * */
-//    override var url: String = navigateEntry.url
-    /**
-     * Whether the web driver has javascript support
-     * */
     override val supportJavascript: Boolean = true
-    /**
-     * Whether the web page source is mocked
-     * */
+
     override val isMockedPageSource: Boolean = false
-    /**
-     * Driver status
-     * */
+
     override val status = AtomicReference(WebDriver.Status.UNKNOWN)
 
     override var lastActiveTime: Instant = Instant.now()
 
     override val isWorking get() = status.get().isWorking
-    val isNotWorking get() = !isWorking
     override val isRetired get() = status.get().isRetired
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
     override val isFree get() = status.get().isFree
     override val isCrashed get() = status.get().isCrashed
 
+    private val jsoupCreateDestroyMonitor = Any()
     private var jsoupSession: Connection? = null
 
     override fun free() = status.set(WebDriver.Status.FREE)
@@ -87,6 +72,9 @@ abstract class AbstractWebDriver(
         if (status.compareAndSet(WebDriver.Status.WORKING, WebDriver.Status.CANCELED)) {
         }
     }
+
+    override val sessionId: String?
+        get() = id.toString()
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
@@ -106,6 +94,15 @@ abstract class AbstractWebDriver(
 
     override suspend fun evaluateSilently(expression: String): Any? =
         takeIf { isWorking }?.runCatching { evaluate(expression) }
+
+    @Throws(WebDriverException::class)
+    override suspend fun isVisible(selector: String): Boolean {
+        return evaluate("__pulsar_utils__.isVisible('$selector')") == "true"
+    }
+
+    override suspend fun isChecked(selector: String): Boolean {
+        return evaluate("__pulsar_utils__.isChecked('$selector')") == "true"
+    }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollDown(count: Int) {
@@ -170,6 +167,26 @@ abstract class AbstractWebDriver(
         return result?.toString()?.split("\n")?.toList() ?: listOf()
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
+        evaluate("__pulsar_utils__.clickMatches('$selector', '$pattern')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
+        evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun check(selector: String) {
+        evaluate("__pulsar_utils__.check('$selector')")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun uncheck(selector: String) {
+        evaluate("__pulsar_utils__.uncheck('$selector')")
+    }
+
     /**
      * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
      * The browser should be initialized by opening a page before the session is created.
@@ -178,7 +195,57 @@ abstract class AbstractWebDriver(
     override suspend fun newSession(): Connection {
         val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
         val cookies = getCookies()
-        val userAgent = BrowserSettings.randomUserAgent()
+
+        return newSession(headers, cookies)
+    }
+
+    @Throws(IOException::class)
+    override suspend fun loadResource(url: String): Connection.Response? {
+        synchronized(jsoupCreateDestroyMonitor) {
+            if (jsoupSession == null) {
+                val (headers, cookies) = getHeadersAndCookies()
+                jsoupSession = newSession(headers, cookies)
+            }
+        }
+
+        val response = withContext(Dispatchers.IO) {
+            jsoupSession?.newRequest()?.url(url)?.execute()
+        }
+
+        return response
+    }
+
+    /**
+     * Quit the browser instance
+     * */
+    override fun quit() {
+        close()
+    }
+
+    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
+
+    override fun hashCode(): Int = id
+
+    override fun compareTo(other: AbstractWebDriver): Int = id - other.id
+
+    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id"
+
+    private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
+        return runBlocking {
+            val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
+            val cookies = getCookies()
+
+            headers to cookies
+        }
+    }
+
+    /**
+     * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
+     * The browser should be initialized by opening a page before the session is created.
+     * */
+    private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
+        // TODO: use the same user agent as this browser
+        val userAgent = browser.userAgent ?: (browser as AbstractBrowser).browserSettings.userAgent.getRandomUserAgent()
 
         val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
@@ -202,25 +269,4 @@ abstract class AbstractWebDriver(
 
         return session
     }
-
-    @Throws(IOException::class)
-    override suspend fun loadResource(url: String): Connection.Response? {
-        if (jsoupSession == null) {
-            jsoupSession = newSession()
-        }
-
-        val response = withContext(Dispatchers.IO) {
-            jsoupSession?.newRequest()?.url(url)?.execute()
-        }
-
-        return response
-    }
-
-    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
-
-    override fun hashCode(): Int = id
-
-    override fun compareTo(other: AbstractWebDriver): Int = id - other.id
-
-    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
 }

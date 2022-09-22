@@ -1,7 +1,5 @@
 package ai.platon.pulsar.context
 
-import ai.platon.pulsar.session.PulsarEnvironment
-import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -9,14 +7,14 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.CrawlLoops
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.session.PulsarSession
 import org.springframework.beans.BeansException
-import org.springframework.context.ApplicationContext
 import java.net.URL
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Future
 import kotlin.reflect.KClass
 
 /**
@@ -31,17 +29,24 @@ interface PulsarContext: AutoCloseable {
      * */
     val id: Int
 
-    val pulsarEnvironment: PulsarEnvironment
-
-    val applicationContext: ApplicationContext
-
     /**
-     * An immutable config is loaded from the config file at process startup, and never changes
+     * An immutable config loaded from the config file at startup, and never changes
      * */
     val unmodifiedConfig: ImmutableConfig
 
+    /**
+     * The global cache
+     * */
+    val globalCache: GlobalCache
+
+    /**
+     * The url pool to fetch
+     * */
     val crawlPool: UrlPool
 
+    /**
+     * The main loops
+     * */
     val crawlLoops: CrawlLoops
 
     /**
@@ -228,28 +233,37 @@ interface PulsarContext: AutoCloseable {
      * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
      *
      * @param urls    The urls to load
-     * @param options The options
      * @return Pages for all urls.
      */
     fun loadAll(urls: Iterable<NormUrl>): Collection<WebPage>
 
     /**
-     * Load a url asynchronously, the url is added to the crawl task queue, and will be executed asynchronously
+     * Load a url asynchronously, the url is added to the task queue, and will be executed asynchronously
      * */
     fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
 
     /**
-     * Load a batch of urls asynchronously, the urls are added to the crawl task queue, and will be executed asynchronously
+     * Load a batch of urls asynchronously, the urls are added to the task queue, and will be executed asynchronously
      * */
     fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
 
     /**
-     * Submit a url, the url is added to the crawl task queue, and will be executed asynchronously
+     * Submit a url, the url will be added to the task queue, and will be executed asynchronously.
+     *
+     * The url should be standard or degenerate, otherwise it will be discarded.
+     *
+     * @param url The url to submit, which will be added to the task queue
+     * @return The [PulsarContext] itself to enabled chained operations
      * */
     fun submit(url: UrlAware): PulsarContext
 
     /**
-     * Submit a batch of urls, the urls are added to the crawl task queue, and will be executed asynchronously
+     * Submit a batch of urls, the urls are added to the task queue, and will be executed asynchronously.
+     *
+     * The urls should be standard or degenerate, otherwise they will be discarded.
+     *
+     * @param urls The urls to submit, which will be added to the task queue
+     * @return The [PulsarContext] itself to enabled chained operations
      * */
     fun submitAll(urls: Iterable<UrlAware>): PulsarContext
 
@@ -259,7 +273,7 @@ interface PulsarContext: AutoCloseable {
     fun parse(page: WebPage): FeaturedDocument?
 
     /**
-     * Persist the webpage into the backend storage immediately.
+     * Persist the webpage into the storage immediately.
      * By default, the backend storage is the local file system, if mongodb is detected,
      * the mongodb will be used as the backend storage.
      */

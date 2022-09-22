@@ -10,6 +10,10 @@
         <property name="environment" ref="environment"/>
     </bean>
 
+<!--    <bean id="applicationContext" class="org.springframework.context.support.ClassPathXmlApplicationContext" -->
+<!--          init-method="start" destroy-method="close">-->
+<!--    </bean>-->
+
     <!--Web Page Database -->
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
@@ -21,7 +25,6 @@
 
     <!--Misc message writer -->
     <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">
-        <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -45,8 +48,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.StreamingCrawlLoop">
-        <constructor-arg ref="globalCacheFactory"/>
+    <bean id="crawlLoop" class="ai.platon.pulsar.crawl.impl.StreamingCrawlLoop">
         <constructor-arg ref="conf"/>
         <constructor-arg value="DefaultCrawlLoop"/>
     </bean>

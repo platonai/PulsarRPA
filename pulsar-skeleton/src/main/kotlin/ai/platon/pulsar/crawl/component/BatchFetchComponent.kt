@@ -20,10 +20,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 
 class BatchFetchComponent(
     val webDb: WebDb,
@@ -100,11 +96,7 @@ class BatchFetchComponent(
      * Or else parallel fetch pages in a ExecutorService
      */
     private fun fetchAllInternal(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return if (options.preferParallel) {
-            parallelFetchAll(urls, options)
-        } else {
-            optimizeBatchSize(urls, options).map { fetch(it, options) }
-        }
+        return parallelFetchAll(urls, options)
     }
 
     /**
@@ -122,7 +114,7 @@ class BatchFetchComponent(
     }
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
-        coreMetrics?.markTaskStart(Iterables.size(urls))
+        coreMetrics?.markFetchTaskStart(Iterables.size(urls))
         return urls.map { FetchEntry(it, options).page }
                 .let { protocol.getResponses(it, options.conf) }
                 .map { getProtocolOutput(protocol, it, it.page) }
@@ -133,7 +125,7 @@ class BatchFetchComponent(
      * */
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
-        coreMetrics?.markTaskStart(size)
+        coreMetrics?.markFetchTaskStart(size)
         return runBlocking { urls.asFlow().map { fetch(it, options) }.toList(mutableListOf()) }
     }
 

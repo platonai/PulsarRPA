@@ -15,7 +15,7 @@ Web scraping, web harvesting, or web data extraction is data scraping used for e
 === Network As A Database
 The network, especially, the Web, is the largest database in the world, but extracting data from the Web has never been easy.
 
-Pulsar treats the network as a database.For each webpage, Pulsar will first check the local storage, if it does not exist, or expired, or any other fetch condition is triggered, Pulsar will retrieve it from the Web.
+Pulsar treats the network as a database. For each webpage, Pulsar will first check the local storage, if it does not exist, or expired, or any other fetch condition is triggered, Pulsar will retrieve it from the Web.
 
 Pulsar has SQL support, so we can turn the Web into tables and charts using simple SQLs, and also we can query the Web using SQL directly.
 
@@ -36,16 +36,40 @@ Although Pulsar supports various web scraping methods, browser rendering is the 
 Browser rendering means every webpage is open by a real browser to make sure all fields on the webpage are present correctly.
 
 === Pulsar Context
-A PulsarContext consists of different components that are highly customizable.
+A Pulsar context consists of a set of components that are highly customizable.
 
 A StaticPulsarContext consists of the default components.
 
-A ClassPathXmlPulsarContext consists of a set of components which are customized using spring beans files.
+A ClassPathXmlPulsarContext consists of components which are customized using Spring bean configuration files.
 
 A SQLContext consists of components to support X-SQL.
 
 === Pulsar Session
-A PulsarSession provides a set of simple, powerful and flexible APIs to do web scraping tasks.
+PulsarSession defines a concise interface to fetch webpages, from the local storage
+or the Internet, and methods to parse, extract, persist, index, export them.
+
+Key methods:
+
+* PulsarSession.load: load a webpage from local storage, or fetch it from the Internet.
+* PulsarSession.parse: parse a webpage into a document.
+* PulsarSession.scrape: load a webpage, parse it into a document and then extract fields from the document.
+
+And also the batch versions:
+
+* PulsarSession.loadOutPages: load the portal page and out pages.
+* PulsarSession.scrapeOutPages: load the portal page and out pages, extract fields from out pages.
+
+The first method to keep in mind is how to load a page.
+
+A load method checks the local storage first, if it exists and is good,
+return the persisted version, otherwise, fetch it from the Internet.
+
+Other fetch condition can be specified in load arguments, or load options:
+
+1. expiration
+2. page size requirements
+3. field requirements
+
 [source,kotlin]
 ----
 val session = PulsarContexts.createSession()
@@ -58,10 +82,56 @@ val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name 
 // ...
 ----
 
-=== Urls
+Once a webpage is loaded from local storage, or fetched from the Internet,
+we come to the next process steps:
+1. parse the web content into a HTML document
+2. extract fields from the HTML document
+3. write the fields into a destination, such as
+1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
+2. solr, elastic, etc.
+
+There are many ways to fetch the content of a page from the Internet:
+1. http protocol
+2. through a real browser
+
+Since the webpages are becoming more and more complex, fetching webpages through
+real browsers is the primer way nowadays.
+
+When we fetch webpages using a real browser, we may need to interact with pages to
+ensure the desired fields are loaded correctly and completely. Activate [PageEvent]
+and use [WebDriver] to archive such purpose.
+
+[source,kotlin]
+----
+val options = session.options(args)
+options.event.simulateEvent.onDidDOMStateCheck.addLast { page, driver ->
+  driver.scrollDown()
+}
+session.load(url, options)
+----
+
+Pulsar [WebDriver] provides a complete method set for RPA, just like selenium, playwright
+and puppeteer, all actions and behaviors are optimized to mimic real people as closely as possible.
+
+=== Web Driver
+WebDriver defines a concise interface to visit and interact with web pages, all actions and behaviors are optimized to mimic real people as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
+
+The methods in this interface fall into three categories:
+
+. Control of the browser itself
+. Selection of textContent and attributes of Elements
+. Interact with the webpage
+
+Key methods:
+
+* WebDriver.navigateTo: load a new web page.
+* WebDriver.scrollDown: scroll down on a web page to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
+* WebDriver.pageSource: retrieve the source code of a webpage.
+
+=== URLs
 A Uniform Resource Locator (URL), colloquially termed a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
 
-Urls in Pulsar have some special additional meanings, actually, every task in Pulsar is some form of url.
+A URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in Pulsar is defined as some form of URL.
 
 There are several basic forms of urls in Pulsar:
 
@@ -70,7 +140,7 @@ There are several basic forms of urls in Pulsar:
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[UrlAware]
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl]
 
-NormUrl stands for `normalized url`, which means the url is the final form to be passed to the fetch component, and is usually passed to a real browser eventually.
+NormUrl stands for `normalized url`, which means the url is the final form for the fetch component, and is usually passed to a real browser eventually.
 
 If not specified, a url in string format actually means a `configured url`, or `a url with arguments`, for example:
 [source,kotlin]
@@ -86,15 +156,17 @@ val args = "-taskName amazon -expires 1d -ignoreFailure"
 session.load(url, args)
 ----
 
-A UrlAware provides much more complex controls to do scraping tasks. UrlAware is the interface for all Hyperlinks, see <<Hyperlinks,Hyperlinks>> section for details.
+A UrlAware provides much more complex controls to do crawl tasks. UrlAware is the interface of all Hyperlinks, see <<Hyperlinks,Hyperlinks>> section for details.
 
-At last, a link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl] is actually not a URL, but can be an interface of any task to be executed in the crawl loop.
+At last, a link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl] is actually not a URL, it's an interface of any task to be executed in the crawl loop.
 
 === Hyperlinks
 
 A hyperlink, or simply a link, is a reference to data that the user can follow by clicking or tapping.
 
-A Hyperlink in Pulsar is a normal hyperlink with additional information to tell the system how to do the scraping.
+A Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task.
+
+There are several Hyperlinks defined by Pulsar:
 
 A ParsableHyperlink is a convenient abstraction to do fetch-and-parse tasks in continuous crawl jobs:
 
@@ -110,12 +182,12 @@ PulsarContexts.create().submitAll(urls).await()
 
 A CompletableHyperlink helps us to do java style asynchronous computation: submit a hyperlink and wait for the task to complete.
 
-A ListenableHyperlink help us to register event handlers for the scraping:
+A ListenableHyperlink help us to attach event handlers:
 [source,kotlin]
 ----
 val session = PulsarContexts.createSession()
 val link = ListenableHyperlink(
-portalUrl, args = "-refresh -parse", eventHandler = PrintFlowEventHandler())
+portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 session.submit(link)
 ----
 The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[kotlin].
@@ -136,13 +208,18 @@ The example code can be found here: link:../pulsar-rest/src/main/kotlin/ai/plato
 [#_load_options]
 === Load Options
 
-Most of our scraping methods accept a parameter called load arguments, or load options, to control how to load/fetch a webpage.
+Most methods in Pulsar Session accept a parameter called load arguments, or load options, to control how to load/fetch/scrape webpages.
 [source,kotlin]
 ----
 val page = session.load(url, "-expires 1d")
 val page2 = session.load(url, "-refresh")
 val document = session.loadDocument(url, "-expires 1d -ignoreFailure")
 val pages = session.loadOutPages(url, "-outLink a[href~=item]")
+
+Or:
+val options = session.options(""-expires 1d -ignoreFailure"")
+val document = session.loadDocument(url, options)
+
 // ...
 ----
 
@@ -155,21 +232,23 @@ The most important load options are:
     -parse       // Triger the parse phrase
     -resource    // Fetch the url as a resource without browser rendering
 
-All load options are parsed to a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions], check the code for all the supported options.
+All load options are parsed to a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] object, check the code for all the supported options.
 
 === Event Handler
+
+Event handlers here refer to webpage event handlers, which capture and process events throughout the lifecycle of webpages.
 
 See link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[EventHandlerUsage] for all available event handlers.
 
 === X-SQL
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
+Pulsar supports the Network As A Database paradigm, we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
 
 == The implementation concepts of Pulsar
 Developers don't need to study the implementation concepts, but knowing these concepts helps us better understand how the whole system works.
 
 === Url Pool
-When running continuous crawls, urls are added into a link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool]. A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] contains a variety of link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt[UrlCache]s to satisfy different scrape requirements, for example, priority, delaying, dead time, external loading, and so on.
+When running continuous crawls, urls are added into a link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool]. A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] contains a variety of link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt[UrlCache]s to satisfy different scrape requirements, for example, priority, delaying, deadline, external loading, and so on.
 
 === Crawl Loop
 When running continuous crawls, a crawl loop is started to keep fetching urls from the UrlPool, and then load/fetch them asynchronously in a PulsarSession.
@@ -177,13 +256,10 @@ When running continuous crawls, a crawl loop is started to keep fetching urls fr
 Keep in mind that every task in Pulsar is a url, so the crawl loop can accept and execute any kind of tasks.
 
 === Privacy Context
-One of the biggest difficulties in web scraping tasks is the bot stealth. For scraping tasks, the website should have no idea whether a visit is from a human being or a bot. Once a page visit is suspected by the website, which we call a privacy leak, the privacy context has to be dropped, and the system will visit the page in another privacy context.
+One of the biggest difficulties in web scraping tasks is the bot stealth. For scraping tasks, the website should have no idea whether a visit is from a human being or a bot. Once a page visit is suspected by the website, which we call a privacy leak, the privacy context has to be dropped, and Pulsar will visit the page in another privacy context.
 
 === Proxy Management
 Smart rotating proxies.
-
-=== Web Driver
-A web driver is a program to automate the browser.
 
 === Web Driver Stealth
 When controlling a browser programmatically to visit a webpage, the website might detect if the visit is automated, the web driver stealth technology is used to prevent the bot from be detected.

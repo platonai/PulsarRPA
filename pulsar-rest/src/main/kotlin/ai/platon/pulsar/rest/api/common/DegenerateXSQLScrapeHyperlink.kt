@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api.common
 
+import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.DegenerateUrl
@@ -27,9 +28,14 @@ open class DegenerateXSQLScrapeHyperlink(
 
     override fun complete(page: WebPage) {
         try {
-            // TODO: how to properly retrieve the following value?
-            response.pageContentBytes = 1
-            response.pageStatusCode = 200
+            // TODO: properly retrieve the following value
+            if (page.isNil) {
+                response.pageContentBytes = 0
+                response.pageStatusCode = ResourceStatus.SC_EXPECTATION_FAILED
+            } else {
+                response.pageContentBytes = 1
+                response.pageStatusCode = 200
+            }
         } catch (t: Throwable) {
             logger.warn("Unexpected exception", t)
         } finally {
@@ -38,7 +44,7 @@ open class DegenerateXSQLScrapeHyperlink(
     }
 
     private fun registerEventHandler() {
-        eventHandler.crawlEventHandler.onAfterLoad.addLast { url, page ->
+        event.crawlEvent.onLoaded.addLast { url, page ->
             try {
                 executeQuery()
             } catch (t: Throwable) {

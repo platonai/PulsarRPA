@@ -403,6 +403,7 @@ class PowerQueryParser(private val query: String) {
     companion object {
         private val combinators = arrayOf(",", ">", "+", "~", " ")
         private val AttributeEvals = arrayOf("=", "!=", "^=", "$=", "*=", "~=")
+
         /**
          * Parse a CSS query into an Evaluator.
          * @param query CSS query

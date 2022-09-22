@@ -20,7 +20,6 @@ import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.browser.BrowserType;
-import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.urls.UrlUtils;
 import ai.platon.pulsar.persist.gora.generated.*;
@@ -33,13 +32,10 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -47,6 +43,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -58,13 +55,11 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
  */
 final public class WebPage implements Comparable<WebPage> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(WebPage.class);
+    private static final AtomicInteger SEQUENCER = new AtomicInteger();
 
-    public static AtomicInteger sequencer = new AtomicInteger();
+    public static final WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
-    public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
-
-    private Integer id = sequencer.incrementAndGet();
+    private Integer id = SEQUENCER.incrementAndGet();
     /**
      * The url is the permanent internal address, and the location is the last working address
      */
@@ -116,11 +111,6 @@ final public class WebPage implements Comparable<WebPage> {
     private volatile ByteBuffer tmpContent = null;
 
     /**
-     * If this page is fetched from internet
-     */
-    private String args = null;
-
-    /**
      * The delay time to retry if a retry is needed
      */
     private Duration retryDelay = Duration.ZERO;
@@ -158,6 +148,10 @@ final public class WebPage implements Comparable<WebPage> {
         return newWebPage(url, conf, null);
     }
 
+    /**
+     * @deprecated Use WebPageEx.newTestWebPage instead
+     * */
+    @Deprecated
     @NotNull
     public static WebPage newTestWebPage(@NotNull String url) {
         return newWebPage(url, new VolatileConfig(), null);
@@ -278,7 +272,7 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public String getReversedUrl() {
-        return reversedUrl != null ? reversedUrl : "";
+        return reversedUrl;
     }
 
     public int getId() {
@@ -342,7 +336,7 @@ final public class WebPage implements Comparable<WebPage> {
      * Common fields
      * ******************************************************************************
      *
-     * @return a {@link ai.platon.pulsar.persist.Variables} object.
+     * @return a {@link Variables} object.
      */
 
     @NotNull
@@ -373,7 +367,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * <p>getAndRemoveVar.</p>
      *
-     * @param name a {@link java.lang.String} object.
+     * @param name a {@link String} object.
      * @return a boolean.
      */
     public Object removeVar(@NotNull String name) {
@@ -442,20 +436,15 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The load arguments is variant task by task, so the local version is the first choice,
      * while the persisted version is used for historical check only
+     *
+     * The underlying field should not use name 'args' since it exists already
+     * with another gora type, see GProtocolStatus.args and GParseStatus.args
      */
     @NotNull
     public String getArgs() {
-        if (this.args != null) {
-            return args;
-        }
-
-        CharSequence opts = page.getOptions();
-        if (opts == null) {
-            return "";
-        }
-
-        args = opts.toString().trim();
-        return args;
+        // The underlying field should not use name 'args'
+        CharSequence args = page.getParams();
+        return args != null ? args.toString() : "";
     }
 
     /**
@@ -463,8 +452,7 @@ final public class WebPage implements Comparable<WebPage> {
      * */
     public void setArgs(@NotNull String args) {
         variables.remove(VAR_LOAD_OPTIONS);
-        this.args = args;
-        page.setOptions(args);
+        page.setParams(args);
     }
 
     @NotNull
@@ -540,13 +528,6 @@ final public class WebPage implements Comparable<WebPage> {
         page.setDistance(newDistance);
     }
 
-    public void increaseDistance(int newDistance) {
-        int oldDistance = getDistance();
-        if (newDistance < oldDistance) {
-            setDistance(newDistance);
-        }
-    }
-
     @NotNull
     public FetchMode getFetchMode() {
         return FetchMode.fromString(getMetadata().get(Name.FETCH_MODE));
@@ -561,30 +542,32 @@ final public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public BrowserType getLastBrowser() {
-        return BrowserType.fromString(getMetadata().get(Name.BROWSER));
+        String browser = page.getBrowser() != null ? page.getBrowser().toString() : "";
+        return BrowserType.fromString(browser);
     }
 
     public void setLastBrowser(@NotNull BrowserType browser) {
-        getMetadata().set(Name.BROWSER, browser.name());
+        page.setBrowser(browser.name());
     }
 
     public boolean isResource() {
-        return getMetadata().getBoolean(Name.IS_RESOURCE, false);
+        return page.getResource() != null;
     }
 
     public void setResource(boolean resource) {
         if (resource) {
-            getMetadata().set(Name.IS_RESOURCE, "true");
+            page.setResource(1);
         }
     }
 
     @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
-        return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
+        String integrity = page.getHtmlIntegrity() != null ? page.getHtmlIntegrity().toString() : "";
+        return HtmlIntegrity.Companion.fromString(integrity);
     }
 
     public void setHtmlIntegrity(@NotNull HtmlIntegrity integrity) {
-        getMetadata().set(Name.HTML_INTEGRITY, integrity.name());
+        page.setHtmlIntegrity(integrity.name());
     }
 
     public int getFetchPriority() {
@@ -629,24 +612,6 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.GENERATE_TIME, generateTime.toString());
     }
 
-    @Nullable
-    public Instant getModelSyncTime() {
-        String modelSyncTime = getMetadata().get(Name.MODEL_SYNC_TIME);
-        if (modelSyncTime == null) {
-            return null;
-        } else {
-            return Instant.parse(modelSyncTime);
-        }
-    }
-
-    public void setModelSyncTime(@Nullable Instant modelSyncTime) {
-        if (modelSyncTime != null) {
-            getMetadata().set(Name.MODEL_SYNC_TIME, modelSyncTime.toString());
-        } else {
-            getMetadata().set(Name.MODEL_SYNC_TIME, (Instant) null);
-        }
-    }
-
     public int getFetchCount() {
         return page.getFetchCount();
     }
@@ -678,7 +643,7 @@ final public class WebPage implements Comparable<WebPage> {
      * <p>
      * A baseUrl has the same semantic with Jsoup.parse:
      *
-     * @return a {@link java.lang.String} object.
+     * @return a {@link String} object.
      * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
      * @see WebPage#getLocation
      */
@@ -846,12 +811,6 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public Duration getLastTimeout() {
-        String s = getMetadata().get(Name.RESPONSE_TIME);
-        return s == null ? Duration.ZERO : Duration.parse(s);
-    }
-
-    @NotNull
     public Instant getModifiedTime() {
         return Instant.ofEpochMilli(page.getModifiedTime());
     }
@@ -878,8 +837,9 @@ final public class WebPage implements Comparable<WebPage> {
     @NotNull
     public PageCategory getPageCategory() {
         try {
-            if (page.getPageCategory() != null) {
-                return PageCategory.parse(page.getPageCategory().toString());
+            CharSequence pageCategory = page.getPageCategory();
+            if (pageCategory != null) {
+                return PageCategory.parse(pageCategory.toString());
             }
         } catch (Throwable ignored) {
         }
@@ -890,7 +850,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * category : index, detail, review, media, search, etc
      *
-     * @param pageCategory a {@link ai.platon.pulsar.persist.metadata.PageCategory} object.
+     * @param pageCategory a {@link PageCategory} object.
      */
     public void setPageCategory(@NotNull PageCategory pageCategory) {
         page.setPageCategory(pageCategory.toString());
@@ -915,7 +875,6 @@ final public class WebPage implements Comparable<WebPage> {
      */
     public void setEncoding(@Nullable String encoding) {
         page.setEncoding(encoding);
-        getMetadata().set(Name.CHAR_ENCODING_FOR_CONVERSION, encoding);
     }
 
     /**
@@ -945,7 +904,7 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The entire raw document content e.g. raw XHTML
      *
-     * @return The raw document content in {@link java.nio.ByteBuffer}.
+     * @return The raw document content in {@link ByteBuffer}.
      */
     @Nullable
     public ByteBuffer getContent() {
@@ -998,11 +957,11 @@ final public class WebPage implements Comparable<WebPage> {
     @NotNull
     public String getContentAsString() {
         ByteBuffer buffer = getContent();
-        byte[] array = buffer.array();
-        if (array == null) {
-            array = "".getBytes(StandardCharsets.UTF_8);
+        if (buffer == null || buffer.remaining() == 0) {
+            return "";
         }
-        return ByteUtils.toString(array);
+
+        return new String(buffer.array(), buffer.arrayOffset(), buffer.limit());
     }
 
     /**
@@ -1066,8 +1025,8 @@ final public class WebPage implements Comparable<WebPage> {
             isContentUpdated = true;
 
             int length = value.array().length;
-            setContentLength(length);
-            setPersistContentLength(length);
+            computeContentLength(length);
+            setPersistedContentLength(length);
         } else {
             clearPersistContent();
         }
@@ -1076,38 +1035,33 @@ final public class WebPage implements Comparable<WebPage> {
     public void clearPersistContent() {
         tmpContent = page.getContent();
         page.setContent(null);
-        setPersistContentLength(0);
+        setPersistedContentLength(0);
     }
 
     /**
-     * Get the decleared content length.
+     * Get the length of content in bytes.
      *
      * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
      *
-     * @return The content length
+     * @return The length of the content in bytes.
      */
     public long getContentLength() {
-        return getMetadata().getLong(Name.CONTENT_BYTES, 0);
+        return page.getContentLength() != null ? page.getContentLength() : 0;
     }
 
     /**
-     * Set the decleared content length.
-     *
-     * TODO: use a field for content length
+     * Compute the length of content in bytes.
      */
-    private void setContentLength(long bytes) {
+    private void computeContentLength(long bytes) {
         long lastBytes = getContentLength();
-        Metadata metadata = getMetadata();
-        metadata.set(Name.LAST_CONTENT_BYTES, lastBytes);
-        metadata.set(Name.CONTENT_BYTES, bytes);
-        metadata.set(Name.AVE_CONTENT_BYTES, getAverageContentBytes(bytes));
+        page.setLastContentLength(lastBytes);
+        page.setContentLength(bytes);
+        computeAveContentLength(bytes);
     }
 
-    private long getAverageContentBytes(long bytes) {
-        Metadata metadata = getMetadata();
-
+    private void computeAveContentLength(long bytes) {
         int count = getFetchCount();
-        long lastAveBytes = metadata.getLong(Name.AVE_CONTENT_BYTES, 0);
+        long lastAveBytes = page.getAveContentLength();
 
         long aveBytes;
         if (count > 0 && lastAveBytes == 0) {
@@ -1117,23 +1071,23 @@ final public class WebPage implements Comparable<WebPage> {
             aveBytes = (lastAveBytes * count + bytes) / (count + 1);
         }
 
-        return aveBytes;
+        page.setAveContentLength(aveBytes);
     }
 
-    public long getPersistContentLength() {
-        return getMetadata().getLong(Name.PERSIST_CONTENT_BYTES, 0);
+    public long getPersistedContentLength() {
+        return page.getPersistedContentLength() != null ? page.getPersistedContentLength() : 0;
     }
 
-    private void setPersistContentLength(long bytes) {
-        getMetadata().set(Name.PERSIST_CONTENT_BYTES, bytes);
+    private void setPersistedContentLength(long bytes) {
+        page.setPersistedContentLength(bytes);
     }
 
-    public long getLastContentBytes() {
-        return getMetadata().getLong(Name.LAST_CONTENT_BYTES, 0);
+    public long getLastContentLength() {
+        return page.getLastContentLength() != null ? page.getLastContentLength() : 0;
     }
 
-    public long getAveContentBytes() {
-        return getMetadata().getLong(Name.AVE_CONTENT_BYTES, 0);
+    public long getAveContentLength() {
+        return page.getAveContentLength() != null ? page.getAveContentLength() : 0;
     }
 
     @NotNull
@@ -1166,26 +1120,23 @@ final public class WebPage implements Comparable<WebPage> {
     /**
      * The last proxy used to fetch the page
      */
-    @Nullable
     public String getProxy() {
-        return getMetadata().get(Name.PROXY);
+        return page.getProxy() == null ? null : page.getProxy().toString();
     }
 
     /**
      * The last proxy used to fetch the page
      */
     public void setProxy(@Nullable String proxy) {
-        if (proxy != null) {
-            getMetadata().set(Name.PROXY, proxy);
-        }
+        page.setProxy(proxy);
     }
 
     @Nullable
-    public ActiveDomStatus getActiveDomStatus() {
-        GActiveDomStatus s = page.getActiveDomStatus();
+    public ActiveDOMStatus getActiveDOMStatus() {
+        GActiveDOMStatus s = page.getActiveDOMStatus();
         if (s == null) return null;
 
-        return new ActiveDomStatus(
+        return new ActiveDOMStatus(
                 s.getN(),
                 s.getScroll(),
                 s.getSt().toString(),
@@ -1195,12 +1146,12 @@ final public class WebPage implements Comparable<WebPage> {
         );
     }
 
-    public void setActiveDomStatus(ActiveDomStatus s) {
+    public void setActiveDOMStatus(ActiveDOMStatus s) {
         if (s == null) {
             return;
         }
 
-        GActiveDomStatus s2 = page.getActiveDomStatus();
+        GActiveDOMStatus s2 = page.getActiveDOMStatus();
         if (s2 != null) {
             s2.setN(s.getN());
             s2.setScroll(s.getScroll());
@@ -1212,37 +1163,18 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    public Map<String, ActiveDomStat> getActiveDomStats() {
-        Map<CharSequence, GActiveDomStat> s = page.getActiveDomStats();
+    public Map<String, ActiveDOMStat> getActiveDOMStatTrace() {
+        Map<CharSequence, GActiveDOMStat> s = page.getActiveDOMStatTrace();
         return s.entrySet().stream().collect(Collectors.toMap(
                 e -> e.getKey().toString(),
                 e -> Converters.INSTANCE.convert(e.getValue())
         ));
     }
 
-    public void setActiveDomStats(@NotNull Map<String, ActiveDomStat> stats) {
-        Map<CharSequence, GActiveDomStat> stats2 = stats.entrySet().stream().collect(
+    public void setActiveDOMStatTrace(@NotNull Map<String, ActiveDOMStat> trace) {
+        Map<CharSequence, GActiveDOMStat> statTrace = trace.entrySet().stream().collect(
                 Collectors.toMap(Map.Entry::getKey, e -> Converters.INSTANCE.convert(e.getValue())));
-        page.setActiveDomStats(stats2);
-    }
-
-    @NotNull
-    public ActiveDomUrls getActiveDomUrls() {
-        Map<CharSequence, CharSequence> urls = page.getActiveDomUrls();
-        return new ActiveDomUrls(
-                urls.getOrDefault("URL", "").toString(),
-                urls.getOrDefault("baseURI", "").toString(),
-                urls.getOrDefault("location", "").toString(),
-                urls.getOrDefault("documentURI", "").toString()
-        );
-    }
-
-    public void setActiveDomUrls(@NotNull ActiveDomUrls urls) {
-        Map<CharSequence, CharSequence> domUrls = page.getActiveDomUrls();
-        domUrls.put("URL", urls.getURL());
-        domUrls.put("baseURI", urls.getBaseURI());
-        domUrls.put("location", urls.getLocation());
-        domUrls.put("documentURI", urls.getDocumentURI());
+        page.setActiveDOMStatTrace(statTrace);
     }
 
     /**
@@ -1484,10 +1416,32 @@ final public class WebPage implements Comparable<WebPage> {
      * Page Model
      * ******************************************************************************
      */
+    @Nullable
+    public Instant getPageModelUpdateTime() {
+        return Instant.ofEpochMilli(page.getPageModelUpdateTime());
+    }
+
+    public void setPageModelUpdateTime(@Nullable Instant time) {
+        page.setPageModelUpdateTime(time == null ? 0 : time.toEpochMilli());
+    }
+
+    @Nullable
+    public PageModel getPageModel() {
+        if (page.getPageModel() != null) {
+            return PageModel.box(page.getPageModel());
+        }
+        else {
+            return null;
+        }
+    }
 
     @NotNull
-    public PageModel getPageModel() {
-        return PageModel.box(page.getPageModel());
+    public PageModel ensurePageModel() {
+        if (page.getPageModel() == null) {
+            page.setPageModel(GPageModel.newBuilder().build());
+        }
+
+        return Objects.requireNonNull(getPageModel());
     }
 
     /**

@@ -15,17 +15,17 @@
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
-        <version>3.4</version>
+        <version>3.6.0-SNAPSHOT</version>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.9.15-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
 
     <name>Pulsar</name>
-    <description>The easy way to crawl and scrape the web:
-        turn large web sites into tables and charts using simple native api, SQL or RESTful api</description>
+    <description>The easy way to crawl and scrape the Web:
+        turn large web sites into tables and charts using simple native api, SQL or REST api</description>
 
     <licenses>
         <license>
@@ -47,7 +47,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.9.15</tag>
+        <tag>v1.10.0</tag>
     </scm>
 
     <repositories>
@@ -107,14 +107,20 @@
                 <module>pulsar-skeleton</module>
                 <module>pulsar-resources</module>
                 <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
+                <module>pulsar-plugins/pulsar-protocol</module>
 
-                <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
+                <module>pulsar-tools/pulsar-browser</module>
 
                 <module>pulsar-spring-support</module>
-                <module>pulsar-rest</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>develop-plugins</id>
+
+            <modules>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-plugins</module>
             </modules>
         </profile>
 

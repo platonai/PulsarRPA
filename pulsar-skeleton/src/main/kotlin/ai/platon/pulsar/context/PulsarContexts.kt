@@ -1,6 +1,7 @@
 package ai.platon.pulsar.context
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
 import ai.platon.pulsar.context.support.StaticPulsarContext
@@ -33,7 +34,7 @@ object PulsarContexts {
 
         contexts.add(context)
         activeContext = context
-        (context.applicationContext as? AbstractApplicationContext)?.registerShutdownHook()
+        (context as? AbstractPulsarContext)?.applicationContext?.registerShutdownHook()
         context.registerShutdownHook()
         logger.info("Active context | {}", contexts.joinToString { it::class.qualifiedName + "#" + it.id })
 
@@ -63,23 +64,5 @@ object PulsarContexts {
     fun shutdown() {
         contexts.forEach { it.close() }
         activeContext = null
-    }
-}
-
-fun withContext(block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.create(StaticPulsarContext()).use {
-        block(it)
-    }
-}
-
-fun withContext(contextLocation: String, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.create(ClassPathXmlPulsarContext(contextLocation)).use {
-        block(it)
-    }
-}
-
-fun withContext(applicationContext: ApplicationContext, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.create(applicationContext).use {
-        block(it)
     }
 }

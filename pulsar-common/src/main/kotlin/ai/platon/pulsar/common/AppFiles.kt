@@ -103,6 +103,10 @@ object AppFiles {
 
     fun readLastGeneratedRows(): Int {
         try {
+            if (!Files.exists(AppPaths.PATH_LAST_GENERATED_ROWS)) {
+                return -1
+            }
+
             val line = Files.readAllLines(AppPaths.PATH_LAST_GENERATED_ROWS)[0]
             return NumberUtils.toInt(line, -1)
         } catch (ignored: Throwable) {
@@ -124,6 +128,10 @@ object AppFiles {
 
     fun readBatchIdOrDefault(defaultValue: String): String {
         try {
+            if (!Files.exists(AppPaths.PATH_LAST_BATCH_ID)) {
+                return defaultValue
+            }
+
             return Files.readAllLines(AppPaths.PATH_LAST_BATCH_ID)[0]
         } catch (ignored: Throwable) {}
 

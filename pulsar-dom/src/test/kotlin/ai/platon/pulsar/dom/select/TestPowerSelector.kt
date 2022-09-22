@@ -1,7 +1,8 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.Documents
-import org.junit.Assert.assertEquals
+import org.jsoup.Jsoup
+import org.junit.Assert.*
 import org.junit.Test
 
 /**

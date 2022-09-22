@@ -6,11 +6,7 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
-import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.random.Random
 
 class WebDriverAdapter(
     val driver: WebDriver,
@@ -47,7 +43,7 @@ class WebDriverAdapter(
     /**
      * The id of the session to the browser
      * */
-    override val sessionId get() = driver.sessionId
+    override val sessionId get() = driverOrNull?.sessionId
 
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
@@ -61,13 +57,13 @@ class WebDriverAdapter(
      * The actual url return by the browser
      * */
     @Throws(WebDriverException::class)
-    override suspend fun currentUrl() = driver.currentUrl()
+    override suspend fun currentUrl() = driverOrNull?.currentUrl() ?: ""
 
     /**
      * The real time page source return by the browser
      * */
     @Throws(WebDriverException::class)
-    override suspend fun pageSource() = driver.pageSource()
+    override suspend fun pageSource() = driverOrNull?.pageSource()
 
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String) = driverOrNull?.waitForSelector(selector) ?: 0
@@ -91,7 +87,10 @@ class WebDriverAdapter(
     override suspend fun exists(selector: String) = driverOrNull?.exists(selector) ?: false
 
     @Throws(WebDriverException::class)
-    override suspend fun visible(selector: String) = driverOrNull?.visible(selector) ?: false
+    override suspend fun isVisible(selector: String) = driverOrNull?.isVisible(selector) ?: false
+
+    @Throws(WebDriverException::class)
+    override suspend fun isChecked(selector: String) = driverOrNull?.isChecked(selector) ?: false
 
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) = driverOrNull?.click(selector, count) ?: Unit
@@ -104,6 +103,16 @@ class WebDriverAdapter(
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
         driverOrNull?.clickMatches(selector, attrName, pattern, count)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun check(selector: String) {
+        driverOrNull?.check(selector)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun uncheck(selector: String) {
+        driverOrNull?.uncheck(selector)
     }
 
     @Throws(WebDriverException::class)
@@ -139,7 +148,7 @@ class WebDriverAdapter(
     override suspend fun boundingBox(selector: String) = driverOrNull?.boundingBox(selector)
 
     @Throws(WebDriverException::class)
-    override suspend fun evaluate(expression: String) = driver.evaluate(expression)
+    override suspend fun evaluate(expression: String) = driverOrNull?.evaluate(expression)
 
     @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders() = driverOrNull?.mainRequestHeaders() ?: mapOf()
@@ -156,16 +165,16 @@ class WebDriverAdapter(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun captureScreenshot(selector: String) = driver.captureScreenshot(selector)
+    override suspend fun captureScreenshot(selector: String) = driverOrNull?.captureScreenshot(selector)
 
     @Throws(WebDriverException::class)
-    override suspend fun captureScreenshot(rect: RectD) = driver.captureScreenshot(rect)
+    override suspend fun captureScreenshot(rect: RectD) = driverOrNull?.captureScreenshot(rect)
 
     @Throws(WebDriverException::class)
     override suspend fun stop() = driverOrNull?.stop() ?: Unit
 
     @Throws(WebDriverException::class)
-    override suspend fun stopLoading() = driverOrNull?.stopLoading() ?: Unit
+    override suspend fun pause() = driverOrNull?.pause() ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun terminate() = driverOrNull?.terminate() ?: Unit

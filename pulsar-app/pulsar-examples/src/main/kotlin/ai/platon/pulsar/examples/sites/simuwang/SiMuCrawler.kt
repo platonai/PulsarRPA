@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.simuwang
 
-import ai.platon.pulsar.crawl.event.CloseMaskLayerHandler
-import ai.platon.pulsar.crawl.event.LoginHandler
+import ai.platon.pulsar.crawl.event.impl.CloseMaskLayerHandler
+import ai.platon.pulsar.crawl.event.impl.LoginHandler
 import ai.platon.pulsar.ql.context.SQLContexts
 
 class SiMuLoginHandler(
@@ -34,8 +34,8 @@ open class SiMuCrawler {
     val loginHandler = SiMuLoginHandler(portalUrl, username, password)
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
     val options = session.options(args).also {
-        it.ensureEventHandler().loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
-        it.ensureEventHandler().simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
+        it.event.browseEvent.onBrowserLaunched.addLast(loginHandler)
+        it.event.browseEvent.onDocumentActuallyReady.addLast(closeMaskLayerHandler)
     }
 
     open fun crawl() {

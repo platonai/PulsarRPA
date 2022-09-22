@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.language
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.event.CloseMaskLayerHandler
+import ai.platon.pulsar.crawl.event.impl.CloseMaskLayerHandler
 
 fun main() {
     val portalUrl = "https://shopee.co.th/กระเป๋าเป้ผู้ชาย-cat.49.1037.10297?page=1"
@@ -14,7 +14,7 @@ fun main() {
     val options = session.options(args)
 
     val closeMaskLayerHandler = CloseMaskLayerHandler(closeMaskLayerSelector)
-    options.ensureEventHandler().simulateEventHandler.onAfterCheckDOMState.addLast(closeMaskLayerHandler)
+    options.event.browseEvent.onDocumentActuallyReady.addLast(closeMaskLayerHandler)
 
     session.loadOutPages(portalUrl, options)
 }

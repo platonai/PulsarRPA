@@ -2,15 +2,15 @@ package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.CrawlLoops
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
+import ai.platon.pulsar.crawl.impl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.persist.WebDb
 import org.springframework.context.support.StaticApplicationContext
 
 class StaticPulsarContext(
-    override val applicationContext: StaticApplicationContext = StaticApplicationContext()
+    applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : BasicPulsarContext(applicationContext) {
 
     /**
@@ -20,7 +20,7 @@ class StaticPulsarContext(
     /**
      * Url normalizers
      * */
-    override val urlNormalizers = getBeanOrNull() ?: CrawlUrlNormalizers(unmodifiedConfig)
+    override val urlNormalizers = getBeanOrNull() ?: ChainedUrlNormalizer(unmodifiedConfig)
     /**
      * The web db
      * */
@@ -50,11 +50,10 @@ class StaticPulsarContext(
      * */
     override val loadComponent = getBeanOrNull() ?: LoadComponent(
         webDb, globalCacheFactory, fetchComponent, parseComponent, updateComponent, unmodifiedConfig)
-
     /**
      * The main loop
      * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(mutableListOf(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig)))
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(unmodifiedConfig))
 
     init {
         applicationContext.refresh()

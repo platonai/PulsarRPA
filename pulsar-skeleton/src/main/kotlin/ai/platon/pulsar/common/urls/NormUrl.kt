@@ -10,7 +10,7 @@ import java.net.URL
  * A normalized url.
  *
  * Every NormUrl contains two urls: url and href, url stands for Uniform Resource Locator,
- * both for external webpage and internal database, and href stands for Hyperlink Reference,
+ * both for external webpage and internal database record, and href stands for Hyperlink Reference,
  * which is a url extracted from a HTML document.
  *
  * The href is the first choice to locate a resource, because it's
@@ -27,13 +27,11 @@ open class NormUrl constructor(
     constructor(spec: String, options: LoadOptions, hrefSpec: String? = null, detail: UrlAware? = null):
             this(URL(spec), options, hrefSpec?.let { URL(hrefSpec) }, detail)
 
-    val spec = url.toString()
-    val hrefSpec = href?.toString()
-    val args = options.toString()
-    val configuredUrl = "$spec $args".trim()
+    val spec get() = url.toString()
+    val hrefSpec get() = href?.toString()
+    val args get() = options.toString()
+    val configuredUrl get() = "$spec $args".trim()
 
-    val isEmpty get() = spec.isEmpty()
-    val isNotEmpty get() = !isEmpty
     val isNil get() = this == NIL
     val isNotNil get() = !isNil
 

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.gora.generated.GFieldGroup
-import org.apache.commons.collections4.CollectionUtils
+import ai.platon.pulsar.persist.gora.generated.GPageModel
 
 /**
  * Created by vincent on 17-8-3.
@@ -11,8 +10,10 @@ import org.apache.commons.collections4.CollectionUtils
  * The core concept of Document Data Model, DDM
  */
 class PageModel(
-        val fieldGroups: MutableList<GFieldGroup>
+        val pageModel: GPageModel
 ) {
+    val fieldGroups get() = pageModel.fieldGroups
+
     val numGroups get() = fieldGroups.size
 
     val numFields get() = fieldGroups.sumOf { it.fields.size }
@@ -27,7 +28,7 @@ class PageModel(
 
     val boxedFieldGroups get() = fieldGroups.map { FieldGroup.box(it) }
 
-    fun unbox() = fieldGroups
+    fun unbox() = pageModel
 
     fun firstOrNull() = if (isEmpty) null else get(0)
 
@@ -56,13 +57,14 @@ class PageModel(
     }
 
     fun deepCopy(): PageModel {
-        return PageModel(fieldGroups.mapTo(mutableListOf()) { GFieldGroup.newBuilder(it).build() })
+        val other = GPageModel.newBuilder(pageModel).build()
+        return PageModel(other)
     }
 
     companion object {
         @JvmStatic
-        fun box(fieldGroups: MutableList<GFieldGroup>): PageModel {
-            return PageModel(fieldGroups)
+        fun box(pageModel: GPageModel): PageModel {
+            return PageModel(pageModel)
         }
     }
 }

@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -129,17 +130,17 @@ object AppPaths {
 
     init {
         AppPaths::class.java.declaredFields
-                .filter { it.annotations.any { it is RequiredDirectory } }
-                .mapNotNull { it.get(AppPaths) as? Path }
-                .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
+            .filter { it.annotations.any { it is RequiredDirectory } }
+            .mapNotNull { it.get(AppPaths) as? Path }
+            .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
 
         AppPaths::class.java.declaredFields
-                .filter { it.annotations.any { it is RequiredFile } }
-                .mapNotNull { it.get(AppPaths) as? Path }
-                .forEach {
-                    it.parent.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) }
-                    it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
-                }
+            .filter { it.annotations.any { it is RequiredFile } }
+            .mapNotNull { it.get(AppPaths) as? Path }
+            .forEach {
+                it.parent.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) }
+                it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
+            }
     }
 
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
@@ -161,13 +162,22 @@ object AppPaths {
         return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
     }
 
+    fun fromDomain(url: URL): String {
+        val host = url.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(url.host).topPrivateDomain().toString()
+        return host.replace('.', '-')
+    }
+
+    fun fromDomain(url: String): String {
+        val u = UrlUtils.getURLOrNull(url) ?: return "unknown"
+        return fromDomain(u)
+    }
+
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = UrlUtils.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
 
-        var host = u.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(u.host).topPrivateDomain().toString()
-        host = host.replace('.', '-')
+        val dirForDomain = fromDomain(u)
         val fileId = fileId(uri)
-        return "$prefix$host-$fileId$suffix"
+        return "$prefix$dirForDomain-$fileId$suffix"
     }
 
     fun uniqueSymbolicLinkForUri(uri: String, suffix: String = ".htm"): Path {

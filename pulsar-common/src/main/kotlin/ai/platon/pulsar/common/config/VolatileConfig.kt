@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
  * Created by vincent on 18-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved.
  *
- * The volatile config is designed to read/write/modify frequently.
+ * The volatile config is designed to read/write frequently.
  */
 open class VolatileConfig : MutableConfig {
     var fallbackConfig: ImmutableConfig? = null
@@ -154,16 +154,6 @@ open class VolatileConfig : MutableConfig {
     }
 
     companion object {
-        /**
-         * The programmer have to make sure the [DEFAULT] config is not modified.
-         * */
-        @JvmStatic
-        val DEFAULT = VolatileConfig()
-        /**
-         * The programmer have to make sure the [EMPTY] config is not modified.
-         * */
-        @JvmStatic
-        val EMPTY = VolatileConfig()
         /**
          * The [UNSAFE] is usually used as a placeholder, the programmer should make sure the
          * [UNSAFE] config is never read.

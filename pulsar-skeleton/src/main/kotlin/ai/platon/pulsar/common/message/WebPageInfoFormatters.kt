@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.model.ActiveDomStat
+import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.text.DecimalFormat
@@ -66,14 +66,14 @@ class LoadStatusFormatter(
     private val href get() = page.href
     private val location get() = page.location
     private val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
-    private val proxy get() = page.metadata[Name.PROXY]
+    private val proxy get() = page.proxy
     private val protocolStatus get() = page.protocolStatus
-    private val activeDomStats = page.activeDomStats
+    private val activeDOMStatTrace = page.activeDOMStatTrace
     private val m get() = page.pageModel
 
     private val jsSate: String
         get() {
-            val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
+            val (ni, na, nnm, nst, w, h) = activeDOMStatTrace["lastStat"]?: ActiveDOMStat()
             val divisor = if (page.id < verboseCount) 10 else verboseCount
             val prefix = if (page.id % divisor == 0) {
                 "i/a/nm/st/h:"
@@ -105,7 +105,6 @@ class LoadStatusFormatter(
             else -> prefix01
         }
     }
-
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
     private val successSymbol get() = if (protocolStatus.isSuccess) "\uD83D\uDCAF " else "\uD83D\uDC94 " // 100 score/broken heart
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
@@ -120,7 +119,16 @@ class LoadStatusFormatter(
             }
             return " last fetched ${prevFetchTimeDuration.readable()} ago,"
         }
-    private val fieldCount get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
+    private val fieldCount: String
+        get() {
+            val model = m
+            return when {
+                model == null -> ""
+                model.numFields == 0 -> ""
+                else -> String.format("%d/%d/%d", model.numNonBlankFields, model.numNonNullFields, model.numFields)
+            }
+        }
+
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
     private val fetchCount get() =
@@ -129,7 +137,7 @@ class LoadStatusFormatter(
         } else {
             String.format("%d", page.fetchCount)
         }
-    private val fieldCountFmt get() = if (m.numFields == 0) "%s" else " | nf:%-10s"
+    private val fieldCountFmt get() = if (m == null || m?.numFields == 0) "%s" else " | nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
@@ -146,7 +154,7 @@ class LoadStatusFormatter(
                 buildContentBytes(),
                 DateTimes.readableDuration(responseTime),
                 jsSate,
-                if (m.numFields == 0) "" else fieldCount,
+                fieldCount,
                 proxy?:"",
                 buildLocation()
         )
@@ -159,10 +167,10 @@ class LoadStatusFormatter(
     }
 
     private fun buildContentBytes(): String {
-        var contentBytes = if (page.lastContentBytes == 0L || page.lastContentBytes == page.contentLength) {
+        var contentBytes = if (page.lastContentLength == 0L || page.lastContentLength == page.contentLength) {
             readableBytes(page.contentLength).trim()
         } else {
-            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentBytes).trim()
+            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentLength).trim()
         }
 
         if (page.content == null) {

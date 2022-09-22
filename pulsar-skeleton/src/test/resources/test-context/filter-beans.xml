@@ -15,7 +15,7 @@
         </constructor-arg>
     </bean>
 
-    <bean id="urlNormalizers" class="ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers">
+    <bean id="urlNormalizers" class="ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer">
         <constructor-arg ref="conf"/>
         <constructor-arg value="default"/>
         <constructor-arg>

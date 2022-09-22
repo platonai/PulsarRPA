@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * from appending protocol name (eg. http) to constant
  */
 class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoCloseable {
-    private val log = LoggerFactory.getLogger(ProtocolFactory::class.java)
+    private val logger = LoggerFactory.getLogger(ProtocolFactory::class.java)
 
     private val protocols: MutableMap<String, Protocol> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
@@ -56,7 +56,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
                 .onEach { it.value.conf = immutableConfig }
                 .toMap(protocols)
         protocols.keys.joinToString(", ", "Supported protocols: ", "")
-                .also { log.info(it) }
+                .also { logger.info(it) }
     }
 
     /**
@@ -66,11 +66,10 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
      * jdbc:h2:tcp://localhost/~/test
      */
     fun getProtocol(page: WebPage): Protocol {
-        var mode = page.fetchMode
-        if (mode == FetchMode.UNKNOWN) {
-            mode = FetchMode.BROWSER
-        }
-        return when (mode.also { page.fetchMode = it }) {
+        val fetchMode = page.fetchMode.takeIf { it != FetchMode.UNKNOWN } ?: FetchMode.BROWSER
+        page.fetchMode = fetchMode
+
+        return when (fetchMode) {
             FetchMode.BROWSER -> getProtocol("browser:" + page.url)
             else -> getProtocol(page.url)
         }?:throw ProtocolNotFound(page.url)
@@ -99,11 +98,11 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
             val className = config[1]
             return Class.forName(className).constructors.first().newInstance() as Protocol
         } catch (e: ClassNotFoundException) {
-            log.error(e.stringify())
+            logger.error(e.stringify())
         } catch (e: InstantiationException) {
-            log.error(e.stringify())
+            logger.error(e.stringify())
         } catch (e: IllegalAccessException) {
-            log.error(e.stringify())
+            logger.error(e.stringify())
         }
         return null
     }
@@ -114,7 +113,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
                 try {
                     protocol.close()
                 } catch (e: Throwable) {
-                    log.error(e.toString())
+                    logger.error(e.toString())
                 }
             }
             protocols.clear()

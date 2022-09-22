@@ -29,10 +29,12 @@ import kotlin.reflect.KClass
  * Creates and caches [ParseFilter] implementing plugins.
  */
 class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig): AutoCloseable {
-    private val log = LoggerFactory.getLogger(ParseFilters::class.java)
+    private val logger = LoggerFactory.getLogger(ParseFilters::class.java)
 
-    val parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
+    private val _parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
     private val closed = AtomicBoolean()
+
+    val parseFilters: List<ParseFilter> = _parseFilters
 
     constructor(conf: ImmutableConfig): this(listOf(), conf)
 
@@ -40,10 +42,10 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
         parseFilters.forEach { it.initialize() }
     }
 
-    fun clear() = parseFilters.clear()
+    fun clear() = _parseFilters.clear()
 
     fun remove(clazz: KClass<*>) {
-        val it = parseFilters.iterator()
+        val it = _parseFilters.iterator()
         while (it.hasNext() && it.next()::class == clazz) {
             it.remove()
         }
@@ -51,9 +53,9 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     fun hasFilter(parseFilter: ParseFilter) = parseFilters.contains(parseFilter)
 
-    fun addFirst(parseFilter: ParseFilter) = parseFilters.add(0, parseFilter)
+    fun addFirst(parseFilter: ParseFilter) = _parseFilters.add(0, parseFilter)
 
-    fun addLast(parseFilter: ParseFilter) = parseFilters.add(parseFilter)
+    fun addLast(parseFilter: ParseFilter) = _parseFilters.add(parseFilter)
 
     /**
      * Run all defined filters
@@ -62,14 +64,11 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
         // loop on each filter
         parseFilters.forEach { filter ->
             if (filter.isRelevant(parseContext).isOK) {
-                // parseContext.parseResult.parsers.add(filter::class)
-
-                val result = kotlin.runCatching { filter.filter(parseContext) }
-                        .onFailure { log.warn("Unexpected exception", it) }
-                        .getOrNull()
+                val result = filter.runCatching { filter(parseContext) }
+                    .onFailure { logger.warn("[Unexpected]", it) }.getOrNull()
 
                 if (result != null && result.shouldBreak) {
-                    return
+                    return@filter
                 }
             }
         }
@@ -87,7 +86,11 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn("Failed to close ParseFilter", it.message) } }
+            parseFilters.forEach {
+                it.runCatching { close() }.onFailure { t ->
+                    logger.warn("Cannot close ${this.javaClass.simpleName}", t)
+                }
+            }
         }
     }
 

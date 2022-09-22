@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
  */
 public class PageCounters {
 
-    
     public static String DELIMITER = "'";
     
     public static Map<Class, String> COUNTER_GROUPS = new HashMap<>();

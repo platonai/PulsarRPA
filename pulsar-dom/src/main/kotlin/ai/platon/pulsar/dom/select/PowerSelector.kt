@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.UrlUtils
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -185,7 +185,7 @@ object PowerSelector {
         try {
             return PowerQueryParser.parse(cssQuery)
         } catch (e: PowerSelectorParseException) {
-            var message = e.simplify()
+            var message = e.brief()
             if (!message.isNullOrBlank()) {
                 val host = UrlUtils.getURLOrNull(baseUri)?.host
                 val key = "$host $cssQuery"
@@ -203,7 +203,7 @@ object PowerSelector {
                     logger.warn("Caught $count1 parse exceptions | $cssQuery")
                 } else {
                     if (count2 == 1) {
-                        logger.warn("Failed to parse css query | $cssQuery | $baseUri | ${e.simplify()}")
+                        logger.warn("Failed to parse css query | $cssQuery | $baseUri | ${e.brief()}")
                     } else if (count2 < 50 && count2 % 10 == 0) {
                         logger.warn("Caught $count2 parse exceptions | $cssQuery")
                     } else if (count2 < 1000 && count2 % 100 == 0) {

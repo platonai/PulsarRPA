@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.9.15-SNAPSHOT</version>
+        <version>1.10.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-plugins</artifactId>
@@ -30,6 +30,21 @@
         <module>pulsar-index</module>
         <module>pulsar-schedule</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>protocol-selenium</id>
+            <modules>
+                <module>pulsar-protocol-selenium</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>protocol-playwright</id>
+            <modules>
+                <module>pulsar-protocol-playwright</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>

@@ -8,8 +8,6 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.url.StatefulListenableHyperlink
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -38,7 +36,7 @@ class TestLoadOptions {
         val options = i.options("$args0 $args")
         assertEquals(".products a", options.outLinkSelector)
 
-        val (url, args) = UrlUtils.splitUrlArgs("$url -incognito -expires 1s -retry")
+        val (url, args) = UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure")
         val options2 = LoadOptions.parse(args, conf)
         val options3 = LoadOptions.merge(options, options2)
         assertOptions(options3)
@@ -126,7 +124,7 @@ class TestLoadOptions {
 
     @Test
     fun testBooleanOptions() {
-        var options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure -retryFailed -storeContent false", conf)
+        var options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure -ignoreFailure -storeContent false", conf)
         assertTrue(options.incognito)
         assertTrue(options.ignoreFailure)
         assertFalse(options.parse)
@@ -139,7 +137,7 @@ class TestLoadOptions {
         val modifiedOptionsKeys = options.modifiedOptions.keys
         assertTrue { "incognito" in modifiedOptionsKeys }
         assertTrue { "expires" in modifiedOptionsKeys }
-        assertTrue { "retryFailed" in modifiedOptionsKeys }
+        assertTrue { "ignoreFailure" in modifiedOptionsKeys }
         assertTrue { "ignoreFailure" in modifiedOptionsKeys }
         assertFalse { "parse" in modifiedOptionsKeys }
 
@@ -150,7 +148,7 @@ class TestLoadOptions {
         println(modifiedParams)
         assertEquals(false, options.isDefault("storeContent"))
         assertEquals(false, modifiedParams["-storeContent"])
-        assertEquals(true, modifiedParams["-retryFailed"])
+        assertEquals(true, modifiedParams["-ignoreFailure"])
         assertEquals(true, modifiedParams["-incognito"])
 
         val args = options.toString()
@@ -167,7 +165,7 @@ class TestLoadOptions {
         assertFalse(options.storeContent)
 
         println("modifiedOptions: " + options.modifiedOptions)
-        assertTrue(modifiedOptions.containsKey("retryFailed"))
+        assertTrue(modifiedOptions.containsKey("ignoreFailure"))
         assertTrue(modifiedOptions.containsKey("expires"))
     }
 
@@ -180,16 +178,16 @@ class TestLoadOptions {
 
     @Test
     fun testModifiedOptions() {
-        val options = LoadOptions.parse("-incognito -expires 1s -retry", conf)
+        val options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure", conf)
 //        println(options.modifiedOptions)
         val modifiedOptions = options.modifiedOptions
-        assertTrue(modifiedOptions.containsKey("retryFailed"))
+        assertTrue(modifiedOptions.containsKey("ignoreFailure"))
         assertTrue(modifiedOptions.containsKey("expires"))
     }
 
     @Test
     fun testMerging() {
-        val options = LoadOptions.parse("-incognito -expires 1s -retry", conf)
+        val options = LoadOptions.parse("-incognito -expires 1s -ignoreFailure", conf)
         val args = "-label test-merging"
         val options2 = LoadOptions.merge(options, i.options(args))
         assertEquals("test-merging", options2.label)
@@ -198,12 +196,12 @@ class TestLoadOptions {
 
     @Test
     fun testErase() {
-        val args = "-incognito -expires 1s -retry"
-        val erasedArgs = "-erased -erased 1s -retry"
+        val args = "-incognito -expires 1s -ignoreFailure"
+        val erasedArgs = "-erased -erased 1s -ignoreFailure"
         val args1 = LoadOptions.eraseOptions(args, "incognito", "expires", "")
         assertEquals(erasedArgs, args1, args1)
         val options = LoadOptions.parse(args1, conf)
-        val reparsedArgs = "-retryFailed"
+        val reparsedArgs = "-ignoreFailure"
         assertEquals(reparsedArgs, options.toString(), options.toString())
     }
 
@@ -214,7 +212,7 @@ class TestLoadOptions {
 
     @Test
     fun testClone() {
-        val options = LoadOptions.parse("$args -incognito -expires 1s -retry -storeContent false", conf)
+        val options = LoadOptions.parse("$args -incognito -expires 1s -ignoreFailure -storeContent false", conf)
         val clone = options.clone()
         assertEquals(options, clone)
         val clone2 = clone.clone()
@@ -230,38 +228,37 @@ class TestLoadOptions {
         assertOptionEquals("", "-shouldIgnore2 2")
         assertOptionEquals("", "-shouldIgnore3 a b c")
 
-        assertOptionEquals("-retry", "-retry -shouldIgnore")
-        assertOptionEquals("-retry", "-retry -shouldIgnore2 2")
-        assertOptionEquals("-retry", "-retry -shouldIgnore3 a b c")
+        assertOptionEquals("-ignoreFailure", "-ignoreFailure -shouldIgnore")
+        assertOptionEquals("-ignoreFailure", "-ignoreFailure -shouldIgnore2 2")
+        assertOptionEquals("-ignoreFailure", "-ignoreFailure -shouldIgnore3 a b c")
 
         assertOptionEquals("-tl 50", "-tl 40 -tl 50")
         assertOptionEquals("-tl 40 -itemExpires 10", "-itemExpires 10 -tl 40")
 
         assertOptionNotEquals("-tl 10", "-tl 40")
         assertOptionNotEquals("-tl 10 -itemExpires 10", "-itemExpires 10 -tl 40")
-        assertOptionNotEquals("-retry -tl 40 -itemExpires 10", "-itemExpires 10 -tl 40")
+        assertOptionNotEquals("-ignoreFailure -tl 40 -itemExpires 10", "-itemExpires 10 -tl 40")
     }
 
     @Test
     fun testNormalizeOptions() {
-        val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -retry").second, conf)
+        val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
         val normUrl = i.normalize(url, op)
         val options = normUrl.options
         assertTrue(options.incognito)
         assertEquals(1, options.expires.seconds)
-        assertTrue(options.preferParallel)
-        assertTrue(options.retryFailed)
+        assertTrue(options.ignoreFailure)
     }
 
     @Test
     fun testNormalizeOptions2() {
-        val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url $args -incognito -expires 1s -retry -storeContent false").second, conf)
+        val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url $args -incognito -expires 1s -ignoreFailure -storeContent false").second, conf)
         val normUrl = i.normalize(url, options)
 
         println(normUrl.configuredUrl)
         val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d", conf))
 
-        assertTrue { normUrl2.options.retryFailed }
+        assertTrue { normUrl2.options.ignoreFailure }
 
         assertOptions(normUrl2.options)
         assertEquals(40, normUrl2.options.topLinks)
@@ -279,13 +276,13 @@ class TestLoadOptions {
 
     @Test
     fun testHashCode() {
-        val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -retry").second, conf)
+        val op = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
         println(op.hashCode())
     }
 
     @Test
     fun testNormalizeItemOptions() {
-        val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -retry").second, conf)
+        val options = LoadOptions.parse(UrlUtils.splitUrlArgs("$url -incognito -expires 1s -ignoreFailure").second, conf)
         val normUrl = i.normalize(url, options)
         println(normUrl.configuredUrl)
 
@@ -304,8 +301,7 @@ class TestLoadOptions {
         assertEquals(1, options.expires.seconds)
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)
-        assertTrue(options.preferParallel)
-        assertTrue(options.retryFailed)
+        assertTrue(options.ignoreFailure)
     }
 
     private fun assertOptionEquals(expected: String, actual: String, msg: String? = null) {

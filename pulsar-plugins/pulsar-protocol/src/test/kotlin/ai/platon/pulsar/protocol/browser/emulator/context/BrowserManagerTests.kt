@@ -10,6 +10,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import kotlinx.coroutines.runBlocking
@@ -43,7 +44,7 @@ class BrowserManagerTests {
     fun `When run tasks the contexts rotates`() {
         val manager = MultiPrivacyContextManager(webDriverPoolManager, conf)
         val url = "about:blank"
-        val page = WebPage.newTestWebPage(url)
+        val page = WebPageExt.newTestWebPage(url)
 
         runBlocking {
             repeat(10) {

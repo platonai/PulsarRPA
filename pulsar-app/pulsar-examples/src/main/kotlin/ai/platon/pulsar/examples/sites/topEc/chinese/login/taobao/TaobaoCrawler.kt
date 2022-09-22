@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.login.taobao
 
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.event.LoginHandler
+import ai.platon.pulsar.crawl.event.impl.LoginHandler
 import ai.platon.pulsar.session.PulsarSession
 
 class TaobaoLoginHandler(
@@ -30,7 +30,7 @@ fun main() {
     val session: PulsarSession = PulsarContexts.createSession()
     val options = session.options(args)
     val loginHandler = TaobaoLoginHandler(username, password, warnUpUrl = portalUrl)
-    options.ensureEventHandler().loadEventHandler.onAfterBrowserLaunch.addLast(loginHandler)
+    options.event.browseEvent.onBrowserLaunched.addLast(loginHandler)
 
     session.loadOutPages(portalUrl, options)
 

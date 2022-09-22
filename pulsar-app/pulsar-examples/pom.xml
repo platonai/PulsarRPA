@@ -14,7 +14,7 @@
   <parent>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-app</artifactId>
-    <version>1.9.15-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>pulsar-examples</artifactId>
@@ -56,12 +56,9 @@
       <groupId>ai.platon.pulsar</groupId>
       <artifactId>pulsar-all</artifactId>
     </dependency>
-
     <dependency>
       <groupId>ai.platon.pulsar</groupId>
-      <artifactId>pulsar-site-amazon</artifactId>
-      <version>1.9.15-SNAPSHOT</version>
-      <scope>compile</scope>
+      <artifactId>pulsar-tests</artifactId>
     </dependency>
 
     <dependency>

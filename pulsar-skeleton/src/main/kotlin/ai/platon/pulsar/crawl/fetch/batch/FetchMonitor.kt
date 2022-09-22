@@ -10,8 +10,8 @@ import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
-import ai.platon.pulsar.crawl.fetch.indexer.IndexThread
-import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
+import ai.platon.pulsar.crawl.index.jit.indexer.IndexThread
+import ai.platon.pulsar.crawl.index.jit.indexer.JITIndexer
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -299,7 +299,7 @@ class FetchMonitor(
              * Check throughput(fetch speed)
              * */
             if (coreMetrics != null && now > throughputCheckTime
-                    && coreMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
+                    && coreMetrics.successFetchTasksPerSecond < minSuccessPagesPerSecond) {
                 lowThroughputCount++
                 checkFetchThroughput()
                 throughputCheckTime += throughputCheckInterval

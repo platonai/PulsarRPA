@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Duration
+import java.time.Instant
 
 class ChromeVersion {
     @JsonProperty("Browser")
@@ -28,6 +29,8 @@ class ChromeTab {
     var devtoolsFrontendUrl: String? = null
     var webSocketDebuggerUrl: String? = null
     var faviconUrl: String? = null
+
+    val createTime = Instant.now()
 
     fun isPageType(): Boolean = PAGE_TYPE == type
 

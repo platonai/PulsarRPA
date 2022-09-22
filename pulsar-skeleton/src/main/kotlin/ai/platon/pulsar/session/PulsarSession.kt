@@ -9,16 +9,74 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.context.support.AbstractPulsarContext
-import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.DocumentCatch
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.PageCatch
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
+/**
+ * PulsarSession defines a concise interface to fetch webpages, from the local storage
+ * or the Internet, and methods to parse, extract, persist, index, export them.
+ *
+ * Key methods:
+ *
+ * [PulsarSession.load], load a webpage from local storage, or fetch it from the Internet.
+ * [PulsarSession.parse], parse a webpage into a document.
+ * [PulsarSession.scrape], load a webpage, parse it into a document and then extract
+ * fields from the document.
+ *
+ * And also the batch versions:
+ *
+ * [PulsarSession.loadOutPages], load the portal page and out pages.
+ * [PulsarSession.scrapeOutPages], load the portal page and out pages, extract fields
+ * from out pages.
+ *
+ * The first method to keep in mind is how to load a page.
+ *
+ * A load method checks the local storage first, if it exists and is good,
+ * return the persisted version, otherwise, fetch it from the Internet.
+ *
+ * Other fetch condition can be specified in load arguments, or load options:
+ * 1. expiration
+ * 2. page size requirements
+ * 3. field requirements
+ *
+ * Once a webpage is loaded from local storage, or fetched from the Internet,
+ * we come to the next process steps:
+ * 1. parse the web content into a HTML document
+ * 2. extract fields from the HTML document
+ * 3. write the fields into a destination, such as
+ *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
+ *    2. solr, elastic, etc.
+ *
+ * There are many ways to fetch the content of a page from the Internet:
+ * 1. http protocol
+ * 2. through a real browser
+ *
+ * Since the webpages are becoming more and more complex, fetching webpages through
+ * real browsers is the primer way nowadays.
+ *
+ * When we fetch webpages using a real browser, we may need to interact with pages to
+ * ensure the desired fields are loaded correctly and completely. Activate [PageEvent]
+ * and use [WebDriver] to archive such purpose.
+ *
+ * ```kotlin
+ * val options = session.options(args)
+ * options.event.simulateEvent.onDidDOMStateCheck.addLast { page, driver ->
+ *   driver.scrollDown()
+ * }
+ * session.load(url, options)
+ * ```
+ *
+ * Pulsar [WebDriver] provides a complete method set for RPA, just like selenium, playwright
+ * and puppeteer, all actions and behaviors are optimized to mimic real people as closely as possible.
+ * */
 interface PulsarSession : AutoCloseable {
 
     /**
@@ -40,16 +98,30 @@ interface PulsarSession : AutoCloseable {
 
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
-     * TODO: session scoped?
      * */
+    @Deprecated("Not used any more")
     val sessionBeanFactory: BeanFactory
-    val display: String
-    val pageCache: PageCatch
-    val documentCache: DocumentCatch
-    val globalCacheFactory: GlobalCacheFactory
-
     /**
-     * Close objects when sessions close
+     * A short descriptive display text.
+     * */
+    val display: String
+    /**
+     * The global page cache
+     * */
+    val pageCache: PageCatch
+    /**
+     * The global document cache
+     * */
+    val documentCache: DocumentCatch
+    /**
+     * The global cache
+     * */
+    val globalCache: GlobalCache
+
+    @Deprecated("Factory should not be a interface property, globalCache is OK")
+    val globalCacheFactory: GlobalCacheFactory
+    /**
+     * Close objects when the session closes
      * */
     fun registerClosable(closable: AutoCloseable): Boolean
     /**
@@ -60,7 +132,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Create a new options, with a new volatile config
      * */
-    fun options(args: String = "", eventHandler: PulsarEventHandler? = null): LoadOptions
+    fun options(args: String = "", event: PageEvent? = null): LoadOptions
 
     /**
      * Get a property
@@ -137,7 +209,7 @@ interface PulsarSession : AutoCloseable {
      * Check if a page exists in the database
      *
      * @param url The url
-     * @return true if the page exists in the database
+     * @return true if the page exists in the storage
      */
     fun exists(url: String): Boolean
 
@@ -151,28 +223,46 @@ interface PulsarSession : AutoCloseable {
     fun fetchState(page: WebPage, options: LoadOptions): CheckState
 
     /**
-     * Open a page with [url]
+     * Open a url.
      *
-     * @param url     The url of the page to open
-     * @return The web page
+     * This method opens the url immediately, regardless of the previous state of the page.
+     *
+     * @param url The url to open
+     * @return The webpage
      */
     fun open(url: String): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with arguments.
      *
-     * @param url     The url to load
-     * @param args The load args
-     * @return The web page
+     * This method checks the local storage first, if it exists and is good,
+     * return the persisted version, otherwise, fetch it from the Internet.
+     *
+     * Other fetch condition can be specified in load arguments:
+     * 1. expiration
+     * 2. page size requirement
+     * 3. fields requirement
+     *
+     * @param url The url to load
+     * @param args The load arguments
+     * @return The webpage
      */
     fun load(url: String, args: String): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with options.
      *
-     * @param url     The url to load
+     * This method checks the local storage first, if it exists and is good,
+     * return the persisted version, otherwise, fetch it from the Internet.
+     *
+     * Other fetch condition can be specified in load arguments:
+     * 1. expiration
+     * 2. page size requirement
+     * 3. fields requirement
+     *
+     * @param url The url to load
      * @param options The load options
-     * @return The web page
+     * @return The webpage
      */
     fun load(url: String, options: LoadOptions = options()): WebPage
 
@@ -186,7 +276,7 @@ interface PulsarSession : AutoCloseable {
     fun load(url: UrlAware, args: String): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with options.
      *
      * @param url     The url to load
      * @param options The load options
@@ -195,7 +285,7 @@ interface PulsarSession : AutoCloseable {
     fun load(url: UrlAware, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url in normalized form.
      *
      * @param normUrl The normalized url
      * @return The web page
@@ -203,7 +293,10 @@ interface PulsarSession : AutoCloseable {
     fun load(normUrl: NormUrl): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with specified options.
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param options The load options
@@ -212,7 +305,10 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadDeferred(url: String, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with specified options.
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param args The load args
@@ -221,7 +317,10 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadDeferred(url: UrlAware, args: String): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with specified options.
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param options The load options
@@ -231,6 +330,9 @@ interface PulsarSession : AutoCloseable {
 
     /**
      * Load a url with specified options
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param normUrl The normalized url
      * @return The web page
@@ -334,6 +436,9 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url as a resource without browser rendering in the browser context
      *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
      * @param url     The url to load
      * @param args The load arguments
      * @return The web page
@@ -341,6 +446,9 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadResource(url: String, referer: String, args: String): WebPage
     /**
      * Load a url as a resource without browser rendering in the browser context
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param opts The load options
@@ -387,18 +495,21 @@ interface PulsarSession : AutoCloseable {
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
+
     /**
      * Scrape a webpage
      * */
     fun scrape(
         url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
+
     /**
      * Scrape a webpage
      * */
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
+
     /**
      * Scrape a webpage
      * */
@@ -407,19 +518,35 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -427,7 +554,13 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -435,64 +568,110 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields with their name from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields with their name from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param args The load arguments
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
+
     /**
-     * Scrape out pages
+     * Scrape out pages using given selectors.
+     *
+     * @param portalUrl The portal url the scraping start from
+     * @param options The load options
+     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
+     * @param fieldSelectors The CSS selectors to extract fields from out pages
+     * @return A list of extracted fields from out pages
      * */
     @ExperimentalApi
     fun scrapeOutPages(
         portalUrl: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
+
     /**
      * Get a variable associated with this session
      * */
     fun getVariable(name: String): Any?
+
     /**
      * Set a variable associated with this session
      * */
     fun setVariable(name: String, value: Any)
+
     /**
      * Put session scope bean
      * */
+    @Deprecated("Not used any more")
     fun putSessionBean(obj: Any)
+
     /**
      * Delete a webpage from the backend storage
      * */
     fun delete(url: String)
+
     /**
-     * Flush to the backend storage
+     * Flush to the storage
      * */
     fun flush()
+
     /**
-     * Persist to the backend storage
+     * Persist to the storage
      * */
     fun persist(page: WebPage): Boolean
+
     /**
-     * Export a webpage
+     * Export the content of a webpage.
+     *
+     * @param page Page to export
+     * @param ident File name identifier used to distinguish from other names
+     * @return The path of the exported page
      * */
     fun export(page: WebPage, ident: String = ""): Path
+
     /**
-     * Export a document
+     * Export the outer HTML of the document.
+     *
+     * @param doc Document to export
+     * @param ident File name identifier used to distinguish from other names
+     * @return The path of the exported document
      * */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
+
     /**
-     * Export a document to the given path
+     * Export the whole HTML of the document to the given path.
+     *
+     * @param doc Document to export
+     * @param path Path to save the exported content
+     * @return The path of the exported document
      * */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
 }

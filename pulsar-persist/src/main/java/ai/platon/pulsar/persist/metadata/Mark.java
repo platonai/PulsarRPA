@@ -16,12 +16,6 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist.metadata;
 
-/**
- * <p>Mark class.</p>
- *
- * @author vincent
- * @version $Id: $Id
- */
 public enum Mark {
     INJECT("inj"), GENERATE("gn"), FETCH("fth"), PARSE("prs"), UPDATEOUTG("updo"),
     UPDATEING("updi"), INDEX("idx"), INACTIVE("iat"), SEMI_INACTIVE("siat"), INTERNAL("itn");
@@ -32,11 +26,6 @@ public enum Mark {
         this.value = value;
     }
 
-    /**
-     * <p>value.</p>
-     *
-     * @return a {@link java.lang.String} object.
-     */
     public String value() {
         return value;
     }

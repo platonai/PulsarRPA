@@ -1,20 +1,19 @@
 package ai.platon.pulsar.context.support
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.CheckState
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.options.CommonUrlNormalizer
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.common.urls.PlainUrl
-import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.common.FetchState
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -24,7 +23,6 @@ import ai.platon.pulsar.session.PulsarEnvironment
 import ai.platon.pulsar.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
-import org.springframework.beans.factory.BeanCreationNotAllowedException
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
 import java.util.*
@@ -41,8 +39,8 @@ import kotlin.reflect.KClass
  * A PulsarContext can be used to inject, fetch, load, parse, store webpages.
  */
 abstract class AbstractPulsarContext(
-        override val applicationContext: AbstractApplicationContext,
-        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
+        val applicationContext: AbstractApplicationContext,
+        val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
 
     companion object {
@@ -79,6 +77,11 @@ abstract class AbstractPulsarContext(
     private val abnormalPages: List<WebPage>? get() = if (isActive) null else listOf()
 
     /**
+     * Check if the context is active
+     * */
+    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
+
+    /**
      * The context id
      * */
     override val id = instanceSequencer.incrementAndGet()
@@ -91,62 +94,35 @@ abstract class AbstractPulsarContext(
     /**
      * Url normalizers
      * */
-    open val urlNormalizers: CrawlUrlNormalizers get() = getBean()
+    open val urlNormalizers: ChainedUrlNormalizer get() = getBean()
 
     /**
      * The web db
      * */
     open val webDb: WebDb get() = getBean()
 
-    /**
-     * The global cache manager
-     * */
     open val globalCacheFactory: GlobalCacheFactory get() = getBean()
 
-    /**
-     * The injection component
-     * */
     open val injectComponent: InjectComponent get() = getBean()
 
-    /**
-     * The fetch component
-     * */
     open val fetchComponent: BatchFetchComponent get() = getBean()
 
-    /**
-     * The parse component
-     * */
     open val parseComponent: ParseComponent get() = getBean()
 
-    /**
-     * The update component
-     * */
     open val updateComponent: UpdateComponent get() = getBean()
 
-    /**
-     * The load component
-     * */
     open val loadComponent: LoadComponent get() = getBean()
 
-    /**
-     * The url pool to fetch
-     * */
-    override val crawlPool: UrlPool get() = globalCacheFactory.globalCache.urlPool
+    override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
 
-    /**
-     * The main loops
-     * */
+    override val crawlPool: UrlPool get() = globalCache.urlPool
+
     override val crawlLoops: CrawlLoops get() = getBean()
 
     /**
      * The start time
      * */
     val startTime = System.currentTimeMillis()
-
-    /**
-     * Check if the context is active
-     * */
-    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
      * All open sessions
@@ -204,9 +180,8 @@ abstract class AbstractPulsarContext(
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
-     * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
-     * but default values in LoadOptions are ignored.
+     * An url can be configured by appending arguments to the url, and it also can be used with load options,
+     * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
@@ -222,8 +197,8 @@ abstract class AbstractPulsarContext(
      * Normalize urls, remove invalid ones
      *
      * @param urls The urls to normalize
-     * @param options The LoadOptions applied to each url
-     * @param toItemOption If the LoadOptions is converted to item load options
+     * @param options The load options applied to each url
+     * @param toItemOption If true, [options] will be converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
@@ -233,11 +208,10 @@ abstract class AbstractPulsarContext(
     /**
      * Normalize an url.
      *
-     * If both url arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
-     * but default values in LoadOptions are ignored.
+     * If both tailing arguments and load options are present, the tailing arguments override the load options.
      * */
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return CommonUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
+        return CombinedUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
     }
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
@@ -395,13 +369,15 @@ abstract class AbstractPulsarContext(
 
     override fun submit(url: UrlAware): AbstractPulsarContext {
         startLoopIfNecessary()
-        if (isActive) crawlPool.add(url)
+        if (url.isStandard || url is DegenerateUrl) {
+            crawlPool.add(url)
+        }
         return this
     }
 
     override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarContext {
         startLoopIfNecessary()
-        if (isActive) crawlPool.addAll(urls)
+        crawlPool.addAll(urls.filter { it.isStandard || it is DegenerateUrl })
         return this
     }
 
@@ -457,8 +433,8 @@ abstract class AbstractPulsarContext(
      * Delegates to `doClose()` for the actual closing procedure.
      * @see Runtime.addShutdownHook
      *
-     * @see .close
-     * @see .doClose
+     * @see close
+     * @see doClose
      */
     @Throws(IllegalStateException::class)
     override fun registerShutdownHook() {
@@ -473,8 +449,8 @@ abstract class AbstractPulsarContext(
      *
      * Delegates to `doClose()` for the actual closing procedure.
      * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
-     * @see .doClose
-     * @see .registerShutdownHook
+     * @see doClose
+     * @see registerShutdownHook
      */
     override fun close() {
         synchronized(startupShutdownMonitor) {

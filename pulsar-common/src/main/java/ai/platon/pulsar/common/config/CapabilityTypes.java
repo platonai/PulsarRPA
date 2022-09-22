@@ -1,20 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a getConf of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package ai.platon.pulsar.common.config;
 
 /**
@@ -176,12 +159,7 @@ public interface CapabilityTypes {
 
     String INJECT_WATCH = "inject.watch";
 
-    String INJECT_SCORE = "db.score.injected";
-
-    /**
-     * Query engine parameters
-     */
-    String QE_HANDLE_PERIODICAL_FETCH_TASKS = "query.engine.handle.periodical.fetch.tasks";
+    String INJECT_SCORE = "inject.score";
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
 
@@ -295,6 +273,7 @@ public interface CapabilityTypes {
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_RESPONSE_HANDLER = "browser.response.handler";
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
+    String BROWSER_ENABLE_UA_OVERRIDING = "browser.enable.ua.overriding";
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     /**
@@ -309,6 +288,7 @@ public interface CapabilityTypes {
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+    @Deprecated
     String BROWSER_JS_NAME_MANGLING_MAGIC = "browser.js.name.mangling.magic";
 
     /**

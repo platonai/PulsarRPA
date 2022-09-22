@@ -44,7 +44,7 @@ class TestDataCollectors : TestBase() {
 
         val collectors: MutableList<PriorityDataCollector<UrlAware>> = Collections.synchronizedList(LinkedList())
         collectors += UrlCacheCollector(urlCache)
-        val fetchQueueIterable = ConcurrentLoadingIterable(CombinedDataCollector(collectors), null, null, 10)
+        val fetchQueueIterable = ConcurrentLoadingIterable(ChainedDataCollector(collectors), null, null, 10)
 
         assertTrue { fetchQueueIterable.regularCollector.hasMore() }
         assertTrue { fetchQueueIterable.iterator().hasNext() }

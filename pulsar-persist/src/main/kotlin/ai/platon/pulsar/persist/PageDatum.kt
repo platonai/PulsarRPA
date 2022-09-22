@@ -24,8 +24,8 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
-import ai.platon.pulsar.persist.model.ActiveDomUrls
+import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
+import ai.platon.pulsar.persist.model.ActiveDOMUrls
 import java.util.*
 
 /**
@@ -42,7 +42,7 @@ class PageDatum(
      */
     var location: String = url,
     /**
-     * The protocol status
+     * The protocol status without translation
      * */
     var protocolStatus: ProtocolStatus = ProtocolStatus.STATUS_CANCELED,
     /**
@@ -66,8 +66,8 @@ class PageDatum(
     var proxyEntry: ProxyEntry? = null
     var lastBrowser: BrowserType? = null
     var htmlIntegrity: HtmlIntegrity? = null
-    var activeDomMultiStatus: ActiveDomMultiStatus? = null
-    var activeDomUrls: ActiveDomUrls? = null
+    var activeDOMStatTrace: ActiveDOMStatTrace? = null
+    var activeDOMUrls: ActiveDOMUrls? = null
 
     val contentLength get() = (content?.size ?: 0).toLong()
 
@@ -79,23 +79,7 @@ class PageDatum(
                 && Arrays.equals(content, other.content)
     }
 
-    override fun hashCode(): Int {
-        return url.hashCode()
-    }
+    override fun hashCode() = url.hashCode()
 
-    override fun toString(): String {
-        return Params.of(
-            "serializeId", serializeId,
-            "url", url,
-            "location", location,
-            "headers", headers,
-            "metadata", metadata,
-            "contentType", contentType
-        ).formatAsLine()
-    }
-
-    companion object {
-        val EMPTY_CONTENT = ByteArray(0)
-        val serializeId = 0L
-    }
+    override fun toString() = url
 }

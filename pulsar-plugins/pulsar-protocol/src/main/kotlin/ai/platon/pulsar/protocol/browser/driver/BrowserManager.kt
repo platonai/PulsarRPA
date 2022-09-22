@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.protocol.browser.DriverLaunchException
+import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -17,11 +17,12 @@ open class BrowserManager(
     private val logger = getLogger(this)
     private val closed = AtomicBoolean()
     private val browserFactory = BrowserFactory()
+    // TODO: use browser id as the key directly
     private val _browsers = ConcurrentHashMap<String, Browser>()
 
     val browsers: Map<String, Browser> = _browsers
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     fun launch(browserId: BrowserId, driverSettings: WebDriverSettings, capabilities: Map<String, Any>): Browser {
         val launcherOptions = LauncherOptions(driverSettings)
         if (driverSettings.isSupervised) {
@@ -42,12 +43,13 @@ open class BrowserManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _browsers.values.forEach {
-                it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
+                // managed by [WebDriverPoolManager]
+                // it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
             }
         }
     }
 
-    @Throws(DriverLaunchException::class)
+    @Throws(BrowserLaunchException::class)
     @Synchronized
     private fun launchIfAbsent(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions

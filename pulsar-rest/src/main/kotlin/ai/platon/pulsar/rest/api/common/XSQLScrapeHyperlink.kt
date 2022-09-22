@@ -3,10 +3,10 @@ package ai.platon.pulsar.rest.api.common
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_IS_SCRAPE
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
-import ai.platon.pulsar.crawl.DefaultLoadEventHandler
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultLoadEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
+import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -23,27 +23,29 @@ import java.time.Instant
 import java.util.*
 import kotlin.system.measureTimeMillis
 
-class ScrapeLoadEventHandler(
+class ScrapeLoadEvent(
     val hyperlink: XSQLScrapeHyperlink,
     val response: ScrapeResponse,
-) : DefaultLoadEventHandler() {
+) : DefaultLoadEvent() {
     init {
-        onBeforeLoad.addLast {
+        onWillLoad.addLast {
             response.pageStatusCode = ResourceStatus.SC_PROCESSING
+            null
         }
-        onBeforeParse.addLast { page ->
-            require(page.loadEventHandler === this)
+        onWillParseHTMLDocument.addLast { page ->
+            require(page.loadEvent === this)
             page.variables[VAR_IS_SCRAPE] = true
+            null
         }
-        onBeforeHtmlParse.addLast { page ->
+        onWillParseHTMLDocument.addLast { page ->
         }
-        onAfterHtmlParse.addLast { page, document ->
-            require(page.loadEventHandler === this)
+        onHTMLDocumentParsed.addLast { page, document ->
+            require(page.loadEvent === this)
             require(page.hasVar(VAR_IS_SCRAPE))
             hyperlink.extract(page, document)
         }
-        onAfterLoad.addLast { page ->
-            require(page.loadEventHandler === this)
+        onLoaded.addLast { page ->
+            require(page.loadEvent === this)
             hyperlink.complete(page)
         }
     }
@@ -66,8 +68,8 @@ open class XSQLScrapeHyperlink(
     val response = ScrapeResponse()
 
     override var args: String? = "-parse ${sql.args}"
-    override var eventHandler: PulsarEventHandler = DefaultPulsarEventHandler(
-        loadEventHandler = ScrapeLoadEventHandler(this, response)
+    override var event: PageEvent = DefaultPageEvent(
+        loadEvent = ScrapeLoadEvent(this, response)
     )
 
     open fun executeQuery(): ResultSet = executeQuery(request, response)
@@ -92,7 +94,10 @@ open class XSQLScrapeHyperlink(
     }
 
     protected open fun doExtract(page: WebPage, document: FeaturedDocument): ResultSet {
-        if (!page.protocolStatus.isSuccess || page.contentLength == 0L || page.content == null) {
+        if (!page.protocolStatus.isSuccess ||
+            page.contentLength == 0L || page.persistedContentLength == 0L
+            || page.content == null
+        ) {
             response.statusCode = ResourceStatus.SC_NO_CONTENT
             return ResultSets.newSimpleResultSet()
         }
@@ -112,10 +117,10 @@ open class XSQLScrapeHyperlink(
             response.resultSet = resultSet
         } catch (e: JdbcSQLException) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}{}", e.simplify())
+            logger.warn("Failed to execute sql #${response.uuid}{}", e.brief())
         } catch (e: Throwable) {
             response.statusCode = ResourceStatus.SC_EXPECTATION_FAILED
-            logger.warn("Failed to execute sql #${response.uuid}\n{}", e.simplify())
+            logger.warn("Failed to execute sql #${response.uuid}\n{}", e.brief())
         }
 
         return rs

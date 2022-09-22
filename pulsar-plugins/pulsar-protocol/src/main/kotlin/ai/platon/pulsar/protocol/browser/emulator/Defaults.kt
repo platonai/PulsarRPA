@@ -7,6 +7,9 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
+import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserEmulatedFetcherImpl
+import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator
+import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImpl
 
 class DefaultWebDriverSettings(conf: ImmutableConfig): WebDriverSettings(conf)
 
@@ -16,23 +19,21 @@ class DefaultWebDriverFactory(conf: ImmutableConfig)
     : WebDriverFactory(DefaultWebDriverSettings(conf), DefaultBrowserManager(conf), conf)
 
 class DefaultWebDriverPoolManager(conf: ImmutableConfig)
-    : WebDriverPoolManager(DefaultWebDriverFactory(conf), conf, suppressMetrics = true) {
-
-    }
+    : WebDriverPoolManager(DefaultWebDriverFactory(conf), conf, suppressMetrics = true)
 
 class DefaultBrowserEmulator(
         driverPoolManager: WebDriverPoolManager,
         conf: ImmutableConfig
-): BrowserEmulator(
+): InteractiveBrowserEmulator(
         driverPoolManager,
-        BrowserResponseHandler(driverPoolManager, null, conf),
+        BrowserResponseHandlerImpl(conf),
         conf
 )
 
 class DefaultBrowserEmulatedFetcher(
         conf: ImmutableConfig,
         driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)
-): BrowserEmulatedFetcher(
+): BrowserEmulatedFetcherImpl(
         BasicPrivacyContextManager(driverPoolManager, conf),
         driverPoolManager,
         DefaultBrowserEmulator(driverPoolManager, conf),
@@ -42,16 +43,7 @@ class DefaultBrowserEmulatedFetcher(
 
 class Defaults(val conf: ImmutableConfig) {
     companion object {
-        private var defaultFetcher: DefaultBrowserEmulatedFetcher? = null
-    }
-
-    private fun getOrCreateBrowserEmulatedFetcher(): DefaultBrowserEmulatedFetcher {
-        synchronized(this) {
-            if (defaultFetcher == null) {
-                defaultFetcher = DefaultBrowserEmulatedFetcher((conf))
-            }
-            return defaultFetcher!!
-        }
+        private var fetcher: BrowserEmulatedFetcher? = null
     }
 
     val browserEmulatedFetcher: BrowserEmulatedFetcher
@@ -71,4 +63,13 @@ class Defaults(val conf: ImmutableConfig) {
 
     val browserManager: BrowserManager
         get() = driverFactory.browserManager
+
+    private fun getOrCreateBrowserEmulatedFetcher(): BrowserEmulatedFetcher {
+        synchronized(this) {
+            if (fetcher == null) {
+                fetcher = DefaultBrowserEmulatedFetcher((conf))
+            }
+            return fetcher!!
+        }
+    }
 }

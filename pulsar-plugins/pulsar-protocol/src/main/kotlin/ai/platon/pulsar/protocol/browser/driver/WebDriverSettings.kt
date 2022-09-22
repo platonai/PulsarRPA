@@ -56,17 +56,11 @@ import java.time.Duration
         webStorageEnabled: true
     }
  * */
-open class WebDriverSettings(
-    parameters: Map<String, Any> = mapOf(),
-    jsDirectory: String = "js",
-    conf: ImmutableConfig
-): BrowserSettings(parameters, jsDirectory, conf) {
+open class WebDriverSettings(conf: ImmutableConfig): BrowserSettings(conf) {
 
     companion object {
         val POLLING_DRIVER_TIMEOUT = Duration.ofSeconds(60)
     }
-
-    constructor(config: ImmutableConfig): this(mapOf(), "js", config)
 
     val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(10))
     val pollingDriverTimeout get() = conf.getDuration("polling.driver.timeout", POLLING_DRIVER_TIMEOUT)
@@ -74,7 +68,11 @@ open class WebDriverSettings(
     // Special
     // var mobileEmulationEnabled = true
 
-    fun createGeneralOptions(): MutableMap<String, Any> {
+    open fun formatViewPort(delimiter: String = ","): String {
+        return "${screenViewport.width}$delimiter${screenViewport.height}"
+    }
+
+    open fun createGeneralOptions(): MutableMap<String, Any> {
         val generalOptions = mutableMapOf<String, Any>()
 
         // generalOptions.setCapability("browserLanguage", "zh_CN")
@@ -83,7 +81,7 @@ open class WebDriverSettings(
         return generalOptions
     }
 
-    fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
+    open fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {
         val chromeOptions = ChromeOptions()
         chromeOptions.merge(generalOptions)
 

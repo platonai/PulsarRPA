@@ -1,8 +1,8 @@
 package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -23,13 +23,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import kotlin.jvm.Throws
 
 /**
- * A very simple file backend storage for Web pages
+ * A very simple file backend storage for webpages
  * */
 class FileBackendPageStore(
-        private val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
+    private val persistDirectory: Path = AppPaths.LOCAL_STORAGE_DIR
 ) : MemStore<String, GWebPage>() {
 
     private val logger = LoggerFactory.getLogger(FileBackendPageStore::class.java)
@@ -62,10 +61,9 @@ class FileBackendPageStore(
     @Synchronized
     fun readHtml(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
-        val filename = AppPaths.fromUri(url, "", ".htm")
-        val path = persistDirectory.resolve(filename)
+        val path = getPersistPath(url, ".html")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl $filename " + Files.exists(path))
+        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl " + Files.exists(path) + " | $path")
 
         if (Files.exists(path)) {
             val content = Files.readAllBytes(path)
@@ -82,13 +80,13 @@ class FileBackendPageStore(
     @Synchronized
     fun readAvro(reversedUrl: String): GWebPage? {
         val url = UrlUtils.unreverseUrlOrNull(reversedUrl) ?: return null
-        val filename = AppPaths.fromUri(url, "", ".avro")
-        val path = persistDirectory.resolve(filename)
+        val path = getPersistPath(url, ".avro")
+
         if (!Files.exists(path)) {
             return null
         }
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl $filename " + Files.exists(path))
+        logger.takeIf { it.isTraceEnabled }?.trace("Getting $reversedUrl " + Files.exists(path) + " | $path")
         return try {
             readAvro(path)
         } catch (e: AvroRuntimeException) {
@@ -96,7 +94,7 @@ class FileBackendPageStore(
             Files.deleteIfExists(path)
             null
         } catch (e: IOException) {
-            logger.warn(e.simplify("readAvro", " | $path"))
+            // logger.warn(Throwable.brief())
             Files.deleteIfExists(path)
             null
         }
@@ -121,21 +119,18 @@ class FileBackendPageStore(
 
     @Synchronized
     fun writeHtml(page: WebPage) {
-        val filename = AppPaths.fromUri(page.url, "", ".htm")
-        val path = persistDirectory.resolve(filename)
+        val content = page.content ?: return
+        val path = getPersistPath(page.url, ".htm")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
-
-        // TODO: serialize with the metadata
-        page.content?.let { Files.write(path, it.array()) }
+        logger.takeIf { it.isTraceEnabled }?.trace("Putting ${page.content?.array()?.size} | $path")
+        Files.write(path, content.array())
     }
 
     @Synchronized
     fun writeAvro(page: WebPage) {
-        val filename = AppPaths.fromUri(page.url, "", ".avro")
-        val path = persistDirectory.resolve(filename)
+        val path = getPersistPath(page.url, ".avro")
 
-        logger.takeIf { it.isTraceEnabled }?.trace("Putting $filename ${page.content?.array()?.size}")
+        logger.takeIf { it.isTraceEnabled }?.trace("Putting ${page.content?.array()?.size} | $path")
 
         Files.deleteIfExists(path)
         try {
@@ -143,8 +138,21 @@ class FileBackendPageStore(
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
         } catch (e: IOException) {
-            logger.warn(e.simplify("writeAvro", " | $path"))
+            logger.warn(e.brief())
         }
+    }
+
+    fun getPersistPath(url: String, suffix: String): Path {
+        val directory = getPersistDirectory(url)
+        val filename = AppPaths.fromUri(url, "", suffix)
+        return directory.resolve(filename)
+    }
+
+    private fun getPersistDirectory(url: String): Path {
+        val dirForDomain = AppPaths.fromDomain(url)
+        val path = persistDirectory.resolve(dirForDomain)
+        Files.createDirectories(path)
+        return path
     }
 
     @Throws(IOException::class)
@@ -171,7 +179,7 @@ class FileBackendPageStore(
 
         page.content = ByteBuffer.wrap(content)
         require(page.contentLength == content.size.toLong())
-        require(page.persistContentLength == content.size.toLong())
+        require(page.persistedContentLength == content.size.toLong())
 
         return page
     }

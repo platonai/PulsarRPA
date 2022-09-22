@@ -20,7 +20,7 @@ class BlockUrlsExample: BrowserExampleBase() {
 
         page.onDomContentEventFired { event: DomContentEventFired ->
             // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
-            runtime.evaluate("__pulsar_utils__.checkPulsarStatus()")
+            runtime.evaluate("__pulsar_utils__.checkStatus()")
         }
 
         page.onLoadEventFired { event: LoadEventFired ->

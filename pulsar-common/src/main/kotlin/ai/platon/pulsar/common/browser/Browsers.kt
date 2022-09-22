@@ -2,13 +2,14 @@ package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
 object Browsers {
 
-    val CHROME_BINARY_SEARCH_PATHS = arrayOf(
+    val CHROME_BINARY_SEARCH_PATHS = listOf(
         "/usr/bin/google-chrome-stable",
         "/usr/bin/google-chrome",
         "/opt/google/chrome/chrome",
@@ -23,6 +24,8 @@ object Browsers {
         "/usr/bin/chromium-browser"
     )
 
+    val ADDITIONAL_CHROME_BINARY_SEARCH_PATHS = mutableListOf<String>()
+
     /**
      * Returns the chrome binary path.
      *
@@ -35,11 +38,25 @@ object Browsers {
                 ?: throw RuntimeException("CHROME_PATH is not executable | $path")
         }
 
-        return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }
+        val searchPaths = ADDITIONAL_CHROME_BINARY_SEARCH_PATHS + CHROME_BINARY_SEARCH_PATHS
+        return searchPaths.map { Paths.get(it) }
             .firstOrNull { Files.isExecutable(it) }
             ?.toAbsolutePath()
             ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
     }
 
     fun searchChromeBinaryOrNull() = kotlin.runCatching { searchChromeBinary() }.getOrNull()
+
+    /**
+     * Find BROWSER_CHROME_PATH in all config files
+     * */
+    private fun searchChromeBinaryPathAllAround(conf: ImmutableConfig) {
+        val chromeBinaryPath = conf.get(CapabilityTypes.BROWSER_CHROME_PATH)
+        if (chromeBinaryPath != null) {
+            val path = Paths.get(chromeBinaryPath).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
+            if (path != null) {
+                System.setProperty(CapabilityTypes.BROWSER_CHROME_PATH, chromeBinaryPath)
+            }
+        }
+    }
 }

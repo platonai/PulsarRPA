@@ -21,10 +21,9 @@ package ai.platon.pulsar.crawl.parse.html
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
-import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
@@ -37,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Html parser
  */
 class PrimerHtmlParser(
-    private val parseFilters: ParseFilters?,
+    private val parseFilters: ParseFilters? = null,
     private val conf: ImmutableConfig,
 ) : Parser {
     companion object {
@@ -71,15 +70,16 @@ class PrimerHtmlParser(
             onWillParseHTMLDocument(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)
+
             parseFilters?.filter(parseContext)
 
             parseContext.document?.let { onHTMLDocumentParsed(page, it) }
 
             parseContext.parseResult
         } catch (e: MalformedURLException) {
-            failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
+            ParseResult.failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
         } catch (e: Exception) {
-            failed(ParseStatusCodes.FAILED_INVALID_FORMAT, e.message)
+            ParseResult.failed(ParseStatusCodes.FAILED_INVALID_FORMAT, e.message)
         }
     }
 
@@ -90,7 +90,7 @@ class PrimerHtmlParser(
         numHtmlParses.incrementAndGet()
 
         try {
-            page.loadEventHandler?.onWillParseHTMLDocument?.invoke(page)
+            page.loadEvent?.onWillParseHTMLDocument?.invoke(page)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onWillParseHTMLDocument | ${page.configuredUrl}", e)
         }
@@ -101,7 +101,7 @@ class PrimerHtmlParser(
      * */
     private fun onHTMLDocumentParsed(page: WebPage, document: FeaturedDocument) {
         try {
-            page.loadEventHandler?.onHTMLDocumentParsed?.invoke(page, document)
+            page.loadEvent?.onHTMLDocumentParsed?.invoke(page, document)
         } catch (e: Throwable) {
             logger.warn("Failed to invoke onHTMLDocumentParsed | ${page.configuredUrl}", e)
         } finally {

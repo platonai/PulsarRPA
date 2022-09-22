@@ -72,9 +72,9 @@ class AppMetricRegistry : MetricRegistry() {
         enumCounterRegistry.register(counterClass)
         val enumConstants = counterClass.enumConstants
         if (withGauges) {
-            enumConstants.associateTo(enumCounters) { it to counterAndGauge(counterClass, ident, it.name) }
+            enumConstants.associateWithTo(enumCounters) { counterAndGauge(counterClass, ident, it.name) }
         } else {
-            enumConstants.associateTo(enumCounters) { it to counter(counterClass, ident, it.name) }
+            enumConstants.associateWithTo(enumCounters) { counter(counterClass, ident, it.name) }
         }
     }
 

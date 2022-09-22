@@ -2,19 +2,19 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.atomic.AtomicInteger
 
-class PrintFlowEventHandler: DefaultPulsarEventHandler() {
+class PrintFlowEvent: DefaultPageEvent() {
     private val sequencer = AtomicInteger()
     private val seq get() = sequencer.incrementAndGet()
 
     init {
-        loadEventHandler.apply {
+        loadEvent.apply {
             onFilter.addLast { url ->
                 println("$seq. onFilter")
                 url
@@ -23,60 +23,61 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
                 println("$seq. onNormalize")
                 url
             }
-            onBeforeLoad.addLast { url ->
+            onWillLoad.addLast { url ->
                 println("$seq. onBeforeLoad")
+                null
             }
-            onBeforeFetch.addLast { page ->
+            onWillFetch.addLast { page ->
                 println("$seq. onBeforeFetch")
             }
-            onBeforeBrowserLaunch.addLast { page ->
-                println("$seq. onBeforeBrowserLaunch")
-            }
-            onAfterBrowserLaunch.addLast { page, driver ->
-                println("$seq. onAfterBrowserLaunch")
-            }
-            onAfterFetch.addLast { page ->
+            onFetched.addLast { page ->
                 println("$seq. onAfterFetch")
             }
-            onBeforeParse.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
                 println("$seq. onBeforeParse")
             }
-            onBeforeHtmlParse.addLast { page ->
+            onWillParseHTMLDocument.addLast { page ->
                 println("$seq. onBeforeHtmlParse")
             }
-            onBeforeExtract.addLast { page ->
+            onWillExtractData.addLast { page ->
                 println("$seq. onBeforeExtract")
             }
-            onAfterExtract.addLast { page: WebPage, document: FeaturedDocument ->
+            onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. onAfterExtract")
             }
-            onAfterHtmlParse.addLast { page: WebPage, document: FeaturedDocument ->
+            onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
                 println("$seq. onAfterHtmlParse")
             }
-            onAfterParse.addLast { page ->
+            onParsed.addLast { page ->
                 println("$seq. onAfterParse")
             }
-            onAfterLoad.addLast { page ->
+            onLoaded.addLast { page ->
                 println("$seq. onAfterLoad")
             }
         }
 
-        simulateEventHandler.apply {
-            onBeforeCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+        browseEvent.apply {
+            onWillLaunchBrowser.addLast { page ->
+                println("$seq. onBeforeBrowserLaunch")
+            }
+            onBrowserLaunched.addLast { page, driver ->
+                println("$seq. onAfterBrowserLaunch")
+            }
+            onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onBeforeCheckDOMState")
             }
-            onAfterCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
+            onDOMStateChecked.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onAfterCheckDOMState")
             }
-            onBeforeComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onBeforeComputeFeature")
             }
-            onAfterComputeFeature.addLast { page: WebPage, driver: WebDriver ->
+            onFeatureComputed.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onAfterComputeFeature")
             }
         }
 
-        crawlEventHandler.apply {
+        crawlEvent.apply {
             onFilter.addLast { url: UrlAware ->
                 println("$seq. onFilter")
                 url
@@ -85,10 +86,11 @@ class PrintFlowEventHandler: DefaultPulsarEventHandler() {
                 println("$seq. onNormalize")
                 url
             }
-            onBeforeLoad.addLast { url: UrlAware ->
+            onWillLoad.addLast { url: UrlAware ->
                 println("$seq. onBeforeLoad")
+                url
             }
-            onAfterLoad.addLast { url, page ->
+            onLoaded.addLast { url, page ->
                 println("$seq. onAfterLoad")
             }
         }
@@ -102,7 +104,7 @@ fun main() {
     val portalUrl = "https://list.jd.com/list.html?cat=652,12345,12349"
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(
-        portalUrl, args = "-refresh -parse", eventHandler = PrintFlowEventHandler())
+        portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 
     // submit the link to the fetch pool.
     session.submit(link)

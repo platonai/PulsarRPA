@@ -3,15 +3,11 @@ package ai.platon.pulsar.crawl.common.options
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.*
 import ai.platon.pulsar.common.options.deprecated.CrawlOptions
-import ai.platon.pulsar.common.options.deprecated.EntityOptions
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.CollectionUtils
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
-import java.time.Duration
 import java.util.*
-import java.util.stream.Stream
 import kotlin.test.assertTrue
 
 /**
@@ -40,41 +36,6 @@ class TestPulsarOptions {
 
     private val conf = VolatileConfig()
 
-    /**
-     * TODO: Failed to parse CrawlOptions
-     */
-    @Test
-    @Ignore("Failed to parse CrawlOptions")
-    fun testProgramOpts() {
-        Stream.of(args1, args2).forEach { args ->
-            val options = CrawlOptions.parse(args, conf)
-            println(args)
-            println(options.toString())
-
-            assertEquals(args, Duration.ofSeconds(1), options.fetchInterval)
-            assertEquals(args, 2000, options.fetchPriority.toLong())
-
-            assertEquals(args, "body", options.linkOptions.restrictCss)
-            assertEquals(args, ".+", options.linkOptions.urlRegex)
-            assertEquals(args, 4, options.linkOptions.minAnchorLength.toLong())
-            assertEquals(args, 45, options.linkOptions.maxAnchorLength.toLong())
-            assertEquals(args, 44, options.linkOptions.minUrlLength.toLong())
-            assertEquals(args, 200, options.linkOptions.maxUrlLength.toLong())
-
-            val eopts = EntityOptions.parse(args)
-            assertEquals("article", eopts.name)
-            assertEquals("body", eopts.root)
-            assertTrue(eopts.cssRules.containsKey("title"))
-            assertTrue(eopts.cssRules.containsValue("#title"))
-
-            assertEquals("comments", eopts.collectionOptions.name)
-            assertEquals("#comments", eopts.collectionOptions.root)
-            assertEquals(".comment", eopts.collectionOptions.item)
-            assertTrue(eopts.collectionOptions.cssRules.containsKey("author"))
-            assertTrue(eopts.collectionOptions.cssRules.containsValue(".content"))
-        }
-    }
-
     @Test
     fun testRebuildOptions() {
         val options = CrawlOptions.parse(args2, conf)
@@ -91,13 +52,6 @@ class TestPulsarOptions {
         assertTrue(loadOptions.params.asMap().containsKey("-persist"))
         assertTrue(finalArgs.contains("-reparseLinks"))
         assertTrue(!finalArgs.contains("-notSupport"))
-    }
-
-    @Test
-    fun testNormalize() {
-        val args = "-en news -er #content -amin 3 -amax 100 -Fa=b"
-        val options = EntityOptions.parse(args)
-        println(options)
     }
 
     @Test

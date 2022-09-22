@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.simplify
 import org.h2.jdbc.JdbcSQLException
 import java.sql.Connection
 import java.sql.DriverManager
@@ -53,7 +53,7 @@ class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()): AutoCloseable {
      */
     @Throws(JdbcSQLException::class)
     fun getConnectionOrNull(name: String) = kotlin.runCatching { getConnection(name) }
-            .onFailure { getLogger(H2MemoryDb::class).warn(it.simplify()) }
+            .onFailure { getLogger(H2MemoryDb::class).warn(it.brief()) }
             .getOrNull()
 
     override fun close() {

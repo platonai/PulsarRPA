@@ -1,13 +1,13 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.browser.common.EmulateSettings
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.DefaultPulsarEventHandler
-import ai.platon.pulsar.crawl.PulsarEventHandler
-import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.crawl.PageEvent
+import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -18,68 +18,17 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * The default load options, be careful to change the default behaviour.
- * */
-object LoadOptionDefaults {
-    /**
-     * The default task time.
-     * */
-    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-    /**
-     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
-     * */
-    var expires = ChronoUnit.DECADES.duration
-    /**
-     * The default time to expire
-     * */
-    var expireAt = DateTimes.doomsday
-    /**
-     * Lazy flush.
-     * */
-    var lazyFlush = true
-    /**
-     * Trigger the parse phrase or not.
-     *
-     * Do not parse by default, since there are may ways to trigger a webpage parsing:
-     * 1. use session.parse()
-     * 2. add a -parse option
-     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
-     * */
-    var parse = false
-    /**
-     * Store webpage content or not.
-     *
-     * Store webpage content by default.
-     * If we are running a public cloud, this option might be changed to false.
-     * */
-    var storeContent = true
-    /**
-     * If true, still fetch the page even if it is gone.
-     * */
-    var ignoreFailure = false
-    /**
-     * There are several cases to enable jit retry.
-     * For example, in a test environment.
-     * */
-    var nJitRetry = -1
-    /**
-     * The default browser is chrome with pulsar implemented web driver.
-     * */
-    var browser = BrowserType.PULSAR_CHROME
-    /**
-     * Set to be > 0 if we are doing unit test or other test.
-     * We will talk more, log more and trace more in test mode.
-     * */
-    var test = 0
-}
-
-/**
- * LoadOptions can represent the controling arguments which effects how we load a webpage:
+ * A [LoadOptions] object contains a set of control parameters that affect how we load a webpage.
+ *
+ * The load options, or load arguments, can be a plain string in the form of command line parameters,
+ * and can be parsed into a [LoadOptions] object.
  *
  * ```kotlin
- * // fetch only when after 1d since last fetch
+ * // parse a string into a LoadOptions object
+ * val options = session.options('-expires 1d -itemExpires 1d -ignoreFailure -parse -storeContent')
+ * // fetch after 1d since last fetch
  * session.load('https://www.jd.com', '-expires 1d')
- * // fetch now ignoring errors
+ * // fetch immediately ignoring errors
  * session.load('https://www.jd.com', '-refresh')
  * // do not fetch after dead time
  * session.load('https://www.jd.com', '-deadTime 2022-04-15T18:36:54.941Z')
@@ -88,106 +37,127 @@ object LoadOptionDefaults {
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- *
- * NOTICE: every option with name `optionName` has to take a [Parameter] name [-optionName].
  */
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
-    var eventHandler: PulsarEventHandler? = null,
-    var itemEventHandler: PulsarEventHandler? = null
+    var rawEvent: PageEvent? = null,
+    var rawItemEvent: PageEvent? = null
 ): CommonOptions(argv) {
 
     /**
-     * The label of this load task.
+     * The task label, it's optional and can be used to group tasks.
      * */
     @ApiPublic
-    @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
+    @Parameter(names = ["-l", "-label", "--label"],
+        description = "The task label, it's optional and can be used to group tasks")
     var label = ""
 
     /**
-     * The task id. A task can contain multiple loads.
+     * The task id, it's optional and can be used to distinguish tasks.
      * */
     @ApiPublic
     @Parameter(names = ["-taskId", "--task-id"],
-        description = "The task id. A task can contain multiple loads")
+        description = "The task id, it's optional and can be used to distinguish tasks")
     var taskId = ""
 
     /**
-     * The task time, we usually use a task time to indicate the name of a batch task.
+     * The task time, we usually use task time to indicate the name of a task batch.
      * */
     @ApiPublic
     @Parameter(names = ["-taskTime", "--task-time"], converter = InstantConverter::class,
-            description = "The task time, we usually use a task time to indicate the name of a batch task")
+            description = "The task time, we usually use task time to indicate the name of a task batch")
     var taskTime = LoadOptionDefaults.taskTime
 
     /**
-     * The dead time, if now > deadTime, the task should be discarded as soon as possible.
+     * The deadline to finish the task, if the deadline is exceeded, the task should be discarded
+     * as soon as possible.
+     *
+     * :::
+     *
+     * NOTICE:
+     * The arguments "-deadTime", "--dead-time" are deprecated, will be removed in the further.
+     *
+     * :::
+     *
      * */
     @ApiPublic
-    @Parameter(names = ["-deadTime", "--dead-time"], converter = InstantConverter::class,
-        description = "The dead time, if now > deadTime, the task should be discarded as soon as possible")
-    var deadTime = DateTimes.doomsday
+    @Parameter(names = ["-deadline", "-deadTime", "--dead-time"], converter = InstantConverter::class,
+        description = "The deadline to finish the task, if the deadline is exceeded, " +
+                " the task should be discarded as soon as possible.")
+    var deadline = DateTimes.doomsday
+
+    @Deprecated("Inappropriate name", ReplaceWith("deadline"))
+    val deadTime get() = deadline
 
     /**
-     * The auth token for this task.
+     * The auth token, used for authorization purpose.
      * */
     @ApiPublic
-    @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this task")
+    @Parameter(names = ["-authToken", "--auth-token"],
+        description = "The auth token, can be used for authorization purpose.")
     var authToken = ""
 
     /**
-     * If true, get a copy of the webpage and do not modify it.
+     * Specify if the load execution is read only or not.
+     * If a load execution is read only, the webpage loaded should not be changed by the execution.
      * */
     @ApiPublic
-    @Parameter(names = ["-readonly"], description = "If true, get a copy of the webpage and do not modify it")
+    @Parameter(names = ["-readonly"],
+        description = "Specify if the load execution is read only or not.")
     var readonly = false
 
     /**
-     * If true, fetch the page content as a resource without browser rendering.
+     * If true, fetch the url as a resource without browser rendering.
      * */
     @ApiPublic
     @Parameter(names = ["-resource", "-isResource"],
-        description = "If true, fetch the page content as a resource without browser rendering")
+        description = "If true, fetch the url as a resource without browser rendering.")
     var isResource = false
 
     /**
-     * The expiry time. If a page is expired, it should be fetched from the web.
+     * The expiry duration. If the expiry time is exceeded, the page should be fetched from the Internet.
      *
      * The term "expires" usually be used for an expiry time, for example, http-equiv, or in cookie specification,
      * guess it means "expires at".
      *
      * The expires field supports both ISO-8601 standard and hadoop time duration format:
-     * ISO-8601 standard : PnDTnHnMn.nS
-     * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
+     * 1. ISO-8601 standard : PnDTnHnMn.nS
+     * 2. Hadoop time duration format: 100s, 1m, 1h, 1d, valid units are : ns, us, ms, s, m, h, d.
      * */
     @ApiPublic
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
-            description = "The expiry time. If a page is expired, it should be fetched from the web")
+            description = "The expiry duration. " +
+                    "If the expiry time is exceeded, the page should be fetched from the Internet.")
     var expires = LoadOptionDefaults.expires
 
     /**
-     * The time point to expire. If a page is expired, it should be fetched from the web.
+     * The expiry time point. If the expiry time is exceeded, the page should be fetched from the Internet.
+     *
+     * Accept the following format:
+     * 1. yyyy-MM-dd[ HH[:mm[:ss]]]
+     * 2. ISO_INSTANT, or yyyy-MM-ddTHH:mm:ssZ
      * */
     @ApiPublic
     @Parameter(names = ["-expireAt", "--expire-at"], converter = InstantConverter::class,
-            description = "The time point to expire. If a page is expired, it should be fetched from the web")
+            description = "The expiry time point. " +
+                    "If the expiry time is exceeded, the page should be fetched from the Internet.")
     var expireAt = LoadOptionDefaults.expireAt
 
     /**
-     * The fetch interval, used for periodically tasks.
+     * The fetch interval, used for periodically fetch tasks.
      * */
     @ApiPublic
     @Parameter(names = ["-fi", "-fetchInterval", "--fetch-interval"], converter = DurationConverter::class,
-        description = "The fetch interval, used for periodically tasks")
+        description = "The fetch interval, used for periodically fetch tasks.")
     var fetchInterval = ChronoUnit.DECADES.duration
 
     /**
-     * The CSS selector to select out links in the portal page.
+     * The selector to extract links in portal pages.
      * */
     @ApiPublic
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
-            description = "The CSS selector to select out links in the portal page")
+            description = "The selector to extract links in portal pages.")
     var outLinkSelector = ""
 
     /**
@@ -199,18 +169,18 @@ open class LoadOptions(
     var outLinkPattern = ".+"
 
     /**
-     * The selector of the element to click for out links, if it's blank, no element should be clicked.
+     * The selector for element to click.
      * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(
         names = ["-click", "-clickTarget", "--click-target"],
-        description = "The selector of the element to click for out links, if it's blank, no element should be clicked"
+        description = "The selector for element to click."
     )
     var clickTarget = ""
 
     /**
-     * The css selector of next page anchor.
+     * The selector for next page anchor.
      * TODO: not implemented yet
      * */
     @ApiPublic
@@ -220,62 +190,74 @@ open class LoadOptions(
 
     /**
      * The iframe id to switch to.
+     * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The iframe id to switch to")
     var iframe = 0
 
     /**
-     * Specify how many links to select if we deal with out-pages.
+     * Specify how many links to extract for out pages.
      * */
     @ApiPublic
     @Parameter(names = ["-tl", "-topLinks", "--top-links"],
-        description = "Specify how many links to select if we deal with out-pages.")
+        description = "Specify how many links to extract for out pages.")
     var topLinks = 20
 
     /**
-     * Try the top N anchor groups.
+     * Choose the top N anchor groups for further process. Used by auto web mining project.
      * */
     @ApiPublic
-    @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
+    @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"],
+        description = "Try the top N anchor groups")
     var topNAnchorGroups = 3
 
     /**
-     * Wait for ajax content until the element is filled by a non-blank text.
+     * The selector specified element should have a non-blank text, the system should
+     * wait until the element is filled by a non-blank text, or until it times out.
+     * TODO: not implemented yet
      * */
     @ApiPublic
     @Parameter(names = ["-wnb", "-waitNonBlank"],
-            description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
+            description = "The selector specified element should have a non-blank text")
     var waitNonBlank: String = ""
 
     /**
-     * Keep the pages only if the required text is not blank.
+     * The selector specified element should have a non-blank text, the task should
+     * be retried if the element's text content is empty or blank.
+     * TODO: not implemented yet
      * */
     @ApiPublic
-    @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
+    @Parameter(names = ["-rnb", "-requireNotBlank"],
+        description = "The selector specified element should have a non-blank text")
     var requireNotBlank: String = ""
 
     /**
-     * Fetch pages smaller than requireSize in bytes.
+     * The minimum page size expected, if it is less than that, it will need to be re-fetched.
+     *
+     * The unit is byte.
      * */
     @ApiPublic
-    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
+    @Parameter(names = ["-rs", "-requireSize", "--require-size"],
+        description = "The minimum page size expected")
     var requireSize = 0
 
     /**
-     * Re-fetch a page who's images less than requireImages.
+     * The minimum number of images expected in the page, if it is less than that,
+     * it will need to be re-fetched.
      * */
     @ApiPublic
     @Parameter(names = ["-ri", "-requireImages", "--require-images"],
-        description = "Re-fetch a page who's images less than requireImages")
+        description = "The minimum number of images expected in the page")
     var requireImages = 0
 
     /**
-     * Re-fetch a page who's anchors less than requireAnchors.
+     * The minimum number of anchors expected in the page, if it is less than that,
+     * it will need to be re-fetched.
      * */
     @ApiPublic
     @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"],
-        description = "Re-fetch a page who's anchors less than requireAnchors")
+        description = "The minimum number of anchors expected in the page")
     var requireAnchors = 0
 
     /**
@@ -294,32 +276,32 @@ open class LoadOptions(
     var browser = LoadOptionDefaults.browser
 
     /**
-     * The count to scroll down after a page being opened in a browser.
+     * The number of times the page should be scrolled down after it has just been opened in a browser.
      * */
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page being opened in a browser")
-    var scrollCount = EmulateSettings.DEFAULT.scrollCount
+    var scrollCount = InteractSettings.DEFAULT.scrollCount
 
     /**
-     * The interval to scroll down after a page being opened in a browser.
+     * The interval to scroll down.
      * */
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page being opened in a browser")
-    var scrollInterval = EmulateSettings.DEFAULT.scrollInterval
+    var scrollInterval = InteractSettings.DEFAULT.scrollInterval
 
     /**
      * The maximum time to perform javascript injected into the browser.
      * */
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into the browser")
-    var scriptTimeout = EmulateSettings.DEFAULT.scriptTimeout
+    var scriptTimeout = InteractSettings.DEFAULT.scriptTimeout
 
     /**
      * The maximum time to wait for a page to finish.
      * */
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to finish")
-    var pageLoadTimeout = EmulateSettings.DEFAULT.pageLoadTimeout
+    var pageLoadTimeout = InteractSettings.DEFAULT.pageLoadTimeout
 
     /**
      * The browser used to visit the item pages.
@@ -436,15 +418,6 @@ open class LoadOptions(
         set(value) = doRefresh(value)
 
     /**
-     * Force retry fetching the page if it's failed last time, or it's marked as gone.
-     * */
-    @Deprecated("Replaced by ignoreFailure, will be removed in further versions")
-    @ApiPublic
-    @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
-            description = "Retry fetching the page even if it's failed last time, or it's marked as gone")
-    var retryFailed = LoadOptionDefaults.ignoreFailure
-
-    /**
      * Retry fetching the page even if it's failed last time.
      * */
     @ApiPublic
@@ -476,18 +449,9 @@ open class LoadOptions(
     var lazyFlush = LoadOptionDefaults.lazyFlush
 
     /**
-     * Parallel fetch pages whenever applicable.
-     * */
-    @Deprecated("Not used since there is no non-parallel fetching")
-    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
-            description = "Parallel fetch pages whenever applicable")
-    var preferParallel = true
-
-    /**
      * Run browser in incognito mode.
-     * Not used since the browser is always running in temporary contexts
+     * Not used since the browser always running in temporary contexts.
      * */
-    @Deprecated("Not used since the browser is always running in temporary contexts")
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
 
@@ -510,15 +474,15 @@ open class LoadOptions(
     var hardRedirect = false
 
     /**
-     * If true, run the parse phrase.
+     * If true, parse the page when it's just be fetched.
      * */
-    @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page after fetch")
+    @Parameter(names = ["-ps", "-parse", "--parse"], description = "If true, parse the page when it's just be fetched.")
     var parse = LoadOptionDefaults.parse
 
     /**
-     * Re-parse all links if the page is parsed.
+     * Re-parse links if the page has been parsed before.
      * */
-    @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
+    @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse links if the page has been parsed before.")
     var reparseLinks = false
 
     /**
@@ -528,19 +492,21 @@ open class LoadOptions(
     var ignoreUrlQuery = false
 
     /**
-     * No normalizer is applied to parse links.
+     * If true, no normalizer will be applied when parse links.
      * */
-    @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
+    @Parameter(names = ["-noNorm", "--no-link-normalizer"],
+        description = "If true, no normalizer will be applied when parse links.")
     var noNorm = false
 
     /**
-     * No filter is applied to parse links.
+     * If true, no filter will be applied when parse links.
      * */
-    @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
+    @Parameter(names = ["-noFilter", "--no-link-filter"],
+        description = "If true, no filter will be applied when parse links.")
     var noFilter = false
 
     /**
-     * Specify the network condition.
+     * Indicates the network condition.
      * */
     @Parameter(
         names = ["-netCond", "-netCondition", "--net-condition"],
@@ -559,7 +525,7 @@ open class LoadOptions(
      * The load option version.
      * */
     @Parameter(names = ["-v", "-version", "--version"], description = "The load option version")
-    var version = "20210321"
+    var version = "20220918"
 
     /**
      * Get the corrected [outLinkSelector] or null. See [outLinkSelector] for more information.
@@ -571,6 +537,10 @@ open class LoadOptions(
      * The page referrer.
      * */
     var referrer: String? = null
+
+    val event: PageEvent get() = enableEvent()
+
+    val itemEvent: PageEvent get() = enableItemEvent()
 
     /**
      * Find out the modified fields and return a [Params].
@@ -607,22 +577,7 @@ open class LoadOptions(
      * The constructor.
      * */
     protected constructor(args: String, other: LoadOptions) :
-            this(split(args), other.conf, other.eventHandler, other.itemEventHandler)
-
-    /**
-     * Ensure the EventHandler is created.
-     * */
-    fun ensureEventHandler(): PulsarEventHandler {
-        val eh = eventHandler ?: DefaultPulsarEventHandler()
-        eventHandler = eh
-        return eh
-    }
-
-    fun ensureItemEventHandler(): PulsarEventHandler {
-        val eh = eventHandler ?: DefaultPulsarEventHandler()
-        itemEventHandler = eh
-        return eh
-    }
+            this(split(args), other.conf, other.rawEvent, other.rawItemEvent)
 
     /**
      * Parse the arguments into [LoadOptions] with JCommander and with bug fixes.
@@ -638,13 +593,14 @@ open class LoadOptions(
                     it.isAccessible = true
                     it.set(this, true)
                 }
+            // fix out link parsing (remove surrounding symbols)
             outLinkSelector = correctOutLinkSelector() ?: ""
         }
         return b
     }
 
     /**
-     * Create options for item pages.
+     * Create a new [LoadOptions] object for item pages.
      * */
     open fun createItemOptions(): LoadOptions {
         val itemOptions = clone()
@@ -653,16 +609,17 @@ open class LoadOptions(
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
-        itemOptions.eventHandler = itemEventHandler
+        itemOptions.rawEvent = rawItemEvent
 
         return itemOptions
     }
 
     /**
-     * Check if the page has been expired.
-     * A page is expired if
+     * Check if the page expires.
+     *
+     * A page is expired when:
      * 1. the last fetch time is before [expireAt] and now is after [expireAt]
-     * 2. (the last fetch time + [expires]) is passed
+     * 2. (the last fetch time + [expires]) is exceeded
      * */
     fun isExpired(prevFetchTime: Instant): Boolean {
         val now = Instant.now()
@@ -675,7 +632,7 @@ open class LoadOptions(
     }
 
     /**
-     * If the page is dead, do not fetch it from the web.
+     * If the page is dead, drop the task as soon as possible.
      * */
     fun isDead(): Boolean {
         return deadTime < Instant.now()
@@ -697,40 +654,40 @@ open class LoadOptions(
         requireAnchors = itemRequireAnchors
         browser = itemBrowser
 
-        eventHandler = itemEventHandler
+        rawEvent = rawItemEvent
     }
 
     /**
-     * Write some option values to [conf].
+     * Write option values to [conf].
      *
-     * [LoadOptions] is not globally visible, we have to pass some values to modules who can not see it
+     * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration() = overrideConfiguration(this.conf)
 
     /**
-     * Write some option values to [conf].
+     * Write option values to [conf].
      *
-     * [LoadOptions] is not globally visible, we have to pass some values to modules who can not see it
+     * [LoadOptions] is not globally visible, we have to pass values to modules which can not see it
      * through a [VolatileConfig] object.
      * */
     fun overrideConfiguration(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
-        val emulateSettings = when (netCondition) {
-            Condition.WORSE -> EmulateSettings.worseNetSettings
-            Condition.WORST -> EmulateSettings.worstNetSettings
-            else -> EmulateSettings.goodNetSettings
+        val interactSettings = when (netCondition) {
+            Condition.WORSE -> InteractSettings.worseNetSettings
+            Condition.WORST -> InteractSettings.worstNetSettings
+            else -> InteractSettings.goodNetSettings
         }.copy()
 
-        if (!isDefault("scrollCount")) emulateSettings.scrollCount = scrollCount
-        if (!isDefault("scrollInterval")) emulateSettings.scrollInterval = scrollInterval
-        if (!isDefault("scriptTimeout")) emulateSettings.scriptTimeout = scriptTimeout
-        if (!isDefault("pageLoadTimeout")) emulateSettings.pageLoadTimeout = pageLoadTimeout
+        if (!isDefault("scrollCount")) interactSettings.scrollCount = scrollCount
+        if (!isDefault("scrollInterval")) interactSettings.scrollInterval = scrollInterval
+        if (!isDefault("scriptTimeout")) interactSettings.scriptTimeout = scriptTimeout
+        if (!isDefault("pageLoadTimeout")) interactSettings.pageLoadTimeout = pageLoadTimeout
 
-        emulateSettings.overrideConfiguration(conf)
+        interactSettings.overrideConfiguration(conf)
 
-        eventHandler?.let { putBean(it) }
+        rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
-        // not used since the browser is always running in temporary contexts
+        // incognito is not used since the browser is always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 
@@ -755,8 +712,8 @@ open class LoadOptions(
     }
 
     /**
-     * Convert the [LoadOptions] to be a string.
-     * The operation should be reversible:
+     * Convert the [LoadOptions] to a string.
+     * The two operations [parse] and [toString] are reversible:
      *
      * val args = "..."
      * val options1 = LoadOptions.parse(args)
@@ -788,7 +745,7 @@ open class LoadOptions(
     }
 
     /**
-     * Create a new [LoadOptions] object.
+     * Create a new [LoadOptions] object with the same arguments string and event handlers.
      * */
     open fun clone() = parse(toString(), this)
 
@@ -815,11 +772,29 @@ open class LoadOptions(
         refresh = value
     }
 
+    /**
+     * Ensure [event] is created.
+     * */
+    private fun enableEvent(): PageEvent {
+        val eh = rawEvent ?: DefaultPageEvent()
+        rawEvent = eh
+        return eh
+    }
+
+    /**
+     * Ensure [rawItemEvent] is created.
+     * */
+    private fun enableItemEvent(): PageEvent {
+        val eh = rawEvent ?: DefaultPageEvent()
+        rawItemEvent = eh
+        return eh
+    }
+
     companion object {
         /**
          * The default option.
          * */
-        val DEFAULT = LoadOptions("", VolatileConfig.DEFAULT)
+        val DEFAULT = LoadOptions("", VolatileConfig.UNSAFE)
 
         /**
          * A list of all option fields.
@@ -988,4 +963,60 @@ open class LoadOptions(
             return normalizedArgs.trim()
         }
     }
+}
+
+/**
+ * The default load options, be careful to change the default behaviour.
+ * */
+object LoadOptionDefaults {
+    /**
+     * The default task time.
+     * */
+    var taskTime = Instant.now().truncatedTo(ChronoUnit.MINUTES)
+    /**
+     * The default expiry time, some time we may need expire all pages by default, for example, in test mode
+     * */
+    var expires = ChronoUnit.DECADES.duration
+    /**
+     * The default time to expire
+     * */
+    var expireAt = DateTimes.doomsday
+    /**
+     * Lazy flush.
+     * */
+    var lazyFlush = true
+    /**
+     * Trigger the parse phrase or not.
+     *
+     * Do not parse by default, since there are may ways to trigger a webpage parsing:
+     * 1. use session.parse()
+     * 2. add a -parse option
+     * 3. use a [ai.platon.pulsar.crawl.common.url.ParsableHyperlink]
+     * */
+    var parse = false
+    /**
+     * Store webpage content or not.
+     *
+     * Store webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     * */
+    var storeContent = true
+    /**
+     * If true, still fetch the page even if it is gone.
+     * */
+    var ignoreFailure = false
+    /**
+     * There are several cases to enable jit retry.
+     * For example, in a test environment.
+     * */
+    var nJitRetry = -1
+    /**
+     * The default browser is chrome with pulsar implemented web driver.
+     * */
+    var browser = BrowserType.PULSAR_CHROME
+    /**
+     * Set to be > 0 if we are doing unit test or other test.
+     * We will talk more, log more and trace more in test mode.
+     * */
+    var test = 0
 }

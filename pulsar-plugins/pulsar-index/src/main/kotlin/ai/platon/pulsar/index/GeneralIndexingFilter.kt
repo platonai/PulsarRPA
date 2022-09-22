@@ -29,12 +29,7 @@ import org.apache.commons.lang3.StringUtils
 import java.util.function.Consumer
 
 /**
- * Adds basic searchable fields to a document. The fields are: host - add host
- * as un-stored, indexed and tokenized url - url is both stored and indexed, so
- * it's both searchable and returned. This is also a required field. content -
- * content is indexed, so that it's searchable, but not stored in index title -
- * title is stored and indexed cache - add cached content/summary display
- * policy, if available tstamp - add timestamp when fetched, for deduplication
+ * Adds basic searchable fields to a document.
  */
 class GeneralIndexingFilter(
     override var conf: ImmutableConfig,
@@ -56,10 +51,6 @@ class GeneralIndexingFilter(
     }
 
     /**
-     * The [GeneralIndexingFilter] filter object which supports boolean
-     * configurable value for length of characters permitted within the title @see
-     * `index.max.title.length` in pulsar-default.xml
-     *
      * @param doc  The [IndexDocument] object
      * @param url  URL to be filtered for anchor text
      * @param page [WebPage] object relative to the URL
@@ -75,20 +66,16 @@ class GeneralIndexingFilter(
     }
 
     private fun addDocFields(doc: IndexDocument, url: String, page: WebPage) {
-        // Major page entities
-        page.pageModel.unbox().forEach(Consumer { p: GFieldGroup -> addDocFields(doc, p.fields) })
-
-        // Secondary page entities
-        // page.getPageModel().getRawPageEntities().forEach(pe -> addDocFields(doc, pe.getFields()));
+        page.pageModel?.fieldGroups?.forEach { addDocFields(doc, it.fields) }
     }
 
     private fun addDocFields(doc: IndexDocument, fields: Map<CharSequence, CharSequence?>) {
-        fields.entries.stream()
-            .filter { e: Map.Entry<CharSequence, CharSequence?> -> e.value != null && e.value!!.length < maxContentLength }
-            .forEach { e: Map.Entry<CharSequence, CharSequence?> -> doc.addIfAbsent(e.key.toString(), e.value!!) }
+        fields.filter { it.value != null }.map { it.key.toString() to it.value.toString() }
+            .filter { it.second.length < maxContentLength }
+            .forEach { doc.addIfAbsent(it.first, it.second) }
     }
 
     companion object {
-        private var maxContentLength = 0
+        private var maxContentLength = 20_000
     }
 }

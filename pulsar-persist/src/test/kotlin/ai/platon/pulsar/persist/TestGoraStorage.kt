@@ -62,7 +62,7 @@ class TestGoraStorage {
         }
 
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
-        var page = WebPage.newInternalPage(url)
+        var page = WebPageExt.newTestWebPage(url)
         assertEquals(url, page.url)
         // webDb.put(page.getUrl(), page, true);
         webDb.put(page)
@@ -74,7 +74,6 @@ class TestGoraStorage {
         assertEquals(page.url, page2.url)
         assertEquals(page.contentAsString, page2.contentAsString)
         assertTrue(page.isNotNil)
-        assertTrue(page.isInternal)
         pageExt.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()

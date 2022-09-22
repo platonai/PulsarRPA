@@ -15,7 +15,7 @@ import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
-import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
+import ai.platon.pulsar.crawl.index.jit.indexer.JITIndexer
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
@@ -264,11 +264,13 @@ class TaskScheduler(
         }
 
         // Remove content if storeContent is false. Content is added to page earlier
-        // so PageParser is able to parse it, now, we can clear it
+        // so PageParser is able to parse it, now, we can clear it.
         if (page.content != null && !storeContent) {
             if (!page.isSeed) {
+                // Clear content for non-seed pages
                 page.setContent(ByteArray(0))
             } else if (page.fetchCount > 2) {
+                // Clear content for seed pages after 2nd fetch
                 page.setContent(ByteArray(0))
             }
         }

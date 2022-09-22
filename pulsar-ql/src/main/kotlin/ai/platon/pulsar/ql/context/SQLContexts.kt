@@ -1,15 +1,14 @@
 package ai.platon.pulsar.ql.context
 
-import ai.platon.pulsar.session.BasicPulsarSession
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.CrawlLoops
-import ai.platon.pulsar.crawl.StreamingCrawlLoop
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
+import ai.platon.pulsar.crawl.impl.StreamingCrawlLoop
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionConfig
@@ -17,6 +16,7 @@ import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.ql.h2.H2MemoryDb
 import ai.platon.pulsar.ql.h2.H2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
+import ai.platon.pulsar.session.BasicPulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
@@ -50,7 +50,7 @@ open class H2SQLContext(
 }
 
 class StaticH2SQLContext(
-    override val applicationContext: StaticApplicationContext = StaticApplicationContext()
+    applicationContext: StaticApplicationContext = StaticApplicationContext()
 ) : H2SQLContext(applicationContext) {
 
     /**
@@ -60,7 +60,7 @@ class StaticH2SQLContext(
     /**
      * Url normalizers
      * */
-    override val urlNormalizers = getBeanOrNull() ?: CrawlUrlNormalizers(unmodifiedConfig)
+    override val urlNormalizers = getBeanOrNull() ?: ChainedUrlNormalizer(unmodifiedConfig)
     /**
      * The web db
      * */
@@ -72,7 +72,7 @@ class StaticH2SQLContext(
     /**
      * The main loop
      * */
-    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(globalCacheFactory, unmodifiedConfig))
+    override val crawlLoops: CrawlLoops = getBeanOrNull() ?: CrawlLoops(StreamingCrawlLoop(unmodifiedConfig))
     /**
      * The injection component
      * */
@@ -162,17 +162,5 @@ object SQLContexts {
     @Synchronized
     fun shutdown() {
         PulsarContexts.shutdown()
-    }
-}
-
-fun withSQLContext(block: (context: SQLContext) -> Unit) {
-    SQLContexts.create(DefaultClassPathXmlSQLContext()).use {
-        block(it)
-    }
-}
-
-fun withSQLContext(contextLocation: String, block: (context: SQLContext) -> Unit) {
-    SQLContexts.create(ClassPathXmlSQLContext(contextLocation)).use {
-        block(it)
     }
 }

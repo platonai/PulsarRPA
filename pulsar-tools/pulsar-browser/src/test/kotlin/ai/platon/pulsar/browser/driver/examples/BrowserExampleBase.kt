@@ -12,9 +12,9 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     open val testUrl = "https://item.jd.com/100001071956.html"
 
     val browserSettings = BrowserSettings()
-    val preloadJs = browserSettings.generatePreloadJs()
+    val preloadJs = browserSettings.scriptLoader.getPreloadJs()
     val launchOptions = ChromeOptions()
-            .addArgument("window-size", browserSettings.formatViewPort())
+            .addArgument("window-size", formatViewPort())
             .also { it.headless = headless }
     val launcher = ChromeLauncher()
     val chrome = launcher.launch(launchOptions)
@@ -27,6 +27,8 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     val mainFrame get() = page.frameTree.frame
     val runtime get() = devTools.runtime
     val emulation get() = devTools.emulation
+    val dom get() = devTools.dom
+    val overlay get() = devTools.overlay
 
     abstract fun run()
 
@@ -35,6 +37,11 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
             val evaluation = runtime.evaluate("document.documentElement.outerHTML")
             return evaluation.result.value.toString()
         }
+
+    private fun formatViewPort(delimiter: String = ","): String {
+        val vp = BrowserSettings.screenViewport
+        return "${vp.width}$delimiter${vp.height}"
+    }
 
     override fun close() {
         devTools.awaitTermination()

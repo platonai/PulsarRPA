@@ -21,8 +21,8 @@ class TestEvents : TestBase() {
     fun setup() {
         val metrics = fetchComponent.coreMetrics
         assertNotNull(metrics)
-        metrics.tasks.mark(-metrics.tasks.count)
-        metrics.successTasks.mark(-metrics.successTasks.count)
+        metrics.fetchTasks.mark(-metrics.fetchTasks.count)
+        metrics.successFetchTasks.mark(-metrics.successFetchTasks.count)
         metrics.persists.reset()
     }
 
@@ -35,22 +35,23 @@ class TestEvents : TestBase() {
         val hyperlink = StatefulListenableHyperlink(url, args = "-i 0s")
 
         val firedEvents = mutableListOf<String>()
-        val eventHandler = hyperlink.eventHandler.loadEventHandler
+        val eventHandler = hyperlink.event.loadEvent
         eventHandler.apply {
-            onBeforeLoad.addLast { url ->
+            onWillLoad.addLast { url ->
                 firedEvents.add("onBeforeLoad")
-                assertEquals(0, metrics.tasks.count)
+                assertEquals(0, metrics.fetchTasks.count)
+                null
             }
 
-            onAfterFetch.addLast { page ->
+            onFetched.addLast { page ->
                 firedEvents.add("onAfterFetch")
                 assertTrue { page.crawlStatus.isFetched }
-                assertEquals(1, metrics.tasks.count)
-                assertEquals(1, metrics.successTasks.count)
+                assertEquals(1, metrics.fetchTasks.count)
+                assertEquals(1, metrics.successFetchTasks.count)
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }
 
-            onAfterLoad.addLast { page ->
+            onLoaded.addLast { page ->
                 firedEvents.add("onAfterLoad")
 
                 assertTrue { page.protocolStatus.isSuccess }
@@ -59,8 +60,8 @@ class TestEvents : TestBase() {
 
                 assertTrue { page.options.persist }
 
-                assertEquals(1, metrics.tasks.count)
-                assertEquals(1, metrics.successTasks.count)
+                assertEquals(1, metrics.fetchTasks.count)
+                assertEquals(1, metrics.successFetchTasks.count)
                 assertEquals(1, metrics.persists.counter.count)
                 assertEquals(0, metrics.persistContentMBytes.counter.count)
             }

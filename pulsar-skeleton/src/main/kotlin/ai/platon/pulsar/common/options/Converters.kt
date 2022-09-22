@@ -51,7 +51,7 @@ enum class ItemExtractor {
     DEFAULT, BOILERPIPE;
 
     override fun toString(): String {
-        return name.toLowerCase()
+        return name.lowercase(Locale.getDefault())
     }
 
     companion object {

@@ -22,13 +22,13 @@ class UrlFeeder(
         .apply { name = "DelayCC#Delay" }
 
     val loadingIterable =
-        ConcurrentLoadingIterable(CombinedDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
+        ConcurrentLoadingIterable(ChainedDataCollector(), realTimeCollector, delayCollector, lowerCacheSize)
     val cacheSize get() = loadingIterable.cacheSize
 
-    private val combinedDataCollector get() = loadingIterable.regularCollector as CombinedDataCollector
+    private val chainedDataCollector get() = loadingIterable.regularCollector as ChainedDataCollector
 
     val openCollectors: Collection<PriorityDataCollector<UrlAware>>
-        get() = combinedDataCollector.collectors
+        get() = chainedDataCollector.collectors
 
     val collectors: List<PriorityDataCollector<UrlAware>>
         get() = mutableListOf<PriorityDataCollector<UrlAware>>().also {
@@ -89,7 +89,7 @@ class UrlFeeder(
     }
 
     fun addDefaultCollectors(): UrlFeeder {
-        combinedDataCollector.collectors.removeIf { it is UrlCacheCollector }
+        chainedDataCollector.collectors.removeIf { it is UrlCacheCollector }
         urlPool.orderedCaches.values.forEach { urlCache ->
             addCollector(UrlCacheCollector(urlCache).apply { name = "FCC.$id" })
         }
@@ -97,43 +97,43 @@ class UrlFeeder(
     }
 
     fun addCollector(collector: PriorityDataCollector<UrlAware>): UrlFeeder {
-        combinedDataCollector.collectors += collector
+        chainedDataCollector.collectors += collector
         return this
     }
 
     fun addCollectors(collectors: Iterable<PriorityDataCollector<UrlAware>>): UrlFeeder {
-        combinedDataCollector.collectors += collectors
+        chainedDataCollector.collectors += collectors
         return this
     }
 
-    fun getCollectors(name: String): List<PriorityDataCollector<UrlAware>> {
-        return combinedDataCollector.collectors.filter { it.name == name }
+    fun findByName(name: String): List<PriorityDataCollector<UrlAware>> {
+        return chainedDataCollector.collectors.filter { it.name == name }
     }
 
-    fun getCollectors(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
-        return combinedDataCollector.collectors.filter { it.name in names }
+    fun findByName(names: Iterable<String>): List<PriorityDataCollector<UrlAware>> {
+        return chainedDataCollector.collectors.filter { it.name in names }
     }
 
-    fun getCollectors(regex: Regex): List<PriorityDataCollector<UrlAware>> {
-        return combinedDataCollector.collectors.filter { it.name.matches(regex) }
+    fun findByName(regex: Regex): List<PriorityDataCollector<UrlAware>> {
+        return chainedDataCollector.collectors.filter { it.name.matches(regex) }
     }
 
-    fun getCollectorsLike(name: String): List<PriorityDataCollector<UrlAware>> {
-        return getCollectors(".*$name.*".toRegex())
+    fun findByNameLike(name: String): List<PriorityDataCollector<UrlAware>> {
+        return findByName(".*$name.*".toRegex())
     }
 
     fun remove(collector: DataCollector<UrlAware>): Boolean {
-        return combinedDataCollector.collectors.remove(collector)
+        return chainedDataCollector.collectors.remove(collector)
     }
 
     fun removeAll(collectors: Collection<DataCollector<UrlAware>>): Boolean {
-        return combinedDataCollector.collectors.removeAll(collectors)
+        return chainedDataCollector.collectors.removeAll(collectors)
     }
 
     fun clear() {
         loadingIterable.clear()
         realTimeCollector.urlCache.clear()
         delayCollector.queue.clear()
-        combinedDataCollector.clear()
+        chainedDataCollector.clear()
     }
 }

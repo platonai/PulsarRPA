@@ -61,7 +61,6 @@ class WebDb(
      * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
-     *
      */
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
@@ -74,8 +73,11 @@ class WebDb(
         accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
 
         if (page != null) {
-            tracer?.trace("Got $key")
-            return WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+
+            tracer?.trace("Got ${p.fetchCount} ${p.prevFetchTime} ${p.fetchTime} $key")
+
+            return p
         }
 
         return null
@@ -126,7 +128,7 @@ class WebDb(
             dataStore.delete(key)
         }
 
-        tracer?.trace("Putting $key")
+        tracer?.trace("Putting ${page.fetchCount} ${page.prevFetchTime} ${page.fetchTime} $key")
 
         val startTime = System.nanoTime()
         dataStore.put(key, page.unbox())

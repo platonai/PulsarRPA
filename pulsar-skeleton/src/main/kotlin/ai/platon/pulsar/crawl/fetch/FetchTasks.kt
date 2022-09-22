@@ -75,6 +75,7 @@ class FetchTask constructor(
     val state = AtomicReference(State.NOT_READY)
 
     var proxyEntry: ProxyEntry? = null
+    val createdTime = Instant.now()
 
     val url get() = page.url
     val href get() = page.href
@@ -149,7 +150,7 @@ class FetchResult(
     operator fun component2() = response
     operator fun component3() = exception
 
-    val status get() = response.status
+    val status get() = response.protocolStatus
     val isSuccess get() = status.isSuccess
     val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
     val isCrawlRetry get() = status.isRetry(RetryScope.CRAWL)

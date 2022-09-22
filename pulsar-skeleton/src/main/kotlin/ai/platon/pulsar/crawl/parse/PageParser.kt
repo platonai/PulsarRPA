@@ -22,13 +22,13 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.persist.ext.loadEventHandler
+import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
@@ -117,7 +117,6 @@ class PageParser(
                 updateCounters(parseResult)
 
                 if (parseResult.isSuccess) {
-                    messageWriter?.debugExtractedFields(page)
                     page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
                 }
             }
@@ -150,7 +149,7 @@ class PageParser(
         }
 
         return try {
-            beforeParse(page)
+            onWillParse(page)
             applyParsers(page)
         } catch (e: ParserNotFound) {
             unparsableTypes.add(page.contentType)
@@ -160,23 +159,23 @@ class PageParser(
             LOG.warn("Failed to parse | ${page.configuredUrl}", e)
             return ParseResult.failed(e)
         } finally {
-            afterParse(page)
+            onParsed(page)
         }
     }
 
-    private fun beforeParse(page: WebPage) {
+    private fun onWillParse(page: WebPage) {
         try {
-            page.loadEventHandler?.onBeforeParse?.invoke(page)
+            page.loadEvent?.onWillParse?.invoke(page)
         } catch (e: Throwable) {
-            LOG.warn("Failed to invoke beforeParser handler", e)
+            LOG.warn("[onWillParse]", e)
         }
     }
 
-    private fun afterParse(page: WebPage) {
+    private fun onParsed(page: WebPage) {
         try {
-            page.loadEventHandler?.onAfterParse?.invoke(page)
+            page.loadEvent?.onParsed?.invoke(page)
         } catch (e: Throwable) {
-            LOG.warn("Failed to invoke afterParser handler", e)
+            LOG.warn("[onParsed]", e)
         }
     }
 
@@ -203,8 +202,8 @@ class PageParser(
             }
             parseResult.parsers.add(parser::class)
 
-            if (log.isDebugEnabled && millis > 10_000) {
-                val m = page.pageModel
+            val m = page.pageModel
+            if (log.isDebugEnabled && millis > 10_000 && m != null) {
                 log.debug("It takes {} to parse {}/{}/{} fields | {}", Duration.ofMillis(millis).readable(),
                         m.numNonBlankFields, m.numNonNullFields, m.numFields, page.url)
             }
@@ -214,6 +213,7 @@ class PageParser(
                 break
             }
         }
+
         return parseResult
     }
 
@@ -246,7 +246,7 @@ class PageParser(
      * */
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
-        val newUrl = crawlFilters.normalizeToNull(refreshHref, CrawlUrlNormalizers.SCOPE_FETCHER)?:return
+        val newUrl = crawlFilters.normalizeToNull(refreshHref, ChainedUrlNormalizer.SCOPE_FETCHER)?:return
 
         page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING

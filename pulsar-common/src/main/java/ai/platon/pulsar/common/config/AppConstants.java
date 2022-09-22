@@ -122,6 +122,8 @@ public interface AppConstants {
     String FILE_BACKEND_STORE_CLASS = "ai.platon.pulsar.persist.gora.FileBackendPageStore";
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
+    // schema version 1.10.x
+    String WEBPAGE_SCHEMA = "webpage110";
 
     /**
      * Fetch

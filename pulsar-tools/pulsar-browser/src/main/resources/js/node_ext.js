@@ -6,7 +6,7 @@
  * @param attrValue {String}
  * */
 Node.prototype.__pulsar_setAttributeIfNotBlank = function(attrName, attrValue) {
-    if (this.__pulsar_isElement() && attrValue && attrValue.trim().length > 0) {
+    if (this instanceof HTMLElement && attrValue && attrValue.trim().length > 0) {
         this.setAttribute(attrName, attrValue.trim())
     }
 };
@@ -49,6 +49,29 @@ Node.prototype.__pulsar_forEachElement = function(action) {
         }
     };
     new __pulsar_NodeTraversor(visitor).traverse(this);
+};
+
+/**
+ * @param pattern The pattern to match
+ * @return {Element|null}
+ * */
+Node.prototype.__pulsar_findMatches = function(pattern) {
+    let visitor = {};
+
+    let result = null
+    visitor.head = function (node, depth) {
+        if (node instanceof HTMLElement) {
+            let text = node.textContent
+            if (text.match(pattern)) {
+                result = node
+                visitor.stopped = true
+            }
+        }
+    };
+
+    new __pulsar_NodeTraversor(visitor).traverse(this);
+
+    return result
 };
 
 /**

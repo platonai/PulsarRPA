@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.crawl.filter.CrawlUrlNormalizers
+import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,6 +93,6 @@ class TestBasicUrlNormalizer {
 
     @Throws(Exception::class)
     private fun normalizeTest(weird: String, normal: String) {
-        Assert.assertEquals(normal, normalizer!!.normalize(weird, CrawlUrlNormalizers.SCOPE_DEFAULT))
+        Assert.assertEquals(normal, normalizer!!.normalize(weird, ChainedUrlNormalizer.SCOPE_DEFAULT))
     }
 }

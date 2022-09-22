@@ -58,9 +58,6 @@ class NormUrlTests {
     }
 
     private fun assertNormUrl(url: String, args: String, configuredUrl: String, normUrl: NormUrl) {
-        assertFalse(normUrl.isEmpty)
-        assertTrue(normUrl.isNotEmpty)
-
         assertEquals(url, normUrl.url.toString())
         assertEquals(url, normUrl.spec)
         assertEquals(configuredUrl, normUrl.configuredUrl)

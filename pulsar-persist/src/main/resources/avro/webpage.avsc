@@ -4,6 +4,11 @@
   "namespace": "ai.platon.pulsar.persist.gora.generated",
   "fields": [
     {
+      "name": "baseUrl",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
       "name": "createTime",
       "type": "long",
       "default": 0
@@ -34,7 +39,7 @@
       "default": null
     },
     {
-      "name": "options",
+      "name": "params",
       "type": ["null","string"],
       "default": null
     },
@@ -44,9 +49,24 @@
       "default": null
     },
     {
+      "name": "resource",
+      "type": ["null","int"],
+      "default": null
+    },
+    {
       "name": "crawlStatus",
       "type": "int",
       "default": 0
+    },
+    {
+      "name": "browser",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "proxy",
+      "type": ["null","string"],
+      "default": null
     },
     {
       "name": "prevFetchTime",
@@ -117,12 +137,32 @@
       "default": null
     },
     {
-       "name": "baseUrl",
-       "type": ["null","string"],
-       "default": null
+      "name": "contentLength",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "lastContentLength",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "aveContentLength",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "persistedContentLength",
+      "type": "long",
+      "default": 0
     },
     {
       "name": "referrer",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "htmlIntegrity",
       "type": ["null","string"],
       "default": null
     },
@@ -214,6 +254,11 @@
       "default": 0
     },
     {
+      "name": "pageModelUpdateTime",
+      "type": "long",
+      "default": 0
+    },
+    {
       "name": "prevSignature",
       "type": ["null","bytes"],
       "default": null
@@ -254,6 +299,11 @@
       "default": []
     },
     {
+      "name": "deadLinks",
+      "type" : { "type" : "array", "items" : "string"},
+      "default": []
+    },
+    {
       "name": "liveLinks",
       "type": {
         "type": "map",
@@ -278,11 +328,6 @@
       "default": {}
     },
     {
-      "name": "deadLinks",
-      "type" : { "type" : "array", "items" : "string"},
-      "default": []
-    },
-    {
       "name": "inlinks",
       "type": {"type": "map","values": ["null","string"]},
       "default": {}
@@ -298,16 +343,11 @@
       "default": {}
     },
     {
-      "name": "activeDomUrls",
-      "type": {"type": "map","values": ["null","string"]},
-      "default": {}
-    },
-    {
-      "name": "activeDomStatus",
+      "name": "activeDOMStatus",
       "type": [
         "null",
         {
-          "name": "GActiveDomStatus",
+          "name": "GActiveDOMStatus",
           "type": "record",
           "namespace": "ai.platon.pulsar.persist.gora.generated",
           "fields": [
@@ -323,12 +363,12 @@
       "default": null
     },
     {
-      "name": "activeDomStats",
+      "name": "activeDOMStatTrace",
       "type": {
         "type": "map",
         "values": ["null",
             {
-              "name": "GActiveDomStat",
+              "name": "GActiveDOMStat",
               "type": "record",
               "namespace": "ai.platon.pulsar.persist.gora.generated",
               "fields" : [
@@ -346,21 +386,35 @@
     },
     {
       "name": "pageModel",
-      "type": {
-        "type": "array",
-        "items": {
-          "name": "GFieldGroup",
+      "type": [
+        "null",
+        {
+          "name": "GPageModel",
           "type": "record",
           "namespace": "ai.platon.pulsar.persist.gora.generated",
-          "fields" : [
-            {"name": "id", "type": "long", "default": 0},
-            {"name": "parentId", "type": "long", "default": 0},
-            {"name": "name", "type": ["null", "string"], "default": null},
-            {"name": "fields","type": {"type": "map","values": ["null","string"]},"default": {}}
+          "fields": [
+            {
+              "name": "fieldGroups",
+              "type": {
+                "type": "array",
+                "items": {
+                  "name": "GFieldGroup",
+                  "type": "record",
+                  "namespace": "ai.platon.pulsar.persist.gora.generated",
+                  "fields" : [
+                    {"name": "id", "type": "long", "default": 0},
+                    {"name": "parentId", "type": "long", "default": 0},
+                    {"name": "name", "type": ["null", "string"], "default": null},
+                    {"name": "fields","type": {"type": "map","values": ["null","string"]},"default": {}}
+                  ]
+                }
+              },
+              "default": []
+            }
           ]
         }
-      },
-      "default": []
+      ],
+      "default": null
     }
   ]
 }

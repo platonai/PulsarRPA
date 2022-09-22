@@ -3,7 +3,6 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
 import ai.platon.pulsar.common.urls.UrlUtils
-import ai.platon.pulsar.crawl.ExpressionSimulateEventHandler
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
@@ -57,21 +56,6 @@ object DomFunctions {
         val session = sqlContext.getSession(h2session.serialId)
         val normUrl = session.normalize(configuredUrl).apply { options.expires = Duration.ZERO }
         return session.parseValueDom(session.load(normUrl))
-    }
-
-    @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
-    @JvmStatic
-    fun fetchAndEvaluate(@H2Context conn: Connection, configuredUrl: String, expressions: String): ValueDom {
-        if (!sqlContext.isActive) return ValueDom.NIL
-
-        val h2session = H2SessionFactory.getH2Session(conn)
-
-        return sqlContext.getSession(h2session).run {
-            val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
-            val eventHandler = ExpressionSimulateEventHandler("", expressions)
-            normUrl.options.conf.putBean(eventHandler)
-            parseValueDom(load(normUrl))
-        }
     }
 
     /**

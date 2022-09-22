@@ -24,7 +24,8 @@ class ChromeWebDriverTests: TestBase() {
     private val url = "https://www.amazon.com/dp/B00BTX5926"
     private val asin = url.substringAfterLast("/dp/")
     private val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    private val confuser get() = BrowserSettings.confuser
+    private val settings = BrowserSettings()
+    private val confuser get() = settings.confuser
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
         "02acrPopover" to "#acrPopover",
@@ -43,6 +44,21 @@ class ChromeWebDriverTests: TestBase() {
     private val screenshotDir = AppPaths.WEB_CACHE_DIR
         .resolve("tests")
         .resolve("screenshot")
+
+    @Test
+    fun `Ensure js injected`() {
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(url, driver, 1)
+
+            val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
+            println(r)
+            assertEquals(2, r)
+
+            driver.close()
+        }
+    }
 
     @Test
     fun `Ensure no injected js variables are seen`() {
@@ -226,6 +242,27 @@ class ChromeWebDriverTests: TestBase() {
 
             driver.stop()
         }
+    }
+
+    @Test
+    fun testDragAndHold() {
+        val walmartUrl = "https://www.walmart.com/ip/584284401"
+        // 2022.09.06:
+        // override the user agent, and walmart shows robot check page.
+        BrowserSettings.enableUserAgentOverriding()
+        val driver = driverFactory.create()
+
+        runBlocking {
+            open(walmartUrl, driver)
+
+            driver.waitForNavigation()
+            driver.waitForSelector("body")
+
+            val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
+            println(result)
+        }
+
+        readLine()
     }
 
     private suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 5) {
