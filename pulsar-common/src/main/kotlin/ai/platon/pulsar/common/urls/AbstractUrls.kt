@@ -34,9 +34,9 @@ abstract class AbstractUrl(
 
     override val label: String get() = OptionUtils.findOption(args, listOf("-l", "-label", "--label")) ?: ""
 
-    override val deadTime: Instant
+    override val deadline: Instant
         get() {
-            val deadTime = OptionUtils.findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
+            val deadTime = OptionUtils.findOption(args, listOf("-deadline", "-deadTime", "--dead-time")) ?: ""
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
         }
 

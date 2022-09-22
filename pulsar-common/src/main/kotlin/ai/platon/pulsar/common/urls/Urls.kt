@@ -52,12 +52,12 @@ interface UrlAware {
     val configuredUrl: String
 
     /**
-     * If true, the url is a standard URL and can be converted to a java.Util.URL
+     * If true, the url is a standard URL and can be converted to a [java.net.URL]
      * */
     val isStandard: Boolean
 
     /**
-     * Converted to a java.Util.URL
+     * Converted to a [java.net.URL]
      * */
     @get:Throws(MalformedURLException::class)
     val toURL: URL
@@ -83,9 +83,15 @@ interface UrlAware {
     val label: String
 
     /**
-     * The url label, it should be a shortcut for -deadTime option in args
+     * The deadline, it should be a shortcut for -deadline option in args
      * */
-    val deadTime: Instant
+    val deadline: Instant
+
+    /**
+     * The deadline, it should be a shortcut for -deadline option in args
+     * */
+    @Deprecated("Inappropriate name", ReplaceWith("deadline"))
+    val deadTime: Instant get() = deadline
 
     /**
      * Required website language

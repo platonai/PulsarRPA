@@ -159,12 +159,7 @@ public interface CapabilityTypes {
 
     String INJECT_WATCH = "inject.watch";
 
-    String INJECT_SCORE = "db.score.injected";
-
-    /**
-     * Query engine parameters
-     */
-    String QE_HANDLE_PERIODICAL_FETCH_TASKS = "query.engine.handle.periodical.fetch.tasks";
+    String INJECT_SCORE = "inject.score";
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
 

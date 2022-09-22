@@ -76,9 +76,11 @@ object UrlUtils {
      * @return The normalized URL
      * @throws URISyntaxException
      *         If the given string violates RFC&nbsp;2396
+     * @throws MalformedURLException
+     * @throws IllegalArgumentException
      * */
     @JvmStatic
-    @Throws(URISyntaxException::class)
+    @Throws(URISyntaxException::class, IllegalArgumentException::class, MalformedURLException::class)
     fun normalize(url: String, ignoreQuery: Boolean = false): URL {
         val (url0, _) = splitUrlArgs(url)
 
@@ -113,7 +115,7 @@ object UrlUtils {
     fun normalizeOrEmpty(url: String, ignoreQuery: Boolean = false): String {
         return try {
             normalize(url, ignoreQuery).toString()
-        } catch (e: URISyntaxException) {
+        } catch (e: Exception) {
             ""
         }
     }
@@ -141,7 +143,7 @@ object UrlUtils {
     fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
         return try {
             normalize(url, ignoreQuery).toString()
-        } catch (e: URISyntaxException) {
+        } catch (e: Exception) {
             null
         }
     }

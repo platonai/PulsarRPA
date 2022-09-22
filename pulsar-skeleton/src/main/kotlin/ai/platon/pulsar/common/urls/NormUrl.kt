@@ -10,7 +10,7 @@ import java.net.URL
  * A normalized url.
  *
  * Every NormUrl contains two urls: url and href, url stands for Uniform Resource Locator,
- * both for external webpage and internal database, and href stands for Hyperlink Reference,
+ * both for external webpage and internal database record, and href stands for Hyperlink Reference,
  * which is a url extracted from a HTML document.
  *
  * The href is the first choice to locate a resource, because it's
