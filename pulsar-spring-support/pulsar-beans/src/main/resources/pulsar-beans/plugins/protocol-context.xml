@@ -42,7 +42,6 @@
     </bean>
 
     <bean id="browserResponseHandlerFactory" class="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandlerFactory">
-        <constructor-arg ref="driverPoolManager"/>
         <constructor-arg ref="conf"/>
     </bean>
 
