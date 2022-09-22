@@ -188,7 +188,7 @@ open class CompletableHyperlink<T>(
      * */
     override var nMaxRetry: Int = 3
 
-    override val deadTime: Instant
+    override val deadline: Instant
         get() {
             val deadTime = OptionUtils.findOption(args, listOf("-deadTime", "--dead-time")) ?: ""
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday

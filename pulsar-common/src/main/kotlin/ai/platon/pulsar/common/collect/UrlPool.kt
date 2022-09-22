@@ -140,7 +140,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
         orderedCaches.values.forEach { it.removeDeceased() }
         unorderedCaches.forEach { it.removeDeceased() }
         val now = Instant.now()
-        delayCache.removeIf { it.url.deadTime < now }
+        delayCache.removeIf { it.url.deadline < now }
     }
 
     override fun clear() {

@@ -79,7 +79,7 @@ abstract class AbstractUrlCache(
 ) : UrlCache {
     override fun removeDeceased() {
         val now = Instant.now()
-        queues.forEach { it.removeIf { it.deadTime < now } }
+        queues.forEach { it.removeIf { it.deadline < now } }
     }
 
     override fun clear() {
