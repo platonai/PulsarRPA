@@ -158,6 +158,7 @@ open class FetchComponent(
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
         val protocolStatus = output.protocolStatus
         if (protocolStatus.isCanceled) {
+            page.isCanceled = true
             return page
         }
 

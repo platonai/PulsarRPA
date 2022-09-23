@@ -109,11 +109,12 @@ open class BrowserResponseHandlerImpl(
         // chrome can not connect to the peer, it probably be caused by a bad proxy
         // convert to retry in PRIVACY_CONTEXT later
         val status = when (ec) {
+            null -> ProtocolStatus.retry(RetryScope.PRIVACY, "Unknown error")
             BrowserError.CONNECTION_TIMED_OUT -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
             BrowserError.EMPTY_RESPONSE -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
             else -> {
                 // unexpected exception
-                ProtocolStatus.retry(RetryScope.CRAWL, ec ?: "Unknown error")
+                ProtocolStatus.retry(RetryScope.PRIVACY, ec)
             }
         }
 
@@ -121,6 +122,7 @@ open class BrowserResponseHandlerImpl(
     }
 
     override fun createProtocolStatusForBrokenContent(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
+        // RetryScope.PRIVACY requires a privacy context leak warning while RetryScope.CRAWL does not
         return when {
             // should cancel all running tasks and reset the privacy context and then re-fetch them
             htmlIntegrity.isRobotCheck || htmlIntegrity.isRobotCheck2 || htmlIntegrity.isRobotCheck3 ->

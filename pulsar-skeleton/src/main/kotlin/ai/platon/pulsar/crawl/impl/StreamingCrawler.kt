@@ -429,6 +429,10 @@ open class StreamingCrawler(
     }
 
     private fun collectStatAfterLoad(page: WebPage) {
+        if (page.isCanceled) {
+            return
+        }
+
         lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
         if (!page.protocolStatus.isSuccess) {
             return
@@ -452,6 +456,7 @@ open class StreamingCrawler(
         when {
             !isActive -> return
             page == null -> handleRetry0(url, page)
+            page.isCanceled -> handleRetry0(url, page)
             page.protocolStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {

@@ -53,6 +53,20 @@ class FetchStatusFormatter(val page: WebPage) {
     }
 }
 
+private enum class UnicodeSymbols(val value: String) {
+    CANCELLATION_X("\uD83D\uDDD9"), // 'CANCELLATION X' (U+1F5D9)
+    LIGHTNING("⚡"), // fetched new
+    RELOAD("⟳"), // fetched updated, clockwise gaped circle arrow
+    HOT_BEVERAGE("☕"), // hot beverage, cached
+    HARD_DRIVER("\uD83D\uDDB4"), // hard driver symbol
+    BUG("\uD83D\uDC1B"),
+    SCROE100("\uD83D\uDCAF"),
+    BROKEN_HEART("\uD83D\uDC94")
+    ;
+
+    override fun toString() = value
+}
+
 class LoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
@@ -85,66 +99,78 @@ class LoadStatusFormatter(
 
     private val fetchReason get() = buildFetchReason()
     private val prefix01 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "⚡" // fetched new
-        page.isFetched -> "⟳"  // fetched updated, clockwise gapped circle arrow
-        page.isCached -> "☕"   // load from cache, hot beverage
-        page.isLoaded -> "\uD83D\uDDB4"   // load from db, hard driver symbol
-        else -> "\uD83D\uDC1B"  // BUG symbol
+        page.isCanceled -> UnicodeSymbols.CANCELLATION_X // canceled
+        page.isFetched && page.fetchCount == 1 -> UnicodeSymbols.LIGHTNING // fetched new
+        page.isFetched -> UnicodeSymbols.RELOAD // fetched, reload
+        page.isCached -> UnicodeSymbols.HOT_BEVERAGE // cached
+        page.isLoaded -> UnicodeSymbols.HARD_DRIVER   // load from db
+        else -> UnicodeSymbols.BUG  // BUG symbol
     }
     private val prefix02 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "New ⚡"
-        page.isFetched -> "Updated ⟳" // fetched updated, clockwise gapped circle arrow
-        page.isCached -> "Cached ☕"  // load from cache, hot beverage
-        page.isLoaded -> "Loaded \uD83D\uDDB4" // load from db, hard driver symbol
-        else -> "Unknown \uD83D\uDC1B" // BUG symbol
+        page.isCanceled -> "Canceled ${UnicodeSymbols.CANCELLATION_X}" // 'CANCELLATION X' (U+1F5D9)
+        page.isFetched && page.fetchCount == 1 -> "New ${UnicodeSymbols.LIGHTNING}"
+        page.isFetched -> "Updated ${UnicodeSymbols.RELOAD}" // fetched updated, clockwise gaped circle arrow
+        page.isCached -> "Cached ${UnicodeSymbols.HOT_BEVERAGE}"  // load from cache, hot beverage
+        page.isLoaded -> "Loaded ${UnicodeSymbols.HARD_DRIVER}" // load from db, hard driver symbol
+        else -> "Unknown ${UnicodeSymbols.BUG}" // BUG symbol
     }
-    private val prefix0: String get() {
-        return when {
-            page.id < verboseCount && page.id % 10 == 0 -> prefix02
-            page.id > verboseCount && page.id % verboseCount == 0 -> prefix02
-            else -> prefix01
-        }
+    private val prefix0: String get() = when {
+        page.id < verboseCount && page.id % 10 == 0 -> prefix02
+        page.id > verboseCount && page.id % verboseCount == 0 -> prefix02
+        else -> prefix01.toString()
     }
-    private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
-    private val successSymbol get() = if (protocolStatus.isSuccess) "\uD83D\uDCAF " else "\uD83D\uDC94 " // 100 score/broken heart
+    private val prefixSymbol get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
+    private val successSymbol: String get() = when {
+        page.isCanceled -> "${UnicodeSymbols.CANCELLATION_X} " // 'CANCELLATION X' (U+1F5D9)
+        protocolStatus.isSuccess -> "${UnicodeSymbols.SCROE100} " // 100 score
+        else -> "${UnicodeSymbols.BROKEN_HEART} " // broken heart
+    }
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
     private val category get() = page.pageCategory.symbol()
     private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
     private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
-    private val prevFetchTimeReport: String
-        get() {
-            if (prevFetchTimeDuration.toDays() > 20 * 360) {
-                return ""
-            }
-            return " last fetched ${prevFetchTimeDuration.readable()} ago,"
-        }
-    private val fieldCount: String
-        get() {
-            val model = m
-            return when {
-                model == null -> ""
-                model.numFields == 0 -> ""
-                else -> String.format("%d/%d/%d", model.numNonBlankFields, model.numNonNullFields, model.numFields)
-            }
-        }
-
+    private val prevFetchTimeReport: String get() = when {
+        prevFetchTimeDuration.toDays() > 20 * 360 -> ""
+        else -> " last fetched ${prevFetchTimeDuration.readable()} ago,"
+    }
+    private val fieldCount: String get() = when {
+        m == null -> ""
+        m?.numFields == 0 -> ""
+        else -> String.format("%d/%d/%d", m?.numNonBlankFields?:0, m?.numNonNullFields?:0, m?.numFields?:0)
+    }
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
-    private val fetchCount get() =
-        if (page.fetchRetries > 0) {
-            String.format("%d/%d", page.fetchRetries, page.fetchCount)
-        } else {
-            String.format("%d", page.fetchCount)
-        }
+    private val fetchCount get() = when {
+        page.fetchRetries > 0 -> String.format("%d/%d", page.fetchRetries, page.fetchCount)
+        else -> String.format("%d", page.fetchCount)
+    }
     private val fieldCountFmt get() = if (m == null || m?.numFields == 0) "%s" else " | nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
-    private val fmt get() = "%3d. $successSymbol$prefix1 %s $fetchReason got %d %s in %s," +
+    private val fmt get() = "%3d. $successSymbol$prefixSymbol %s $fetchReason got %d %s in %s," +
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
+
+    data class Record(
+        val name: String,
+        val value: Any,
+        val prefix: String = "",
+        val postfix: String = "",
+        val width: Int = 0,
+    )
+
+    fun explain() {
+        listOf(
+            Record("id", page.id, width = 3),
+            Record("successSymbol", successSymbol, width = 1),
+            Record("prefix", prefixSymbol),
+            Record("minorCode", page.protocolStatus.minorCode),
+            Record("fetchReason", fetchReason, width = 1),
+        )
+    }
 
     override fun toString(): String {
         return String.format(fmt,

@@ -260,9 +260,11 @@ class LoadingWebDriverPool(
 
     private fun doClose(timeToWait: Duration) {
         _freeDrivers.clear()
+        _onlineDrivers.forEach { it.cancel() }
+        _onlineDrivers.clear()
 
-        val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
-        nonSynchronized.forEach { it.cancel() }
+//        val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
+//        nonSynchronized.forEach { it.cancel() }
 
         // TODO: should we wait or close drivers immediately?
 //        waitUntilIdle(timeToWait)
