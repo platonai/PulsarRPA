@@ -106,11 +106,13 @@ class WebDriverContext(
 
         waitUntilNoRunningTasks(Duration.ofSeconds(10))
 
+        val isShutdown = if (isActive) "" else " (shutdown)"
+        val display = browserId.display
         if (runningTasks.isNotEmpty()) {
-            logger.info("Still {} running tasks after context close | {}",
-                runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
+            logger.info("Still {} running tasks after context close$isShutdown | {} | {}",
+                runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" }, display)
         } else {
-            logger.info("Web driver context is closed successfully | {}", browserId)
+            logger.info("Web driver context is closed successfully$isShutdown | {} | {}", display, browserId)
         }
     }
 
@@ -157,13 +159,14 @@ class WebDriverContext(
             lock.unlock()
         }
 
-        val ident = browserId.ident
+        val isShutdown = if (isActive) "" else " (shutdown)"
+        val display = browserId.display
         val message = when {
             availableMemory < memoryToReserve ->
-                String.format("Low memory (%.2fGiB), close %d retired browsers immediately | $ident",
+                String.format("Low memory (%.2fGiB), close %d retired browsers immediately$isShutdown | $display",
                     ByteUnit.BYTE.toGiB(availableMemory.toDouble()), runningTasks.size)
-            n == 0L -> String.format("Timeout (still %d running tasks) | $ident", runningTasks.size)
-            n < timeout.seconds -> String.format("All tasks return in %d seconds | $ident", timeout.seconds - n)
+            n == 0L -> String.format("Timeout (still %d running tasks)$isShutdown | $display", runningTasks.size)
+            n < timeout.seconds -> String.format("All tasks return in %d seconds$isShutdown | $display", timeout.seconds - n)
             else -> ""
         }
 

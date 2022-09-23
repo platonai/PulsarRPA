@@ -13,9 +13,9 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -111,6 +111,21 @@ open class WebDriverPoolManager(
     suspend fun <R> run(task: WebDriverTask<R>): R? {
         lastActiveTime = Instant.now()
         return run0(task).also { lastActiveTime = Instant.now() }
+    }
+
+    /**
+     * TODO: set a cancelable point here, if the system shutdown, cancel all coroutines
+     * */
+    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    suspend fun <R> runCancelable(task: WebDriverTask<R>): R? {
+        val deferred = supervisorScope {
+            async { run(task) }
+        }
+
+        // call on close
+        // deferred.cancel()
+
+        return deferred.await()
     }
 
     /**
