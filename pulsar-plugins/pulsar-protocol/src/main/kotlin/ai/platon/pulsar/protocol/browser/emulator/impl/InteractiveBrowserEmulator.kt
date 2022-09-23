@@ -234,7 +234,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
-//            val event = page.simulateEvent
+//            val event = page.browseEvent
 //            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
 
             /**
@@ -294,7 +294,7 @@ open class InteractiveBrowserEmulator(
         checkState(task, driver)
 
 //        listeners.notify(EventType.willNavigate, page, driver)
-//        val event = page.simulateEvent
+//        val event = page.browseEvent
 //        notify("onWillNavigate") { event?.onWillNavigate?.invoke(page, driver) }
 
         // href has the higher priority to locate a resource

@@ -227,19 +227,24 @@ Here is a typical RPA code snippet, which is required to collect data from top e
 ```kotlin
 val options = session.options(args)
 val event = options.event.browseEvent
-// Warp up the browser to avoid being blocked by the website,
-// or choose the global settings, such as your location.
 event.onBrowserLaunched.addLast { page, driver ->
+    // warp up the browser to avoid being blocked by the website,
+    // or choose the global settings, such as your location.
     warnUpBrowser(page, driver)
 }
 event.onWillFetch.addLast { page, driver ->
+    // have to visit a referrer page before we can visit the desired page
     waitForReferrer(page, driver)
+    // websites may prevent us from opening too many pages at a time, so we should open links one by one.
     waitForPreviousPage(page, driver)
 }
 event.onWillCheckDocumentState.addLast { page, driver ->
+    // wait for a special fields to appear on the page
     driver.waitForSelector("body h1[itemprop=name]")
+    // close the mask layer, it might be promotions, ads, or something else.
     driver.click(".mask-layer-close-button")
 }
+// visit the URL and trigger events
 session.load(url, options)
 ```
 
@@ -345,9 +350,9 @@ The response is as follows in json format:
 }
 ----
 
-== Usage: experience Pulsar in a executable jar
+== Usage: experience Pulsar with the executable jar
 
-We have released a standalone, executable jar, based on Pulsar. Download link:https://github.com/platonai/exotic#download[Exotic] and enjoy it with a single command line:
+We have released a standalone, executable jar, based on Pulsar. Download link:https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
 
     java -jar exotic-standalone.jar
 

@@ -104,7 +104,7 @@ and use [WebDriver] to archive such purpose.
 [source,kotlin]
 ----
 val options = session.options(args)
-options.event.simulateEvent.onDidDOMStateCheck.addLast { page, driver ->
+options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
   driver.scrollDown()
 }
 session.load(url, options)
