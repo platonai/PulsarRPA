@@ -139,6 +139,7 @@ open class InteractiveBrowserEmulator(
 
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
+        // TODO: page should not be modified in browser phrase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
 
         if (task.page.options.isDead()) {

@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
@@ -164,8 +165,9 @@ class MultiPrivacyContextManager(
         val warnings = privacyContext.privacyLeakWarnings.get()
         val status = result.status
         if (warnings > 0) {
+            val symbol = UnicodeEmoji.WARNING
             logger.info(
-                "Privacy leak warning {}/{} | {}#{} | {}. {}",
+                "$symbol Privacy leak warning {}/{} | {}#{} | {}. {}",
                 warnings, privacyContext.maximumWarnings,
                 privacyContext.sequence, privacyContext.display,
                 result.task.page.id, status

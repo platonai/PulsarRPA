@@ -20,3 +20,13 @@ open class WebDriverCancellationException(
 
     constructor(cause: Throwable?) : this(null, null, cause)
 }
+
+open class BrowserException(
+    message: String? = null,
+    cause: Throwable? = null
+): RuntimeException(message, cause) {
+
+    constructor(message: String?, cause: Throwable) : this(message, null, cause)
+
+    constructor(cause: Throwable?) : this(null, null, cause)
+}

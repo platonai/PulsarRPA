@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
@@ -564,7 +565,8 @@ open class StreamingCrawler(
 
         globalMetrics.retries.mark()
         if (page != null) {
-            val prefix = "Trying ${nextRetryNumber}th ${delay.readable()} later"
+            val symbol = UnicodeEmoji.FENCER
+            val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later"
             taskLogger.info("{}", LoadStatusFormatter(page, prefix = prefix))
         }
     }

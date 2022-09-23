@@ -70,8 +70,47 @@ class LoadStatusFormatter(
     private val proxy get() = page.proxy
     private val protocolStatus get() = page.protocolStatus
     private val activeDOMStatTrace = page.activeDOMStatTrace
-    private val m get() = page.pageModel
+    private val m = page.pageModel
 
+    private val taskStatusSymbol: String get() = when {
+        prefix.isNotBlank() -> ""
+        page.isCanceled -> "${UnicodeEmoji.CANCELLATION_X} "
+        protocolStatus.isFailed -> "${UnicodeEmoji.BROKEN_HEART} "
+        protocolStatus.isSuccess -> "${UnicodeEmoji.HUNDRED_POINTS} "
+        else -> "${UnicodeEmoji.SKULL_CROSSBONES} "
+    }
+    private val pageStatusSymbol get() = when {
+        page.isCanceled -> UnicodeEmoji.CANCELLATION_X // canceled
+        page.isFetched && page.fetchCount == 1 -> UnicodeEmoji.LIGHTNING // fetched new
+        page.isFetched -> UnicodeEmoji.CIRCLE_ARROW_1 // fetched, reload
+        page.isCached -> UnicodeEmoji.HOT_BEVERAGE // cached
+        page.isLoaded -> UnicodeEmoji.OPTICAL_DISC   // load from db
+        else -> UnicodeEmoji.BUG  // BUG symbol
+    }
+    private val pageStatusText get() = when {
+        page.isCanceled -> "Canceled"
+        page.isFetched && page.fetchCount == 1 -> "New"
+        page.isFetched -> "Updated"
+        page.isCached -> "Cached"
+        page.isLoaded -> "Loaded"
+        else -> "Unknown"
+    }
+    private val pageStatus: String get() = when {
+        page.id < verboseCount && page.id % 10 == 0 -> "$pageStatusText $pageStatusSymbol"
+        page.id > verboseCount && page.id % verboseCount == 0 -> "$pageStatusText $pageStatusSymbol"
+        else -> pageStatusSymbol.toString()
+    }
+    private val loadMessagePrefix get() = prefix.takeIf { it.isNotEmpty() } ?: pageStatus
+    private val category get() = page.pageCategory.symbol()
+    private val fetchReason get() = buildFetchReason()
+    private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
+    private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
+    private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
+    private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
+    private val prevFetchTimeReport: String get() = when {
+        prevFetchTimeDuration.toDays() > 20 * 360 -> ""
+        else -> " last fetched ${prevFetchTimeDuration.readable()} ago,"
+    }
     private val jsSate: String
         get() {
             val (ni, na, nnm, nst, w, h) = activeDOMStatTrace["lastStat"]?: ActiveDOMStat()
@@ -83,48 +122,10 @@ class LoadStatusFormatter(
                 String.format("$prefix%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
             } else ""
         }
-
-    private val fetchReason get() = buildFetchReason()
-    private val loadStatusSymbol get() = when {
-        page.isCanceled -> UnicodeEmoji.CANCELLATION_X // canceled
-        page.isFetched && page.fetchCount == 1 -> UnicodeEmoji.LIGHTNING // fetched new
-        page.isFetched -> UnicodeEmoji.CIRCLE_ARROW_1 // fetched, reload
-        page.isCached -> UnicodeEmoji.HOT_BEVERAGE // cached
-        page.isLoaded -> UnicodeEmoji.OPTICAL_DISC   // load from db
-        else -> UnicodeEmoji.BUG  // BUG symbol
-    }
-    private val loadStatusText get() = when {
-        page.isCanceled -> "Canceled"
-        page.isFetched && page.fetchCount == 1 -> "New"
-        page.isFetched -> "Updated"
-        page.isCached -> "Cached"
-        page.isLoaded -> "Loaded"
-        else -> "Unknown"
-    }
-    private val loadStatus: String get() = when {
-        page.id < verboseCount && page.id % 10 == 0 -> "$loadStatusText $loadStatusSymbol"
-        page.id > verboseCount && page.id % verboseCount == 0 -> "$loadStatusText $loadStatusSymbol"
-        else -> loadStatusSymbol.toString()
-    }
-    private val loadMessagePrefix get() = prefix.takeIf { it.isNotEmpty() } ?: loadStatus
-    private val successSymbol: String get() = when {
-        page.isCanceled -> "${UnicodeEmoji.CANCELLATION_X} " // 'CANCELLATION X' (U+1F5D9)
-        protocolStatus.isSuccess -> "${UnicodeEmoji.HUNDRED_POINTS} " // 100 score
-        else -> "${UnicodeEmoji.BROKEN_HEART} " // broken heart
-    }
-    private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
-    private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
-    private val category get() = page.pageCategory.symbol()
-    private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
-    private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
-    private val prevFetchTimeReport: String get() = when {
-        prevFetchTimeDuration.toDays() > 20 * 360 -> ""
-        else -> " last fetched ${prevFetchTimeDuration.readable()} ago,"
-    }
     private val fieldCount: String get() = when {
         m == null -> ""
-        m?.numFields == 0 -> ""
-        else -> String.format("%d/%d/%d", m?.numNonBlankFields?:0, m?.numNonNullFields?:0, m?.numFields?:0)
+        m.numFields == 0 -> ""
+        else -> String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     }
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
@@ -137,7 +138,7 @@ class LoadStatusFormatter(
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
-    private val fmt get() = "%3d. $successSymbol$loadMessagePrefix %s $fetchReason got %d %s in %s," +
+    private val fmt get() = "%3d. $taskStatusSymbol$loadMessagePrefix %s $fetchReason got %d %s in %s," +
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
 
@@ -152,7 +153,7 @@ class LoadStatusFormatter(
     fun explain() {
         listOf(
             Record("id", page.id, width = 3),
-            Record("successSymbol", successSymbol, width = 1),
+            Record("successSymbol", taskStatusSymbol, width = 1),
             Record("prefix", loadMessagePrefix),
             Record("minorCode", page.protocolStatus.minorCode),
             Record("fetchReason", fetchReason, width = 1),
