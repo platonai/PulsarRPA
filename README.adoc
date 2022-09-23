@@ -1,6 +1,6 @@
 = What is PulsarR?
 Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: Pulsar README
+3.0, July 29, 2022: PulsarR README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
@@ -11,7 +11,7 @@ English | link:README-CN.adoc[简体中文]
 
 PulsarR is the ultimate open source solution to scrape web data at scale.
 
-PulsarR [ˈpʌlsɑr] stands for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
+PulsarR [ˈpʌlsɑr] is short for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
 
 Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar has developed a range of cutting-edge technologies to solve this problem.
 
@@ -22,7 +22,7 @@ We also have a plan to release an advanced AI to automatically extract every fie
 == Features
 
 * Web spider: browser rendering, ajax data crawling
-* RPA: robotic process automation, mimic human behaviors, SPA crawling, or do something else awesome
+* RPA: robotic process automation, mimic human behaviors, SPA crawling, or do something else valuable
 * Simple API: single line of code to scrape, or single SQL to turn a website into a table
 * X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
 * Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
@@ -30,7 +30,7 @@ We also have a plan to release an advanced AI to automatically extract every fie
 * Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
 * Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
 * Large scale: fully distributed, designed for large scale crawling
-* Big data: various backend storage support: MongoDB/HBase/Gora
+* Big data: various backend storage support: Local File/MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
 
 == Get started
@@ -76,7 +76,6 @@ The core Pulsar concepts include the following:
 * RPA: stands for robotic process automation which is the only way to scrape modern webpages
 * Network As A Database: access the Web just like a local database
 * X-SQL: query the Web using SQL directly
-* Browser Rendering: fetch webpages using real browsers
 * Pulsar Session: a Pulsar session provides a set of simple, powerful and flexible APIs to do web scraping tasks
 * Web Driver: the web driver defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
 * URLs: a URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in Pulsar is defined as some form of URL
@@ -133,6 +132,8 @@ val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[hr
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // load, parse and scrape named fields
 val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+// load, parse and scrape named fields
+val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
@@ -142,10 +143,10 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 Most of our scrape methods accept a parameter called load options, or load arguments, to control how to load, fetch and scrape a webpage.
 
     -expires     // The expiry time of a page
-    -itemExpires // The expiry time of item pages in some batch scraping methods
-    -outLink     // The selector for out links to scrape
+    -itemExpires // The expiry time of item pages in batch scraping methods
+    -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Triger the parse phrase
+    -parse       // Enable the parse phrase
     -resource    // Fetch the url as a resource without browser rendering
 
 Check link:docs/concepts.adoc#_load_options[Load Options] for details.
@@ -214,6 +215,35 @@ public class ContinuousCrawler {
 ----
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+
+=== RPA
+
+As websites become more and more complicated, RPA has become the only way to collect data from some website, such as websites using Custom Font technology.
+
+Pulsar provides a convenient way to mimic real people during the lifecycle of a webpage, using web drivers to interact with the webpage: scrolling, typing, screen capturing, mouse dropping, clicking and more.
+
+Here is a typical RPA code snippet, which is required to collect data from top e-comm sites.
+
+```kotlin
+val options = session.options(args)
+val event = options.event.browseEvent
+// Warp up the browser to avoid being blocked by the server,
+// or choose the global settings, such as your location.
+event.onBrowserLaunched.addLast { page, driver ->
+    warnUpBrowser(page, driver)
+}
+event.onWillFetch.addLast { page, driver ->
+    waitForReferrer(page, driver)
+    waitForPreviousPage(page, driver)
+}
+event.onWillCheckDocumentState.addLast { page, driver ->
+    driver.waitForSelector("body h1[itemprop=name]")
+    driver.click(".mask-layer-close-button")
+}
+session.load(url, options)
+```
+
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin].
 
 === Use X-SQL to query the web
 

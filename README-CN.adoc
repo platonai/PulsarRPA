@@ -1,6 +1,6 @@
-= Pulsar 简介
+= PulsarR 简介
 Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: Pulsar README
+3.0, July 29, 2022: PulsarR README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
@@ -9,9 +9,11 @@ link:README.adoc[English] | 简体中文
 
 == 简介
 
-Pulsar 是大规模抓取 Web 数据的终极开源方案。
+PulsarR 是大规模抓取 Web 数据的终极开源方案。
 
-大规模提取 Web 数据非常困难。 #网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 提供了一系列高级特性来解决该问题。
+PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果与其他项目没有混淆，可以称为 Pulsar。
+
+大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 开发了一系列尖端技术来解决这个问题。
 
 Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
 
@@ -19,17 +21,17 @@ Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 S
 
 == 主要特性
 
-* 网络爬虫：浏览器渲染，ajax 数据采集
-* 高性能：高度优化，在单台机器上并行渲染数百个网页，并避免被屏蔽
-* 低成本：每天采集100,000浏览器渲染的电商网页，或者n * 10,000,000数据点，仅仅需要8核CPU和32G内存
-* 数据质量保证：智能重试，精确调度，网页数据生命周期管理
-* 大规模：完全分布式，为大规模采集设计
-* 简单API：一行代码进行采集，或者一行SQL将一个网站栏目转变为表格
-* X-SQL：扩展SQL来管理所有网页数据相关任务：网络爬虫，数据采集，网页内容挖掘，Web BI等
-* 机器人隐身：Web driver 隐身，IP轮换，隐私上下文轮换，永不被屏蔽
-* RPA：拟人行为，采集单网页应用（SPA），或者执行其他有趣的任务
-* 大数据：支持多种多样的底层存储，如本地文件，MongoDB/HBase/Gora等
-* 日志和指标：密切监控并记录每一个事件
+* 网络爬虫：浏览器渲染、ajax数据爬取
+* RPA：机器人流程自动化、模仿人类行为、采集单网页应用程序或执行其他有价值的任务
+* 简单的 API：一行代码抓取，或者一行 SQL 将整个网站栏目变成表格
+* X-SQL：扩展 SQL 来管理 Web 数据：网络爬取、数据采集、Web 内容挖掘、Web BI
+* 爬虫隐身：浏览器驱动隐身，IP 轮换，隐私上下文轮换，永远不会被屏蔽
+* 高性能：高度优化，单机并行渲染数百页而不被屏蔽
+* 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，或 n * 10,000,000 个数据点，仅需要 8 核 CPU/32G 内存
+* 数据量保证：智能重试、精准调度、Web数据生命周期管理
+* 大规模采集：完全分布式，专为大规模数据采集而设计
+* 大数据支持：支持各种后端存储：本地文件/MongoDB/HBase/Gora
+* 日志和指标：密切监控并记录每个事件
 
 == 开始
 
@@ -64,23 +66,24 @@ fun main() {
 }
 ----
 
-示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin].
+示例代码可以在这里找到：
+link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 == 核心概念
 
 Pulsar 的核心概念包括：
 
-* 网络数据采集（Web Scraping）
-* 网络即数据库（Network As A Database）
-* 自动提取（Auto Extract）
-* 浏览器渲染（Browser Rendering）
-* Pulsar 上下文（Pulsar Context）
-* Pulsar 会话（Pulsar Session）
-* 统一资源定位器（URLs）
-* 超链接（Hyperlinks）
-* 加载选项（Load Options）
-* 事件处理器（Event Handler）
-* X-SQL
+* 网络数据采集（Web Scraping）: 使用机器人从网站中提取内容和数据的过程
+* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决方案提供支持
+* RPA: 机器人流程自动化，这是抓取现代网页的唯一方法
+* 网络即数据库（Network As A Database）: 像访问本地数据库一样访问 Web
+* X-SQL: 直接使用 SQL 查询 Web
+* Pulsar Session: Pulsar session 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
+* Web Driver: Web 驱动定义了一个简洁的界面来访问和与网页交互，所有行为都经过优化以尽可能接近真实的人
+* URL: Pulsar 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。Pulsar 中的每个任务都被定义为某种形式的 URL
+* Hyperlink: Pulsar 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
+* Load Options: 加载选项或加载参数是影响 Pulsar 如何加载、获取和抓取网页的控制参数
+* Event Handler: 在网页的整个生命周期中捕获和处理事件
 
 点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] 查看详情。
 
@@ -128,12 +131,14 @@ val document2 = session.loadDocument(url, "-expires 1d")
 // 使用该文档做一些事情
 // ...
 
-// 加载由-outLink指示的所有网页
+// 加载由-outLink指示的链出页面
 val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 // 加载，解析并提取字段
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // 加载，解析并提取具名字段
 val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+// 从由-outLink指示的链出页面中加载，解析并提取具名字段
+val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
@@ -216,6 +221,35 @@ public class ContinuousCrawler {
 ----
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+
+=== RPA
+
+随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
+
+Pulsar 提供了一种在网页生命周期中模仿真人的便捷方式，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。
+
+这是一个典型的 RPA 代码片段，它是从顶级电子商务网站收集数据所必需的：
+
+```kotlin
+val options = session.options(args)
+val event = options.event.browseEvent
+// Warp up the browser to avoid being blocked by the server,
+// or choose the global settings, such as your location.
+event.onBrowserLaunched.addLast { page, driver ->
+    warnUpBrowser(page, driver)
+}
+event.onWillFetch.addLast { page, driver ->
+    waitForReferrer(page, driver)
+    waitForPreviousPage(page, driver)
+}
+event.onWillCheckDocumentState.addLast { page, driver ->
+    driver.waitForSelector("body h1[itemprop=name]")
+    driver.click(".mask-layer-close-button")
+}
+session.load(url, options)
+```
+
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin]。
 
 === 使用 X-SQL 查询 Web
 

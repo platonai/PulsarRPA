@@ -24,8 +24,9 @@
     <version>1.10.1-SNAPSHOT</version>
 
     <name>Pulsar</name>
-    <description>The easy way to crawl and scrape the Web:
-        turn large web sites into tables and charts using simple native api, SQL or REST api</description>
+    <description>The easy way to crawl the Web:
+        turn large web sites into tables and charts using simple native API, SQL or REST API
+    </description>
 
     <licenses>
         <license>
