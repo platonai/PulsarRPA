@@ -109,7 +109,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
-        browser.emit1(BrowserEvents.willNavigate, entry)
+        browser.emit(BrowserEvents.willNavigate, entry)
         navigateHistory.add(entry)
 
         this.navigateEntry = entry

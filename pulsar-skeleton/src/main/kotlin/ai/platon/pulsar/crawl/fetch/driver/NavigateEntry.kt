@@ -42,7 +42,7 @@ data class NavigateEntry(
      * The time when the object is created.
      */
     val createTime: Instant = Instant.now(),
-) {
+): Comparable<NavigateEntry> {
     /**
      * The time when the document is ready.
      */
@@ -61,4 +61,17 @@ data class NavigateEntry(
             actionTimes[action] = now
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        return when (other) {
+            null -> false
+            is String -> other == url
+            is NavigateEntry -> other.url == url
+            else -> false
+        }
+    }
+
+    override fun hashCode() = url.hashCode()
+
+    override fun compareTo(other: NavigateEntry) = url.compareTo(other.url)
 }
