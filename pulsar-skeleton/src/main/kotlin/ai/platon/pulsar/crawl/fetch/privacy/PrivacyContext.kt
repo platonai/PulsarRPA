@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.browser.ChromeError
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -145,6 +146,7 @@ abstract class PrivacyContext(
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK) -> markWarning()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_2) -> markWarning(2)
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_3) -> markWarning(3)
+            status.isRetry(RetryScope.PRIVACY) && status.retryReason is ChromeError -> markWarning(3)
             status.isRetry(RetryScope.PRIVACY) -> markWarning()
             status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
             status.isSuccess -> markSuccess()

@@ -14,7 +14,11 @@ enum class UnicodeEmoji(val value: String) {
     HUNDRED_POINTS("\uD83D\uDCAF"),
     BROKEN_HEART("\uD83D\uDC94"),
     RACING_CAR("\uD83C\uDFCE"),
-    DELIVERY_TRUCK("\uD83D\uDE9A")
+    DELIVERY_TRUCK("\uD83D\uDE9A"),
+    WHITE_HEAVY_CHECK("✅"),
+    CHECK_MARK("✓"),
+    HEAVY_MULTIPLICATION_X("✖"),
+    BALLOT_X("✗"),
     ;
 
     override fun toString() = value

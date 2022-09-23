@@ -359,7 +359,7 @@ open class StreamingCrawler(
 
             try {
                 globalMetrics.tasks.mark()
-                runLoadTask(url)
+                runLoadTaskWithEventHandlers(url)
             } finally {
                 lastActiveTime = Instant.now()
 
@@ -373,7 +373,7 @@ open class StreamingCrawler(
         return flowState
     }
 
-    private suspend fun runLoadTask(url: UrlAware) {
+    private suspend fun runLoadTaskWithEventHandlers(url: UrlAware) {
         emit(CrawlEvents.willLoad, url)
 
         if (url is ListenableUrl && url is DegenerateUrl) {

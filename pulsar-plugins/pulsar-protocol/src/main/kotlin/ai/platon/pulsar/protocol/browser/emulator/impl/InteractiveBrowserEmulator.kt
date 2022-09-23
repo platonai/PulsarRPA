@@ -418,7 +418,7 @@ open class InteractiveBrowserEmulator(
                 // this will never happen since 1.10.0
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val browserError = responseHandler.createBrowserError(message)
+                val browserError = responseHandler.createBrowserErrorResponse(message)
                 status = browserError.status
                 result.activeDOMMessage = browserError.activeDOMMessage
                 result.state = FlowState.BREAK

@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.browser.ChromeError
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
@@ -13,7 +14,6 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.protocol.browser.emulator.util.*
 import org.slf4j.LoggerFactory
@@ -103,22 +103,21 @@ open class BrowserResponseHandlerImpl(
      * Chrome redirected to the error page chrome-error://
      * This page should be text analyzed to determine the actual error.
      * */
-    override fun createBrowserError(message: String): BrowserError {
+    override fun createBrowserErrorResponse(message: String): BrowserErrorResponse {
         val activeDomMessage = ActiveDOMMessage.fromJson(message)
         val ec = activeDomMessage.trace?.status?.ec
-        // chrome can not connect to the peer, it probably be caused by a bad proxy
-        // convert to retry in PRIVACY_CONTEXT later
-        val status = when (ec) {
-            null -> ProtocolStatus.retry(RetryScope.PRIVACY, "Unknown error")
-            BrowserError.CONNECTION_TIMED_OUT -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
-            BrowserError.EMPTY_RESPONSE -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
-            else -> {
-                // unexpected exception
-                ProtocolStatus.retry(RetryScope.PRIVACY, ec)
-            }
+        if (ec == null) {
+            val status = ProtocolStatus.retry(RetryScope.PRIVACY, "Unknown error")
+            return BrowserErrorResponse(status, activeDomMessage)
         }
 
-        return BrowserError(status, activeDomMessage)
+        val error = ChromeError.valueOfOrNull(ec)
+        val status = if (error == null) {
+            logger.warn("Undocumented chrome error $ec")
+            ProtocolStatus.retry(RetryScope.PRIVACY, ec)
+        } else ProtocolStatus.retry(RetryScope.PRIVACY, error)
+
+        return BrowserErrorResponse(status, activeDomMessage)
     }
 
     override fun createProtocolStatusForBrokenContent(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {

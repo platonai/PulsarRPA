@@ -8,6 +8,7 @@ package ai.platon.pulsar.persist;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -295,6 +296,16 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public String getName() {
         return majorCodes.getOrDefault(getMajorCode(), "unknown") + "/"
                 + minorCodes.getOrDefault(getMinorCode(), "unknown");
+    }
+
+    @Nullable
+    public Object getRetryScope() {
+        return getArgs().get(ARG_RETRY_SCOPE);
+    }
+
+    @Nullable
+    public Object getRetryReason() {
+        return getArgs().get(ARG_RETRY_REASON);
     }
 
     public void upgradeRetry(RetryScope scope) {
