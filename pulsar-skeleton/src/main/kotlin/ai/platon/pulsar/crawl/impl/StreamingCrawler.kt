@@ -463,13 +463,17 @@ open class StreamingCrawler(
 
     @Throws(Exception::class)
     private suspend fun loadWithMinorExceptionHandled(url: UrlAware): WebPage? {
-        // apply the default options, arguments in the url has the highest priority, so url.args needs to appear last
         val options = session.options(url.args ?: "")
         if (options.isDead()) {
             // The url is dead, drop the task
             globalKilledTasks.incrementAndGet()
             return null
         }
+
+        // TODO: use the code below, to avoid option creation, which leads to too complex option merging
+//        if (url.deadline > Instant.now()) {
+//            session.loadDeferred(url)
+//        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }

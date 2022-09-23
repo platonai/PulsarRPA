@@ -162,7 +162,7 @@ class LoadingWebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            doClose(CLOSE_ALL_TIMEOUT)
+            doClose(Duration.ofSeconds(5))
         }
     }
 
@@ -264,9 +264,11 @@ class LoadingWebDriverPool(
         val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
         nonSynchronized.forEach { it.cancel() }
 
-        waitUntilIdle(timeToWait)
+        // TODO: should we wait or close drivers immediately?
+//        waitUntilIdle(timeToWait)
 
-        closeAllDrivers(nonSynchronized)
+        // close drivers by browser
+        // closeAllDrivers(nonSynchronized)
     }
 
     private fun closeAllDrivers(drivers: List<WebDriver>) {
@@ -276,6 +278,7 @@ class LoadingWebDriverPool(
             driver.quit().also { counterQuit.inc() }
             logger.debug("Quit driver {}/{} | {}", i.incrementAndGet(), total, driver)
         }
+        _browser?.close()
     }
 
     /**

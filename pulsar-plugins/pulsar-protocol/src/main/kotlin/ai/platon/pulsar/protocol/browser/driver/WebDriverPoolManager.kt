@@ -98,7 +98,7 @@ open class WebDriverPoolManager(
      * TODO: consider pro-actor model instead
      *
      * reactor: tell me if you can do this job
-     * proactor: here is a job, tell me if you finished it
+     * pro-actor: here is a job, tell me if you finished it
      *
      * @return The result of action, or null if timeout
      * */
@@ -177,15 +177,12 @@ open class WebDriverPoolManager(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _driverPools.keys.forEach { doCloseDriverPool(it) }
+            _driverPools.values.forEach { it.close() }
             _driverPools.clear()
+
+            browserManager.close()
+
             logger.info("Web driver pool manager is closed")
-            if (gauges?.entries?.isEmpty() == false || _driverPools.isNotEmpty()) {
-                val s = formatStatus(true)
-                if (s.isNotEmpty()) {
-                    logger.info(s)
-                }
-            }
         }
     }
 

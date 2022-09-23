@@ -635,7 +635,7 @@ open class LoadOptions(
      * If the page is dead, drop the task as soon as possible.
      * */
     fun isDead(): Boolean {
-        return deadTime < Instant.now()
+        return deadline < Instant.now()
     }
 
     /**

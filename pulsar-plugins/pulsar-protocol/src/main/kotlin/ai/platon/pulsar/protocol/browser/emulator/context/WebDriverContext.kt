@@ -98,12 +98,13 @@ class WebDriverContext(
         // not shutdown, wait longer
         if (AppContext.isActive) {
             waitUntilAllDoneNormally(Duration.ofMinutes(3))
+            // close underlying IO based modules asynchronously
+            cancelAllAndCloseUnderlyingLayer()
+        } else {
+            cancelAllAndCloseUnderlyingLayerImmediately()
         }
 
-        // close underlying IO based modules asynchronously
-        cancelAllAndCloseUnderlyingLayer()
-
-        waitUntilNoRunningTasks(Duration.ofSeconds(20))
+        waitUntilNoRunningTasks(Duration.ofSeconds(10))
 
         if (runningTasks.isNotEmpty()) {
             logger.info("Still {} running tasks after context close | {}",
@@ -122,6 +123,12 @@ class WebDriverContext(
         // Close all online drivers and delete the browser data
         driverPoolManager.cancelAll(browserId)
         driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
+    }
+
+    private fun cancelAllAndCloseUnderlyingLayerImmediately() {
+        runningTasks.forEach { it.cancel() }
+        driverPoolManager.cancelAll()
+        driverPoolManager.close()
     }
 
     private fun waitUntilAllDoneNormally(timeout: Duration) {
@@ -150,12 +157,13 @@ class WebDriverContext(
             lock.unlock()
         }
 
+        val ident = browserId.ident
         val message = when {
             availableMemory < memoryToReserve ->
-                String.format("Low memory (%.2fGiB), close %d retired browsers immediately",
+                String.format("Low memory (%.2fGiB), close %d retired browsers immediately | $ident",
                     ByteUnit.BYTE.toGiB(availableMemory.toDouble()), runningTasks.size)
-            n == 0L -> String.format("Timeout (still %d running tasks)", runningTasks.size)
-            n < timeout.seconds -> String.format("All finished in %d seconds", timeout.seconds - n)
+            n == 0L -> String.format("Timeout (still %d running tasks) | $ident", runningTasks.size)
+            n < timeout.seconds -> String.format("All tasks return in %d seconds | $ident", timeout.seconds - n)
             else -> ""
         }
 

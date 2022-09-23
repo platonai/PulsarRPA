@@ -42,10 +42,10 @@ open class BrowserManager(
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _browsers.values.forEach {
-                // managed by [WebDriverPoolManager]
-                // it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
+            _browsers.values.parallelStream().forEach {
+                it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
             }
+            _browsers.clear()
         }
     }
 

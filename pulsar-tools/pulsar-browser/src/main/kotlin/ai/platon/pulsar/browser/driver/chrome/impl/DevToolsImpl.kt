@@ -371,6 +371,7 @@ abstract class DevToolsImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            // discard all furthers in dispatcher?
             kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored]", it.message) }
             closeLatch.countDown()
         }
