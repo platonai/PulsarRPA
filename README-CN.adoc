@@ -97,14 +97,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.10</version>
+  <version>1.10.1</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.10")
+implementation("ai.platon.pulsar:pulsar-all:1.10.1")
 ----
 
 对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
@@ -222,7 +222,7 @@ public class ContinuousCrawler {
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-=== RPA
+=== RPA (机器人流程自动化)
 
 随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
 
@@ -233,7 +233,7 @@ Pulsar 提供了一种在网页生命周期中模仿真人的便捷方式，使�
 ```kotlin
 val options = session.options(args)
 val event = options.event.browseEvent
-// Warp up the browser to avoid being blocked by the server,
+// Warp up the browser to avoid being blocked by the website,
 // or choose the global settings, such as your location.
 event.onBrowserLaunched.addLast { page, driver ->
     warnUpBrowser(page, driver)
@@ -279,7 +279,7 @@ println(ResultSetFormatter(rs, withHeader = true))
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.10 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.10.1 | 1,349 ratings | 4.40
 ----
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
