@@ -111,7 +111,7 @@ open class BrowserPrivacyContext(
             proxyContext = pc
             coreMetrics?.proxies?.mark()
         } catch (e: ProxyException) {
-            logger.warn(e.brief("Failed to create proxy context"))
+            logger.warn(e.brief("Failed to create proxy context - "))
         }
     }
 }

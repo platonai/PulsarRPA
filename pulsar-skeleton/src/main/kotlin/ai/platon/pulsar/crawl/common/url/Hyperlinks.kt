@@ -113,12 +113,9 @@ open class ParsableHyperlink(
             this(url, { page, document -> onParse.accept(page, document) })
 
     override var event: PageEvent = DefaultPageEvent().also {
-        it.loadEvent.onHTMLDocumentParsed.addLast(object: HTMLDocumentHandler() {
-            override fun invoke(page: WebPage, document: FeaturedDocument) {
-                onParse(page, document.document)
-                Unit
-            }
-        })
+        it.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+            onParse(page, document.document)
+        }
     }
 }
 

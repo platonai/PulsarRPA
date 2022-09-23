@@ -45,19 +45,8 @@ abstract class PrivacyContextHandler: (PrivacyContext) -> Any?, AbstractPHandler
     abstract override operator fun invoke(privacyContext: PrivacyContext): Any?
 }
 
-abstract class WebDriverHandler: (WebDriver) -> Any?, AbstractPHandler() {
-    abstract override operator fun invoke(driver: WebDriver): Any?
-    abstract suspend fun invoke(page: WebPage, driver: WebDriver): Any?
-}
-
 abstract class WebPageWebDriverHandler: (WebPage, WebDriver) -> Any?, AbstractPHandler() {
     abstract override operator fun invoke(page: WebPage, driver: WebDriver): Any?
-    abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): Any?
-}
-
-abstract class WebDriverFetchResultHandler: (WebPage, WebDriver) -> FetchResult?, AbstractPHandler() {
-    abstract override operator fun invoke(page: WebPage, driver: WebDriver): FetchResult?
-    abstract suspend fun invokeDeferred(page: WebPage, driver: WebDriver): FetchResult?
 }
 
 abstract class PageDatumHandler: (String, PageDatum) -> Any?, AbstractPHandler() {
