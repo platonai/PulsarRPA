@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
@@ -53,20 +54,6 @@ class FetchStatusFormatter(val page: WebPage) {
     }
 }
 
-private enum class UnicodeSymbols(val value: String) {
-    CANCELLATION_X("\uD83D\uDDD9"), // 'CANCELLATION X' (U+1F5D9)
-    LIGHTNING("⚡"), // fetched new
-    RELOAD("⟳"), // fetched updated, clockwise gaped circle arrow
-    HOT_BEVERAGE("☕"), // hot beverage, cached
-    HARD_DRIVER("\uD83D\uDDB4"), // hard driver symbol
-    BUG("\uD83D\uDC1B"),
-    SCROE100("\uD83D\uDCAF"),
-    BROKEN_HEART("\uD83D\uDC94")
-    ;
-
-    override fun toString() = value
-}
-
 class LoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
@@ -98,32 +85,32 @@ class LoadStatusFormatter(
         }
 
     private val fetchReason get() = buildFetchReason()
-    private val prefix01 get() = when {
-        page.isCanceled -> UnicodeSymbols.CANCELLATION_X // canceled
-        page.isFetched && page.fetchCount == 1 -> UnicodeSymbols.LIGHTNING // fetched new
-        page.isFetched -> UnicodeSymbols.RELOAD // fetched, reload
-        page.isCached -> UnicodeSymbols.HOT_BEVERAGE // cached
-        page.isLoaded -> UnicodeSymbols.HARD_DRIVER   // load from db
-        else -> UnicodeSymbols.BUG  // BUG symbol
+    private val loadStatusSymbol get() = when {
+        page.isCanceled -> UnicodeEmoji.CANCELLATION_X // canceled
+        page.isFetched && page.fetchCount == 1 -> UnicodeEmoji.LIGHTNING // fetched new
+        page.isFetched -> UnicodeEmoji.CIRCLE_ARROW_1 // fetched, reload
+        page.isCached -> UnicodeEmoji.HOT_BEVERAGE // cached
+        page.isLoaded -> UnicodeEmoji.OPTICAL_DISC   // load from db
+        else -> UnicodeEmoji.BUG  // BUG symbol
     }
-    private val prefix02 get() = when {
-        page.isCanceled -> "Canceled ${UnicodeSymbols.CANCELLATION_X}" // 'CANCELLATION X' (U+1F5D9)
-        page.isFetched && page.fetchCount == 1 -> "New ${UnicodeSymbols.LIGHTNING}"
-        page.isFetched -> "Updated ${UnicodeSymbols.RELOAD}" // fetched updated, clockwise gaped circle arrow
-        page.isCached -> "Cached ${UnicodeSymbols.HOT_BEVERAGE}"  // load from cache, hot beverage
-        page.isLoaded -> "Loaded ${UnicodeSymbols.HARD_DRIVER}" // load from db, hard driver symbol
-        else -> "Unknown ${UnicodeSymbols.BUG}" // BUG symbol
+    private val loadStatusText get() = when {
+        page.isCanceled -> "Canceled"
+        page.isFetched && page.fetchCount == 1 -> "New"
+        page.isFetched -> "Updated"
+        page.isCached -> "Cached"
+        page.isLoaded -> "Loaded"
+        else -> "Unknown"
     }
-    private val prefix0: String get() = when {
-        page.id < verboseCount && page.id % 10 == 0 -> prefix02
-        page.id > verboseCount && page.id % verboseCount == 0 -> prefix02
-        else -> prefix01.toString()
+    private val loadStatus: String get() = when {
+        page.id < verboseCount && page.id % 10 == 0 -> "$loadStatusText $loadStatusSymbol"
+        page.id > verboseCount && page.id % verboseCount == 0 -> "$loadStatusText $loadStatusSymbol"
+        else -> loadStatusSymbol.toString()
     }
-    private val prefixSymbol get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
+    private val loadMessagePrefix get() = prefix.takeIf { it.isNotEmpty() } ?: loadStatus
     private val successSymbol: String get() = when {
-        page.isCanceled -> "${UnicodeSymbols.CANCELLATION_X} " // 'CANCELLATION X' (U+1F5D9)
-        protocolStatus.isSuccess -> "${UnicodeSymbols.SCROE100} " // 100 score
-        else -> "${UnicodeSymbols.BROKEN_HEART} " // broken heart
+        page.isCanceled -> "${UnicodeEmoji.CANCELLATION_X} " // 'CANCELLATION X' (U+1F5D9)
+        protocolStatus.isSuccess -> "${UnicodeEmoji.HUNDRED_POINTS} " // 100 score
+        else -> "${UnicodeEmoji.BROKEN_HEART} " // broken heart
     }
     private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
     private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
@@ -150,7 +137,7 @@ class LoadStatusFormatter(
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
-    private val fmt get() = "%3d. $successSymbol$prefixSymbol %s $fetchReason got %d %s in %s," +
+    private val fmt get() = "%3d. $successSymbol$loadMessagePrefix %s $fetchReason got %d %s in %s," +
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
 
@@ -166,7 +153,7 @@ class LoadStatusFormatter(
         listOf(
             Record("id", page.id, width = 3),
             Record("successSymbol", successSymbol, width = 1),
-            Record("prefix", prefixSymbol),
+            Record("prefix", loadMessagePrefix),
             Record("minorCode", page.protocolStatus.minorCode),
             Record("fetchReason", fetchReason, width = 1),
         )
