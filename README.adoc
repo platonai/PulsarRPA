@@ -360,7 +360,7 @@ We have released a standalone, executable jar, based on Pulsar. Download link:ht
 
 Pulsar has carefully designed the log and metrics subsystem, to record every event happen in the system.
 
-Pulsar reports the status for every page loading in the logs, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages are successfully fetched, how many pages are retrying, how many proxy ips are used, and so on.
+Pulsar reports the status for every page load execution in the logs, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
 
 A typical page loading report is as the following, and you can check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
 
