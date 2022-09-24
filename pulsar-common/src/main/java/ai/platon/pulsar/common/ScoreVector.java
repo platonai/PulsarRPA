@@ -304,6 +304,10 @@ public class ScoreVector implements Comparable<ScoreVector> {
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
         if (!(other instanceof ScoreVector)) {
             return false;
         }

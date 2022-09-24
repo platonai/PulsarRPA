@@ -34,6 +34,10 @@ data class PrivacyContextId(
      * Note: do not use the default equality function
      * */
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return other is PrivacyContextId
                 && other.contextDir == contextDir
                 && other.fingerprint.browserType.toString() == fingerprint.browserType.toString()
@@ -79,6 +83,10 @@ data class BrowserId constructor(
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return other is BrowserId
                 && other.contextDir == contextDir
                 && other.fingerprint.toString() == fingerprint.toString()

@@ -202,7 +202,7 @@ open class CompletableHyperlink<T>(
      * 3. a [UrlAware]
      * */
     override fun equals(other: Any?): Boolean {
-        if (other === this) {
+        if (this === other) {
             return true
         }
 

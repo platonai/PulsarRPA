@@ -197,6 +197,10 @@ class ProxyEntry(
     override fun hashCode(): Int = 31 * proxyType.hashCode() + hostPort.hashCode()
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is ProxyEntry
                 && other.proxyType == proxyType
                 && other.host == host && other.port == port

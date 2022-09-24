@@ -91,7 +91,7 @@ object ProtocolStatusTranslator {
             CrawlStatus.STATUS_REDIR_TEMP
         }
 
-        val newUrl = protocolStatus.getArgOr(ProtocolStatus.ARG_REDIRECT_TO_URL, "")
+        val newUrl = protocolStatus.getArgOrElse(ProtocolStatus.ARG_REDIRECT_TO_URL, "")
         if (newUrl.isNotEmpty()) {
             // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
             val reprUrl = URLUtil.chooseRepr(url, newUrl, temp)

@@ -124,5 +124,11 @@ class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory
 
     override fun hashCode() = baseUri.hashCode()
 
-    override fun equals(other: Any?) = other is PageEntity && baseUri == other.baseUri
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
+        return other is PageEntity && baseUri == other.baseUri
+    }
 }

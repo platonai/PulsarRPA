@@ -160,6 +160,10 @@ open class DocumentFragment(
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is DocumentFragment && element === other.element
     }
 

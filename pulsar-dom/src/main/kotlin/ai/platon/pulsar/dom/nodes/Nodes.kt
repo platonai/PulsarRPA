@@ -92,6 +92,10 @@ data class GeoAnchor(
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is GeoAnchor && url == other.url
     }
 

@@ -162,6 +162,10 @@ public class ScoreEntry implements Comparable<ScoreEntry> {
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
         return other instanceof ScoreEntry && compareTo((ScoreEntry) other) == 0;
     }
 

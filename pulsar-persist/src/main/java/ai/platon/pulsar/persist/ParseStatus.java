@@ -154,7 +154,7 @@ public class ParseStatus implements ParseStatusCodes {
                 + minorCodes.getOrDefault(getMinorCode(), "unknown");
     }
 
-    public String getArgOrDefault(String name, String defaultValue) {
+    public String getArgOrElse(String name, String defaultValue) {
         return getArgs().getOrDefault(name, defaultValue).toString();
     }
 

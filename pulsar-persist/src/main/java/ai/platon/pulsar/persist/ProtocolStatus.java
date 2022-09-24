@@ -232,7 +232,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public boolean isRetry(RetryScope scope) {
         RetryScope defaultScope = RetryScope.CRAWL;
-        return getMinorCode() == RETRY && getArgOr(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
+        return getMinorCode() == RETRY && getArgOrElse(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
     }
 
     public boolean isRetry(RetryScope scope, Object reason) {
@@ -244,7 +244,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         } else {
             reasonString = reason.toString();
         }
-        return isRetry(scope) && getArgOr(ARG_RETRY_REASON, "").equals(reasonString);
+        return isRetry(scope) && getArgOrElse(ARG_RETRY_REASON, "").equals(reasonString);
     }
 
     public boolean isTempMoved() {
@@ -288,7 +288,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         getArgs().put(getMinorName(), message);
     }
 
-    public String getArgOr(@NotNull String name, @NotNull String defaultValue) {
+    public String getArgOrElse(@NotNull String name, @NotNull String defaultValue) {
         return getArgs().getOrDefault(name, defaultValue).toString();
     }
 

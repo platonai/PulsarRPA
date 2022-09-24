@@ -12,5 +12,11 @@ abstract class SessionDelegate(val id: Int, val implementation: Any) {
 
     override fun toString() = name
 
-    override fun equals(other: Any?) = other is SessionDelegate && other.id == id
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
+        return other is SessionDelegate && other.id == id
+    }
 }

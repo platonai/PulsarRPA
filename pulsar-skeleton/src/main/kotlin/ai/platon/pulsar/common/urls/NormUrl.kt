@@ -43,6 +43,10 @@ open class NormUrl constructor(
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return other is NormUrl && configuredUrl == other.configuredUrl
     }
 

@@ -201,6 +201,10 @@ open class FeaturedDocument(val document: Document) {
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is FeaturedDocument && location == other.location
     }
 

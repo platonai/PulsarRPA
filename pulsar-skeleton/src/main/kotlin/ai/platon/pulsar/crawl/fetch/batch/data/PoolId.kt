@@ -10,6 +10,10 @@ class PoolId(val priority: Int, val protocol: String, val host: String) : Compar
     constructor(priority: Int, url: URL): this(priority, url.protocol, url.host)
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return other is PoolId
                 && priority == other.priority
                 && protocol == other.protocol

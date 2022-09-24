@@ -301,7 +301,11 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof MultiMetadata)) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof MultiMetadata)) {
             return false;
         }
 

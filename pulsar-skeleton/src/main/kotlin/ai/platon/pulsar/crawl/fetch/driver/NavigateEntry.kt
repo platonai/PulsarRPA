@@ -63,6 +63,10 @@ data class NavigateEntry(
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return when (other) {
             null -> false
             is String -> other == url

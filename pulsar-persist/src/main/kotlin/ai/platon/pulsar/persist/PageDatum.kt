@@ -72,6 +72,10 @@ class PageDatum(
     val contentLength get() = (content?.size ?: 0).toLong()
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is PageDatum
                 && url == other.url
                 && location == other.location
