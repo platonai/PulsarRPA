@@ -1,20 +1,15 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -22,14 +17,12 @@ import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedExceptio
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.random.Random
 
 class WebDriverContext(
     val browserId: BrowserId,
@@ -90,7 +83,7 @@ class WebDriverContext(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.stringify("[Unexpected][Ignored]")) }
+            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.stringify()) }
         }
     }
 
@@ -99,9 +92,9 @@ class WebDriverContext(
         if (AppContext.isActive) {
             waitUntilAllDoneNormally(Duration.ofMinutes(3))
             // close underlying IO based modules asynchronously
-            cancelAllAndCloseUnderlyingLayer()
+            closeUnderlyingLayerGracefully()
         } else {
-            cancelAllAndCloseUnderlyingLayerImmediately()
+            closeUnderlyingLayerImmediately()
         }
 
         waitUntilNoRunningTasks(Duration.ofSeconds(10))
@@ -116,18 +109,16 @@ class WebDriverContext(
         }
     }
 
-    private fun cancelAllAndCloseUnderlyingLayer() {
-        // Mark all working tasks are canceled, so they return as soon as possible,
-        // the ready tasks are blocked to wait for driverManager.reset() finish
-        // TODO: why the canceled tasks do not return in time?
+    private fun closeUnderlyingLayerGracefully() {
+        // Mark all working tasks are canceled, so they return as soon as possible
         runningTasks.forEach { it.cancel() }
-        // may wait for cancelling finish?
-        // Close all online drivers and delete the browser data
+        // Cancel the browser, and all online drivers, and the worker coroutines with the drivers
         driverPoolManager.cancelAll(browserId)
-        driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
+
+        driverPoolManager.closeDriverPoolGracefully(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
-    private fun cancelAllAndCloseUnderlyingLayerImmediately() {
+    private fun closeUnderlyingLayerImmediately() {
         runningTasks.forEach { it.cancel() }
         driverPoolManager.cancelAll()
         driverPoolManager.close()
@@ -150,7 +141,6 @@ class WebDriverContext(
     private fun waitUntilIdle(timeout: Duration) {
         var n = timeout.seconds
         lock.lockInterruptibly()
-
         try {
             while (runningTasks.isNotEmpty() && availableMemory > memoryToReserve && n-- > 0) {
                 notBusy.await(1, TimeUnit.SECONDS)
@@ -165,8 +155,8 @@ class WebDriverContext(
             availableMemory < memoryToReserve ->
                 String.format("Low memory (%.2fGiB), close %d retired browsers immediately$isShutdown | $display",
                     ByteUnit.BYTE.toGiB(availableMemory.toDouble()), runningTasks.size)
-            n == 0L -> String.format("Timeout (still %d running tasks)$isShutdown | $display", runningTasks.size)
-            n < timeout.seconds -> String.format("All tasks return in %d seconds$isShutdown | $display", timeout.seconds - n)
+            n <= 0L -> String.format("Timeout (still %d running tasks)$isShutdown | $display", runningTasks.size)
+            n > 0 -> String.format("All tasks return in %d seconds$isShutdown | $display", timeout.seconds - n)
             else -> ""
         }
 

@@ -2,12 +2,13 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.browser.ChromeError
+import ai.platon.pulsar.common.browser.BrowserErrorCode
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -107,15 +108,16 @@ open class BrowserResponseHandlerImpl(
         val activeDomMessage = ActiveDOMMessage.fromJson(message)
         val ec = activeDomMessage.trace?.status?.ec
         if (ec == null) {
-            val status = ProtocolStatus.retry(RetryScope.PRIVACY, "Unknown error")
+            val status = ProtocolStatus.retry(RetryScope.PRIVACY, "Unknown error, no message")
             return BrowserErrorResponse(status, activeDomMessage)
         }
 
-        val error = ChromeError.valueOfOrNull(ec)
-        val status = if (error == null) {
-            logger.warn("Undocumented chrome error $ec")
-            ProtocolStatus.retry(RetryScope.PRIVACY, ec)
-        } else ProtocolStatus.retry(RetryScope.PRIVACY, error)
+        val error = BrowserErrorCode.valueOfOrUnknown(ec)
+        val exception = BrowserErrorPageException(error)
+        val status = ProtocolStatus.retry(RetryScope.PRIVACY, exception)
+        if (error.isUnknown()) {
+            logger.info("Undocumented browser error $ec")
+        }
 
         return BrowserErrorResponse(status, activeDomMessage)
     }

@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.browser.ChromeError
+import ai.platon.pulsar.common.browser.BrowserErrorCode
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
 import org.slf4j.LoggerFactory
@@ -141,12 +142,12 @@ abstract class PrivacyContext(
 
         val status = result.status
         when {
-            status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> markLeaked()
+            status.isRetry(RetryScope.PRIVACY, ProxyRetiredException::class.java) -> markLeaked()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.FORBIDDEN) -> markLeaked()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK) -> markWarning()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_2) -> markWarning(2)
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_3) -> markWarning(3)
-            status.isRetry(RetryScope.PRIVACY) && status.retryReason is ChromeError -> markWarning(3)
+            status.isRetry(RetryScope.PRIVACY, BrowserErrorPageException::class.java) -> markWarning(3)
             status.isRetry(RetryScope.PRIVACY) -> markWarning()
             status.isRetry(RetryScope.CRAWL) -> markMinorWarning()
             status.isSuccess -> markSuccess()

@@ -30,7 +30,7 @@ import kotlin.concurrent.withLock
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class LoadingWebDriverPool(
+class LoadingWebDriverPool constructor(
     val browserId: BrowserId,
     val priority: Int = 0,
     val driverFactory: WebDriverFactory,
@@ -162,7 +162,7 @@ class LoadingWebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            doClose(Duration.ofSeconds(5))
+            closeGracefully(Duration.ofSeconds(5))
         }
     }
 
@@ -245,10 +245,13 @@ class LoadingWebDriverPool(
 
     @Throws(BrowserLaunchException::class)
     private fun createWebDriver(volatileConfig: VolatileConfig) {
-        val driver = driverFactory.create(browserId, priority, volatileConfig, start = false)
+        // val b = browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
+        // val driver = b.newDriver()
+
+        val (browser, driver) = driverFactory.create(browserId, priority, volatileConfig, start = false)
 
         lock.withLock {
-            // _browser = driver.browser
+            _browser = browser
             _freeDrivers.add(driver)
             _onlineDrivers.add(driver)
         }
@@ -258,7 +261,7 @@ class LoadingWebDriverPool(
         }
     }
 
-    private fun doClose(timeToWait: Duration) {
+    private fun closeGracefully(timeToWait: Duration) {
         _freeDrivers.clear()
         _onlineDrivers.forEach { it.cancel() }
         _onlineDrivers.clear()
@@ -266,21 +269,10 @@ class LoadingWebDriverPool(
 //        val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
 //        nonSynchronized.forEach { it.cancel() }
 
-        // TODO: should we wait or close drivers immediately?
-//        waitUntilIdle(timeToWait)
+        waitUntilIdle(timeToWait)
 
         // close drivers by browser
         // closeAllDrivers(nonSynchronized)
-    }
-
-    private fun closeAllDrivers(drivers: List<WebDriver>) {
-        val i = AtomicInteger()
-        val total = drivers.size
-        drivers.parallelStream().forEach { driver ->
-            driver.quit().also { counterQuit.inc() }
-            logger.debug("Quit driver {}/{} | {}", i.incrementAndGet(), total, driver)
-        }
-        _browser?.close()
     }
 
     /**

@@ -9,6 +9,7 @@ class TestProtocolStatus {
     fun testRetry() {
         val status = ProtocolStatus.retry(RetryScope.PRIVACY, Exception())
         assertTrue(status.isRetry(RetryScope.PRIVACY, Exception()))
+        assertTrue(status.isRetry(RetryScope.PRIVACY, Exception::class.java))
 
         val e = Exception()
         println(e.javaClass.name)

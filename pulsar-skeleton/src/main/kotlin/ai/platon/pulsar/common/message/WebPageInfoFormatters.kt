@@ -133,7 +133,7 @@ class LoadStatusFormatter(
         page.fetchRetries > 0 -> String.format("%d/%d", page.fetchRetries, page.fetchCount)
         else -> String.format("%d", page.fetchCount)
     }
-    private val fieldCountFmt get() = if (m == null || m?.numFields == 0) "%s" else " | nf:%-10s"
+    private val fieldCountFmt get() = if (m == null || m.numFields == 0) "%s" else " | nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
@@ -158,6 +158,7 @@ class LoadStatusFormatter(
             Record("minorCode", page.protocolStatus.minorCode),
             Record("fetchReason", fetchReason, width = 1),
         )
+        TODO("NOT IMPLEMENTED")
     }
 
     override fun toString(): String {
