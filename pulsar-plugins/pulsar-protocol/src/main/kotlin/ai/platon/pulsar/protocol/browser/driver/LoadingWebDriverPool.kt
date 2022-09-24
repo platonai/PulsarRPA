@@ -248,10 +248,10 @@ class LoadingWebDriverPool constructor(
         // val b = browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
         // val driver = b.newDriver()
 
-        val (browser, driver) = driverFactory.create(browserId, priority, volatileConfig, start = false)
+        val driver = driverFactory.create(browserId, priority, volatileConfig, start = false)
 
         lock.withLock {
-            _browser = browser
+            _browser = driver.browser
             _freeDrivers.add(driver)
             _onlineDrivers.add(driver)
         }

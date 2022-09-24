@@ -30,10 +30,7 @@ class TenantedUrl(val tenantId: Int, var url: String) : Comparable<TenantedUrl> 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other == null) return false
-        if (javaClass != other.javaClass) return false
-
-        val otherTUrl = other as TenantedUrl?
-        return tenantId == otherTUrl!!.tenantId && url == otherTUrl.url
+        return other is TenantedUrl && tenantId == other.tenantId && url == other.url
     }
 
     override fun compareTo(other: TenantedUrl): Int {

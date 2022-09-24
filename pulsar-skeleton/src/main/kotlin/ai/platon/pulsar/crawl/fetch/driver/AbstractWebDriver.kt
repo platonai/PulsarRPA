@@ -222,7 +222,7 @@ abstract class AbstractWebDriver(
         close()
     }
 
-    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
+    override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)
 
     override fun hashCode(): Int = id
 

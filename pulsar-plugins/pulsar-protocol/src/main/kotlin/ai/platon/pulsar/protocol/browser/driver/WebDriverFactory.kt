@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
+import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
@@ -42,7 +43,18 @@ open class WebDriverFactory(
     @Synchronized
     fun create(
         browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
-    ): Pair<AbstractBrowser, WebDriver> {
+    ): WebDriver {
+        return createBrowserAndDriver(browserId, priority, conf, start).second
+    }
+
+    /**
+     * Create a WebDriver
+     */
+    @Throws(BrowserLaunchException::class)
+    @Synchronized
+    fun createBrowserAndDriver(
+        browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
+    ): Pair<Browser, WebDriver> {
         logger.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserId)
 
         val capabilities = driverSettings.createGeneralOptions()
