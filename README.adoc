@@ -17,7 +17,7 @@ Extracting web data at scale is extremely hard. #Websites change frequently and 
 
 Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
 
-We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
+We are also developing an advanced AI to automatically extract every field in a web page with remarkable accuracy.
 
 == Features
 
@@ -72,16 +72,16 @@ The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kot
 The core Pulsar concepts include the following:
 
 * Web Scraping: the process of using bots to extract content and data from a website
-* Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI solutions
+* Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI algorithm
 * RPA: stands for robotic process automation which is the only way to scrape modern webpages
 * Network As A Database: access the Web just like a local database
 * X-SQL: query the Web using SQL directly
-* Pulsar Session: a Pulsar session provides a set of simple, powerful and flexible APIs to do web scraping tasks
-* Web Driver: the web driver defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
+* Pulsar Session: provides a set of simple, powerful and flexible APIs to do web scraping tasks
+* Web Driver: defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
 * URLs: a URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in Pulsar is defined as some form of URL
 * Hyperlinks: a Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task
 * Load Options: load options, or load arguments are control parameters that affect how Pulsar loads, fetches and crawls webpages
-* Event Handler: capture and process events throughout the lifecycle of webpages
+* Event Handlers: capture and process events throughout the lifecycle of webpages
 
 Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
 
@@ -222,7 +222,7 @@ As websites become more and more complicated, RPA has become the only way to col
 
 Pulsar provides a convenient way to mimic real people during the lifecycle of a webpage, using a web driver to interact with the webpage: scrolling, typing, screen capturing, mouse dragging, clicking and more, all actions and behaviors are optimized to mimic real people as closely as possible.
 
-Here is a typical RPA code snippet, which is required to collect data from top e-comm sites.
+Here is a typical RPA code snippet, which is required to collect data from most top e-comm sites.
 
 ```kotlin
 val options = session.options(args)
@@ -356,13 +356,13 @@ We have released a standalone, executable jar, based on Pulsar. Download link:ht
 
     java -jar exotic-standalone.jar
 
-== Log & Metrics
+== Logs & Metrics
 
-Pulsar has carefully designed the log and metrics subsystem, to record every event happen in the system.
+Pulsar has carefully designed the logging and metrics subsystem to record every event that occurs in the system.
 
-Pulsar reports the status for every page load execution in the logs, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
+Pulsar logs the status for every load execution, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
 
-A typical page loading report is as the following, and you can check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
+Typical page loading logs are as the following, check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
 
 [source,composer log,options="nowrap"]
 ----
@@ -384,7 +384,7 @@ A typical page loading report is as the following, and you can check link:docs/l
 Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
 == Advanced topics
-Check link:docs/faq/advanced-topics.adoc[advanced topics] to see answers for the following questions:
+Check link:docs/faq/advanced-topics.adoc[advanced topics] to find out the answers for the following questions:
 
 * What’s so difficult about scraping web data at scale?
 * How to scrape a million product pages from an e-commerce website a day?

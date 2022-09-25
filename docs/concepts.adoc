@@ -64,7 +64,7 @@ The first method to keep in mind is how to load a page.
 A load method checks the local storage first, if it exists and is good,
 return the persisted version, otherwise, fetch it from the Internet.
 
-Other fetch condition can be specified in load arguments, or load options:
+Other fetch conditions can be specified via load options:
 
 1. expiration
 2. page size requirements
@@ -82,24 +82,25 @@ val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name 
 // ...
 ----
 
-Once a webpage is loaded from local storage, or fetched from the Internet,
-we come to the next process steps:
-1. parse the web content into a HTML document
-2. extract fields from the HTML document
-3. write the fields into a destination, such as
-1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
-2. solr, elastic, etc.
+Once a webpage is loaded from local storage, or fetched from the Internet, we will proceed to the next processing process:
+
+. parse the web content into an HTML document
+. extract fields from the HTML document
+. write the fields into a destination, such as
+.. plain file, avro file, CSV, excel, mongodb, mysql, etc.
+.. solr, elastic, etc.
 
 There are many ways to fetch the content of a page from the Internet:
-1. http protocol
-2. through a real browser
+
+. http protocol
+. through a real browser
 
 Since the webpages are becoming more and more complex, fetching webpages through
 real browsers is the primer way nowadays.
 
 When we fetch webpages using a real browser, we may need to interact with pages to
-ensure the desired fields are loaded correctly and completely. Activate [PageEvent]
-and use [WebDriver] to archive such purpose.
+ensure the desired fields are loaded correctly and completely. Activate PageEvent
+and use WebDriver to archive such purpose.
 
 [source,kotlin]
 ----
@@ -110,7 +111,7 @@ options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
 session.load(url, options)
 ----
 
-Pulsar [WebDriver] provides a complete method set for RPA, just like selenium, playwright
+Pulsar WebDriver provides a complete method set for RPA, just like selenium, playwright
 and puppeteer, all actions and behaviors are optimized to mimic real people as closely as possible.
 
 === Web Driver
@@ -119,13 +120,13 @@ WebDriver defines a concise interface to visit and interact with web pages, all 
 The methods in this interface fall into three categories:
 
 . Control of the browser itself
-. Selection of textContent and attributes of Elements
+. Selection of elements, extracting textContent and attributes
 . Interact with the webpage
 
 Key methods:
 
-* WebDriver.navigateTo: load a new web page.
-* WebDriver.scrollDown: scroll down on a web page to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
+* WebDriver.navigateTo: load a new webpage.
+* WebDriver.scrollDown: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
 * WebDriver.pageSource: retrieve the source code of a webpage.
 
 === URLs
@@ -166,7 +167,7 @@ A hyperlink, or simply a link, is a reference to data that the user can follow b
 
 A Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task.
 
-There are several Hyperlinks defined by Pulsar:
+There are several Hyperlinks predefined by Pulsar:
 
 A ParsableHyperlink is a convenient abstraction to do fetch-and-parse tasks in continuous crawl jobs:
 

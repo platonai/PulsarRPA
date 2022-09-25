@@ -17,18 +17,18 @@ PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果�
 
 Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
 
-我们还计划发布一种高级 AI，以自动提取网页中的每个字段，并具有显着的准确性。
+我们还在开发一种先进的人工智能，以显著的准确性自动提取网页中的每个字段。
 
 == 主要特性
 
 * 网络爬虫：浏览器渲染、ajax数据爬取
 * RPA：机器人流程自动化、模仿人类行为、采集单网页应用程序或执行其他有价值的任务
-* 简单的 API：一行代码抓取，或者一行 SQL 将整个网站栏目变成表格
+* 简洁的 API：一行代码抓取，或者一条 SQL 将整个网站栏目变成表格
 * X-SQL：扩展 SQL 来管理 Web 数据：网络爬取、数据采集、Web 内容挖掘、Web BI
 * 爬虫隐身：浏览器驱动隐身，IP 轮换，隐私上下文轮换，永远不会被屏蔽
 * 高性能：高度优化，单机并行渲染数百页而不被屏蔽
 * 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，或 n * 10,000,000 个数据点，仅需要 8 核 CPU/32G 内存
-* 数据量保证：智能重试、精准调度、Web数据生命周期管理
+* 数据量保证：智能重试、精准调度、Web 数据生命周期管理
 * 大规模采集：完全分布式，专为大规模数据采集而设计
 * 大数据支持：支持各种后端存储：本地文件/MongoDB/HBase/Gora
 * 日志和指标：密切监控并记录每个事件
@@ -46,7 +46,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 
 上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
 
-*大多数#生产环境#抓取项目可以从以下代码片段开始：*
+*大多数 #生产环境# 数据采集项目可以从以下代码片段开始：*
 
 *Kotlin*
 [source,kotlin]
@@ -74,20 +74,20 @@ link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/Contin
 Pulsar 的核心概念包括：
 
 * 网络数据采集（Web Scraping）: 使用机器人从网站中提取内容和数据的过程
-* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决方案提供支持
+* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决算法驱动
 * RPA: 机器人流程自动化，这是抓取现代网页的唯一方法
 * 网络即数据库（Network As A Database）: 像访问本地数据库一样访问 Web
 * X-SQL: 直接使用 SQL 查询 Web
-* Pulsar Session: Pulsar session 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
+* Pulsar Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
 * Web Driver: Web 驱动定义了一个简洁的界面来访问网页并与之交互，所有行为都经过优化以尽可能接近真实的人
 * URL: Pulsar 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。Pulsar 中的每个任务都被定义为某种形式的 URL
 * Hyperlink: Pulsar 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
-* Load Options: 加载选项或加载参数是影响 Pulsar 如何加载、获取和抓取网页的控制参数
-* Event Handler: 在网页的整个生命周期中捕获和处理事件
+* Load Options: 加载选项或加载参数影响 Pulsar 如何加载、获取和抓取网页
+* Event Handlers: 在网页的整个生命周期中捕获和处理事件
 
 点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] 查看详情。
 
-== 使用方法：将Pulsar用作软件库
+== 使用方法：将 Pulsar 用作软件库
 
 利用 Pulsar 强大功能的最简单方法是将其作为库添加到您的项目中。
 
@@ -115,9 +115,9 @@ implementation("ai.platon.pulsar:pulsar-all:1.10.1")
 
 [source,kotlin]
 ----
-// 创建一个Pulsar会话
+// 创建一个 Pulsar 会话
 val session = PulsarContexts.createSession()
-// 示例程序使用的url
+// 示例程序使用的 url
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 // 加载一个页面，如果该页面已过期，或者该页面为首次加载，则从互联网上下载该页面
 val page = session.load(url, "-expires 1d")
@@ -131,13 +131,13 @@ val document2 = session.loadDocument(url, "-expires 1d")
 // 使用该文档做一些事情
 // ...
 
-// 加载由-outLink指示的链出页面
+// 加载由 -outLink 指示的链出页面
 val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 // 加载，解析并提取字段
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // 加载，解析并提取具名字段
 val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
-// 从由-outLink指示的链出页面中加载，解析并提取具名字段
+// 从由 -outLink 指示的链出页面中加载，解析并提取具名字段
 val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
@@ -315,7 +315,7 @@ bin/pulsar
 ----
 bin/scrape.sh
 ----
-bash 脚本非常简单，只需使用 curl 发布 X-SQL：
+该 bash 脚本非常简单，只需使用 curl 发送 X-SQL：
 [source,shell]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -334,7 +334,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 
 示例代码可以在这里找到: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
 
-Json格式的响应如下：
+Json 格式的响应如下：
 
 [source,json]
 ----
@@ -367,9 +367,9 @@ Json格式的响应如下：
 
 Pulsar 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
 
-Pulsar 在日志中报告每个页面加载执行的状态，因此很容易知道系统中发生了什么，找出系统运行是否健康、成功获取多少页面、重试多少页面、使用了多少代理 ip 等答案。
+Pulsar 在日志中报告每个页面加载任务执行的状态，因此很容易知道系统中发生了什么，判断系统运行是否健康、回答成功获取多少页面、重试多少页面、使用了多少代理 IP。
 
-典型的页面加载报告如下，您可以查看 link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态。
+下面是一组典型的页面加载日志，查看 link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态。
 
 [source,composer log,options="nowrap"]
 ----
