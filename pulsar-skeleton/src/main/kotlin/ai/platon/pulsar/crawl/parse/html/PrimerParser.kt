@@ -101,7 +101,7 @@ class PrimerParser(val conf: ImmutableConfig) {
     @Throws(Exception::class)
     fun parseHTMLDocument(page: WebPage): ParseContext {
         tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
-            page.id, Strings.readableBytes(page.contentLength),
+            page.id, Strings.compactFormat(page.contentLength),
             page.protocolStatus, page.htmlIntegrity, page.url
         )
 

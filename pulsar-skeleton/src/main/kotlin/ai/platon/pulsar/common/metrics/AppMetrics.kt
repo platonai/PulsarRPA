@@ -111,8 +111,8 @@ class AppMetrics(
             mapOf(
                 "startTime" to Gauge { startTime },
                 "elapsedTime" to Gauge { elapsedTime },
-                "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
-                "freeSpace" to Gauge { freeSpace.map { Strings.readableBytes(it) } }
+                "availableMemory" to Gauge { Strings.compactFormat(availableMemory) },
+                "freeSpace" to Gauge { freeSpace.map { Strings.compactFormat(it) } }
             ).let { reg.registerAll(this, it) }
         }
     }

@@ -94,7 +94,7 @@ open class BrowserResponseHandlerImpl(
                 "Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                 task.pageDatum.protocolStatus.minorName,
                 elapsed,
-                Strings.readableBytes(length),
+                Strings.compactFormat(length),
                 settings.pageLoadTimeout, settings.scriptTimeout, settings.scrollInterval,
                 link)
         }

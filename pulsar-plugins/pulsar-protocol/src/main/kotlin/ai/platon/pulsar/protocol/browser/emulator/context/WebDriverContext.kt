@@ -99,7 +99,7 @@ class WebDriverContext(
 
         waitUntilNoRunningTasks(Duration.ofSeconds(10))
 
-        val isShutdown = if (isActive) "" else " (shutdown)"
+        val isShutdown = if (AppContext.isActive) "" else " (shutdown)"
         val display = browserId.display
         if (runningTasks.isNotEmpty()) {
             logger.info("Still {} running tasks after context close$isShutdown | {} | {}",
@@ -149,7 +149,7 @@ class WebDriverContext(
             lock.unlock()
         }
 
-        val isShutdown = if (isActive) "" else " (shutdown)"
+        val isShutdown = if (AppContext.isActive) "" else " (shutdown)"
         val display = browserId.display
         val message = when {
             availableMemory < memoryToReserve ->

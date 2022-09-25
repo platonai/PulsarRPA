@@ -115,9 +115,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private fun reportZombieContexts() {
         if (zombieContexts.isNotEmpty()) {
             val prefix = "The latest context throughput: "
-            val postfix = " (success/sec)"
+            val postfix = " (success/min)"
             zombieContexts.take(15)
-                .joinToString(", ", prefix, postfix) { String.format("%.2f", it.meterSuccesses.meanRate) }
+                .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }
         }
     }

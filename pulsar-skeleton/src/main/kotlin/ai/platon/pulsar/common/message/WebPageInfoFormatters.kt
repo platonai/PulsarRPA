@@ -183,9 +183,9 @@ class LoadStatusFormatter(
 
     private fun buildContentBytes(): String {
         var contentBytes = if (page.lastContentLength == 0L || page.lastContentLength == page.contentLength) {
-            readableBytes(page.contentLength).trim()
+            compactFormat(page.contentLength).trim()
         } else {
-            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentLength).trim()
+            compactFormat(page.contentLength).trim() + " <- " + compactFormat(page.lastContentLength).trim()
         }
 
         if (page.content == null) {
@@ -195,8 +195,8 @@ class LoadStatusFormatter(
         return contentBytes
     }
 
-    private fun readableBytes(bytes: Long): String {
-        return if (bytes == 0L) "0" else Strings.readableBytes(bytes, 7, false)
+    private fun compactFormat(bytes: Long): String {
+        return if (bytes == 0L) "0" else Strings.compactFormat(bytes, 7, false)
     }
 
     private fun buildLocation(): String {

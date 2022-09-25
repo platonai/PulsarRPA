@@ -223,7 +223,7 @@ abstract class BrowserEmulatorImplBase(
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
-        val readableLength = Strings.readableBytes(pageSource.length)
+        val readableLength = Strings.compactFormat(pageSource.length)
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)

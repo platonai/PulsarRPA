@@ -542,7 +542,7 @@ class LoadComponent(
                 metrics.persistContentMBytes.inc(ByteUnitConverter.convert(bytes, "M").toLong())
             }
         }
-        tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
+        tracer?.trace("Persisted {} | {}", Strings.compactFormat(page.contentLength), page.url)
     }
 
     fun flush() = webDb.flush()

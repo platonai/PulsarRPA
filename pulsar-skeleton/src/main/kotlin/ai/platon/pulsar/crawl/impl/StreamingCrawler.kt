@@ -32,6 +32,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermissions
+import java.text.CompactNumberFormat
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
@@ -566,7 +567,7 @@ open class StreamingCrawler(
         globalMetrics.retries.mark()
         if (page != null) {
             val symbol = UnicodeEmoji.FENCER
-            val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later"
+            val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later | "
             taskLogger.info("{}", LoadStatusFormatter(page, prefix = prefix))
         }
     }
@@ -585,9 +586,9 @@ open class StreamingCrawler(
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             globalRunningTasks,
-            Strings.readableBytes(availableMemory),
-            Strings.readableBytes(memoryToReserve.toLong()),
-            Strings.readableBytes(availableMemory - memoryToReserve.toLong())
+            Strings.compactFormat(availableMemory),
+            Strings.compactFormat(memoryToReserve.toLong()),
+            Strings.compactFormat(availableMemory - memoryToReserve.toLong())
         )
         session.globalCache.clearPDCaches()
 
@@ -608,7 +609,7 @@ open class StreamingCrawler(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.readableBytes(availableMemory))
+                    contextLeaksRate, Strings.compactFormat(availableMemory))
             delay(1000)
 
             // trigger the meter updating

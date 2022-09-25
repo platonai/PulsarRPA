@@ -45,7 +45,7 @@ class CoreMetrics(
             mapOf(
                 "version" to Gauge { AppContext.APP_VERSION },
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
-                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
+                "usedMemory" to Gauge { Strings.compactFormat(usedMemory) },
 
                 "pulsarSessionPageCacheHits" to Gauge { AbstractPulsarSession.pageCacheHits },
                 "pulsarSessionPageCacheHits/s" to Gauge { 1.0 * AbstractPulsarSession.pageCacheHits.get() / DateTimes.elapsedSeconds() },
@@ -363,13 +363,13 @@ class CoreMetrics(
             elapsedTime.readable(),
             successFetchTasks.meanRate,
             proxies.count,
-            Strings.readableBytes(bytes),
-            Strings.readableBytes(bytes / seconds),
-            Strings.readableBytes(bytes / count),
-            Strings.readableBytes(networkIFsRecvBytes),
-            Strings.readableBytes(networkIFsRecvBytesPerSecond),
-            Strings.readableBytes(networkIFsRecvBytesPerPage),
-            Strings.readableBytes(totalNetworkIFsRecvBytes)
+            Strings.compactFormat(bytes),
+            Strings.compactFormat(bytes / seconds),
+            Strings.compactFormat(bytes / count),
+            Strings.compactFormat(networkIFsRecvBytes),
+            Strings.compactFormat(networkIFsRecvBytesPerSecond),
+            Strings.compactFormat(networkIFsRecvBytesPerPage),
+            Strings.compactFormat(totalNetworkIFsRecvBytes)
         )
     }
 
