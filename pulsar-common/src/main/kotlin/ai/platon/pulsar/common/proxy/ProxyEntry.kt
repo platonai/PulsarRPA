@@ -94,7 +94,7 @@ class ProxyEntry(
     // number of success pages
     val numSuccessPages = AtomicInteger()
     val servedDomains = ConcurrentHashMultiset.create<String>()
-    val status = AtomicReference<Status>(Status.FREE)
+    val status = AtomicReference(Status.FREE)
     val testSpeed get() = accumResponseMillis.get() / numTests.get().coerceAtLeast(1) / 1000.0
     val ttl get() = declaredTTL ?: (availableTime + PROXY_EXPIRED)
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
@@ -198,7 +198,7 @@ class ProxyEntry(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
-            return true;
+            return true
         }
 
         return other is ProxyEntry
@@ -226,9 +226,25 @@ class ProxyEntry(
         return "$ban[$hostPort => $outIp]($numFailedPages/$numSuccessPages/$ttlStr)"
     }
 
+    /**
+     * Format metadata as key-value pairs, metadata with zero value are ignored.
+     * */
     private fun formatMetadata(): String {
         val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "st:${status.get().ordinal} pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosses, fpg:$numFailedPages"
+
+        var s = listOf(
+            "st" to status.get().ordinal,
+            "pg" to nPages,
+            "fpg" to numFailedPages.get(),
+            "tt" to numTests.get(),
+            "ftt" to numConnectionLosses.get()
+        ).filter { it.second > 0 }.joinToString(", ")
+
+        if (testSpeed > 0) {
+            s += ", spd:$testSpeed"
+        }
+
+        return s
     }
 
     companion object {

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.UnicodeEmoji
@@ -18,6 +19,8 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.util.concurrent.atomic.AtomicReference
 
 class MultiPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
@@ -37,6 +40,7 @@ class MultiPrivacyContextManager(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+    private val maintainTimer = AtomicReference<java.util.Timer>()
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
@@ -65,11 +69,19 @@ class MultiPrivacyContextManager(
         return context
     }
 
+    /**
+     * If the number of privacy contexts does not exceed the upper limit, create a new one,
+     * otherwise return the next active context.
+     *
+     * If a context is inactive, close it.
+     * */
     @Throws(ProxyException::class)
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
         val context = computeIfNecessary(fingerprint)
 
         if (context.isActive) {
+            // only start the maintaining timer when there is at least one context
+            startMaintainTimerIfNecessary()
             return context
         }
 
@@ -79,7 +91,8 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     *
+     * If the number of privacy contexts does not exceed the upper limit, create a new one,
+     * otherwise return the next one.
      * */
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         if (activeContexts.size < numPrivacyContexts) {
@@ -90,6 +103,7 @@ class MultiPrivacyContextManager(
             }
         }
 
+        // TODO: is synchronized necessary?
         return synchronized(activeContexts) { iterator.next() }
     }
 
@@ -128,10 +142,23 @@ class MultiPrivacyContextManager(
 
         // All retry is forced to do in crawl scope
         if (result.isPrivacyRetry) {
-            result.status.upgradeRetry(RetryScope.CRAWL).also { logCrawlRetry(task) }
+            result.status.upgradeRetry(RetryScope.CRAWL)
         }
 
         return result
+    }
+
+    private fun startMaintainTimerIfNecessary() {
+        if (maintainTimer.compareAndSet(null, java.util.Timer("PrivacyContextMMT", true))) {
+            val timer = maintainTimer.get()
+            timer?.scheduleAtFixedRate(Duration.ofMinutes(5), Duration.ofSeconds(10)) {
+                maintain()
+            }
+        }
+    }
+
+    private fun maintain() {
+        activeContexts.filterValues { it.isIdle }.values.forEach { close(it) }
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
@@ -185,12 +212,5 @@ class MultiPrivacyContextManager(
             result.task.id, privacyContext.sequence, privacyContext.privacyLeakWarnings,
             result.status, result.task.url
         )
-    }
-
-    private fun logCrawlRetry(task: FetchTask) {
-//        if (task.nPrivacyRetries > 1) {
-//            logger.takeIf { task.nPrivacyRetries > 1 }?.warn("{}. Task is still privacy leaked after {}/{} tries | {}",
-//                    task.id, task.nPrivacyRetries, task.nRetries, task.url)
-//        }
     }
 }

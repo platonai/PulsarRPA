@@ -174,7 +174,7 @@ class ChromeDevtoolsDriver(
         navigateEntry.stopped = true
         try {
             if (browser.isGUI) {
-                // in gui mode, just stop the loading, so we can make a diagnosis
+                // in gui mode, just stop the loading, so we can diagnose
                 pageAPI?.stopLoading()
             } else {
                 // go to about:blank, so the browser stops the previous page and release all resources
@@ -731,12 +731,12 @@ class ChromeDevtoolsDriver(
             return
         }
 
-        tabs.forEach { oldTab ->
-            oldTab.url?.let { closeTabsIfTimeout(it, oldTab) }
+        tabs.forEach { tab ->
+            tab.url?.let { closeTabsIfTimeout(it, tab) }
         }
     }
 
-    private fun closeTabsIfTimeout(tabUrl: String, oldTab: ChromeTab) {
+    private fun closeTabsIfTimeout(tabUrl: String, tab: ChromeTab) {
         val now = Instant.now()
         val entries = browser.navigateHistory.asSequence()
             .filter { it.url == tabUrl }
@@ -746,19 +746,16 @@ class ChromeDevtoolsDriver(
 
         if (entries.isNotEmpty()) {
             // browser.navigateHistory.removeAll(entries)
-            browser.closeTab(oldTab)
+            browser.closeTab(tab)
         }
     }
 
     private fun closeIrrelevantTabs(tabs: Array<ChromeTab>) {
-        val now = Instant.now()
         val irrelevantTabs = tabs
-            .filter { it.url?.matches("about:".toRegex()) == true }
-            .filter { oldTab -> browser.navigateHistory.none { it.url == oldTab.url } }
-        if (irrelevantTabs.isNotEmpty()) {
-            // TODO: might close a tab open just now
-            // irrelevantTabs.forEach { browserInstance.closeTab(it) }
-        }
+            .filterNot { it.urlOrEmpty.matches("about:".toRegex()) } // newly created
+            .filter { tab -> browser.navigateHistory.none { it.url == tab.url } } // not in history, so it's open by click
+
+        // irrelevantTabs.forEach { browser.closeTab(it) }
     }
 
     private fun getInjectJs(): String {
