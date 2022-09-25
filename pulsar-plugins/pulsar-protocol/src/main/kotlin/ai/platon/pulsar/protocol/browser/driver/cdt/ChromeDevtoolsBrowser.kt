@@ -95,7 +95,7 @@ class ChromeDevtoolsBrowser(
         val unmanagedDrivers = chromeDrivers.filter { !it.isManaged }
             .filter { Duration.between(lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         if (unmanagedDrivers.isNotEmpty()) {
-            logger.info("Closing {} unmanaged drivers", unmanagedDrivers.size)
+            logger.debug("Closing {} unmanaged drivers", unmanagedDrivers.size)
             require(unmanagedDrivers.all { it.navigateHistory.isEmpty() }) {
                 "Unmanaged driver should has no history"
             }

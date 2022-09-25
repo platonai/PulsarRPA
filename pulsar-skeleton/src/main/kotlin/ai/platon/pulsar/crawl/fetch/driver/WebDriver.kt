@@ -78,6 +78,11 @@ interface WebDriver: Closeable {
      * */
     val isMockedPageSource: Boolean
     /**
+     * Indicate if the driver is managed or not. A managed web driver is created for a fetch task
+     * while unmanaged drivers are created from the browser's tab list.
+     * */
+    var isManaged: Boolean
+    /**
      * The driver status.
      * */
     val status: AtomicReference<Status>
