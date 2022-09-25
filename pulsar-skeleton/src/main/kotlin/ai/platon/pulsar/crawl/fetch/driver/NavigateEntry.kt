@@ -31,9 +31,13 @@ data class NavigateEntry(
      */
     var location: String = url,
     /**
-     * Indicate if the driver be stopped.
+     * Indicate if the navigation is stopped.
      */
     var stopped: Boolean = false,
+    /**
+     * Indicate if the tab for this navigation is closed.
+     */
+    var closed: Boolean = false,
     /**
      * The last active time.
      */
@@ -42,7 +46,7 @@ data class NavigateEntry(
      * The time when the object is created.
      */
     val createTime: Instant = Instant.now(),
-) {
+): Comparable<NavigateEntry> {
     /**
      * The time when the document is ready.
      */
@@ -61,4 +65,21 @@ data class NavigateEntry(
             actionTimes[action] = now
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        return when (other) {
+            null -> false
+            is String -> other == url
+            is NavigateEntry -> other.url == url
+            else -> false
+        }
+    }
+
+    override fun hashCode() = url.hashCode()
+
+    override fun compareTo(other: NavigateEntry) = url.compareTo(other.url)
 }

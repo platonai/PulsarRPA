@@ -51,6 +51,10 @@ abstract class BrowserEmulatorImplBase(
     val counterCancels by lazy { registry.counter(this, "cancels") }
 
     open fun createResponse(task: NavigateTask): Response {
+        if (!isActive) {
+            return ForwardingResponse.canceled(task.page)
+        }
+
         val pageDatum = task.pageDatum
         val length = task.pageSource.length
         pageSourceByteHistogram.update(length)
@@ -220,10 +224,14 @@ abstract class BrowserEmulatorImplBase(
     }
 
     private fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
+        if (!isActive) {
+            return
+        }
+
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
-        val readableLength = Strings.readableBytes(pageSource.length)
+        val readableLength = Strings.compactFormat(pageSource.length)
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
@@ -234,14 +242,8 @@ abstract class BrowserEmulatorImplBase(
                 proxyEntry.display, domain, count, link, task.url
             )
         } else {
-            logger.warn(
-                "{}. Page is {}({}) | file://{} | {}",
-                task.page.id,
-                integrity.name,
-                readableLength,
-                link,
-                task.url
-            )
+            logger.warn("{}. Page is {}({}) | file://{} | {}",
+                task.page.id, integrity.name, readableLength, link, task.url)
         }
     }
 

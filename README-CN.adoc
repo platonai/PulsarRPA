@@ -1,6 +1,6 @@
-= Pulsar 简介
+= PulsarR 简介
 Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: Pulsar README
+3.0, July 29, 2022: PulsarR README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
@@ -9,27 +9,29 @@ link:README.adoc[English] | 简体中文
 
 == 简介
 
-Pulsar 是大规模抓取 Web 数据的终极开源方案。
+PulsarR 是大规模抓取 Web 数据的终极开源方案。
 
-大规模提取 Web 数据非常困难。 #网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 提供了一系列高级特性来解决该问题。
+PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果与其他项目没有混淆，可以称为 Pulsar。
+
+大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 开发了一系列尖端技术来解决这个问题。
 
 Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
 
-我们还计划发布一种高级 AI，以自动提取网页中的每个字段，并具有显着的准确性。
+我们还计划发布一个先进的人工智能，以显著的精度自动提取网页中的每一个字段。
 
 == 主要特性
 
-* 网络爬虫：浏览器渲染，ajax 数据采集
-* 高性能：高度优化，在单台机器上并行渲染数百个网页，并避免被屏蔽
-* 低成本：每天采集100,000浏览器渲染的电商网页，或者n * 10,000,000数据点，仅仅需要8核CPU和32G内存
-* 数据质量保证：智能重试，精确调度，网页数据生命周期管理
-* 大规模：完全分布式，为大规模采集设计
-* 简单API：一行代码进行采集，或者一行SQL将一个网站栏目转变为表格
-* X-SQL：扩展SQL来管理所有网页数据相关任务：网络爬虫，数据采集，网页内容挖掘，Web BI等
-* 机器人隐身：Web driver 隐身，IP轮换，隐私上下文轮换，永不被屏蔽
-* RPA：拟人行为，采集单网页应用（SPA），或者执行其他有趣的任务
-* 大数据：支持多种多样的底层存储，如本地文件，MongoDB/HBase/Gora等
-* 日志和指标：密切监控并记录每一个事件
+* 网络爬虫：浏览器渲染、ajax数据爬取
+* RPA：机器人流程自动化、模仿人类行为、采集单网页应用程序或执行其他有价值的任务
+* 简洁的 API：一行代码抓取，或者一条 SQL 将整个网站栏目变成表格
+* X-SQL：扩展 SQL 来管理 Web 数据：网络爬取、数据采集、Web 内容挖掘、Web BI
+* 爬虫隐身：浏览器驱动隐身，IP 轮换，隐私上下文轮换，永远不会被屏蔽
+* 高性能：高度优化，单机并行渲染数百页而不被屏蔽
+* 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，或 n * 10,000,000 个数据点，仅需要 8 核 CPU/32G 内存
+* 数据量保证：智能重试、精准调度、Web 数据生命周期管理
+* 大规模采集：完全分布式，专为大规模数据采集而设计
+* 大数据支持：支持各种后端存储：本地文件/MongoDB/HBase/Gora
+* 日志和指标：密切监控并记录每个事件
 
 == 开始
 
@@ -44,7 +46,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 
 上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
 
-*大多数#生产环境#抓取项目可以从以下代码片段开始：*
+*大多数 #生产环境# 数据采集项目可以从以下代码片段开始：*
 
 *Kotlin*
 [source,kotlin]
@@ -64,27 +66,28 @@ fun main() {
 }
 ----
 
-示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin].
+示例代码可以在这里找到：
+link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 == 核心概念
 
 Pulsar 的核心概念包括：
 
-* 网络数据采集（Web Scraping）
-* 网络即数据库（Network As A Database）
-* 自动提取（Auto Extract）
-* 浏览器渲染（Browser Rendering）
-* Pulsar 上下文（Pulsar Context）
-* Pulsar 会话（Pulsar Session）
-* 统一资源定位器（URLs）
-* 超链接（Hyperlinks）
-* 加载选项（Load Options）
-* 事件处理器（Event Handler）
-* X-SQL
+* 网络数据采集（Web Scraping）: 使用机器人从网站中提取内容和数据的过程
+* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决算法驱动
+* RPA: 机器人流程自动化，这是抓取现代网页的唯一方法
+* 网络即数据库（Network As A Database）: 像访问本地数据库一样访问 Web
+* X-SQL: 直接使用 SQL 查询 Web
+* Pulsar Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
+* Web Driver: Web 驱动定义了一个简洁的界面来访问网页并与之交互，所有行为都经过优化以尽可能接近真实的人
+* URL: Pulsar 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。Pulsar 中的每个任务都被定义为某种形式的 URL
+* Hyperlink: Pulsar 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
+* Load Options: 加载选项或加载参数影响 Pulsar 如何加载、获取和抓取网页
+* Event Handlers: 在网页的整个生命周期中捕获和处理事件
 
 点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] 查看详情。
 
-== 使用方法：将Pulsar用作软件库
+== 使用方法：将 Pulsar 用作软件库
 
 利用 Pulsar 强大功能的最简单方法是将其作为库添加到您的项目中。
 
@@ -94,14 +97,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.9.10</version>
+  <version>1.10.1</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.9.10")
+implementation("ai.platon.pulsar:pulsar-all:1.10.1")
 ----
 
 对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
@@ -112,9 +115,9 @@ implementation("ai.platon.pulsar:pulsar-all:1.9.10")
 
 [source,kotlin]
 ----
-// 创建一个Pulsar会话
+// 创建一个 Pulsar 会话
 val session = PulsarContexts.createSession()
-// 示例程序使用的url
+// 示例程序使用的 url
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 // 加载一个页面，如果该页面已过期，或者该页面为首次加载，则从互联网上下载该页面
 val page = session.load(url, "-expires 1d")
@@ -128,12 +131,14 @@ val document2 = session.loadDocument(url, "-expires 1d")
 // 使用该文档做一些事情
 // ...
 
-// 加载由-outLink指示的所有网页
+// 加载由 -outLink 指示的链出页面
 val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
 // 加载，解析并提取字段
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // 加载，解析并提取具名字段
 val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
+// 从由 -outLink 指示的链出页面中加载，解析并提取具名字段
+val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
@@ -217,9 +222,42 @@ public class ContinuousCrawler {
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
+=== RPA (机器人流程自动化）
+
+随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
+
+Pulsar 提供了一种在网页生命周期中模仿真人的便捷方式，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。
+
+这是一个典型的 RPA 代码片段，它是从顶级电子商务网站收集数据所必需的：
+
+```kotlin
+val options = session.options(args)
+val event = options.event.browseEvent
+event.onBrowserLaunched.addLast { page, driver ->
+    // 预热浏览器，以避免被网站阻止，或选择全局设置，例如您的位置
+    warnUpBrowser(page, driver)
+}
+event.onWillFetch.addLast { page, driver ->
+    // 必须先访问引荐来源页面，然后才能访问所需页面
+    waitForReferrer(page, driver)
+    // 网站可能会阻止我们一次打开过多页面，因此我们应该逐一打开链接
+    waitForPreviousPage(page, driver)
+}
+event.onWillCheckDocumentState.addLast { page, driver ->
+    // 等待特殊字段出现在页面上
+    driver.waitForSelector("body h1[itemprop=name]")
+    // 关闭遮罩层，它可能是促销、广告或其他东西
+    driver.click(".mask-layer-close-button")
+}
+// 访问 URL 并触发事件
+session.load(url, options)
+```
+
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin]。
+
 === 使用 X-SQL 查询 Web
 
-提取单个页面:
+提取单个页面：
 
 [source,sql]
 ----
@@ -232,7 +270,7 @@ select
   from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
 ----
 
-执行 X-SQL:
+执行 X-SQL：
 
 [source,kotlin]
 ----
@@ -245,7 +283,7 @@ println(ResultSetFormatter(rs, withHeader = true))
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.10 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.10.1 | 1,349 ratings | 4.40
 ----
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
@@ -277,7 +315,7 @@ bin/pulsar
 ----
 bin/scrape.sh
 ----
-bash 脚本非常简单，只需使用 curl 发布 X-SQL：
+该 bash 脚本非常简单，只需使用 curl 发送 X-SQL：
 [source,shell]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
@@ -296,7 +334,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 
 示例代码可以在这里找到: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
 
-Json格式的响应如下：
+Json 格式的响应如下：
 
 [source,json]
 ----
@@ -319,11 +357,28 @@ Json格式的响应如下：
 }
 ----
 
-== 使用方法：在可执行 jar 中体验 Pulsar
+== 使用方法：通过可执行 jar 体验 Pulsar
 
-我们发布了一个基于 Pulsar 的独立可执行 jar。 下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行享受使用乐趣：
+我们发布了一个基于 Pulsar 的独立可执行 jar。 下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行探索其能力：
 
     java -jar exotic-standalone.jar
+
+== 日志和指标
+
+Pulsar 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
+
+Pulsar 在日志中报告每个页面加载任务执行的状态，因此很容易知道系统中发生了什么，判断系统运行是否健康、回答成功获取多少页面、重试多少页面、使用了多少代理 IP。
+
+下面是一组典型的页面加载日志，查看 link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态。
+
+[source,composer log,options="nowrap"]
+----
+2022-09-24 11:46:26.045  INFO [-worker-14] a.p.p.c.c.L.Task - 3313. 💯 ⚡ U for N got 200 580.92 KiB in 1m14.277s, fc:1 | 75/284/96/277/6554 | 106.32.12.75 | 3xBpaR2 | https://www.walmart.com/ip/Restored-iPhone-7-32GB-Black-T-Mobile-Refurbished/329207863 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:46:09.190  INFO [-worker-32] a.p.p.c.c.L.Task - 3738. 💯 💿 U  got 200 452.91 KiB in 55.286s, last fetched 9h32m50s ago, fc:1 | 49/171/82/238/6172 | 121.205.220.179 | https://www.walmart.com/ip/Boost-Mobile-Apple-iPhone-SE-2-Cell-Phone-Black-64GB-Prepaid-Smartphone/490934488 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:46:28.567  INFO [-worker-17] a.p.p.c.c.L.Task - 2269. 💯 🔃 U for SC got 200 565.07 KiB <- 543.41 KiB in 1m22.767s, last fetched 16m58s ago, fc:6 | 58/230/98/295/6272 | 27.158.125.76 | 9uwu602 | https://www.walmart.com/ip/Straight-Talk-Apple-iPhone-11-64GB-Purple-Prepaid-Smartphone/356345388?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 ⚡ U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
+----
 
 == 系统要求
 

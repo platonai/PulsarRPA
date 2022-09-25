@@ -34,6 +34,10 @@ data class PrivacyContextId(
      * Note: do not use the default equality function
      * */
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return other is PrivacyContextId
                 && other.contextDir == contextDir
                 && other.fingerprint.browserType.toString() == fingerprint.browserType.toString()
@@ -79,6 +83,10 @@ data class BrowserId constructor(
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
         return other is BrowserId
                 && other.contextDir == contextDir
                 && other.fingerprint.toString() == fingerprint.toString()
@@ -140,7 +148,7 @@ class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
 
 class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
     private val logger = LoggerFactory.getLogger(PrivacyContextIdGeneratorFactory::class.java)
-    val generator by lazy { createIfAbsent(conf) }
+    val generator: PrivacyContextIdGenerator by lazy { createIfAbsent(conf) }
 
     private fun createIfAbsent(conf: ImmutableConfig): PrivacyContextIdGenerator {
         val defaultClazz = DefaultPrivacyContextIdGenerator::class.java
@@ -148,7 +156,9 @@ class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
             conf.getClass(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, defaultClazz)
         } catch (e: Exception) {
             logger.warn("Configured proxy loader {}({}) is not found, use default ({})",
-                    CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, conf.get(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS), defaultClazz.simpleName)
+                CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS,
+                conf.get(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS),
+                defaultClazz.simpleName)
             defaultClazz
         }
 

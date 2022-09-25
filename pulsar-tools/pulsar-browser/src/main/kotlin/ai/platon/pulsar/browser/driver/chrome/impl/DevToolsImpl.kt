@@ -46,9 +46,21 @@ class InvocationFuture(val returnProperty: String? = null) {
         countDownLatch.countDown()
     }
 
+    /**
+     * Causes the current thread to wait until the latch has counted down to
+     * zero, unless the thread is interrupted, or the specified waiting time elapses.
+     *
+     * TODO: this method blocks the current thread, so it should not used in a coroutine
+     * */
     @Throws(InterruptedException::class)
     fun await(timeout: Duration) = await(timeout.toMillis(), TimeUnit.MILLISECONDS)
 
+    /**
+     * Causes the current thread to wait until the latch has counted down to
+     * zero, unless the thread is interrupted, or the specified waiting time elapses.
+     *
+     * TODO: this method blocks the current thread, so it should not used in a coroutine
+     * */
     @Throws(InterruptedException::class)
     fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
         return if (timeout == 0L) {
@@ -137,6 +149,10 @@ class EventDispatcher : Consumer<String> {
 
     fun unregisterListener(key: String, listener: DevToolsEventListener) {
         eventListeners[key]?.removeIf { listener.handler == it.handler }
+    }
+
+    fun removeAllListeners() {
+        eventListeners.clear()
     }
 
     override fun accept(message: String) {
@@ -299,6 +315,7 @@ abstract class DevToolsImpl(
             }
 
             val readTimeout = config.readTimeout
+            // blocking the current thread
             val responded = future.await(readTimeout)
             dispatcher.unsubscribe(method.id)
             lastActiveTime = Instant.now()
@@ -371,6 +388,7 @@ abstract class DevToolsImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            // discard all furthers in dispatcher?
             kotlin.runCatching { doClose() }.onFailure { logger.warn("[Unexpected][Ignored]", it.message) }
             closeLatch.countDown()
         }

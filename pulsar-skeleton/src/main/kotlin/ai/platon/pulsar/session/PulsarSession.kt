@@ -62,13 +62,13 @@ import java.util.concurrent.CompletableFuture
  * Since the webpages are becoming more and more complex, fetching webpages through
  * real browsers is the primer way nowadays.
  *
- * When we fetch webpages using a real browser, we may need to interact with pages to
- * ensure the desired fields are loaded correctly and completely. Activate [PageEvent]
+ * When we fetch webpages using a real browser, we need to interact with pages to
+ * ensure the required fields are loaded correctly and completely. Enable [PageEvent]
  * and use [WebDriver] to archive such purpose.
  *
  * ```kotlin
  * val options = session.options(args)
- * options.event.simulateEvent.onDidDOMStateCheck.addLast { page, driver ->
+ * options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
  *   driver.scrollDown()
  * }
  * session.load(url, options)

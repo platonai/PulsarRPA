@@ -49,8 +49,8 @@ open class BrowserPrivacyContext(
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 meterSuccesses.count, String.format("%.2f", meterSuccesses.meanRate),
                 meterSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.readableBytes(coreMetrics?.totalNetworkIFsRecvBytes?:0),
-                Strings.readableBytes(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
+                Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
+                Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
                 meterTasks.count, meterFinishes.count,
                 proxyContext?.proxyEntry
         )
@@ -111,7 +111,7 @@ open class BrowserPrivacyContext(
             proxyContext = pc
             coreMetrics?.proxies?.mark()
         } catch (e: ProxyException) {
-            logger.warn(e.brief("Failed to create proxy context"))
+            logger.warn(e.brief("Failed to create proxy context - "))
         }
     }
 }

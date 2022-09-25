@@ -21,6 +21,7 @@ import org.apache.commons.math3.linear.OpenMapRealVector;
 import org.apache.commons.math3.linear.SparseRealVector;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * From mahout
@@ -307,6 +308,10 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
         if (o instanceof OrderedIntDoubleMapping) {
             OrderedIntDoubleMapping other = (OrderedIntDoubleMapping) o;
             if (numMappings == other.numMappings) {

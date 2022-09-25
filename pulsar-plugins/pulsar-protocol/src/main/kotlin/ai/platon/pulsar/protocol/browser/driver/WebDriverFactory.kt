@@ -3,6 +3,8 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
+import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
@@ -42,6 +44,17 @@ open class WebDriverFactory(
     fun create(
         browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
     ): WebDriver {
+        return createBrowserAndDriver(browserId, priority, conf, start).second
+    }
+
+    /**
+     * Create a WebDriver
+     */
+    @Throws(BrowserLaunchException::class)
+    @Synchronized
+    fun createBrowserAndDriver(
+        browserId: BrowserId, priority: Int, conf: VolatileConfig, start: Boolean = true
+    ): Pair<Browser, WebDriver> {
         logger.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserId)
 
         val capabilities = driverSettings.createGeneralOptions()
@@ -51,7 +64,7 @@ open class WebDriverFactory(
         val browserType = browserId.browserType
 
         try {
-            val driver = when (browserType) {
+            val (browser, driver) = when (browserType) {
                 BrowserType.PULSAR_CHROME -> createChromeDevtoolsDriver(browserId, capabilities)
 //                BrowserType.PLAYWRIGHT_CHROME -> createPlaywrightDriver(browserInstanceId, capabilities)
                 BrowserType.MOCK_CHROME -> createMockChromeDevtoolsDriver(browserId, capabilities)
@@ -62,7 +75,7 @@ open class WebDriverFactory(
                 driver.startWork()
             }
 
-            return WebDriverAdapter(driver, priority)
+            return browser to WebDriverAdapter(driver, priority)
         } catch (e: BrowserLaunchException) {
             logger.error("Can not launch browser $browserType | {}", e.message)
             throw e
@@ -72,10 +85,10 @@ open class WebDriverFactory(
     @Throws(BrowserLaunchException::class)
     private fun createChromeDevtoolsDriver(
         instanceId: BrowserId, capabilities: Map<String, Any>,
-    ): ChromeDevtoolsDriver {
+    ): Pair<ChromeDevtoolsBrowser, ChromeDevtoolsDriver> {
         require(instanceId.browserType == BrowserType.PULSAR_CHROME)
         val browser = browserManager.launch(instanceId, driverSettings, capabilities) as ChromeDevtoolsBrowser
-        return browser.newDriver()
+        return browser to browser.newDriver()
     }
 
 //    private fun createPlaywrightDriver(
@@ -89,13 +102,13 @@ open class WebDriverFactory(
     @Throws(BrowserLaunchException::class)
     private fun createMockChromeDevtoolsDriver(
         instanceId: BrowserId, capabilities: Map<String, Any>,
-    ): MockWebDriver {
+    ): Pair<MockBrowser, MockWebDriver> {
         require(instanceId.browserType == BrowserType.MOCK_CHROME)
         val browser = browserManager.launch(instanceId, driverSettings, capabilities) as MockBrowser
         val fingerprint = instanceId.fingerprint.copy(browserType = BrowserType.PULSAR_CHROME)
         val backupInstanceId = BrowserId(instanceId.contextDir, fingerprint)
-        val backupDriverCreator = { createChromeDevtoolsDriver(backupInstanceId, capabilities) }
-        return MockWebDriver(browser, backupDriverCreator)
+        val backupDriverCreator = { createChromeDevtoolsDriver(backupInstanceId, capabilities).second }
+        return browser to MockWebDriver(browser, backupDriverCreator)
     }
 
     private fun setProxy(capabilities: MutableMap<String, Any>, proxyServer: String) {

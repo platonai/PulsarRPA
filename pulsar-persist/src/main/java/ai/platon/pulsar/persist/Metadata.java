@@ -180,6 +180,10 @@ public class Metadata {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
         return o instanceof Metadata && data.equals(((Metadata) o).data);
     }
 

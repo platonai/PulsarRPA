@@ -6,10 +6,8 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.PageEvent
-import ai.platon.pulsar.crawl.event.HTMLDocumentHandler
 import ai.platon.pulsar.crawl.event.WebPageHandler
 import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
 import java.net.MalformedURLException
@@ -113,12 +111,9 @@ open class ParsableHyperlink(
             this(url, { page, document -> onParse.accept(page, document) })
 
     override var event: PageEvent = DefaultPageEvent().also {
-        it.loadEvent.onHTMLDocumentParsed.addLast(object: HTMLDocumentHandler() {
-            override fun invoke(page: WebPage, document: FeaturedDocument) {
-                onParse(page, document.document)
-                Unit
-            }
-        })
+        it.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
+            onParse(page, document.document)
+        }
     }
 }
 
@@ -207,7 +202,7 @@ open class CompletableHyperlink<T>(
      * 3. a [UrlAware]
      * */
     override fun equals(other: Any?): Boolean {
-        if (other === this) {
+        if (this === other) {
             return true
         }
 
@@ -264,6 +259,11 @@ internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHy
     override fun invoke(page: WebPage) {
         link.complete(page)
         link.event.loadEvent.onLoaded.remove(this)
+
+        // TODO: the following code might be better
+//        if (link.event.loadEvent.onLoaded.remove(this)) {
+//            link.complete(page)
+//        }
     }
 }
 

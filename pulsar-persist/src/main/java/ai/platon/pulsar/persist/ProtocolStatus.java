@@ -8,9 +8,11 @@ package ai.platon.pulsar.persist;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -130,11 +132,15 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static ProtocolStatus retry(RetryScope scope, Object reason) {
         String reasonString;
         if (reason instanceof Exception) {
-            reasonString = ((Exception) reason).getClass().getName();
+            reasonString = ((Exception) reason).getClass().getSimpleName();
         } else {
             reasonString = reason.toString();
         }
-        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope, ARG_RETRY_REASON, reasonString);
+
+        return failed(ProtocolStatusCodes.RETRY,
+                ARG_RETRY_SCOPE, scope,
+                ARG_RETRY_REASON, reasonString
+        );
     }
 
     @Nonnull
@@ -226,17 +232,19 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public boolean isRetry(RetryScope scope) {
         RetryScope defaultScope = RetryScope.CRAWL;
-        return getMinorCode() == RETRY && getArgOrDefault(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
+        return getMinorCode() == RETRY && getArgOrElse(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
     }
 
     public boolean isRetry(RetryScope scope, Object reason) {
-        String reasonString = "";
+        String reasonString;
         if (reason instanceof Exception) {
-            reasonString = ((Exception) reason).getClass().getName();
+            reasonString = ((Exception) reason).getClass().getSimpleName();
+        } else if (reason instanceof Class) {
+            reasonString = ((Class<?>) reason).getSimpleName();
         } else {
             reasonString = reason.toString();
         }
-        return isRetry(scope) && getArgOrDefault(ARG_RETRY_REASON, "").equals(reasonString);
+        return isRetry(scope) && getArgOrElse(ARG_RETRY_REASON, "").equals(reasonString);
     }
 
     public boolean isTempMoved() {
@@ -280,7 +288,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         getArgs().put(getMinorName(), message);
     }
 
-    public String getArgOrDefault(@NotNull String name, @NotNull String defaultValue) {
+    public String getArgOrElse(@NotNull String name, @NotNull String defaultValue) {
         return getArgs().getOrDefault(name, defaultValue).toString();
     }
 
@@ -297,16 +305,28 @@ public class ProtocolStatus implements ProtocolStatusCodes {
                 + minorCodes.getOrDefault(getMinorCode(), "unknown");
     }
 
+    @Nullable
+    public Object getRetryScope() {
+        return getArgs().get(ARG_RETRY_SCOPE);
+    }
+
+    @Nullable
+    public Object getRetryReason() {
+        return getArgs().get(ARG_RETRY_REASON);
+    }
+
     public void upgradeRetry(RetryScope scope) {
         getArgs().put(ARG_RETRY_SCOPE, scope.toString());
     }
 
     @Override
     public String toString() {
-        String minorName = minorCodes.getOrDefault(getMinorCode(), "unknown");
+        String minorName = minorCodes.getOrDefault(getMinorCode(), "Unknown");
         String str = minorName + "(" + getMinorCode() + ")";
         if (!getArgs().isEmpty()) {
+            List<String> keys = List.of(ARG_RETRY_SCOPE, ARG_RETRY_REASON, ARG_HTTP_CODE);
             String args = getArgs().entrySet().stream()
+                    .filter(e -> keys.contains(e.getKey().toString()))
                     .map(e -> e.getKey() + ": " + e.getValue())
                     .collect(Collectors.joining(", "));
             str += " " + args;

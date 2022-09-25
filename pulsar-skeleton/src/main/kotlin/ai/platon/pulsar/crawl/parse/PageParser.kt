@@ -245,13 +245,13 @@ class PageParser(
      * Process redirect when the page is fetched with native http protocol rather than a browser
      * */
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
-        val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
+        val refreshHref = parseStatus.getArgOrElse(ParseStatus.REFRESH_HREF, "")
         val newUrl = crawlFilters.normalizeToNull(refreshHref, ChainedUrlNormalizer.SCOPE_FETCHER)?:return
 
         page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
         if (newUrl == page.url) {
-            val refreshTime = parseStatus.getArgOrDefault(ParseStatus.REFRESH_TIME, "0").toInt()
+            val refreshTime = parseStatus.getArgOrElse(ParseStatus.REFRESH_TIME, "0").toInt()
             val reprUrl = URLUtil.chooseRepr(page.url, newUrl, refreshTime < AppConstants.PERM_REFRESH_TIME)
             page.reprUrl = reprUrl
         }

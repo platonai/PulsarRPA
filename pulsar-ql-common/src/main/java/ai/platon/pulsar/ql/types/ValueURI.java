@@ -78,6 +78,10 @@ public class ValueURI extends Value {
 
     @Override
     public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
         return other instanceof ValueURI && ((ValueURI) other).uri.equals(this.uri);
     }
 

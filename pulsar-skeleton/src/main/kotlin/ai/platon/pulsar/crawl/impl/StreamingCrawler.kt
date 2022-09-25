@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
@@ -359,7 +360,7 @@ open class StreamingCrawler(
 
             try {
                 globalMetrics.tasks.mark()
-                runLoadTask(url)
+                runLoadTaskWithEventHandlers(url)
             } finally {
                 lastActiveTime = Instant.now()
 
@@ -373,7 +374,7 @@ open class StreamingCrawler(
         return flowState
     }
 
-    private suspend fun runLoadTask(url: UrlAware) {
+    private suspend fun runLoadTaskWithEventHandlers(url: UrlAware) {
         emit(CrawlEvents.willLoad, url)
 
         if (url is ListenableUrl && url is DegenerateUrl) {
@@ -429,6 +430,10 @@ open class StreamingCrawler(
     }
 
     private fun collectStatAfterLoad(page: WebPage) {
+        if (page.isCanceled) {
+            return
+        }
+
         lastFetchError = page.protocolStatus.takeIf { !it.isSuccess }?.toString() ?: ""
         if (!page.protocolStatus.isSuccess) {
             return
@@ -452,6 +457,7 @@ open class StreamingCrawler(
         when {
             !isActive -> return
             page == null -> handleRetry0(url, page)
+            page.isCanceled -> handleRetry0(url, page)
             page.protocolStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
@@ -463,13 +469,17 @@ open class StreamingCrawler(
 
     @Throws(Exception::class)
     private suspend fun loadWithMinorExceptionHandled(url: UrlAware): WebPage? {
-        // apply the default options, arguments in the url has the highest priority, so url.args needs to appear last
         val options = session.options(url.args ?: "")
         if (options.isDead()) {
             // The url is dead, drop the task
             globalKilledTasks.incrementAndGet()
             return null
         }
+
+        // TODO: use the code below, to avoid option creation, which leads to too complex option merging
+//        if (url.deadline > Instant.now()) {
+//            session.loadDeferred(url)
+//        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }
             .onFailure { flowState = handleException(url, it) }
@@ -555,7 +565,8 @@ open class StreamingCrawler(
 
         globalMetrics.retries.mark()
         if (page != null) {
-            val prefix = "Trying ${nextRetryNumber}th ${delay.readable()} later"
+            val symbol = UnicodeEmoji.FENCER
+            val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later | "
             taskLogger.info("{}", LoadStatusFormatter(page, prefix = prefix))
         }
     }
@@ -574,9 +585,9 @@ open class StreamingCrawler(
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             globalRunningTasks,
-            Strings.readableBytes(availableMemory),
-            Strings.readableBytes(memoryToReserve.toLong()),
-            Strings.readableBytes(availableMemory - memoryToReserve.toLong())
+            Strings.compactFormat(availableMemory),
+            Strings.compactFormat(memoryToReserve.toLong()),
+            Strings.compactFormat(availableMemory - memoryToReserve.toLong())
         )
         session.globalCache.clearPDCaches()
 
@@ -597,7 +608,7 @@ open class StreamingCrawler(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.readableBytes(availableMemory))
+                    contextLeaksRate, Strings.compactFormat(availableMemory))
             delay(1000)
 
             // trigger the meter updating

@@ -140,7 +140,7 @@ class FatLinkExtractor(
             log.info(
                 "{}. No new link in portal page({}), latest fetch at: {} | <{}> | {}",
                 page.id,
-                Strings.readableBytes(page.contentLength),
+                Strings.compactFormat(page.contentLength),
                 Duration.between(page.prevFetchTime, now).readable(),
                 selector,
                 seed

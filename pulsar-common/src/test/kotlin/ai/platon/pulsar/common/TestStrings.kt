@@ -15,7 +15,7 @@ class TestStrings {
     }
 
     @Test
-    fun `urls match regexes`() {
+    fun `Urls match regexes`() {
         assertTrue { "http://amazon.com/b/ref=dp_bc_aui_C_3&node=17874225011".contains("&node=\\d+".toRegex()) }
         assertTrue { "http://amazon.com/a/reviews/123".contains("/reviews/".toRegex()) }
         assertTrue { "http://amazon.com/a/reviews/123".matches(".+/reviews/.+".toRegex()) }
@@ -31,8 +31,14 @@ class TestStrings {
     }
 
     @Test
-    fun testReadableBytes() {
-        println(Strings.readableBytes(1e6.toLong(), true))
+    fun testCompactFormat() {
+        var s = Strings.compactFormat(1e6.toLong(), true)
+//        println(s)
+        assertEquals("1.00 MB", s)
+
+        s = Strings.compactFormat(1e6.toLong())
+        assertEquals("976.56 KiB", s)
+//        println(s)
     }
 
     @Test
@@ -42,5 +48,4 @@ class TestStrings {
         assertEquals(50, s2.length)
         assertTrue(s2) { s2.endsWith("a...") }
     }
-
 }

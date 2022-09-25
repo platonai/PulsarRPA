@@ -155,6 +155,9 @@ abstract class AbstractChainedFunction0<R>: AbstractPFunction0<R>(), ChainedHand
         override fun invoke() = handler()
     })
 
+    /**
+     * TODO: remove does not work if the handler is added as a lambda function
+     * */
     override fun remove(handler: Any) = registeredHandlers.remove(handler)
 
     override fun clear() = registeredHandlers.clear()

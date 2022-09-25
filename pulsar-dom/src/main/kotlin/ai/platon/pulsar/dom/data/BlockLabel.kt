@@ -23,6 +23,10 @@ open class BlockLabel(value: String) : Comparable<BlockLabel> {
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is BlockLabel && text == other.text
     }
 

@@ -96,7 +96,7 @@ private fun reportHyperlink(
         log.info("Portal page is illegal (too small) | {}", page.url)
     } else {
         val exportLink = AppPaths.uniqueSymbolicLinkForUri(page.url)
-        val readableBytes = Strings.readableBytes(page.contentLength)
+        val readableBytes = Strings.compactFormat(page.contentLength)
         log.info(
             "{}. There are {} links in portal page ({}), total {} fetch urls | file://{} | {}",
             page.id, links.size, readableBytes, fetchUrls.size, exportLink, page.url

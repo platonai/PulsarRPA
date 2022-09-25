@@ -54,6 +54,15 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
         return true
     }
 
+    /**
+     * TODO: easy to misuse, especially when we emit a non-suspend event in a suspend function
+     *
+     * In the following example, emit1 is misused, should be emit
+     * suspend fun navigateTo(entry: NavigateEntry) {
+     *   browser.emit1(BrowserEvents.willNavigate, entry)
+     *   navigateHistory.add(entry)
+     * }
+     * */
     override suspend fun emit1(event: EventType): Boolean {
         val l = events[event]?.filterIsInstance<suspend () -> Unit>() ?: return false
         l.forEach { kotlin.runCatching { it() }.onFailure { onFailure(it) } }

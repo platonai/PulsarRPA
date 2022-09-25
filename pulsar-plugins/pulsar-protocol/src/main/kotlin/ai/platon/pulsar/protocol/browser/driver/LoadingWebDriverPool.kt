@@ -30,7 +30,7 @@ import kotlin.concurrent.withLock
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class LoadingWebDriverPool(
+class LoadingWebDriverPool constructor(
     val browserId: BrowserId,
     val priority: Int = 0,
     val driverFactory: WebDriverFactory,
@@ -162,7 +162,7 @@ class LoadingWebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            doClose(CLOSE_ALL_TIMEOUT)
+            closeGracefully(Duration.ofSeconds(5))
         }
     }
 
@@ -226,6 +226,9 @@ class LoadingWebDriverPool(
     private fun createDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
         synchronized(driverFactory) {
             try {
+                // create driver from remote unmanaged tabs, close unmanaged idle drivers, etc
+                _browser?.maintain()
+
                 if (shouldCreateDriver()) {
                     createWebDriver(volatileConfig)
                 }
@@ -245,10 +248,14 @@ class LoadingWebDriverPool(
 
     @Throws(BrowserLaunchException::class)
     private fun createWebDriver(volatileConfig: VolatileConfig) {
+        // TODO: the code below might be better
+        // val b = browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
+        // val driver = b.newDriver()
+
         val driver = driverFactory.create(browserId, priority, volatileConfig, start = false)
 
         lock.withLock {
-            // _browser = driver.browser
+            _browser = driver.browser
             _freeDrivers.add(driver)
             _onlineDrivers.add(driver)
         }
@@ -258,24 +265,18 @@ class LoadingWebDriverPool(
         }
     }
 
-    private fun doClose(timeToWait: Duration) {
+    private fun closeGracefully(timeToWait: Duration) {
         _freeDrivers.clear()
+        _onlineDrivers.forEach { it.cancel() }
+        _onlineDrivers.clear()
 
-        val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
-        nonSynchronized.forEach { it.cancel() }
+//        val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
+//        nonSynchronized.forEach { it.cancel() }
 
         waitUntilIdle(timeToWait)
 
-        closeAllDrivers(nonSynchronized)
-    }
-
-    private fun closeAllDrivers(drivers: List<WebDriver>) {
-        val i = AtomicInteger()
-        val total = drivers.size
-        drivers.parallelStream().forEach { driver ->
-            driver.quit().also { counterQuit.inc() }
-            logger.debug("Quit driver {}/{} | {}", i.incrementAndGet(), total, driver)
-        }
+        // close drivers by browser
+        // closeAllDrivers(nonSynchronized)
     }
 
     /**

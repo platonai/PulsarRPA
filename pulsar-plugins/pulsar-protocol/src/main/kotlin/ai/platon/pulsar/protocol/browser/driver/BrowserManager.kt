@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-//import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserInstance
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -35,17 +34,17 @@ open class BrowserManager(
     }
 
     @Synchronized
-    fun close(browserId: BrowserId) {
+    fun closeBrowserGracefully(browserId: BrowserId) {
         _browsers.remove(browserId.userDataDir.toString())?.close()
     }
 
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _browsers.values.forEach {
-                // managed by [WebDriverPoolManager]
-                // it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
+            _browsers.values.parallelStream().forEach {
+                it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
             }
+            _browsers.clear()
         }
     }
 

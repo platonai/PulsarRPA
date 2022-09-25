@@ -58,6 +58,10 @@ class CrawlStatus constructor(private val status: Byte) : CrawlStatusCodes {
     val isGone get() = status == CrawlStatusCodes.GONE
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is CrawlStatus && status.toInt() == other.code
     }
 

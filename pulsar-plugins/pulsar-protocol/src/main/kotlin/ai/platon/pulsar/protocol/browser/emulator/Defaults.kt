@@ -18,8 +18,12 @@ class DefaultBrowserManager(conf: ImmutableConfig): BrowserManager(conf)
 class DefaultWebDriverFactory(conf: ImmutableConfig)
     : WebDriverFactory(DefaultWebDriverSettings(conf), DefaultBrowserManager(conf), conf)
 
-class DefaultWebDriverPoolManager(conf: ImmutableConfig)
-    : WebDriverPoolManager(DefaultWebDriverFactory(conf), conf, suppressMetrics = true)
+class DefaultWebDriverPoolManager(conf: ImmutableConfig) :
+    WebDriverPoolManager(
+        DefaultBrowserManager(conf),
+        DefaultWebDriverFactory(conf),
+        conf, suppressMetrics = true
+    )
 
 class DefaultBrowserEmulator(
         driverPoolManager: WebDriverPoolManager,

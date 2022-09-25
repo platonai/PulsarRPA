@@ -32,6 +32,8 @@ class ChromeTab {
 
     val createTime = Instant.now()
 
+    val urlOrEmpty get() = url ?: ""
+
     fun isPageType(): Boolean = PAGE_TYPE == type
 
     companion object {

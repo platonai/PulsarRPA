@@ -65,9 +65,7 @@ class RestaurantCrawler(
 
     fun options(args: String): LoadOptions {
         val options = session.options(args)
-        val eh = options.event
-
-        val be = eh.browseEvent
+        val be = options.event.browseEvent
         be.onWillComputeFeature.addLast { page, driver ->
             commentSelectors.entries.mapIndexed { i, _ ->
                 "#reviewlist-wrapper .comment-item:nth-child($i) .more"
@@ -82,7 +80,6 @@ class RestaurantCrawler(
         be.onFeatureComputed.addLast { page, driver ->
             fieldSelectors.entries.asFlow().flowOn(Dispatchers.IO).collect { (name, selector) ->
                 if (driver.exists(selector)) {
-println("Screenshot for $selector")
                     Screenshot(page, driver).screenshot(name, selector)
                     delay(1500)
                 }

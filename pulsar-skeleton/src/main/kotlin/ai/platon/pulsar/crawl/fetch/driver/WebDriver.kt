@@ -78,6 +78,10 @@ interface WebDriver: Closeable {
      * */
     val isMockedPageSource: Boolean
     /**
+     * Indicate if the driver is recovered from the browser's tab list or not.
+     * */
+    var isRecovered: Boolean
+    /**
      * The driver status.
      * */
     val status: AtomicReference<Status>

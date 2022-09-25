@@ -1254,8 +1254,6 @@ __pulsar_utils__.add = function(a, b) {
  * @return {Object}
  * */
 __pulsar_utils__.typeInfo = function() {
-    return {
-        "this.name": this.name,
-        "this.config": this.config,
-    }
+    let fields = Object.keys(__pulsar_utils__).join(", ")
+    return fields
 };

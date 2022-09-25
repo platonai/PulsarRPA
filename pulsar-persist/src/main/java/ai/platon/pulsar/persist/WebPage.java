@@ -52,6 +52,8 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
  * The core web page structure
+ *
+ * TODO: add a ImmutableWebPage
  */
 final public class WebPage implements Comparable<WebPage> {
 
@@ -99,6 +101,11 @@ final public class WebPage implements Comparable<WebPage> {
      * If this page is fetched from internet
      */
     private boolean isFetched = false;
+
+    /**
+     * If this page is canceled
+     */
+    private boolean isCanceled = false;
 
     /**
      * If this page is fetched and updated
@@ -406,6 +413,20 @@ final public class WebPage implements Comparable<WebPage> {
 
     public void setFetched(boolean fetched) {
         isFetched = fetched;
+    }
+
+    /**
+     * If a page is canceled, it remains unchanged
+     * */
+    public boolean isCanceled() {
+        return isCanceled;
+    }
+
+    /**
+     * If a page is canceled, it remains unchanged
+     * */
+    public void setCanceled(boolean canceled) {
+        isCanceled = canceled;
     }
 
     public boolean isContentUpdated() {
@@ -1516,6 +1537,10 @@ final public class WebPage implements Comparable<WebPage> {
 
     @Override
     public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
         return other instanceof WebPage && ((WebPage) other).url.equals(url);
     }
 

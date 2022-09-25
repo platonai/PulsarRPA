@@ -1,5 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.browser.BrowserErrorCode
+
 open class WebDriverException(
     message: String? = null,
     val driver: WebDriver? = null,
@@ -20,3 +22,10 @@ open class WebDriverCancellationException(
 
     constructor(cause: Throwable?) : this(null, null, cause)
 }
+
+open class BrowserErrorPageException(
+    errorCode: BrowserErrorCode,
+    message: String? = null,
+    pageContent: String? = null,
+    cause: Throwable? = null
+): RuntimeException(message, cause)

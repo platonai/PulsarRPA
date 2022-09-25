@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -44,7 +45,7 @@ class CoreMetrics(
             mapOf(
                 "version" to Gauge { AppContext.APP_VERSION },
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
-                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) },
+                "usedMemory" to Gauge { Strings.compactFormat(usedMemory) },
 
                 "pulsarSessionPageCacheHits" to Gauge { AbstractPulsarSession.pageCacheHits },
                 "pulsarSessionPageCacheHits/s" to Gauge { 1.0 * AbstractPulsarSession.pageCacheHits.get() / DateTimes.elapsedSeconds() },
@@ -353,7 +354,8 @@ class CoreMetrics(
         val count = successFetchTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
         val proxyFmt = if (proxies.count > 0) " using %s proxies" else ""
-        var format = "Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
+        val symbol = UnicodeEmoji.DELIVERY_TRUCK
+        var format = "$symbol Fetched %d pages in %s(%.2f pages/s) successfully$proxyFmt | content: %s, %s/s, %s/p"
         // format += " | net recv: %s, %s/s, %s/p | total net recv: %s"
         return String.format(
             format,
@@ -361,13 +363,13 @@ class CoreMetrics(
             elapsedTime.readable(),
             successFetchTasks.meanRate,
             proxies.count,
-            Strings.readableBytes(bytes),
-            Strings.readableBytes(bytes / seconds),
-            Strings.readableBytes(bytes / count),
-            Strings.readableBytes(networkIFsRecvBytes),
-            Strings.readableBytes(networkIFsRecvBytesPerSecond),
-            Strings.readableBytes(networkIFsRecvBytesPerPage),
-            Strings.readableBytes(totalNetworkIFsRecvBytes)
+            Strings.compactFormat(bytes),
+            Strings.compactFormat(bytes / seconds),
+            Strings.compactFormat(bytes / count),
+            Strings.compactFormat(networkIFsRecvBytes),
+            Strings.compactFormat(networkIFsRecvBytesPerSecond),
+            Strings.compactFormat(networkIFsRecvBytesPerPage),
+            Strings.compactFormat(totalNetworkIFsRecvBytes)
         )
     }
 

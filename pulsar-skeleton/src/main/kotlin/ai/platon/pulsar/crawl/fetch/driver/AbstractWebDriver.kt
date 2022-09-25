@@ -51,6 +51,8 @@ abstract class AbstractWebDriver(
 
     override val isMockedPageSource: Boolean = false
 
+    override var isRecovered: Boolean = false
+
     override val status = AtomicReference(WebDriver.Status.UNKNOWN)
 
     override var lastActiveTime: Instant = Instant.now()
@@ -222,7 +224,7 @@ abstract class AbstractWebDriver(
         close()
     }
 
-    override fun equals(other: Any?): Boolean = other is AbstractWebDriver && other.id == this.id
+    override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)
 
     override fun hashCode(): Int = id
 

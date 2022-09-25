@@ -139,6 +139,7 @@ open class InteractiveBrowserEmulator(
 
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
+        // TODO: page should not be modified in browser phrase, it should only be updated using PageDatum
         task.page.lastBrowser = driver.browserType
 
         if (task.page.options.isDead()) {
@@ -234,7 +235,7 @@ open class InteractiveBrowserEmulator(
 
             emit1(EmulateEvents.willStopTab, page, driver)
 //            listeners.notify(EventType.willStopTab, page, driver)
-//            val event = page.simulateEvent
+//            val event = page.browseEvent
 //            notify("onWillStopTab") { event?.onWillStopTab?.invoke(page, driver) }
 
             /**
@@ -294,7 +295,7 @@ open class InteractiveBrowserEmulator(
         checkState(task, driver)
 
 //        listeners.notify(EventType.willNavigate, page, driver)
-//        val event = page.simulateEvent
+//        val event = page.browseEvent
 //        notify("onWillNavigate") { event?.onWillNavigate?.invoke(page, driver) }
 
         // href has the higher priority to locate a resource
@@ -418,7 +419,7 @@ open class InteractiveBrowserEmulator(
                 // this will never happen since 1.10.0
                 logger.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val browserError = responseHandler.createBrowserError(message)
+                val browserError = responseHandler.createBrowserErrorResponse(message)
                 status = browserError.status
                 result.activeDOMMessage = browserError.activeDOMMessage
                 result.state = FlowState.BREAK

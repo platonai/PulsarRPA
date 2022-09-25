@@ -6,7 +6,7 @@ import ai.platon.pulsar.crawl.event.*
  * Manage all events in crawl phrase of the webpage lifecycle.
  * */
 interface CrawlEvent {
-    @Deprecated("No need to filter in a crawler")
+    @Deprecated("Url filtering should not be in PageEvent")
     val onFilter: UrlAwareEventFilter
 
     @Deprecated("No need to normalize in a crawler")
@@ -25,6 +25,7 @@ interface CrawlEvent {
  * Manage all events in the load phrase of the webpage lifecycle.
  * */
 interface LoadEvent {
+    @Deprecated("Url filtering should not be in load phrase, crawl phrase is better")
     val onFilter: UrlFilterEventHandler
 
     val onNormalize: UrlFilterEventHandler

@@ -24,7 +24,7 @@ class ChromeWebDriverTests: TestBase() {
     private val url = "https://www.amazon.com/dp/B00BTX5926"
     private val asin = url.substringAfterLast("/dp/")
     private val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    private val settings = BrowserSettings()
+    private val settings = driverFactory.driverSettings
     private val confuser get() = settings.confuser
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",

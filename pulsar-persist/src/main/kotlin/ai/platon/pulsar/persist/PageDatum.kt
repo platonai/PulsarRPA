@@ -37,9 +37,18 @@ class PageDatum(
      */
     val url: String,
     /**
-     * The last working address, it might redirect to url, or it might have additional random parameters.
-     * location may be different from url, it's generally normalized.
-     */
+     * Returns the document location as a string.
+     *
+     * [PageDatum.location] is the last working address, retrieved by javascript,
+     * it might redirect from url, or it might have additional random parameters.
+     * [PageDatum.location] may be different from [PageDatum.url].
+     *
+     * In javascript, the documentURI property can be used on any document types. The document.URL
+     * property can only be used on HTML documents.
+     *
+     * @see <a href='https://www.w3schools.com/jsref/prop_document_documenturi.asp'>
+     *     HTML DOM Document documentURI</a>
+     * */
     var location: String = url,
     /**
      * The protocol status without translation
@@ -72,6 +81,10 @@ class PageDatum(
     val contentLength get() = (content?.size ?: 0).toLong()
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is PageDatum
                 && url == other.url
                 && location == other.location

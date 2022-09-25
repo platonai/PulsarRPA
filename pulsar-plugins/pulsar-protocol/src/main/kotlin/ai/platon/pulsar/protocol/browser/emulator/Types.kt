@@ -51,18 +51,10 @@ class BrowserStatus(
         var code: Int = 0
 )
 
-class BrowserError(
+class BrowserErrorResponse(
         val status: ProtocolStatus,
         val activeDOMMessage: ActiveDOMMessage
-) {
-    companion object {
-        const val CONNECTION_TIMED_OUT = "ERR_CONNECTION_TIMED_OUT"
-        const val NO_SUPPORTED_PROXIES = "ERR_NO_SUPPORTED_PROXIES"
-        const val CONNECTION_CLOSED = "ERR_CONNECTION_CLOSED"
-        const val EMPTY_RESPONSE = "ERR_EMPTY_RESPONSE"
-        const val CONNECTION_RESET = "ERR_CONNECTION_RESET"
-    }
-}
+)
 
 interface Sleeper {
     fun sleep(duration: Duration)

@@ -635,7 +635,7 @@ open class LoadOptions(
      * If the page is dead, drop the task as soon as possible.
      * */
     fun isDead(): Boolean {
-        return deadTime < Instant.now()
+        return deadline < Instant.now()
     }
 
     /**
@@ -733,9 +733,10 @@ open class LoadOptions(
      * The equality check, two [LoadOptions] are equal only when the normalized arguments string are equal.
      * */
     override fun equals(other: Any?): Boolean {
-        if (other === this) {
-            return true
+        if (this === other) {
+            return true;
         }
+
         return other is LoadOptions && other.toString() == toString()
     }
 

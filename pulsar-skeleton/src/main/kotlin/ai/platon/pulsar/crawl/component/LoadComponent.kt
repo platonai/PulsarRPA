@@ -304,14 +304,15 @@ class LoadComponent(
         }
 
         // We might use the cached page's content in parse phrase
-        // TODO: what if is canceled
+        // TODO: what if is canceled?
         if (options.parse) {
             parse(page, normUrl.options)
         }
 
         try {
+            val detail = normUrl.detail
             // we might use the cached page's content in after load handler
-            if (normUrl.detail is CompletableHyperlink<*>) {
+            if (detail is CompletableHyperlink<*>) {
                 require(page.loadEvent?.onLoaded?.isNotEmpty == true) {
                     "A completable link must have a onLoaded handler"
                 }
@@ -322,7 +323,7 @@ class LoadComponent(
             logger.warn("Failed to invoke onLoaded | ${page.configuredUrl}", e)
         }
 
-        if (options.persist && !status.isCanceled && !options.readonly) {
+        if (options.persist && !page.isCanceled && !options.readonly) {
             persist(page, options)
         }
     }
@@ -423,7 +424,7 @@ class LoadComponent(
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         // the metadata of the page is loaded from database but the content is not cached,
         // so load the content again
-        update(page, options)
+        updateFetchSchedule(page, options)
         globalCache.fetchingCache.remove(page.url)
     }
 
@@ -490,13 +491,14 @@ class LoadComponent(
         return CheckState(FetchState.DO_NOT_FETCH, "unknown")
     }
 
-    private fun update(page: WebPage, options: LoadOptions) {
+    private fun updateFetchSchedule(page: WebPage, options: LoadOptions) {
         if (page.isInternal) {
+            logger.warn("Unexpected internal page [updateFetchSchedule]")
             return
         }
 
         // canceled or loaded from database, do not update fetch schedule
-        if (!page.isFetched || page.protocolStatus.isCanceled) {
+        if (page.isCanceled || !page.isFetched) {
             return
         }
 
@@ -540,7 +542,7 @@ class LoadComponent(
                 metrics.persistContentMBytes.inc(ByteUnitConverter.convert(bytes, "M").toLong())
             }
         }
-        tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentLength), page.url)
+        tracer?.trace("Persisted {} | {}", Strings.compactFormat(page.contentLength), page.url)
     }
 
     fun flush() = webDb.flush()

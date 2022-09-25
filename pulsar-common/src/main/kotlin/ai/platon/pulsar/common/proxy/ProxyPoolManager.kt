@@ -53,7 +53,7 @@ open class ProxyPoolManager(
     }
 
     /**
-     * Run the task in the proxy monitor
+     * Run the task with the proxy
      * */
     @Throws(NoProxyException::class)
     private suspend fun <R> runWith0(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
@@ -76,7 +76,7 @@ open class ProxyPoolManager(
     }
 
     /**
-     * Take off the proxy if it is active proxy, and the monitor will choose the next proxy to connect
+     * Take off the proxy if it is active, and the monitor will choose the next proxy to connect
      * */
     open fun takeOff(excludedProxy: ProxyEntry, ban: Boolean) {}
 
@@ -97,14 +97,6 @@ open class ProxyPoolManager(
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
-
-        fun enableProxy() {
-            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "yes")
-        }
-
-        fun disableProxy() {
-            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
-        }
 
         /**
          * Proxy system can be enabled/disabled at runtime
@@ -150,30 +142,45 @@ open class ProxyPoolManager(
             return numEnabledProviderFiles > 0
         }
 
+        fun enableProxy(): Companion {
+            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "yes")
+            return this
+        }
+
+        fun disableProxy(): Companion {
+            System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
+            return this
+        }
+
         @Synchronized
         @Throws(IOException::class)
-        fun enableDefaultProviders() {
+        fun enableDefaultProviders(): Companion {
             DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
                 FileUtils.copyFileToDirectory(it.toFile(), AVAILABLE_PROVIDER_DIR.toFile())
             }
             AVAILABLE_PROVIDER_DIR.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+
+            return this
         }
 
         @Synchronized
         @Throws(IOException::class)
-        fun enableProvider(providerPath: Path) {
+        fun enableProvider(providerPath: Path): Companion {
             val filename = providerPath.fileName
             val link = AppPaths.ENABLED_PROVIDER_DIR.resolve(filename)
             Files.deleteIfExists(link)
             Files.createSymbolicLink(link, providerPath)
+
+            return this
         }
 
         @Synchronized
         @Throws(IOException::class)
-        fun disableProviders() {
+        fun disableProviders(): Companion {
             Files.list(AppPaths.ENABLED_PROVIDER_DIR)
                     .filter { Files.isRegularFile(it) || Files.isSymbolicLink(it) }
                     .forEach { Files.delete(it) }
+            return this
         }
     }
 }

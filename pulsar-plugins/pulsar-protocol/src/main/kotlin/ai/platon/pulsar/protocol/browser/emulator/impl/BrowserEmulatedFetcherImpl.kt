@@ -137,16 +137,19 @@ open class BrowserEmulatedFetcherImpl(
             return
         }
 
-        try {
-            action()
-        } catch (e: WebDriverCancellationException) {
-            logger.info("Web driver is cancelled")
-        } catch (e: WebDriverException) {
-            logger.warn(e.brief("[Ignored][$name] "))
-        } catch (e: Exception) {
-            logger.warn(e.stringify("[Ignored][$name] "))
-        } catch (e: Throwable) {
-            logger.error(e.stringify("[Unexpected][$name] "))
+        val e = kotlin.runCatching { action() }.exceptionOrNull()
+
+        if (e != null && isActive) {
+            handleEventException(name, e)
+        }
+    }
+
+    private fun handleEventException(name: String, e: Throwable) {
+        when (e) {
+            is WebDriverCancellationException -> logger.info("Web driver is cancelled")
+            is WebDriverException -> logger.warn(e.brief("[Ignored][$name] "))
+            is Exception -> logger.warn(e.brief("[Ignored][$name] "))
+            else -> logger.error(e.stringify("[Unexpected][$name] "))
         }
     }
 }

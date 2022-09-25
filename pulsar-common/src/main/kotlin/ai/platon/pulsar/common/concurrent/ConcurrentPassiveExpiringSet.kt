@@ -50,7 +50,11 @@ class ConcurrentPassiveExpiringSet<E>(val ttl: Duration = Duration.ofSeconds(-1)
     }
 
     override fun equals(other: Any?): Boolean {
-        return map.keys == other
+        if (this === other) {
+            return true;
+        }
+
+        return other is ConcurrentPassiveExpiringSet<*> && map.keys == other.map.keys
     }
 
     override fun hashCode(): Int = map.keys.hashCode()

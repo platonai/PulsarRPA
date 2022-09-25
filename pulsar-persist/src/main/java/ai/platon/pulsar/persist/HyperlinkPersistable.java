@@ -188,6 +188,10 @@ public class HyperlinkPersistable implements Comparable<HyperlinkPersistable> {
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
         if (!(o instanceof HyperlinkPersistable)) {
             return getUrl().equals(o.toString());
         }

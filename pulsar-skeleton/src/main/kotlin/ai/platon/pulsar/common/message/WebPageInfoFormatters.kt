@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
@@ -69,8 +70,47 @@ class LoadStatusFormatter(
     private val proxy get() = page.proxy
     private val protocolStatus get() = page.protocolStatus
     private val activeDOMStatTrace = page.activeDOMStatTrace
-    private val m get() = page.pageModel
+    private val m = page.pageModel
 
+    private val taskStatusSymbol: String get() = when {
+        prefix.isNotBlank() -> ""
+        page.isCanceled -> "${UnicodeEmoji.CANCELLATION_X} "
+        protocolStatus.isFailed -> "${UnicodeEmoji.BROKEN_HEART} "
+        protocolStatus.isSuccess -> "${UnicodeEmoji.HUNDRED_POINTS} "
+        else -> "${UnicodeEmoji.SKULL_CROSSBONES} "
+    }
+    private val pageStatusSymbol get() = when {
+        page.isCanceled -> UnicodeEmoji.CANCELLATION_X // canceled
+        page.isFetched && page.fetchCount == 1 -> UnicodeEmoji.LIGHTNING // fetched new
+        page.isFetched -> UnicodeEmoji.CIRCLE_ARROW_1 // fetched, reload
+        page.isCached -> UnicodeEmoji.HOT_BEVERAGE // cached
+        page.isLoaded -> UnicodeEmoji.OPTICAL_DISC   // load from db
+        else -> UnicodeEmoji.BUG  // BUG symbol
+    }
+    private val pageStatusText get() = when {
+        page.isCanceled -> "Canceled"
+        page.isFetched && page.fetchCount == 1 -> "New"
+        page.isFetched -> "Updated"
+        page.isCached -> "Cached"
+        page.isLoaded -> "Loaded"
+        else -> "Unknown"
+    }
+    private val pageStatus: String get() = when {
+        page.id < verboseCount && page.id % 10 == 0 -> "$pageStatusText $pageStatusSymbol"
+        page.id > verboseCount && page.id % verboseCount == 0 -> "$pageStatusText $pageStatusSymbol"
+        else -> pageStatusSymbol.toString()
+    }
+    private val loadMessagePrefix get() = prefix.takeIf { it.isNotEmpty() } ?: pageStatus
+    private val category get() = page.pageCategory.symbol()
+    private val fetchReason get() = buildFetchReason()
+    private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
+    private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
+    private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
+    private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
+    private val prevFetchTimeReport: String get() = when {
+        prevFetchTimeDuration.toDays() > 20 * 360 -> ""
+        else -> " last fetched ${prevFetchTimeDuration.readable()} ago,"
+    }
     private val jsSate: String
         get() {
             val (ni, na, nnm, nst, w, h) = activeDOMStatTrace["lastStat"]?: ActiveDOMStat()
@@ -82,69 +122,44 @@ class LoadStatusFormatter(
                 String.format("$prefix%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
             } else ""
         }
-
-    private val fetchReason get() = buildFetchReason()
-    private val prefix01 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "⚡" // fetched new
-        page.isFetched -> "⟳"  // fetched updated, clockwise gapped circle arrow
-        page.isCached -> "☕"   // load from cache, hot beverage
-        page.isLoaded -> "\uD83D\uDDB4"   // load from db, hard driver symbol
-        else -> "\uD83D\uDC1B"  // BUG symbol
+    private val fieldCount: String get() = when {
+        m == null -> ""
+        m.numFields == 0 -> ""
+        else -> String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     }
-    private val prefix02 get() = when {
-        page.isFetched && page.fetchCount == 1 -> "New ⚡"
-        page.isFetched -> "Updated ⟳" // fetched updated, clockwise gapped circle arrow
-        page.isCached -> "Cached ☕"  // load from cache, hot beverage
-        page.isLoaded -> "Loaded \uD83D\uDDB4" // load from db, hard driver symbol
-        else -> "Unknown \uD83D\uDC1B" // BUG symbol
-    }
-    private val prefix0: String get() {
-        return when {
-            page.id < verboseCount && page.id % 10 == 0 -> prefix02
-            page.id > verboseCount && page.id % verboseCount == 0 -> prefix02
-            else -> prefix01
-        }
-    }
-    private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
-    private val successSymbol get() = if (protocolStatus.isSuccess) "\uD83D\uDCAF " else "\uD83D\uDC94 " // 100 score/broken heart
-    private val label = StringUtils.abbreviateMiddle(page.options.label, "..", 20)
-    private val formattedLabel get() = if (label.isBlank()) "" else " | $label"
-    private val category get() = page.pageCategory.symbol()
-    private val prevFetchTimeBeforeUpdate = page.getVar(PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE) as? Instant ?: page.prevFetchTime
-    private val prevFetchTimeDuration: Duration get() = Duration.between(prevFetchTimeBeforeUpdate, Instant.now())
-    private val prevFetchTimeReport: String
-        get() {
-            if (prevFetchTimeDuration.toDays() > 20 * 360) {
-                return ""
-            }
-            return " last fetched ${prevFetchTimeDuration.readable()} ago,"
-        }
-    private val fieldCount: String
-        get() {
-            val model = m
-            return when {
-                model == null -> ""
-                model.numFields == 0 -> ""
-                else -> String.format("%d/%d/%d", model.numNonBlankFields, model.numNonNullFields, model.numFields)
-            }
-        }
-
     private val proxyFmt get() = if (proxy.isNullOrBlank()) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else " | %s"
-    private val fetchCount get() =
-        if (page.fetchRetries > 0) {
-            String.format("%d/%d", page.fetchRetries, page.fetchCount)
-        } else {
-            String.format("%d", page.fetchCount)
-        }
-    private val fieldCountFmt get() = if (m == null || m?.numFields == 0) "%s" else " | nf:%-10s"
+    private val fetchCount get() = when {
+        page.fetchRetries > 0 -> String.format("%d/%d", page.fetchRetries, page.fetchCount)
+        else -> String.format("%d", page.fetchCount)
+    }
+    private val fieldCountFmt get() = if (m == null || m.numFields == 0) "%s" else " | nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 
-    private val fmt get() = "%3d. $successSymbol$prefix1 %s $fetchReason got %d %s in %s," +
+    private val fmt get() = "%3d. $taskStatusSymbol$loadMessagePrefix %s $fetchReason got %d %s in %s," +
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
+
+    data class Record(
+        val name: String,
+        val value: Any,
+        val prefix: String = "",
+        val postfix: String = "",
+        val width: Int = 0,
+    )
+
+    fun explain() {
+        listOf(
+            Record("id", page.id, width = 3),
+            Record("successSymbol", taskStatusSymbol, width = 1),
+            Record("prefix", loadMessagePrefix),
+            Record("minorCode", page.protocolStatus.minorCode),
+            Record("fetchReason", fetchReason, width = 1),
+        )
+        TODO("NOT IMPLEMENTED")
+    }
 
     override fun toString(): String {
         return String.format(fmt,
@@ -168,9 +183,9 @@ class LoadStatusFormatter(
 
     private fun buildContentBytes(): String {
         var contentBytes = if (page.lastContentLength == 0L || page.lastContentLength == page.contentLength) {
-            readableBytes(page.contentLength).trim()
+            compactFormat(page.contentLength).trim()
         } else {
-            readableBytes(page.contentLength).trim() + " <- " + readableBytes(page.lastContentLength).trim()
+            compactFormat(page.contentLength).trim() + " <- " + compactFormat(page.lastContentLength).trim()
         }
 
         if (page.content == null) {
@@ -180,8 +195,8 @@ class LoadStatusFormatter(
         return contentBytes
     }
 
-    private fun readableBytes(bytes: Long): String {
-        return if (bytes == 0L) "0" else Strings.readableBytes(bytes, 7, false)
+    private fun compactFormat(bytes: Long): String {
+        return if (bytes == 0L) "0" else Strings.compactFormat(bytes, 7, false)
     }
 
     private fun buildLocation(): String {

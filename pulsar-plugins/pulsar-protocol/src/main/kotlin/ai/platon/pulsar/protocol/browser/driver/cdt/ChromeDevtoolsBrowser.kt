@@ -6,7 +6,9 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import com.github.kklisura.cdt.protocol.ChromeDevTools
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 
 class ChromeDevtoolsBrowser(
@@ -18,6 +20,10 @@ class ChromeDevtoolsBrowser(
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowser::class.java)
 
     private val toolsConfig = DevToolsConfig()
+    private val chromeTabs: List<ChromeTab>
+        get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.chromeTab }
+    private val devtools: List<ChromeDevTools>
+        get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
 
     @Synchronized
     @Throws(WebDriverException::class)
@@ -25,9 +31,7 @@ class ChromeDevtoolsBrowser(
         try {
             // In chrome every tab is a separate process
             val chromeTab = createTab()
-            val devTools = createDevTools(chromeTab, toolsConfig)
-
-            return ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
+            return newDriver(chromeTab, false)
         } catch (e: ChromeDriverException) {
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
         } catch (e: Exception) {
@@ -39,7 +43,6 @@ class ChromeDevtoolsBrowser(
     @Throws(WebDriverException::class)
     fun createTab(): ChromeTab {
         lastActiveTime = Instant.now()
-
         return kotlin.runCatching { chrome.createTab(ChromeImpl.ABOUT_BLANK_PAGE) }
             .getOrElse { throw WebDriverException("createTab", it) }
     }
@@ -47,6 +50,7 @@ class ChromeDevtoolsBrowser(
     @Synchronized
     @Throws(WebDriverException::class)
     fun closeTab(tab: ChromeTab) {
+        logger.debug("Closing tab | {}", tab.url)
         return chrome.runCatching { closeTab(tab) }.getOrElse { throw WebDriverException("closeTab", it) }
     }
 
@@ -56,10 +60,46 @@ class ChromeDevtoolsBrowser(
         return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
     }
 
+    override fun maintain() {
+        listTabs().filter { it.id !in drivers.keys }.map { newDriver(it, true) }
+
+//        println("\n\n\n")
+//        chromeTabs.forEach {
+//            println(it.id + "\t" + it.parentId + "\t|\t" + it.url)
+//        }
+
+        closeRecoveredIdleDrivers()
+    }
+
+    private fun newDriver(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {
+        val devTools = createDevTools(chromeTab, toolsConfig)
+        val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
+        driver.isRecovered = recovered
+
+        _drivers[chromeTab.id] = driver
+
+        return driver
+    }
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching { doClose() }.onFailure { logger.warn("Failed to close browser", it) }
             super.close()
+        }
+    }
+
+    private fun closeRecoveredIdleDrivers() {
+        val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
+
+        val unmanagedTabTimeout = Duration.ofSeconds(30)
+        val unmanagedDrivers = chromeDrivers.filter { it.isRecovered }
+            .filter { Duration.between(lastActiveTime, Instant.now()) > unmanagedTabTimeout }
+        if (unmanagedDrivers.isNotEmpty()) {
+            logger.debug("Closing {} unmanaged drivers", unmanagedDrivers.size)
+            require(unmanagedDrivers.all { it.navigateHistory.isEmpty() }) {
+                "Unmanaged driver should has no history"
+            }
+            unmanagedDrivers.forEach { it.close() }
         }
     }
 
@@ -79,7 +119,7 @@ class ChromeDevtoolsBrowser(
 
         logger.info("Closing browser with {} devtools ... | #{}", drivers.size, id)
 
-        val nonSynchronized = drivers.toList().also { drivers.clear() }
+        val nonSynchronized = drivers.toList().also { _drivers.clear() }
         nonSynchronized.parallelStream().forEach {
             it.runCatching { close() }.onFailure { logger.warn("Failed to close the devtool", it) }
         }

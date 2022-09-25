@@ -15,6 +15,10 @@ class WebVertex(val url: String, var page: WebPage? = null) {
     }
 
     override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true;
+        }
+
         return other is WebVertex && other.url == url
     }
 

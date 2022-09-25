@@ -151,7 +151,7 @@ class FetchLoop(
                 return
             }
 
-            val isCanceled = page.protocolStatus.isCanceled
+            val isCanceled = page.isCanceled
             if (!isCanceled && taskScheduler.parse) {
                 val parseResult = parseComponent.parse(page, false, true)
                 if (log.isTraceEnabled) {
@@ -188,9 +188,9 @@ class FetchLoop(
     private fun handleMemoryShortage(j: Int) {
         log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
                 numRunningTasks,
-                Strings.readableBytes(availableMemory),
-                Strings.readableBytes(instanceRequiredMemory),
-                Strings.readableBytes(abs(memoryRemaining))
+                Strings.compactFormat(availableMemory),
+                Strings.compactFormat(instanceRequiredMemory),
+                Strings.compactFormat(abs(memoryRemaining))
         )
         System.gc()
     }
