@@ -31,9 +31,13 @@ data class NavigateEntry(
      */
     var location: String = url,
     /**
-     * Indicate if the driver be stopped.
+     * Indicate if the navigation is stopped.
      */
     var stopped: Boolean = false,
+    /**
+     * Indicate if the tab for this navigation is closed.
+     */
+    var closed: Boolean = false,
     /**
      * The last active time.
      */

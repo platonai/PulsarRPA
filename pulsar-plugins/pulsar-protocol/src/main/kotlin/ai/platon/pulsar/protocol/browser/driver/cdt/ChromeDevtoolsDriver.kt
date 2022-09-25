@@ -23,9 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 class ChromeDevtoolsDriver(
-    private val chromeTab: ChromeTab,
-    private val devTools: RemoteDevTools,
-    private val browserSettings: BrowserSettings,
+    val chromeTab: ChromeTab,
+    val devTools: RemoteDevTools,
+    val browserSettings: BrowserSettings,
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
 
@@ -34,9 +34,6 @@ class ChromeDevtoolsDriver(
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
     val openSequence = 1 + browser.drivers.size
-    //    val chromeTabTimeout get() = browserSettings.fetchTaskTimeout.plusSeconds(20)
-    val chromeTabTimeout get() = Duration.ofMinutes(2)
-    val isSPA get() = browserSettings.isSPA
 
     val enableUrlBlocking get() = browserSettings.isUrlBlockingEnabled
     private val _blockedURLs = mutableListOf<String>()
@@ -73,6 +70,7 @@ class ChromeDevtoolsDriver(
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val closed = AtomicBoolean()
 
+    var isManaged = false
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
@@ -182,9 +180,6 @@ class ChromeDevtoolsDriver(
             }
 
             handleRedirect()
-            // dumpCookies()
-            // TODO: it might be better to do this using a scheduled task
-            cleanTabs()
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "terminate")
         } catch (e: ChromeDriverException) {
@@ -711,51 +706,6 @@ class ChromeDevtoolsDriver(
         if (finalUrl.isNotBlank() && finalUrl != navigateUrl) {
             // browser.addHistory(NavigateEntry(finalUrl))
         }
-    }
-
-    // close irrelevant tabs, which might be opened for humanization purpose
-    @Throws(ChromeDriverException::class)
-    private fun cleanTabs() {
-        try {
-            val tabs = browser.listTabs()
-            closeTimeoutTabs(tabs)
-            closeIrrelevantTabs(tabs)
-        } catch (e: WebDriverException) {
-            // ignored
-        }
-    }
-
-    // close timeout tabs
-    private fun closeTimeoutTabs(tabs: Array<ChromeTab>) {
-        if (isSPA) {
-            return
-        }
-
-        tabs.forEach { tab ->
-            tab.url?.let { closeTabsIfTimeout(it, tab) }
-        }
-    }
-
-    private fun closeTabsIfTimeout(tabUrl: String, tab: ChromeTab) {
-        val now = Instant.now()
-        val entries = browser.navigateHistory.asSequence()
-            .filter { it.url == tabUrl }
-            .filter { it.stopped }
-            .filter { it.lastActiveTime + chromeTabTimeout < now }
-            .toList()
-
-        if (entries.isNotEmpty()) {
-            // browser.navigateHistory.removeAll(entries)
-            browser.closeTab(tab)
-        }
-    }
-
-    private fun closeIrrelevantTabs(tabs: Array<ChromeTab>) {
-        val irrelevantTabs = tabs
-            .filterNot { it.urlOrEmpty.matches("about:".toRegex()) } // newly created
-            .filter { tab -> browser.navigateHistory.none { it.url == tab.url } } // not in history, so it's open by click
-
-        // irrelevantTabs.forEach { browser.closeTab(it) }
     }
 
     private fun getInjectJs(): String {

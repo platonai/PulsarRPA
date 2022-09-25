@@ -23,7 +23,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.persist.ext.options
-import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
@@ -199,12 +198,12 @@ open class FetchComponent(
         pageDatum?.also {
             page.location = it.location
             page.proxy = it.proxyEntry?.outIp
-            val ms = it.activeDOMStatTrace
-            if (ms != null) {
-                page.activeDOMStatus = ms.status
+            val trace = it.activeDOMStatTrace
+            if (trace != null) {
+                page.activeDOMStatus = trace.status
                 page.activeDOMStatTrace = mapOf(
-                    "initStat" to ms.initStat, "initD" to ms.initD,
-                    "lastStat" to ms.lastStat, "lastD" to ms.lastD
+                    "initStat" to trace.initStat, "initD" to trace.initD,
+                    "lastStat" to trace.lastStat, "lastD" to trace.lastD
                 )
             }
 

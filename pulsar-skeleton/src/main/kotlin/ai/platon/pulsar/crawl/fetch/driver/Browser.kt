@@ -30,7 +30,7 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     /**
      * The created drivers by this browser.
      * */
-    val drivers: Queue<WebDriver>
+    val drivers: Map<String, WebDriver>
     /**
      * Check if this browser is idle.
      * */
@@ -44,4 +44,8 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * Register event handler when a url is about to navigate.
      * */
     fun onWillNavigate(entry: NavigateEntry)
+    /**
+     * Maintain the browser
+     * */
+    fun maintain()
 }

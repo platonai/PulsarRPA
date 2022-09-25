@@ -226,6 +226,9 @@ class LoadingWebDriverPool constructor(
     private fun createDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
         synchronized(driverFactory) {
             try {
+                // create driver from remote unmanaged tabs, close unmanaged idle drivers, etc
+                _browser?.maintain()
+
                 if (shouldCreateDriver()) {
                     createWebDriver(volatileConfig)
                 }
@@ -245,6 +248,7 @@ class LoadingWebDriverPool constructor(
 
     @Throws(BrowserLaunchException::class)
     private fun createWebDriver(volatileConfig: VolatileConfig) {
+        // TODO: the code below might be better
         // val b = browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
         // val driver = b.newDriver()
 

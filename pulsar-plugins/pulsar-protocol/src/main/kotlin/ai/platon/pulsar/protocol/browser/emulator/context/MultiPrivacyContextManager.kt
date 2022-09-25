@@ -20,6 +20,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 class MultiPrivacyContextManager(
@@ -40,7 +41,7 @@ class MultiPrivacyContextManager(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
-    private val maintainTimer = AtomicReference<java.util.Timer>()
+    private val maintainTimer = AtomicReference<Timer>()
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
@@ -149,7 +150,7 @@ class MultiPrivacyContextManager(
     }
 
     private fun startMaintainTimerIfNecessary() {
-        if (maintainTimer.compareAndSet(null, java.util.Timer("PrivacyContextMMT", true))) {
+        if (maintainTimer.compareAndSet(null, java.util.Timer("PrivacyCMMT", true))) {
             val timer = maintainTimer.get()
             timer?.scheduleAtFixedRate(Duration.ofMinutes(5), Duration.ofSeconds(10)) {
                 maintain()

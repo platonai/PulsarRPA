@@ -88,7 +88,7 @@ open class WebDriverFactory(
     ): Pair<ChromeDevtoolsBrowser, ChromeDevtoolsDriver> {
         require(instanceId.browserType == BrowserType.PULSAR_CHROME)
         val browser = browserManager.launch(instanceId, driverSettings, capabilities) as ChromeDevtoolsBrowser
-        return browser to browser.newDriver()
+        return browser to browser.newDriver().also { it.isManaged = true }
     }
 
 //    private fun createPlaywrightDriver(

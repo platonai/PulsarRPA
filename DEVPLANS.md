@@ -17,3 +17,4 @@
 7. try to reduce communication between pulsar and the browser, a possible way is to disable the network api
 8. selenium support, and multiple browsers support
 9. close irrelevant tabs
+

@@ -132,6 +132,8 @@ class TestString {
         assertTrue { url.matches(regex) }
 
         assertEquals("a.b", "a..b".replace("\\.+".toRegex(), "."))
+
+        assertTrue { "about:blank".matches("about:.+".toRegex()) }
     }
 
     @Test
