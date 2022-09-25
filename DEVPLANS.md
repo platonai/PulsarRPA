@@ -13,8 +13,8 @@
     6. onInitRetryDelayPolicy
 6. RPA supports
     1. frames
-    2. create webdriver for existing tab
+    2. **finished** create webdriver for existing tab
 7. try to reduce communication between pulsar and the browser, a possible way is to disable the network api
 8. selenium support, and multiple browsers support
-9. close irrelevant tabs
-
+9. support web driver's opener
+   1. for chrome devtools, the opener can be found via ChromeTab.parentId

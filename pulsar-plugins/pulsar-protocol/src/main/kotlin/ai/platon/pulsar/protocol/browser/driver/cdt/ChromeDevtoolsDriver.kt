@@ -70,7 +70,6 @@ class ChromeDevtoolsDriver(
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
     private val closed = AtomicBoolean()
 
-    override var isManaged = false
     override var lastActiveTime = Instant.now()
     val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone

@@ -3,7 +3,6 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
@@ -11,8 +10,6 @@ import com.github.kklisura.cdt.protocol.ChromeDevTools
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.*
-import java.util.concurrent.atomic.AtomicReference
 
 class ChromeDevtoolsBrowser(
     id: BrowserId,
@@ -34,7 +31,7 @@ class ChromeDevtoolsBrowser(
         try {
             // In chrome every tab is a separate process
             val chromeTab = createTab()
-            return newDriver(chromeTab)
+            return newDriver(chromeTab, false)
         } catch (e: ChromeDriverException) {
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
         } catch (e: Exception) {
@@ -64,21 +61,24 @@ class ChromeDevtoolsBrowser(
     }
 
     override fun maintain() {
-        listTabs().filter { it.id !in drivers.keys }.map { newDriver(it) }
+        listTabs().filter { it.id !in drivers.keys }.map { newDriver(it, true) }
 
 //        println("\n\n\n")
 //        chromeTabs.forEach {
 //            println(it.id + "\t" + it.parentId + "\t|\t" + it.url)
 //        }
 
-        closeUnmanagedIdleDrivers()
+        closeRecoveredIdleDrivers()
     }
 
-    private fun newDriver(chromeTab: ChromeTab): ChromeDevtoolsDriver {
+    private fun newDriver(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {
         val devTools = createDevTools(chromeTab, toolsConfig)
-        return _drivers.computeIfAbsent(chromeTab.id) {
-            ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
-        } as ChromeDevtoolsDriver
+        val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
+        driver.isRecovered = recovered
+
+        _drivers[chromeTab.id] = driver
+
+        return driver
     }
 
     override fun close() {
@@ -88,11 +88,11 @@ class ChromeDevtoolsBrowser(
         }
     }
 
-    private fun closeUnmanagedIdleDrivers() {
+    private fun closeRecoveredIdleDrivers() {
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
         val unmanagedTabTimeout = Duration.ofSeconds(30)
-        val unmanagedDrivers = chromeDrivers.filter { !it.isManaged }
+        val unmanagedDrivers = chromeDrivers.filter { it.isRecovered }
             .filter { Duration.between(lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         if (unmanagedDrivers.isNotEmpty()) {
             logger.debug("Closing {} unmanaged drivers", unmanagedDrivers.size)
