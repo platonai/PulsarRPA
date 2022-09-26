@@ -77,8 +77,8 @@ FetchReason indicates why the page was fetched. The reason can be one of the fol
 - The page was never fetched
 - The page has expired since the last fetch
 - The -refresh option is applied, so the page should be refreshed
-- The page is scheduled to fetch
-- Last fetch failed, retrying
+- The page was scheduled to fetch
+- Last fetch was failed and retried
 - Last fetched page has no content
 - Last fetched page content was too small
 - Required fields missed in the last fetched page content
