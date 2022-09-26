@@ -362,9 +362,9 @@ Pulsar has carefully designed the logging and metrics subsystem to record every 
 
 Pulsar logs the status for every load execution, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
 
-Typical page loading logs are as the following, check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
-
 You can gain insight into the state of the entire system just by looking at a few symbols: 💯 💔 🗙 ⚡💿 🔃。
+
+Typical page loading logs are as the following, check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
 
 [source,composer log,options="nowrap"]
 ----
