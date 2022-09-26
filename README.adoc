@@ -364,7 +364,7 @@ Pulsar logs the status for every load execution, so it's easy to know what happe
 
 You can gain insight into the state of the entire system just by noticing a few symbols: 💯 💔 🗙 ⚡💿 🔃🤺。
 
-Typical page loading logs are as the following, check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
+Typical logs for task status are shown below, check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
 
 [source,composer log,options="nowrap"]
 ----
