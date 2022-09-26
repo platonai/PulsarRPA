@@ -20,7 +20,7 @@ The following example log reports a retrying page:
 
 [source,composer log,options="nowrap"]
 ----
-2022-09-24 11:46:12.167  INFO [-worker-62] a.p.p.c.i.S.Task - 3744. 🤺 Trying 2th 10s later U  got 1601 0 <- 0 in 1m0.612s, last fetched 10s ago, fc:1/1 Retry(1601) rsp: CRAWL | https://www.walmart.com/ip/iPhone-7-128GB-Silver-Boost-Mobile-Used-Grade-B/662547852
+2022-09-24 11:46:12.167  INFO [-worker-62] a.p.p.c.i.S.Task - 3744. 🤺 Trying 2th 10s later | U  got 1601 0 <- 0 in 1m0.612s, last fetched 10s ago, fc:1/1 Retry(1601) rsp: CRAWL | https://www.walmart.com/ip/iPhone-7-128GB-Silver-Boost-Mobile-Used-Grade-B/662547852
 ----
 
 This document explains each field in the logs.
