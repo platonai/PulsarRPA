@@ -17,7 +17,7 @@ logs/pulsar.m.log  - the metrics
 
 The status of loading tasks are the primary concern. You can gain insight into the state of the entire system just by looking at a few symbols: 💯 💔 🗙 ⚡💿 🔃。
 
-== Loading task logs
+== Loading task logs explained
 
 Here are 5 example logs which report the status of loaded tasks:
 
