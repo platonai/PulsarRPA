@@ -15,6 +15,8 @@ logs/pulsar.pg.log - mainly reports the status of load/fetch tasks
 logs/pulsar.m.log  - the metrics
 ----
 
+== Loading task logs
+
 Here are 5 example logs which report the status of loaded tasks:
 
 [source,composer log,options="nowrap"]
@@ -35,7 +37,7 @@ The following example log reports a retrying page:
 
 This document explains each field in the logs.
 
-Part I: general information pre-defined by the logging system
+=== Part I: general information pre-defined by the logging system
 
 [source,composer log,options="nowrap"]
 ----
@@ -44,7 +46,7 @@ Date       Time          LogLevel  ThreadName   LogName
 2022-09-24 11:46:09.190  INFO      [-worker-32] a.p.p.c.c.L.Task -
 ----
 
-Part II: PageId, TaskStatus, PageStatus, PageCategory, FetchReason, FetchCode, PageSize and FetchTime
+=== Part II: PageId, TaskStatus, PageStatus, PageCategory, FetchReason, FetchCode, PageSize and FetchTime
 
 [source,composer log,options="nowrap"]
 ----
@@ -105,7 +107,7 @@ FetchCode is a number, describes the fetch phrase status, inherited from the sta
 
 All possible codes are defined in link:pulsar-persist/src/main/java/ai/platon/pulsar/persist/metadata/ProtocolStatusCodes.java[ProtocolStatusCodes].
 
-Part III - PrevFetchTime, FetchCount, FetchFailure, DOMStatistic, ProxyIP and PrivacyContext
+=== Part III - PrevFetchTime, FetchCount, FetchFailure, DOMStatistic, ProxyIP and PrivacyContext
 
 [source,composer log,options="nowrap"]
 ----
@@ -140,7 +142,7 @@ DOMStatistic shows whether the page was fetched correctly, for example, a fully 
 
 For the other fields, such as ProxyIP, PrivacyContext, no need to explain.
 
-Part IV: the task URL
+=== Part IV: the task URL
 
 [source,composer log,options="nowrap"]
 ----
