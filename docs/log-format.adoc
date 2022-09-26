@@ -5,7 +5,17 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-Here are 5 example logs which report the status of loaded pages:
+Pulsar has carefully designed the logging and metrics subsystem to record every event that occurs in the system. This document explained the format of typical logs.
+
+Pulsar splits all logs into several separate files:
+
+----
+logs/pulsar.log    - the default logs
+logs/pulsar.pg.log - mainly reports the status of load/fetch tasks
+logs/pulsar.m.log  - the metrics
+----
+
+Here are 5 example logs which report the status of loaded tasks:
 
 [source,composer log,options="nowrap"]
 ----
@@ -35,12 +45,12 @@ Date       Time          LogLevel  ThreadName   LogName
 Continued:
 [source,composer log,options="nowrap"]
 ----
-PageId    TaskStatus PageStatus  PageCategory      FetchReason     FetchCode PageSize                           FetchTime
-3313.     💯         ⚡            U             for N           got 200         580.92 KiB                     in 1m14.277s
-3738.     💯         💿           U                             got 200          452.91 KiB                    in 55.286s
-2269.     💯         🔃           U             for SC          got 200          565.07 KiB <- 543.41 KiB      in 1m22.767s
-3732.     💔         ⚡            U             for N           got 1601         0 <- 0 in 32.201s
-2828.     🗙         🗙            U            for SC           got 200         0 <- 348.31 KiB <- 684.75 KiB in 0s
+PageId    TaskStatus PageStatus  PageCategory   FetchReason     FetchCode      PageSize                        FetchTime
+3313.     💯         ⚡           U            for N           got 200         580.92 KiB                     in 1m14.277s
+3738.     💯         💿           U                            got 200         452.91 KiB                     in 55.286s
+2269.     💯         🔃           U            for SC          got 200         565.07 KiB <- 543.41 KiB       in 1m22.767s
+3732.     💔         ⚡           U            for N           got 1601        0 <- 0 in 32.201s
+2828.     🗙          🗙           U            for SC          got 200          0 <- 348.31 KiB <- 684.75 KiB  in 0s
 ----
 
 PageId is the id of the WebPage object and is unique process-wide.
@@ -50,9 +60,6 @@ TaskStatus is a unicode symbol, can be one of the following:
     💯 - Task is success
     💔 - Task is failed
     🗙 - Task is canceled
-
-and for retrying tasks, the symbol is:
-
     🤺 - Task is retrying
 
 PageStatus is a unicode symbol, can be one of the following:
@@ -93,7 +100,7 @@ FetchCode is a number, describes the fetch phrase status, inherited from the sta
     200 - success
     1601 - retry
 
-All codes are defined in link:pulsar-persist/src/main/java/ai/platon/pulsar/persist/metadata/ProtocolStatusCodes.java[ProtocolStatusCodes].
+All possible codes are defined in link:pulsar-persist/src/main/java/ai/platon/pulsar/persist/metadata/ProtocolStatusCodes.java[ProtocolStatusCodes].
 
 Continued:
 [source,composer log,options="nowrap"]
@@ -106,27 +113,28 @@ last fetched 16m58s ago,    fc:6 |                                              
 last fetched 18m55s ago,    fc:2 |                                                   34/130/52/181/5747 | 60.184.124.232  | 11zTa0r2
 ----
 
-PrevFetchTime is the time of the previous fetch.
+PrevFetchTime is the time when the previous fetch completed.
 
 FetchCount is the count of all fetch executions, excluding cancelled fetches.
 
-FetchFailure is the failure information of the most recent fetch execution, and it is empty if it succeeded.
+FetchFailure is the failure information of the previous fetch execution, and it is empty if it succeeds.
 
-DOMStatistic contains simple statistics on the HTML document, the statistics are calculated in a real browser using javascript.
+DOMStatistic contains simple statistics on the HTML document, which are calculated using javascript in a real browser, the format can be one of the following:
 
+    58/230/98/295/6272
     58/230/98/295/6272 (i/a/nm/st/h)
 
 where
 
-    i:  anchor count
+    i:  anchor count in the HTML document
     a:  image count
     nm: number count
     st: small text count
-    h:  document height in pexels
+    h:  scroll height of the document in pexels
 
-Check DOMStatistic to see if the page was fetched correctly, for example, a fully loaded page is usually above 5,000 pixels, and anything below that means the page may need to be re-fetched.
+DOMStatistic shows whether the page was fetched correctly, for example, a fully loaded page is usually higher than 5,000 pixels, and pages below this value may need to be re-fetched.
 
-For the other fields, such as ProxyIP, PrivacyContext, there is no need to explain.
+For the other fields, such as ProxyIP, PrivacyContext, no need to explain.
 
 Continued:
 [source,composer log,options="nowrap"]
@@ -139,4 +147,4 @@ https://www.walmart.com/ip/182353175 -expires PT24H -ignoreFailure -itemExpires 
 https://www.walmart.com/ip/209201965 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ----
 
-URL is the url to fetch. The url can follow load arguments, or load options, check link:docs/concepts.adoc#_load_options[Load Options] for details.
+URL field is the url to fetch. The url can be followed by load arguments, or load options, check link:docs/concepts.adoc#_load_options[Load Options] for details.
