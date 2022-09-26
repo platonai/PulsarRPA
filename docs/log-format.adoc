@@ -15,7 +15,7 @@ logs/pulsar.pg.log - mainly reports the status of load/fetch tasks
 logs/pulsar.m.log  - the metrics
 ----
 
-The status of loading tasks are the primary concern. You can gain insight into the state of the entire system just by looking at a few symbols: 💯 💔 🗙 ⚡💿 🔃。
+The status of loading tasks are the primary concern. You can gain insight into the state of the entire system just by looking at a few symbols: 💯 💔 🗙 ⚡💿 🔃🤺。
 
 == Loading task logs explained
 
