@@ -35,6 +35,8 @@ The following example log reports a retrying page:
 
 This document explains each field in the logs.
 
+Part I: general information pre-defined by the logging system
+
 [source,composer log,options="nowrap"]
 ----
 Date       Time          LogLevel  ThreadName   LogName
@@ -42,7 +44,8 @@ Date       Time          LogLevel  ThreadName   LogName
 2022-09-24 11:46:09.190  INFO      [-worker-32] a.p.p.c.c.L.Task -
 ----
 
-Continued:
+Part II: PageId, TaskStatus, PageStatus, PageCategory, FetchReason, FetchCode, PageSize and FetchTime
+
 [source,composer log,options="nowrap"]
 ----
 PageId    TaskStatus PageStatus  PageCategory   FetchReason     FetchCode      PageSize                        FetchTime
@@ -102,7 +105,8 @@ FetchCode is a number, describes the fetch phrase status, inherited from the sta
 
 All possible codes are defined in link:pulsar-persist/src/main/java/ai/platon/pulsar/persist/metadata/ProtocolStatusCodes.java[ProtocolStatusCodes].
 
-Continued:
+Part III - PrevFetchTime, FetchCount, FetchFailure, DOMStatistic, ProxyIP and PrivacyContext
+
 [source,composer log,options="nowrap"]
 ----
 PrevFetchTime               FetchCount        FetchFailure                           DOMStatistic         ProxyIP           PrivacyContext
@@ -136,7 +140,8 @@ DOMStatistic shows whether the page was fetched correctly, for example, a fully 
 
 For the other fields, such as ProxyIP, PrivacyContext, no need to explain.
 
-Continued:
+Part IV: the task URL
+
 [source,composer log,options="nowrap"]
 ----
 URL
