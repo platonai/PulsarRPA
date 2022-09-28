@@ -121,7 +121,7 @@ implementation("ai.platon.pulsar:pulsar-all:1.10.1")
 val session = PulsarContexts.createSession()
 // 示例程序使用的 url
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-// 加载一个页面，如果该页面已过期，或者该页面为首次加载，则从互联网上下载该页面
+// 加载一个页面，如果该页面为首次加载，或者该页面已过期，则从互联网上下载该页面
 val page = session.load(url, "-expires 1d")
 // 将一个网页内容解析为Jsoup文档
 val document = session.parse(page)
