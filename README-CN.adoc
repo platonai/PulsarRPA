@@ -15,7 +15,7 @@ PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果�
 
 大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 开发了一系列尖端技术来解决这个问题。
 
-我们发布了一些最大型电商网站的全站数据采集的完整解决方案，这些解决方案满足对相关数据采集的最高标准要求，他们将永久免费，譬如：
+我们发布了一些最大型电商网站的全站数据采集的完整解决方案，这些解决方案满足最高标准的性能和质量要求，他们将永久免费，譬如：
 
 * link:https://github.com/platonai/exotic-amazon[Exotic Amazon]
 * link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
