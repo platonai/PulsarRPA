@@ -155,14 +155,14 @@ val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapO
 
 请注意，我们的大多数抓取方法都接受一个称为加载参数或加载选项的参数，以控制如何加载/获取网页。
 
-    -expires     // The expiry time of a page
-    -itemExpires // The expiry time of item pages in some batch scraping methods
-    -outLink     // The selector for out links to scrape
-    -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Triger the parse phrase
-    -resource    // Fetch the url as a resource without browser rendering
+    -expires     // 网页失效时间
+    -itemExpires // 批采集方法中，项目页的失效时间
+    -outLink     // 批采集方法中，项目页链接的 CSS 选择器
+    -refresh     // 强制重新采集网页
+    -parse       // 激活数据解析流程
+    -resource    // 将采集任务视作网络资源进行采集，从而不必经过浏览器渲染
 
-点击 link:docs/concepts.adoc#_load_options[Load Options] 查看详情。
+点击 link:docs/concepts.adoc#_load_options[Load Options] 查看所有加载选项。
 
 === 提取网页数据
 
