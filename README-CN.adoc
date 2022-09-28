@@ -23,7 +23,7 @@ PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果�
 
 Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
 
-Pulsar 支持 RPA 采集。Pulsar 包含一个 RPA 子系统，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。该子系统和大家所熟知的 selenium/playwright/puppeteer 是类似的，但对所有 RPA 行为进行了优化，譬如更好地模拟真实操作，更好的执行性能，更好的容错处理。
+Pulsar 支持 RPA 采集。Pulsar 包含一个 RPA 子系统，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。该子系统和大家所熟知的 selenium/playwright/puppeteer 是类似的，但对所有 RPA 行为进行了优化，譬如更好地模拟真实操作，更好的执行性能，更好的容错处理，等等。
 
 我们还计划发布一个先进的人工智能，以显著的精度自动提取网页中的每一个字段。
 
