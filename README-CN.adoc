@@ -13,7 +13,9 @@ PulsarR 是大规模抓取 Web 数据的终极开源方案。
 
 PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果与其他项目没有混淆，可以称为 Pulsar。
 
-大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 开发了一系列尖端技术来解决这个问题。我们发布了一些最大型电商网站的全站数据采集的完整解决方案，他们将永久免费，如：link:https://github.com/platonai/exotic-amazon[Exotic Amazon].
+大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 开发了一系列尖端技术来解决这个问题。
+
+我们发布了一些最大型电商网站的全站数据采集的完整解决方案，他们将永久免费，如：link:https://github.com/platonai/exotic-amazon[Exotic Amazon].
 
 Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
 
