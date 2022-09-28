@@ -17,9 +17,9 @@ PulsarR [ˈpʌlsɑr] 是脉冲星辐射（PulsarR Radiation）的缩写。如果
 
 我们发布了一些最大型电商网站的全站数据采集的完整解决方案，*这些解决方案满足最高标准的性能、质量和成本要求*，他们将永久免费并开放源代码，譬如：
 
-* https://link.zhihu.com/?target=https%3A//github.com/platonai/exotic-amazon[Exotic Amazon]
-* https://link.zhihu.com/?target=https%3A//github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
-* https://link.zhihu.com/?target=https%3A//github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
+* https://github.com/platonai/exotic-amazon[Exotic Amazon]
+* https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
+* https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
 
 PulsarR 支持高质量的大规模数据采集和处理。PulsarR 开发了一系列基础设施和前沿技术，来保证即使是大规模数据采集场景，也能达到最高标准的性能、质量和总体拥有成本。
 
@@ -29,7 +29,7 @@ PulsarR 支持 RPA 采集。PulsarR 包含一个 RPA 子系统，来实现网页
 
 PulsarR 支持退化的单一资源采集。PulsarR 的默认采集方式是通过浏览器渲染来采集完整的网页数据，如果您需要的数据可以通过单一链接获取，譬如可以通过某个 ajax 接口返回，也可以调用 PulsarR 的资源采集方法进行高速采集。
 
-PulsarR 计划支持最前沿的信息提取技术。我们计划发布一个先进的人工智能，以显著的精度自动提取所有网页（譬如商品详情页）中的每一个字段，目前我们提供了一个 https://link.zhihu.com/?target=https%3A//github.com/platonai/exotic%23run-auto-extract[试用版本]。
+PulsarR 计划支持最前沿的信息提取技术。我们计划发布一个先进的人工智能，以显著的精度自动提取所有网页（譬如商品详情页）中的每一个字段，目前我们提供了一个 https://github.com/platonai/exotic#run-auto-extract[试用版本]。
 
 == 主要特性
 
@@ -84,7 +84,7 @@ link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/Contin
 
 == 核心概念
 
-PulsarR 的核心概念包括：
+PulsarR 的核心概念包括以下内容，了解了这些核心概念，您可以使用 PulsarR 解决最高要求的数据采集任务：
 
 * 网络数据采集（Web Scraping）: 使用机器人从网站中提取内容和数据的过程
 * 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决算法驱动
