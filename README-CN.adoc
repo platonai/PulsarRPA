@@ -9,37 +9,42 @@ link:README.adoc[English] | 简体中文
 
 == 简介
 
-PulsarR 是大规模抓取 Web 数据的终极开源方案。
+PulsarR 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
 
-PulsarR [ˈpʌlsɑr] 是脉冲星辐射（Pulsar Radiation）的缩写。如果与其他项目没有混淆，可以称为 Pulsar。
+PulsarR [ˈpʌlsɑr] 是脉冲星辐射（PulsarR Radiation）的缩写。如果与其他项目没有混淆，可以称为 Pulsar。
 
-大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，Pulsar 开发了一系列尖端技术来解决这个问题。
+大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，PulsarR 开发了一系列尖端技术来解决这些问题。
 
-我们发布了一些最大型电商网站的全站数据采集的完整解决方案，这些解决方案满足最高标准的性能、质量和成本要求，他们将永久免费，譬如：
+我们发布了一些最大型电商网站的全站数据采集的完整解决方案，*这些解决方案满足最高标准的性能、质量和成本要求*，他们将永久免费并开放源代码，譬如：
 
-* link:https://github.com/platonai/exotic-amazon[Exotic Amazon]
-* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
-* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
+* https://github.com/platonai/exotic-amazon[Exotic Amazon]
+* https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
+* https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
 
-Pulsar 支持 Network As A Database 范式，因此我们可以使用简单的 SQL 将 Web 转换为表格和图表，此外，我们可以直接使用 SQL 查询 Web。
+**PulsarR 支持高质量的大规模数据采集和处理。**PulsarR 开发了一系列基础设施和前沿技术，来保证即使是大规模数据采集场景，也能达到最高标准的性能、质量和总体拥有成本。
 
-Pulsar 支持 RPA 采集。Pulsar 包含一个 RPA 子系统，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。该子系统和大家所熟知的 selenium/playwright/puppeteer 是类似的，但对所有 RPA 行为进行了优化，譬如更好地模拟真实操作，更好的执行性能，更好的容错处理，等等。
+**PulsarR 支持网络即数据库范式。**PulsarR 像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。我们也可以使用简单的 SQL 将 Web 直接转换为表格和图表，更进一步，我们直接使用 SQL 可以查询 Web。
 
-我们还计划发布一个先进的人工智能，以显著的精度自动提取网页中的每一个字段。
+**PulsarR 支持 RPA 采集。**PulsarR 包含一个 RPA 子系统，来实现网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。该子系统和大家所熟知的 selenium, playwright, puppeteer 是类似的，但对所有行为进行了优化，譬如更真实的模拟操作，更好的执行性能，更好的并行性，更好的容错处理，等等。
+
+**PulsarR 支持退化的单一资源采集。**PulsarR 的默认采集方式是通过浏览器渲染来采集完整的网页数据，如果您需要的数据可以通过单一链接获取，譬如可以通过某个 ajax 接口返回，也可以调用 PulsarR 的资源采集方法进行高速采集。
+
+**PulsarR 计划支持最前沿的信息提取技术。**我们计划发布一个先进的人工智能，以显著的精度自动提取所有网页（譬如商品详情页）中的每一个字段，目前我们提供了一个 https://github.com/platonai/exotic#run-auto-extract[试用版本]。
 
 == 主要特性
 
-* 网络爬虫：浏览器渲染、ajax数据爬取
+* 网络爬虫：各种数据采集模式，包括浏览器渲染、ajax数据采集、普通协议采集等
 * RPA：机器人流程自动化、模仿人类行为、采集单网页应用程序或执行其他有价值的任务
-* 高性能：高度优化，单机并行渲染数百页而不被屏蔽
-* 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，或 n * 10,000,000 个数据点，仅需要 8 核 CPU/32G 内存
-* 数据量保证：智能重试、精准调度、Web 数据生命周期管理
 * 简洁的 API：一行代码抓取，或者一条 SQL 将整个网站栏目变成表格
 * X-SQL：扩展 SQL 来管理 Web 数据：网络爬取、数据采集、Web 内容挖掘、Web BI
 * 爬虫隐身：浏览器驱动隐身，IP 轮换，隐私上下文轮换，永远不会被屏蔽
+* 高性能：高度优化，单机并行渲染数百页而不被屏蔽
+* 低成本：每天抓取 100,000 个浏览器渲染的电子商务网页，或 n * 10,000,000 个数据点，仅需要 8 核 CPU/32G 内存
+* 数据量保证：智能重试、精准调度、Web 数据生命周期管理
 * 大规模采集：完全分布式，专为大规模数据采集而设计
 * 大数据支持：支持各种后端存储：本地文件/MongoDB/HBase/Gora
 * 日志和指标：密切监控并记录每个事件
+* [即将发布]Information Extraction：自动学习网页数据模式，以显著的精度自动提取网页中的每一个字段
 
 == 开始
 
@@ -79,25 +84,39 @@ link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/Contin
 
 == 核心概念
 
-Pulsar 的核心概念包括：
+PulsarR 的核心概念包括以下内容，了解了这些核心概念，您可以使用 PulsarR 解决最高要求的数据采集任务：
 
 * 网络数据采集（Web Scraping）: 使用机器人从网站中提取内容和数据的过程
-* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能算法驱动
+* 自动提取（Auto Extract）: 自动学习数据模式并从网页中提取每个字段，由尖端的人工智能解决算法驱动
 * RPA: 机器人流程自动化，这是抓取现代网页的唯一方法
 * 网络即数据库（Network As A Database）: 像访问本地数据库一样访问 Web
 * X-SQL: 直接使用 SQL 查询 Web
-* Pulsar Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
+* PulsarR Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
 * Web Driver: Web 驱动定义了一个简洁的界面来访问网页并与之交互，所有行为都经过优化以尽可能接近真实的人
-* URL: Pulsar 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。Pulsar 中的每个任务都被定义为某种形式的 URL
-* Hyperlink: Pulsar 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
-* Load Options: 加载选项或加载参数影响 Pulsar 如何加载、获取和抓取网页
+* URL: PulsarR 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。PulsarR 中的每个任务都被定义为某种形式的 URL
+* Hyperlink: PulsarR 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
+* Load Options: 加载选项或加载参数影响 PulsarR 如何加载、获取和抓取网页
 * Event Handlers: 在网页的整个生命周期中捕获和处理事件
 
-点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] 查看详情。
+点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[PulsarR concepts] 查看详情。
 
-== 使用方法：将 Pulsar 用作软件库
+== 使用方法一：通过可执行 jar 体验 PulsarR
 
-利用 Pulsar 强大功能的最简单方法是将其作为库添加到您的项目中。
+我们发布了一个基于 PulsarR 的独立可执行 jar，它包含：
+
+* 一组顶尖站点的数据采集示例
+* 自监督机器学习的信息提取程序，AI 算法识别详情页的所有字段，95% 以上字段精确度 99% 以上
+* 自监督机器学习并输出所有字段的采集规则
+* 从命令行直接执行网页数据采集任务，不需要写代码
+* 一个简洁并强大的 PulsarR 客户端，可以像传统数据库客户端一样，通过编写 SQL 来查询 Web，采集数据
+
+下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行探索其能力：
+
+    java -jar exotic-standalone.jar
+
+== 使用方法二：将 PulsarR 用作软件库
+
+利用 PulsarR 强大功能的最简单方法是将其作为库添加到您的项目中。
 
 Maven:
 [source,xml]
@@ -105,17 +124,17 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.1")
+implementation("ai.platon.pulsar:pulsar-all:1.10.2")
 ----
 
-对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
+对于国内开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
 
 === 基本用法
 
@@ -123,11 +142,11 @@ implementation("ai.platon.pulsar:pulsar-all:1.10.1")
 
 [source,kotlin]
 ----
-// 创建一个 Pulsar 会话
+// 创建一个 PulsarR 会话
 val session = PulsarContexts.createSession()
 // 示例程序使用的 url
 val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-// 加载一个页面，如果该页面为首次加载，或者该页面已过期，则从互联网上下载该页面
+// 加载一个页面，如果该页面已过期，或者该页面为首次加载，则从互联网上下载该页面
 val page = session.load(url, "-expires 1d")
 // 将一个网页内容解析为Jsoup文档
 val document = session.parse(page)
@@ -155,18 +174,18 @@ val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapO
 
 请注意，我们的大多数抓取方法都接受一个称为加载参数或加载选项的参数，以控制如何加载/获取网页。
 
-    -expires     // 网页失效时间
-    -itemExpires // 批采集方法中，项目页的失效时间
-    -outLink     // 批采集方法中，项目页链接的 CSS 选择器
-    -refresh     // 强制重新采集网页
-    -parse       // 激活数据解析流程
-    -resource    // 将采集任务视作网络资源进行采集，从而不必经过浏览器渲染
+    -expires     // The expiry time of a page
+    -itemExpires // The expiry time of item pages in some batch scraping methods
+    -outLink     // The selector for out links to scrape
+    -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
+    -parse       // Triger the parse phrase
+    -resource    // Fetch the url as a resource without browser rendering
 
-点击 link:docs/concepts.adoc#_load_options[Load Options] 查看所有加载选项。
+点击 link:docs/concepts.adoc#_load_options[Load Options] 查看详情。
 
 === 提取网页数据
 
-Pulsar 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。
+PulsarR 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。
 
 *Kotlin*
 
@@ -178,7 +197,7 @@ val price = document.selectFirst('.price').text()
 
 === 连续采集
 
-在 Pulsar 中抓取大量 url 集合或运行连续采集非常简单。
+在 PulsarR 中抓取大量 url 集合或运行连续采集非常简单。
 
 *Kotlin*
 
@@ -234,7 +253,7 @@ public class ContinuousCrawler {
 
 随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
 
-Pulsar 提供了一种在网页生命周期中模仿真人的便捷方式，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。这个大家所熟知的 selenium/playwright/puppeteer 是一致的，不同的是，Pulsar 的所有行为针对大规模数据采集优化。
+PulsarR 包含一个 RPA 子系统，提供了一种在网页生命周期中模仿真人的便捷方式，使用 Web 驱动程序与网页交互：滚动、打字、屏幕捕获、鼠标拖放、点击等。这和大家所熟知的 selenium，playwright，puppeteer 类似，不同的是，PulsarR 的所有行为都针对大规模数据采集进行优化。
 
 以下是一个典型的 RPA 代码片段，它是从顶级电子商务网站收集数据所必需的：
 
@@ -261,7 +280,7 @@ event.onWillCheckDocumentState.addLast { page, driver ->
 session.load(url, options)
 ```
 
-示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin]。
+The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin]。
 
 === 使用 X-SQL 查询 Web
 
@@ -291,14 +310,14 @@ println(ResultSetFormatter(rs, withHeader = true))
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.10.1 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.10.2 | 1,349 ratings | 4.40
 ----
 
 示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
-== 使用方法：将 Pulsar 作为 REST 服务运行
+== 使用方法三：将 PulsarR 作为 REST 服务运行
 
-当 Pulsar 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
+当 PulsarR 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
 
 === 从源代码构建
 ----
@@ -306,9 +325,9 @@ git clone https://github.com/platonai/pulsar.git
 cd pulsar && bin/build-run.sh
 ----
 
-对于中国开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
+对于国内开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
 
-=== 使用 X-SQL 查询网页
+=== 使用 X-SQL 查询 Web
 
 如果未启动，则启动 pulsar 服务器：
 
@@ -365,21 +384,15 @@ Json 格式的响应如下：
 }
 ----
 
-== 使用方法：通过可执行 jar 体验 Pulsar
-
-我们发布了一个基于 Pulsar 的独立可执行 jar。 下载 link:https://github.com/platonai/exotic#download[Exotic] 并使用单个命令行探索其能力：
-
-    java -jar exotic-standalone.jar
-
 == 日志和指标
 
-Pulsar 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
+PulsarR 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
 
-Pulsar 在日志中报告每个页面加载任务执行的状态，因此很容易知道系统中发生了什么，判断系统运行是否健康、回答成功获取多少页面、重试多少页面、使用了多少代理 IP。
+PulsarR 在日志中报告每个页面加载任务执行的状态，因此很容易知道系统中发生了什么，判断系统运行是否健康、回答成功获取多少页面、重试多少页面、使用了多少代理 IP。
 
-只需注意几个符号，您就可以深入了解整个系统的状态：💯 💔 🗙 ⚡💿 🔃🤺。
+只需注意几个符号，您就可以深入了解整个系统的状态：💯 💔 🗙 ⚡ 💿 🔃 🤺。
 
-下面是一组典型的任务日志，查看 link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态。
+下面是一组典型的页面加载日志，查看 link:docs/log-format.adoc[日志格式] 了解如何阅读日志，从而一目了然地了解整个系统的状态。
 
 [source,composer log,options="nowrap"]
 ----
@@ -388,7 +401,6 @@ Pulsar 在日志中报告每个页面加载任务执行的状态，因此很容�
 2022-09-24 11:46:28.567  INFO [-worker-17] a.p.p.c.c.L.Task - 2269. 💯 🔃 U for SC got 200 565.07 KiB <- 543.41 KiB in 1m22.767s, last fetched 16m58s ago, fc:6 | 58/230/98/295/6272 | 27.158.125.76 | 9uwu602 | https://www.walmart.com/ip/Straight-Talk-Apple-iPhone-11-64GB-Purple-Prepaid-Smartphone/356345388?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 ⚡ U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
-2022-09-24 11:46:12.167  INFO [-worker-62] a.p.p.c.i.S.Task - 3744. 🤺 Trying 2th 10s later | U  got 1601 0 <- 0 in 1m0.612s, last fetched 10s ago, fc:1/1 Retry(1601) rsp: CRAWL | https://www.walmart.com/ip/iPhone-7-128GB-Silver-Boost-Mobile-Used-Grade-B/662547852
 ----
 
 == 系统要求
@@ -399,7 +411,7 @@ Pulsar 在日志中报告每个页面加载任务执行的状态，因此很容�
 * java and jar on the PATH
 * Google Chrome 90+
 
-Pulsar 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
+PulsarR 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
 
 == 高级主题
 
@@ -428,13 +440,13 @@ Pulsar 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行�
 
 == 同其他方案的对比
 
-一般来说，”主要特性“部分中提到的特性都得到了 Pulsar 的良好支持，但其他解决方案不支持或者支持不好。
+一般来说，”主要特性“部分中提到的特性都得到了 PulsarR 的良好支持，但其他解决方案不支持或者支持不好。
 
 点击链接 link:docs/faq/solution-comparison.adoc[solution comparison] 查看以下问题的答案：
 
-* Pulsar vs selenium/puppeteer/playwright
-* Pulsar vs nutch
-* Pulsar vs scrapy+splash
+* PulsarR vs selenium/puppeteer/playwright
+* PulsarR vs nutch
+* PulsarR vs scrapy+splash
 
 == 技术细节
 点击链接 link:docs/faq/technical-details.adoc[technical details] 查看以下问题的答案：
