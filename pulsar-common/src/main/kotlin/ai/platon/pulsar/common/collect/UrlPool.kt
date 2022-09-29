@@ -158,7 +158,10 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override val higher5Cache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER5.value]!!
     override val highestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHEST.value]!!
 
-    override fun add(url: String, priority: Priority13) = add(Hyperlink(url))
+    override fun add(url: String, priority: Priority13): Boolean {
+        val link = Hyperlink(url).also { it.priority = priority.value }
+        return add(link)
+    }
 
     override fun add(url: UrlAware): Boolean {
         val added = orderedCaches[url.priority]?.reentrantQueue?.add(url)
