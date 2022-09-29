@@ -9,6 +9,14 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 
+/**
+ * The url feeder collects urls from the url pool and feed them to the crawlers.
+ *
+ * The url feed collect urls using [DataCollector], each [DataCollector] collect urls
+ * from exactly one [UrlCache].
+ *
+ * The user can register multiple [UrlCache]s and [DataCollector]s for different type of tasks.
+ * */
 class UrlFeeder(
     val urlPool: UrlPool,
     val lowerCacheSize: Int = 100,

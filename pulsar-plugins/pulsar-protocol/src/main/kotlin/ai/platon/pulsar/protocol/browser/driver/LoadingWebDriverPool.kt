@@ -249,7 +249,7 @@ class LoadingWebDriverPool constructor(
     @Throws(BrowserLaunchException::class)
     private fun createWebDriver(volatileConfig: VolatileConfig) {
         // TODO: the code below might be better
-        // val b = browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
+        // val b = browserManager.launch(browserId, driverSettings, capabilities)
         // val driver = b.newDriver()
 
         val driver = driverFactory.create(browserId, priority, volatileConfig, start = false)
@@ -281,7 +281,7 @@ class LoadingWebDriverPool constructor(
 
     /**
      * Wait until idle.
-     * @see [ArrayBlockingQueue#take]
+     * @see [java.util.concurrent.ArrayBlockingQueue.take]
      * @throws InterruptedException if the current thread is interrupted
      * */
     private fun waitUntilIdle(timeout: Duration) {

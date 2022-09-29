@@ -39,7 +39,7 @@ open class DelayUrl(
 }
 
 /**
- * The url pool
+ * A [UrlPool] contains many [UrlCache]s with different priority.
  * */
 interface UrlPool {
     companion object {

@@ -10,6 +10,9 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
+/**
+ * This is a helper class that queries or inserts a data collector from or into a URLFeeder.
+ * */
 class UrlFeederHelper(val feeder: UrlFeeder) {
     private val dcLogger = getLogger(DataCollector::class)
     private val urlPool get() = feeder.urlPool
