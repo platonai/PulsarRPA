@@ -22,11 +22,6 @@ import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * Extension point for DOM-based parsers. Permits one to add additional metadata
- * to parses provided by the html or tika plugins. All plugins found which
- * implement this extension point are run sequentially on the parse.
- */
 abstract class AbstractParseFilter(
         final override val id: Int = instanceSequencer.incrementAndGet(),
         override var parent: ParseFilter? = null
