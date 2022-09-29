@@ -40,7 +40,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     /**
-     * Create a h2 session and a associated query session, the h2 session is returned to h2 runtime
+     * Create a h2 session and an associated query session, the h2 session is returned by h2 runtime
      *
      * @param ci The h2 connection info
      * @return The h2 session

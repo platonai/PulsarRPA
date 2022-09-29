@@ -25,7 +25,7 @@ import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
 
 /**
- * A retriever of url content. Implemented by protocol extensions.
+ * A retriever for url content. Implemented by protocol extensions.
  *
  * TODO: protocols are designed to be initialized at setConf() method, which is not good
  */
