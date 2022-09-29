@@ -33,19 +33,16 @@ class ScrapeLoadEvent(
             null
         }
         onWillParseHTMLDocument.addLast { page ->
-            require(page.loadEvent === this)
             page.variables[VAR_IS_SCRAPE] = true
             null
         }
         onWillParseHTMLDocument.addLast { page ->
         }
         onHTMLDocumentParsed.addLast { page, document ->
-            require(page.loadEvent === this)
             require(page.hasVar(VAR_IS_SCRAPE))
             hyperlink.extract(page, document)
         }
         onLoaded.addLast { page ->
-            require(page.loadEvent === this)
             hyperlink.complete(page)
         }
     }

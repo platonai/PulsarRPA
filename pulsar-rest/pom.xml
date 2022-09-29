@@ -24,6 +24,10 @@
         <!-- Pulsar dependency -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-resources</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
         </dependency>
         <dependency>

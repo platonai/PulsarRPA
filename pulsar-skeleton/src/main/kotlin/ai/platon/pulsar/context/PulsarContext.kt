@@ -60,8 +60,14 @@ interface PulsarContext: AutoCloseable {
      * */
     fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T?
 
+    /**
+     * Create a pulsar session
+     * */
     fun createSession(): PulsarSession
 
+    /**
+     * Close a pulsar session
+     * */
     fun closeSession(session: PulsarSession)
 
     /**

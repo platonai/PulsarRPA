@@ -6,6 +6,9 @@ import ai.platon.pulsar.common.urls.UrlAware
 import java.time.Duration
 import java.time.Instant
 
+/**
+ * A url topic groups urls.
+ * */
 data class UrlTopic(
     /**
      * The topic name
@@ -49,7 +52,7 @@ class UrlTopicComparator {
 }
 
 /**
- *
+ * A url loader loads urls from external sources, such as files, databases.
  * */
 interface ExternalUrlLoader {
     /**

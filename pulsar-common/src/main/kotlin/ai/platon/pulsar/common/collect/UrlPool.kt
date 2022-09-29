@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The delay url. A delay url is a url with a delay duration.
+ * The delay url. A delay url is a url with a delay.
  * Delay urls can work with a [DelayQueue], so every time when we retrieve an item from the queue,
  * only the expired items are available.
  * */
