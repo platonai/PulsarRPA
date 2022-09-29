@@ -25,15 +25,18 @@ open class DelayUrl(
     val url: UrlAware,
     val delay: Duration,
 ) : Delayed {
-    // The time to start the task
-    val startTime = System.currentTimeMillis() + delay.toMillis()
+    // The time at which the delay expires
+    val delayExpireAt = System.currentTimeMillis() + delay.toMillis()
+
+    @Deprecated("Inappropriate name", ReplaceWith("delayExpires"))
+    val startTime get() = delayExpireAt
 
     override fun compareTo(other: Delayed): Int {
-        return Ints.saturatedCast(startTime - (other as DelayUrl).startTime)
+        return Ints.saturatedCast(delayExpireAt - (other as DelayUrl).delayExpireAt)
     }
 
     override fun getDelay(unit: TimeUnit): Long {
-        val diff = startTime - System.currentTimeMillis()
+        val diff = delayExpireAt - System.currentTimeMillis()
         return unit.convert(diff, TimeUnit.MILLISECONDS)
     }
 }
@@ -126,14 +129,37 @@ interface UrlPool {
      * A shortcut to the cache with the highest priority in the ordered caches.
      * */
     val highestCache: UrlCache
-
+    /**
+     * Initialize the url pool
+     * */
     fun initialize()
+    /**
+     * Add a url to the pool
+     * */
     fun add(url: String, priority: Priority13 = Priority13.NORMAL): Boolean
+    /**
+     * Add a url to the pool
+     * */
     fun add(url: UrlAware): Boolean
+    /**
+     * Add urls to the pool
+     * */
     fun addAll(urls: Iterable<String>, priority: Priority13 = Priority13.NORMAL): Boolean
+    /**
+     * Add urls to the pool
+     * */
     fun addAll(urls: Iterable<UrlAware>): Boolean
+    /**
+     * Remove deceased urls, such as URLs that are past the deadline.
+     * */
     fun removeDeceased()
+    /**
+     * Clear the pool
+     * */
     fun clear()
+    /**
+     * Check if there is more items in the url pool
+     * */
     fun hasMore(): Boolean
 }
 
@@ -213,7 +239,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
 }
 
 /**
- * The global cache
+ * The concurrent url pool
  * */
 open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
     override val realTimeCache: UrlCache = ConcurrentUrlCache("realtime", REAL_TIME_PRIORITY)
@@ -228,20 +254,20 @@ open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
     }
 }
 
+/**
+ * A [LoadingUrlPool] is a [UrlPool], the items can be loaded from external source using [loader].
+ * */
 class LoadingUrlPool(
     val loader: ExternalUrlLoader,
     val capacity: Int = 10_000,
     conf: ImmutableConfig,
 ) : ConcurrentUrlPool(conf) {
-    /**
-     * The real time fetch cache
-     * */
+
     override val realTimeCache: UrlCache = LoadingUrlCache("realtime", REAL_TIME_PRIORITY, loader, capacity)
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
             Priority13.values().forEach {
-                // TODO: better fetch cache name, it affects the topic id
                 orderedCaches[it.value] = LoadingUrlCache(it.name, it.value, loader, capacity)
             }
         }
