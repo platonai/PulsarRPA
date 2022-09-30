@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>1.10.1-SNAPSHOT</version>
+        <version>1.10.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>pulsar-rest</artifactId>
@@ -22,6 +22,10 @@
 
     <dependencies>
         <!-- Pulsar dependency -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-resources</artifactId>
+        </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>

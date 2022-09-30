@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture
  * [PulsarSession.scrape], load a webpage, parse it into a document and then extract
  * fields from the document.
  *
- * And also the batch versions:
+ * There are also batch versions:
  *
  * [PulsarSession.loadOutPages], load the portal page and out pages.
  * [PulsarSession.scrapeOutPages], load the portal page and out pages, extract fields
@@ -267,11 +267,11 @@ interface PulsarSession : AutoCloseable {
     fun load(url: String, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url with specified options
+     * Load a url with the specified load arguments.
      *
      * @param url     The url to load
-     * @param args The load args
-     * @return The web page
+     * @param args The load arguments
+     * @return The webpage loaded
      */
     fun load(url: UrlAware, args: String): WebPage
 

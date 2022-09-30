@@ -94,14 +94,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.1</version>
+  <version>1.10.2</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.1")
+implementation("ai.platon.pulsar:pulsar-all:1.10.2")
 ----
 
 === Basic usage

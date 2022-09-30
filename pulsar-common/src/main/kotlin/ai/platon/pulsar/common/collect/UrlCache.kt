@@ -3,18 +3,19 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.queue.*
 import ai.platon.pulsar.common.urls.UrlAware
+import com.google.common.cache.LoadingCache
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * The url cache holds [UrlAware]s.
+ * Url cache holds urls.
  *
- * A url cache contains several queues for different purpose: reentrant, non-reentrant and n-reentrant. A reentrant
- * queue accepts a url multiple times, a non-reentrant queue accepts a url only once, and a n-reentrant queue accepts a
- * url for n times at most.
+ * A url cache contains several queues for different purpose: reentrant, non-reentrant and n-reentrant.
+ * A reentrant queue accepts the same url multiple times, a non-reentrant queue accepts the same url only once,
+ * and an n-reentrant queue accepts the same url for n times at most.
  *
- * Url caches are expected to be very large, the items can be loaded from external source, for example, MongoDB.
+ * The URL cache is expected to be very large and items may be loaded from external sources such as MongoDB.
  * */
 interface UrlCache {
     /**
@@ -30,7 +31,7 @@ interface UrlCache {
      * */
     val nonReentrantQueue: Queue<UrlAware>
     /**
-     * A non-reentrant queue accepts the same url for n times at most
+     * An n-reentrant queue accepts the same url for n times at most
      * */
     val nReentrantQueue: Queue<UrlAware>
     /**
@@ -38,7 +39,7 @@ interface UrlCache {
      * */
     val reentrantQueue: Queue<UrlAware>
     /**
-     * A list of all queues
+     * Create a list of all the queues
      * */
     val queues: List<Queue<UrlAware>>
         get() = listOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
@@ -47,8 +48,8 @@ interface UrlCache {
      * */
     val size get() = queues.sumOf { it.size }
     /**
-     * The precise count of urls in the external source, since the external source can be very large, retrieve the precise
-     * size can be very slow in some external storage.
+     * The precise count of urls in the external source, since the external source can be very large,
+     * retrieving the precise size can be very slow in some external source.
      * */
     val externalSize: Int get() = 0
     /**
@@ -96,15 +97,18 @@ open class ConcurrentUrlCache(
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
 }
 
+/**
+ * Contains a sets of loading queues which can load urls from external source using [urlLoader].
+ * */
 class LoadingUrlCache constructor(
     name: String,
     priority: Int,
     /**
-     * The external url loader
+     * A loader to load urls from external sources
      * */
     val urlLoader: ExternalUrlLoader,
     /**
-     * The cache capacity
+     * The capacity for each queue
      * */
     val capacity: Int = LoadingQueue.DEFAULT_CAPACITY,
 ) : AbstractUrlCache(name, priority), Loadable<UrlAware> {

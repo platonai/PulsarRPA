@@ -17,83 +17,154 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The delay url. A delay url is a url with a delay duration.
+ * The delay url. A delay url is a url with a delay.
  * Delay urls can work with a [DelayQueue], so every time when we retrieve an item from the queue,
- * only the expired items are available.
+ * only the items with delay expired are available.
  * */
 open class DelayUrl(
     val url: UrlAware,
     val delay: Duration,
 ) : Delayed {
-    // The time to start the task
-    val startTime = System.currentTimeMillis() + delay.toMillis()
+    // The time at which the delay expires
+    val delayExpireAt = System.currentTimeMillis() + delay.toMillis()
+
+    @Deprecated("Inappropriate name", ReplaceWith("delayExpires"))
+    val startTime get() = delayExpireAt
 
     override fun compareTo(other: Delayed): Int {
-        return Ints.saturatedCast(startTime - (other as DelayUrl).startTime)
+        return Ints.saturatedCast(delayExpireAt - (other as DelayUrl).delayExpireAt)
     }
 
     override fun getDelay(unit: TimeUnit): Long {
-        val diff = startTime - System.currentTimeMillis()
+        val diff = delayExpireAt - System.currentTimeMillis()
         return unit.convert(diff, TimeUnit.MILLISECONDS)
     }
 }
 
 /**
- * The url pool
+ * A [UrlPool] contains many [UrlCache]s with different priority.
  * */
 interface UrlPool {
     companion object {
         val REAL_TIME_PRIORITY = Priority13.HIGHEST.value
     }
     /**
-     * The real time url cache, real time urls have the highest priority
+     * The real time url cache in which urls have the highest priority of all.
      * */
     val realTimeCache: UrlCache
     /**
-     * The delayed url cache
+     * An unbounded queue of [Delayed] urls, in which an element can only be taken
+     * when its delay has expired.
+     *
+     * Delay cache has higher priority than all ordered caches and is usually used for retrying tasks.
      * */
     val delayCache: Queue<DelayUrl>
     /**
-     * The ordered url caches
+     * The ordered url caches.
+     *
+     * Ordered caches has higher priority than unordered caches.
      * */
     val orderedCaches: MutableMap<Int, UrlCache>
     /**
-     * The unordered fetch caches, tasks in unordered caches have the lowest priority
+     * The unordered url caches, tasks in unordered caches have the lowest priority.
+     *
+     * Unordered caches has the lowest priority of all
      * */
     val unorderedCaches: MutableList<UrlCache>
     /**
-     * Total number of items in all url caches
+     * Total number of items in all url caches.
      * */
     val totalCount: Int
     @Deprecated("Confusing name", ReplaceWith("totalCount"))
     val totalItems: Int get() = totalCount
-
+    /**
+     * A shortcut to the cache with the lowest priority in the ordered caches
+     * */
     val lowestCache: UrlCache
+    /**
+     * A shortcut to the cache that is 5 priority lower than the normal cache in the ordered caches.
+     * */
     val lower5Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 4 priority lower than the normal cache in the ordered caches.
+     * */
     val lower4Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 3 priority lower than the normal cache in the ordered caches.
+     * */
     val lower3Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 2 priority lower than the normal cache in the ordered caches.
+     * */
     val lower2Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 1 priority lower than the normal cache in the ordered caches.
+     * */
     val lowerCache: UrlCache
+    /**
+     * A shortcut to the cache has the default priority in the ordered caches.
+     * */
     val normalCache: UrlCache
+    /**
+     * A shortcut to the cache that is 1 priority higher than the normal cache in the ordered caches.
+     * */
     val higherCache: UrlCache
+    /**
+     * A shortcut to the cache that is 2 priority higher than the normal cache in the ordered caches.
+     * */
     val higher2Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 3 priority higher than the normal cache in the ordered caches.
+     * */
     val higher3Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 4 priority higher than the normal cache in the ordered caches.
+     * */
     val higher4Cache: UrlCache
+    /**
+     * A shortcut to the cache that is 5 priority higher than the normal cache in the ordered caches.
+     * */
     val higher5Cache: UrlCache
+    /**
+     * A shortcut to the cache with the highest priority in the ordered caches.
+     * */
     val highestCache: UrlCache
-
+    /**
+     * Initialize the url pool
+     * */
     fun initialize()
+    /**
+     * Add a url to the pool
+     * */
     fun add(url: String, priority: Priority13 = Priority13.NORMAL): Boolean
+    /**
+     * Add a url to the pool
+     * */
     fun add(url: UrlAware): Boolean
+    /**
+     * Add urls to the pool
+     * */
     fun addAll(urls: Iterable<String>, priority: Priority13 = Priority13.NORMAL): Boolean
+    /**
+     * Add urls to the pool
+     * */
     fun addAll(urls: Iterable<UrlAware>): Boolean
+    /**
+     * Remove deceased urls, such as URLs that are past the deadline.
+     * */
     fun removeDeceased()
+    /**
+     * Clear the pool
+     * */
     fun clear()
+    /**
+     * Check if there is more items in the url pool
+     * */
     fun hasMore(): Boolean
 }
 
 /**
- * The abstract fetch pool
+ * The abstract url pool
  * */
 abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     protected val initialized = AtomicBoolean()
@@ -113,7 +184,10 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     override val higher5Cache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHER5.value]!!
     override val highestCache: UrlCache get() = ensureInitialized().orderedCaches[Priority13.HIGHEST.value]!!
 
-    override fun add(url: String, priority: Priority13) = add(Hyperlink(url))
+    override fun add(url: String, priority: Priority13): Boolean {
+        val link = Hyperlink(url).also { it.priority = priority.value }
+        return add(link)
+    }
 
     override fun add(url: UrlAware): Boolean {
         val added = orderedCaches[url.priority]?.reentrantQueue?.add(url)
@@ -144,7 +218,9 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
     }
 
     override fun clear() {
+        // orderedCaches.values.forEach { it.clear() }
         orderedCaches.clear()
+        // unorderedCaches.forEach { it.clear() }
         unorderedCaches.clear()
         realTimeCache.clear()
         delayCache.clear()
@@ -163,7 +239,7 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
 }
 
 /**
- * The global cache
+ * The concurrent url pool
  * */
 open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
     override val realTimeCache: UrlCache = ConcurrentUrlCache("realtime", REAL_TIME_PRIORITY)
@@ -178,20 +254,20 @@ open class ConcurrentUrlPool(conf: ImmutableConfig) : AbstractUrlPool(conf) {
     }
 }
 
+/**
+ * A [LoadingUrlPool] is a [UrlPool], the items can be loaded from external source using [loader].
+ * */
 class LoadingUrlPool(
     val loader: ExternalUrlLoader,
     val capacity: Int = 10_000,
     conf: ImmutableConfig,
 ) : ConcurrentUrlPool(conf) {
-    /**
-     * The real time fetch cache
-     * */
+
     override val realTimeCache: UrlCache = LoadingUrlCache("realtime", REAL_TIME_PRIORITY, loader, capacity)
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
             Priority13.values().forEach {
-                // TODO: better fetch cache name, it affects the topic id
                 orderedCaches[it.value] = LoadingUrlCache(it.name, it.value, loader, capacity)
             }
         }

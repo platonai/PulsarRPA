@@ -868,17 +868,30 @@ final public class WebPage implements Comparable<WebPage> {
         return PageCategory.UNKNOWN;
     }
 
+    @NotNull
+    public OpenPageCategory getOpenPageCategory() {
+        try {
+            CharSequence pageCategory = page.getPageCategory();
+            if (pageCategory != null) {
+                return OpenPageCategory.Companion.parse(pageCategory.toString());
+            }
+        } catch (Throwable ignored) {
+        }
+
+        return new OpenPageCategory("", "");
+    }
+
     /**
      * category : index, detail, review, media, search, etc
      *
      * @param pageCategory a {@link PageCategory} object.
      */
     public void setPageCategory(@NotNull PageCategory pageCategory) {
-        page.setPageCategory(pageCategory.toString());
+        page.setPageCategory(pageCategory.format());
     }
 
     public void setPageCategory(@NotNull OpenPageCategory pageCategory) {
-        page.setPageCategory(pageCategory.toString());
+        page.setPageCategory(pageCategory.format());
     }
 
     /**

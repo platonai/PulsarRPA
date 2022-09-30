@@ -36,6 +36,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.HTTP_TIMEOUT;
 
+/**
+ * TODO: just use Jsoup
+ * */
 public abstract class AbstractNativeHttpProtocol extends AbstractHttpProtocol {
 
     public static final int BUFFER_SIZE = 8 * 1024;

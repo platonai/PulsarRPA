@@ -56,7 +56,7 @@ open class DelayLoadingQueue(
         get() = estimateIfExpired().lastEstimatedExternalSize.coerceAtLeast(0)
 
     /**
-     * Determines if the given expiration time is less than <code>now</code>.
+     * Determine whether the deadline has been exceeded.
      *
      * @param now the time in used to compare against the expiration time.
      * @param delay the expiration time

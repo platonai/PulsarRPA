@@ -60,8 +60,14 @@ interface PulsarContext: AutoCloseable {
      * */
     fun <T : Any> getBeanOrNull(requiredType: KClass<T>): T?
 
+    /**
+     * Create a pulsar session
+     * */
     fun createSession(): PulsarSession
 
+    /**
+     * Close a pulsar session
+     * */
     fun closeSession(session: PulsarSession)
 
     /**
@@ -70,7 +76,7 @@ interface PulsarContext: AutoCloseable {
     fun registerClosable(closable: AutoCloseable)
 
     /**
-     * Normalize an url, the url can be one of the following:
+     * Normalize an url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api
 
+import ai.platon.pulsar.crawl.CrawlLoops
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
 import org.springframework.boot.autoconfigure.domain.EntityScan
@@ -16,4 +17,9 @@ import org.springframework.context.annotation.ImportResource
     "ai.platon.pulsar.boot.autoconfigure",
     "ai.platon.pulsar.rest.api"
 )
-class ApiApplication
+class ApiApplication(
+    /**
+     * Activate crawl loops
+     * */
+    val crawlLoops: CrawlLoops
+)
