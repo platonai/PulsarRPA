@@ -13,11 +13,25 @@ PulsarR is the ultimate open source solution to scrape web data at scale.
 
 PulsarR [ˈpʌlsɑr] is short for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
 
-Extracting web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, Pulsar has developed a range of cutting-edge technologies to solve this problem.
+Extracting Web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, PulsarR has developed a range of cutting-edge technologies to solve this problem.
 
-Pulsar supports the Network As A Database paradigm, so we can turn the Web into tables and charts using simple SQLs, furthermore, we query the web using SQL directly.
+We have released complete solutions for site-wide Web scraping of some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality and cost. They will be free and open source forever, such as:
 
-We also have a plan to release an advanced AI to automatically extract every field in webpages with notable accuracy.
+* link:https://github.com/platonai/exotic-amazon[Exotic Amazon]
+* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
+* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
+
+*PulsarR supports high-quality, large-scale Web data collection and processing.* We have developed a range of infrastructure and cutting-edge technologies to ensure the highest standards of performance, quality and TCO (total cost of ownership), even in very large-scale data collection scenarios.
+
+*PulsarR supports the Network-As-A-Database paradigm.* PulsarR treats the external network as a database. If the required data is not in the local storage, or the existing version does not meet the analysis needs, the system will collect the latest version of the data from the Internet. We can also use simple SQL to directly convert the Web into tables and charts. Furthermore, we can use SQL to query the Web directly.
+
+**PulsarR supports browser rendering as the primary method to collect Web data.** By using browser rendering as the primary method to collect Web data, we achieve an optimal balance between data point scale, data quality, labor cost and hardware cost, and achieve the lowest TCO (total cost of ownership). Through optimization, such as blocking irrelevant resource files, the performance of browser rendering can even be comparable to the traditional single resource collection methods. Furthermore, for some simple resources, we can call PulsarR's single resource collection methods for high-speed collection after opening the browser and obtaining the context.
+
+*PulsarR supports RPA based Web scraping.* PulsarR includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, mouse drag and drop, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
+
+*PulsarR supports single resource collection.* PulsarR's default data collection method is to harvest the complete Web data through browser rendering, but if the data you need can be retrieved through a single link, for example through an ajax interface, you can also call PulsarR's resource collection method for high-speed collection.
+
+*PulsarR plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
 
 == Features
 
@@ -85,7 +99,7 @@ The core Pulsar concepts include the following:
 
 Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
 
-== Usage: use Pulsar as a library
+== Usage I: use Pulsar as a library
 The simplest way to leverage the power of Pulsar is to add it to your project as a library.
 
 Maven:
@@ -94,14 +108,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.2</version>
+  <version>1.10.3</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.2")
+implementation("ai.platon.pulsar:pulsar-all:1.10.3")
 ----
 
 === Basic usage
@@ -283,7 +297,7 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 The example code can be found here: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
-== Usage: run Pulsar as a REST service
+== Usage II: run Pulsar as a REST service
 When Pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 
 === Build from source
@@ -350,9 +364,17 @@ The response is as follows in json format:
 }
 ----
 
-== Usage: experience Pulsar with the executable jar
+== Usage III: experience Pulsar with the executable jar
 
-We have released a standalone, executable jar, based on Pulsar. Download link:https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
+We have released a standalone executable jar based on PulsarR, which includes:
+
+* Web scraping examples of a set of top sites
+* An applet based on self-supervised machine learning for information extraction, AI identifies all fields on the detail page with over 90% field accuracy of 99.9% or more
+* An applet based on self-supervised machine learning and outputs all extract rules, which can help traditional Web scraping methods
+* An applet that scrape Web data directly from the command line, like wget or curl, without writing code
+* A concise and powerful PulsarR client, which can query the Web and collect data by writing SQL just like the traditional database client
+
+Download https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
 
     java -jar exotic-standalone.jar
 
@@ -362,9 +384,9 @@ Pulsar has carefully designed the logging and metrics subsystem to record every 
 
 Pulsar logs the status for every load execution, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
 
-You can gain insight into the state of the entire system just by noticing a few symbols: 💯 💔 🗙 ⚡💿 🔃🤺。
+By paying attention to just a few symbols, you can gain insight into the state of the entire system: 💯 💔 🗙 ⚡ 💿 🔃 🤺。
 
-Typical logs for task status are shown below, check link:docs/log-format.adoc[log-format] to learn how to read the logs to learn the status of the whole system at a glance.
+Typical page loading logs are shown below, check link:docs/log-format.adoc[log-format] to learn how to read the logs and gain insight into the state of the entire system at a glance.
 
 [source,composer log,options="nowrap"]
 ----
@@ -373,7 +395,6 @@ Typical logs for task status are shown below, check link:docs/log-format.adoc[lo
 2022-09-24 11:46:28.567  INFO [-worker-17] a.p.p.c.c.L.Task - 2269. 💯 🔃 U for SC got 200 565.07 KiB <- 543.41 KiB in 1m22.767s, last fetched 16m58s ago, fc:6 | 58/230/98/295/6272 | 27.158.125.76 | 9uwu602 | https://www.walmart.com/ip/Straight-Talk-Apple-iPhone-11-64GB-Purple-Prepaid-Smartphone/356345388?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:18.390  INFO [r-worker-8] a.p.p.c.c.L.Task - 3732. 💔 ⚡ U for N got 1601 0 <- 0 in 32.201s, fc:1/1 Retry(1601) rsp: CRAWL, rrs: EMPTY_0B | 2zYxg52 | https://www.walmart.com/ip/Apple-iPhone-7-256GB-Jet-Black-AT-T-Locked-Smartphone-Grade-B-Used/182353175?variantFieldId=actual_color -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
-2022-09-24 11:46:12.167  INFO [-worker-62] a.p.p.c.i.S.Task - 3744. 🤺 Trying 2th 10s later | U  got 1601 0 <- 0 in 1m0.612s, last fetched 10s ago, fc:1/1 Retry(1601) rsp: CRAWL | https://www.walmart.com/ip/iPhone-7-128GB-Silver-Boost-Mobile-Used-Grade-B/662547852
 ----
 
 == Requirements
