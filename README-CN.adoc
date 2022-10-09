@@ -181,7 +181,7 @@ val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapO
     -parse       // Enable the parse phrase
     -resource    // Fetch the url as a resource without browser rendering
 
-点击 link:docs/concepts.adoc#_load_options[Load Options] 查看详情。
+点击 link:docs/concepts-CN.adoc#_load_options[Load Options] 查看详情。
 
 === 提取网页数据
 
