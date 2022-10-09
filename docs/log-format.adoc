@@ -102,7 +102,7 @@ FetchReason contains one or two characters, it's defined as the following:
     symbols[TEMP_MOVED] = "TM"
     symbols[UNKNOWN] = "U"
 
-FetchCode is a number, describes the fetch phrase status, inherited from the standard HTTP error code, usually be one of:
+FetchCode is a number which describes the fetch phase state, it's inherited from the standard HTTP error code and is usually one of the following:
 
     200 - success
     1601 - retry
