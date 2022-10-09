@@ -57,7 +57,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码可以在这里找到：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
+上面的代码从一组产品页面中抓取由 css 选择器 #title 和 #acrCustomerReviewText 指定的字段。 示例代码：link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/sites/amazon/AmazonCrawler.java[java].
 
 *大多数 #生产环境# 数据采集项目可以从以下代码片段开始：*
 
@@ -79,8 +79,36 @@ fun main() {
 }
 ----
 
-示例代码可以在这里找到：
+示例代码：
 link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+
+*#最复杂# 的数据采集项目需要从 RPA 开始：*
+
+```kotlin
+val options = session.options(args)
+val event = options.event.browseEvent
+event.onBrowserLaunched.addLast { page, driver ->
+    // warp up the browser to avoid being blocked by the website,
+    // or choose the global settings, such as your location.
+    warnUpBrowser(page, driver)
+}
+event.onWillFetch.addLast { page, driver ->
+    // have to visit a referrer page before we can visit the desired page
+    waitForReferrer(page, driver)
+    // websites may prevent us from opening too many pages at a time, so we should open links one by one.
+    waitForPreviousPage(page, driver)
+}
+event.onWillCheckDocumentState.addLast { page, driver ->
+    // wait for a special fields to appear on the page
+    driver.waitForSelector("body h1[itemprop=name]")
+    // close the mask layer, it might be promotions, ads, or something else.
+    driver.click(".mask-layer-close-button")
+}
+// visit the URL and trigger events
+session.load(url, options)
+```
+
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin].
 
 == 核心概念
 
@@ -168,7 +196,7 @@ val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-n
 val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
-示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
 
 *Load options*
 
@@ -247,7 +275,7 @@ public class ContinuousCrawler {
 }
 ----
 
-示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 === RPA (机器人流程自动化）
 
@@ -313,7 +341,7 @@ TITLE                                                   | BRAND                 
 HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.10.2 | 1,349 ratings | 4.40
 ----
 
-示例代码可以在这里找到: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
 == 使用方法三：将 PulsarR 作为 REST 服务运行
 
@@ -359,7 +387,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
   from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');"
 ----
 
-示例代码可以在这里找到: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
+示例代码: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
 
 Json 格式的响应如下：
 
