@@ -98,7 +98,7 @@ PulsarR 的核心概念包括以下内容，了解了这些核心概念，您可
 * Load Options: 加载选项或加载参数影响 PulsarR 如何加载、获取和抓取网页
 * Event Handlers: 在网页的整个生命周期中捕获和处理事件
 
-点击 link:docs/concepts.adoc#_the_core_concepts_of_pulsar[PulsarR concepts] 查看详情。
+点击 link:docs/concepts-CN.adoc#_the_core_concepts_of_pulsar[PulsarR concepts] 查看详情。
 
 == 使用方法一：通过可执行 jar 体验 PulsarR
 
