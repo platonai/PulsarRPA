@@ -212,25 +212,40 @@ The example code can be found here: link:../pulsar-rest/src/main/kotlin/ai/plato
 Most methods in Pulsar Session accept a parameter called load arguments, or load options, to control how to load/fetch/scrape webpages.
 [source,kotlin]
 ----
+// use URL-argument form:
 val page = session.load(url, "-expires 1d")
 val page2 = session.load(url, "-refresh")
 val document = session.loadDocument(url, "-expires 1d -ignoreFailure")
-val pages = session.loadOutPages(url, "-outLink a[href~=item]")
+val pages = session.loadOutPages(url, "-outLink a[href~=item] -itemExpires 7d")
 
-Or:
-val options = session.options(""-expires 1d -ignoreFailure"")
+session.submit(Hyperlink(url, args = "-expires 1d"))
+
+// Or use configured-URL form:
+val page = session.load("$url -expires 1d")
+val page2 = session.load("$url -refresh")
+val document = session.loadDocument("$url -expires 1d -ignoreFailure")
+val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", "-outLink a[href~=item] -itemExpires 7d")
+
+session.submit(Hyperlink("$url -expires 1d"))
+
+// Or use URL-option form:
+var options = session.options("-expires 1d -ignoreFailure")
 val document = session.loadDocument(url, options)
+options = session.options("-outLink a[href~=item] -itemExpires 7d")
+val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", options)
 
 // ...
 ----
 
+The configured-URL form can be mixed with the other forms and has the highest priority.
+
 The most important load options are:
 
     -expires     // The expiry time of a page
-    -itemExpires // The expiry time of item pages in some batch scraping methods
-    -outLink     // The selector for out links to scrape
+    -itemExpires // The expiry time of item pages in batch scraping methods
+    -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Triger the parse phrase
+    -parse       // Enable the parse phrase
     -resource    // Fetch the url as a resource without browser rendering
 
 All load options are parsed to a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] object, check the code for all the supported options.
