@@ -161,15 +161,15 @@ session.load(url, args)
 
 A UrlAware provides much more complex controls to do crawl tasks. UrlAware is the interface of all Hyperlinks, see <<Hyperlinks,Hyperlinks>> section for details.
 
-At last, a link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl] is actually not a URL, it's an interface of any task to be executed in the crawl loop.
+At last, a link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Urls.kt[DegenerateUrl] is actually not a URL, it's an interface of any task to be executed in the crawl loop.
 
 === Hyperlinks
 
-A hyperlink, or simply a link, is a reference to data that the user can follow by clicking or tapping.
+A link:https://en.wikipedia.org/wiki/Hyperlink[hyperlink], or simply a link, refers specifically to a reference to data on the Web, usually containing a URL, a text, and a set of attributes that the user can follow by clicking or tapping on it.
 
-A Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task.
+link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[Hyperlinks in Pulsar] are like normal hyperlinks, but with additional information to describe the task.
 
-There are several Hyperlinks predefined by Pulsar:
+There are several hyperlinks predefined by Pulsar:
 
 A ParsableHyperlink is a convenient abstraction to do fetch-and-parse tasks in continuous crawl jobs:
 
@@ -193,7 +193,7 @@ val link = ListenableHyperlink(
 portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 session.submit(link)
 ----
-The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[kotlin].
+The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[kotlin] and the order in which they are executed.
 
 A CompletableListenableHyperlink helps us to do the both:
 [source,kotlin]
@@ -260,6 +260,8 @@ The load arguments are parsed into a link:../pulsar-skeleton/src/main/kotlin/ai/
 It is worth noting that when we execute the `load()` family of methods, the system does not parse the page, but provides the `parse()` method to parse the page. However, once we add the `-parse` argument, the parsing subsystem will be activated and the page will be parsed automatically. We can register handlers to perform tasks such as data extraction and data persistence after the page is parsed.
 
 There are two ways to register handlers in the parsing subsystem: Register a global link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilter.kt[ParseFilter] with link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilters.kt[ParseFilters], or register a page wide event handler with link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent].
+
+A good example of using ParseFilter to perform complex tasks is https://github.com/platonai/exotic-amazon/blob/main/src/main/kotlin/ai/platon/exotic/amazon/crawl/core/handlers/parse/WebDataExtractorInstaller.kt[e-commerce site-wide data collection], where a separate ParseFilter is registered for each type of page to handle page parsing, extraction result persistence, link collection, etc.
 
 === Browser Settings
 BrowserSettings defines a convenient interface to specify the behavior of browser automation, such as:

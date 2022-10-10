@@ -141,9 +141,9 @@ Pulsar 中有几种基本的 URL 形式:
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[UrlAware]
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl]
 
-NormUrl 代表 “规范化的Url”，这意味着该 url 是 fetch 组件的最终形式，并且通常最终被传递给真正的浏览器。
+NormUrl 代表 “规范化的 Url”，这意味着该 url 是 fetch 组件的最终形式，并且通常最终被传递给真正的浏览器。
 
-如果未指定，字符串格式的 url 实际上意味着 “已配置的 url” 或 “带参数的 url”,例如:
+如果未指定，字符串格式的 url 实际上意味着 “configured url” 或 “url with parameters”，例如:
 
 [source,kotlin]
 ----
@@ -166,9 +166,9 @@ UrlAware 提供了更复杂的控制来完成采集任务。UrlAware 是所有 H
 
 === 超链接
 
-超链接，或简称为链接，是对数据的引用，用户可以通过单击或点击来跟随它。
+link:https://en.wikipedia.org/wiki/Hyperlink[超链接]，或简称为链接，特指 Web 上对数据的引用，通常包含一个 URL，一个文本和一组属性，用户可以通过单击或点击来跟随它。
 
-Pulsar 中的超链接是一个普通的 link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink]，带有描述任务的额外信息。
+link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[Pulsar 中的 Hyperlink] 如同普通超链接，但带有描述任务的额外信息。
 
 Pulsar 预定义了几个超链接:
 
@@ -184,7 +184,7 @@ val urls = LinkExtractors.fromResource("seeds.txt")
 PulsarContexts.create().submitAll(urls).await()
 ----
 
-CompletableHyperlink帮助我们进行 java 风格的异步计算: 提交一个超链接并等待任务完成。
+CompletableHyperlink 帮助我们进行 java 风格的异步计算: 提交一个超链接并等待任务完成。
 
 ListenableHyperlink 帮助我们附加事件处理程序：
 [source,kotlin]
@@ -214,7 +214,7 @@ fun executeQuery(request: ScrapeRequest): ScrapeResponse {
 [#_load_options]
 === Load Options
 
-Pulsar Session 中的几乎每个方法都接受一个名为 load arguments 或 load options 的参数，以控制如何加载、获取和提取网页。
+Pulsar Session 中的几乎每个方法都接受一个名为 `load arguments` 或 `load options` 的参数，以控制如何加载、获取和提取网页。
 
 有三种形式来组合 URL 及其参数:
 
@@ -264,22 +264,22 @@ val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", options)
 
 有两种方法可以在解析子系统中注册处理程序：用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilters.kt[ParseFilters] 注册一个全局范围的 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilter.kt[ParseFilter]，或者用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent] 注册一个页面范围的事件处理程序。
 
+使用 ParseFilter 来执行复杂任务的一个很好的案例是 https://github.com/platonai/exotic-amazon/blob/main/src/main/kotlin/ai/platon/exotic/amazon/crawl/core/handlers/parse/WebDataExtractorInstaller.kt[电商全站数据采集]，针对每种类型的页面注册了不同的 ParseFilter，来处理网页解析、提取结果持久化、链接收集等问题。
+
 === 浏览器设置
 
-BrowserSettings 定义了一个方便的接口来指定浏览器自动化的行为，例如:
+link:../pulsar-tools/pulsar-browser/src/main/kotlin/ai/platon/pulsar/browser/common/BrowserSettings.kt[BrowserSettings] 定义了一个方便的接口来指定浏览器自动化的行为，例如:
 
 . 有头还是无头？
 . 是否运行单网页应用程序（SPA）？
 . 是否启用代理 IP？
 . 是否屏蔽媒体资源？
 
-查看 link:../pulsar-tools/pulsar-browser/src/main/kotlin/ai/platon/pulsar/browser/common/BrowserSettings.kt[BrowserSettings] 了解详情。
-
 === 事件处理器
 
 这里的事件处理程序是网页事件处理程序，它在网页的整个生命周期中捕获和处理事件。
 
-查看 link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[EventHandlerUsage] 了解所有支持的事件。
+查看 link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[EventHandlerUsage] 了解所有支持的事件，以及它们被执行的顺序。
 
 === X-SQL
 
@@ -291,13 +291,13 @@ Pulsar 支持网络即数据库范式，我们可以使用简单的 SQL 将 Web 
 
 === 链接池
 
-运行连续爬网时，URL会添加到 link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] 中. link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] 包含各种 link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt[UrlCache]s 来满足不同的要求，例如，优先级、延迟、截止日期、外部加载要求等等。
+运行连续爬网时，URL会添加到 link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] 中。link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] 包含各种 link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt[UrlCache] 来满足不同的需求，例如，优先级、延迟、截止日期、外部加载等等。
 
 === Crawl Loop
 
-当运行连续爬网时，系统会启动一个 Crawl Loop 来不断从 UrlPool 获取 URL，然后在 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] 中异步加载或获取它们。
+当运行连续爬网时，系统会启动一个主循环来不断从 link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt[UrlPool] 获取 URL，然后在 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] 中异步加载或获取它们。
 
-请记住，Pulsar 中的每个任务都是一个 url，因此爬行循环可以接受和执行任何类型的任务。
+请记住，Pulsar 中的每个任务都是一个 URL，因此主循环可以接受和执行任何类型的任务。
 
 === 隐私上下文
 
