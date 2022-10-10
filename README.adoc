@@ -326,6 +326,8 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
+Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
+
 == Usage II: run Pulsar as a REST service
 When Pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 

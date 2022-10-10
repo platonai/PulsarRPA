@@ -25,7 +25,7 @@ select
 from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');
 ----
 
-Pulsar extends H2 database mainly by registering UDFs.
+Pulsar extends H2 database mainly by registering UDFs, but it also makes other extensions.
 
 Every X-SQL function has a namespace, for example:
 
@@ -44,7 +44,7 @@ The following X-SQL functions are all the same:
     dom_load_and_select(url, 'body');
     dOm_____lo_AdaNd_S___elEct_____(url, 'body');
 
-Since LOAD_AND_SELECT is declared as `hasShortcut`, so the namespace can be ignored, the following functions are still the same:
+Since LOAD_AND_SELECT is declared as `hasShortcut`, the namespace can be ignored, the following functions are still the same:
 
     LOAD_AND_SELECT(url, 'body');
     loadAndSelect(url, 'body');

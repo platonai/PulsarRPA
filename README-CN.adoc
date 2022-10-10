@@ -346,6 +346,8 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
 
+点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
+
 == 使用方法三：将 PulsarR 作为 REST 服务运行
 
 当 PulsarR 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。

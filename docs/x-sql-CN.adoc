@@ -25,7 +25,7 @@ select
 from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');
 ----
 
-Pulsar 主要通过注册 UDF 来扩展 H2 数据库。
+Pulsar 主要通过注册 UDF 来扩展 H2 数据库，但也做了其他扩展。
 
 每个 X-SQL 函数都有一个命名空间，例如:
 
