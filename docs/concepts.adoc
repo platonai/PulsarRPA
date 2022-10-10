@@ -3,7 +3,6 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: The Pulsar concepts
 :toc:
 :icons: font
-include::quickref.adoc
 
 This document describes Pulsar concepts.
 
@@ -13,7 +12,7 @@ This document describes Pulsar concepts.
 Web scraping, web harvesting, or web data extraction is data scraping used for extracting data from websites.
 
 === Network As A Database
-The Internet, especially, the WWW, is the largest database in the world, but extracting data from the Web has never been easy.
+The Internet, especially, the World Wide Web (WWW), is the largest database in the world, but extracting data from the Web has never been easy.
 
 Pulsar treats the network as a database. For each webpage, Pulsar will first check the local storage, if it does not exist, or expired, or any other fetch condition is triggered, Pulsar will retrieve it from the Web.
 
@@ -21,11 +20,9 @@ Pulsar has SQL support, so we can turn the Web into tables and charts using simp
 
 === Auto Extract
 
-Web data extraction has evolved over the last three decades from using statistical methods to more advanced
-machine learning methods. Machine learning techniques are much preferred nowadays due to demand for time-to-market, developer
-productivity, and cost concerns. Using our leading edge technology, the entire end-to-end Web data extraction life cycle is automated without any manual intervention.
+Web data extraction has evolved over the last three decades from using statistical methods to more advanced machine learning methods. Machine learning techniques are much preferred nowadays due to demand for time-to-market, developer productivity, and cost concerns. Using our cutting edge technology, the entire end-to-end Web data extraction lifecycle is automated without any manual intervention.
 
-We provided a demo project to show how to use our world leading machine learning algorithm to extract almost every field in webpages automatically: https://github.com/platonai/exotic[Exotic].
+We provided a preview project to show how to use our world leading machine learning algorithm to extract almost every field in webpages automatically: https://github.com/platonai/exotic[Exotic].
 
 You can also use https://github.com/platonai/exotic[Exotic] as an intelligent CSS selector generator, the generated CSS selectors can be used in any traditional scrape systems to extract data from webpages.
 
@@ -36,7 +33,10 @@ Although Pulsar supports various web scraping methods, browser rendering is the 
 Browser rendering means every webpage is open by a real browser to make sure all fields on the webpage are present correctly.
 
 === Pulsar Context
-A Pulsar context consists of a set of components that are highly customizable.
+
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/context/PulsarContext.kt[PulsarContext] consists of a set of highly customizable components that provide the core set of interfaces of the system and is used to create link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession]s.
+
+The link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/context/PulsarContext.kt[PulsarContext] is the interface to all other contexts.
 
 A StaticPulsarContext consists of the default components.
 
@@ -52,15 +52,15 @@ link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.k
 
 Key methods:
 
-* `load()`: load a webpage from local storage, or fetch it from the Internet.
-* `parse()`: parse a webpage into a document.
-* `scrape()`: load a webpage, parse it into a document and then extract fields from the document.
-* `submit()`: submit a url to the url pool, the url will be processed in the main loop later.
+* `.load()`: load a webpage from local storage, or fetch it from the Internet.
+* `.parse()`: parse a webpage into a document.
+* `.scrape()`: load a webpage, parse it into a document and then extract fields from the document.
+* `.submit()`: submit a url to the url pool, the url will be processed in the main loop later.
 
 And also the batch versions:
 
-* `loadOutPages()`: load the portal page and out pages.
-* `scrapeOutPages()`: load the portal page and out pages, extract fields from out pages.
+* `.loadOutPages()`: load the portal page and out pages.
+* `.scrapeOutPages()`: load the portal page and out pages, extract fields from out pages.
 
 Check link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] to learn all methods.
 
@@ -125,9 +125,9 @@ The methods in this interface fall into three categories:
 
 Key methods:
 
-* `navigateTo()`: load a new webpage.
-* `scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
-* `pageSource()`: retrieve the source code of a webpage.
+* `.navigateTo()`: load a new webpage.
+* `.scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
+* `.pageSource()`: retrieve the source code of a webpage.
 
 === URLs
 A Uniform Resource Locator (URL), colloquially termed a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
@@ -189,8 +189,7 @@ A ListenableHyperlink help us to attach event handlers:
 [source,kotlin]
 ----
 val session = PulsarContexts.createSession()
-val link = ListenableHyperlink(
-portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
+val link = ListenableHyperlink(portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 session.submit(link)
 ----
 The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[kotlin] and the order in which they are executed.
@@ -257,11 +256,11 @@ The most important load options are:
 
 The load arguments are parsed into a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] object, check the code for all the supported options.
 
-It is worth noting that when we execute the `load()` family of methods, the system does not parse the page, but provides the `parse()` method to parse the page. However, once we add the `-parse` argument, the parsing subsystem will be activated and the page will be parsed automatically. We can register handlers to perform tasks such as data extraction and data persistence after the page is parsed.
+It is worth noting that when we execute the `load()` family of methods, the system does not parse the page, but provides the `parse()` method to parse the page. However, once we add the `-parse` argument, the parsing subsystem will be activated and the page will be parsed automatically. We can register handlers to perform tasks such as data extraction, data persistence and link collection.
 
 There are two ways to register handlers in the parsing subsystem: Register a global link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilter.kt[ParseFilter] with link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilters.kt[ParseFilters], or register a page wide event handler with link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent].
 
-A good example of using ParseFilter to perform complex tasks is https://github.com/platonai/exotic-amazon/blob/main/src/main/kotlin/ai/platon/exotic/amazon/crawl/core/handlers/parse/WebDataExtractorInstaller.kt[e-commerce site-wide data collection], where a separate ParseFilter is registered for each type of page to handle page parsing, extraction result persistence, link collection, etc.
+A good example of using ParseFilter to perform complex tasks is https://github.com/platonai/exotic-amazon/blob/main/src/main/kotlin/ai/platon/exotic/amazon/crawl/core/handlers/parse/WebDataExtractorInstaller.kt[e-commerce site-wide data collection], where a separate ParseFilter is registered for each type of page to handle data extraction, extraction result persistence, link collection, etc.
 
 === Browser Settings
 BrowserSettings defines a convenient interface to specify the behavior of browser automation, such as:

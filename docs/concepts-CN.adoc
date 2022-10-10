@@ -40,15 +40,15 @@ link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.k
 
 主要方法:
 
-* `load()`: 从本地存储加载网页，或从互联网获取网页
-* `parse()`: 将网页解析成文档
-* `scrape()`: 加载网页，将其解析为文档，然后从文档中提取字段
-* `submit()`: 向 URL 池提交一个 URL，该 URL 将会在主循环中被处理
+* `.load()`: 从本地存储加载网页，或从互联网获取网页
+* `.parse()`: 将网页解析成文档
+* `.scrape()`: 加载网页，将其解析为文档，然后从文档中提取字段
+* `.submit()`: 向 URL 池提交一个 URL，该 URL 将会在主循环中被处理
 
 还有批量版本：
 
-* `loadOutPages()`: 加载入口页面和链出页面
-* `scrapeOutPages()`: 加载门入口页面和链出页面，从链出页面中提取字段
+* `.loadOutPages()`: 加载入口页面和链出页面
+* `.scrapeOutPages()`: 加载门入口页面和链出页面，从链出页面中提取字段
 
 首先要学习的是如何加载一个页面。加载方法如 `session.load()` 首先检查本地存储，如果所需页面存在并且符合要求，则返回本地版本，否则将从互联网获取它。
 
@@ -125,9 +125,9 @@ link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebD
 
 主要方法:
 
-* `navigateTo()`: 加载新网页。
-* `scrollDown()`: 在网页上向下滚动以完全加载页面。大多数现代网页支持使用 ajax 技术的延迟加载，即网页内容只有在滚动到视图中时才开始加载。
-* `pageSource()`: 获得网页源代码。
+* `.navigateTo()`: 加载新网页。
+* `.scrollDown()`: 在网页上向下滚动以完全加载页面。大多数现代网页支持使用 ajax 技术的延迟加载，即网页内容只有在滚动到视图中时才开始加载。
+* `.pageSource()`: 获得网页源代码。
 
 === URLs
 统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。
@@ -190,8 +190,7 @@ ListenableHyperlink 帮助我们附加事件处理程序：
 [source,kotlin]
 ----
 val session = PulsarContexts.createSession()
-val link = ListenableHyperlink(
-portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
+val link = ListenableHyperlink(portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 session.submit(link)
 ----
 
@@ -260,11 +259,11 @@ val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", options)
 
 加载参数都被解析为一个 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] 对象, 查看代码了解所有支持的选项。
 
-值得留意的是，当我们执行 `load()` 系列方法时，系统不会解析网页，而是提供了 `parse()` 方法来解析网页。但是，一旦我们加入了 `-parse` 参数，系统就会激活**解析子系统**并自动解析网页。我们可以注册处理程序，执行数据提取、数据持久化等任务。
+值得留意的是，当我们执行 `load()` 系列方法时，系统不会解析网页，而是提供了 `parse()` 方法来解析网页。但是，一旦我们加入了 `-parse` 参数，系统就会激活**解析子系统**并自动解析网页。我们可以注册处理程序，执行数据提取、提取结果持久化、收集更多链接等任务。
 
 有两种方法可以在解析子系统中注册处理程序：用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilters.kt[ParseFilters] 注册一个全局范围的 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilter.kt[ParseFilter]，或者用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent] 注册一个页面范围的事件处理程序。
 
-使用 ParseFilter 来执行复杂任务的一个很好的案例是 https://github.com/platonai/exotic-amazon/blob/main/src/main/kotlin/ai/platon/exotic/amazon/crawl/core/handlers/parse/WebDataExtractorInstaller.kt[电商全站数据采集]，针对每种类型的页面注册了不同的 ParseFilter，来处理网页解析、提取结果持久化、链接收集等问题。
+使用 ParseFilter 来执行复杂任务的一个很好的案例是 https://github.com/platonai/exotic-amazon/blob/main/src/main/kotlin/ai/platon/exotic/amazon/crawl/core/handlers/parse/WebDataExtractorInstaller.kt[电商全站数据采集]，针对每种类型的页面注册了不同的 ParseFilter，来处理数据提取、提取结果持久化、链接收集等任务。
 
 === 浏览器设置
 
