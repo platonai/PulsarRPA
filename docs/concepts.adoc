@@ -214,13 +214,13 @@ Almost every method in Pulsar Session accepts a parameter called load arguments,
 
 There are three forms to combine URLs and their parameters:
 
-1. URL-argument form
-2. URL-option form
+1. URL-arguments form
+2. URL-options form
 3. configured-URL form
 
 [source,kotlin]
 ----
-// use URL-argument form:
+// use URL-arguments form:
 val page = session.load(url, "-expires 1d")
 val page2 = session.load(url, "-refresh")
 val document = session.loadDocument(url, "-expires 1d -ignoreFailure")
@@ -234,7 +234,7 @@ val document = session.loadDocument("$url -expires 1d -ignoreFailure")
 val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", "-outLink a[href~=item] -itemExpires 7d")
 session.submit(Hyperlink("$url -expires 1d"))
 
-// Or use URL-option form:
+// Or use URL-options form:
 var options = session.options("-expires 1d -ignoreFailure")
 val document = session.loadDocument(url, options)
 options = session.options("-outLink a[href~=item] -itemExpires 7d")
@@ -243,7 +243,7 @@ val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", options)
 // ...
 ----
 
-The configured-URL form can be mixed with the other forms and has the highest priority.
+The configured-URL form can be mixed with the other two forms and has the higher priority.
 
 The most important load options are:
 
@@ -251,10 +251,14 @@ The most important load options are:
     -itemExpires // The expiry time of item pages in batch scraping methods
     -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Enable the parse phase
+    -parse       // Activate parse subsystem
     -resource    // Fetch the url as a resource without browser rendering
 
 The load arguments are parsed into a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] object, check the code for all the supported options.
+
+It is worth noting that when we execute the `load()` family of methods, the system does not parse the page, but provides the `parse()` method to parse the page. However, once we add the `-parse` argument, the parsing subsystem will be activated and the page will be parsed automatically. We can register handlers to perform tasks such as data extraction and data persistence after the page is parsed.
+
+There are two ways to register handlers in the parsing subsystem: Register a global link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilter.kt[ParseFilter] with link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilters.kt[ParseFilters], or register a page wide event handler with link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent].
 
 === Browser Settings
 BrowserSettings defines a convenient interface to specify the behavior of browser automation, such as:

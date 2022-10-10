@@ -188,7 +188,7 @@ Most of our scrape methods accept a parameter called load options, or load argum
     -itemExpires // The expiry time of item pages in batch scraping methods
     -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Enable the parse phase
+    -parse       // Activate parse subsystem
     -resource    // Fetch the url as a resource without browser rendering
 
 Check link:docs/concepts.adoc#_load_options[Load Options] for details.

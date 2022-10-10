@@ -217,13 +217,13 @@ Pulsar Session 中的几乎每个方法都接受一个名为 load arguments 或 
 
 有三种形式来组合 URL 及其参数:
 
-1. URL-argument 形式
-2. URL-option 形式
+1. URL-arguments 形式
+2. URL-options 形式
 3. configured-URL 形式
 
 [source,kotlin]
 ----
-// use URL-argument form:
+// use URL-arguments form:
 val page = session.load(url, "-expires 1d")
 val page2 = session.load(url, "-refresh")
 val document = session.loadDocument(url, "-expires 1d -ignoreFailure")
@@ -237,7 +237,7 @@ val document = session.loadDocument("$url -expires 1d -ignoreFailure")
 val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", "-outLink a[href~=item] -itemExpires 7d")
 session.submit(Hyperlink("$url -expires 1d"))
 
-// Or use URL-option form:
+// Or use URL-options form:
 var options = session.options("-expires 1d -ignoreFailure")
 val document = session.loadDocument(url, options)
 options = session.options("-outLink a[href~=item] -itemExpires 7d")
@@ -246,7 +246,7 @@ val pages = session.loadOutPages("$url -expires 1d -ignoreFailure", options)
 // ...
 ----
 
-Configured-URL 形式可以与其他形式混合使用，并且具有最高的优先级。
+其中，configured-URL 形式可以与其他两种形式混合使用，并且具有更高的优先级。
 
 最重要的加载选项有：
 
@@ -254,10 +254,14 @@ Configured-URL 形式可以与其他形式混合使用，并且具有最高的�
     -itemExpires // The expiry time of item pages in batch scraping methods
     -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Enable the parse phase
+    -parse       // Activate parse subsystem
     -resource    // Fetch the url as a resource without browser rendering
 
 加载参数都被解析为一个 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] 对象, 查看代码了解所有支持的选项。
+
+值得留意的是，当我们执行 `load()` 系列方法时，系统不会解析网页，而是提供了 `parse()` 方法来解析网页。但是，一旦我们加入了 `-parse` 参数，系统就会激活**解析子系统**并自动解析网页。我们可以注册处理程序，执行数据提取、数据持久化等任务。
+
+有两种方法可以在解析子系统中注册处理程序：用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilters.kt[ParseFilters] 注册一个全局范围的 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/parse/ParseFilter.kt[ParseFilter]，或者用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent] 注册一个页面范围的事件处理程序。
 
 === 浏览器设置
 
