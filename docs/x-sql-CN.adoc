@@ -54,13 +54,13 @@ X-SQL 函数不区分大小写，所有下划线(`_`)都会被忽略。
 
 ## Table Functions
 
-Each table function returns a ResultSet and can be in the `from` clause.
+每个 table function 都返回一个 ResultSet，并且可以出现在 `from` 子句中。
 
 ### LOAD_AND_SELECT
 
     LOAD_AND_SELECT(url [cssSelector [, offset [, limit]]])
 
-加载一个页面并选择元素，返回一个ResultSet。返回的结果集有两列：`DOM`和`DOC`，这两列的类型是 `ValueDom`。
+加载一个页面并选择元素，返回一个 ResultSet。返回的结果集有两列：`DOM`和`DOC`，这两列的类型是 `ValueDom`。
 
 示例：
 
@@ -74,7 +74,9 @@ from
 
 ## DOM Functions
 
-DOM 函数被设计成与 `DOM` 一起工作，最重要的 DOM 函数定义在下面几个文件中：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions], link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
+DOM 函数被设计为与 DOM 一起工作。每个DOM函数都接受一个 `ValueDom` 参数，它是一个 Jsoup Element 的包装。
+
+最重要的 DOM 函数定义在下面几个文件中：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions], link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
 
 所有的字符串函数都在命名空间 `DOM` 中。
 

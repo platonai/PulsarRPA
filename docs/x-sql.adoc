@@ -54,7 +54,7 @@ Since LOAD_AND_SELECT is declared as `hasShortcut`, so the namespace can be igno
 
 ## Table Functions
 
-Each table function returns a ResultSet and can be in the `from` clause.
+Each table function returns a ResultSet and can appear in the `from` clause.
 
 ### LOAD_AND_SELECT
 
@@ -74,7 +74,9 @@ from
 
 ## DOM Functions
 
-DOM functions are designed to work with DOM, most important DOM functions are defined in link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions], link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
+DOM functions are designed to work with DOM. Every DOM function accepts a `ValueDom` parameter, which is a wrapper of a Jsoup Element.
+
+Most important DOM functions are defined in link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions], link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
 
 All DOM functions are in the namespace `DOM`.
 
