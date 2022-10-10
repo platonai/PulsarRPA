@@ -86,6 +86,7 @@ link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/Contin
 
 *#最复杂# 的数据采集项目需要从 RPA 开始：*
 
+*Kotlin*
 ```kotlin
 val options = session.options(args)
 val event = options.event.browseEvent

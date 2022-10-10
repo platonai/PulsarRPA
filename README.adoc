@@ -84,6 +84,7 @@ Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/e
 
 *The #most complicated# crawl challenges can start with RPA:*
 
+*Kotlin*
 ```kotlin
 val options = session.options(args)
 val event = options.event.browseEvent
