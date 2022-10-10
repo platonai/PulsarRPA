@@ -251,7 +251,7 @@ The most important load options are:
     -itemExpires // The expiry time of item pages in batch scraping methods
     -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Enable the parse phrase
+    -parse       // Enable the parse phase
     -resource    // Fetch the url as a resource without browser rendering
 
 The load arguments are parsed into a link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] object, check the code for all the supported options.

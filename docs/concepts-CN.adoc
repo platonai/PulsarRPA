@@ -254,7 +254,7 @@ Configured-URL 形式可以与其他形式混合使用，并且具有最高的�
     -itemExpires // The expiry time of item pages in batch scraping methods
     -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Enable the parse phrase
+    -parse       // Enable the parse phase
     -resource    // Fetch the url as a resource without browser rendering
 
 加载参数都被解析为一个 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/options/LoadOptions.kt[LoadOptions] 对象, 查看代码了解所有支持的选项。

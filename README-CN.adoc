@@ -206,7 +206,7 @@ val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapO
     -itemExpires // The expiry time of item pages in batch scraping methods
     -outLink     // The selector of out links to scrape
     -refresh     // Force (re)fetch the page, just like hitting the refresh button on a real browser
-    -parse       // Enable the parse phrase
+    -parse       // Enable the parse phase
     -resource    // Fetch the url as a resource without browser rendering
 
 点击 link:docs/concepts-CN.adoc#_load_options[Load Options] 查看详情。
