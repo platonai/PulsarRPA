@@ -3,7 +3,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: The Pulsar concepts
 :toc:
 :icons: font
-:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+include::quickref.adoc
 
 This document describes Pulsar concepts.
 
@@ -47,26 +47,30 @@ A SQLContext consists of components to support X-SQL.
 Programmers can write their own Pulsar Contexts to extend the system.
 
 === Pulsar Session
-PulsarSession defines a concise interface for fetching web pages from local storage or the Internet, as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
+
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] defines a concise interface to load web pages from local storage or fetch from the Internet, as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
 
 Key methods:
 
-* PulsarSession.load: load a webpage from local storage, or fetch it from the Internet.
-* PulsarSession.parse: parse a webpage into a document.
-* PulsarSession.scrape: load a webpage, parse it into a document and then extract fields from the document.
+* `load()`: load a webpage from local storage, or fetch it from the Internet.
+* `parse()`: parse a webpage into a document.
+* `scrape()`: load a webpage, parse it into a document and then extract fields from the document.
+* `submit()`: submit a url to the url pool, the url will be processed in the main loop later.
 
 And also the batch versions:
 
-* PulsarSession.loadOutPages: load the portal page and out pages.
-* PulsarSession.scrapeOutPages: load the portal page and out pages, extract fields from out pages.
+* `loadOutPages()`: load the portal page and out pages.
+* `scrapeOutPages()`: load the portal page and out pages, extract fields from out pages.
 
-The first thing to understand is how to load a page. The load methods first check the local storage and returns the local version if the required page exists and matches the requirements, otherwise it will fetch it from the Internet.
+Check link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] to learn all methods.
 
-The loading parameters or loading options can be used to specify when the system will fetch a webpage from the Internet:
+The first thing to understand is how to load a page. Load methods like `session.load()` first check the local storage and return the local version if the required page exists and meets the requirements, otherwise it will be fetched from the Internet.
+
+The `load parameters` or `load options` can be used to specify when the system will fetch a webpage from the Internet:
 
 . Expiration
 . Force refresh
-. Webpage size
+. Page size
 . Required fields
 . Other conditions
 
@@ -77,14 +81,14 @@ val url = "..."
 val page = session.load(url, "-expires 1d")
 val document = session.parse(page)
 val document2 = session.loadDocument(url, "-expires 1d")
-val pages = session.loadOutPages(url, "-outLink a[href~=item]")
+val pages = session.loadOutPages(url, "-outLink a[href~=item] -expires 1d -itemExpires 7d -itemRequireSize 300000")
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // ...
 ----
 
-Once a webpage is loaded from local storage, or fetched from the Internet, we will proceed to the next processing process:
+Once a page is loaded from local storage, or fetched from the Internet, we will proceed to the next processing process:
 
-. parse the web content into an HTML document
+. parse the page content into an HTML document
 . extract fields from the HTML document
 . write the fields into a destination, such as
 .. plain file, avro file, CSV, excel, mongodb, mysql, etc.
@@ -95,11 +99,9 @@ There are many ways to fetch the page content from the Internet:
 . through http protocol
 . through a real browser
 
-Since the webpages are becoming more and more complex, fetching webpages through real browsers is the primary way nowadays.
+Since webpages are becoming more and more complex, fetching webpages through real browsers is the primary way nowadays.
 
-When we fetch webpages using a real browser, we may need to interact with pages to
-ensure the desired fields are loaded correctly and completely. Activate PageEvent
-and use WebDriver to archive such purpose.
+When we fetch webpages using a real browser, we may need to interact with pages to ensure the desired fields are loaded correctly and completely. Activate link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent] and use link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt[WebDriver] to archive such purpose.
 
 [source,kotlin]
 ----
@@ -110,11 +112,10 @@ options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
 session.load(url, options)
 ----
 
-WebDriver provides a complete method set for RPA, just like selenium, playwright
-and puppeteer. All actions and behaviors are optimized to mimic real people as closely as possible.
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt[WebDriver] provides a complete method set for RPA, just like selenium, playwright and puppeteer. All actions and behaviors are optimized to mimic real people as closely as possible.
 
 === Web Driver
-WebDriver defines a concise interface to visit and interact with web pages, all actions and behaviors are optimized to mimic real people as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt[WebDriver] defines a concise interface to visit and interact with web pages, all actions and behaviors are optimized to mimic real people as closely as possible, such as scrolling, clicking, typing text, dragging and dropping, etc.
 
 The methods in this interface fall into three categories:
 
@@ -124,9 +125,9 @@ The methods in this interface fall into three categories:
 
 Key methods:
 
-* WebDriver.navigateTo: load a new webpage.
-* WebDriver.scrollDown: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
-* WebDriver.pageSource: retrieve the source code of a webpage.
+* `navigateTo()`: load a new webpage.
+* `scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
+* `pageSource()`: retrieve the source code of a webpage.
 
 === URLs
 A Uniform Resource Locator (URL), colloquially termed a web address, is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.
@@ -302,5 +303,3 @@ When a browser is programmed to access a webpage, the website may detect that th
 
 === Backend Storage
 A variety of backend storage solutions are supported by Pulsar to meet our customers' pressing needs: Local File System, MongoDB, HBase, Gora, etc.
-
-:UrlPool-quickref: ../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt

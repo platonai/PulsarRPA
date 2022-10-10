@@ -24,9 +24,9 @@ Pulsar 像对待内部数据库一样对待外部网络，如果需要的数据�
 
 Web 数据抽取在过去三十年中已经从使用统计方法发展到更高级的机器学习方法。由于对上线时间、开发者生产率和成本的考虑，机器学习技术现在更受欢迎。
 
-我们提供了一个演示项目，展示如何使用我们世界领先的机器学习算法来自动提取网页中的几乎每个字段: https://github.com/platonai/exotic[Exotic]。
+我们提供了一个预览项目，展示如何使用我们领先的机器学习算法来自动提取网页中的几乎每个字段: https://github.com/platonai/exotic[Exotic]。
 
-你也可以使用 https://github.com/platonai/exotic[Exotic] 作为一个智能 CSS 路径生成器，生成的 CSS 选择器可以在传统爬虫系统中使用，从网页中提取数据。
+您也可以将 https://github.com/platonai/exotic[Exotic] 用作一个智能 CSS 路径生成器，生成的 CSS 选择器可以在传统爬虫系统中使用，从网页中提取数据。
 
 === 浏览器渲染
 
@@ -36,22 +36,23 @@ Web 数据抽取在过去三十年中已经从使用统计方法发展到更高�
 
 === Pulsar Session
 
-PulsarSession 定义了一个简洁的接口，用于从本地存储或互联网获取网页，以及解析、提取、保存、索引和导出网页的方法。
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] 定义了一个简洁的接口，用于从本地存储或互联网获取网页，以及解析、提取、保存、索引和导出网页的方法。
 
 主要方法:
 
-* PulsarSession.load: 从本地存储加载网页，或从互联网获取网页。
-* PulsarSession.parse: 将网页解析成文档。
-* PulsarSession.scrape: 加载网页，将其解析为文档，然后从文档中提取字段。
+* `load()`: 从本地存储加载网页，或从互联网获取网页
+* `parse()`: 将网页解析成文档
+* `scrape()`: 加载网页，将其解析为文档，然后从文档中提取字段
+* `submit()`: 向 URL 池提交一个 URL，该 URL 将会在主循环中被处理
 
-还有批量版本:
+还有批量版本：
 
-* PulsarSession.loadOutPages: 加载入口页面和链出页面。
-* PulsarSession.scrapeOutPages: 加载门入口页面和链出页面，从链出页面中提取字段。
+* `loadOutPages()`: 加载入口页面和链出页面
+* `scrapeOutPages()`: 加载门入口页面和链出页面，从链出页面中提取字段
 
-首先要了解的是如何加载一个页面。加载方法首先检查本地存储，如果所需页面存在并且符合要求，则返回本地版本，否则将从互联网获取它。
+首先要学习的是如何加载一个页面。加载方法如 `session.load()` 首先检查本地存储，如果所需页面存在并且符合要求，则返回本地版本，否则将从互联网获取它。
 
-可以通过加载参数或加载选项来指定何时从互联网获取一个网页：
+可以通过 `加载参数` 或 `加载选项` 来指定何时从互联网获取一个网页：
 
 . 失效期限
 . 强制更新
@@ -66,7 +67,7 @@ val url = "..."
 val page = session.load(url, "-expires 1d")
 val document = session.parse(page)
 val document2 = session.loadDocument(url, "-expires 1d")
-val pages = session.loadOutPages(url, "-outLink a[href~=item]")
+val pages = session.loadOutPages(url, "-outLink a[href~=item] -expires 1d -itemExpires 7d -itemRequireSize 300000")
 val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 // ...
 ----
@@ -86,7 +87,7 @@ val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name 
 
 由于网页变得越来越复杂，通过真实浏览器获取网页是当今的主要方式。
 
-当我们使用真正的浏览器获取网页时，我们可能需要与页面进行交互，以确保正确完整地加载所需的字段。激活 PageEvent 并使用 WebDriver 来实现此目的。
+当我们使用真实浏览器获取网页时，我们可能需要与页面进行交互，以确保正确完整地加载所需的字段。激活 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/PageEvents.kt[PageEvent] 并使用 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt[WebDriver] 来实现此目的。
 
 [source,kotlin]
 ----
@@ -97,13 +98,13 @@ options.event.browseEvent.onDidDOMStateCheck.addLast { page, driver ->
 session.load(url, options)
 ----
 
-WebDriver 为 RPA 提供了一套完整的方法集，就像 selenium, playwright 和 puppeteer, 但所有的动作和行为都经过优化，以尽可能模仿真人。
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt[WebDriver] 为 RPA 提供了一套完整的方法集，就像 selenium, playwright 和 puppeteer, 但所有的动作和行为都经过优化，以尽可能模仿真人。
 
 === Pulsar Context
 
-Pulsar Context 由一组高度可定制的组件组成，提供了系统最核心的一组接口，并用来生成 PulsarSession。
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/context/PulsarContext.kt[PulsarContext] 由一组高度可定制的组件组成，提供了系统最核心的一组接口，并用来生成 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession]。
 
-PulsarContext 是所有 Pulsar Context 的接口类。
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/context/PulsarContext.kt[PulsarContext] 是所有 Pulsar Context 的接口类。
 
 StaticPulsarContext 由默认组件组成。
 
@@ -114,7 +115,7 @@ SQLContext 包含一组组件，用来实现 X-SQL。
 程序员也可以编写自己的 Pulsar Context 来扩展系统。
 
 === Web Driver
-WebDriver 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt[WebDriver] 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
 
 该接口中的方法分为三类:
 
@@ -124,9 +125,9 @@ WebDriver 定义了一个简洁的界面来访问网页并与之交互，所有�
 
 主要方法:
 
-* WebDriver.navigateTo: 加载新网页。
-* WebDriver.scrollDown: 在网页上向下滚动以完全加载页面。大多数现代网页支持使用 ajax 技术的延迟加载，即网页内容只有在滚动到视图中时才开始加载。
-* WebDriver.pageSource: 获得网页源代码。
+* `navigateTo()`: 加载新网页。
+* `scrollDown()`: 在网页上向下滚动以完全加载页面。大多数现代网页支持使用 ajax 技术的延迟加载，即网页内容只有在滚动到视图中时才开始加载。
+* `pageSource()`: 获得网页源代码。
 
 === URLs
 统一资源定位符(URL)，俗称网址，是对网络资源的引用，指定其在计算机网络上的位置和检索它的机制。
@@ -294,7 +295,7 @@ Pulsar 支持网络即数据库范式，我们可以使用简单的 SQL 将 Web 
 
 === Crawl Loop
 
-当运行连续爬网时，系统会启动一个 Crawl Loop 来不断从 UrlPool 获取 URL，然后在 PulsarSession 中异步加载或获取它们。
+当运行连续爬网时，系统会启动一个 Crawl Loop 来不断从 UrlPool 获取 URL，然后在 link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] 中异步加载或获取它们。
 
 请记住，Pulsar 中的每个任务都是一个 url，因此爬行循环可以接受和执行任何类型的任务。
 
@@ -313,5 +314,3 @@ Pulsar 支持网络即数据库范式，我们可以使用简单的 SQL 将 Web 
 === 后端存储
 
 Pulsar 支持各种后端存储解决方案，以满足我们客户的迫切需要：本地文件系统、MongoDB、HBase、Gora 等。
-
-:UrlPool-quickref: ../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt
