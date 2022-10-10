@@ -280,7 +280,9 @@ Check link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/exampl
 
 === X-SQL
 
-Pulsar supports the Network As A Database paradigm, we can turn the Web into tables and charts using simple SQLs, furthermore, we can query the web using SQL directly.
+Pulsar supports the Network As A Database paradigm, we developed X-SQL to query the Web directly and convert webpages into tables and charts.
+
+Click link:x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
 == Implementation concepts
 Developers don't need to study the implementation concepts, but knowing these concepts helps us better understand how the whole system works.

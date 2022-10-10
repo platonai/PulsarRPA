@@ -352,7 +352,7 @@ Scrape a webpage in another terminal window:
 bin/scrape.sh
 ----
 The bash script is quite simple, just use curl to post an X-SQL:
-[source,shell]
+[source,sql]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
@@ -392,6 +392,8 @@ The response is as follows in json format:
     "status": "OK"
 }
 ----
+
+Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
 == Usage III: experience Pulsar with the executable jar
 

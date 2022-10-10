@@ -282,7 +282,9 @@ link:../pulsar-tools/pulsar-browser/src/main/kotlin/ai/platon/pulsar/browser/com
 
 === X-SQL
 
-Pulsar 支持网络即数据库范式，我们可以使用简单的 SQL 将 Web 变成表格和图表，更进一步，我们可以直接使用 SQL 查询 Web。
+Pulsar 支持网络即数据库范式，我们开发了X-SQL来直接查询网页，并将网页转换成表格和图表。
+
+点击 link:x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
 == 实现概念
 

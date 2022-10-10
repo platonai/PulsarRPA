@@ -374,7 +374,7 @@ bin/pulsar
 bin/scrape.sh
 ----
 该 bash 脚本非常简单，只需使用 curl 发送 X-SQL：
-[source,shell]
+[source,sql]
 ----
 curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
@@ -414,6 +414,8 @@ Json 格式的响应如下：
     "status": "OK"
 }
 ----
+
+点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
 == 日志和指标
 
