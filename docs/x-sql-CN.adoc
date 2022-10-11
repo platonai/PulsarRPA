@@ -4,6 +4,8 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :toc:
 :icons: font
 
+== 简介
+
 我们开发了 X-SQL 来直接查询网页，并将网页转换成表格和图表。
 
 X-SQL 建立在 H2 数据库上，所以它与 H2 兼容，SQL 方言是 H2。
@@ -72,13 +74,13 @@ from
     load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body', 1, 10)
 ----
 
-## DOM Functions
+## DOM 函数
 
-DOM 函数被设计为与 DOM 一起工作。每个DOM函数都接受一个 `ValueDom` 参数，它是一个 Jsoup Element 的包装。
+DOM 函数被设计为查询 DOM 的属性。每个 DOM 函数都接受一个 `ValueDom` 参数，它是一个 Jsoup Element 的包装。
 
-最重要的 DOM 函数定义在下面几个文件中：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions], link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
+DOM 函数定义在下面文件中：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions]。
 
-所有的字符串函数都在命名空间 `DOM` 中。
+所有的 DOM 函数都在命名空间 `DOM` 中。
 
 ### DOM_BASE_URI
 
@@ -93,11 +95,23 @@ DOM 函数被设计为与 DOM 一起工作。每个DOM函数都接受一个 `Val
 select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body')
 ----
 
+## DOM 选择函数
+
+DOM 选择函数被设计为从 DOM 中查询元素及其属性。
+
+每个 DOM 函数都接受一个名为 `DOM`（大小写不敏感），类型为 `ValueDom` 的参数，它是一个 Jsoup `Element` 的包装。
+
+DOM 选择函数通常也接受一个 `cssSelector` 参数，从而选择 `DOM` 的子元素。
+
+最重要的 DOM 选择函数定义在下面文件中：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions]。
+
+所有的 DOM 选择函数都在命名空间 `DOM` 中。
+
 ### DOM_FIRST_TEXT
 
     DOM_FIRST_TEXT(dom, cssSelector)
 
-返回由`cssSelector`在`dom`内选择的第一个元素的文本内容，它类似于下面的javascript代码。
+返回由 `cssSelector` 在 `dom` 内选择的第一个元素的文本内容，它类似于下面的 javascript 代码。
 
     dom.querySelector(cssSelector).textContent
 
@@ -113,9 +127,29 @@ from
     load_and_select('https://www.example.com/zgbs/appliances', 'ul.item-collection li.item')
 ----
 
+### DOM_ALL_TEXTS
+
+    DOM_ALL_TEXTS(dom, cssSelector)
+
+返回由 `cssSelector` 在 `dom` 内选择的所有元素的文本内容组成的数组，它类似于下面的 javascript 伪代码。
+
+    dom.querySelectorAll(cssSelector).map(e => e.textContent)
+
+示例：
+
+[source,sql]
+----
+select
+    dom_all_texts(dom, 'ul li.item a.name') as ProductNames,
+    dom_all_texts(dom, 'ul li.item span.price') as ProductPrices,
+    dom_all_texts(dom, 'ul li.item span.star') as ProductStars
+from
+    load_and_select('https://www.example.com/zgbs/appliances', 'div.products')
+----
+
 ## String Functions
 
-所有的字符串函数都是通过程序从 org.apache.commons.lang3.StringUtils 自动转换而来。你可以在下述文件中找到 UDF 定义：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt[StringFunctions].
+大多数字符串函数是通过程序从 `org.apache.commons.lang3.StringUtils` 自动转换而来。你可以在下述文件中找到 UDF 定义：link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt[StringFunctions].
 
 所有的字符串函数都在命名空间 `STR` 中。
 

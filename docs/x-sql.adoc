@@ -4,6 +4,8 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :toc:
 :icons: font
 
+== Introduction
+
 We developed X-SQL to query the Web directly and convert webpages into tables and charts.
 
 X-SQL is build on h2 database, so it's compatible with h2 and the SQL dialect is h2.
@@ -74,9 +76,9 @@ from
 
 ## DOM Functions
 
-DOM functions are designed to work with DOM. Every DOM function accepts a `ValueDom` parameter, which is a wrapper of a Jsoup Element.
+DOM functions are designed to query the attributes of DOM. Every DOM function accepts a `ValueDom` parameter, which is a wrapper of a Jsoup Element.
 
-Most important DOM functions are defined in link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions], link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
+DOM functions are defined in link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomFunctions.kt[DomFunctions].
 
 All DOM functions are in the namespace `DOM`.
 
@@ -92,6 +94,18 @@ Example:
 ----
 select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B09V3KXJPB', 'body')
 ----
+
+## DOM Selection Functions
+
+The DOM selection functions are designed to query elements and their attributes from the DOM.
+
+Each DOM function accepts a parameter named `DOM` (case-insensitive) of type `ValueDom`, which is a wrapper around a Jsoup `Element`.
+
+The DOM selector function also usually accepts a `cssSelector` parameter, which selects the child elements of the `DOM`.
+
+Most important DOM selection functions are defined in link:../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/DomSelectFunctions.kt[DomSelectFunctions].
+
+All DOM selection functions are in the namespace `DOM`.
 
 ### DOM_FIRST_TEXT
 
@@ -111,6 +125,26 @@ select
     dom_first_text(dom, '#star') as StarNum
 from
     load_and_select('https://www.example.com/zgbs/appliances', 'ul.item-collection li.item')
+----
+
+### DOM_ALL_TEXTS
+
+    DOM_ALL_TEXTS(dom, cssSelector)
+
+Returns an array consisting of the text contents of all elements selected by `cssSelector` within `dom`, which is similar to the following pseudo javascript code.
+
+    dom.querySelectorAll(cssSelector).map(e => e.textContent)
+
+Example:
+
+[source,sql]
+----
+select
+    dom_all_texts(dom, 'ul li.item a.name') as ProductNames,
+    dom_all_texts(dom, 'ul li.item span.price') as ProductPrices,
+    dom_all_texts(dom, 'ul li.item span.star') as ProductStars
+from
+    load_and_select('https://www.example.com/zgbs/appliances', 'div.products')
 ----
 
 ## String Functions
