@@ -48,7 +48,7 @@ Programmers can write their own Pulsar Contexts to extend the system.
 
 === Pulsar Session
 
-link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] defines a concise interface to load web pages from local storage or fetch from the Internet, as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
+link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt[PulsarSession] defines an interface to load web pages from local storage or fetch from the Internet, as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
 
 Key methods:
 

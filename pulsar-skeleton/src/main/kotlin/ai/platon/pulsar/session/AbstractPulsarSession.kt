@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.support.AbstractPulsarContext
@@ -61,9 +62,6 @@ abstract class AbstractPulsarSession(
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
-    /**
-     * The session scoped bean factory
-     * */
     override val sessionBeanFactory = BeanFactory(sessionConfig)
 
     override val display get() = "$id"
@@ -84,16 +82,10 @@ abstract class AbstractPulsarSession(
 
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
-    /**
-     * Close objects when the session is closing
-     * */
     override fun registerClosable(closable: AutoCloseable) = ensureActive { closableObjects.add(closable) }
 
     override fun disablePDCache() = run { enablePDCache = false }
 
-    /**
-     * Create a new options, with a new volatile config
-     * */
     override fun options(args: String, event: PageEvent?): LoadOptions {
         val opts = LoadOptions.parse(args, sessionConfig.toVolatileConfig())
         if (event != null) {
@@ -130,12 +122,6 @@ abstract class AbstractPulsarSession(
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(urls, options, toItemOption)
 
-    /**
-     * Inject a url
-     *
-     * @param url The url followed by options
-     * @return The web page created
-     */
     override fun inject(url: String): WebPage = ensureActive { context.inject(normalize(url)) }
 
     override fun get(url: String): WebPage = ensureActive { context.get(url) }
@@ -146,30 +132,10 @@ abstract class AbstractPulsarSession(
 
     override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
 
-    /**
-     * Open a page with [url]
-     *
-     * @param url     The url of the page to open
-     * @return The web page
-     */
     override fun open(url: String): WebPage = load(url, options("-refresh"))
 
-    /**
-     * Load a url with specified options
-     *
-     * @param url     The url to load
-     * @param args The load args
-     * @return The web page
-     */
     override fun load(url: String, args: String): WebPage = load(url, options(args))
 
-    /**
-     * Load a url with specified options
-     *
-     * @param url     The url to load
-     * @param options The load options
-     * @return The web page
-     */
     override fun load(url: String, options: LoadOptions): WebPage = load(normalize(url, options))
 
     override fun load(url: UrlAware, args: String): WebPage = load(normalize(url, options(args)))
@@ -189,9 +155,6 @@ abstract class AbstractPulsarSession(
     override suspend fun loadDeferred(url: UrlAware, args: String): WebPage =
         loadDeferred(normalize(url, options(args)))
 
-    /**
-     *
-     * */
     override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage =
         loadDeferred(normalize(url, options))
 
@@ -268,13 +231,6 @@ abstract class AbstractPulsarSession(
         return null
     }
 
-    /**
-     * Load all urls with specified options, this may cause a parallel fetching if required
-     *
-     * @param urls    The urls to load
-     * @param options The load options for all urls
-     * @return The web pages
-     */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
         val normUrls = normalize(urls, options)
         return context.loadAll(normUrls)
@@ -292,32 +248,24 @@ abstract class AbstractPulsarSession(
         return context.loadAllAsync(urls)
     }
 
+    override fun submit(url: String, args: String?) = submit(PlainUrl(url, args))
+
     override fun submit(url: UrlAware): AbstractPulsarSession {
         context.submit(url)
         return this
     }
 
-    override fun submitAll(urls: Iterable<UrlAware>): AbstractPulsarSession {
+    override fun submitAll(urls: Iterable<String>) = submitAll(urls.map { PlainUrl(it) })
+
+    override fun submitAll(urls: Iterable<String>, args: String) = submitAll(urls.map { PlainUrl(it, args) })
+
+    override fun submitAll(urls: Collection<UrlAware>): AbstractPulsarSession {
         context.submitAll(urls)
         return this
     }
 
-    /**
-     * Load all out pages in a portal page
-     *
-     * @param portalUrl    The portal url from where to load pages
-     * @param args         The load args
-     * @return The web pages
-     */
     override fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, options(args))
 
-    /**
-     * Load out pages from a portal page
-     *
-     * @param portalUrl    The portal url from where to load pages
-     * @param options The load options
-     * @return The web pages
-     */
     override fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage> {
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options
@@ -380,10 +328,6 @@ abstract class AbstractPulsarSession(
         return loadDeferred(url, opts)
     }
 
-    /**
-     * Parse the Web page into DOM.
-     * If the Web page is not changed since last parse, use the last result if available
-     */
     override fun parse(page: WebPage, noCache: Boolean) = parse0(page, noCache)
 
     override fun loadDocument(url: String, args: String) = loadDocument(url, options(args))

@@ -21,31 +21,33 @@ import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 /**
- * PulsarSession defines a concise interface to fetch webpages, from the local storage
- * or the Internet, and methods to parse, extract, persist, index, export them.
+ * [PulsarSession] defines an interface to load web pages from local storage or fetch from the Internet,
+ * as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
  *
  * Key methods:
  *
- * [PulsarSession.load], load a webpage from local storage, or fetch it from the Internet.
- * [PulsarSession.parse], parse a webpage into a document.
- * [PulsarSession.scrape], load a webpage, parse it into a document and then extract
- * fields from the document.
+ * * [load]: load a webpage from local storage, or fetch it from the Internet.
+ * * [parse]: parse a webpage into a document.
+ * * [scrape]: load a webpage, parse it into a document and then extract fields from the document.
+ * * [submit]: submit a url to the url pool, the url will be processed in the main loop later.
  *
- * There are also batch versions:
+ * And also the batch versions:
  *
- * [PulsarSession.loadOutPages], load the portal page and out pages.
- * [PulsarSession.scrapeOutPages], load the portal page and out pages, extract fields
- * from out pages.
+ * * [loadOutPages]: load the portal page and out pages.
+ * * [scrapeOutPages]: load the portal page and out pages, extract fields from out pages.
  *
- * The first method to keep in mind is how to load a page.
+ * The first thing to understand is how to load a page. Load methods like [load] first
+ * check the local storage and return the local version if the required page exists and meets the
+ * requirements, otherwise it will be fetched from the Internet.
  *
- * A load method checks the local storage first, if it exists and is good,
- * return the persisted version, otherwise, fetch it from the Internet.
+ * The `load parameters` or `load options` can be used to specify when the system will fetch a webpage
+ * from the Internet:
  *
- * Other fetch condition can be specified in load arguments, or load options:
- * 1. expiration
- * 2. page size requirements
- * 3. field requirements
+ * . Expiration
+ * . Force refresh
+ * . Page size
+ * . Required fields
+ * . Other conditions
  *
  * Once a webpage is loaded from local storage, or fetched from the Internet,
  * we come to the next process steps:
@@ -90,7 +92,8 @@ interface PulsarSession : AutoCloseable {
     val context: PulsarContext
 
     /**
-     * The session scope volatile config, every setting is supposed to be changed at any time and any place
+     * The session scope volatile config, every setting is supposed to be changed at any time
+     * and any place
      * */
     val sessionConfig: VolatileConfig
 
@@ -182,15 +185,20 @@ interface PulsarSession : AutoCloseable {
     ): List<NormUrl>
 
     /**
-     * Inject a url to fetch later
+     * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls,
+     * where the execution flow is like the following:
      *
-     * @param url The url followed by options
-     * @return The web page created
+     * inject -> generate -> fetch -> parse -> update
+     *              ^                            ^
+     *              |    <-     <-      <-       |
+     *
+     * @param url The url to inject, con be followed by arguments
+     * @return A newly created webpage which is ready to be generated
      */
     fun inject(url: String): WebPage
 
     /**
-     * Get a page from database if exists
+     * Get a page from storage
      *
      * @param url The url
      * @return The webpage
@@ -198,18 +206,18 @@ interface PulsarSession : AutoCloseable {
     fun get(url: String): WebPage
 
     /**
-     * Get a page from database if exists
+     * Get a page from storage.
      *
      * @param url The url
-     * @return The webpage
+     * @return The page in storage if exists or null
      */
     fun getOrNull(url: String): WebPage?
 
     /**
-     * Check if a page exists in the database
+     * Check if the page exists in the storage
      *
-     * @param url The url
-     * @return true if the page exists in the storage
+     * @param url The url to check
+     * @return true if the page exists, false otherwise
      */
     fun exists(url: String): Boolean
 
@@ -376,7 +384,16 @@ interface PulsarSession : AutoCloseable {
      * Submit a url to the url pool, the url will be processed in the main crawl loop later
      *
      * @param url The url to submit
-     * @return The web pages
+     * @param args The load arguments
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submit(url: String, args: String? = null): PulsarSession
+
+    /**
+     * Submit a url to the url pool, the url will be processed in the main crawl loop later
+     *
+     * @param url The url to submit
+     * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: UrlAware): PulsarSession
 
@@ -384,15 +401,32 @@ interface PulsarSession : AutoCloseable {
      * Submit the urls to the url pool, the submitted urls will be processed in the main crawl loop later
      *
      * @param urls The urls to submit
-     * @return The web pages
+     * @return The [PulsarSession] itself to enabled chained operations
      */
-    fun submitAll(urls: Iterable<UrlAware>): PulsarSession
+    fun submitAll(urls: Iterable<String>): PulsarSession
+
+    /**
+     * Submit the urls to the url pool, the submitted urls will be processed in the main crawl loop later
+     *
+     * @param urls The urls to submit
+     * @param args The load arguments
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submitAll(urls: Iterable<String>, args: String): PulsarSession
+
+    /**
+     * Submit the urls to the url pool, the submitted urls will be processed in the main crawl loop later
+     *
+     * @param urls The urls to submit
+     * @return This session
+     */
+    fun submitAll(urls: Collection<UrlAware>): PulsarSession
 
     /**
      * Load out pages linked from the portal page
      *
      * @param portalUrl    The portal url from where to load pages
-     * @param args         The load args
+     * @param args         The load arguments
      * @return The web pages
      */
     fun loadOutPages(portalUrl: String, args: String): List<WebPage>

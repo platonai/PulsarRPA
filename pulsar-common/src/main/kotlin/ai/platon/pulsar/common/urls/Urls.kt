@@ -52,7 +52,7 @@ interface UrlAware {
     val configuredUrl: String
 
     /**
-     * If true, the url is a standard URL and can be converted to a [java.net.URL]
+     * If true, the url is standard and can be converted to a [java.net.URL]
      * */
     val isStandard: Boolean
 
@@ -63,7 +63,7 @@ interface UrlAware {
     val toURL: URL
 
     /**
-     * Converted to a java.Util.URL, if the url is invalid, return null
+     * Converted to a [java.net.URL], if the url is invalid, return null
      * */
     val toURLOrNull: URL?
 
@@ -78,17 +78,17 @@ interface UrlAware {
     val isPersistable: Boolean
 
     /**
-     * The url label, it should be a shortcut for -label option in args
+     * The url label, it should be a shortcut for `-label` option in load options
      * */
     val label: String
 
     /**
-     * The deadline, it should be a shortcut for -deadline option in args
+     * The deadline, it should be a shortcut for `-deadline` option in load options
      * */
     val deadline: Instant
 
     /**
-     * The deadline, it should be a shortcut for -deadline option in args
+     * The deadline, it should be a shortcut for `-deadline` option in load options
      * */
     @Deprecated("Inappropriate name", ReplaceWith("deadline"))
     val deadTime: Instant get() = deadline
