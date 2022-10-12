@@ -31,7 +31,7 @@ import kotlin.reflect.jvm.kotlinProperty
  * // fetch immediately ignoring errors
  * session.load('https://www.jd.com', '-refresh')
  * // do not fetch after dead time
- * session.load('https://www.jd.com', '-deadTime 2022-04-15T18:36:54.941Z')
+ * session.load('https://www.jd.com', '-deadline 2022-04-15T18:36:54.941Z')
  * // activate the parse phrase
  * session.load('https://www.jd.com', '-parse')
  * // write the page content into storage

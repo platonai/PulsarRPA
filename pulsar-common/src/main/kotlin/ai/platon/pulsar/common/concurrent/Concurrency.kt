@@ -27,20 +27,20 @@ fun stopExecution(name: String, executor: ExecutorService, future: Future<*>?, s
         executor.shutdown()
         try {
             // Wait a while for existing tasks to terminate
-            if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 // Cancel currently executing tasks
                 executor.shutdownNow()
                 // Wait a while for tasks to respond to being cancelled
-                if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                     System.err.println("ExecutorService did not terminate")
                 }
             }
         } catch (e: InterruptedException) {
+            System.err.println("Shutting down now | $name")
             // (Re-)Cancel if current thread also interrupted
-            // Preserve interrupt status
-            System.err.println("Shutting down executor $name")
-            Thread.currentThread().interrupt()
             executor.shutdownNow()
+            // Preserve interrupt status
+            Thread.currentThread().interrupt()
         }
     } else { // The external manager(like JEE container) responsible for lifecycle of executor
         synchronized(executor) {
