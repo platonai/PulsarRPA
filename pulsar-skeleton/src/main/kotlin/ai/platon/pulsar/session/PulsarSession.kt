@@ -246,12 +246,12 @@ interface PulsarSession : AutoCloseable {
      * This method first checks the url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
-     * Other fetch condition can be specified by load arguments:
+     * Other fetch conditions can be specified by load arguments:
      *
      * 1. expiration
      * 2. page size requirement
      * 3. fields requirement
-     * 4. other conditions
+     * 4. other
      *
      * @param url The url to load
      * @param args The load arguments
@@ -265,12 +265,12 @@ interface PulsarSession : AutoCloseable {
      * This method first checks the url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
-     * Other fetch condition can be specified by load arguments:
+     * Other fetch conditions can be specified by load arguments:
      *
      * 1. expiration
      * 2. page size requirement
      * 3. fields requirement
-     * 4. other conditions
+     * 4. other
      *
      * @param url The url to load
      * @param options The load options
@@ -514,7 +514,7 @@ interface PulsarSession : AutoCloseable {
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url  The url to load
-     * @param args The referrer
+     * @param referrer The referrer
      * @param args The load arguments
      * @return The webpage containing the resource
      */
@@ -526,10 +526,11 @@ interface PulsarSession : AutoCloseable {
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
-     * @param opts The load options
+     * @param referrer The referrer
+     * @param options The load options
      * @return The webpage containing the resource
      */
-    suspend fun loadResource(url: String, referrer: String, opts: LoadOptions = options()): WebPage
+    suspend fun loadResource(url: String, referrer: String, options: LoadOptions = options()): WebPage
 
     /**
      * Parse a webpage into an HTML document.

@@ -1440,7 +1440,7 @@ final public class WebPage implements Comparable<WebPage> {
     }
 
     public void setReferrer(@Nullable String referrer) {
-        if (UrlUtils.isValidUrl(referrer)) {
+        if (UrlUtils.isStandard(referrer)) {
             page.setReferrer(referrer);
         }
     }
