@@ -130,7 +130,22 @@ The core Pulsar concepts include the following, knowing these core concepts, you
 
 Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
 
-== Usage I: use Pulsar as a library
+== Usage I: experience Pulsar with an executable jar
+
+We have released a standalone executable jar based on PulsarR, which includes:
+
+* Web scraping examples of a set of top sites
+* An applet based on `self-supervised` machine learning for information extraction, AI identifies all fields on the detail page with over 90% field accuracy of 99.9% or more
+* An applet based on `self-supervised` machine learning and outputs all extract rules, which can help traditional Web scraping methods
+* An applet that scrape Web data directly from the command line, like wget or curl, without writing code
+* A PulsarR server to which we can send SQLs to collect Web data
+* A Web UI from which we can write SQLs and send them to the server
+
+Download https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
+
+    java -jar exotic-standalone.jar
+
+== Usage II: use Pulsar as a library
 The simplest way to leverage the power of Pulsar is to add it to your project as a library.
 
 Maven:
@@ -330,7 +345,7 @@ Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/e
 
 Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
-== Usage II: run Pulsar as a REST service
+== Usage III: run Pulsar as a REST service
 When Pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 
 === Build from source
@@ -398,20 +413,6 @@ The response is as follows in json format:
 ----
 
 Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
-
-== Usage III: experience Pulsar with the executable jar
-
-We have released a standalone executable jar based on PulsarR, which includes:
-
-* Web scraping examples of a set of top sites
-* An applet based on self-supervised machine learning for information extraction, AI identifies all fields on the detail page with over 90% field accuracy of 99.9% or more
-* An applet based on self-supervised machine learning and outputs all extract rules, which can help traditional Web scraping methods
-* An applet that scrape Web data directly from the command line, like wget or curl, without writing code
-* A concise and powerful PulsarR client, which can query the Web and collect data by writing SQL just like the traditional database client
-
-Download https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
-
-    java -jar exotic-standalone.jar
 
 == Logs & Metrics
 
