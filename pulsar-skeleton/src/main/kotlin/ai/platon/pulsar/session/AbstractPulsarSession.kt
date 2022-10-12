@@ -320,11 +320,11 @@ abstract class AbstractPulsarSession(
         return loadAllAsync(outLinks)
     }
 
-    override suspend fun loadResource(url: String, referer: String, args: String) = loadResource(url, referer, options(args))
+    override suspend fun loadResource(url: String, referrer: String, args: String) = loadResource(url, referrer, options(args))
 
-    override suspend fun loadResource(url: String, referer: String, opts: LoadOptions): WebPage {
+    override suspend fun loadResource(url: String, referrer: String, opts: LoadOptions): WebPage {
         opts.isResource = true
-        opts.referrer = referer
+        opts.referrer = referrer
         return loadDeferred(url, opts)
     }
 
@@ -473,7 +473,7 @@ abstract class AbstractPulsarSession(
         return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
     }
 
-    override fun equals(other: Any?) = other === this || (other is AbstractPulsarSession && other.id == id)
+    override fun equals(other: Any?) = other === this || (other is PulsarSession && other.id == id)
 
     override fun hashCode(): Int = id
 

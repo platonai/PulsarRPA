@@ -7,14 +7,14 @@ import java.net.MalformedURLException
 import java.net.URL
 
 /**
- * A normalized url.
+ * [NormUrl] stands for `normal url`, which means the url is final and will be used to locate the resource.
  *
- * Every NormUrl contains two urls: url and href, url stands for Uniform Resource Locator,
- * both for external webpage and internal database record, and href stands for Hyperlink Reference,
- * which is a url extracted from a HTML document.
+ * Every normal url contains two urls: a `url` and a `href`, `url` stands for Uniform Resource Locator,
+ * both for external webpage and internal database record, and `href` stands for Hyperlink Reference,
+ * which contains a url extracted from an HTML document.
  *
- * The href is the first choice to locate a resource, because it's
- * extracted from a HTML document without modification while the url might be normalized.
+ * `Href` is the first choice for locating resources, because it's extracted from the HTML document
+ * without modification, while `url` is typically normalized.
  * */
 open class NormUrl constructor(
     val url: URL,

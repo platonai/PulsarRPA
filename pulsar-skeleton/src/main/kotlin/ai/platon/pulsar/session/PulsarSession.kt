@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture
  * * [load]: load a webpage from local storage, or fetch it from the Internet.
  * * [parse]: parse a webpage into a document.
  * * [scrape]: load a webpage, parse it into a document and then extract fields from the document.
- * * [submit]: submit a url to the url pool, the url will be processed in the main loop later.
+ * * [submit]: submit a url to the URL pool, the url will be processed in the main loop later.
  *
  * And also the batch versions:
  *
@@ -133,7 +133,7 @@ interface PulsarSession : AutoCloseable {
     fun disablePDCache()
 
     /**
-     * Create a new options, with a new volatile config
+     * Create a new [LoadOptions] object from arguments [args] and [event]
      * */
     fun options(args: String = "", event: PageEvent? = null): LoadOptions
 
@@ -188,9 +188,9 @@ interface PulsarSession : AutoCloseable {
      * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls,
      * where the execution flow is like the following:
      *
-     * inject -> generate -> fetch -> parse -> update
-     *              ^                            ^
-     *              |    <-     <-      <-       |
+     * inject -> generate -> fetch -> parse [ -> index ] -> update
+     *              ^                                          ^
+     *              |    <-     <-      <-         <-          |
      *
      * @param url The url to inject, con be followed by arguments
      * @return A newly created webpage which is ready to be generated
@@ -201,7 +201,7 @@ interface PulsarSession : AutoCloseable {
      * Get a page from storage
      *
      * @param url The url
-     * @return The webpage
+     * @return The webpage in storage if exists, otherwise returns a NIL page
      */
     fun get(url: String): WebPage
 
@@ -209,7 +209,7 @@ interface PulsarSession : AutoCloseable {
      * Get a page from storage.
      *
      * @param url The url
-     * @return The page in storage if exists or null
+     * @return The page in storage if exists, otherwise returns null
      */
     fun getOrNull(url: String): WebPage?
 
@@ -236,152 +236,186 @@ interface PulsarSession : AutoCloseable {
      * This method opens the url immediately, regardless of the previous state of the page.
      *
      * @param url The url to open
-     * @return The webpage
+     * @return The webpage loaded or NIL
      */
     fun open(url: String): WebPage
 
     /**
-     * Load a url with arguments.
+     * Load a url with specified arguments.
      *
-     * This method checks the local storage first, if it exists and is good,
-     * return the persisted version, otherwise, fetch it from the Internet.
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
      *
-     * Other fetch condition can be specified in load arguments:
+     * Other fetch condition can be specified by load arguments:
+     *
      * 1. expiration
      * 2. page size requirement
      * 3. fields requirement
+     * 4. other conditions
      *
      * @param url The url to load
      * @param args The load arguments
-     * @return The webpage
+     * @return The webpage loaded or NIL
      */
     fun load(url: String, args: String): WebPage
 
     /**
-     * Load a url with options.
+     * Load a url with specified options.
      *
-     * This method checks the local storage first, if it exists and is good,
-     * return the persisted version, otherwise, fetch it from the Internet.
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
      *
-     * Other fetch condition can be specified in load arguments:
+     * Other fetch condition can be specified by load arguments:
+     *
      * 1. expiration
      * 2. page size requirement
      * 3. fields requirement
+     * 4. other conditions
      *
      * @param url The url to load
      * @param options The load options
-     * @return The webpage
+     * @return The webpage loaded or NIL
      */
     fun load(url: String, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url with the specified load arguments.
+     * Load a url with the specified arguments.
      *
-     * @param url     The url to load
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param url  The url to load
      * @param args The load arguments
-     * @return The webpage loaded
+     * @return The webpage loaded or NIL
      */
     fun load(url: UrlAware, args: String): WebPage
 
     /**
      * Load a url with options.
      *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
      * @param url     The url to load
      * @param options The load options
-     * @return The web page
+     * @return The webpage loaded or NIL
      */
     fun load(url: UrlAware, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url in normalized form.
+     * Load a normal url.
      *
-     * @param normUrl The normalized url
-     * @return The web page
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param normUrl The normal url
+     * @return The webpage loaded or NIL
      */
     fun load(normUrl: NormUrl): WebPage
 
     /**
      * Load a url with specified options.
      *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param options The load options
-     * @return The web page
+     * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: String, options: LoadOptions = options()): WebPage
 
     /**
-     * Load a url with specified options.
+     * Load a url with specified arguments.
+     *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
-     * @param url     The url to load
+     * @param url  The url to load
      * @param args The load args
-     * @return The web page
+     * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: UrlAware, args: String): WebPage
 
     /**
      * Load a url with specified options.
      *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param options The load options
-     * @return The web page
+     * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(url: UrlAware, options: LoadOptions = options()): WebPage
 
     /**
      * Load a url with specified options
      *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
-     * @param normUrl The normalized url
-     * @return The web page
+     * @param normUrl The normal url
+     * @return The webpage loaded or NIL
      */
     suspend fun loadDeferred(normUrl: NormUrl): WebPage
 
     /**
-     * Load all urls with specified options, this causes a parallel fetching whenever applicable
+     * Load all urls with specified options
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * @param urls    The urls to load
      * @param options The load options
-     * @return The web pages
+     * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Iterable<String>, options: LoadOptions = options()): List<WebPage>
 
     /**
-     * Load all urls with specified options
+     * Load all normal urls with specified options
      *
-     * @param normUrls    The urls to load
-     * @return The web pages
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param normUrls    The normal urls to load
+     * @return The loaded webpages
      */
     fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage>
 
     /**
-     * Load a url with java async style
+     * Load a normal url in java async style
      *
-     * @param url     The url to load
-     * @return A future
+     * @param url     The normal url to load
+     * @return A completable future of webpage
      */
     fun loadAsync(url: NormUrl): CompletableFuture<WebPage>
 
     /**
-     * Load all urls with specified options with java async style
+     * Load all normal urls in java async style
      *
-     * @param urls The urls to load
-     * @return The web pages
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
 
     /**
-     * Submit a url to the url pool, the url will be processed in the main crawl loop later
+     * Submit a url to the URL pool, the url will be processed in the crawl loop later
      *
      * @param url The url to submit
      * @param args The load arguments
@@ -390,7 +424,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: String, args: String? = null): PulsarSession
 
     /**
-     * Submit a url to the url pool, the url will be processed in the main crawl loop later
+     * Submit a url to the URL pool, the url will be processed in a crawl loop later
      *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -398,7 +432,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: UrlAware): PulsarSession
 
     /**
-     * Submit the urls to the url pool, the submitted urls will be processed in the main crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -406,7 +440,7 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>): PulsarSession
 
     /**
-     * Submit the urls to the url pool, the submitted urls will be processed in the main crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
      *
      * @param urls The urls to submit
      * @param args The load arguments
@@ -415,172 +449,234 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>, args: String): PulsarSession
 
     /**
-     * Submit the urls to the url pool, the submitted urls will be processed in the main crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
      *
      * @param urls The urls to submit
-     * @return This session
+     * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
 
     /**
-     * Load out pages linked from the portal page
+     * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
      * @param portalUrl    The portal url from where to load pages
      * @param args         The load arguments
-     * @return The web pages
+     * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, args: String): List<WebPage>
 
     /**
-     * Load out pages linked from the portal page
+     * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
      * @param portalUrl The portal url from where to load pages
-     * @param options The load options
-     * @return The web pages
+     * @param options   The load options
+     * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = options()): List<WebPage>
 
     /**
-     * Load out pages linked from the portal page
+     * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
      *
-     * @param portalUrl    The portal url from where to load pages
-     * @param options The load options
-     * @return The web pages
+     * @param portalUrl The portal url from where to load pages
+     * @param options   The load options
+     * @return The loaded out pages
      */
     fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>>
 
     /**
-     * Submit the urls of out pages in the portal page, the submitted urls will be processed in the main crawl loop later
+     * Load the portal page, and then submit the specified out links to the URL pool, the out links are
+     * selected by `-outLink` option.
      *
-     * @param portalUrl    The portal url from where to load pages
-     * @param args The load arguments
-     * @return The web pages
+     * The submitted urls will be processed in a crawl loop later.
+     *
+     * @param portalUrl The portal url from where to load pages
+     * @param args      The load arguments
+     * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: String, args: String): AbstractPulsarSession
+    fun submitOutPages(portalUrl: String, args: String): PulsarSession
 
     /**
-     * Submit the urls of out pages in the portal page, the submitted urls will be processed in the main crawl loop later
+     * Load the portal page, and then submit the specified out links to the URL pool, the out links are
+     * selected by `-outLink` option.
      *
-     * @param portalUrl    The portal url from where to load pages
-     * @param options The load options
-     * @return The web pages
+     * The submitted urls will be processed in a crawl loop later.
+     *
+     * @param portalUrl The portal url from where to load pages
+     * @param options   The load options
+     * @return The [PulsarSession] itself to enable chained operation
      */
     fun submitOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
 
     /**
-     * Load a url as a resource without browser rendering in the browser context
+     * Load a url as a resource without browser rendering.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
-     * @param url     The url to load
+     * @param url  The url to load
+     * @param args The referrer
      * @param args The load arguments
-     * @return The web page
+     * @return The webpage containing the resource
      */
-    suspend fun loadResource(url: String, referer: String, args: String): WebPage
+    suspend fun loadResource(url: String, referrer: String, args: String): WebPage
     /**
-     * Load a url as a resource without browser rendering in the browser context
+     * Load a url as a resource without browser rendering.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
      * @param opts The load options
-     * @return The web page
+     * @return The webpage containing the resource
      */
-    suspend fun loadResource(url: String, referer: String, opts: LoadOptions = options()): WebPage
+    suspend fun loadResource(url: String, referrer: String, opts: LoadOptions = options()): WebPage
 
     /**
-     * Parse the Web page into DOM.
-     * If the Web page is not changed since last parse, use the last result if available
+     * Parse a webpage into an HTML document.
      */
     fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument
     /**
-     * Load or fetch a webpage and parse it into a document
+     * Load or fetch a webpage and parse it into an HTML document
      * */
     fun loadDocument(url: String, args: String): FeaturedDocument
     /**
-     * Load or fetch a webpage and parse it into a document
+     * Load or fetch a webpage and parse it into an HTML document
      * */
     fun loadDocument(url: String, options: LoadOptions = options()): FeaturedDocument
     /**
-     * Load or fetch a webpage and parse it into a document
+     * Load or fetch a webpage and then parse it into an HTML document.
      * */
     fun loadDocument(normUrl: NormUrl): FeaturedDocument
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param args The load arguments
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
      * */
     fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?>
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param options The load options
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
      * */
     fun scrape(url: String, options: LoadOptions, fieldSelectors: Iterable<String>): Map<String, String?>
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param args The load arguments
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their names
      * */
     fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?>
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param options The load options
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their names
      * */
     fun scrape(url: String, options: LoadOptions, fieldSelectors: Map<String, String>): Map<String, String?>
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param args The load arguments
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their names
      * */
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
 
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param options The load options
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
      * */
     fun scrape(
         url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Iterable<String>
     ): List<Map<String, String?>>
 
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param args The load arguments
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their names
      * */
     fun scrape(
         url: String, args: String, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
     /**
-     * Scrape a webpage
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * @param url The url to scrape
+     * @param options The load options
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their names
      * */
     fun scrape(
         url: String, options: LoadOptions, restrictSelector: String, fieldSelectors: Map<String, String>
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param args The load arguments
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param args Load arguments for both the portal page and out pages
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted
+     *          with their selectors are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param options The load options
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param options Load options for both the portal page and out pages
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param args The load arguments
-     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param args Load arguments for both the portal page and out pages
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -588,13 +684,14 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param options The load options
-     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param options Load options for both the portal page and out pages
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -602,35 +699,38 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param args The load arguments
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields with their name from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param args Load arguments for both the portal page and out pages
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, args: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param options The load options
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields with their name from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param options Load options for both the portal page and out pages
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param args The load arguments
-     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param args Load arguments for both the portal page and out pages
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -638,13 +738,14 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Scrape out pages using given selectors.
+     * Load or fetch out pages specified by out link selector, and then extract fields specified by
+     * field selectors from each out page.
      *
-     * @param portalUrl The portal url the scraping start from
-     * @param options The load options
-     * @param restrictSelector The selector used to restrict all fields to be inside the DOM
-     * @param fieldSelectors The CSS selectors to extract fields from out pages
-     * @return A list of extracted fields from out pages
+     * @param portalUrl The portal url to start scraping
+     * @param options Load options for both the portal page and out pages
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors CSS selectors to extract fields from out pages
+     * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
     @ExperimentalApi
     fun scrapeOutPages(
@@ -652,12 +753,12 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Get a variable associated with this session
+     * Get a variable from this session
      * */
     fun getVariable(name: String): Any?
 
     /**
-     * Set a variable associated with this session
+     * Set a variable into this session
      * */
     fun setVariable(name: String, value: Any)
 
@@ -668,7 +769,7 @@ interface PulsarSession : AutoCloseable {
     fun putSessionBean(obj: Any)
 
     /**
-     * Delete a webpage from the backend storage
+     * Delete a webpage from the storage
      * */
     fun delete(url: String)
 
