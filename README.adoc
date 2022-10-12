@@ -23,13 +23,13 @@ We have released complete solutions for site-wide Web scraping of some of the la
 
 *PulsarR supports high-quality, large-scale Web data collection and processing.* We have developed a range of infrastructure and cutting-edge technologies to ensure the highest standards of performance, quality and TCO (total cost of ownership), even in very large-scale data collection scenarios.
 
-*PulsarR supports the Network-As-A-Database paradigm.* PulsarR treats the external network as a database. If the required data is not in the local storage, or the existing version does not meet the analysis needs, the system will collect the latest version of the data from the Internet. We can also use simple SQL to directly convert the Web into tables and charts. Furthermore, we can use SQL to query the Web directly.
+*PulsarR supports the Network-As-A-Database paradigm.* PulsarR treats the external network as a database. If the required data is not in the local storage, or the existing version does not meet the analysis needs, the system will collect the latest version of the data from the Internet. We also developed X-SQL to query the Web directly and convert webpages into tables and charts.
 
-**PulsarR supports browser rendering as the primary method to collect Web data.** By using browser rendering as the primary method to collect Web data, we achieve an optimal balance between data point scale, data quality, labor cost and hardware cost, and achieve the lowest TCO (total cost of ownership). Through optimization, such as blocking irrelevant resource files, the performance of browser rendering can even be comparable to the traditional single resource collection methods. Furthermore, for some simple resources, we can call PulsarR's single resource collection methods for high-speed collection after opening the browser and obtaining the context.
+**PulsarR supports browser rendering as the primary method to collect Web data.** By using browser rendering as the primary method to collect Web data, we achieve an optimal balance between data point scale, data quality, labor cost and hardware cost, and achieve the lowest TCO (total cost of ownership). With optimizations such as blocking unnecessary resource files, the performance of browser rendering can even be comparable to the traditional single resource collection method.
 
 *PulsarR supports RPA based Web scraping.* PulsarR includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, mouse drag and drop, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
 
-*PulsarR supports single resource collection.* PulsarR's default data collection method is to harvest the complete Web data through browser rendering, but if the data you need can be retrieved through a single link, for example through an ajax interface, you can also call PulsarR's resource collection method for high-speed collection.
+*PulsarR supports single resource collection.* PulsarR's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example through an ajax interface, you can also call PulsarR's resource collection method for high-speed collection.
 
 *PulsarR plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
 
@@ -46,6 +46,7 @@ We have released complete solutions for site-wide Web scraping of some of the la
 * Large scale: fully distributed, designed for large scale crawling
 * Big data: various backend storage support: Local File/MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
+* [Coming Soon] Information Extraction: Automatically learns web data patterns and automatically extracts every field in a webpage with remarkable precision
 
 == Get started
 
@@ -112,12 +113,13 @@ session.load(url, options)
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin].
 
 == Core concepts
-The core Pulsar concepts include the following:
+
+The core Pulsar concepts include the following, knowing these core concepts, you can use PulsarR to solve the most demanding data scraping tasks:
 
 * Web Scraping: the process of using bots to extract content and data from a website
 * Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI algorithm
 * RPA: stands for robotic process automation which is the only way to scrape modern webpages
-* Network As A Database: access the Web just like a local database
+* Network As A Database: access the network just like a database
 * X-SQL: query the Web using SQL directly
 * Pulsar Session: provides a set of simple, powerful and flexible APIs to do web scraping tasks
 * Web Driver: defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
