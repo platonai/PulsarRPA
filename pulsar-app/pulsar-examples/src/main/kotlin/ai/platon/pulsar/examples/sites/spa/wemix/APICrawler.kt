@@ -32,7 +32,7 @@ private class APICrawler {
 
         IntRange(1, 100).forEach { pageNo ->
             val url = "$apiTemplate?page=$pageNo&pageSize=20"
-            val json = session.loadResource(url, mainUrl, options).contentAsString
+            val json = session.loadResourceDeferred(url, mainUrl, options).contentAsString
             println(json)
         }
     }

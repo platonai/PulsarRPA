@@ -13,7 +13,7 @@ import java.net.URL
  * both for external webpage and internal database record, and `href` stands for Hyperlink Reference,
  * which contains a url extracted from an HTML document.
  *
- * `Href` is the first choice for locating resources, because it's extracted from the HTML document
+ * `Href` is the first choice to locate resources, because it's extracted from the HTML document
  * without modification, while `url` is typically normalized.
  * */
 open class NormUrl constructor(

@@ -21,8 +21,8 @@ import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
 /**
- * [PulsarSession] defines an interface to load web pages from local storage or fetch from the Internet,
- * as well as methods for parsing, extracting, saving, indexing, and exporting web pages.
+ * [PulsarSession] defines an interface to load webpages from local storage or fetch from the Internet,
+ * as well as methods for parsing, extracting, saving and exporting webpages.
  *
  * Key methods:
  *
@@ -40,29 +40,28 @@ import java.util.concurrent.CompletableFuture
  * check the local storage and return the local version if the required page exists and meets the
  * requirements, otherwise it will be fetched from the Internet.
  *
- * The `load parameters` or `load options` can be used to specify when the system will fetch a webpage
+ * `Load parameters` or `load options` can be used to specify when the system will fetch a webpage
  * from the Internet:
  *
- * . Expiration
- * . Force refresh
- * . Page size
- * . Required fields
- * . Other conditions
+ * 1. Expiration
+ * 2. Force refresh
+ * 3. Page size
+ * 4. Required fields
+ * 5. Other conditions
  *
- * Once a webpage is loaded from local storage, or fetched from the Internet,
- * we come to the next process steps:
- * 1. parse the web content into a HTML document
+ * Once a page is loaded from local storage, or fetched from the Internet, we come to the next process steps:
+ * 1. parse the page content into an HTML document
  * 2. extract fields from the HTML document
- * 3. write the fields into a destination, such as
- *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc.
- *    2. solr, elastic, etc.
+ * 3. write the extraction results to a destination, such as
+ *    1. plain file, avro file, CSV, excel, mongodb, mysql, etc
+ *    2. solr, elastic, etc
  *
  * There are many ways to fetch the content of a page from the Internet:
- * 1. http protocol
+ * 1. through HTTP protocol
  * 2. through a real browser
  *
  * Since the webpages are becoming more and more complex, fetching webpages through
- * real browsers is the primer way nowadays.
+ * real browsers is the primary way nowadays.
  *
  * When we fetch webpages using a real browser, we need to interact with pages to
  * ensure the required fields are loaded correctly and completely. Enable [PageEvent]
@@ -76,13 +75,13 @@ import java.util.concurrent.CompletableFuture
  * session.load(url, options)
  * ```
  *
- * Pulsar [WebDriver] provides a complete method set for RPA, just like selenium, playwright
- * and puppeteer, all actions and behaviors are optimized to mimic real people as closely as possible.
+ * [WebDriver] provides a complete method set for RPA, just like selenium, playwright
+ * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
  * */
 interface PulsarSession : AutoCloseable {
 
     /**
-     * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
+     * The session id
      * */
     val id: Int
 
@@ -133,33 +132,33 @@ interface PulsarSession : AutoCloseable {
     fun disablePDCache()
 
     /**
-     * Create a new [LoadOptions] object from arguments [args] and [event]
+     * Create a new [LoadOptions] object with arguments [args] and [event].
      * */
     fun options(args: String = "", event: PageEvent? = null): LoadOptions
 
     /**
-     * Get a property
+     * Get a property.
      * */
     fun property(name: String): String?
 
     /**
-     * Set a session scope property
+     * Set a session scope property.
      * */
     fun property(name: String, value: String)
     /**
-     * Normalize a url
+     * Normalize a url.
      * */
     fun normalize(url: String, args: String? = null): NormUrl
     /**
-     * Normalize a url
+     * Normalize a url.
      * */
     fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
     /**
-     * Normalize a url
+     * Normalize a url.
      * */
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     /**
-     * Normalize urls
+     * Normalize urls.
      * */
     fun normalize(
         urls: Iterable<String>,
@@ -168,15 +167,15 @@ interface PulsarSession : AutoCloseable {
     ): List<NormUrl>
 
     /**
-     * Normalize a url
+     * Normalize a url.
      * */
     fun normalize(url: UrlAware, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
     /**
-     * Normalize a url
+     * Normalize a url.
      * */
     fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl?
     /**
-     * Normalize urls
+     * Normalize urls.
      * */
     fun normalize(
         urls: Collection<UrlAware>,
@@ -185,20 +184,20 @@ interface PulsarSession : AutoCloseable {
     ): List<NormUrl>
 
     /**
-     * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls,
-     * where the execution flow is like the following:
+     * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls
+     * where the execution flow likes the following:
      *
      * inject -> generate -> fetch -> parse [ -> index ] -> update
      *              ^                                          ^
      *              |    <-     <-      <-         <-          |
      *
      * @param url The url to inject, con be followed by arguments
-     * @return A newly created webpage which is ready to be generated
+     * @return A newly created webpage record which is ready to be generated
      */
     fun inject(url: String): WebPage
 
     /**
-     * Get a page from storage
+     * Get a page from storage.
      *
      * @param url The url
      * @return The webpage in storage if exists, otherwise returns a NIL page
@@ -214,7 +213,7 @@ interface PulsarSession : AutoCloseable {
     fun getOrNull(url: String): WebPage?
 
     /**
-     * Check if the page exists in the storage
+     * Check if the page exists in the storage.
      *
      * @param url The url to check
      * @return true if the page exists, false otherwise
@@ -222,7 +221,7 @@ interface PulsarSession : AutoCloseable {
     fun exists(url: String): Boolean
 
     /**
-     * Return the fetch state of the page
+     * Return the fetch state of the page.
      *
      * @param page The webpage
      * @param options The load options
@@ -510,15 +509,34 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url as a resource without browser rendering.
      *
+     * @param url  The url to load
+     * @param referrer The referrer URL
+     * @param args The load arguments
+     * @return The webpage containing the resource
+     */
+    fun loadResource(url: String, referrer: String, args: String): WebPage
+    /**
+     * Load a url as a resource without browser rendering.
+     *
+     * @param url     The url to load
+     * @param referrer The referrer URL
+     * @param options The load options
+     * @return The webpage containing the resource
+     */
+    fun loadResource(url: String, referrer: String, options: LoadOptions = options()): WebPage
+
+    /**
+     * Load a url as a resource without browser rendering.
+     *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url  The url to load
-     * @param referrer The referrer
+     * @param referrer The referrer URL
      * @param args The load arguments
      * @return The webpage containing the resource
      */
-    suspend fun loadResource(url: String, referrer: String, args: String): WebPage
+    suspend fun loadResourceDeferred(url: String, referrer: String, args: String): WebPage
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -526,11 +544,11 @@ interface PulsarSession : AutoCloseable {
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
-     * @param referrer The referrer
+     * @param referrer The referrer URL
      * @param options The load options
      * @return The webpage containing the resource
      */
-    suspend fun loadResource(url: String, referrer: String, options: LoadOptions = options()): WebPage
+    suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions = options()): WebPage
 
     /**
      * Parse a webpage into an HTML document.

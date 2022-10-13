@@ -320,9 +320,19 @@ abstract class AbstractPulsarSession(
         return loadAllAsync(outLinks)
     }
 
-    override suspend fun loadResource(url: String, referrer: String, args: String) = loadResource(url, referrer, options(args))
+    override fun loadResource(url: String, referrer: String, args: String) =
+        loadResource(url, referrer, options(args))
 
-    override suspend fun loadResource(url: String, referrer: String, options: LoadOptions): WebPage {
+    override fun loadResource(url: String, referrer: String, options: LoadOptions): WebPage {
+        options.isResource = true
+        options.referrer = referrer
+        return load(url, options)
+    }
+
+    override suspend fun loadResourceDeferred(url: String, referrer: String, args: String) =
+        loadResourceDeferred(url, referrer, options(args))
+
+    override suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions): WebPage {
         options.isResource = true
         options.referrer = referrer
         return loadDeferred(url, options)

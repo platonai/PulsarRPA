@@ -85,11 +85,11 @@ object AppContext {
         }
     }
 
-    fun beginTerminate() {
+    fun beginTermination() {
         state.set(State.TERMINATING)
     }
 
-    fun endTerminate() = state.set(State.TERMINATED)
+    fun endTermination() = state.set(State.TERMINATED)
 
     private fun sniffVersion(): String {
         var version = System.getProperty("app.version")

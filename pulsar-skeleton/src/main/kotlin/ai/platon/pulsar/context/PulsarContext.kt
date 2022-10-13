@@ -18,9 +18,8 @@ import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KClass
 
 /**
- * Main entry point for Pulsar functionality.
- *
- * A PulsarContext is used to inject, fetch, load, parse, store webpages.
+ * [PulsarContext] consists of a set of highly customizable components that provide
+ * the core set of interfaces of the system and is used to create [PulsarSession].
  */
 interface PulsarContext: AutoCloseable {
 

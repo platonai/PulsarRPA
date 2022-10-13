@@ -33,11 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-/**
- * The main entry point for pulsar functionality.
- *
- * A PulsarContext can be used to inject, fetch, load, parse, store webpages.
- */
 abstract class AbstractPulsarContext(
         val applicationContext: AbstractApplicationContext,
         val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
@@ -234,7 +229,7 @@ abstract class AbstractPulsarContext(
     /**
      * Inject an url
      *
-     * @param url The url followed by options
+     * @param url The url which can be followed by arguments
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
@@ -244,7 +239,7 @@ abstract class AbstractPulsarContext(
     /**
      * Inject an url
      *
-     * @param url The url followed by options
+     * @param url The url which can be followed by arguments
      * @return The web page created
      */
     override fun inject(url: NormUrl): WebPage {
@@ -300,8 +295,8 @@ abstract class AbstractPulsarContext(
     /**
      * Load an page with specified options, see [LoadOptions] for all options
      *
-     * @param url     The url followed by options
-     * @param options The options
+     * @param url     The url which can be followed by arguments
+     * @param options The load options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: String, options: LoadOptions): WebPage {
@@ -312,8 +307,8 @@ abstract class AbstractPulsarContext(
     /**
      * Load a url with specified options, see [LoadOptions] for all options
      *
-     * @param url     The url followed by options
-     * @param options The options
+     * @param url     The url which can be followed by arguments
+     * @param options The load options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: URL, options: LoadOptions): WebPage {
@@ -323,7 +318,7 @@ abstract class AbstractPulsarContext(
     /**
      * Load a url, options can be specified following the url, see [LoadOptions] for all options
      *
-     * @param url The url followed by options
+     * @param url The url which can be followed by arguments
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: NormUrl): WebPage {
@@ -344,7 +339,7 @@ abstract class AbstractPulsarContext(
      * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
      *
      * @param urls    The urls to load
-     * @param options The options
+     * @param options The load options
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
@@ -468,7 +463,7 @@ abstract class AbstractPulsarContext(
     }
 
     protected open fun doClose() {
-        AppContext.beginTerminate()
+        AppContext.beginTermination()
 
         if (closed.compareAndSet(false, true)) {
             try {
@@ -479,7 +474,7 @@ abstract class AbstractPulsarContext(
             }
         }
 
-        AppContext.endTerminate()
+        AppContext.endTermination()
     }
 
     protected open fun doClose0() {
