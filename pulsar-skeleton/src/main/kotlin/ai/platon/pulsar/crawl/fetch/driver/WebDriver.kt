@@ -12,24 +12,22 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 /**
- * WebDriver defines a concise interface to visit and interact with web pages,
+ * [WebDriver] defines a concise interface to visit and interact with web pages,
  * all actions and behaviors are optimized to mimic real people as closely as possible,
  * such as scrolling, clicking, typing text, dragging and dropping, etc.
  *
  * The methods in this interface fall into three categories:
- * <ul>
- * <li>Control of the browser itself</li>
- * <li>Selection of textContent and attributes of Elements</li>
- * <li>Interact with the webpage</li>
- * </ul>
- * <p>
+ *
+ * * Control of the browser itself
+ * * Selection of textContent and attributes of Elements
+ * * Interact with the webpage
  *
  * Key methods:
- * [WebDriver.navigateTo], load a new web page.
- * [WebDriver.scrollDown], scroll down on a web page to fully load the page,
- * most modern webpages support lazy loading using ajax tech, where the web
+ * * [navigateTo]: load a new web page.
+ * * [scrollDown]: scroll down on a web page to fully load the page,
+ * most modern webpages support lazy loading using ajax tech, where the page
  * content only starts to load when it is scrolled into view.
- * [WebDriver.pageSource], retrieve the source code of a webpage.
+ * * [pageSource]: retrieve the source code of a webpage.
  */
 interface WebDriver: Closeable {
     enum class Status {

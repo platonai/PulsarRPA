@@ -126,7 +126,7 @@ The methods in this interface fall into three categories:
 Key methods:
 
 * `.navigateTo()`: load a new webpage.
-* `.scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the web content only starts to load when it is scrolled into view.
+* `.scrollDown()`: scroll down on a webpage to fully load the page. Most modern webpages support lazy loading using ajax tech, where the page content only starts to load when it is scrolled into view.
 * `.pageSource()`: retrieve the source code of a webpage.
 
 === URLs
