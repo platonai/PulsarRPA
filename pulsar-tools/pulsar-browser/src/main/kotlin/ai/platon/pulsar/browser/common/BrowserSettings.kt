@@ -141,7 +141,6 @@ open class BrowserSettings(
 
         /**
          * Block all images.
-         * TODO: not implemented
          * */
         fun blockImages(): Companion {
             // enableUrlBlocking()

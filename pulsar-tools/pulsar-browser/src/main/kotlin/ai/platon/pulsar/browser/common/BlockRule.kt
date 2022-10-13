@@ -7,6 +7,16 @@ import com.github.kklisura.cdt.protocol.types.network.ResourceType
  * The block rules of urls and resources
  * */
 open class BlockRule {
+    companion object {
+        val IMAGE_URL_PATTERNS = listOf(
+            "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp", "*.svg",
+            "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
+        )
+
+        val MEDIA_URL_PATTERNS = listOf(
+            "*.woff", "*.woff2", "*.mp4"
+        ) + IMAGE_URL_PATTERNS
+    }
 
     open val blockingResourceTypes: MutableList<ResourceType>
         get() = listOf(ResourceType.IMAGE, ResourceType.MEDIA, ResourceType.FONT).toMutableList()
