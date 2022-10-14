@@ -101,7 +101,7 @@ class MetadataIndexer(
         doc.add("fetch_time_history", fetchTimeHistory)
         val indexTimeStr = isoInstantFormat(now)
         val firstIndexTime = pageExt.getFirstIndexTime(now)
-        val indexTimeHistory = page.getIndexTimeHistory(indexTimeStr)
+        val indexTimeHistory = pageExt.getIndexTimeHistory(indexTimeStr)
         doc.add("first_index_time", isoInstantFormat(firstIndexTime))
         doc.add("last_index_time", indexTimeStr)
         doc.add("index_time_history", indexTimeHistory)

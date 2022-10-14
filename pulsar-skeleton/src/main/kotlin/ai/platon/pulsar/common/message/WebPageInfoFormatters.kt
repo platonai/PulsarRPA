@@ -54,6 +54,19 @@ class FetchStatusFormatter(val page: WebPage) {
     }
 }
 
+data class Record(
+    val name: String,
+    val value: Any,
+    val prefix: String = "",
+    val postfix: String = "",
+    val width: Int = 0,
+    val padding: Char = ' ',
+) {
+    fun format(): String = if (width > 0) StringUtils.leftPad(toString(), width, padding) else toString()
+
+    override fun toString() = value.toString()
+}
+
 class LoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
@@ -142,22 +155,33 @@ class LoadStatusFormatter(
             "$prevFetchTimeReport fc:$fetchCount$failure" +
             "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
 
-    data class Record(
-        val name: String,
-        val value: Any,
-        val prefix: String = "",
-        val postfix: String = "",
-        val width: Int = 0,
-    )
-
     fun explain() {
         listOf(
             Record("id", page.id, width = 3),
-            Record("successSymbol", taskStatusSymbol, width = 1),
-            Record("prefix", loadMessagePrefix),
-            Record("minorCode", page.protocolStatus.minorCode),
+            Record("category", category),
+            Record("taskStatusSymbol", taskStatusSymbol, width = 1),
+            Record("pageStatusSymbol", pageStatusSymbol, width = 1),
+            Record("pageStatusText", pageStatusText),
+            Record("pageStatus", pageStatus),
+            Record("loadMessagePrefix", loadMessagePrefix),
             Record("fetchReason", fetchReason, width = 1),
+
+            Record("contentBytes", buildContentBytes()),
+            Record("minorCode", page.protocolStatus.minorCode),
+            Record("responseTime", DateTimes.readableDuration(responseTime)),
+            Record("prevFetchTime", prevFetchTimeReport),
+            Record("fetchCount", fetchCount),
+            Record("failure", failure),
+            Record("jsSate", jsSate),
+            Record("fieldCount", fieldCount),
+            Record("proxy", proxy),
+            Record("contextName", contextName),
+            Record("symbolicLink", symbolicLink),
+            Record("location", buildLocation()),
         )
+            .filter { it.width > 0 }
+            .joinToString(" ") { it.format() }
+
         TODO("NOT IMPLEMENTED")
     }
 

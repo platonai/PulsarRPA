@@ -5,6 +5,7 @@ import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.index.IndexWriters
 import ai.platon.pulsar.crawl.index.IndexingFilters
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -39,7 +40,7 @@ class IndexComponent(
         if (doc != null) {
             indexWriters.write(doc)
         }
-        page.putIndexTimeHistory(Instant.now())
+        WebPageExt(page).putIndexTimeHistory(Instant.now())
         return doc
     }
 

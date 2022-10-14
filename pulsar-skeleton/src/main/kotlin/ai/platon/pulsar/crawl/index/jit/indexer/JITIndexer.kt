@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.index.IndexWriters
 import ai.platon.pulsar.crawl.index.IndexingFilters
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import com.google.common.collect.Queues
 import org.slf4j.LoggerFactory
@@ -158,7 +159,7 @@ class JITIndexer(
             if (shouldIndex(doc)) {
                 synchronized(indexWriters) {
                     indexWriters.write(doc)
-                    page.putIndexTimeHistory(Instant.now())
+                    WebPageExt(page).putIndexTimeHistory(Instant.now())
                 }
                 indexedPages.incrementAndGet()
             } // if

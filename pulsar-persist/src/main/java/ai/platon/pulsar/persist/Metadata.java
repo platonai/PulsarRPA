@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -96,6 +97,16 @@ public class Metadata {
     public String get(String name) {
         ByteBuffer bvalue = getByteBuffer(name);
         return bvalue == null ? null : ByteUtils.toString(bvalue.array());
+    }
+
+    @Nonnull
+    public Optional<String> getOptional(String name) {
+        return Optional.ofNullable(get(name));
+    }
+
+    @Nonnull
+    public Optional<String> getOptional(Name name) {
+        return Optional.ofNullable(get(name));
     }
 
     @Nonnull

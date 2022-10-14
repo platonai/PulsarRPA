@@ -34,6 +34,15 @@ class WebPageExt(private val page: WebPage) {
         }
     }
 
+    fun sniffFetchPriority(): Int {
+        var priority = page.fetchPriority
+        val depth = page.distance
+        if (depth < AppConstants.FETCH_PRIORITY_DEPTH_BASE) {
+            priority = Math.max(priority, AppConstants.FETCH_PRIORITY_DEPTH_BASE - depth)
+        }
+        return priority
+    }
+
     fun sniffTitle(): String {
         var title = page.contentTitle
         if (title.isEmpty()) {
@@ -148,7 +157,7 @@ class WebPageExt(private val page: WebPage) {
 
     fun getFirstIndexTime(defaultValue: Instant): Instant {
         var firstIndexTime: Instant? = null
-        val indexTimeHistory = page.getIndexTimeHistory("")
+        val indexTimeHistory = getIndexTimeHistory("")
         if (!indexTimeHistory.isEmpty()) {
             val times = indexTimeHistory.split(",").toTypedArray()
             val time = parseInstant(times[0], Instant.EPOCH)
@@ -216,4 +225,17 @@ class WebPageExt(private val page: WebPage) {
         }
         return modifiedTime
     }
+
+    fun getIndexTimeHistory(defaultValue: String): String {
+        return page.metadata.get(Name.INDEX_TIME_HISTORY) ?: defaultValue
+    }
+
+    fun putIndexTimeHistory(indexTime: Instant) {
+        var indexTimeHistory = page.metadata.get(Name.INDEX_TIME_HISTORY)
+        indexTimeHistory = constructTimeHistory(indexTimeHistory, indexTime, 10)
+        page.metadata.set(Name.INDEX_TIME_HISTORY, indexTimeHistory)
+    }
+
+    fun isValidContentModifyTime(publishTime: Instant) =
+        publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME)
 }

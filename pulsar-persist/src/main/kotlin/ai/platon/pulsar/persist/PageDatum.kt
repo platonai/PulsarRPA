@@ -39,9 +39,9 @@ class PageDatum(
     /**
      * Returns the document location as a string.
      *
-     * [PageDatum.location] is the last working address, retrieved by javascript,
+     * [location] is the last working address, retrieved by javascript,
      * it might redirect from url, or it might have additional random parameters.
-     * [PageDatum.location] may be different from [PageDatum.url].
+     * [location] may be different from [url].
      *
      * In javascript, the documentURI property can be used on any document types. The document.URL
      * property can only be used on HTML documents.

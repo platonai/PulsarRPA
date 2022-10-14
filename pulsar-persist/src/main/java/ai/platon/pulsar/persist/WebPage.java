@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.browser.BrowserType;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.urls.UrlUtils;
+import ai.platon.pulsar.persist.experimental.WebAsset;
 import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.*;
@@ -52,10 +53,8 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
  * The core web page structure
- *
- * TODO: add a ImmutableWebPage
  */
-final public class WebPage implements Comparable<WebPage> {
+final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     private static final AtomicInteger SEQUENCER = new AtomicInteger();
 
@@ -1347,11 +1346,6 @@ final public class WebPage implements Comparable<WebPage> {
         getMetadata().set(Name.TOTAL_OUT_LINKS, String.valueOf(count));
     }
 
-    public void increaseImpreciseLinkCount(int count) {
-        int oldCount = getImpreciseLinkCount();
-        setImpreciseLinkCount(oldCount + count);
-    }
-
     public Map<CharSequence, CharSequence> getInlinks() {
         return page.getInlinks();
     }
@@ -1526,17 +1520,6 @@ final public class WebPage implements Comparable<WebPage> {
      * Index
      * ******************************************************************************
      */
-
-    public String getIndexTimeHistory(String defaultValue) {
-        String s = getMetadata().get(Name.INDEX_TIME_HISTORY);
-        return s == null ? defaultValue : s;
-    }
-
-    public void putIndexTimeHistory(Instant indexTime) {
-        String indexTimeHistory = getMetadata().get(Name.INDEX_TIME_HISTORY);
-        indexTimeHistory = DateTimes.constructTimeHistory(indexTimeHistory, indexTime, 10);
-        getMetadata().set(Name.INDEX_TIME_HISTORY, indexTimeHistory);
-    }
 
     @Override
     public int hashCode() {
