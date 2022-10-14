@@ -33,7 +33,7 @@ open class HyperlinkExtractor(
         val parsedUrls = document.select(selector0).mapNotNull { element ->
             element.attr("abs:href").takeIf { UrlUtils.isValidUrl(it) }
                 ?.let { Pair(it, normalizer?.invoke(it) ?: it) }
-                ?.let { Hyperlink(it.second, element.text(), i++, referer = page.url, href = it.first) }
+                ?.let { Hyperlink(it.second, element.text(), i++, referrer = page.url, href = it.first) }
         }
         parsedUrls.toCollection(fetchUrls)
 

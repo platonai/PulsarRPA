@@ -27,7 +27,7 @@ class TestHyperlinkExtractors: TestBase() {
             val href = it.href
             assertNotNull(href)
             assertTrue { asin in href }
-            assertTrue { it.referer == portalUrl }
+            assertTrue { it.referrer == portalUrl }
         }
     }
 
@@ -47,7 +47,7 @@ class TestHyperlinkExtractors: TestBase() {
         tailLinks.forEach {
             val asin = AmazonUrls.findAsin(it.url) ?: "not-asin"
             assertTrue { asin in it.url }
-            assertEquals(fatLink.url, it.referer)
+            assertEquals(fatLink.url, it.referrer)
         }
     }
 }

@@ -13,7 +13,7 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
     companion object {
 
         fun createPageShell(normUrl: NormUrl): WebPage {
-            val referer = normUrl.detail?.referer ?: normUrl.options.referrer
+            val referer = normUrl.detail?.referrer ?: normUrl.options.referrer
             return createPageShell(normUrl.spec, normUrl.options, normUrl.hrefSpec, referer)
         }
 

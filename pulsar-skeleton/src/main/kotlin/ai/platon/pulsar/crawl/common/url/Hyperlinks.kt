@@ -133,7 +133,7 @@ open class CompletableHyperlink<T>(
     /**
      * The url of the referer page
      * */
-    override var referer: String? = null,
+    override var referrer: String? = null,
     /**
      * The url arguments
      * */

@@ -243,13 +243,19 @@ inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, 
 }
 
 @JvmOverloads
-fun Element.selectHyperlinks(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
-    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+fun Element.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
+    val cssQuery = appendSelectorIfMissing(query, "a")
 
-    return select(cssQuery, offset, limit).mapNotNull {
-        it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
-            ?.let { Hyperlink(it.absUrl("href"), it.cleanText, referer = baseUri()) }
-    }
+//    return select(cssQuery, offset, limit).mapNotNull {
+//        it.takeIf { UrlUtils.isStandard(it.absUrl("href")) }
+//            ?.let { Hyperlink(it.absUrl("href"), it.cleanText, referer = baseUri()) }
+
+
+    return select(cssQuery, offset, limit).asSequence()
+        .map { it to it.absUrl("href") }
+        .filter { UrlUtils.isStandard(it.second) }
+        .map { Hyperlink(it.second, it.first.cleanText, referrer = it.first.baseUri()) }
+        .toList()
 }
 
 fun Element.selectAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {

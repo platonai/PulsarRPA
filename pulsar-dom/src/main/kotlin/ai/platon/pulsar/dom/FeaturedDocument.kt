@@ -19,7 +19,9 @@ import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 import java.awt.Dimension
 import java.nio.file.Path
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.NoSuchElementException
 
 /**
  * The featured document.
@@ -139,27 +141,55 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun selectFirst(query: String): Element {
-        return document.selectFirstOrNull(query)?:throw NoSuchElementException()
+        return document.selectFirstOrNull(query) ?: throw NoSuchElementException("No element matching $query")
     }
 
-    fun <T> selectFirst(query: String, extractor: (Element) -> T): T {
-        return document.selectFirstOrNull(query)?.let { extractor(it) }?:throw NoSuchElementException()
+    fun <T> selectFirst(query: String, transformer: (Element) -> T): T {
+        return document.selectFirstOrNull(query)?.let { transformer(it) } ?: throw NoSuchElementException("No element matching $query")
     }
 
     fun selectFirstOrNull(query: String): Element? {
         return document.selectFirstOrNull(query)
     }
 
-    fun <T> selectFirstOrNull(query: String, extractor: (Element) -> T): T? {
-        return document.selectFirstOrNull(query)?.let { extractor(it) }
+    fun <T> selectFirstOrNull(query: String, transformer: (Element) -> T): T? {
+        return document.selectFirstOrNull(query)?.let { transformer(it) }
     }
 
+    /**
+     * Return the first element, if no element matches the query, return an Optional object.
+     * */
+    fun selectFirstOptional(query: String): Optional<Element> {
+        return Optional.ofNullable(document.selectFirstOrNull(query))
+    }
+
+    /**
+     * Return the first element, if no element matches the query, return an Optional object.
+     * */
+    fun <T> selectFirstOptional(query: String, transformer: (Element) -> T): Optional<T> {
+        return Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
+    }
+
+    @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query)"))
     fun first(query: String): Element? {
         return document.selectFirstOrNull(query)
     }
 
-    fun <T> first(query: String, extractor: (Element) -> T): T? {
-        return document.selectFirstOrNull(query)?.let { extractor(it) }
+    @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query, transformer)"))
+    fun <T> first(query: String, transformer: (Element) -> T): T? {
+        return document.selectFirstOrNull(query)?.let { transformer(it) }
+    }
+
+    fun firstText(query: String): String {
+        return firstTextOrNull(query) ?: throw NoSuchElementException("No element matching $query")
+    }
+
+    fun firstTextOrNull(query: String): String? {
+        return document.selectFirstOrNull(query)?.text()
+    }
+
+    fun firstTextOptional(query: String): Optional<String> {
+        return Optional.ofNullable(firstTextOrNull(query))
     }
 
     fun getFeature(key: Int) = document.getFeature(key)

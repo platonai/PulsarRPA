@@ -33,6 +33,7 @@ open class BrowserSettings(
         /**
          * Specify the browser type for all fetches.
          * */
+        @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
             return BrowserSettings
@@ -44,6 +45,7 @@ open class BrowserSettings(
          * The system adjusts its behavior according to different network conditions
          * to obtain the best data quality and data collection speed.
          * */
+        @JvmStatic
         fun withGoodNetwork(): Companion {
             return BrowserSettings
         }
@@ -54,6 +56,7 @@ open class BrowserSettings(
          * The system adjusts its behavior according to different network conditions
          * to obtain the best data quality and data collection speed.
          * */
+        @JvmStatic
         fun withWorseNetwork(): Companion {
             InteractSettings.worseNetSettings.overrideSystemProperties()
             return BrowserSettings
@@ -65,6 +68,7 @@ open class BrowserSettings(
          * The system adjusts its behavior according to different network conditions
          * to obtain the best data quality and data collection speed.
          * */
+        @JvmStatic
         fun withWorstNetwork(): Companion {
             InteractSettings.worstNetSettings.overrideSystemProperties()
             return BrowserSettings
@@ -73,6 +77,7 @@ open class BrowserSettings(
         /**
          * Launch the browser in GUI mode.
          * */
+        @JvmStatic
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
                 System.err.println("GUI is not available")
@@ -92,6 +97,7 @@ open class BrowserSettings(
         /**
          * Launch the browser in headless mode.
          * */
+        @JvmStatic
         fun headless(): Companion {
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
@@ -106,6 +112,7 @@ open class BrowserSettings(
         /**
          * Launch the browser in supervised mode.
          * */
+        @JvmStatic
         fun supervised(): Companion {
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
 
@@ -116,6 +123,7 @@ open class BrowserSettings(
          * Tell the system to work with single page application.
          * To collect SPA data, the execution needs to have no timeout limit.
          * */
+        @JvmStatic
         fun withSPA(): Companion {
             System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
             System.setProperty(BROWSER_SPA_MODE, "true")
@@ -126,6 +134,7 @@ open class BrowserSettings(
          * Enable url blocking. If url blocking is enabled and the blocking rules are set,
          * resources matching the rules will be blocked by the browser.
          * */
+        @JvmStatic
         fun enableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
             return BrowserSettings
@@ -134,6 +143,7 @@ open class BrowserSettings(
         /**
          * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
          * */
+        @JvmStatic
         fun disableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "false")
             return BrowserSettings
@@ -142,6 +152,7 @@ open class BrowserSettings(
         /**
          * Block all images.
          * */
+        @JvmStatic
         fun blockImages(): Companion {
             // enableUrlBlocking()
             return BrowserSettings
@@ -153,6 +164,7 @@ open class BrowserSettings(
          * Inappropriate user agent overriding will be detected by the target website and
          * the visits will be blocked.
          * */
+        @JvmStatic
         fun enableUserAgentOverriding(): Companion {
             System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
             return BrowserSettings
@@ -164,16 +176,19 @@ open class BrowserSettings(
          * Inappropriate user agent overriding will be detected by the target website and
          * the visits will be blocked.
          * */
+        @JvmStatic
         fun disableUserAgentOverriding(): Companion {
             System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
             return BrowserSettings
         }
 
+        @JvmStatic
         fun enableProxy(): Companion {
             ProxyPoolManager.enableProxy()
             return this
         }
 
+        @JvmStatic
         fun disableProxy(): Companion {
             ProxyPoolManager.disableProxy()
             return this

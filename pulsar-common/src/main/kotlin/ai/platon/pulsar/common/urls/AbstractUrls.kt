@@ -11,14 +11,14 @@ import java.time.Instant
 abstract class AbstractUrl(
     override var url: String,
     override var args: String? = null,
-    override var referer: String? = null,
+    override var referrer: String? = null,
     override var href: String? = null,
     override var priority: Int = 0
 ) : ComparableUrlAware {
 
     override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
 
-    override val isStandard get() = UrlUtils.isValidUrl(url)
+    override val isStandard get() = UrlUtils.isStandard(url)
 
     @get:Throws(MalformedURLException::class)
     override val toURL get() = URL(url)

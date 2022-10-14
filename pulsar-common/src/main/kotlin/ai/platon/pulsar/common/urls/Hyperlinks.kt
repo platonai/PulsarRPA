@@ -63,7 +63,7 @@ open class Hyperlink(
     /**
      * The url of the referer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The additional url arguments
      * */
@@ -72,14 +72,14 @@ open class Hyperlink(
      * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
     href: String? = null
-) : AbstractUrl(url, args, referer, href) {
+) : AbstractUrl(url, args, referrer, href) {
     var depth: Int = 0
 
-    constructor(url: UrlAware) : this(url.url, "", 0, url.referer, url.args, href = url.href)
-    constructor(url: Hyperlink) : this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
+    constructor(url: UrlAware) : this(url.url, "", 0, url.referrer, url.args, href = url.href)
+    constructor(url: Hyperlink) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
     constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
 
-    fun data() = HyperlinkDatum(url, text, order, referer = referer, args = args, href = href, true, 0)
+    fun data() = HyperlinkDatum(url, text, order, referer = referrer, args = args, href = href, true, 0)
 }
 
 open class StatefulHyperlink(
@@ -261,7 +261,7 @@ open class CrawlableFatLink(
             return false
         }
 
-        require(url.referer == this.url)
+        require(url.referrer == this.url)
         url.modifiedAt = Instant.now()
         url.status = status
         modifiedAt = Instant.now()
@@ -284,6 +284,6 @@ object Hyperlinks {
      * */
     fun toHyperlink(url: UrlAware): Hyperlink {
         return if (url is Hyperlink) url
-        else Hyperlink(url.url, args = url.args, referer = url.referer, href = url.href)
+        else Hyperlink(url.url, args = url.args, referrer = url.referrer, href = url.href)
     }
 }
