@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.event.WebPageHandler
 import ai.platon.pulsar.crawl.event.impl.DefaultPageEvent
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
 import java.net.MalformedURLException
@@ -101,18 +102,18 @@ open class ParsableHyperlink(
      * The url of this hyperlink
      * */
     url: String,
-    val onParse: (WebPage, Document) -> Any?
+    val onParse: (WebPage, FeaturedDocument) -> Any?
 ): Hyperlink(url, args = "-parse"), ListenableUrl {
 
     /**
      * Java compatible constructor
      * */
-    constructor(url: String, onParse: BiConsumer<WebPage, Document>):
+    constructor(url: String, onParse: BiConsumer<WebPage, FeaturedDocument>):
             this(url, { page, document -> onParse.accept(page, document) })
 
     override var event: PageEvent = DefaultPageEvent().also {
         it.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
-            onParse(page, document.document)
+            onParse(page, document)
         }
     }
 }

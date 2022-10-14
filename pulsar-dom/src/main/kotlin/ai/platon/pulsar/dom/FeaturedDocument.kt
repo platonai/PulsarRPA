@@ -4,12 +4,14 @@ import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
+import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.forEach
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.dom.select.selectFirstOrNull
+import ai.platon.pulsar.dom.select.selectHyperlinks
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -18,6 +20,7 @@ import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 import java.awt.Dimension
+import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -25,6 +28,7 @@ import kotlin.NoSuchElementException
 
 /**
  * The featured document.
+ *
  * A featured document have all it's features calculated
  * */
 open class FeaturedDocument(val document: Document) {
@@ -63,9 +67,9 @@ open class FeaturedDocument(val document: Document) {
 
     val documentOrNull get() = document.takeIf { isNotInternal() }
 
-    constructor(baseUri: String): this(Document(baseUri))
+    constructor(baseUri: String) : this(Document(baseUri))
 
-    constructor(other: FeaturedDocument): this(other.unbox())
+    constructor(other: FeaturedDocument) : this(other.unbox())
 
     init {
         initialize()
@@ -87,22 +91,38 @@ open class FeaturedDocument(val document: Document) {
     val location get() = document.location()
 
     val head: Element
-        get() = document.head() ?: throw RuntimeException("Bad document, head tag is missing")
+        get() = document.head()
 
     val body: Element
-        get() = document.body() ?: throw RuntimeException("Bad document, body tag is missing")
+        get() = document.body()
 
     val text: String get() = document.text()
 
+    val ownText: String get() = document.ownText()
+
+    val wholeText: String get() = document.wholeText()
+
     val html: String get() = document.html()
+
+    val outerHtml: String get() = document.outerHtml()
+
+    val charset: Charset get() = document.charset()
+
+    val nodeName: String get() = document.nodeName()
+
+    val data: String get() = document.data()
+
+    val id: String get() = document.id()
+
+    val className: String get() = document.className()
 
     val prettyHtml: String
         get() {
             document.outputSettings().prettyPrint()
             return document.html()
-                    .replace("s-features", "\n\t\t\ts-features")
-                    .replace("s-named-features", "\n\t\t\ts-named-features")
-                    .replace("s-caption", "\n\t\t\ts-caption")
+                .replace("s-features", "\n\t\t\ts-features")
+                .replace("s-named-features", "\n\t\t\ts-named-features")
+                .replace("s-caption", "\n\t\t\ts-caption")
         }
 
     var features: RealVector
@@ -145,7 +165,8 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun <T> selectFirst(query: String, transformer: (Element) -> T): T {
-        return document.selectFirstOrNull(query)?.let { transformer(it) } ?: throw NoSuchElementException("No element matching $query")
+        return document.selectFirstOrNull(query)?.let { transformer(it) }
+            ?: throw NoSuchElementException("No element matching $query")
     }
 
     fun selectFirstOrNull(query: String): Element? {
@@ -170,6 +191,11 @@ open class FeaturedDocument(val document: Document) {
         return Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
     }
 
+    @JvmOverloads
+    fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
+        return document.selectHyperlinks(query, offset, limit)
+    }
+
     @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query)"))
     fun first(query: String): Element? {
         return document.selectFirstOrNull(query)
@@ -190,6 +216,18 @@ open class FeaturedDocument(val document: Document) {
 
     fun firstTextOptional(query: String): Optional<String> {
         return Optional.ofNullable(firstTextOrNull(query))
+    }
+
+    fun firstAttribute(query: String, attrName: String, defaultValue: String = ""): String {
+        return firstAttributeOrNull(query, attrName) ?: defaultValue
+    }
+
+    fun firstAttributeOrNull(query: String, attrName: String): String? {
+        return selectFirstOrNull(query)?.attr(attrName)
+    }
+
+    fun firstAttributeOptional(query: String, attrName: String): Optional<String> {
+        return Optional.ofNullable(firstAttributeOrNull(query, attrName))
     }
 
     fun getFeature(key: Int) = document.getFeature(key)

@@ -12,6 +12,8 @@ import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
+import java.util.*
+import kotlin.NoSuchElementException
 
 /**
  * In-box syntax, cases:
@@ -164,18 +166,18 @@ fun Node.all(predicate: (Node) -> Boolean): Boolean {
  * Notice: do not provide default value for offset, it overrides the default version in Node
  * offset is 1 based
  * */
-fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elements {
+fun Node.select(query: String, offset: Int, limit: Int = Int.MAX_VALUE): Elements {
     if (this !is Element) {
         return Elements()
     }
 
-    return PowerSelector.select(cssQuery, this, offset, limit)
+    return PowerSelector.select(query, this, offset, limit)
 }
 
-fun <O> Node.select(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
                     transformer: (Element) -> O): List<O> {
     return if (this is Element) {
-        PowerSelector.select(cssQuery, this, offset, limit, transformer)
+        PowerSelector.select(query, this, offset, limit, transformer)
     } else listOf()
 }
 
@@ -205,32 +207,44 @@ inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destinati
     }
 }
 
-fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    return select(cssQuery, offset, limit)
+fun Node.select2(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+    return select(query, offset, limit)
 }
 
-fun Node.selectFirstOrNull(cssQuery: String): Element? {
-    return (this as? Element)?.let { PowerSelector.selectFirst(cssQuery, it) }
+fun Node.selectFirstOrNull(query: String): Element? {
+    return (this as? Element)?.let { PowerSelector.selectFirst(query, it) }
 }
 
-fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O? {
-    return selectFirstOrNull(cssQuery)?.let(transformer)
+fun <O> Node.selectFirstOrNull(query: String, transformer: (Element) -> O): O? {
+    return selectFirstOrNull(query)?.let(transformer)
 }
 
-fun Node.firstText(cssQuery: String, defaultValue: String = ""): String {
-    return selectFirstOrNull(cssQuery)?.text()?:defaultValue
+fun Node.selectFirstOptional(query: String): Optional<Element> {
+    return Optional.ofNullable(selectFirstOrNull(query))
 }
 
-fun Node.firstTextOrNull(cssQuery: String): String? {
-    return selectFirstOrNull(cssQuery)?.text()
+fun Node.firstText(query: String, defaultValue: String = ""): String {
+    return firstTextOrNull(query) ?: defaultValue
 }
 
-fun Node.firstAttribute(cssQuery: String, attrName: String, defaultValue: String = ""): String {
-    return selectFirstOrNull(cssQuery)?.attr(attrName)?.takeIf { it.isNotEmpty() }?:defaultValue
+fun Node.firstTextOrNull(query: String): String? {
+    return selectFirstOrNull(query)?.text()
 }
 
-fun Node.firstAttributeOrNull(cssQuery: String, attrName: String): String? {
-    return selectFirstOrNull(cssQuery)?.attr(attrName)
+fun Node.firstTextOptional(query: String): Optional<String> {
+    return Optional.ofNullable(firstTextOrNull(query))
+}
+
+fun Node.firstAttribute(query: String, attrName: String, defaultValue: String = ""): String {
+    return firstAttributeOrNull(query, attrName) ?: defaultValue
+}
+
+fun Node.firstAttributeOrNull(query: String, attrName: String): String? {
+    return selectFirstOrNull(query)?.attr(attrName)
+}
+
+fun Node.firstAttributeOptional(query: String, attrName: String): Optional<String> {
+    return Optional.ofNullable(firstAttributeOrNull(query, attrName))
 }
 
 /**
@@ -258,17 +272,17 @@ fun Element.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MA
         .toList()
 }
 
-fun Element.selectAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
-    return getAnchors(restrictCss, offset, limit)
+fun Element.selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
+    return getAnchors(query, offset, limit)
 }
 
-fun Element.selectImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
-    return getImages(restrictCss, offset, limit)
+fun Element.selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+    return getImages(query, offset, limit)
 }
 
 @Deprecated("Use selectAnchors instead")
-fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
-    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+fun Element.getAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
+    val cssQuery = appendSelectorIfMissing(query, "a")
     return select(cssQuery, offset, limit).mapNotNull {
         it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
                 ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
@@ -276,8 +290,8 @@ fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MA
 }
 
 @Deprecated("Use selectImages instead")
-fun Element.getImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
-    val cssQuery = appendSelectorIfMissing(restrictCss, "img")
+fun Element.getImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+    val cssQuery = appendSelectorIfMissing(query, "img")
     return select(cssQuery, offset, limit) {
         it.absUrl("src").takeIf { UrlUtils.isValidUrl(it) }
     }.filterNotNull()

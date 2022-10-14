@@ -8,11 +8,8 @@ import ai.platon.pulsar.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.rpa.DefaultBrowseRPA
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.select.selectHyperlinks
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.driver.cdt.ChromeDevtoolsDriver
 import ai.platon.pulsar.session.PulsarSession
-import org.jsoup.nodes.Document
 
 class WalmartRPA(
     val session: PulsarSession = PulsarContexts.createSession()
@@ -55,7 +52,7 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
 
     private val rpa = WalmartRPA(session)
 
-    private val parseHandler = { _: WebPage, document: Document -> }
+    private val parseHandler = { _: WebPage, document: FeaturedDocument -> }
 
     fun scrapeOutPages(portalUrl: String, args: String) {
         val options = rpa.options(args)
@@ -64,7 +61,7 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
 
         val document = session.loadDocument(portalUrl, options)
 
-        val links = document.document.selectHyperlinks(options.outLinkSelector)
+        val links = document.selectHyperlinks(options.outLinkSelector)
             .asSequence()
             .take(10000)
             .distinct()
