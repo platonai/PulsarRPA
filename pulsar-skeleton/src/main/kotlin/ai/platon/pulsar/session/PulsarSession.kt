@@ -148,11 +148,15 @@ interface PulsarSession : AutoCloseable {
     /**
      * Normalize a url.
      * */
-    fun normalize(url: String, args: String? = null): NormUrl
+    fun normalize(url: String): NormUrl
     /**
      * Normalize a url.
      * */
-    fun normalize(url: String, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, args: String, toItemOption: Boolean = false): NormUrl
+    /**
+     * Normalize a url.
+     * */
+    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
     /**
      * Normalize a url.
      * */
@@ -160,16 +164,27 @@ interface PulsarSession : AutoCloseable {
     /**
      * Normalize urls.
      * */
-    fun normalize(
-        urls: Iterable<String>,
-        options: LoadOptions = options(),
-        toItemOption: Boolean = false
-    ): List<NormUrl>
-
+    fun normalize(urls: Iterable<String>): List<NormUrl>
+    /**
+     * Normalize urls.
+     * */
+    fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean = false): List<NormUrl>
+    /**
+     * Normalize urls.
+     * */
+    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
     /**
      * Normalize a url.
      * */
-    fun normalize(url: UrlAware, options: LoadOptions = options(), toItemOption: Boolean = false): NormUrl
+    fun normalize(url: UrlAware): NormUrl
+    /**
+     * Normalize a url.
+     * */
+    fun normalize(url: UrlAware, args: String, toItemOption: Boolean = false): NormUrl
+    /**
+     * Normalize a url.
+     * */
+    fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
     /**
      * Normalize a url.
      * */
@@ -177,11 +192,26 @@ interface PulsarSession : AutoCloseable {
     /**
      * Normalize urls.
      * */
-    fun normalize(
-        urls: Collection<UrlAware>,
-        options: LoadOptions = options(),
-        toItemOption: Boolean = false
-    ): List<NormUrl>
+    fun normalize(urls: Collection<UrlAware>): List<NormUrl>
+    /**
+     * Normalize urls, remove invalid ones
+     *
+     * @param urls The urls to normalize
+     * @param options The LoadOptions applied to each url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return All normalized urls, all invalid input urls are removed
+     * */
+    fun normalize(urls: Collection<UrlAware>, args: String, toItemOption: Boolean = false): List<NormUrl>
+
+    /**
+     * Normalize urls, remove invalid ones
+     *
+     * @param urls The urls to normalize
+     * @param options The LoadOptions applied to each url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return All normalized urls, all invalid input urls are removed
+     * */
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
 
     /**
      * Inject a url as a seed to fetch. Injection is usually used in Nutch style crawls
@@ -256,6 +286,25 @@ interface PulsarSession : AutoCloseable {
      * @param args The load arguments
      * @return The webpage loaded or NIL
      */
+    fun load(url: String): WebPage
+
+    /**
+     * Load a url with specified arguments.
+     *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * Other fetch conditions can be specified by load arguments:
+     *
+     * 1. expiration
+     * 2. page size requirement
+     * 3. fields requirement
+     * 4. other
+     *
+     * @param url The url to load
+     * @param args The load arguments
+     * @return The webpage loaded or NIL
+     */
     fun load(url: String, args: String): WebPage
 
     /**
@@ -275,7 +324,19 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The webpage loaded or NIL
      */
-    fun load(url: String, options: LoadOptions = options()): WebPage
+    fun load(url: String, options: LoadOptions): WebPage
+
+    /**
+     * Load a url with the specified arguments.
+     *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param url  The url to load
+     * @param args The load arguments
+     * @return The webpage loaded or NIL
+     */
+    fun load(url: UrlAware): WebPage
 
     /**
      * Load a url with the specified arguments.
@@ -299,7 +360,7 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The webpage loaded or NIL
      */
-    fun load(url: UrlAware, options: LoadOptions = options()): WebPage
+    fun load(url: UrlAware, options: LoadOptions): WebPage
 
     /**
      * Load a normal url.
@@ -381,7 +442,67 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The webpage loaded or NIL
      */
-    fun loadAll(urls: Iterable<String>, options: LoadOptions = options()): List<WebPage>
+    fun loadAll(urls: Iterable<String>): List<WebPage>
+
+    /**
+     * Load all urls with specified options
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls    The urls to load
+     * @param options The load options
+     * @return The webpage loaded or NIL
+     */
+    fun loadAll(urls: Iterable<String>, args: String): List<WebPage>
+
+    /**
+     * Load all urls with specified options
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls    The urls to load
+     * @param options The load options
+     * @return The webpage loaded or NIL
+     */
+    fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage>
+
+    /**
+     * Load all urls with specified options
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls    The urls to load
+     * @param options The load options
+     * @return The webpage loaded or NIL
+     */
+    fun loadAll(urls: Collection<UrlAware>): List<WebPage>
+
+    /**
+     * Load all urls with specified options
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls    The urls to load
+     * @param options The load options
+     * @return The webpage loaded or NIL
+     */
+    fun loadAll(urls: Collection<UrlAware>, args: String): List<WebPage>
+
+    /**
+     * Load all urls with specified options
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls    The urls to load
+     * @param options The load options
+     * @return The webpage loaded or NIL
+     */
+    fun loadAll(urls: Collection<UrlAware>, options: LoadOptions): List<WebPage>
 
     /**
      * Load all normal urls with specified options
@@ -392,7 +513,55 @@ interface PulsarSession : AutoCloseable {
      * @param normUrls    The normal urls to load
      * @return The loaded webpages
      */
-    fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage>
+    fun loadAll(normUrls: List<NormUrl>): List<WebPage>
+
+    /**
+     * Load a normal url in java async style
+     *
+     * @param url     The url to load
+     * @return A completable future of webpage
+     */
+    fun loadAsync(url: String): CompletableFuture<WebPage>
+
+    /**
+     * Load a normal url in java async style
+     *
+     * @param url     The url to load
+     * @return A completable future of webpage
+     */
+    fun loadAsync(url: String, args: String): CompletableFuture<WebPage>
+
+    /**
+     * Load a normal url in java async style
+     *
+     * @param url     The url to load
+     * @return A completable future of webpage
+     */
+    fun loadAsync(url: String, options: LoadOptions): CompletableFuture<WebPage>
+
+    /**
+     * Load a normal url in java async style
+     *
+     * @param url     The url to load
+     * @return A completable future of webpage
+     */
+    fun loadAsync(url: UrlAware): CompletableFuture<WebPage>
+
+    /**
+     * Load a normal url in java async style
+     *
+     * @param url     The url to load
+     * @return A completable future of webpage
+     */
+    fun loadAsync(url: UrlAware, args: String): CompletableFuture<WebPage>
+
+    /**
+     * Load a normal url in java async style
+     *
+     * @param url     The url to load
+     * @return A completable future of webpage
+     */
+    fun loadAsync(url: UrlAware, options: LoadOptions): CompletableFuture<WebPage>
 
     /**
      * Load a normal url in java async style
@@ -411,7 +580,73 @@ interface PulsarSession : AutoCloseable {
      * @param urls The normal urls to load
      * @return The completable futures of webpages
      */
-    fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>>
+    fun loadAllAsync(urls: Iterable<String>): List<CompletableFuture<WebPage>>
+
+    /**
+     * Load all normal urls in java async style
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
+     */
+    fun loadAllAsync(urls: Iterable<String>, args: String): List<CompletableFuture<WebPage>>
+
+    /**
+     * Load all normal urls in java async style
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
+     */
+    fun loadAllAsync(urls: Iterable<String>, options: LoadOptions): List<CompletableFuture<WebPage>>
+
+    /**
+     * Load all normal urls in java async style
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
+     */
+    fun loadAllAsync(urls: Collection<UrlAware>): List<CompletableFuture<WebPage>>
+
+    /**
+     * Load all normal urls in java async style
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
+     */
+    fun loadAllAsync(urls: Collection<UrlAware>, args: String): List<CompletableFuture<WebPage>>
+
+    /**
+     * Load all normal urls in java async style
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
+     */
+    fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions): List<CompletableFuture<WebPage>>
+
+    /**
+     * Load all normal urls in java async style
+     *
+     * This method first checks each url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * @param urls The normal urls to load
+     * @return The completable futures of webpages
+     */
+    fun loadAllAsync(urls: List<NormUrl>): List<CompletableFuture<WebPage>>
 
     /**
      * Submit a url to the URL pool, the url will be processed in the crawl loop later
@@ -420,7 +655,25 @@ interface PulsarSession : AutoCloseable {
      * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
      */
-    fun submit(url: String, args: String? = null): PulsarSession
+    fun submit(url: String): PulsarSession
+
+    /**
+     * Submit a url to the URL pool, the url will be processed in the crawl loop later
+     *
+     * @param url The url to submit
+     * @param args The load arguments
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submit(url: String, args: String): PulsarSession
+
+    /**
+     * Submit a url to the URL pool, the url will be processed in the crawl loop later
+     *
+     * @param url The url to submit
+     * @param args The load arguments
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submit(url: String, options: LoadOptions): PulsarSession
 
     /**
      * Submit a url to the URL pool, the url will be processed in a crawl loop later
@@ -429,6 +682,17 @@ interface PulsarSession : AutoCloseable {
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: UrlAware): PulsarSession
+
+    /**
+     * Submit a url to the URL pool, the url will be processed in a crawl loop later
+     *
+     * @param url The url to submit
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submit(url: UrlAware, args: String): PulsarSession
+
+    // No such version, it's too complicated to handle events
+    // fun submit(url: UrlAware, options: LoadOptions): PulsarSession
 
     /**
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
@@ -451,9 +715,29 @@ interface PulsarSession : AutoCloseable {
      * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
      *
      * @param urls The urls to submit
+     * @param args The load arguments
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submitAll(urls: Iterable<String>, options: LoadOptions): PulsarSession
+
+    /**
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     *
+     * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
+
+    /**
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     *
+     * @param urls The urls to submit
+     * @return The [PulsarSession] itself to enabled chained operations
+     */
+    fun submitAll(urls: Collection<UrlAware>, args: String): PulsarSession
+
+    // No such version, it's too complicated to handle events
+    // fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -472,6 +756,15 @@ interface PulsarSession : AutoCloseable {
      * @return The loaded out pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = options()): List<WebPage>
+
+    /**
+     * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
+     *
+     * @param portalUrl The portal url from where to load pages
+     * @param args   The load arguments
+     * @return The loaded out pages
+     */
+    fun loadOutPagesAsync(portalUrl: String, args: String): List<CompletableFuture<WebPage>>
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
@@ -549,11 +842,18 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions = options()): WebPage
-
+    /**
+     * Parse a webpage into an HTML document.
+     */
+    fun parse(page: WebPage): FeaturedDocument
     /**
      * Parse a webpage into an HTML document.
      */
     fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into an HTML document
+     * */
+    fun loadDocument(url: String): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
      * */

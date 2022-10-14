@@ -102,7 +102,10 @@ abstract class AbstractPulsarSession(
         sessionConfig[name] = value
     }
 
-    override fun normalize(url: String, args: String?): NormUrl = context.normalize(url, options(args ?: ""))
+    override fun normalize(url: String) = normalize(url, "")
+
+    override fun normalize(url: String, args: String, toItemOption: Boolean) =
+        context.normalize(url, options(args), toItemOption)
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(url, options, toItemOption)
@@ -110,14 +113,29 @@ abstract class AbstractPulsarSession(
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean) =
         context.normalizeOrNull(url, options, toItemOption)
 
+    override fun normalize(urls: Iterable<String>) = normalize(urls, options(), false)
+
+    override fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean) =
+        normalize(urls, options(args), toItemOption)
+
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(urls, options, toItemOption)
+
+    override fun normalize(url: UrlAware) = normalize(url, options())
+
+    override fun normalize(url: UrlAware, args: String, toItemOption: Boolean) =
+        normalize(url, options(args), toItemOption)
 
     override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(url, options, toItemOption)
 
     override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean) =
         context.normalizeOrNull(url, options, toItemOption)
+
+    override fun normalize(urls: Collection<UrlAware>) = normalize(urls, options(), false)
+
+    override fun normalize(urls: Collection<UrlAware>, args: String, toItemOption: Boolean) =
+        normalize(urls, options(args), toItemOption)
 
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean) =
         context.normalize(urls, options, toItemOption)
@@ -134,9 +152,13 @@ abstract class AbstractPulsarSession(
 
     override fun open(url: String): WebPage = load(url, options("-refresh"))
 
+    override fun load(url: String): WebPage = load(url, options())
+
     override fun load(url: String, args: String): WebPage = load(url, options(args))
 
     override fun load(url: String, options: LoadOptions): WebPage = load(normalize(url, options))
+
+    override fun load(url: UrlAware): WebPage = load(normalize(url, options()))
 
     override fun load(url: UrlAware, args: String): WebPage = load(normalize(url, options(args)))
 
@@ -231,26 +253,64 @@ abstract class AbstractPulsarSession(
         return null
     }
 
-    override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
-        val normUrls = normalize(urls, options)
-        return context.loadAll(normUrls)
-    }
+    override fun loadAll(urls: Iterable<String>) = loadAll(urls, options())
 
-    override fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage> {
-        return context.loadAll(normUrls)
-    }
+    override fun loadAll(urls: Iterable<String>, args: String) = loadAll(urls, options(args))
 
-    override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
-        return context.loadAsync(url)
-    }
+    override fun loadAll(urls: Iterable<String>, options: LoadOptions) = loadAll(normalize(urls, options))
 
-    override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
-        return context.loadAllAsync(urls)
-    }
+    override fun loadAll(urls: Collection<UrlAware>) = loadAll(urls, options())
 
-    override fun submit(url: String, args: String?) = submit(PlainUrl(url, args))
+    override fun loadAll(urls: Collection<UrlAware>, args: String) = loadAll(urls, options(args))
+
+    override fun loadAll(urls: Collection<UrlAware>, options: LoadOptions) = loadAll(normalize(urls, options))
+
+    override fun loadAll(normUrls: List<NormUrl>) = context.loadAll(normUrls)
+
+    override fun loadAsync(url: String) = loadAsync(normalize(url))
+
+    override fun loadAsync(url: String, args: String) = loadAsync(normalize(url, args))
+
+    override fun loadAsync(url: String, options: LoadOptions) = loadAsync(normalize(url, options))
+
+    override fun loadAsync(url: UrlAware) = loadAsync(normalize(url))
+
+    override fun loadAsync(url: UrlAware, args: String) = loadAsync(normalize(url, args))
+
+    override fun loadAsync(url: UrlAware, options: LoadOptions) = loadAsync(normalize(url, options))
+
+    override fun loadAsync(url: NormUrl) = context.loadAsync(url)
+
+    override fun loadAllAsync(urls: Iterable<String>) = loadAllAsync(normalize(urls))
+
+    override fun loadAllAsync(urls: Iterable<String>, args: String) = loadAllAsync(normalize(urls, args))
+
+    override fun loadAllAsync(urls: Iterable<String>, options: LoadOptions) = loadAllAsync(normalize(urls, options))
+
+    override fun loadAllAsync(urls: Collection<UrlAware>) = loadAllAsync(normalize(urls))
+
+    override fun loadAllAsync(urls: Collection<UrlAware>, args: String) = loadAllAsync(normalize(urls, args))
+
+    override fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions) = loadAllAsync(normalize(urls, options))
+
+    override fun loadAllAsync(urls: List<NormUrl>) = context.loadAllAsync(urls)
+
+    override fun submit(url: String) = submit(PlainUrl(url))
+
+    override fun submit(url: String, args: String) = submit(PlainUrl(url, args))
+
+    override fun submit(url: String, options: LoadOptions): PulsarSession {
+        context.submit(ListenableHyperlink(url, args = options.toString(), event = options.event))
+        return this
+    }
 
     override fun submit(url: UrlAware): AbstractPulsarSession {
+        context.submit(url)
+        return this
+    }
+
+    override fun submit(url: UrlAware, args: String): PulsarSession {
+        url.args = LoadOptions.normalize(url.args, args)
         context.submit(url)
         return this
     }
@@ -259,7 +319,16 @@ abstract class AbstractPulsarSession(
 
     override fun submitAll(urls: Iterable<String>, args: String) = submitAll(urls.map { PlainUrl(it, args) })
 
+    override fun submitAll(urls: Iterable<String>, options: LoadOptions) =
+        submitAll(urls.map { ListenableHyperlink(it, args = options.toString(), event = options.event) })
+
     override fun submitAll(urls: Collection<UrlAware>): AbstractPulsarSession {
+        context.submitAll(urls)
+        return this
+    }
+
+    override fun submitAll(urls: Collection<UrlAware>, args: String): AbstractPulsarSession {
+        urls.forEach { it.args = LoadOptions.normalize(it.args, args) }
         context.submitAll(urls)
         return this
     }
@@ -305,6 +374,8 @@ abstract class AbstractPulsarSession(
         return this
     }
 
+    override fun loadOutPagesAsync(portalUrl: String, args: String) = loadOutPagesAsync(portalUrl, options(args))
+
     override fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>> {
         val normUrl = normalize(portalUrl, options)
         val opts = normUrl.options
@@ -338,7 +409,11 @@ abstract class AbstractPulsarSession(
         return loadDeferred(url, options)
     }
 
+    override fun parse(page: WebPage) = parse0(page, false)
+
     override fun parse(page: WebPage, noCache: Boolean) = parse0(page, noCache)
+
+    override fun loadDocument(url: String) = loadDocument(url, options())
 
     override fun loadDocument(url: String, args: String) = loadDocument(url, options(args))
 

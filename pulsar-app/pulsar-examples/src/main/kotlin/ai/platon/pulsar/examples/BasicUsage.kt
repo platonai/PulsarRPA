@@ -31,11 +31,11 @@ fun main() {
 
     println("== document")
     println(document.title)
-    println(document.selectFirst("title").text())
+    println(document.selectFirstOrNull("title")?.text())
 
     println("== document2")
     println(document2.title)
-    println(document2.selectFirst("title").text())
+    println(document2.selectFirstOrNull("title")?.text())
 
     println("== pages")
     println(pages.map { it.url })

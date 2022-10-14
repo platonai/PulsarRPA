@@ -18,13 +18,10 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
-import org.jsoup.select.NodeVisitor
 import java.awt.Dimension
-import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.NoSuchElementException
 
 /**
  * The featured document.
@@ -39,7 +36,7 @@ open class FeaturedDocument(val document: Document) {
         var secondaryGridDimension = Dimension(5, 5)
         var densityUnitArea = 400 * 400
 
-        val globalNumDocuments = AtomicInteger()
+        val sequencer = AtomicInteger()
 
         val NIL = FeaturedDocument(nilDocument)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -75,9 +72,9 @@ open class FeaturedDocument(val document: Document) {
         initialize()
     }
 
-    var title: String
-        get() = document.title()
-        set(value) = document.title(value)
+    val sequence get() = sequencer.incrementAndGet()
+
+    val title get() = document.title()
 
     /**
      * Get the URL this Document was parsed from.
@@ -90,31 +87,29 @@ open class FeaturedDocument(val document: Document) {
      */
     val location get() = document.location()
 
-    val head: Element
-        get() = document.head()
+    val head: Element get() = document.head()
 
-    val body: Element
-        get() = document.body()
+    val body: Element get() = document.body()
 
-    val text: String get() = document.text()
+    val text get() = document.text()
 
-    val ownText: String get() = document.ownText()
+    val ownText get() = document.ownText()
 
-    val wholeText: String get() = document.wholeText()
+    val wholeText get() = document.wholeText()
 
-    val html: String get() = document.html()
+    val html get() = document.html()
 
-    val outerHtml: String get() = document.outerHtml()
+    val outerHtml get() = document.outerHtml()
 
-    val charset: Charset get() = document.charset()
+    val charset get() = document.charset()
 
-    val nodeName: String get() = document.nodeName()
+    val nodeName get() = document.nodeName()
 
-    val data: String get() = document.data()
+    val data get() = document.data()
 
-    val id: String get() = document.id()
+    val id get() = document.id()
 
-    val className: String get() = document.className()
+    val className get() = document.className()
 
     val prettyHtml: String
         get() {
@@ -140,6 +135,17 @@ open class FeaturedDocument(val document: Document) {
     fun isNotInternal() = !isInternal()
 
     fun createElement(tagName: String) = document.createElement(tagName)
+
+    /**
+     * For some site without a <title> tag inside a <head> tag
+     * */
+    fun guessTitle(): String {
+        return title.takeUnless { it.isBlank() }
+            ?: firstTextOrNull("title")
+            ?: firstTextOrNull("h1")
+            ?: firstTextOrNull("h2")
+            ?: ""
+    }
 
     fun absoluteLinks() {
         document.forEachElement {
@@ -292,7 +298,7 @@ open class FeaturedDocument(val document: Document) {
             FeatureCalculatorFactory.calculator.calculate(document)
             require(features.isNotEmpty)
 
-            globalNumDocuments.incrementAndGet()
+            sequencer.incrementAndGet()
 
             document.unitArea = densityUnitArea
             document.primaryGrid = primaryGridDimension

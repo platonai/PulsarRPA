@@ -87,7 +87,7 @@ interface PulsarContext: AutoCloseable {
      * */
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
 
-    fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl?
+    fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean = false): NormUrl?
 
     /**
      * Normalize urls, remove invalid ones
@@ -107,7 +107,7 @@ interface PulsarContext: AutoCloseable {
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormUrl
 
-    fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl?
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean = false): NormUrl?
 
     /**
      * Normalize urls, remove invalid ones

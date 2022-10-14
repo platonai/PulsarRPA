@@ -68,6 +68,15 @@ class TestCases {
     )
 
     @Test
+    fun testOptional() {
+        val s1 = Optional.ofNullable("hello")
+        val s2 = Optional.ofNullable<String>(null)
+
+        assertEquals("hello", s1.get())
+        assertEquals("(null)", s2.orElse("(null)"))
+    }
+
+    @Test
     fun testReflection() {
         val clazz = SingleFiledLines::class
         assertEquals(1, clazz.constructors.size)

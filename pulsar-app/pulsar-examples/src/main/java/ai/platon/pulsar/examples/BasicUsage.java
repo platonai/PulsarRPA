@@ -5,6 +5,7 @@ import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.session.PulsarSession;
 import com.google.gson.Gson;
+import org.jsoup.nodes.Element;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,11 +41,11 @@ public class BasicUsage {
 
         System.out.println("== document");
         System.out.println(document.getTitle());
-        System.out.println(document.selectFirst("title").text());
+        System.out.println(document.selectFirstOptional("title").map(Element::text));
 
         System.out.println("== document2");
         System.out.println(document2.getTitle());
-        System.out.println(document2.selectFirst("title").text());
+        System.out.println(document2.selectFirstOptional("title").map(Element::text));
 
         System.out.println("== pages");
         System.out.println(pages.stream().map(WebPage::getUrl).collect(Collectors.toList()));
