@@ -69,7 +69,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 fun main() {
     val context = PulsarContexts.create()
 
-    val parseHandler = { _: WebPage, document: Document ->
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // use the document
         // ...
         // and then extract further hyperlinks
@@ -238,9 +238,9 @@ val price = document.selectFirst('.price').text()
 fun main() {
     val context = PulsarContexts.create()
 
-    val parseHandler = { _: WebPage, document: Document ->
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // do something wonderful with the document
-        println(document.title() + "\t|\t" + document.baseUri())
+        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
     }
     val urls = LinkExtractors.fromResource("seeds.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
@@ -258,9 +258,9 @@ fun main() {
 ----
 public class ContinuousCrawler {
 
-    private static void onParse(WebPage page, Document document) {
+    private static void onParse(WebPage page, FeaturedDocument document) {
         // do something wonderful with the document
-        System.out.println(document.title() + "\t|\t" + document.baseUri());
+        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
     }
 
     public static void main(String[] args) {

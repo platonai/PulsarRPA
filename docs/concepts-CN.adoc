@@ -176,9 +176,10 @@ ParsableHyperlink 是在连续爬虫作业中执行获取-解析任务的一种�
 
 [source,kotlin]
 ----
-val parseHandler = { _: WebPage, document: Document ->
+val parseHandler = { _: WebPage, document: FeaturedDocument ->
     // do something wonderful with the document
 }
+
 val urls = LinkExtractors.fromResource("seeds.txt")
     .map { ParsableHyperlink(it, parseHandler) }
 PulsarContexts.create().submitAll(urls).await()

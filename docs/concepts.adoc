@@ -175,9 +175,10 @@ A ParsableHyperlink is a convenient abstraction to do fetch-and-parse tasks in c
 
 [source,kotlin]
 ----
-val parseHandler = { _: WebPage, document: Document ->
+val parseHandler = { _: WebPage, document: FeaturedDocument ->
     // do something wonderful with the document
 }
+
 val urls = LinkExtractors.fromResource("seeds.txt")
     .map { ParsableHyperlink(it, parseHandler) }
 PulsarContexts.create().submitAll(urls).await()

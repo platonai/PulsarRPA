@@ -69,7 +69,7 @@ The code above will scrape fields specified by css selectors #title and #acrCust
 fun main() {
     val context = PulsarContexts.create()
 
-    val parseHandler = { _: WebPage, document: Document ->
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // use the document
         // ...
         // and then extract further hyperlinks
@@ -233,9 +233,9 @@ It's really simple to scrape a massive url collection or run continuous crawls i
 fun main() {
     val context = PulsarContexts.create()
 
-    val parseHandler = { _: WebPage, document: Document ->
+    val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // do something wonderful with the document
-        println(document.title() + "\t|\t" + document.baseUri())
+        println(document.getTitle() + "\t|\t" + document.getBaseUri())
     }
     val urls = LinkExtractors.fromResource("seeds.txt")
         .map { ParsableHyperlink("$it -refresh", parseHandler) }
@@ -253,9 +253,9 @@ fun main() {
 ----
 public class ContinuousCrawler {
 
-    private static void onParse(WebPage page, Document document) {
+    private static void onParse(WebPage page, FeaturedDocument document) {
         // do something wonderful with the document
-        System.out.println(document.title() + "\t|\t" + document.baseUri());
+        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
     }
 
     public static void main(String[] args) {
