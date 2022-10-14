@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.experimental;
+package ai.platon.pulsar.examples.async;
 
 import ai.platon.pulsar.common.LinkExtractors;
 import ai.platon.pulsar.context.PulsarContexts;
