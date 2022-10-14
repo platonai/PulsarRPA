@@ -22,6 +22,7 @@ open class BrowserSettings(
     companion object {
         // The viewport size for browser to rendering all webpages
         var screenViewport = AppConstants.DEFAULT_VIEW_PORT
+
         // Compression quality from range [0..100] (jpeg only) to capture screenshots
         var screenshotQuality = 50
 
@@ -95,6 +96,12 @@ open class BrowserSettings(
         }
 
         /**
+         * Launch the browser in GUI mode.
+         * */
+        @JvmStatic
+        fun headed() = withGUI()
+
+        /**
          * Launch the browser in headless mode.
          * */
         @JvmStatic
@@ -115,7 +122,24 @@ open class BrowserSettings(
         @JvmStatic
         fun supervised(): Companion {
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
+            return BrowserSettings
+        }
 
+        /**
+         * Set privacy context count
+         * */
+        @JvmStatic
+        fun privacyContext(n: Int): Companion {
+            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
+            return BrowserSettings
+        }
+
+        /**
+         * Set the max number to open tabs in each browser context
+         * */
+        @JvmStatic
+        fun maxTabs(n: Int): Companion {
+            System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
 

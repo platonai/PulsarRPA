@@ -150,7 +150,7 @@ abstract class AbstractPulsarSession(
 
     override fun fetchState(page: WebPage, options: LoadOptions) = context.fetchState(page, options)
 
-    override fun open(url: String): WebPage = load(url, options("-refresh"))
+    override fun open(url: String): WebPage = load(url, "-refresh")
 
     override fun load(url: String): WebPage = load(url, options())
 
@@ -172,6 +172,8 @@ abstract class AbstractPulsarSession(
         return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCache(normUrl)
     }
 
+    override suspend fun loadDeferred(url: String, args: String) = loadDeferred(normalize(url, options(args)))
+
     override suspend fun loadDeferred(url: String, options: LoadOptions) = loadDeferred(normalize(url, options))
 
     override suspend fun loadDeferred(url: UrlAware, args: String): WebPage =
@@ -186,71 +188,6 @@ abstract class AbstractPulsarSession(
         }
 
         return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
-    }
-
-    private fun loadAndCache(normUrl: NormUrl): WebPage {
-        return context.load(normUrl).also {
-            pageCacheOrNull?.putDatum(it.url, it)
-        }
-    }
-
-    private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
-        return context.loadDeferred(normUrl).also {
-            pageCacheOrNull?.putDatum(it.url, it)
-        }
-    }
-
-    /**
-     * Create page with cached core, but not metadata. If the page might be changed, it should be fetched again.
-     *
-     * If the loading is not a read-only-loading, which might modify the page status, or the loading have event handlers,
-     * in such cases, we must render the page in the browser again.
-     *
-     * TODO: handle the session cache and the FetchComponent cache
-     * */
-    private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
-        if (!normUrl.options.readonly) {
-            return null
-        }
-
-        // We have events to handle, so do not use the cached version
-        if (normUrl.options.rawEvent != null) {
-            return null
-        }
-
-        val cachedPage = getCachedPageOrNull(normUrl)
-        val page = FetchEntry.createPageShell(normUrl)
-
-        if (cachedPage != null) {
-            // the cached page can be or not be persisted, but not guaranteed
-            // if a page is loaded from cache, the content remains unchanged and should not persist to database
-            page.unsafeSetGPage(cachedPage.unbox())
-
-            page.isCached = true
-            page.tmpContent = cachedPage.tmpContent
-            page.args = normUrl.args
-
-            return page
-        }
-
-        return null
-    }
-
-    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
-        val (url, options) = normUrl
-        if (options.refresh) {
-            // refresh the page, do not take cached version
-            return null
-        }
-
-        val now = Instant.now()
-        val page = pageCacheOrNull?.getDatum(url, options.expires, now) ?: return null
-        if (!options.isExpired(page.prevFetchTime)) {
-            pageCacheHits.incrementAndGet()
-            return page
-        }
-
-        return null
     }
 
     override fun loadAll(urls: Iterable<String>) = loadAll(urls, options())
@@ -299,15 +236,10 @@ abstract class AbstractPulsarSession(
 
     override fun submit(url: String, args: String) = submit(PlainUrl(url, args))
 
-    override fun submit(url: String, options: LoadOptions): PulsarSession {
-        context.submit(ListenableHyperlink(url, args = options.toString(), event = options.event))
-        return this
-    }
+    override fun submit(url: String, options: LoadOptions) =
+        submit(ListenableHyperlink(url, args = options.toString(), event = options.event))
 
-    override fun submit(url: UrlAware): AbstractPulsarSession {
-        context.submit(url)
-        return this
-    }
+    override fun submit(url: UrlAware) = submit(url, "")
 
     override fun submit(url: UrlAware, args: String): PulsarSession {
         url.args = LoadOptions.normalize(url.args, args)
@@ -589,6 +521,71 @@ abstract class AbstractPulsarSession(
         }
 
         return context.parse(page) ?: nil
+    }
+
+    private fun loadAndCache(normUrl: NormUrl): WebPage {
+        return context.load(normUrl).also {
+            pageCacheOrNull?.putDatum(it.url, it)
+        }
+    }
+
+    private suspend fun loadAndCacheDeferred(normUrl: NormUrl): WebPage {
+        return context.loadDeferred(normUrl).also {
+            pageCacheOrNull?.putDatum(it.url, it)
+        }
+    }
+
+    /**
+     * Create page with cached core, but not metadata. If the page might be changed, it should be fetched again.
+     *
+     * If the loading is not a read-only-loading, which might modify the page status, or the loading have event handlers,
+     * in such cases, we must render the page in the browser again.
+     *
+     * TODO: handle the session cache and the FetchComponent cache
+     * */
+    private fun createPageWithCachedCoreOrNull(normUrl: NormUrl): WebPage? {
+        if (!normUrl.options.readonly) {
+            return null
+        }
+
+        // We have events to handle, so do not use the cached version
+        if (normUrl.options.rawEvent != null) {
+            return null
+        }
+
+        val cachedPage = getCachedPageOrNull(normUrl)
+        val page = FetchEntry.createPageShell(normUrl)
+
+        if (cachedPage != null) {
+            // the cached page can be or not be persisted, but not guaranteed
+            // if a page is loaded from cache, the content remains unchanged and should not persist to database
+            page.unsafeSetGPage(cachedPage.unbox())
+
+            page.isCached = true
+            page.tmpContent = cachedPage.tmpContent
+            page.args = normUrl.args
+
+            return page
+        }
+
+        return null
+    }
+
+    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
+        val (url, options) = normUrl
+        if (options.refresh) {
+            // refresh the page, do not take cached version
+            return null
+        }
+
+        val now = Instant.now()
+        val page = pageCacheOrNull?.getDatum(url, options.expires, now) ?: return null
+        if (!options.isExpired(page.prevFetchTime)) {
+            pageCacheHits.incrementAndGet()
+            return page
+        }
+
+        return null
     }
 
     private fun parseNormalizedLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {

@@ -922,13 +922,12 @@ open class LoadOptions(
         /**
          * Normalize [args], all option names in a normalized argument string match the field name in [LoadOptions].
          * */
-        fun normalize(vararg args: String?) =
-            parse(args.filterNotNull().joinToString(" "), VolatileConfig.UNSAFE).toString()
+        fun normalize(vararg args: String?) = parse(args.filterNotNull().joinToString(" ")).toString()
 
         /**
          * Parse the [args] with other [conf].
          * */
-        fun parse(args: String, conf: VolatileConfig) = LoadOptions(args.trim(), conf).apply { parse() }
+        fun parse(args: String, conf: VolatileConfig = VolatileConfig.UNSAFE) = LoadOptions(args.trim(), conf).apply { parse() }
 
         /**
          * Parse the [args] with other [options].

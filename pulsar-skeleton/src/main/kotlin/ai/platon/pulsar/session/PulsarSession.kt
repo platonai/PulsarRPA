@@ -383,6 +383,21 @@ interface PulsarSession : AutoCloseable {
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
      * @param url     The url to load
+     * @param args The load options
+     * @return The webpage loaded or NIL
+     */
+    suspend fun loadDeferred(url: String, args: String): WebPage
+
+    /**
+     * Load a url with specified options.
+     *
+     * This method first checks the url in the local store and return the local version if the page
+     * exists and matches the requirements, otherwise fetch it from the Internet.
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
+     * @param url     The url to load
      * @param options The load options
      * @return The webpage loaded or NIL
      */
