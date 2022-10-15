@@ -188,7 +188,6 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun terminate() {
-
         stop()
     }
 
