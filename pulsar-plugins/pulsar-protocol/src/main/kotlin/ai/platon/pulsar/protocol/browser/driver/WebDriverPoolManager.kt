@@ -146,7 +146,7 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Create a driver pool, but the driver pool is not added to [driverPools]
+     * Create a driver pool, but the driver pool is not added to [driverPools].
      * */
     fun createUnmanagedDriverPool(
         browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0
@@ -171,8 +171,8 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Cancel the fetch task specified by [url] remotely
-     * NOTE: A cancel request should run immediately not waiting for any browser task return
+     * Cancel the fetch task specified by [url] remotely.
+     * NOTE: A cancel request should run immediately not waiting for any browser task return.
      * */
     fun cancel(browserId: BrowserId, url: String): WebDriver? {
         val driverPool = driverPools[browserId] ?: return null
@@ -180,14 +180,14 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Cancel all the fetch tasks, stop loading all pages
+     * Cancel all the fetch tasks, stop loading all pages.
      * */
     fun cancelAll() {
         driverPools.values.forEach { it.cancelAll() }
     }
 
     /**
-     * Cancel all the fetch tasks, stop loading all pages
+     * Cancel all the fetch tasks, stop loading all pages.
      * */
     fun cancelAll(browserId: BrowserId) {
         val driverPool = driverPools[browserId] ?: return
@@ -195,7 +195,9 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Cancel all running tasks and close all web drivers
+     * Find the driver pool with browserId of [browserId], cancel all running tasks in it, and close all drivers in it.
+     *
+     * When we close a driver pool, all threads that are trying to get a driver should wait.
      * */
     fun closeDriverPoolGracefully(browserId: BrowserId, timeToWait: Duration) {
         numReset.mark()
@@ -276,7 +278,7 @@ open class WebDriverPoolManager(
 //        }
 
         return try {
-            // The code that is executing inside the [block] is cancelled on timeout
+            // The code that is executing inside the [block] is cancelled on timeout.
             withTimeout(fetchTaskTimeout.toMillis()) {
                 runCancelable(task, driver)
             }
@@ -330,16 +332,24 @@ open class WebDriverPoolManager(
 
     private fun closeDriverPoolGracefully0(browserId: BrowserId) {
         _driverPools[browserId]?.also {
+            // Force the page stop all navigations and RELEASES all resources.
+            it.onlineDrivers.forEach { kotlin.runCatching { runBlocking { it.stop() } } }
             it.isRetired = true
             _retiredDriverPools.add(browserId)
         }
 
         val isGUI = driverSettings.isGUI
         val displayMode = driverSettings.displayMode
-        // Keep some web drivers in GUI mode open, so we can diagnose.
+        // Issue #17: when counting retired web drivers, all retired drivers in all driver pools should be counted.
+        val totalRetiredDrivers = driverPools.values.sumOf { it.onlineDrivers.count { it.isRetired } }
+        // Maximum allowed number of retired drives, if it's exceeded, the oldest driver pool should be closed.
+        val maxAllowedRetiredDrivers = 10
+        // Keep some web drivers in GUI mode open for diagnostic purposes.
         val driverPool = when {
             !isGUI -> _driverPools.remove(browserId)
-            isGUI && driverPools.size > 10 -> {
+            // The drivers are in GUI mode and there is many open drivers.
+            totalRetiredDrivers > maxAllowedRetiredDrivers -> {
+                // Find out the oldest retired driver pool
                 driverPools.values.filter { it.isRetired }.minByOrNull { it.lastActiveTime }
             }
             else -> null

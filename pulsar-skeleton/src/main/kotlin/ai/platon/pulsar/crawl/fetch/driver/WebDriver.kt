@@ -332,7 +332,7 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun stop()
     /**
-     * Force the page stop all navigations and releases all resources.
+     * Force the page stop all navigations and RELEASES all resources.
      * If a web driver is terminated, it should not be used any more and should be quit
      * as soon as possible.
      * */
