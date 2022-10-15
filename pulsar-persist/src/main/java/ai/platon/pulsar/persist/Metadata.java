@@ -146,7 +146,8 @@ public class Metadata {
 
     @Nonnull
     public Instant getInstant(Name name, Instant defaultValue) {
-        return DateTimes.parseInstant(get(name), defaultValue);
+        String value = get(name);
+        return value == null ? defaultValue : DateTimes.parseInstant(value, defaultValue);
     }
 
     public boolean contains(Name name) {

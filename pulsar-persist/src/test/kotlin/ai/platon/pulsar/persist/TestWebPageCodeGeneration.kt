@@ -11,7 +11,7 @@ import kotlin.reflect.javaType
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.test.assertTrue
 
-class TestWebPage {
+class TestWebPageCodeGeneration {
 
     private fun convertReturnType(type: KType): String {
         var s = type.toString().filter { it != '!' }
@@ -39,6 +39,25 @@ class TestWebPage {
 
         val clazz = """
             |interface Asset {
+            |    ${properties.joinToString("\n    ")}
+            |}
+        """.trimMargin()
+
+        println(clazz)
+    }
+
+    @Test
+    fun generateJavaImmutableClass() {
+        val properties = WebPage::class.declaredMemberFunctions
+            .filter { it.isOpen }
+            .filter { it.name.startsWith("get") }
+            .map {
+                convertReturnType(it.returnType) + " " +
+                        it.name + "() { /** IMPLEMENTATION */ };"
+            }
+
+        val clazz = """
+            |class WebPage {
             |    ${properties.joinToString("\n    ")}
             |}
         """.trimMargin()

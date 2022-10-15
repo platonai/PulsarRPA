@@ -86,7 +86,6 @@ public interface WebAsset {
   OpenPageCategory getOpenPageCategory();
 
   String getEncoding();
-  String getEncodingOrDefault(String defaultValue);
   String getEncodingClues();
 
   HtmlIntegrity getHtmlIntegrity();

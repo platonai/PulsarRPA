@@ -44,7 +44,7 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
 
     override fun doFilter(parseContext: ParseContext): FilterResult {
         val page = parseContext.page
-        extract(page, page.getEncodingOrDefault("UTF-8"))
+        extract(page, page.encoding ?: "UTF-8")
         return FilterResult.success()
     }
 

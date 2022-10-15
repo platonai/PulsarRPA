@@ -11,8 +11,10 @@ import java.net.URL
 
 object UrlUtils {
 
+    @JvmStatic
     fun isInternal(url: String) = url.startsWith(INTERNAL_URL_PREFIX)
 
+    @JvmStatic
     fun isNotInternal(url: String) = !isInternal(url)
 
     /**
@@ -234,6 +236,7 @@ object UrlUtils {
         return url.trim() to args.trim()
     }
 
+    @JvmStatic
     fun mergeUrlArgs(url: String, args: String? = null): String {
         return if (args.isNullOrBlank()) url.trim() else "${url.trim()} ${args.trim()}"
     }
@@ -484,9 +487,7 @@ object UrlUtils {
      * encode the character to be a string "\\u0001" or "\\\\u0001", so we should decode
      * them to be the right one
      *
-     *
      * Note, the character is displayed as <U></U>+0001> in some output system
-     *
      *
      * Now, we consider all the three character/string \u0001, "\\u0001", "\\\\u0001"
      * are the lower key bound
@@ -560,7 +561,7 @@ object UrlUtils {
     }
 
     /**
-     * Convert given Utf8 instance to String and and cleans out any offending "�"
+     * Convert given Utf8 instance to String and cleans out any offending "�"
      * from the String.
      *
      * @param utf8 Utf8 object

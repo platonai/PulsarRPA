@@ -41,10 +41,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -341,8 +338,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * *****************************************************************************
      * Common fields
      * ******************************************************************************
-     *
-     * @return a {@link Variables} object.
      */
 
     @NotNull
@@ -351,7 +346,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Check if the page scope temporary variable with name {@name} exist
+     * Check if the page scope temporary variable with {@code name} exists
      *
      * @param name The variable name to check
      * @return true if the variable exist
@@ -361,20 +356,19 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Get a page scope temporary variable
+     * Returns the local variable value to which the specified name is mapped,
+     * or {@code null} if the local variable map contains no mapping for the name.
      *
-     * @param name a {@link String} object.
-     * @return a Object or null.
+     * @param name the name whose associated value is to be returned
+     * @return the value to which the specified name is mapped, or
+     *         {@code null} if the local variable map contains no mapping for the key
      */
     public Object getVar(@NotNull String name) {
         return variables.get(name);
     }
 
     /**
-     * <p>getAndRemoveVar.</p>
-     *
-     * @param name a {@link String} object.
-     * @return a boolean.
+     * Retrieves and removes the local variable with the given name.
      */
     public Object removeVar(@NotNull String name) {
         return variables.remove(name);
@@ -415,14 +409,18 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * If a page is canceled, it remains unchanged
+     * Check if the page is canceled.
+     *
+     * If a page is canceled, it should not be updated.
      * */
     public boolean isCanceled() {
         return isCanceled;
     }
 
     /**
-     * If a page is canceled, it remains unchanged
+     * Check if the page is canceled.
+     *
+     * If a page is canceled, it should not be updated.
      * */
     public void setCanceled(boolean canceled) {
         isCanceled = canceled;
@@ -445,10 +443,18 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return Metadata.box(page.getMetadata());
     }
 
+    /**
+     * CrawlMarks are used for nutch style crawling.
+     * */
     public CrawlMarks getMarks() {
         return CrawlMarks.box(page.getMarkers());
     }
 
+    /**
+     * Check if a mark is marked.
+     *
+     * CrawlMarks are used for nutch style crawling.
+     * */
     public boolean hasMark(Mark mark) {
         return page.getMarkers().get(wrapKey(mark)) != null;
     }
@@ -457,18 +463,18 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * The load arguments is variant task by task, so the local version is the first choice,
      * while the persisted version is used for historical check only
      *
-     * The underlying field should not use name 'args' since it exists already
-     * with another gora type, see GProtocolStatus.args and GParseStatus.args
+     * Underlying gora field should not use name 'args' which is already used,
+     * see GProtocolStatus.args and GParseStatus.args
      */
     @NotNull
     public String getArgs() {
-        // The underlying field should not use name 'args'
+        // Underlying gora field should not use name 'args' which is already used.
         CharSequence args = page.getParams();
         return args != null ? args.toString() : "";
     }
 
     /**
-     * Set the local args variable and the persist version, and also clear the load options.
+     * Set the arguments and clear the LoadOptions object.
      * */
     public void setArgs(@NotNull String args) {
         variables.remove(VAR_LOAD_OPTIONS);
@@ -494,12 +500,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     @NotNull
     public String getConfiguredUrl() {
-        String configuredUrl = url;
-        String realArgs = getArgs();
-        if (!realArgs.isBlank()) {
-            configuredUrl += " " + realArgs;
-        }
-        return configuredUrl.trim();
+        return UrlUtils.mergeUrlArgs(url, getArgs());
     }
 
     public int getFetchedLinkCount() {
@@ -911,15 +912,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Get the encoding of the content.
-     * Content encoding is detected just before it's parsed.
-     */
-    @NotNull
-    public String getEncodingOrDefault(@NotNull String defaultEncoding) {
-        return page.getEncoding() == null ? defaultEncoding : page.getEncoding().toString();
-    }
-
-    /**
      * The clues are used to determine the encoding of the page content
      * */
     @NotNull
@@ -963,7 +955,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Get the persistent page content
+     * Get the persisted page content
      */
     @Nullable
     public ByteBuffer getPersistContent() {
@@ -1179,7 +1171,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         );
     }
 
-    public void setActiveDOMStatus(ActiveDOMStatus s) {
+    public void setActiveDOMStatus(@Nullable ActiveDOMStatus s) {
         if (s == null) {
             return;
         }
@@ -1338,8 +1330,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     public int getImpreciseLinkCount() {
-        String count = getMetadata().getOrDefault(Name.TOTAL_OUT_LINKS, "0");
-        return NumberUtils.toInt(count, 0);
+        return getMetadata().getInt(Name.TOTAL_OUT_LINKS, 0);
     }
 
     public void setImpreciseLinkCount(int count) {
@@ -1368,8 +1359,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     public int getAnchorOrder() {
-        int order = page.getAnchorOrder();
-        return order < 0 ? MAX_LIVE_LINK_PER_PAGE : order;
+        return page.getAnchorOrder() < 0 ? MAX_LIVE_LINK_PER_PAGE : page.getAnchorOrder();
     }
 
     public void setAnchorOrder(int order) {
@@ -1455,12 +1445,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     @Nullable
     public PageModel getPageModel() {
-        if (page.getPageModel() != null) {
-            return PageModel.box(page.getPageModel());
-        }
-        else {
-            return null;
-        }
+        return page.getPageModel() == null ? null : PageModel.box(page.getPageModel());
     }
 
     @NotNull

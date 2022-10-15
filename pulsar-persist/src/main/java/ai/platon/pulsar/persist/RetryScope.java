@@ -1,10 +1,7 @@
 package ai.platon.pulsar.persist;
 
 /**
- * <p>RetryScope class.</p>
- *
- * @author vincent
- * @version $Id: $Id
+ * Retry scope indicates in which scope or subsystem to perform the retrying.
  */
 public enum RetryScope {
     /**
