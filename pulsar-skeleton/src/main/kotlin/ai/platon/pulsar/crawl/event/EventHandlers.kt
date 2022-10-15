@@ -8,6 +8,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.experimental.WebAsset
 
 abstract class VoidHandler: PFunction0<Unit>, AbstractPHandler() {
     abstract override operator fun invoke()
@@ -79,12 +80,34 @@ open class UrlEventHandler: AbstractChainedFunction1<String, String?>() {
     }
 }
 
+/**
+ * A readonly handler, the web asset will not be changed
+ * */
+open class WebAssetEventHandler: AbstractChainedFunction1<WebAsset, Any?>()
+
 open class WebPageEventHandler: AbstractChainedFunction1<WebPage, Any?>()
+
+/**
+ * A readonly handler, the web asset will not be changed
+ * */
+open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, WebAsset?, Any?>()
 
 open class UrlAwareWebPageEventHandler: AbstractChainedFunction2<UrlAware, WebPage?, Any?>()
 
-open class HTMLDocumentEventHandler: AbstractChainedFunction2<WebPage, FeaturedDocument, Any?>()
+/**
+ * A readonly handler, the web asset will not be changed
+ * */
+open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<WebAsset, FeaturedDocument, Any?>()
+
+open class WebPageHTMLDocumentEventHandler: AbstractChainedFunction2<WebPage, FeaturedDocument, Any?>()
+
+typealias HTMLDocumentEventHandler = WebPageHTMLDocumentEventHandler
 
 open class PageDatumEventHandler: AbstractChainedFunction2<String, PageDatum, Any?>()
+
+/**
+ * A readonly handler, the web asset will not be changed
+ * */
+open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, WebDriver, Any?>()
 
 open class WebPageWebDriverEventHandler: AbstractChainedPDFunction2<WebPage, WebDriver, Any?>()
