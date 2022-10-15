@@ -56,22 +56,27 @@ open class GlobalCache(val conf: ImmutableConfig) {
      * */
     private val documentCacheCapacity = conf.getUint(GLOBAL_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY)
     /**
-     * The url pool, hold on queues of urls to fetch
+     * A url pool contains many url caches, the urls added to the pool will be processed in crawl loops.
      * */
     open var urlPool: UrlPool = ConcurrentUrlPool(conf).apply { initialize() }
     /**
-     * The fetching cache, an url is added to the cache before fetching and removed from it after fetching
+     * Fetching cache holds the URLs being fetched.
+     *
+     * Urls will be added to the cache before fetching and will be deleted after fetching.
      * */
     open val fetchingCache = FetchingCache()
     /**
-     * The global page cache, a page will be removed if it's expired or the cache is full
+     * The global page cache, a page will be removed automatically if it's expired or the cache is full.
      * */
     open val pageCache = PageCatch(capacity = pageCacheCapacity)
     /**
-     * The global document cache, a document will be removed if it's expired or the cache is full
+     * The global document cache, a document will be removed automatically if it's expired or the cache is full.
      * */
     open val documentCache = DocumentCatch(capacity = documentCacheCapacity)
 
+    /**
+     * Reset all caches. After this operation, all caches will be empty.
+     * */
     fun resetCaches() {
         fetchingCache.clear()
         pageCache.clear()
@@ -79,6 +84,9 @@ open class GlobalCache(val conf: ImmutableConfig) {
         urlPool = ConcurrentUrlPool(conf).apply { initialize() }
     }
 
+    /**
+     * Clear all caches. After this operation, all caches will be empty.
+     * */
     fun clearCaches() {
         fetchingCache.clear()
         pageCache.clear()
@@ -86,13 +94,16 @@ open class GlobalCache(val conf: ImmutableConfig) {
         urlPool.clear()
     }
 
+    /**
+     * Clear page cache and document cache. After this operation, page cache and document cache will be empty.
+     * */
     fun clearPDCaches() {
         pageCache.clear()
         documentCache.clear()
     }
 
     /**
-     * Put page and document to cache
+     * Put the page and the document in the cache.
      * */
     fun putPDCache(page: WebPage, document: FeaturedDocument) {
         val url = page.url
@@ -101,7 +112,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
     }
 
     /**
-     * Remove item from page cache and document cache
+     * Remove items specified by the url from page cache and document cache.
      * */
     fun removePDCache(url: String) {
         pageCache.remove(url)
@@ -109,6 +120,9 @@ open class GlobalCache(val conf: ImmutableConfig) {
     }
 }
 
+/**
+ * The global cache factory.
+ * */
 class GlobalCacheFactory(val immutableConfig: ImmutableConfig) {
     val reflectedGlobalCache: GlobalCache by lazy {
         val clazz = immutableConfig.getClass(

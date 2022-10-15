@@ -42,7 +42,10 @@ open class DelayUrl(
 }
 
 /**
- * A [UrlPool] contains many [UrlCache]s with different priority.
+ * A [UrlPool] contains many [UrlCache]s, the urls added to the pool will be processed in crawl loops.
+ *
+ * Different [UrlCache]s in [UrlPool] have different priorities, there are real time cache, delay cache,
+ * ordered caches and unordered caches.
  * */
 interface UrlPool {
     companion object {

@@ -86,7 +86,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     private final Variables variables = new Variables();
 
     /**
-     * If this page is fetched from internet
+     * If this page is fetched from Internet
      */
     private boolean isCached = false;
 
@@ -96,7 +96,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     private boolean isLoaded = false;
 
     /**
-     * If this page is fetched from internet
+     * If this page is fetched from Internet
      */
     private boolean isFetched = false;
 

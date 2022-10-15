@@ -9,7 +9,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Url cache holds urls.
+ * The url cache holds urls.
  *
  * A url cache contains several queues for different purpose: reentrant, non-reentrant and n-reentrant.
  * A reentrant queue accepts the same url multiple times, a non-reentrant queue accepts the same url only once,

@@ -176,13 +176,11 @@ open class StreamingCrawler(
     init {
         AppMetrics.reg.registerAll(this, "$id.g", gauges)
 
-        if (globalCache != null) {
-            val cacheGauges = mapOf(
-                "pageCacheSize" to Gauge { globalCache.pageCache.size },
-                "documentCacheSize" to Gauge { globalCache.documentCache.size }
-            )
-            AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
-        }
+        val cacheGauges = mapOf(
+            "pageCacheSize" to Gauge { globalCache.pageCache.size },
+            "documentCacheSize" to Gauge { globalCache.documentCache.size }
+        )
+        AppMetrics.reg.registerAll(this, "$id.g", cacheGauges)
 
         generateFinishCommand()
     }
