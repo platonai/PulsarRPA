@@ -233,7 +233,7 @@ class LoadStatusFormatter(
         var readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
         if (withNormUrl) readableLocation = "$readableLocation <- $url"
         if (withReferer) readableLocation = "$readableLocation <- ${page.referrer}"
-        val doWithSymbolicLink = page.id < verboseCount || withSymbolicLink
+        val doWithSymbolicLink = page.isFetched && (page.id < verboseCount || withSymbolicLink)
         return if (doWithSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
     }
 }
