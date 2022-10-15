@@ -27,7 +27,7 @@ We have released complete solutions for site-wide Web scraping of some of the la
 
 **PulsarR supports browser rendering as the primary method to collect Web data.** By using browser rendering as the primary method to collect Web data, we achieve an optimal balance between data point scale, data quality, labor cost and hardware cost, and achieve the lowest TCO (total cost of ownership). With optimizations such as blocking unnecessary resource files, the performance of browser rendering can even be comparable to the traditional single resource collection method.
 
-*PulsarR supports RPA based Web scraping.* PulsarR includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, mouse drag and drop, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
+*PulsarR supports RPA based Web scraping.* PulsarR includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, dragging and dropping, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
 
 *PulsarR supports single resource collection.* PulsarR's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example through an ajax interface, you can also call PulsarR's resource collection method for high-speed collection.
 
@@ -282,7 +282,7 @@ Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/e
 
 As websites become more and more complicated, RPA has become the only way to collect data from some website, such as websites using Custom Font technology.
 
-Pulsar provides a convenient way to mimic real people during the lifecycle of a webpage, using a web driver to interact with the webpage: scrolling, typing, screen capturing, mouse dragging, clicking and more, all actions and behaviors are optimized to mimic real people as closely as possible.
+Pulsar provides a convenient way to mimic real people during the lifecycle of a webpage, using a web driver to interact with the webpage: scrolling, typing, screen capturing, dragging and dropping, clicking and more, all actions and behaviors are optimized to mimic real people as closely as possible.
 
 Here is a typical RPA code snippet, which is required to collect data from most top e-comm sites.
 
