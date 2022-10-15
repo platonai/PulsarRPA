@@ -52,7 +52,7 @@ We have released complete solutions for site-wide Web scraping of some of the la
 
 *Most scraping attempts can start with (almost) a single line of code:*
 
-*Kotlin*
+*Kotlin:*
 [source,kotlin,options="nowrap"]
 ----
 fun main() = PulsarContexts.createSession().scrapeOutPages(
@@ -63,7 +63,7 @@ The code above will scrape fields specified by css selectors #title and #acrCust
 
 *Most #real world# crawl projects can start with the following code snippet:*
 
-*Kotlin*
+*Kotlin:*
 [source,kotlin]
 ----
 fun main() {
@@ -85,7 +85,7 @@ Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/e
 
 *The #most complicated# crawl challenges can start with RPA:*
 
-*Kotlin*
+*Kotlin:*
 ```kotlin
 val options = session.options(args)
 val event = options.event.browseEvent
@@ -164,9 +164,11 @@ Gradle:
 implementation("ai.platon.pulsar:pulsar-all:1.10.4")
 ----
 
+You can also clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].
+
 === Basic usage
 
-*Kotlin*
+*Kotlin:*
 
 [source,kotlin]
 ----
@@ -215,7 +217,7 @@ Check link:docs/concepts.adoc#_load_options[Load Options] for details.
 
 Pulsar uses https://jsoup.org/[jsoup] to extract data from HTML documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
-*Kotlin*
+*Kotlin:*
 
 [source,kotlin]
 ----
@@ -226,7 +228,7 @@ val price = document.selectFirst('.price').text()
 === Continuous crawls
 It's really simple to scrape a massive url collection or run continuous crawls in Pulsar.
 
-*Kotlin*
+*Kotlin:*
 
 [source,kotlin]
 ----
@@ -247,7 +249,7 @@ fun main() {
 }
 ----
 
-*Java*
+*Java:*
 
 [source,java]
 ----

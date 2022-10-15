@@ -52,7 +52,7 @@ PulsarR [ˈpʌlsɑr] 是脉冲星辐射（PulsarR Radiation）的缩写。如果
 
 *大多数抓取尝试可以从几乎一行代码开始：*
 
-*Kotlin*
+*Kotlin:*
 [source,kotlin,options="nowrap"]
 ----
 fun main() = PulsarContexts.createSession().scrapeOutPages(
@@ -63,7 +63,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
 
 *大多数 #生产环境# 数据采集项目可以从以下代码片段开始：*
 
-*Kotlin*
+*Kotlin:*
 [source,kotlin]
 ----
 fun main() {
@@ -86,7 +86,7 @@ link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/Contin
 
 *#最复杂# 的数据采集项目需要从 RPA 开始：*
 
-*Kotlin*
+*Kotlin:*
 ```kotlin
 val options = session.options(args)
 val event = options.event.browseEvent
@@ -166,11 +166,13 @@ Gradle:
 implementation("ai.platon.pulsar:pulsar-all:1.10.4")
 ----
 
+也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]。
+
 对于国内开发者，我们强烈建议您按照 link:bin/tools/maven/maven-settings.adoc[这个] 指导来加速构建。
 
 === 基本用法
 
-*Kotlin*
+*Kotlin:*
 
 [source,kotlin]
 ----
@@ -219,7 +221,7 @@ val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapO
 
 PulsarR 使用 https://jsoup.org/[jsoup] 从 HTML 文档中提取数据。 Jsoup 将 HTML 解析为与现代浏览器相同的 DOM。 查看  https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] 以获取所有受支持的 CSS 选择器。
 
-*Kotlin*
+*Kotlin:*
 
 [source,kotlin]
 ----
@@ -231,7 +233,7 @@ val price = document.selectFirst('.price').text()
 
 在 PulsarR 中抓取大量 url 集合或运行连续采集非常简单。
 
-*Kotlin*
+*Kotlin:*
 
 [source,kotlin]
 ----
@@ -252,7 +254,7 @@ fun main() {
 }
 ----
 
-*Java*
+*Java:*
 
 [source,java]
 ----
