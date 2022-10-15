@@ -261,7 +261,7 @@ class GenerateComponent(
             return true
         }
 
-        // INACTIVE mark is already filtered in HBase query phrase, double check here for diagnoses
+        // INACTIVE mark is already filtered in HBase query phase, double check here for diagnoses
         if (page.hasMark(Mark.INACTIVE)) {
             enumCounters.inc(Counter.mInactive)
         }

@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.crawl.event.*
 
 /**
- * Manage all events in crawl phrase of the webpage lifecycle.
+ * Manage all events in crawl phase of the webpage lifecycle.
  * */
 interface CrawlEvent {
     @Deprecated("Url filtering should not be in PageEvent")
@@ -22,10 +22,10 @@ interface CrawlEvent {
 }
 
 /**
- * Manage all events in the load phrase of the webpage lifecycle.
+ * Manage all events in the load phase of the webpage lifecycle.
  * */
 interface LoadEvent {
-    @Deprecated("Url filtering should not be in load phrase, crawl phrase is better")
+    @Deprecated("Url filtering should not be in load phase, crawl phase is better")
     val onFilter: UrlFilterEventHandler
 
     val onNormalize: UrlFilterEventHandler
@@ -54,7 +54,7 @@ interface LoadEvent {
 }
 
 /**
- * Manage all events in the browse phrase of the webpage lifecycle.
+ * Manage all events in the browse phase of the webpage lifecycle.
  * */
 interface BrowseEvent {
     val onWillLaunchBrowser: WebPageEventHandler
@@ -90,17 +90,29 @@ interface BrowseEvent {
 }
 
 /**
- * Manage all events in the webpage lifecycle.
+ * Manage all events in the lifecycle in a webpage.
  *
- * The events are separated into three groups:
- * 1. [LoadEvent] in load phrase
- * 2. [BrowseEvent] in browse phrase
- * 3. [CrawlEvent] in crawl phrase
+ * The events are fall into three groups:
+ *
+ * 1. [LoadEvent] in load phase
+ * 2. [BrowseEvent] in browse phase
+ * 3. [CrawlEvent] in crawl phase
  * */
 interface PageEvent {
+    /**
+     * The load phase event handler
+     * */
     val loadEvent: LoadEvent
+    /**
+     * The browse phase event handler
+     * */
     val browseEvent: BrowseEvent
+    /**
+     * The crawl phase event handler
+     * */
     val crawlEvent: CrawlEvent
-
+    /**
+     * Chain the other page event handler to the tail of this one.
+     * */
     fun chain(other: PageEvent): PageEvent
 }

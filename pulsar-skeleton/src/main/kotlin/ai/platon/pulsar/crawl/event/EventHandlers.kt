@@ -81,24 +81,49 @@ open class UrlEventHandler: AbstractChainedFunction1<String, String?>() {
 }
 
 /**
- * A readonly handler, the web asset will not be changed
+ * A readonly handler, the Web asset will not be changed
  * */
 open class WebAssetEventHandler: AbstractChainedFunction1<WebAsset, Any?>()
 
 open class WebPageEventHandler: AbstractChainedFunction1<WebPage, Any?>()
 
 /**
- * A readonly handler, the web asset will not be changed
+ * A readonly handler, the Web asset will not be changed.
  * */
 open class UrlAwareWebAssetEventHandler: AbstractChainedFunction2<UrlAware, WebAsset?, Any?>()
 
+/**
+ * An event handler that accepts a [UrlAware] and a [WebPage], anything can be returned.
+ *
+ * The Web asset might be changed by the handler since [WebPage] has setters.
+ *
+ * If the Web asset is not supposed to be changed, readonly handlers should be used which
+ * accept a [WebAsset] instead of [WebPage].
+ *
+ * Another possible way to write more robust code is to remove all setters in [WebPage],
+ * and add a MutableWebPage subclass.
+ * */
 open class UrlAwareWebPageEventHandler: AbstractChainedFunction2<UrlAware, WebPage?, Any?>()
 
 /**
- * A readonly handler, the web asset will not be changed
+ * A readonly handler, the Web asset will not be changed
  * */
 open class WebAssetHTMLDocumentEventHandler: AbstractChainedFunction2<WebAsset, FeaturedDocument, Any?>()
 
+/**
+ * An event handler that accepts a [WebPage] and a [FeaturedDocument], anything can be returned.
+ *
+ * The event handler should work with the passed document, such as extracting fields, persisting
+ * extraction results, collecting more links, and so on.
+ *
+ * The Web asset might be changed by the handler since [WebPage] has setters.
+ *
+ * If the Web asset is not supposed to be changed, readonly handlers should be used which
+ * accept a [WebAsset] instead of [WebPage].
+ *
+ * Another possible way to write more robust code is to remove all setters in [WebPage],
+ * and add a MutableWebPage subclass.
+ * */
 open class WebPageHTMLDocumentEventHandler: AbstractChainedFunction2<WebPage, FeaturedDocument, Any?>()
 
 typealias HTMLDocumentEventHandler = WebPageHTMLDocumentEventHandler
@@ -106,8 +131,20 @@ typealias HTMLDocumentEventHandler = WebPageHTMLDocumentEventHandler
 open class PageDatumEventHandler: AbstractChainedFunction2<String, PageDatum, Any?>()
 
 /**
- * A readonly handler, the web asset will not be changed
+ * A readonly handler, the Web asset will not be changed
  * */
 open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, WebDriver, Any?>()
 
+/**
+ * An event handler that accepts a [WebPage] and a [WebDriver], anything can be returned.
+ * The event handler is supposed to use the Web driver to interact with the active remote web page.
+ *
+ * The Web asset might be changed by the handler since [WebPage] has setters.
+ *
+ * If the Web asset is not supposed to be changed, readonly handlers should be used which
+ * accept a [WebAsset] instead of [WebPage].
+ *
+ * Another possible way to write more robust code is to remove all setters in [WebPage],
+ * and add a MutableWebPage subclass.
+ * */
 open class WebPageWebDriverEventHandler: AbstractChainedPDFunction2<WebPage, WebDriver, Any?>()

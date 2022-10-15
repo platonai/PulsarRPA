@@ -303,7 +303,7 @@ class LoadComponent(
             report(page)
         }
 
-        // We might use the cached page's content in parse phrase
+        // We might use the cached page's content in parse phase
         // TODO: what if is canceled?
         if (options.parse) {
             parse(page, normUrl.options)

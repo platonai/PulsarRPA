@@ -32,7 +32,7 @@ import kotlin.reflect.jvm.kotlinProperty
  * session.load('https://www.jd.com', '-refresh')
  * // do not fetch after dead time
  * session.load('https://www.jd.com', '-deadline 2022-04-15T18:36:54.941Z')
- * // activate the parse phrase
+ * // activate the parse phase
  * session.load('https://www.jd.com', '-parse')
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
@@ -435,10 +435,10 @@ open class LoadOptions(
     var nMaxRetry = 3
 
     /**
-     * Retry at most n times at fetch phrase immediately if RETRY(1601) code return.
+     * Retry at most n times at fetch phase immediately if RETRY(1601) code return.
      * */
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
-            description = "Retry at most n times at fetch phrase immediately if RETRY(1601) code return")
+            description = "Retry at most n times at fetch phase immediately if RETRY(1601) code return")
     var nJitRetry = LoadOptionDefaults.nJitRetry
 
     /**
@@ -987,7 +987,7 @@ object LoadOptionDefaults {
      * */
     var lazyFlush = true
     /**
-     * Trigger the parse phrase or not.
+     * Trigger the parse phase or not.
      *
      * Do not parse by default, since there are may ways to trigger a webpage parsing:
      * 1. use session.parse()
