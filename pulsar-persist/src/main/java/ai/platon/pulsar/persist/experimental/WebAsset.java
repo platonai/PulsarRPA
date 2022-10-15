@@ -23,54 +23,101 @@ import java.util.List;
 import java.util.Map;
 
 public interface WebAsset {
-  String getKey();
-  String getLocation();
   int getId();
-  ByteBuffer getSignature();
-  ByteBuffer getContent();
-  String getEncoding();
-  long getContentLength();
+
+  String getUrl();
+  String getKey();
   String getReversedUrl();
-  Metadata getMetadata();
+  String getLocation();
   String getBaseUrl();
-  CrawlMarks getMarks();
   String getArgs();
+  String getConfiguredUrl();
+  String getReprUrl();
+
+  String getReferrer();
+  String getHref();
+
+  Variables getVariables();
+  Object getVar(String name);
+  VolatileConfig getConf();
+
+  Metadata getMetadata();
+  CrawlMarks getMarks();
+  ProtocolHeaders getHeaders();
+
+  Instant getCreateTime();
   ZoneId getZoneId();
   String getBatchId();
   int getDistance();
-  HtmlIntegrity getHtmlIntegrity();
   int getFetchPriority();
-  Instant getCreateTime();
   int getFetchCount();
   CrawlStatus getCrawlStatus();
+
   Instant getFetchTime();
   Instant getPrevFetchTime();
   Instant getPrevCrawlTime1();
   Duration getFetchInterval();
   ProtocolStatus getProtocolStatus();
-  ProtocolHeaders getHeaders();
-  String getReprUrl();
+
   int getFetchRetries();
   Instant getModifiedTime();
   Instant getPrevModifiedTime();
   PageCategory getPageCategory();
-  ByteArrayInputStream getContentAsInputStream();
-  long getAveContentLength();
-  long getPersistedContentLength();
-  long getLastContentLength();
-  String getContentType();
   ByteBuffer getPrevSignature();
   String getProxy();
   ActiveDOMStatus getActiveDOMStatus();
   Map<String, ActiveDOMStat> getActiveDOMStatTrace();
+
+  Instant getContentPublishTime();
+  Instant getPrevContentPublishTime();
+  Instant getRefContentPublishTime();
+  Instant getContentModifiedTime();
+  Instant getPrevContentModifiedTime();
+  Instant getPrevRefContentPublishTime();
+
+  PageCounters getPageCounters();
+  Duration getRetryDelay();
+  int getMaxRetries();
+
+  int getFetchedLinkCount();
+  FetchMode getFetchMode();
+  BrowserType getLastBrowser();
+  Instant getGenerateTime();
+  OpenPageCategory getOpenPageCategory();
+
+  String getEncoding();
+  String getEncodingOrDefault(String defaultValue);
+  String getEncodingClues();
+
+  HtmlIntegrity getHtmlIntegrity();
+
   String getPageTitle();
   String getContentTitle();
   String getPageText();
   String getContentText();
   int getContentTextLen();
+
+  String getContentType();
+  long getContentLength();
+
+  long getAveContentLength();
+  long getPersistedContentLength();
+  long getLastContentLength();
+
+  ByteBuffer getTmpContent();
+  ByteBuffer getContent();
+  ByteBuffer getPersistContent();
+  byte[] getContentAsBytes();
+  String getContentAsString();
+  InputSource getContentAsSaxInputSource();
+  ByteArrayInputStream getContentAsInputStream();
+
+  ByteBuffer getSignature();
+  String getPrevSignatureAsString();
+  String getSignatureAsString();
+
   ParseStatus getParseStatus();
   Map<CharSequence, GHypeLink> getLiveLinks();
-  String getUrl();
   Map<CharSequence, CharSequence> getVividLinks();
   List<CharSequence> getDeadLinks();
   List<CharSequence> getLinks();
@@ -78,41 +125,15 @@ public interface WebAsset {
   Map<CharSequence, CharSequence> getInlinks();
   CharSequence getAnchor();
   int getAnchorOrder();
-  Instant getContentPublishTime();
-  Instant getPrevContentPublishTime();
-  Instant getRefContentPublishTime();
-  Instant getContentModifiedTime();
-  Instant getPrevContentModifiedTime();
-  Instant getPrevRefContentPublishTime();
-  String getReferrer();
-  Instant getPageModelUpdateTime();
-  PageModel getPageModel();
+
+  Collection<String> getSimpleLiveLinks();
+  String[] getInlinkAnchors();
+
+  float getCash();
   float getScore();
   float getContentScore();
   String getSortScore();
-  PageCounters getPageCounters();
-  String getHref();
-  Variables getVariables();
-  Object getVar(String name);
-  VolatileConfig getConf();
-  Duration getRetryDelay();
-  int getMaxRetries();
-  String getConfiguredUrl();
-  int getFetchedLinkCount();
-  FetchMode getFetchMode();
-  BrowserType getLastBrowser();
-  Instant getGenerateTime();
-  OpenPageCategory getOpenPageCategory();
-  String getEncodingOrDefault(String defaultValue);
-  String getEncodingClues();
-  ByteBuffer getTmpContent();
-  ByteBuffer getPersistContent();
-  byte[] getContentAsBytes();
-  String getContentAsString();
-  InputSource getContentAsSaxInputSource();
-  String getPrevSignatureAsString();
-  String getSignatureAsString();
-  Collection<String> getSimpleLiveLinks();
-  String[] getInlinkAnchors();
-  float getCash();
+
+  Instant getPageModelUpdateTime();
+  PageModel getPageModel();
 }
