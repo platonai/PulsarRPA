@@ -19,7 +19,7 @@ package ai.platon.pulsar.persist.metadata;
 import ai.platon.pulsar.common.ResourceStatus;
 
 /**
- * ProtocolStatusCodes describe the fetch phrase status, inherited from the standard HTTP error code.
+ * ProtocolStatusCodes describe the fetch phase status, inherited from the standard HTTP error code.
  *
  * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
  * @link {https://developer.mozilla.org/en-US/docs/Web/HTTP/Status}

@@ -46,7 +46,7 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
      * Set to 0.0f (unknown value) - inlink contributions will bring it to a
      * correct level. Newly discovered pages have at least one inlink.
      *
-     * Called in update phrase
+     * Called in update phase
      */
     override fun initialScore(page: WebPage) {
         page.score = 0.0f
@@ -54,7 +54,7 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
     }
 
     /**
-     * Called in generate phrase
+     * Called in generate phase
      * */
     override fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
         val score = NamedScoreVector()

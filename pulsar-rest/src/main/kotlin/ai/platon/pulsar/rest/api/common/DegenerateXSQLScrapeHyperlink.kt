@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 /**
- * Never go to load phrase, LoadComponent.load is never used for a degenerate link
+ * Never go to load phase, `LoadComponent.load()` is never used for a degenerate link
  * */
 open class DegenerateXSQLScrapeHyperlink(
     request: ScrapeRequest,
