@@ -67,7 +67,7 @@ interface WebDriver: Closeable {
      * */
     val browserType: BrowserType
     /**
-     * Indicate the driver has javascript support or not. Web drivers such as MockDriver does not
+     * Indicates whether the driver supports javascript. Web drivers such as MockDriver do not
      * support javascript.
      * */
     val supportJavascript: Boolean
@@ -76,7 +76,7 @@ interface WebDriver: Closeable {
      * */
     val isMockedPageSource: Boolean
     /**
-     * Indicate if the driver is recovered from the browser's tab list or not.
+     * Indicate whether the driver is recovered from the browser's tab list.
      * */
     var isRecovered: Boolean
     /**
@@ -117,13 +117,14 @@ interface WebDriver: Closeable {
 
     /**
      * Adds a script which would be evaluated in one of the following scenarios:
-     * <ul>
-     * <li> Whenever the page is navigated.</li>
-     * </ul>
      *
-     * <p> The script is evaluated after the document was created but before any of
+     * * Whenever the page is navigated.
+     *
+     * The script is evaluated after the document was created but before any of
      * its scripts were run. This is useful to amend the JavaScript environment, e.g.
-     * to seed {@code Math.random}.
+     * to seed [Math.random].
+     *
+     * @param script Javascript source code to add.
      * */
     @Throws(WebDriverException::class)
     suspend fun addInitScript(script: String)
@@ -143,8 +144,8 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun navigateTo(url: String)
     /**
-     * Returns the main resource response. In case of multiple redirects, the navigation will resolve with the first
-     * non-redirect response.
+     * Returns the response of the main resource. In case of multiple redirects, the navigation will resolve
+     * with the first non-redirect response.
      *
      * @param entry NavigateEntry to navigate page to.
      */
@@ -155,7 +156,7 @@ interface WebDriver: Closeable {
     suspend fun setTimeouts(browserSettings: BrowserSettings)
 
     /**
-     * Get a string representing the current URL that the browser is looking at.
+     * Returns a string representing the current URL that the browser is looking at.
      *
      * @return The URL of the page currently loaded in the browser
      */
@@ -163,7 +164,7 @@ interface WebDriver: Closeable {
     suspend fun currentUrl(): String
 
     /**
-     * Get the source of the last loaded page. If the page has been modified after loading (for
+     * Returns the source of the last loaded page. If the page has been modified after loading (for
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
