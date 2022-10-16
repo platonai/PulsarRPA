@@ -18,8 +18,10 @@ public class BasicUsage {
         PulsarSession session = PulsarContexts.createSession();
         // the main url we are playing with
         String url = "https://list.jd.com/list.html?cat=652,12345,12349";
-        // load a page, fetch it from the web if it has expired or if it's being fetched for the first time
+        // load a page, or fetch it from the Internet if it does not exist or has expired
         WebPage page = session.load(url, "-expires 1d");
+        // submit a url to the URL pool, and it will be processed in a crawl loop
+        session.submit(url, "-expires 1d");
         // parse the page content into a Jsoup document
         FeaturedDocument document = session.parse(page, false);
         // do something with the document
@@ -32,6 +34,8 @@ public class BasicUsage {
 
         // load all pages with links specified by -outLink
         List<WebPage> pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]");
+        // load the portal page and submit the out links specified by the `-outLink` option to the URL pool
+        session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]");
         // load, parse and scrape fields
         List<Map<String, String>> fields = session.scrape(url, "-expires 1d", "li[data-sku]",
                 Arrays.asList(".p-name em", ".p-price"));

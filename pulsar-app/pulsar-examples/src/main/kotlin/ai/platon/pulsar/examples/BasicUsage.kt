@@ -8,7 +8,7 @@ fun main() {
     val session = PulsarContexts.createSession()
     // the main url we are playing with
     val url = "https://list.jd.com/list.html?cat=670,671,12798"
-    // load a page, fetch it from the web if it has expired or if it's being fetched for the first time
+    // load a page, or fetch it from the Internet if it does not exist or has expired
     val page = session.load(url, "-expires 10s")
     // parse the page content into a Jsoup document
     val document = session.parse(page)
@@ -22,6 +22,8 @@ fun main() {
 
     // load all pages with links specified by -outLink
     val pages = session.loadOutPages(url, "-expires 10s -itemExpires 10s -outLink a[href~=item]")
+    // load the portal page and submit the out links specified by the `-outLink` option to the URL pool
+    session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
     // load, parse and scrape fields
     val fields = session.scrape(url, "-expires 10s", "li[data-sku]", listOf(".p-name em", ".p-price"))
     // load, parse and scrape named fields

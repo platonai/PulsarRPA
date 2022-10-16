@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class RPACrawler {
 
@@ -43,7 +45,6 @@ public class RPACrawler {
             @Override
             public Object invoke(WebPage page, JvmWebDriver driver, Continuation<? super Object> continuation) {
                 fieldSelectors.values().forEach(selector -> interact(selector, driver));
-
                 return null;
             }
         });
@@ -60,11 +61,16 @@ public class RPACrawler {
     }
 
     private void interact(String selector, JvmWebDriver driver) {
+        var delayedExecutor = CompletableFuture.delayedExecutor(2, TimeUnit.SECONDS);
+        var searchBoxSelector = ".form input[type=text]";
+
         driver.existsAsync(selector).thenAccept(exists -> {
             if (exists) {
-                driver.clickAsync(selector).thenRun(() -> {
-                    logger.info("{} clicked", selector);
-                }).join();
+                driver.clickAsync(selector)
+                        .thenCompose(ignored -> driver.firstTextAsync(selector))
+                        .thenAcceptAsync(text -> driver.typeAsync(searchBoxSelector, text.substring(1, 4)), delayedExecutor)
+                        .thenRun(() -> { logger.info("{} clicked", selector); })
+                        .join();
             }
         }).join();
     }

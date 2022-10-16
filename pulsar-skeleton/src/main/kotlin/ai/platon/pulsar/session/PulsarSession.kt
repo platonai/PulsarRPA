@@ -197,7 +197,7 @@ interface PulsarSession : AutoCloseable {
      * Normalize urls, remove invalid ones
      *
      * @param urls The urls to normalize
-     * @param options The LoadOptions applied to each url
+     * @param args The arguments
      * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
@@ -283,7 +283,6 @@ interface PulsarSession : AutoCloseable {
      * 4. other
      *
      * @param url The url to load
-     * @param args The load arguments
      * @return The webpage loaded or NIL
      */
     fun load(url: String): WebPage
@@ -333,7 +332,6 @@ interface PulsarSession : AutoCloseable {
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * @param url  The url to load
-     * @param args The load arguments
      * @return The webpage loaded or NIL
      */
     fun load(url: UrlAware): WebPage
@@ -454,7 +452,6 @@ interface PulsarSession : AutoCloseable {
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * @param urls    The urls to load
-     * @param options The load options
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Iterable<String>): List<WebPage>
@@ -466,7 +463,7 @@ interface PulsarSession : AutoCloseable {
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * @param urls    The urls to load
-     * @param options The load options
+     * @param args The load arguments
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Iterable<String>, args: String): List<WebPage>
@@ -490,7 +487,6 @@ interface PulsarSession : AutoCloseable {
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * @param urls    The urls to load
-     * @param options The load options
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Collection<UrlAware>): List<WebPage>
@@ -502,7 +498,7 @@ interface PulsarSession : AutoCloseable {
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
      * @param urls    The urls to load
-     * @param options The load options
+     * @param args The load arguments
      * @return The webpage loaded or NIL
      */
     fun loadAll(urls: Collection<UrlAware>, args: String): List<WebPage>
@@ -667,13 +663,12 @@ interface PulsarSession : AutoCloseable {
      * Submit a url to the URL pool, the url will be processed in the crawl loop later
      *
      * @param url The url to submit
-     * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: String): PulsarSession
 
     /**
-     * Submit a url to the URL pool, the url will be processed in the crawl loop later
+     * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
      * @param url The url to submit
      * @param args The load arguments
@@ -682,16 +677,16 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: String, args: String): PulsarSession
 
     /**
-     * Submit a url to the URL pool, the url will be processed in the crawl loop later
+     * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
      * @param url The url to submit
-     * @param args The load arguments
+     * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submit(url: String, options: LoadOptions): PulsarSession
 
     /**
-     * Submit a url to the URL pool, the url will be processed in a crawl loop later
+     * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -699,7 +694,7 @@ interface PulsarSession : AutoCloseable {
     fun submit(url: UrlAware): PulsarSession
 
     /**
-     * Submit a url to the URL pool, the url will be processed in a crawl loop later
+     * Submit a url to the URL pool, and it will be processed in a crawl loop
      *
      * @param url The url to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -710,7 +705,7 @@ interface PulsarSession : AutoCloseable {
     // fun submit(url: UrlAware, options: LoadOptions): PulsarSession
 
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -718,7 +713,7 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>): PulsarSession
 
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * @param urls The urls to submit
      * @param args The load arguments
@@ -727,16 +722,16 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Iterable<String>, args: String): PulsarSession
 
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * @param urls The urls to submit
-     * @param args The load arguments
+     * @param options The load options
      * @return The [PulsarSession] itself to enabled chained operations
      */
     fun submitAll(urls: Iterable<String>, options: LoadOptions): PulsarSession
 
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -744,7 +739,7 @@ interface PulsarSession : AutoCloseable {
     fun submitAll(urls: Collection<UrlAware>): PulsarSession
 
     /**
-     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop later
+     * Submit the urls to the URL pool, the submitted urls will be processed in a crawl loop
      *
      * @param urls The urls to submit
      * @return The [PulsarSession] itself to enabled chained operations
@@ -791,8 +786,7 @@ interface PulsarSession : AutoCloseable {
     fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>>
 
     /**
-     * Load the portal page, and then submit the specified out links to the URL pool, the out links are
-     * selected by `-outLink` option.
+     * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
      * The submitted urls will be processed in a crawl loop later.
      *
@@ -803,8 +797,7 @@ interface PulsarSession : AutoCloseable {
     fun submitOutPages(portalUrl: String, args: String): PulsarSession
 
     /**
-     * Load the portal page, and then submit the specified out links to the URL pool, the out links are
-     * selected by `-outLink` option.
+     * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
      * The submitted urls will be processed in a crawl loop later.
      *

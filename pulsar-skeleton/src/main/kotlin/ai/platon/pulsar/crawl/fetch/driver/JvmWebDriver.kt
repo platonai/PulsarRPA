@@ -17,18 +17,10 @@ import kotlin.random.Random
  * all actions and behaviors are optimized to mimic real people as closely as possible,
  * such as scrolling, clicking, typing text, dragging and dropping, etc.
  *
- * The methods in this interface fall into three categories:
+ * [JvmWebDriver] is programmatically generated from the [WebDriver] class and is designed to
+ * help handle [WebDriver] tasks in other JVM languages such as java, clojure, scala, etc.
  *
- * * Control of the browser itself
- * * Selection of textContent and attributes of Elements
- * * Interact with the webpage
- *
- * Key methods:
- * * [navigateToAsync]: open a page.
- * * [scrollDownAsync]: scroll down on a web page to fully load the page,
- * most modern webpages support lazy loading using ajax tech, where the page
- * content only starts to load when it is scrolled into view.
- * * [pageSourceAsync]: retrieve the source code of a webpage.
+ * @see [WebDriver]
  */
 interface JvmWebDriver {
 
