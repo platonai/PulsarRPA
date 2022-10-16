@@ -4,6 +4,8 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :toc:
 :icons: font
 
+English | link:x-sql-CN.adoc[简体中文]
+
 == Introduction
 
 We developed X-SQL to query the Web directly and convert webpages into tables and charts.

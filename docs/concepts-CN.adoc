@@ -5,6 +5,8 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
+link:concepts.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+
 本文件描述了 Pulsar 的概念。
 
 [#_the_core_concepts_of_pulsar]

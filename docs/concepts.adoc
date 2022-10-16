@@ -4,6 +4,8 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :toc:
 :icons: font
 
+English | link:concepts-CN.adoc[简体中文]
+
 This document describes Pulsar concepts.
 
 [#_the_core_concepts_of_pulsar]

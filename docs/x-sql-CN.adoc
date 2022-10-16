@@ -4,6 +4,8 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :toc:
 :icons: font
 
+link:x-sql.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+
 == 简介
 
 我们开发了 X-SQL 来直接查询网页，并将网页转换成表格和图表。
