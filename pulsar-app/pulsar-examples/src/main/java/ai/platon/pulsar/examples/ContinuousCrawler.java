@@ -17,7 +17,7 @@ public class ContinuousCrawler {
         // do something wonderful with the document
         System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
 
-        // we can extract links in document and then scraping them
+        // extract more links from the document
         List<Hyperlink> urls = document.selectHyperlinks("a[href~=/dp/]");
         PulsarContexts.create().submitAll(urls);
     }

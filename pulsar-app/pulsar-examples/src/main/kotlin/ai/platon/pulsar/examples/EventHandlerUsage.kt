@@ -80,7 +80,6 @@ class PrintFlowEvent: DefaultPageEvent() {
             }
             onDidInteract.addLast { page, driver ->
                 println("$seq. onWillInteract")
-
             }
             onWillStopTab.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onWillStopTab")

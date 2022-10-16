@@ -10,6 +10,10 @@ fun main() {
     val context = PulsarContexts.create()
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->
+        // do something wonderful with the document
+        println(document.title + "\t|\t" + document.baseUri)
+
+        // extract more links from the document
         context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))
     }
     val urls = LinkExtractors.fromResource("seeds10.txt")
