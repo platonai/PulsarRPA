@@ -671,6 +671,7 @@
 
     <properties>
         <kotlin.version>1.5.32</kotlin.version>
+        <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
 <!--        <kotlin.version>1.6.20</kotlin.version>-->
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>

@@ -3,12 +3,15 @@ package ai.platon.pulsar.crawl.event
 import ai.platon.pulsar.common.lang.*
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.crawl.fetch.FetchResult
+import ai.platon.pulsar.crawl.fetch.driver.JvmWebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.experimental.WebAsset
+import org.jetbrains.annotations.NotNull
+import kotlin.coroutines.Continuation
 
 abstract class VoidHandler: PFunction0<Unit>, AbstractPHandler() {
     abstract override operator fun invoke()
@@ -148,3 +151,11 @@ open class WebAssetWebDriverEventHandler: AbstractChainedPDFunction2<WebAsset, W
  * and add a MutableWebPage subclass.
  * */
 open class WebPageWebDriverEventHandler: AbstractChainedPDFunction2<WebPage, WebDriver, Any?>()
+
+abstract class WebPageJvmWebDriverEventHandler: WebPageWebDriverEventHandler() {
+    override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
+        return invoke(page, driver.jvm())
+    }
+
+    abstract suspend fun invoke(page: WebPage, driver: JvmWebDriver): Any?
+}

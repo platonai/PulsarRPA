@@ -24,56 +24,69 @@ class PrintFlowEvent: DefaultPageEvent() {
                 url
             }
             onWillLoad.addLast { url ->
-                println("$seq. onBeforeLoad")
+                println("$seq. onWillLoad")
                 null
             }
             onWillFetch.addLast { page ->
-                println("$seq. onBeforeFetch")
+                println("$seq. onWillFetch")
             }
             onFetched.addLast { page ->
-                println("$seq. onAfterFetch")
+                println("$seq. onFetched")
             }
             onWillParseHTMLDocument.addLast { page ->
-                println("$seq. onBeforeParse")
+                println("$seq. onWillParseHTMLDocument")
             }
             onWillParseHTMLDocument.addLast { page ->
-                println("$seq. onBeforeHtmlParse")
+                println("$seq. onWillParseHTMLDocument")
             }
             onWillExtractData.addLast { page ->
-                println("$seq. onBeforeExtract")
+                println("$seq. onWillExtractData")
             }
             onDataExtracted.addLast { page: WebPage, document: FeaturedDocument ->
-                println("$seq. onAfterExtract")
+                println("$seq. onDataExtracted")
             }
             onHTMLDocumentParsed.addLast { page: WebPage, document: FeaturedDocument ->
-                println("$seq. onAfterHtmlParse")
+                println("$seq. onHTMLDocumentParsed")
             }
             onParsed.addLast { page ->
-                println("$seq. onAfterParse")
+                println("$seq. onParsed")
             }
             onLoaded.addLast { page ->
-                println("$seq. onAfterLoad")
+                println("$seq. onLoaded")
             }
         }
 
         browseEvent.apply {
             onWillLaunchBrowser.addLast { page ->
-                println("$seq. onBeforeBrowserLaunch")
+                println("$seq. onWillLaunchBrowser")
             }
             onBrowserLaunched.addLast { page, driver ->
-                println("$seq. onAfterBrowserLaunch")
+                println("$seq. onBrowserLaunched")
             }
-            onWillCheckDOMState.addLast { page: WebPage, driver: WebDriver ->
-                println("$seq. onBeforeCheckDOMState")
+            onWillCheckDocumentState.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. onWillCheckDocumentState")
             }
-            onDOMStateChecked.addLast { page: WebPage, driver: WebDriver ->
-                println("$seq. onAfterCheckDOMState")
+            onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. onDocumentActuallyReady")
             }
             onWillComputeFeature.addLast { page: WebPage, driver: WebDriver ->
-                println("$seq. onBeforeComputeFeature")
+                println("$seq. onWillComputeFeature")
             }
             onFeatureComputed.addLast { page: WebPage, driver: WebDriver ->
-                println("$seq. onAfterComputeFeature")
+                println("$seq. onFeatureComputed")
+            }
+            onWillInteract.addLast { page, driver ->
+                println("$seq. onWillInteract")
+            }
+            onDidInteract.addLast { page, driver ->
+                println("$seq. onWillInteract")
+
+            }
+            onWillStopTab.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. onWillStopTab")
+            }
+            onTabStopped.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. onTabStopped")
             }
         }
 

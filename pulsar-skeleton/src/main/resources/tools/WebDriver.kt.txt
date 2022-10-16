@@ -23,7 +23,7 @@ import kotlin.random.Random
  * * Interact with the webpage
  *
  * Key methods:
- * * [navigateTo]: open a page.
+ * * [navigateTo]: load a new web page.
  * * [scrollDown]: scroll down on a web page to fully load the page,
  * most modern webpages support lazy loading using ajax tech, where the page
  * content only starts to load when it is scrolled into view.
@@ -114,11 +114,6 @@ interface WebDriver: Closeable {
      * to interact with webpages.
      * */
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
-
-    /**
-     * Returns the WebDriver with other JVM language support
-     * */
-    fun jvm(): JvmWebDriver
 
     /**
      * Adds a script which would be evaluated in one of the following scenarios:

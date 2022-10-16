@@ -67,14 +67,14 @@ class RestaurantCrawler(
         val options = session.options(args)
         val be = options.event.browseEvent
         be.onWillComputeFeature.addLast { page, driver ->
-            commentSelectors.entries.mapIndexed { i, _ ->
-                "#reviewlist-wrapper .comment-item:nth-child($i) .more"
-            }.asFlow().flowOn(Dispatchers.IO).collect { selector ->
-                if (driver.exists(selector)) {
-                    driver.click(selector)
-                    delay(500)
+            IntRange(1, commentSelectors.size)
+                .map { "#reviewlist-wrapper .comment-item:nth-child($it) .more" }
+                .asFlow().flowOn(Dispatchers.IO).collect { selector ->
+                    if (driver.exists(selector)) {
+                        driver.click(selector)
+                        delay(500)
+                    }
                 }
-            }
         }
 
         be.onFeatureComputed.addLast { page, driver ->

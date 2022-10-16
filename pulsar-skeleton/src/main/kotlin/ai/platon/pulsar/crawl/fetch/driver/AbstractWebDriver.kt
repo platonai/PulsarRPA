@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.urls.UrlUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -19,7 +18,7 @@ import kotlin.random.Random
 abstract class AbstractWebDriver(
     override val browser: Browser,
     override val id: Int = instanceSequencer.incrementAndGet()
-): Comparable<AbstractWebDriver>, WebDriver {
+): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
         val instanceSequencer = AtomicInteger()
     }
@@ -74,6 +73,8 @@ abstract class AbstractWebDriver(
         if (status.compareAndSet(WebDriver.Status.WORKING, WebDriver.Status.CANCELED)) {
         }
     }
+
+    override fun jvm(): JvmWebDriver = this
 
     override val sessionId: String?
         get() = id.toString()
