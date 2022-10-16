@@ -72,7 +72,7 @@ interface WebDriver: Closeable {
      * */
     val supportJavascript: Boolean
     /**
-     * Indicate the page source is mocked or not.
+     * Indicate whether the page source is mocked.
      * */
     val isMockedPageSource: Boolean
     /**

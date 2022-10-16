@@ -18,7 +18,8 @@ import kotlin.random.Random
  * such as scrolling, clicking, typing text, dragging and dropping, etc.
  *
  * [JvmWebDriver] is programmatically generated from the [WebDriver] class and is designed to
- * help handle [WebDriver] tasks in other JVM languages such as java, clojure, scala, etc.
+ * help handle [WebDriver] tasks in other JVM languages such as java, clojure, scala, and so on,
+ * which had difficulty handling kotlin suspend methods.
  *
  * @see [WebDriver]
  */
@@ -41,6 +42,7 @@ interface JvmWebDriver {
      * Blocks URLs from loading.
      *
      * @param urls URL patterns to block. Wildcards ('*') are allowed.
+     * @return the new CompletableFuture
      */
     @Throws(WebDriverException::class)
     fun addBlockedURLsAsync(urls: List<String>): CompletableFuture<Unit>
@@ -49,6 +51,7 @@ interface JvmWebDriver {
      * will resolve with the first non-redirect response.
      *
      * @param url URL to navigate page to.
+     * @return the new CompletableFuture
      */
     @Throws(WebDriverException::class)
     fun navigateToAsync(url: String): CompletableFuture<Unit>
@@ -58,6 +61,7 @@ interface JvmWebDriver {
      * with the first non-redirect response.
      *
      * @param entry NavigateEntry to navigate page to.
+     * @return the new CompletableFuture
      */
     @Throws(WebDriverException::class)
     fun navigateToAsync(entry: NavigateEntry): CompletableFuture<Unit>
