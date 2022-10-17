@@ -4,7 +4,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :toc:
 :icons: font
 
-link:x-sql.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+link:x-sql.adoc[English] | 简体中文
 
 == 简介
 
