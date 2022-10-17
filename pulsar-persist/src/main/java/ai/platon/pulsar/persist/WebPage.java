@@ -662,8 +662,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * The baseUrl is as the same as Location
-     * <p>
+     * The URL where the HTML was retrieved from, to resolve relative links against.
+     *
      * A baseUrl has the same semantic with Jsoup.parse:
      *
      * @return a {@link String} object.
@@ -675,10 +675,15 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
+     * Get the URL this Document was parsed from. If the starting URL is a redirect,
+     * this will return the final URL from which the document was served from.
+     *
      * WebPage.url is the permanent internal address, it might not still available to access the target.
      * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
      * or it might have additional random parameters.
      * WebPage.location may be different from url, it's generally normalized.
+     *
+     * TODO: location is usually not the same as baseUrl, set it properly
      */
     public String getLocation() {
         return getBaseUrl();
@@ -690,6 +695,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * Location is the last working address, it might redirect to url, or it might have additional random parameters.
      * <p>
      * Location may be different from url, it's generally normalized.
+     *
+     * TODO: location is usually not the same as baseUrl, set it properly
      *
      * @param location The location.
      */

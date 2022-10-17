@@ -8,9 +8,7 @@ import ai.platon.pulsar.dom.nodes.*
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.*
 import org.apache.commons.math3.linear.RealVector
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
+import org.jsoup.nodes.*
 import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.nio.file.Path
@@ -18,17 +16,18 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A "featured document" is "very important" and all its features are calculated.
+ * A "featured document" is "very important" and the numerical features of each node are calculated,
+ * the numerical feature can be used to locate nodes or can be used by machine learning algorithms.
  *
- * FeaturedDocument is a wrapper for [org.jsoup.nodes.Document], every node's features
- * are calculated by a [ai.platon.pulsar.dom.features.FeatureCalculator].
+ * [FeaturedDocument] is a wrapper for [org.jsoup.nodes.Document], every node's numerical features are
+ * calculated by a [ai.platon.pulsar.dom.features.FeatureCalculator] which can be customized.
  *
- * FeaturedDocument's DOM is immutable, no method is provided to append or insert elements or nodes.
+ * The DOM of a [FeaturedDocument] is immutable, no method is provided to append or insert elements or nodes.
  *
- * FeaturedDocument provides a set of powerful methods to select elements, text contexts, attributes
+ * [FeaturedDocument] provides a set of powerful methods to select elements, text contexts, attributes
  * and so on:
  *
- * * [select]: retrieves an element collection matching the CSS query
+ * * [select]: retrieves a list of elements matching the CSS query
  * * [selectFirst]: retrieves the first matching element
  * * [selectFirstText]: retrieves the text content of the first matching element
  * * [selectFirstAttribute]: retrieves the attribute value associated to the given name of the first matching element
@@ -72,16 +71,12 @@ open class FeaturedDocument(val document: Document) {
         /**
          * Check if this document is NIL.
          * */
-        fun isNil(doc: FeaturedDocument): Boolean {
-            return doc == NIL || doc.location == NIL.location
-        }
+        fun isNil(doc: FeaturedDocument) = doc == NIL
 
         /**
          * Check if this document is internal.
          * */
-        fun isInternal(doc: FeaturedDocument): Boolean {
-            return doc.location.startsWith(INTERNAL_URL_PREFIX)
-        }
+        fun isInternal(doc: FeaturedDocument) = doc.location.startsWith(INTERNAL_URL_PREFIX)
     }
 
     /**
@@ -95,40 +90,181 @@ open class FeaturedDocument(val document: Document) {
     val title get() = document.title()
 
     /**
-     * Get the URL this Document was parsed from.
-     */
-    val baseUri get() = document.baseUri()
-
-    /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
      */
     val location get() = document.location()
 
+    /**
+     * The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     * before the HTML declares a `<base href>` tag.
+     *
+     * @return base URI
+     * @see #absUrl
+     */
+    val baseUri get() = document.baseUri()
+
+    /**
+     * Get this document's head element.
+     *
+     * As a side effect, if this Document does not already have a HTML structure, 
+     * it will be created. If you do not want that, use `selectFirst("head")` instead.
+     *
+     * @return head element.
+     */
     val head: Element get() = document.head()
 
+    /**
+     * Get this document's {@code <body>} or {@code <frameset>} element.
+     *
+     * As a <b>side-effect</b>, if this Document does not already have a HTML structure, 
+     * it will be created with a {@code <body>} element. If you do not want that, 
+     * use {@code #selectFirst("body")} instead.
+     *
+     * @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} 
+     * element if the document had no contents, or the outermost {@code <frameset> element} 
+     * for frameset documents.
+     */
     val body: Element get() = document.body()
 
+    /**
+     * Gets the <b>normalized, combined text</b> of this element and all its children. Whitespace is normalized and
+     * trimmed.
+     * <p>For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there
+     * now!"}
+     * <p>If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this document (and not
+     * children), use {@link #ownText()}
+     * <p>Note that this method returns the textual content that would be presented to a reader. The contents of data
+     * nodes (such as {@code <script>} tags are not considered text. Use {@link #data()} or {@link #html()} to retrieve
+     * that content.
+     *
+     * @return unencoded, normalized text, or empty string if none.
+     * @see #wholeText()
+     * @see #ownText()
+     * @see #textNodes()
+     */
     val text get() = document.text()
 
+    /**
+     * Gets the (normalized) text owned by this element only; does not get the combined text of all children.
+     * <p>
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
+     * whereas {@code p.text()} returns {@code "Hello there now!"}.
+     * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
+     *
+     * @return unencoded text, or empty string if none.
+     * @see #text()
+     * @see #textNodes()
+     */
     val ownText get() = document.ownText()
 
+    /**
+     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the
+     * original.
+     *
+     * @return unencoded, un-normalized text
+     * @see #text()
+     */
     val wholeText get() = document.wholeText()
 
+    /**
+     * Retrieves the document's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
+     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
+     *
+     * @return String of HTML.
+     * @see #outerHtml()
+     */
     val html get() = document.html()
 
+    /**
+    Get the outer HTML of this document. For example, on a {@code p} element, may return {@code <p>Para</p>}.
+    @return outer HTML
+    @see Element#html()
+    @see Element#text()
+     */
     val outerHtml get() = document.outerHtml()
 
+    /**
+     * Returns the charset used in this document. This method is equivalent
+     * to {@link OutputSettings#charset()}.
+     *
+     * @return Current Charset
+     *
+     * @see OutputSettings#charset()
+     */
     val charset get() = document.charset()
 
+    /**
+    Get the node name of this document. Use for debugging purposes and not logic switching (for that, use instanceof).
+    @return node name
+     */
     val nodeName get() = document.nodeName()
 
-    val data get() = document.data()
-
+    /**
+     * Get the {@code id} attribute of this element.
+     *
+     * @return The id attribute, if present, or an empty string if not.
+     */
     val id get() = document.id()
 
+    /**
+     * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
+     * separated. (E.g. on <code>&lt;div class="header gray"&gt;</code> returns, "<code>header gray</code>")
+     * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
+     */
     val className get() = document.className()
 
+    /**
+     * Get the combined data of this element. Data is e.g. the inside of a {@code <script>} tag. Note that data is NOT the
+     * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@code data()}
+     * for the contents of scripts, comments, CSS styles, etc.
+     *
+     * @return the data, or empty string if none
+     *
+     * @see #dataNodes()
+     */
+    val data get() = document.data()
+
+    /**
+     * Get this element's child data nodes. The list is unmodifiable but the data nodes may be manipulated.
+     * <p>
+     * This is effectively a filter on {@link #childNodes()} to get Data nodes.
+     * </p>
+     * @return child data nodes. If this element has no data nodes, returns an
+     * empty list.
+     * @see #data()
+     */
+    val dataNodes: List<DataNode> get() = document.dataNodes()
+
+    /**
+     * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
+     * <p>
+     * This is effectively a filter on {@link #childNodes()} to get Text nodes.
+     * @return child text nodes. If this element has no text nodes, returns an
+     * empty list.
+     * </p>
+     * For example, with the input HTML: {@code <p>One <span>Two</span> Three <br> Four</p>} with the {@code p} element selected:
+     * <ul>
+     *     <li>{@code p.text()} = {@code "One Two Three Four"}</li>
+     *     <li>{@code p.ownText()} = {@code "One Three Four"}</li>
+     *     <li>{@code p.children()} = {@code Elements[<span>, <br>]}</li>
+     *     <li>{@code p.childNodes()} = {@code List<Node>["One ", <span>, " Three ", <br>, " Four"]}</li>
+     *     <li>{@code p.textNodes()} = {@code List<TextNode>["One ", " Three ", " Four"]}</li>
+     * </ul>
+     */
+    val textNodes: List<TextNode> get() = document.textNodes()
+
+    /**
+     * Get this document's children. Presented as an unmodifiable list: new children can not be added, 
+     * but the child nodes themselves can be manipulated.
+     *
+     * @return list of children. If no children, returns an empty list.
+     */
+    val childNodes: List<Node> get() = document.childNodes()
+
+    /**
+     * Retrieves the document's inner HTML with pretty printing.
+     * */
     val prettyHtml: String
         get() {
             document.outputSettings().prettyPrint(true)
@@ -138,6 +274,11 @@ open class FeaturedDocument(val document: Document) {
                 .replace("s-caption", "\n\t\t\ts-caption")
         }
 
+    /**
+     * Get this document's numeric feature vector.
+     *
+     * @return a real-valued vector with basic algebraic operations.
+     */
     var features: RealVector
         get() = document.extension.features
         set(value) {
@@ -147,26 +288,57 @@ open class FeaturedDocument(val document: Document) {
     @Deprecated("Fragment is no longer used")
     val fragments by lazy { DocumentFragments(this) }
 
+    /**
+     * The constructor
+     *
+     * @param baseUri The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     * before the HTML declares a `<base href>` tag.
+     * */
     constructor(baseUri: String) : this(Document(baseUri))
 
+    /**
+     * The constructor
+     * */
     constructor(other: FeaturedDocument) : this(other.unbox())
 
     init {
         initialize()
     }
 
+    /**
+     * Get the underlying document.
+     *
+     * @return the underlying Jsoup document.
+     */
     fun unbox() = document
 
+    /**
+     * Check if this document is nil.
+     */
     fun isNil() = isNil(this)
 
+    /**
+     * Check if this document is internal.
+     */
     fun isInternal() = isInternal(this)
 
+    /**
+     * Check if this document is internal.
+     */
     fun isNotInternal() = !isInternal()
 
+    /**
+     * Create a new Element, with this document's base uri. Does not make the new element a child of this document.
+     * @param tagName element tag name (e.g. {@code a})
+     *
+     * @return new element
+     */
     fun createElement(tagName: String) = document.createElement(tagName)
 
     /**
-     * The title should be guessed for some site without a <title> tag inside a <head> tag
+     * Guess the document's title.
+     * 
+     * The title should be guessed for some site without a <title> tag inside a <head> tag.
      * */
     fun guessTitle(): String {
         return title.takeUnless { it.isBlank() }
@@ -190,7 +362,7 @@ open class FeaturedDocument(val document: Document) {
     }
 
     /**
-     * Find elements that match the CSS query, with the document as the starting context. Matched elements
+     * Find elements that match the CSS query. Matched elements
      * may include the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -201,7 +373,7 @@ open class FeaturedDocument(val document: Document) {
         document.select2(query, offset, limit)
 
     /**
-     * Find elements that match the CSS query, with the document as the starting context. Matched elements
+     * Find elements that match the CSS query. Matched elements
      * may include the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -211,7 +383,7 @@ open class FeaturedDocument(val document: Document) {
         document.select(query, offset, limit, transformer = transformer)
 
     /**
-     * Find the first element that match the CSS query, with the document as the starting context. Matched element
+     * Find the first element that match the CSS query. Matched element
      * may be the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -221,7 +393,7 @@ open class FeaturedDocument(val document: Document) {
         document.selectFirstOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
     /**
-     * Find the first element that match the CSS query, with the document as the starting context. Matched element
+     * Find the first element that match the CSS query. Matched element
      * may be the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -232,7 +404,7 @@ open class FeaturedDocument(val document: Document) {
             ?: throw NoSuchElementException("No element matching $query")
 
     /**
-     * Find the first element that match the CSS query, with the document as the starting context. Matched element
+     * Find the first element that match the CSS query. Matched element
      * may be the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -241,7 +413,7 @@ open class FeaturedDocument(val document: Document) {
     fun selectFirstOrNull(query: String) = document.selectFirstOrNull(query)
 
     /**
-     * Find the first element that match the CSS query, with the document as the starting context. Matched element
+     * Find the first element that match the CSS query. Matched element
      * may be the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -251,7 +423,7 @@ open class FeaturedDocument(val document: Document) {
         document.selectFirstOrNull(query)?.let { transformer(it) }
 
     /**
-     * Find elements that match the CSS query, with the document as the starting context. Matched elements
+     * Find elements that match the CSS query. Matched elements
      * may include the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -262,7 +434,7 @@ open class FeaturedDocument(val document: Document) {
     fun selectFirstOptional(query: String) = Optional.ofNullable(document.selectFirstOrNull(query))
 
     /**
-     * Find elements that match the CSS query, with the document as the starting context. Matched elements
+     * Find elements that match the CSS query. Matched elements
      * may include the document, or any of its children.
      *
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -281,44 +453,44 @@ open class FeaturedDocument(val document: Document) {
         document.selectFirstOrNull(query)?.let { transformer(it) }
 
     /**
-     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun selectFirstText(query: String) =
         firstTextOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
     /**
-     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun selectFirstTextOrNull(query: String) = document.selectFirstOrNull(query)?.text()
 
     /**
-     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun selectFirstTextOptional(query: String) = Optional.ofNullable(firstTextOrNull(query))
 
     /**
-     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun firstText(query: String) = selectFirstText(query)
 
     /**
-     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun firstTextOrNull(query: String) = selectFirstTextOrNull(query)
 
     /**
-     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Find the text content of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun firstTextOptional(query: String) = selectFirstTextOptional(query)
 
     /**
-     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     @JvmOverloads
@@ -326,20 +498,20 @@ open class FeaturedDocument(val document: Document) {
         firstAttributeOrNull(query, attrName) ?: defaultValue
 
     /**
-     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun selectFirstAttributeOrNull(query: String, attrName: String) = selectFirstOrNull(query)?.attr(attrName)
 
     /**
-     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun selectFirstAttributeOptional(query: String, attrName: String) =
         Optional.ofNullable(firstAttributeOrNull(query, attrName))
 
     /**
-     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     @JvmOverloads
@@ -347,13 +519,13 @@ open class FeaturedDocument(val document: Document) {
         selectFirstAttribute(query, attrName, defaultValue)
 
     /**
-     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun firstAttributeOrNull(query: String, attrName: String) = selectFirstAttributeOrNull(query, attrName)
 
     /**
-     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Find the attribute value of the first element that match the CSS query.
      * Matched element may be the document, or any of its children.
      * */
     fun firstAttributeOptional(query: String, attrName: String) = selectFirstAttributeOptional(query, attrName)

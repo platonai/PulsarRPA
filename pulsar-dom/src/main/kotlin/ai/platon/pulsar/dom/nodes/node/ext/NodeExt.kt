@@ -89,11 +89,15 @@ class ExportPaths(val uri: String) {
     }
 }
 
-val NILDocument = Document.createShell(AppConstants.NIL_PAGE_URL)
+const val NILLocation: String = AppConstants.NIL_PAGE_URL
 
-val NILElement = nilDocument.body()
+const val NILBaseUri: String = NILLocation
 
-val NILNode = nilElement as Node
+val NILDocument: Document = Document.createShell(NILBaseUri)
+
+val NILElement: Element = NILDocument.body()
+
+val NILNode: Node = NILElement
 
 @Deprecated("Inappropriate name", ReplaceWith("NILDocument"))
 val nilDocument = NILDocument
@@ -104,7 +108,7 @@ val nilElement = NILElement
 @Deprecated("Inappropriate name", ReplaceWith("NILNode"))
 val nilNode = NILNode
 
-val Document.isNil get() = this === nilDocument
+val Document.isNil get() = this === NILDocument
 
 val Document.pulsarMetaElement get() = getElementById("#${AppConstants.PULSAR_META_INFORMATION_ID}")
 

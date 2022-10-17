@@ -53,22 +53,31 @@ class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory
 
     val size: Int get() = attributes.size
 
+    /**
+     * The URL where the HTML was retrieved from.
+     *
+     * @return base URI
+     */
     var baseUri: String = baseUri0
         set(value) {
             field = value
             put(META_BASE_URI, baseUri, METADATA)
         }
 
-    var title: String = ""
-        set(value) {
-            field = value
-            put(META_TITLE, title, METADATA)
-        }
-
+    /**
+     * Get the URL this Document was parsed from. If the starting URL is a redirect,
+     * this will return the final URL from which the document was served from.
+     */
     var location: String = ""
         set(location) {
             field = location
             put(META_LOCATION, location, METADATA)
+        }
+
+    var title: String = ""
+        set(value) {
+            field = value
+            put(META_TITLE, title, METADATA)
         }
 
     fun isEmpty(): Boolean {
