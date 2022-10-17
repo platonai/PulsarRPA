@@ -89,11 +89,20 @@ class ExportPaths(val uri: String) {
     }
 }
 
-val nilDocument = Document.createShell(AppConstants.NIL_PAGE_URL)
+val NILDocument = Document.createShell(AppConstants.NIL_PAGE_URL)
 
-val nilElement = nilDocument.body()
+val NILElement = nilDocument.body()
 
-val nilNode = nilElement as Node
+val NILNode = nilElement as Node
+
+@Deprecated("Inappropriate name", ReplaceWith("NILDocument"))
+val nilDocument = NILDocument
+
+@Deprecated("Inappropriate name", ReplaceWith("NILElement"))
+val nilElement = NILElement
+
+@Deprecated("Inappropriate name", ReplaceWith("NILNode"))
+val nilNode = NILNode
 
 val Document.isNil get() = this === nilDocument
 

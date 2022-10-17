@@ -7,6 +7,7 @@ import ai.platon.pulsar.dom.nodes.TraverseState
 import ai.platon.pulsar.dom.nodes.node.ext.cleanText
 import ai.platon.pulsar.dom.nodes.node.ext.rectangle
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
+import org.apache.commons.lang3.StringUtils
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
@@ -123,7 +124,7 @@ fun Node.find(predicate: (Node) -> Boolean): List<Node> {
     return collectIf(predicate)
 }
 
-fun Node.first(predicate: (Node) -> Boolean): Node {
+fun Node.selectFirst(predicate: (Node) -> Boolean): Node {
     return selectFirstOrNull(predicate) ?:throw NoSuchElementException("Node contains no descendant matching the predicate.")
 }
 
@@ -141,6 +142,8 @@ fun Node.selectFirstOrNull(predicate: (Node) -> Boolean): Node? {
     }, this)
     return result
 }
+
+fun Node.first(predicate: (Node) -> Boolean) = selectFirst(predicate)
 
 fun Node.any(predicate: (Node) -> Boolean): Boolean {
     return selectFirstOrNull(predicate) != null
@@ -207,6 +210,7 @@ inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destinati
     }
 }
 
+@JvmOverloads
 fun Node.select2(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
     return select(query, offset, limit)
 }
@@ -223,29 +227,37 @@ fun Node.selectFirstOptional(query: String): Optional<Element> {
     return Optional.ofNullable(selectFirstOrNull(query))
 }
 
-fun Node.firstText(query: String, defaultValue: String = ""): String {
-    return firstTextOrNull(query) ?: defaultValue
-}
+@JvmOverloads
+fun Node.selectFirstText(query: String, defaultValue: String = "") = firstTextOrNull(query) ?: defaultValue
 
-fun Node.firstTextOrNull(query: String): String? {
-    return selectFirstOrNull(query)?.text()
-}
+fun Node.selectFirstTextOrNull(query: String) = selectFirstOrNull(query)?.text()
 
-fun Node.firstTextOptional(query: String): Optional<String> {
-    return Optional.ofNullable(firstTextOrNull(query))
-}
+fun Node.selectFirstTextOptional(query: String) = Optional.ofNullable(firstTextOrNull(query))
 
-fun Node.firstAttribute(query: String, attrName: String, defaultValue: String = ""): String {
-    return firstAttributeOrNull(query, attrName) ?: defaultValue
-}
+@JvmOverloads
+fun Node.firstText(query: String, defaultValue: String = "") = selectFirstText(query, defaultValue)
 
-fun Node.firstAttributeOrNull(query: String, attrName: String): String? {
-    return selectFirstOrNull(query)?.attr(attrName)
-}
+fun Node.firstTextOrNull(query: String) = selectFirstTextOrNull(query)
 
-fun Node.firstAttributeOptional(query: String, attrName: String): Optional<String> {
-    return Optional.ofNullable(firstAttributeOrNull(query, attrName))
-}
+fun Node.firstTextOptional(query: String) = selectFirstTextOptional(query)
+
+@JvmOverloads
+fun Node.selectFirstAttribute(query: String, attrName: String, defaultValue: String = "") =
+    firstAttributeOrNull(query, attrName) ?: defaultValue
+
+fun Node.selectFirstAttributeOrNull(query: String, attrName: String) =
+    selectFirstOrNull(query)?.attr(attrName)
+
+fun Node.selectFirstAttributeOptional(query: String, attrName: String) =
+    Optional.ofNullable(firstAttributeOrNull(query, attrName))
+
+@JvmOverloads
+fun Node.firstAttribute(query: String, attrName: String, defaultValue: String = "") =
+    selectFirstAttribute(query, attrName, defaultValue)
+
+fun Node.firstAttributeOrNull(query: String, attrName: String) = selectFirstAttributeOrNull(query, attrName)
+
+fun Node.firstAttributeOptional(query: String, attrName: String) = selectFirstAttributeOptional(query, attrName)
 
 /**
  * TODO: experimental
@@ -257,13 +269,12 @@ inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, 
 }
 
 @JvmOverloads
-fun Element.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
+fun Node.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
     val cssQuery = appendSelectorIfMissing(query, "a")
 
 //    return select(cssQuery, offset, limit).mapNotNull {
 //        it.takeIf { UrlUtils.isStandard(it.absUrl("href")) }
 //            ?.let { Hyperlink(it.absUrl("href"), it.cleanText, referer = baseUri()) }
-
 
     return select(cssQuery, offset, limit).asSequence()
         .map { it to it.absUrl("href") }
@@ -272,30 +283,31 @@ fun Element.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MA
         .toList()
 }
 
-fun Element.selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
-    return getAnchors(query, offset, limit)
-}
+private fun Element.anchorOrNull() = absUrl("href").takeIf { UrlUtils.isStandard(it) }
+        ?.let { GeoAnchor(it, cleanText, cssSelector(), rectangle) }
 
-fun Element.selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
-    return getImages(query, offset, limit)
-}
-
-@Deprecated("Use selectAnchors instead")
-fun Element.getAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
+@JvmOverloads
+fun Node.selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<GeoAnchor> {
     val cssQuery = appendSelectorIfMissing(query, "a")
-    return select(cssQuery, offset, limit).mapNotNull {
-        it.takeIf { UrlUtils.isValidUrl(it.absUrl("href")) }
-                ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
-    }
+    return select(cssQuery, offset, limit) { it.anchorOrNull() }.filterNotNull()
+//    return select(cssQuery, offset, limit).mapNotNull {
+//        it.takeIf { UrlUtils.isStandard(it.absUrl("href")) }
+//            ?.let { GeoAnchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
+//    }
 }
 
-@Deprecated("Use selectImages instead")
-fun Element.getImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
+@JvmOverloads
+fun Node.selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<String> {
     val cssQuery = appendSelectorIfMissing(query, "img")
-    return select(cssQuery, offset, limit) {
-        it.absUrl("src").takeIf { UrlUtils.isValidUrl(it) }
-    }.filterNotNull()
+    return select(cssQuery, offset, limit) { it.absUrl("src").takeIf { UrlUtils.isStandard(it) } }
+        .filterNotNull()
 }
+
+@Deprecated("Inappropriate name", ReplaceWith("selectAnchors(query, offset, limit)"))
+fun Element.getAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) = selectAnchors(query, offset, limit)
+
+@Deprecated("Inappropriate name", ReplaceWith("selectImages(query, offset, limit)"))
+fun Element.getImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) = selectImages(query, offset, limit)
 
 fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     var q = cssQuery.replace("\\s+".toRegex(), " ").trim()

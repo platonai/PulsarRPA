@@ -4,19 +4,13 @@ import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
-import ai.platon.pulsar.common.urls.Hyperlink
-import ai.platon.pulsar.dom.nodes.forEach
-import ai.platon.pulsar.dom.nodes.forEachElement
+import ai.platon.pulsar.dom.nodes.*
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.dom.select.select
-import ai.platon.pulsar.dom.select.select2
-import ai.platon.pulsar.dom.select.selectFirstOrNull
-import ai.platon.pulsar.dom.select.selectHyperlinks
+import ai.platon.pulsar.dom.select.*
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
-import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.nio.file.Path
@@ -24,9 +18,25 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The featured document.
- *
  * A "featured document" is "very important" and all its features are calculated.
+ *
+ * FeaturedDocument is a wrapper for [org.jsoup.nodes.Document], every node's features
+ * are calculated by a [ai.platon.pulsar.dom.features.FeatureCalculator].
+ *
+ * FeaturedDocument's DOM is immutable, no method is provided to append or insert elements or nodes.
+ *
+ * FeaturedDocument provides a set of powerful methods to select elements, text contexts, attributes
+ * and so on:
+ *
+ * * [select]: retrieves an element collection matching the CSS query
+ * * [selectFirst]: retrieves the first matching element
+ * * [selectFirstText]: retrieves the text content of the first matching element
+ * * [selectFirstAttribute]: retrieves the attribute value associated to the given name of the first matching element
+ * * [selectHyperlinks]: retrieves all hyperlinks of elements matching the CSS query
+ * * [selectAnchors]: retrieves all anchor elements matching the CSS query
+ * * [selectImages]: retrieves all image elements matching the CSS query
+ *
+ * Other methods provided include DOM traversal, node counting, document attribute retrieval, export, and so on.
  * */
 open class FeaturedDocument(val document: Document) {
     companion object {
@@ -38,38 +48,40 @@ open class FeaturedDocument(val document: Document) {
         var secondaryGridDimension = Dimension(5, 5)
         var densityUnitArea = 400 * 400
 
-        val NIL = FeaturedDocument(nilDocument)
+        /**
+         * The NIL document which is a wrapper for a nil [org.jsoup.nodes.Document]
+         * */
+        val NIL = FeaturedDocument(NILDocument)
+        /**
+         * The HTML content of a NIL document
+         * */
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
+        /**
+         * The length of a NIL document's HTML content
+         * */
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 
+        /**
+         * Create a shell document.
+         * */
         fun createShell(baseUri: String): FeaturedDocument {
             val document = Document.createShell(baseUri)
             return FeaturedDocument(document)
         }
 
         /**
-         * A node is Nil when it's owner document is nil
+         * Check if this document is NIL.
          * */
         fun isNil(doc: FeaturedDocument): Boolean {
             return doc == NIL || doc.location == NIL.location
         }
 
+        /**
+         * Check if this document is internal.
+         * */
         fun isInternal(doc: FeaturedDocument): Boolean {
             return doc.location.startsWith(INTERNAL_URL_PREFIX)
         }
-    }
-
-    @Deprecated("Fragment is no longer used")
-    val fragments by lazy { DocumentFragments(this) }
-
-    val documentOrNull get() = document.takeIf { isNotInternal() }
-
-    constructor(baseUri: String) : this(Document(baseUri))
-
-    constructor(other: FeaturedDocument) : this(other.unbox())
-
-    init {
-        initialize()
     }
 
     /**
@@ -77,6 +89,9 @@ open class FeaturedDocument(val document: Document) {
      * */
     val sequence = instanceSequencer.incrementAndGet()
 
+    /**
+     * Get document title.
+     * */
     val title get() = document.title()
 
     /**
@@ -116,8 +131,8 @@ open class FeaturedDocument(val document: Document) {
 
     val prettyHtml: String
         get() {
-            document.outputSettings().prettyPrint()
-            return document.html()
+            document.outputSettings().prettyPrint(true)
+            return outerHtml
                 .replace("s-features", "\n\t\t\ts-features")
                 .replace("s-named-features", "\n\t\t\ts-named-features")
                 .replace("s-caption", "\n\t\t\ts-caption")
@@ -128,6 +143,17 @@ open class FeaturedDocument(val document: Document) {
         set(value) {
             document.extension.features = value
         }
+
+    @Deprecated("Fragment is no longer used")
+    val fragments by lazy { DocumentFragments(this) }
+
+    constructor(baseUri: String) : this(Document(baseUri))
+
+    constructor(other: FeaturedDocument) : this(other.unbox())
+
+    init {
+        initialize()
+    }
 
     fun unbox() = document
 
@@ -154,7 +180,7 @@ open class FeaturedDocument(val document: Document) {
      * Make all links in the document to be absolute.
      * */
     fun absoluteLinks() {
-        document.forEachElement {
+        forEachElement {
             if (it.hasAttr("href")) {
                 it.attr("href", it.attr("abs:href"))
             } else if (it.hasAttr("src")) {
@@ -166,166 +192,226 @@ open class FeaturedDocument(val document: Document) {
     /**
      * Find elements that match the CSS query, with the document as the starting context. Matched elements
      * may include the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     *
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
      * */
     @JvmOverloads
-    fun select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        return document.select2(query, offset, limit)
-    }
+    fun select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.select2(query, offset, limit)
 
     /**
      * Find elements that match the CSS query, with the document as the starting context. Matched elements
      * may include the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     *
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
      * */
-    fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> T): List<T> {
-        return document.select(query, offset, limit, transformer = transformer)
-    }
+    fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> T) =
+        document.select(query, offset, limit, transformer = transformer)
 
     /**
      * Find the first element that match the CSS query, with the document as the starting context. Matched element
      * may be the document, or any of its children.
      *
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
      * */
-    fun selectFirst(query: String): Element {
-        return document.selectFirstOrNull(query) ?: throw NoSuchElementException("No element matching $query")
-    }
+    fun selectFirst(query: String) =
+        document.selectFirstOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
     /**
      * Find the first element that match the CSS query, with the document as the starting context. Matched element
      * may be the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     *
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
      * */
-    fun <T> selectFirst(query: String, transformer: (Element) -> T): T {
-        return document.selectFirstOrNull(query)?.let { transformer(it) }
+    fun <T> selectFirst(query: String, transformer: (Element) -> T) =
+        document.selectFirstOrNull(query)?.let { transformer(it) }
             ?: throw NoSuchElementException("No element matching $query")
-    }
 
     /**
      * Find the first element that match the CSS query, with the document as the starting context. Matched element
      * may be the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
-     * */
-    fun selectFirstOrNull(query: String): Element? {
-        return document.selectFirstOrNull(query)
-    }
-
-    /**
-     * Find the first element that match the CSS query, with the document as the starting context. Matched element
-     * may be the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
-     * */
-    fun <T> selectFirstOrNull(query: String, transformer: (Element) -> T): T? {
-        return document.selectFirstOrNull(query)?.let { transformer(it) }
-    }
-
-    /**
-     * Find elements that match the CSS query, with the document as the starting context. Matched elements
-     * may include the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
      *
-     * Return the first element, if no element matches the query, return an Optional object.
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
      * */
-    fun selectFirstOptional(query: String): Optional<Element> {
-        return Optional.ofNullable(document.selectFirstOrNull(query))
-    }
+    fun selectFirstOrNull(query: String) = document.selectFirstOrNull(query)
+
+    /**
+     * Find the first element that match the CSS query, with the document as the starting context. Matched element
+     * may be the document, or any of its children.
+     *
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
+     * */
+    fun <T> selectFirstOrNull(query: String, transformer: (Element) -> T) =
+        document.selectFirstOrNull(query)?.let { transformer(it) }
 
     /**
      * Find elements that match the CSS query, with the document as the starting context. Matched elements
      * may include the document, or any of its children.
      *
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
      *
      * Return the first element, if no element matches the query, return an Optional object.
      * */
-    fun <T> selectFirstOptional(query: String, transformer: (Element) -> T): Optional<T> {
-        return Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
-    }
+    fun selectFirstOptional(query: String) = Optional.ofNullable(document.selectFirstOrNull(query))
 
     /**
-     * Find hyperlinks in elements that match the CSS query, with the document as the starting context. Matched elements
+     * Find elements that match the CSS query, with the document as the starting context. Matched elements
      * may include the document, or any of its children.
-     * 
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     *
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined.
+     *
+     * Return the first element, if no element matches the query, return an Optional object.
      * */
-    @JvmOverloads
-    fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): List<Hyperlink> {
-        return document.selectHyperlinks(query, offset, limit)
-    }
+    fun <T> selectFirstOptional(query: String, transformer: (Element) -> T) =
+        Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
 
     @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query)"))
-    fun first(query: String): Element? {
-        return document.selectFirstOrNull(query)
-    }
+    fun first(query: String) = document.selectFirstOrNull(query)
 
     @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query, transformer)"))
-    fun <T> first(query: String, transformer: (Element) -> T): T? {
-        return document.selectFirstOrNull(query)?.let { transformer(it) }
-    }
+    fun <T> first(query: String, transformer: (Element) -> T) =
+        document.selectFirstOrNull(query)?.let { transformer(it) }
 
     /**
      * Find the text content of the first element that match the CSS query, with the document as the starting context.
      * Matched element may be the document, or any of its children.
      * */
-    fun firstText(query: String): String {
-        return firstTextOrNull(query) ?: throw NoSuchElementException("No element matching $query")
-    }
+    fun selectFirstText(query: String) =
+        firstTextOrNull(query) ?: throw NoSuchElementException("No element matching $query")
 
     /**
      * Find the text content of the first element that match the CSS query, with the document as the starting context.
      * Matched element may be the document, or any of its children.
      * */
-    fun firstTextOrNull(query: String): String? {
-        return document.selectFirstOrNull(query)?.text()
-    }
+    fun selectFirstTextOrNull(query: String) = document.selectFirstOrNull(query)?.text()
 
     /**
      * Find the text content of the first element that match the CSS query, with the document as the starting context.
      * Matched element may be the document, or any of its children.
      * */
-    fun firstTextOptional(query: String): Optional<String> {
-        return Optional.ofNullable(firstTextOrNull(query))
-    }
+    fun selectFirstTextOptional(query: String) = Optional.ofNullable(firstTextOrNull(query))
+
+    /**
+     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Matched element may be the document, or any of its children.
+     * */
+    fun firstText(query: String) = selectFirstText(query)
+
+    /**
+     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Matched element may be the document, or any of its children.
+     * */
+    fun firstTextOrNull(query: String) = selectFirstTextOrNull(query)
+
+    /**
+     * Find the text content of the first element that match the CSS query, with the document as the starting context.
+     * Matched element may be the document, or any of its children.
+     * */
+    fun firstTextOptional(query: String) = selectFirstTextOptional(query)
 
     /**
      * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
      * Matched element may be the document, or any of its children.
      * */
-    fun firstAttribute(query: String, attrName: String, defaultValue: String = ""): String {
-        return firstAttributeOrNull(query, attrName) ?: defaultValue
-    }
+    @JvmOverloads
+    fun selectFirstAttribute(query: String, attrName: String, defaultValue: String = "") =
+        firstAttributeOrNull(query, attrName) ?: defaultValue
 
     /**
      * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
      * Matched element may be the document, or any of its children.
      * */
-    fun firstAttributeOrNull(query: String, attrName: String): String? {
-        return selectFirstOrNull(query)?.attr(attrName)
-    }
+    fun selectFirstAttributeOrNull(query: String, attrName: String) = selectFirstOrNull(query)?.attr(attrName)
 
     /**
      * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
      * Matched element may be the document, or any of its children.
      * */
-    fun firstAttributeOptional(query: String, attrName: String): Optional<String> {
-        return Optional.ofNullable(firstAttributeOrNull(query, attrName))
+    fun selectFirstAttributeOptional(query: String, attrName: String) =
+        Optional.ofNullable(firstAttributeOrNull(query, attrName))
+
+    /**
+     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Matched element may be the document, or any of its children.
+     * */
+    @JvmOverloads
+    fun firstAttribute(query: String, attrName: String, defaultValue: String = "") =
+        selectFirstAttribute(query, attrName, defaultValue)
+
+    /**
+     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Matched element may be the document, or any of its children.
+     * */
+    fun firstAttributeOrNull(query: String, attrName: String) = selectFirstAttributeOrNull(query, attrName)
+
+    /**
+     * Find the attribute value of the first element that match the CSS query, with the document as the starting context.
+     * Matched element may be the document, or any of its children.
+     * */
+    fun firstAttributeOptional(query: String, attrName: String) = selectFirstAttributeOptional(query, attrName)
+
+    /**
+     * Find hyperlinks in elements matching the CSS query.
+     * */
+    @JvmOverloads
+    fun selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectHyperlinks(query, offset, limit)
+
+    /**
+     * Find anchor elements matching the CSS query.
+     * */
+    @JvmOverloads
+    fun selectAnchors(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectAnchors(query, offset, limit)
+
+    /**
+     * Find image elements matching the CSS query.
+     * */
+    @JvmOverloads
+    fun selectImages(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE) =
+        document.selectImages(query, offset, limit)
+
+    /**
+     * Traverse the DOM and apply the [action] to each [Node].
+     * */
+    fun forEach(action: (Node) -> Unit) {
+        NodeTraversor.traverse({ node: Node, _ -> action(node) }, document)
     }
+
+    /**
+     * Traverse the DOM and apply the [action] to each [Node] that matches [predicate].
+     * */
+    fun forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) =
+        document.forEachMatching(predicate, action)
+
+    /**
+     * Traverse the DOM and apply the [action] to each [Element].
+     * */
+    fun forEachElement(action: (Element) -> Unit) = document.forEachElement(true, action)
+
+    /**
+     * Traverse the DOM and apply the [action] to each [Element] that matches [predicate].
+     * */
+    fun forEachElementMatching(predicate: (Element) -> Boolean, action: (Element) -> Unit) =
+        document.forEachElementMatching(predicate, action)
+
+    /**
+     * Count nodes matching [predicate].
+     * */
+    fun count(predicate: (Node) -> Boolean = {true}) = document.count(predicate)
+
+    /**
+     * Count elements matching [predicate].
+     * */
+    fun countElements(predicate: (Element) -> Boolean = {true}) = document.countElements(predicate)
 
     /**
      * Retrieves the feature with the given key.
@@ -333,45 +419,53 @@ open class FeaturedDocument(val document: Document) {
     fun getFeature(key: Int) = document.getFeature(key)
 
     /**
-     * Format features.
+     * Format node features.
      * */
     fun formatFeatures(vararg featureKeys: Int) = document.formatEachFeatures(*featureKeys)
 
     /**
-     * Format named features.
+     * Format named node features.
      * */
     fun formatNamedFeatures() = document.formatNamedFeatures()
 
     /**
-     * Remove attributes with the given keys.
+     * Remove attributes associated with the given keys.
      * */
     fun removeAttrs(vararg attributeKeys: String) {
-        NodeTraversor.traverse({ node: Node, _ ->  node.extension.removeAttrs(*attributeKeys) }, document)
+        NodeTraversor.traverse({ node: Node, _ -> node.extension.removeAttrs(*attributeKeys) }, document)
     }
 
     /**
      * Remove all script nodes in the document.
      * */
-    fun stripScripts() {
+    fun removeScripts() {
         val removal = mutableSetOf<Node>()
-        NodeTraversor.traverse({ node, _ ->  if (node.nodeName() == "script") removal.add(node) }, document)
+        NodeTraversor.traverse({ node, _ -> if (node.nodeName() == "script") removal.add(node) }, document)
         removal.forEach { it.takeIf { it.hasParent() }?.remove() }
     }
 
     /**
+     * Remove all script nodes in the document.
+     * */
+    fun stripScripts() = removeScripts()
+
+    /**
      * Remove all style nodes from the document, and remove all style attributes from all elements.
      * */
-    fun stripStyles() {
+    fun removeStyles() {
         val removal = mutableSetOf<Node>()
         NodeTraversor.traverse({ node, _ ->
             if (node.nodeName() == "style" || node.attr("type") == "text/css"
-                    || node.attr("ref") == "stylesheet") {
+                || node.attr("ref") == "stylesheet"
+            ) {
                 removal.add(node)
             }
             node.removeAttr("style")
         }, document)
         removal.forEach { it.remove() }
     }
+
+    fun stripStyles() = removeStyles()
 
     /**
      * Export the document.

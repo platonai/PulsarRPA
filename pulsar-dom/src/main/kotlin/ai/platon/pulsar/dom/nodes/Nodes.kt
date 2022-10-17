@@ -260,20 +260,35 @@ fun Node.findFirstAncestor(stop: (Element) -> Boolean, predicate: (Element) -> B
 }
 
 /**
- * For each posterity
+ * Apply an action to each descendant node.
  * */
 fun Node.forEach(includeRoot: Boolean = false, action: (Node) -> Unit) {
     NodeTraversor.traverse({ node, _-> if (includeRoot || node != this) { action(node) } }, this)
 }
 
+/**
+ * Apply an action to each descendant node.
+ * */
 fun Node.forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) {
     NodeTraversor.traverse({ node, _-> if (predicate(node)) { action(node) } }, this)
 }
 
+/**
+ * Apply an action to each descendant node.
+ *
+ * TODO: consider remove includeRoot parameter
+ * */
 fun Node.forEachElement(includeRoot: Boolean = false, action: (Element) -> Unit) {
     NodeTraversor.traverse({ node, _->
         if ((includeRoot || node != this) && node is Element) { action(node) }
     }, this)
+}
+
+/**
+ * Apply an action to each descendant node.
+ * */
+fun Node.forEachElementMatching(predicate: (Element) -> Boolean, action: (Element) -> Unit) {
+    NodeTraversor.traverse({ node, _-> if (node is Element && predicate(node)) { action(node) } }, this)
 }
 
 fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true): Double {
@@ -360,5 +375,11 @@ fun Node.maxByDouble(transform: (Node) -> Double): Node? {
 fun Node.count(predicate: (Node) -> Boolean = {true}): Int {
     var count = 0
     forEach { if (predicate(it)) ++count }
+    return count
+}
+
+fun Node.countElements(predicate: (Element) -> Boolean = {true}): Int {
+    var count = 0
+    forEachElement { if (predicate(it)) ++count }
     return count
 }
