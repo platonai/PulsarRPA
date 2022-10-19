@@ -3,6 +3,7 @@
 1. upgrade kotlin to 1.7.20
 2. upgrade spring to 5.3.23
 3. upgrade spring-boot to 2.6.12
+4. WebPage refactoring: make WebPage be an interface
 
 ## 1.10.x
 
