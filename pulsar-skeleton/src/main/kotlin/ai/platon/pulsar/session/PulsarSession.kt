@@ -17,6 +17,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.experimental.WebAsset
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
+import kotlin.jvm.Throws
 
 /**
  * [PulsarSession] defines an interface to load webpages from local storage or fetch from the Internet,
@@ -76,7 +77,7 @@ import java.util.concurrent.CompletableFuture
  * [WebDriver] provides a complete method set for RPA, just like selenium, playwright
  * and puppeteer does, all actions and behaviors are optimized to mimic real people as closely as possible.
  * */
-interface PulsarSession : AutoCloseable {
+interface PulsarSession {
 
     /**
      * The session id
@@ -1114,4 +1115,7 @@ interface PulsarSession : AutoCloseable {
      * @return The path of the exported document
      * */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
+
+    @Throws(Exception::class)
+    fun close()
 }

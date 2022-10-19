@@ -52,6 +52,7 @@ public interface WebPage extends Comparable<WebPage>, WebAsset {
      * If a page is canceled, it should not be updated.
      * */
     boolean isCanceled();
+
     boolean isCached();
     boolean isLoaded();
     boolean isFetched();

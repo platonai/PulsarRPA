@@ -6,13 +6,12 @@ import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.session.PulsarSession;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 class CrawlAsync {
 
-    public static void loadAll() {
+    public static void parallelLoadAll() {
         PulsarSession session = PulsarContexts.createSession();
-        LinkExtractors.fromResource("seeds10.txt").stream()
+        LinkExtractors.fromResource("seeds10.txt").parallelStream()
                 .map(session::open).map(session::parse)
                 .map(FeaturedDocument::guessTitle)
                 .forEach(System.out::println);
@@ -48,17 +47,14 @@ class CrawlAsync {
         PulsarSession session = PulsarContexts.createSession();
 
         CompletableFuture<?>[] futures = session.loadAllAsync(LinkExtractors.fromResource("seeds10.txt")).stream()
-                .map(f -> f.thenApply(session::parse)
-                        .thenApply(FeaturedDocument::guessTitle)
-                        .thenAccept(System.out::println)
-                )
+                .map(f -> f.thenApply(session::parse).thenApply(FeaturedDocument::guessTitle).thenAccept(System.out::println))
                 .toArray(CompletableFuture<?>[]::new);
 
         CompletableFuture.allOf(futures).join();
     }
 
     public static void main(String[] args) {
-        loadAll();
+        parallelLoadAll();
         loadAllAsync2();
         loadAllAsync3();
         loadAllAsync4();
