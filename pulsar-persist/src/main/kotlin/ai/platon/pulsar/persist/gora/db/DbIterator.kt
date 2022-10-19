@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.gora.query.Result
 import org.slf4j.LoggerFactory
@@ -56,14 +57,14 @@ class DbIterator(
             log.error("Failed to move to the next record", e)
         }
 
-        return nextPage ?: MutableWebPage.NIL
+        return nextPage ?: WebPage.NIL
     }
 
     @Throws(Exception::class)
     private fun moveToNext() {
         nextPage = null
         while (nextPage == null && result.next()) {
-            val page = MutableWebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
+            val page = GoraWebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
             val f = filter
             if (f == null || f.test(page)) {
                 nextPage = page

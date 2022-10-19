@@ -19,6 +19,7 @@ package ai.platon.pulsar.scoring
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
@@ -33,7 +34,7 @@ open class ContentAnalysisScoringFilter(val conf: ImmutableConfig) : ScoringFilt
     /**
      * Increase the score by a sum of inlinked scores.
      */
-    override fun updateContentScore(page: WebPage) {
+    override fun updateContentScore(page: MutableWebPage) {
         page.contentScore = calculateContentScore(page)
     }
 

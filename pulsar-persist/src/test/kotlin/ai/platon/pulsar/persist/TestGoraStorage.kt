@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrEmpty
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -62,7 +63,7 @@ class TestGoraStorage {
         }
 
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
-        var page = WebPageExt.newTestWebPage(url)
+        var page: WebPage = WebPageExt.newTestWebPage(url)
         assertEquals(url, page.url)
         // webDb.put(page.getUrl(), page, true);
         webDb.put(page)
@@ -214,14 +215,17 @@ class TestGoraStorage {
 
         createExamplePage()
         var page = webDb.get(exampleUrl)
-        page.links = ArrayList()
-        // page.getLinks().clear();
-        assertTrue(page.links.isEmpty())
-        assertTrue(page.unbox().isDirty)
-        page.links.add(AppConstants.EXAMPLE_URL)
-        page.links.add(AppConstants.EXAMPLE_URL + "/1")
-        webDb.put(page, true)
-        webDb.flush()
+        if (page is GoraWebPage) {
+            page.links = ArrayList()
+            // page.getLinks().clear();
+            assertTrue(page.links.isEmpty())
+            assertTrue(page.gWebPage.isDirty)
+            page.links.add(AppConstants.EXAMPLE_URL)
+            page.links.add(AppConstants.EXAMPLE_URL + "/1")
+            webDb.put(page, true)
+            webDb.flush()
+        }
+
         page = webDb.get(exampleUrl)
         assertTrue(page.isNotNil)
         assertEquals(2, page.links.size.toLong())
@@ -249,7 +253,7 @@ class TestGoraStorage {
         webDb.flush()
 
         LOG.debug("Random url: $exampleUrl")
-        val page = MutableWebPage.newWebPage(exampleUrl, conf)
+        val page = GoraWebPage.newWebPage(exampleUrl, conf)
 
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i

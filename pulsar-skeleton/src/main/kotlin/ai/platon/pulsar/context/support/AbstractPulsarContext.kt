@@ -64,7 +64,7 @@ abstract class AbstractPulsarContext(
     /**
      * Return null if everything is OK, or return NIL if something wrong
      * */
-    private val abnormalPage get() = if (isActive) null else MutableWebPage.NIL
+    private val abnormalPage get() = if (isActive) null else WebPage.NIL
 
     /**
      * Return null if everything is OK, or return a empty list if something wrong
@@ -194,7 +194,7 @@ abstract class AbstractPulsarContext(
 
     override fun inject(url: NormURL) = abnormalPage ?: injectComponent.inject(url.spec, url.args)
 
-    override fun get(url: String): WebPage = webDbOrNull?.get(url, false) ?: MutableWebPage.NIL
+    override fun get(url: String): WebPage = webDbOrNull?.get(url, false) ?: WebPage.NIL
 
     override fun getOrNull(url: String) = webDbOrNull?.getOrNull(url, false)
 
@@ -236,7 +236,7 @@ abstract class AbstractPulsarContext(
 
     override fun loadAsync(url: NormURL): CompletableFuture<WebPage> {
         startLoopIfNecessary()
-        return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(MutableWebPage.NIL)
+        return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
 
     override fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>> {

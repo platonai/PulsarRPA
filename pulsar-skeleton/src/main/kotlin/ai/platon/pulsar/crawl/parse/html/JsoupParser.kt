@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.MutableWebPage
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -32,7 +33,7 @@ class JsoupParser(
     fun parse(): FeaturedDocument {
         numJsoupParses.incrementAndGet()
 
-        if (page.encoding == null) {
+        if (page.encoding == null && page is MutableWebPage) {
             val primerParser = PrimerParser(conf)
             primerParser.detectEncoding(page)
         }

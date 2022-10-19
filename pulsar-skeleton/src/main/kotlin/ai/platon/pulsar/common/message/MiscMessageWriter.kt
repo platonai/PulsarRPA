@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.model.ActiveDOMUrls
 import ai.platon.pulsar.persist.model.DomStatistics
 import java.time.LocalDateTime
@@ -30,7 +31,7 @@ class MiscMessageWriter(
 
     fun debugFetchHistory(page: WebPage) {
         // Debug fetch time history
-        val fetchTimeHistory = page.getFetchTimeHistory("")
+        val fetchTimeHistory = WebPageExt(page).getFetchTimeHistory("")
         if (fetchTimeHistory.contains(",")) {
             val report = "CST: ${page.crawlStatus}\tFTH: $fetchTimeHistory | ${page.url}"
             reportFetchTimeHistory(report)
@@ -96,7 +97,7 @@ class MiscMessageWriter(
             page.fetchTime,
             page.prevFetchTime,
             page.fetchCount,
-            page.getFetchTimeHistory(""),
+            WebPageExt(page).getFetchTimeHistory(),
             page.protocolStatus,
             page.marks
         )

@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.protocol.http
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.CrawlStatus
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.ProtocolStatus.ARG_HTTP_CODE
 import ai.platon.pulsar.persist.WebPage
@@ -92,7 +93,7 @@ object ProtocolStatusTranslator {
         }
 
         val newUrl = protocolStatus.getArgOrElse(ProtocolStatus.ARG_REDIRECT_TO_URL, "")
-        if (newUrl.isNotEmpty()) {
+        if (newUrl.isNotEmpty() && page is MutableWebPage) {
             // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
             val reprUrl = URLUtil.chooseRepr(url, newUrl, temp)
             if (reprUrl.length >= AppConstants.SHORTEST_VALID_URL_LENGTH) {

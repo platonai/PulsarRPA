@@ -33,70 +33,56 @@ import java.util.Map;
 /**
  * The core web page structure
  */
-public interface WebPage extends WebAsset {
-    boolean isNil();
+public interface WebPage extends Comparable<WebPage>, WebAsset {
+    WebPage NIL = new EmptyWebPage();
 
-    boolean isNotNil();
+    default boolean isNil() {
+        return this == NIL;
+    }
+    default boolean isNotNil() {
+        return !isNil();
+    }
 
     boolean isInternal();
-
     boolean isNotInternal();
 
+    /**
+     * Check if the page is canceled.
+     * <p>
+     * If a page is canceled, it should not be updated.
+     * */
     boolean isCanceled();
-
+    boolean isCached();
     boolean isLoaded();
-
     boolean isFetched();
-
+    boolean isContentUpdated();
     Variables getVariables();
-
     Object getVar(String name);
-
+    boolean hasVar(String name);
     VolatileConfig getConf();
-
     String getProxy();
-
     boolean isSeed();
-
+    boolean hasMark(String mark);
     PageCounters getPageCounters();
-
     int getMaxRetries();
-
     FetchMode getFetchMode();
-
     BrowserType getLastBrowser();
-
     ActiveDOMStatus getActiveDOMStatus();
-
     Map<String, ActiveDOMStat> getActiveDOMStatTrace();
-
     @NotNull
     ParseStatus getParseStatus();
-
     HtmlIntegrity getHtmlIntegrity();
-
     Map<CharSequence, GHypeLink> getLiveLinks();
-
     Collection<String> getSimpleLiveLinks();
-    
     void addLiveLink(HyperlinkPersistable hyperLink);
-    
     Map<CharSequence, CharSequence> getVividLinks();
-
     Collection<String> getSimpleVividLinks();
-
     List<CharSequence> getDeadLinks();
-
     List<CharSequence> getLinks();
-
     int getImpreciseLinkCount();
-
     Map<CharSequence, CharSequence> getInlinks();
-
     @NotNull
     CharSequence getAnchor();
-
     String[] getInlinkAnchors();
-
     int getAnchorOrder();
 }

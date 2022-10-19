@@ -4,18 +4,20 @@ import ai.platon.pulsar.common.DateTimes.constructTimeHistory
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 class WebPageExt(private val page: MutableWebPage) {
 
     companion object {
 
-        fun newTestWebPage(url: String): MutableWebPage {
-            val page = MutableWebPage.newWebPage(url, VolatileConfig(), null)
+        fun newTestWebPage(url: String): GoraWebPage {
+            val page = GoraWebPage.newWebPage(url, VolatileConfig(), null)
 
             page.vividLinks = mapOf("$url?t=a" to "a", "$url?t=b" to "b")
             page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
@@ -87,7 +89,7 @@ class WebPageExt(private val page: MutableWebPage) {
         }
 
         for (l in hypeLinks) {
-            val url = MutableWebPage.u8(l.url)
+            val url = AbstractWebPage.u8(l.url)
             if (!links.contains(url)) {
                 links.add(url)
             }
@@ -106,7 +108,7 @@ class WebPageExt(private val page: MutableWebPage) {
         }
 
         for (link in hypeLinks) {
-            val url = MutableWebPage.u8(link.toString())
+            val url = AbstractWebPage.u8(link.toString())
             // Use a set?
             if (!links.contains(url)) {
                 links.add(url)
@@ -118,7 +120,7 @@ class WebPageExt(private val page: MutableWebPage) {
     }
 
     fun updateContentPublishTime(newPublishTime: Instant): Boolean {
-        if (!page.isValidContentModifyTime(newPublishTime)) {
+        if (!isValidContentModifyTime(newPublishTime)) {
             return false
         }
 
@@ -132,7 +134,7 @@ class WebPageExt(private val page: MutableWebPage) {
     }
 
     fun updateContentModifiedTime(newModifiedTime: Instant): Boolean {
-        if (!page.isValidContentModifyTime(newModifiedTime)) {
+        if (!isValidContentModifyTime(newModifiedTime)) {
             return false
         }
         val lastModifyTime = page.contentModifiedTime
@@ -144,15 +146,17 @@ class WebPageExt(private val page: MutableWebPage) {
     }
 
     fun updateRefContentPublishTime(newRefPublishTime: Instant): Boolean {
-        if (!page.isValidContentModifyTime(newRefPublishTime)) {
+        if (!isValidContentModifyTime(newRefPublishTime)) {
             return false
         }
+
         val latestRefPublishTime = page.refContentPublishTime
         if (newRefPublishTime.isAfter(latestRefPublishTime)) {
             page.prevRefContentPublishTime = latestRefPublishTime
             page.refContentPublishTime = newRefPublishTime
             return true
         }
+
         return false
     }
 
@@ -167,6 +171,14 @@ class WebPageExt(private val page: MutableWebPage) {
             }
         }
         return firstIndexTime ?: defaultValue
+    }
+
+    fun getFetchTimeHistory(defaultValue: String): String {
+        return page.metadata.get(Name.FETCH_TIME_HISTORY) ?: defaultValue
+    }
+
+    fun getFetchTimeHistory(): String? {
+        return page.metadata.get(Name.FETCH_TIME_HISTORY)
     }
 
     /**
@@ -193,7 +205,7 @@ class WebPageExt(private val page: MutableWebPage) {
     val firstFetchTime: Instant?
         get() {
             var firstFetchTime: Instant? = null
-            val history = page.getFetchTimeHistory("")
+            val history = getFetchTimeHistory("")
             if (!history.isEmpty()) {
                 val times = history.split(",").toTypedArray()
                 val time = parseInstant(times[0], Instant.EPOCH)
@@ -208,14 +220,14 @@ class WebPageExt(private val page: MutableWebPage) {
         var modifiedTime = page.modifiedTime
         val headerModifiedTime = page.headers.lastModified
         val contentModifiedTime = page.contentModifiedTime
-        if (page.isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
+        if (isValidContentModifyTime(headerModifiedTime) && headerModifiedTime.isAfter(modifiedTime)) {
             modifiedTime = headerModifiedTime
         }
-        if (page.isValidContentModifyTime(contentModifiedTime) && contentModifiedTime.isAfter(modifiedTime)) {
+        if (isValidContentModifyTime(contentModifiedTime) && contentModifiedTime.isAfter(modifiedTime)) {
             modifiedTime = contentModifiedTime
         }
         val contentPublishTime = page.contentPublishTime
-        if (page.isValidContentModifyTime(contentPublishTime) && contentPublishTime.isAfter(modifiedTime)) {
+        if (isValidContentModifyTime(contentPublishTime) && contentPublishTime.isAfter(modifiedTime)) {
             modifiedTime = contentPublishTime
         }
 

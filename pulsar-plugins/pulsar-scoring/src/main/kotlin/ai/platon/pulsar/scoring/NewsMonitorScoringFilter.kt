@@ -27,6 +27,7 @@ import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.Name
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
@@ -78,7 +79,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
         )
     }
 
-    override fun injectedScore(page: WebPage) {
+    override fun injectedScore(page: MutableWebPage) {
         val score = page.score
         page.cash = score
     }
@@ -87,7 +88,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
      * Set to 0.0f (unknown value) - inlink contributions will bring it to a
      * correct level. Newly discovered pages have at least one inlink.
      */
-    override fun initialScore(row: WebPage) {
+    override fun initialScore(row: MutableWebPage) {
         row.score = 0.0f
         row.cash = 0.0f
     }
@@ -211,7 +212,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
     }
 
     /** Increase the score by a sum of inlinked scores.  */
-    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
+    override fun updateScore(page: MutableWebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
         val score = incomingEdges.sumByDouble { if (it.isLoop) 0.0 else graph.getEdgeWeight(it) }.toFloat()
         page.score = page.score + score
         page.cash = page.cash + score
@@ -249,10 +250,11 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
                 LOG.error("Failed with the following MalformedURLException: ", e)
                 graph.setEdgeWeight(edge, score + externalScore)
             }
-
         }
 
-        page.cash = 0.0f
+        if (page is MutableWebPage) {
+            page.cash = 0.0f
+        }
     }
 
     /** Dampen the boost value by scorePower.  */

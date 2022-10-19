@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants.MEM_STORE_CLASS
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
@@ -172,7 +173,7 @@ class TestGoraStorageInMemory {
             val max = 100
             for (i in 0 until max) {
                 val url = AppConstants.SHORTEST_VALID_URL + "/" + id + "/" + i
-                var page = WebPage.newWebPage(url, conf)
+                var page = GoraWebPage.newWebPage(url, conf)
                 page.location = url
                 page.pageText = "text"
                 page.distance = 0
@@ -187,7 +188,7 @@ class TestGoraStorageInMemory {
                 // retrieve page and check title
                 val goraPage = store.get(url)
                 assertNotNull(goraPage)
-                page = WebPage.box(url, goraPage, conf)
+                page = GoraWebPage.box(url, goraPage, conf)
                 assertEquals("text", page.pageText)
                 assertEquals(0, page.distance.toLong())
                 assertEquals("header1", page.headers["header1"])

@@ -21,6 +21,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.urls.UrlUtils;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexingFilters;
+import ai.platon.pulsar.persist.MutableWebPage;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.WebPageExt;
 import org.junit.Before;
@@ -60,7 +61,7 @@ public class TestIndexingFilters {
         conf.unbox().set(indexingFiltersClassNames, class1 + "," + class2);
 
         String url = "http://www.example.com/";
-        WebPage page = WebPageExt.Companion.newTestWebPage(url);
+        MutableWebPage page = WebPageExt.Companion.newTestWebPage(url);
         page.setPageText("text");
         page.setPageTitle("title");
 

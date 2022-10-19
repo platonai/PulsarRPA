@@ -25,6 +25,7 @@ import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.scoring.Name
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 
 class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
@@ -38,7 +39,7 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
     /**
      *
      * */
-    override fun injectedScore(page: WebPage) {
+    override fun injectedScore(page: MutableWebPage) {
         page.cash = page.score
     }
 
@@ -48,7 +49,7 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
      *
      * Called in update phase
      */
-    override fun initialScore(page: WebPage) {
+    override fun initialScore(page: MutableWebPage) {
         page.score = 0.0f
         page.cash = 0.0f
     }

@@ -30,6 +30,7 @@ import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
 import ai.platon.pulsar.persist.*
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -47,7 +48,7 @@ open class FetchComponent(
 
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && AppContext.isActive
-    private val abnormalPage get() = MutableWebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     /**
      * Fetch an url
@@ -55,7 +56,7 @@ open class FetchComponent(
      * @param url The url of web page to fetch
      * @return The fetch result
      */
-    fun fetch(url: String) = abnormalPage ?: fetchContent(MutableWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+    fun fetch(url: String) = abnormalPage ?: fetchContent(GoraWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
      * Fetch an url

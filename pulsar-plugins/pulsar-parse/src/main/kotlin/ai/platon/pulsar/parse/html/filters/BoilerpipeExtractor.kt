@@ -30,6 +30,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.persist.metadata.PageCategory
 import org.apache.commons.logging.LogFactory
@@ -44,14 +45,16 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
 
     override fun doFilter(parseContext: ParseContext): FilterResult {
         val page = parseContext.page
-        extract(page, page.encoding ?: "UTF-8")
+        if (page is MutableWebPage) {
+            extract(page, page.encoding ?: "UTF-8")
+        }
         return FilterResult.success()
     }
 
     /**
      * Extract the page into fields
      */
-    fun extract(page: WebPage, encoding: String): TextDocument? {
+    fun extract(page: MutableWebPage, encoding: String): TextDocument? {
         val doc = extract(page) ?: return null
         val pageExt = WebPageExt(page)
         page.contentTitle = doc.contentTitle
@@ -64,14 +67,14 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
         return doc
     }
 
-    private fun extract(page: WebPage): TextDocument? {
+    private fun extract(page: MutableWebPage): TextDocument? {
         if (page.content == null) {
             log.warn("Can not extract page without content, url : " + page.url)
             return null
         }
 
         try {
-            if (page.encoding == null) {
+            if (page.encoding == null && page is MutableWebPage) {
                 primerParser.detectEncoding(page)
             }
             val inputSource = page.contentAsSaxInputSource

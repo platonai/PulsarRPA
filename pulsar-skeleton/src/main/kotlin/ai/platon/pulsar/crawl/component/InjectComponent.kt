@@ -53,9 +53,13 @@ class InjectComponent(
             return page
         }
 
-        // already exist in db, update the status and mark it as a seed
-        page.args = args
-        return if (inject(page)) page else MutableWebPage.NIL
+        if (page is MutableWebPage) {
+            // already exist in db, update the status and mark it as a seed
+            page.args = args
+            return if (inject(page)) page else WebPage.NIL
+        }
+
+        return WebPage.NIL
     }
 
     fun inject(page: MutableWebPage): Boolean {
@@ -82,7 +86,7 @@ class InjectComponent(
 
     fun unInject(url: String): WebPage {
         val page = webDb.get(url)
-        if (page.isSeed) {
+        if (page.isSeed && page is MutableWebPage) {
             unInject(page)
         }
         return page

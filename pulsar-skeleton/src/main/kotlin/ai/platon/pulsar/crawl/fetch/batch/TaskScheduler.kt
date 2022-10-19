@@ -249,7 +249,7 @@ class TaskScheduler(
             }
 
             // Double check success
-            if (!page.hasMark(Mark.PARSE)) {
+            if (!page.hasMark(Mark.PARSE.value())) {
                 enumCounters.inc(Counter.rNoParse)
             }
 

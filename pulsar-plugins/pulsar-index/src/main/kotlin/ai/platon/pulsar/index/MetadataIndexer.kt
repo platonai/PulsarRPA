@@ -95,7 +95,7 @@ class MetadataIndexer(
         val now = Instant.now()
         val crawlTimeStr = isoInstantFormat(now)
         val firstFetchTime = pageExt.firstFetchTime ?: now
-        val fetchTimeHistory = page.getFetchTimeHistory(crawlTimeStr)
+        val fetchTimeHistory = pageExt.getFetchTimeHistory() ?: crawlTimeStr
         doc.add("first_crawl_time", isoInstantFormat(firstFetchTime))
         doc.add("last_crawl_time", crawlTimeStr)
         doc.add("fetch_time_history", fetchTimeHistory)

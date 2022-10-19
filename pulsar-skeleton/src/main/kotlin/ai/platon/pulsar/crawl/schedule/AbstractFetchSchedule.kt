@@ -25,6 +25,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.persist.ext.updateFetchTime
 import ai.platon.pulsar.persist.CrawlStatus
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import ai.platon.pulsar.persist.metadata.Mark
@@ -63,7 +64,7 @@ abstract class AbstractFetchSchedule(
      *
      * @param page
      */
-    override fun initializeSchedule(page: WebPage) {
+    override fun initializeSchedule(page: MutableWebPage) {
         page.fetchInterval = defaultInterval
         page.fetchRetries = 0
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
@@ -76,7 +77,7 @@ abstract class AbstractFetchSchedule(
 
      * @param m The modification info
      */
-    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+    override fun setFetchSchedule(page: MutableWebPage, m: ModifyInfo) {
         if (page.protocolStatus.isSuccess) {
             page.fetchRetries = 0
         }
@@ -102,7 +103,7 @@ abstract class AbstractFetchSchedule(
      * @param fetchTime        current fetch time
      */
     override fun setPageRetrySchedule(
-        page: WebPage,
+        page: MutableWebPage,
         prevFetchTime: Instant,
         prevModifiedTime: Instant,
         fetchTime: Instant,
@@ -127,7 +128,7 @@ abstract class AbstractFetchSchedule(
      * NOTE: this may be a different instance than
      */
     override fun setPageGoneSchedule(
-        page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
+        page: MutableWebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
     ) {
         page.fetchInterval = ChronoUnit.DECADES.duration
         val now = Instant.now()
@@ -157,7 +158,7 @@ abstract class AbstractFetchSchedule(
      * fetchlist, otherwise false.
      */
     override fun shouldFetch(page: WebPage, now: Instant): Boolean {
-        if (page.hasMark(Mark.INACTIVE)) {
+        if (page.hasMark(Mark.INACTIVE.value())) {
             return false
         }
 
@@ -188,8 +189,8 @@ abstract class AbstractFetchSchedule(
      * fetchTime to now. If false, force refetch whenever the next fetch
      * time is set.
      */
-    override fun forceRefetch(page: WebPage, prevFetchTime: Instant, asap: Boolean) {
-        if (page.hasMark(Mark.INACTIVE)) {
+    override fun forceRefetch(page: MutableWebPage, prevFetchTime: Instant, asap: Boolean) {
+        if (page.hasMark(Mark.INACTIVE.value())) {
             return
         }
 
@@ -205,7 +206,7 @@ abstract class AbstractFetchSchedule(
         page.updateFetchTime(now, now + fetchInterval)
     }
 
-    protected fun updateRefetchTime(page: WebPage, fetchInterval: Duration, m: ModifyInfo) {
+    protected fun updateRefetchTime(page: MutableWebPage, fetchInterval: Duration, m: ModifyInfo) {
         val now = Instant.now()
         page.fetchInterval = fetchInterval
         page.updateFetchTime(now, now + page.fetchInterval)

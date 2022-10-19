@@ -32,6 +32,7 @@ import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
@@ -106,9 +107,7 @@ class PageParser(
         try {
             val parseResult = doParse(page)
 
-            if (parseResult.isParsed) {
-                page.parseStatus = parseResult
-
+            if (parseResult.isParsed && page is MutableWebPage) {
                 if (parseResult.isRedirect) {
                     processRedirect(page, parseResult)
                 } else if (parseResult.isSuccess) {
@@ -229,7 +228,7 @@ class PageParser(
     /**
      * Note: signature is not useful for pages change rapidly
      * */
-    private fun processSuccess(page: WebPage, parseResult: ParseResult) {
+    private fun processSuccess(page: MutableWebPage, parseResult: ParseResult) {
         val prevSig = page.signature
         if (prevSig != null) {
             page.prevSignature = prevSig
@@ -244,7 +243,7 @@ class PageParser(
     /**
      * Process redirect when the page is fetched with native http protocol rather than a browser
      * */
-    private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
+    private fun processRedirect(page: MutableWebPage, parseStatus: ParseStatus) {
         val refreshHref = parseStatus.getArgOrElse(ParseStatus.REFRESH_HREF, "")
         val newUrl = crawlFilters.normalizeToNull(refreshHref, ChainedUrlNormalizer.SCOPE_FETCHER)?:return
 
@@ -262,7 +261,7 @@ class PageParser(
         // TODO : check the no-follow html tag directive
         val follow = (!page.metadata.contains(Name.NO_FOLLOW)
                 || page.isSeed
-                || page.hasMark(Mark.INJECT)
+                || page.hasMark(Mark.INJECT.value())
                 || page.metadata.contains(Name.FORCE_FOLLOW)
                 || page.variables.contains(Name.FORCE_FOLLOW.name))
         if (follow) {
@@ -271,7 +270,9 @@ class PageParser(
             // TODO: too many filters, hard to debug, move all filters to a single filter, or just do it in ParserFilter
             val hypeLinks = unfilteredLinks
             log.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
-            page.setLiveLinks(hypeLinks)
+            if (page is MutableWebPage) {
+                page.setLiveLinks(hypeLinks)
+            }
             pageExt.addHyperlinks(hypeLinks)
         }
     }

@@ -39,6 +39,8 @@ public interface WebAsset {
   CrawlMarks getMarks();
   ProtocolHeaders getHeaders();
 
+  boolean isResource();
+
   Instant getCreateTime();
   ZoneId getZoneId();
   String getBatchId();
@@ -98,7 +100,6 @@ public interface WebAsset {
   String getSignatureAsString();
 
   ParseStatus getParseStatus();
-
 
   float getCash();
   float getScore();

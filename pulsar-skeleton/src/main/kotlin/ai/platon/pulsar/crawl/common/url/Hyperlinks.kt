@@ -277,7 +277,7 @@ fun NormURL.toCompletableListenableHyperlink(): CompletableListenableHyperlink<W
     link.event.loadEvent.onLoaded.addLast(CompleteWebPageHyperlinkHandler(link))
     options.rawEvent?.let { link.event.chain(it) }
 
-    link.completeOnTimeout(MutableWebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
+    link.completeOnTimeout(WebPage.NIL, options.pageLoadTimeout.seconds + 1, TimeUnit.SECONDS)
 
     return link
 }

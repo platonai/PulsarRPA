@@ -23,10 +23,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 
 /**
  * This class implements an adaptive re-fetch algorithm. This works as follows:
@@ -85,7 +85,7 @@ open class AdaptiveFetchSchedule(
         ).merge(super.getParams())
     }
 
-    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+    override fun setFetchSchedule(page: MutableWebPage, m: ModifyInfo) {
         val newModifiedTime = m.modifiedTime
         super.setFetchSchedule(page, m)
 
@@ -107,7 +107,7 @@ open class AdaptiveFetchSchedule(
      * NOTE: this may be a different instance than
      */
     override fun setPageGoneSchedule(
-        page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
+        page: MutableWebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
     ) {
         val prevInterval = page.fetchInterval.seconds.toFloat()
         var newInterval = prevInterval

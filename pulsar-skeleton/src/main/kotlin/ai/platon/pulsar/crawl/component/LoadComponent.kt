@@ -21,6 +21,8 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.GWebPageAware
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import org.slf4j.LoggerFactory
@@ -67,7 +69,7 @@ class LoadComponent(
 
     @Volatile
     private var numWrite = 0
-    private val abnormalPage get() = MutableWebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
@@ -96,7 +98,7 @@ class LoadComponent(
 
     fun loadWithRetry(normURL: NormURL): WebPage {
         if (normURL.isNil) {
-            return MutableWebPage.NIL
+            return WebPage.NIL
         }
 
         var page = load0(normURL)
@@ -109,7 +111,7 @@ class LoadComponent(
 
     suspend fun loadWithRetryDeferred(normURL: NormURL): WebPage {
         if (normURL.isNil) {
-            return MutableWebPage.NIL
+            return WebPage.NIL
         }
 
         var page = loadDeferred0(normURL)
@@ -224,7 +226,9 @@ class LoadComponent(
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
             // TODO: clone the underlying data or not?
-            page.unsafeCloneGPage(cachedPage as MutableWebPage)
+            if (cachedPage is GoraWebPage) {
+                page.unsafeCloneGPage(cachedPage)
+            }
             page.clearPersistContent()
 
             page.tmpContent = cachedPage.content
@@ -353,7 +357,9 @@ class LoadComponent(
             if (contentPage != null) {
                 page.content = contentPage.content
                 // TODO: test the dirty flag
-                page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
+                if (page is GWebPageAware) {
+                    page.gWebPage.clearDirty(GWebPage.Field.CONTENT.index)
+                }
             }
         }
 
@@ -425,7 +431,9 @@ class LoadComponent(
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         // the metadata of the page is loaded from database but the content is not cached,
         // so load the content again
-        updateFetchSchedule(page, options)
+        if (page is MutableWebPage) {
+            updateFetchSchedule(page, options)
+        }
         globalCache.fetchingCache.remove(page.url)
     }
 
@@ -492,7 +500,7 @@ class LoadComponent(
         return CheckState(FetchState.DO_NOT_FETCH, "unknown")
     }
 
-    private fun updateFetchSchedule(page: WebPage, options: LoadOptions) {
+    private fun updateFetchSchedule(page: MutableWebPage, options: LoadOptions) {
         if (page.isInternal) {
             logger.warn("Unexpected internal page [updateFetchSchedule]")
             return
@@ -508,17 +516,17 @@ class LoadComponent(
         require(page.isFetched)
     }
 
-    private fun persist(page: MutableWebPage, options: LoadOptions) {
+    private fun persist(page: WebPage, options: LoadOptions) {
         // Remove content if storingContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
-        if (!options.storeContent && page.content != null) {
+        if (!options.storeContent && page.content != null && page is MutableWebPage) {
             page.clearPersistContent()
         }
 
         // the content is loaded from cache, the content remains unchanged, do not persist it
-        if (page.isCached) {
-            page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
-            assert(!page.unbox().isContentDirty)
+        if (page.isCached && page is GWebPageAware) {
+            page.gWebPage.clearDirty(GWebPage.Field.CONTENT.index)
+            assert(!page.gWebPage.isContentDirty)
         }
 
         webDb.put(page)

@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.session.AbstractPulsarSession
 import com.codahale.metrics.Gauge
@@ -128,7 +129,7 @@ class FatLinkExtractor(
         val now = Instant.now()
 
         val vividLinks = if (document != null) {
-            parseVividLinks(seed, page, document, denyList).also { page.fetchedLinkCount = 0 }
+            parseVividLinks(seed, page, document, denyList).also { (page as? MutableWebPage)?.fetchedLinkCount = 0 }
         } else {
             loadVividLinks(page, options, denyList)
         }
@@ -159,7 +160,7 @@ class FatLinkExtractor(
         // update vivid links
         if (document != null) {
             val hyperlinks = vividLinks.map { HyperlinkPersistable(it.url, it.text, it.order) }
-            page.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
+            (page as? MutableWebPage)?.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
         }
 
         val fatLink = CrawlableFatLink(normalizedFatLink, href = fatLinkSpec, args = args, tailLinks = vividLinks)

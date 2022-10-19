@@ -26,6 +26,7 @@ import ai.platon.pulsar.crawl.index.IndexerMapping
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.solr.SolrIndexWriter
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -276,16 +277,9 @@ class SolrIndexWriter(private val indexerMapping: IndexerMapping, conf: Immutabl
         if (webDb == null) return
 
         // TODO: use TaskStatusTracker
-        val page = WebPage.newInternalPage(INDEXER_REPORT_PAGE_HOME + "/solr/failure", "Failed solr indexing pages")
-        failedDocs.stream()
-            .map { doc: SolrInputDocument ->
-                doc["url"]!!
-                    .value.toString()
-            }
-            .map { url: String? ->
-                HyperlinkPersistable(
-                    url!!)
-            }
+        val page = GoraWebPage.newInternalPage(INDEXER_REPORT_PAGE_HOME + "/solr/failure", "Failed solr indexing pages")
+        failedDocs.mapNotNull { it["url"]?.value?.toString() }
+            .map { HyperlinkPersistable(it) }
             .forEach { l: HyperlinkPersistable -> page.vividLinks[l.url] = "" }
         webDb!!.put(page)
         webDb!!.flush()

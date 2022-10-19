@@ -32,6 +32,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Maps
@@ -88,7 +89,7 @@ class PrimerParser(val conf: ImmutableConfig) {
         }
     }
 
-    fun detectEncoding(page: WebPage) {
+    fun detectEncoding(page: MutableWebPage) {
         val encoding = encodingDetector.sniffEncoding(page)
         if (encoding != null && encoding.isNotEmpty()) {
             page.encoding = encoding
@@ -105,7 +106,7 @@ class PrimerParser(val conf: ImmutableConfig) {
             page.protocolStatus, page.htmlIntegrity, page.url
         )
 
-        if (page.encoding == null) {
+        if (page.encoding == null && page is MutableWebPage) {
             detectEncoding(page)
         }
 

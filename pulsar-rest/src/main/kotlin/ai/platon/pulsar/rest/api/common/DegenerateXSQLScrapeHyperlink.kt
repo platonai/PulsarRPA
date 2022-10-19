@@ -50,7 +50,7 @@ open class DegenerateXSQLScrapeHyperlink(
             } catch (t: Throwable) {
                 getLogger(this).warn("Unexpected exception", t)
             } finally {
-                complete(page ?: MutableWebPage.NIL)
+                complete(page ?: WebPage.NIL)
             }
         }
     }

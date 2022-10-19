@@ -10,6 +10,8 @@ import ai.platon.pulsar.common.metrics.CommonCounter
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.GWebPageAware
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import kotlinx.coroutines.*
 import org.apache.hadoop.io.IntWritable
@@ -174,7 +176,9 @@ class FetchLoop(
     private fun write(key: String, page: WebPage) {
         try {
             // the page is fetched and status are updated, write to the file system
-            context.write(key, page.unbox())
+            if (page is GWebPageAware) {
+                context.write(key, page.gWebPage)
+            }
         } catch (e: IOException) {
             log.error("Failed to write to hdfs - {}", e.stringify())
         } catch (e: InterruptedException) {

@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -43,26 +44,26 @@ class WebDb(
     val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
     val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
 
-    fun getOrNull(originalUrl: String, field: GWebPage.Field): MutableWebPage? {
+    fun getOrNull(originalUrl: String, field: GWebPage.Field): GoraWebPage? {
         return getOrNull(originalUrl, field.toString())
     }
 
-    fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): MutableWebPage? {
+    fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): GoraWebPage? {
         return getOrNull(originalUrl, false, fields.map { it.toString() }.toTypedArray())
     }
 
-    fun getOrNull(originalUrl: String, field: String): MutableWebPage? {
+    fun getOrNull(originalUrl: String, field: String): GoraWebPage? {
         return getOrNull(originalUrl, false, arrayOf(field))
     }
 
     /**
-     * Returns the MutableWebPage corresponding to the given url.
+     * Returns the GoraWebPage corresponding to the given url.
      *
      * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
-     * @param fields the fields required in the MutableWebPage. Pass null, to retrieve all fields
-     * @return the MutableWebPage corresponding to the key or null if it cannot be found
+     * @param fields the fields required in the GoraWebPage. Pass null, to retrieve all fields
+     * @return the GoraWebPage corresponding to the key or null if it cannot be found
      */
-    fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): MutableWebPage? {
+    fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GoraWebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
@@ -73,7 +74,7 @@ class WebDb(
         accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
 
         if (page != null) {
-            val p = MutableWebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = GoraWebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
 
             tracer?.trace("Got ${p.fetchCount} ${p.prevFetchTime} ${p.fetchTime} $key")
 
@@ -84,21 +85,21 @@ class WebDb(
     }
 
     /**
-     * Returns the MutableWebPage corresponding to the given url.
+     * Returns the GoraWebPage corresponding to the given url.
      *
      * @param originalUrl the original address of the page
-     * @return the MutableWebPage corresponding to the key or MutableWebPage.NIL if it cannot be found
+     * @return the GoraWebPage corresponding to the key or GoraWebPage.NIL if it cannot be found
      */
-    fun get(originalUrl: String, field: GWebPage.Field): MutableWebPage =
-        getOrNull(originalUrl, field) ?: MutableWebPage.NIL
+    fun get(originalUrl: String, field: GWebPage.Field): WebPage =
+        getOrNull(originalUrl, field) ?: GoraWebPage.NIL
 
-    fun get(originalUrl: String, fields: Iterable<GWebPage.Field>): MutableWebPage =
-        getOrNull(originalUrl, fields) ?: MutableWebPage.NIL
+    fun get(originalUrl: String, fields: Iterable<GWebPage.Field>): WebPage =
+        getOrNull(originalUrl, fields) ?: GoraWebPage.NIL
 
-    fun get(originalUrl: String, field: String): MutableWebPage = getOrNull(originalUrl, field) ?: MutableWebPage.NIL
+    fun get(originalUrl: String, field: String): WebPage = getOrNull(originalUrl, field) ?: GoraWebPage.NIL
 
-    fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): MutableWebPage {
-        return getOrNull(originalUrl, norm, fields) ?: MutableWebPage.NIL
+    fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
+        return getOrNull(originalUrl, norm, fields) ?: GoraWebPage.NIL
     }
 
     fun exists(originalUrl: String, norm: Boolean = false): Boolean {
@@ -120,7 +121,7 @@ class WebDb(
             return false
         }
 
-        if (page !is MutableWebPage) {
+        if (page !is GoraWebPage) {
             return false
         }
 
@@ -143,7 +144,7 @@ class WebDb(
         return true
     }
 
-    fun putAll(pages: Iterable<MutableWebPage>) = pages.forEach { put(it, false) }
+    fun putAll(pages: Iterable<GoraWebPage>) = pages.forEach { put(it, false) }
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {

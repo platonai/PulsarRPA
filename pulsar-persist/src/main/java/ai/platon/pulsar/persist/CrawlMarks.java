@@ -7,10 +7,6 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ai.platon.pulsar.persist.MutableWebPage.u8;
-import static ai.platon.pulsar.persist.MutableWebPage.wrapKey;
-
-
 /**
  * Created by vincent on 17-7-26.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
@@ -35,7 +31,7 @@ public class CrawlMarks {
     }
 
     public Utf8 get(Mark mark) {
-        return (Utf8) marks.get(wrapKey(mark));
+        return (Utf8) marks.get(AbstractWebPage.wrapKey(mark));
     }
 
     public boolean contains(Mark mark) {
@@ -47,11 +43,11 @@ public class CrawlMarks {
     }
 
     public void put(Mark mark, String value) {
-        put(mark, u8(value));
+        put(mark, AbstractWebPage.u8(value));
     }
 
     public void put(Mark mark, Utf8 value) {
-        marks.put(wrapKey(mark), value);
+        marks.put(AbstractWebPage.wrapKey(mark), value);
     }
 
     public void putIfNotNull(Mark mark, Utf8 value) {
@@ -62,7 +58,7 @@ public class CrawlMarks {
 
     public void remove(Mark mark) {
         if (contains(mark)) {
-            marks.put(wrapKey(mark), null);
+            marks.put(AbstractWebPage.wrapKey(mark), null);
         }
     }
 

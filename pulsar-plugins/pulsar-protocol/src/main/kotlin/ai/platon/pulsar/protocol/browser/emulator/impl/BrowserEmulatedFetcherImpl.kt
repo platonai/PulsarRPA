@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
@@ -44,9 +45,9 @@ open class BrowserEmulatedFetcherImpl(
         fetched
     }
 
-    override fun fetch(url: String) = fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+    override fun fetch(url: String) = fetchContent(GoraWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
-    override fun fetch(url: String, conf: VolatileConfig) = fetchContent(WebPage.newWebPage(url, conf))
+    override fun fetch(url: String, conf: VolatileConfig) = fetchContent(GoraWebPage.newWebPage(url, conf))
 
     /**
      * Fetch page content
@@ -56,10 +57,10 @@ open class BrowserEmulatedFetcherImpl(
     }
 
     override suspend fun fetchDeferred(url: String) =
-        fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+        fetchContentDeferred(GoraWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     override suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig) =
-        fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))
+        fetchContentDeferred(GoraWebPage.newWebPage(url, volatileConfig))
 
     /**
      * Fetch page content

@@ -19,6 +19,7 @@
 package ai.platon.pulsar.crawl.schedule
 
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
@@ -70,7 +71,7 @@ interface FetchSchedule : Parameterized {
      *
      * @param page
      */
-    fun initializeSchedule(page: WebPage)
+    fun initializeSchedule(page: MutableWebPage)
 
     /**
      * Sets the `fetchInterval` and `fetchTime` on a
@@ -93,7 +94,7 @@ interface FetchSchedule : Parameterized {
      * changed; implementations are free to follow a sensible default
      * behavior.
      */
-    fun setFetchSchedule(page: WebPage, m: ModifyInfo)
+    fun setFetchSchedule(page: MutableWebPage, m: ModifyInfo)
 
     /**
      * This method specifies how to schedule refetching of pages marked as GONE.
@@ -104,7 +105,7 @@ interface FetchSchedule : Parameterized {
      * @param page The page
      */
     fun setPageGoneSchedule(
-        page: WebPage,
+        page: MutableWebPage,
         prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
     )
 
@@ -119,7 +120,7 @@ interface FetchSchedule : Parameterized {
      * @param fetchTime        current fetch time
      */
     fun setPageRetrySchedule(
-        page: WebPage,
+        page: MutableWebPage,
         prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant,
     )
 
@@ -155,5 +156,5 @@ interface FetchSchedule : Parameterized {
      * fetchTime to now. If false, force refetch whenever the next fetch
      * time is set.
      */
-    fun forceRefetch(page: WebPage, prevFetchTime: Instant, asap: Boolean)
+    fun forceRefetch(page: MutableWebPage, prevFetchTime: Instant, asap: Boolean)
 }

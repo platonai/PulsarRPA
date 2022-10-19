@@ -6,6 +6,7 @@ import ai.platon.pulsar.crawl.CrawlEvent
 import ai.platon.pulsar.crawl.LoadEvent
 import ai.platon.pulsar.crawl.PageEvent
 import ai.platon.pulsar.crawl.BrowseEvent
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
 import java.time.Instant
@@ -39,7 +40,7 @@ val WebPage.options: LoadOptions
  */
 val WebPage.label: String get() = options.label
 
-fun WebPage.updateFetchTime(prevFetchTime: Instant, fetchTime: Instant) {
+fun MutableWebPage.updateFetchTime(prevFetchTime: Instant, fetchTime: Instant) {
     this.prevFetchTime = prevFetchTime
     // the next time supposed to fetch
     this.fetchTime = fetchTime

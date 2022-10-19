@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
@@ -51,7 +52,7 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
         )
     }
 
-    override fun injectedScore(page: WebPage) {
+    override fun injectedScore(page: MutableWebPage) {
         val score = page.score
         page.cash = score
     }
@@ -60,7 +61,7 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
      * Set to 0.0f (unknown value) - inlink contributions will bring it to a
      * correct level. Newly discovered pages have at least one inlink.
      */
-    override fun initialScore(page: WebPage) {
+    override fun initialScore(page: MutableWebPage) {
         page.score = 0.0f
         page.cash = 0.0f
     }
@@ -68,7 +69,7 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
     /**
      * Increase the score by a sum of inlinked scores.
      */
-    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
+    override fun updateScore(page: MutableWebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
         val score = incomingEdges.sumOf { if (it.isLoop) 0.0 else graph.getEdgeWeight(it) }.toFloat()
         page.score = page.score + score
         page.cash = page.cash + score
@@ -105,7 +106,10 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
                 graph.setEdgeWeight(edge, score + externalScore)
             }
         }
-        page.cash = 0.0f
+
+        if (page is MutableWebPage) {
+            page.cash = 0.0f
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.GoraWebPage
 
 class FetchEntry(val page: MutableWebPage, val options: LoadOptions) {
 
@@ -13,13 +14,13 @@ class FetchEntry(val page: MutableWebPage, val options: LoadOptions) {
 
     companion object {
 
-        fun createPageShell(normURL: NormURL): MutableWebPage {
+        fun createPageShell(normURL: NormURL): GoraWebPage {
             val referer = normURL.detail?.referrer ?: normURL.options.referrer
             return createPageShell(normURL.spec, normURL.options, normURL.hrefSpec, referer)
         }
 
-        fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): MutableWebPage {
-            val page = MutableWebPage.newWebPage(url, options.conf, href)
+        fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): GoraWebPage {
+            val page = GoraWebPage.newWebPage(url, options.conf, href)
             initWebPage(page, options, href, referrer)
             return page
         }

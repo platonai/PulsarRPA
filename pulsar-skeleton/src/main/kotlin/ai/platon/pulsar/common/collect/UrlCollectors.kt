@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.common.urls.preprocess.UrlNormalizerPipeline
+import ai.platon.pulsar.persist.MutableWebPage
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
 import java.time.Instant
@@ -100,7 +101,7 @@ open class HyperlinkCollector(
     private fun collectToUnsafe(seed: NormURL, pageFatLink: PageFatLink, sink: MutableCollection<UrlAware>): Int {
         val (page, fatLink) = pageFatLink
 
-        page.prevCrawlTime1 = Instant.now()
+        (page as? MutableWebPage)?.prevCrawlTime1 = Instant.now()
         fatLinks[fatLink.url] = fatLink
         // url might be normalized, href is exactly the same as seed.spec
         requireNotNull(fatLink.href)

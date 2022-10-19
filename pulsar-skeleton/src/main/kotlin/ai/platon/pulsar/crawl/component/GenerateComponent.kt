@@ -174,7 +174,7 @@ class GenerateComponent(
             return false to "-unreachableHost"
         }
 
-        if (page.hasMark(Mark.GENERATE)) {
+        if (page.hasMark(Mark.GENERATE.value())) {
             enumCounters.inc(Counter.mGenerated)
             /*
              * Fetch entries are generated, empty webpage entries are created in the database(HBase)
@@ -262,7 +262,7 @@ class GenerateComponent(
         }
 
         // INACTIVE mark is already filtered in HBase query phase, double check here for diagnoses
-        if (page.hasMark(Mark.INACTIVE)) {
+        if (page.hasMark(Mark.INACTIVE.value())) {
             enumCounters.inc(Counter.mInactive)
         }
 

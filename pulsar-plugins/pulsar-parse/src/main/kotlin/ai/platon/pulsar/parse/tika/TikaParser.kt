@@ -30,6 +30,7 @@ import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.HyperlinkPersistable
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -111,8 +112,11 @@ class TikaParser(
             primerParser.collectLinks(baseTag ?: base, hypeLinks, root, null)
         }
 
-        page.setPageTitle(pageTitle)
-        page.setPageText(pageText)
+        if (page is MutableWebPage) {
+            page.setPageTitle(pageTitle)
+            page.setPageText(pageText)
+        }
+
         for (name in tikamd.names()) {
             if (name.equals(TikaCoreProperties.TITLE.toString(), ignoreCase = true)) {
                 continue

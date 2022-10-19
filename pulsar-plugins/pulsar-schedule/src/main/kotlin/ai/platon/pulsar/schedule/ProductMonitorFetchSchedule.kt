@@ -23,10 +23,10 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.AdaptiveFetchSchedule
 import ai.platon.pulsar.crawl.schedule.ModifyInfo
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import java.time.Duration
-import java.time.Instant
 
 /**
  * This class implements an re-fetch algorithm for index-item pattern web sites.
@@ -38,7 +38,7 @@ class ProductMonitorFetchSchedule(
         messageWriter: MiscMessageWriter
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
-    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+    override fun setFetchSchedule(page: MutableWebPage, m: ModifyInfo) {
         // 1. for every seed, re-fetch it every day
         // 2. for every index page, re-fetch it every day
         // 3. for every detail page, we will re-fetch it 90 days later if there are enough resource

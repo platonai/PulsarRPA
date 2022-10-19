@@ -21,6 +21,7 @@ package ai.platon.pulsar.crawl.schedule
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
@@ -43,7 +44,7 @@ class NewsFetchSchedule(
 ) : AdaptiveFetchSchedule(conf, messageWriter) {
     private val LOG = LoggerFactory.getLogger(NewsFetchSchedule::class.java)
 
-    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+    override fun setFetchSchedule(page: MutableWebPage, m: ModifyInfo) {
         var time = m.modifiedTime
         if (time.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
             time = m.fetchTime

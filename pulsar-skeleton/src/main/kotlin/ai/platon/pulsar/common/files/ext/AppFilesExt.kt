@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.dom.Documents
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
@@ -42,10 +43,11 @@ fun AppFiles.export(
     val fileNameIdent = sb.toString()
     val path = export(page, prettyHtml.toByteArray(), prefix = fileNameIdent, suffix = suffix, group = "default")
 
-    // TODO: path is a temporary field, should not be persisted to page.metadata
-    page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
-
-    page.setVar(Name.ORIGINAL_EXPORT_PATH.name, path)
+    if (page is MutableWebPage) {
+        // TODO: path should be a temporary field, should not be persisted to page.metadata
+        page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
+        page.setVar(Name.ORIGINAL_EXPORT_PATH.name, path)
+    }
 
     return path
 }

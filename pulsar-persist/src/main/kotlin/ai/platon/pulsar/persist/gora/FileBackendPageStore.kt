@@ -49,7 +49,7 @@ class FileBackendPageStore(
         super.put(reversedUrl, page)
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
-            val p = MutableWebPage.box(it, page, unsafeConf)
+            val p = GoraWebPage.box(it, page, unsafeConf)
             writeAvro(p)
             writeHtml(p)
         }
@@ -139,7 +139,9 @@ class FileBackendPageStore(
 
         Files.deleteIfExists(path)
         try {
-            writeAvro0(page.unbox(), path)
+            if (page is GWebPageAware) {
+                writeAvro0(page.gWebPage, path)
+            }
         } catch (e: AvroRuntimeException) {
             logger.warn("Failed to write avro file to $path", e)
         } catch (e: IOException) {
@@ -170,8 +172,8 @@ class FileBackendPageStore(
         }
     }
 
-    private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): MutableWebPage {
-        val page = MutableWebPage.newWebPage(url, VolatileConfig.UNSAFE)
+    private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): GoraWebPage {
+        val page = GoraWebPage.newWebPage(url, VolatileConfig.UNSAFE)
         page.also {
             it.location = url
             it.fetchCount = 1

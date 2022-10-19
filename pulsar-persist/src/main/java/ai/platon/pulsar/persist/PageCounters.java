@@ -136,7 +136,7 @@ public class PageCounters {
         if (value == 0) {
             return;
         }
-        pageCounters.put(WebPage.u8(name), value);
+        pageCounters.put(AbstractWebPage.u8(name), value);
     }
 
     /**
@@ -146,7 +146,7 @@ public class PageCounters {
      * @return a int.
      */
     public int get(String name) {
-        return pageCounters.getOrDefault(WebPage.u8(name), 0);
+        return pageCounters.getOrDefault(AbstractWebPage.u8(name), 0);
     }
 
     /**

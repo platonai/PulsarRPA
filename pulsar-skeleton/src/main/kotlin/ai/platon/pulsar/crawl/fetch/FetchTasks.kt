@@ -13,6 +13,8 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.persist.MutableWebPage
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -120,11 +122,11 @@ class FetchTask constructor(
 
     companion object {
         val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.PULSAR_CHROME)
-        val NIL = FetchTask(0, 0, MutableWebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
+        val NIL = FetchTask(0, 0, WebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
 
         fun create(url: String, conf: VolatileConfig): FetchTask {
-            val page = WebPage.newWebPage(url, conf)
+            val page = GoraWebPage.newWebPage(url, conf)
             val priority = conf.getUint(CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY, 0)
             val browserType = conf.getEnum(CapabilityTypes.BROWSER_TYPE, BrowserType.PULSAR_CHROME)
             val fingerprint = Fingerprint(browserType)
@@ -180,7 +182,7 @@ class FetchResult(
 
         fun crawlRetry(task: FetchTask) = FetchResult(task, ForwardingResponse.crawlRetry(task.page))
         fun crawlRetry(task: FetchTask, delay: Duration) = FetchResult(task, ForwardingResponse.crawlRetry(task.page))
-            .also { task.page.retryDelay = delay }
+            .also { (task.page as? MutableWebPage)?.retryDelay = delay }
         fun crawlRetry(task: FetchTask, reason: Exception) = FetchResult(task, ForwardingResponse.crawlRetry(task.page, reason))
 
         fun failed(task: FetchTask, e: Throwable?) = FetchResult(task, ForwardingResponse.failed(task.page, e))

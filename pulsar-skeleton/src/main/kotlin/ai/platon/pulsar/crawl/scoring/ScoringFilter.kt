@@ -21,6 +21,7 @@ package ai.platon.pulsar.crawl.scoring
 import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.crawl.index.IndexDocument
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
@@ -44,7 +45,7 @@ interface ScoringFilter : Parameterized {
      *
      * @param page new page. Filters will modify it in-place.
      */
-    fun injectedScore(page: WebPage) {}
+    fun injectedScore(page: MutableWebPage) {}
 
     /**
      * Set an initial score for newly discovered pages. Note: newly discovered
@@ -55,7 +56,7 @@ interface ScoringFilter : Parameterized {
      *
      * @param page page row.
      */
-    fun initialScore(page: WebPage) {}
+    fun initialScore(page: MutableWebPage) {}
 
     /**
      * This method prepares a sort value for the purpose of sorting and selecting
@@ -88,9 +89,9 @@ interface ScoringFilter : Parameterized {
      * @param inLinkEdges list of [WebEdge]s for all inlinks pointing to
      * this URL.
      */
-    fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {}
+    fun updateScore(page: MutableWebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {}
 
-    fun updateContentScore(page: WebPage) {}
+    fun updateContentScore(page: MutableWebPage) {}
     /**
      * This method calculates a Lucene document boost.
      *

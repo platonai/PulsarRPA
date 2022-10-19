@@ -4,6 +4,7 @@ import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageExt
+import ai.platon.pulsar.persist.gora.GoraWebPage
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
 
@@ -102,7 +103,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         get() {
             var home = webDb.get(homeUrl)
             if (home.isNil) {
-                home = WebPage.newInternalPage(homeUrl, "Web Page Index Home")
+                home = GoraWebPage.newInternalPage(homeUrl, "Web Page Index Home")
                 LOG.debug("Creating weak index home: $homeUrl")
             }
             webDb.put(home)
@@ -120,18 +121,19 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         if (temporaryDeleteAllPage) {
             webDb.delete(url)
             webDb.flush()
-            indexPage = MutableWebPage.NIL
+            indexPage = WebPage.NIL
         }
 
         if (indexPage.isNil) {
             val home = home
             home.vividLinks[url] = ""
             webDb.put(home)
-            indexPage = WebPage.newInternalPage(url, pageTitle)
+            indexPage = GoraWebPage.newInternalPage(url, pageTitle)
             webDb.put(indexPage)
             // webDb.flush()
             // log.debug("Created weak index: " + url);
         }
+
         return indexPage
     }
 }

@@ -1,21 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.config.AppConstants
@@ -34,7 +16,6 @@ import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 
@@ -69,7 +50,7 @@ class UpdateComponent(
         )
     }
 
-    fun updateByOutgoingPage(page: WebPage, outgoingPage: WebPage) {
+    fun updateByOutgoingPage(page: MutableWebPage, outgoingPage: WebPage) {
         val pageExt = WebPageExt(page)
         val pageCounters = page.pageCounters
         pageCounters.increase(PageCounters.Ref.page)
@@ -96,7 +77,7 @@ class UpdateComponent(
         scoringFilters?.updateContentScore(page)
     }
 
-    fun updateByOutgoingPages(page: WebPage, outgoingPages: Collection<WebPage>) {
+    fun updateByOutgoingPages(page: MutableWebPage, outgoingPages: Collection<WebPage>) {
         val lastPageCounters = page.pageCounters.clone()
         outgoingPages.forEach { updateByOutgoingPage(page, it) }
         updatePageCounters(lastPageCounters, page.pageCounters, page)
@@ -140,7 +121,7 @@ class UpdateComponent(
             }
         }
 
-        if (shallowestPage != null) {
+        if (shallowestPage != null && page is MutableWebPage) {
             page.referrer = shallowestPage.url
             // TODO: Not the best options
             page.args = shallowestPage.args
@@ -148,7 +129,7 @@ class UpdateComponent(
         }
     }
 
-    fun updateFetchSchedule(page: WebPage) {
+    fun updateFetchSchedule(page: MutableWebPage) {
         if (page.marks.isInactive) {
             return
         }

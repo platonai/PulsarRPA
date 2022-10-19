@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.index.IndexDocument
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
@@ -43,14 +44,14 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
     /**
      * Calculate a new initial score, used when adding newly discovered pages.
      */
-    override fun initialScore(page: WebPage) {
+    override fun initialScore(page: MutableWebPage) {
         scoringFilters.forEach { it.initialScore(page) }
     }
 
     /**
      * Calculate a new initial score, used when injecting new pages.
      */
-    override fun injectedScore(page: WebPage) {
+    override fun injectedScore(page: MutableWebPage) {
         scoringFilters.forEach { it.injectedScore(page) }
     }
 
@@ -73,13 +74,13 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
         }
     }
 
-    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
+    override fun updateScore(page: MutableWebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
         scoringFilters.forEach {
             it.updateScore(page, graph, incomingEdges)
         }
     }
 
-    override fun updateContentScore(page: WebPage) {
+    override fun updateContentScore(page: MutableWebPage) {
         for (filter in scoringFilters) {
             filter.updateContentScore(page)
         }

@@ -27,6 +27,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.AdaptiveFetchSchedule
 import ai.platon.pulsar.crawl.schedule.ModifyInfo
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
@@ -54,7 +55,7 @@ class NewsMonitorFetchSchedule(
     // Check semi-inactive pages at 1 o'clock at night
     private val semiInactivePageCheckTime = middleNight.plusHours(25)
 
-    override fun setFetchSchedule(page: WebPage, m: ModifyInfo) {
+    override fun setFetchSchedule(page: MutableWebPage, m: ModifyInfo) {
         var newModifiedTime = m.modifiedTime
         if (newModifiedTime.isBefore(TCP_IP_STANDARDIZED_TIME)) {
             newModifiedTime = m.fetchTime
