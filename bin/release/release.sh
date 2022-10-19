@@ -107,6 +107,6 @@ function checkout_working_branch() {
 
 restore_working_branch
 pull
-add_tag
 merge_to_main_branch
 checkout_working_branch
+add_tag
