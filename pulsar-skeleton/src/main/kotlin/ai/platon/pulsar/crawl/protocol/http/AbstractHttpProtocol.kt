@@ -26,6 +26,7 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage

@@ -10,12 +10,12 @@ import ai.platon.pulsar.persist.model.ActiveDOMStatus
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-class WebPageExt(private val page: WebPage) {
+class WebPageExt(private val page: MutableWebPage) {
 
     companion object {
 
-        fun newTestWebPage(url: String): WebPage {
-            val page = WebPage.newWebPage(url, VolatileConfig(), null)
+        fun newTestWebPage(url: String): MutableWebPage {
+            val page = MutableWebPage.newWebPage(url, VolatileConfig(), null)
 
             page.vividLinks = mapOf("$url?t=a" to "a", "$url?t=b" to "b")
             page.activeDOMStatus = ActiveDOMStatus(1, 1, "1", "1", "1")
@@ -24,8 +24,9 @@ class WebPageExt(private val page: WebPage) {
 
             return page
         }
-
     }
+
+    constructor(page: WebPage): this(page as MutableWebPage)
 
     fun increaseDistance(newDistance: Int) {
         val oldDistance: Int = page.distance

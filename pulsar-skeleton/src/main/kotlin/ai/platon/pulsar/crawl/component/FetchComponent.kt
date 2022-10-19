@@ -29,10 +29,7 @@ import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
-import ai.platon.pulsar.persist.CrawlStatus
-import ai.platon.pulsar.persist.PageDatum
-import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -75,7 +72,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    fun fetchContent(page: WebPage) = abnormalPage ?: fetchContent0(FetchEntry(page, page.options))
+    fun fetchContent(page: MutableWebPage) = abnormalPage ?: fetchContent0(FetchEntry(page, page.options))
 
     /**
      * Fetch a page
@@ -91,7 +88,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    suspend fun fetchContentDeferred(page: WebPage) = abnormalPage ?: fetchContentDeferred0(page)
+    suspend fun fetchContentDeferred(page: MutableWebPage) = abnormalPage ?: fetchContentDeferred0(page)
 
     /**
      * Fetch a page
@@ -123,7 +120,7 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
+    protected suspend fun fetchContentDeferred0(page: MutableWebPage): WebPage {
         return try {
             onWillFetch(page)
 
@@ -154,7 +151,7 @@ open class FetchComponent(
         }
     }
 
-    protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
+    protected fun processProtocolOutput(page: MutableWebPage, output: ProtocolOutput): MutableWebPage {
         val protocolStatus = output.protocolStatus
         if (protocolStatus.isCanceled) {
             page.isCanceled = true
@@ -190,7 +187,7 @@ open class FetchComponent(
     }
 
     private fun updateFetchedPage(
-        page: WebPage, pageDatum: PageDatum?,
+        page: MutableWebPage, pageDatum: PageDatum?,
         protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus,
     ): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
@@ -239,7 +236,7 @@ open class FetchComponent(
     companion object {
         private val logger = LoggerFactory.getLogger(FetchComponent::class.java)
 
-        fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
+        fun updateStatus(page: MutableWebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
             page.crawlStatus = crawlStatus
             page.protocolStatus = protocolStatus
             page.updateFetchCount()
@@ -250,7 +247,7 @@ open class FetchComponent(
             marks.putIfNotNull(Mark.FETCH, marks[Mark.GENERATE])
         }
 
-        fun updateContent(page: WebPage, pageDatum: PageDatum, contentTypeHint: String? = null) {
+        fun updateContent(page: MutableWebPage, pageDatum: PageDatum, contentTypeHint: String? = null) {
             var contentType = contentTypeHint
 
             page.setContent(pageDatum.content)

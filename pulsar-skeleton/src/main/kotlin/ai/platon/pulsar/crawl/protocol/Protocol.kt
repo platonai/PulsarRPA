@@ -20,6 +20,7 @@ package ai.platon.pulsar.crawl.protocol
 
 import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
@@ -73,8 +74,4 @@ interface Protocol : Configurable, AutoCloseable {
     fun getRobotRules(page: WebPage): BaseRobotRules
 
     override fun close() {}
-
-    companion object {
-        val log = LoggerFactory.getLogger(Protocol::class.java)
-    }
 }

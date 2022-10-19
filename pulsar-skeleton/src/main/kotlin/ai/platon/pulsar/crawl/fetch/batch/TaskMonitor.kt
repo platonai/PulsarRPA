@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.batch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.batch.data.PoolQueue
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.TreeMultimap
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap
@@ -105,7 +106,7 @@ class TaskMonitor(
     }
 
     @Synchronized
-    fun produce(jobID: Int, page: WebPage) {
+    fun produce(jobID: Int, page: MutableWebPage) {
         page.fetchMode = options.fetchMode
 
         val task = JobFetchTask.create(jobID, page.fetchPriority, page.url, page, groupMode)

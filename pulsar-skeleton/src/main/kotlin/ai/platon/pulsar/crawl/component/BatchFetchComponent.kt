@@ -12,6 +12,7 @@ import ai.platon.pulsar.crawl.common.GlobalCacheFactory
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
@@ -117,7 +118,7 @@ class BatchFetchComponent(
         coreMetrics?.markFetchTaskStart(Iterables.size(urls))
         return urls.map { FetchEntry(it, options).page }
                 .let { protocol.getResponses(it, options.conf) }
-                .map { getProtocolOutput(protocol, it, it.page) }
+                .map { getProtocolOutput(protocol, it, it.page as MutableWebPage) }
     }
 
     /**
@@ -132,7 +133,7 @@ class BatchFetchComponent(
     /**
      * Forward previous fetched response to protocol for further process: retry, status processing, etc
      */
-    private fun getProtocolOutput(protocol: Protocol, response: Response, page: WebPage): WebPage {
+    private fun getProtocolOutput(protocol: Protocol, response: Response, page: MutableWebPage): MutableWebPage {
         // forward a response
         protocol.setResponse(response)
         // run protocol.getProtocolOutput so the page have a chance to perform PROTOCOL scope retry if necessary

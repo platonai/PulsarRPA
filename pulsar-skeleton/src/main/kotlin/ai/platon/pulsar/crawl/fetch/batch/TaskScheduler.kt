@@ -282,7 +282,7 @@ class TaskScheduler(
      * Do not redirect too many times
      * TODO : Check why we need to save reprUrl for each thread
      */
-    private fun handleRedirectUrl(page: WebPage, url: String, newUrl: String, temp: Boolean): String {
+    private fun handleRedirectUrl(page: MutableWebPage, url: String, newUrl: String, temp: Boolean): String {
         val threadId = Thread.currentThread().id
         var reprUrl = reprUrls.getOrDefault(threadId, url)
         reprUrl = URLUtil.chooseRepr(reprUrl, newUrl, temp)
@@ -298,7 +298,7 @@ class TaskScheduler(
         return reprUrl
     }
 
-    private fun updateStatus(page: WebPage) {
+    private fun updateStatus(page: MutableWebPage) {
         enumCounters.inc(CommonCounter.rPersist)
         enumCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
 

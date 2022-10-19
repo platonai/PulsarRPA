@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.commons.lang3.StringUtils
@@ -67,7 +68,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
      */
     fun getProtocol(page: WebPage): Protocol {
         val fetchMode = page.fetchMode.takeIf { it != FetchMode.UNKNOWN } ?: FetchMode.BROWSER
-        page.fetchMode = fetchMode
+        (page as MutableWebPage).fetchMode = fetchMode
 
         return when (fetchMode) {
             FetchMode.BROWSER -> getProtocol("browser:" + page.url)

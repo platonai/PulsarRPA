@@ -14,6 +14,7 @@ import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.experimental.WebAsset
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
@@ -801,18 +802,18 @@ interface PulsarSession : AutoCloseable {
      * @param url  The url to load
      * @param referrer The referrer URL
      * @param args The load arguments
-     * @return The webpage containing the resource
+     * @return The web asset containing the resource
      */
-    fun loadResource(url: String, referrer: String, args: String): WebPage
+    fun loadResource(url: String, referrer: String, args: String): WebAsset
     /**
      * Load a url as a resource without browser rendering.
      *
      * @param url     The url to load
      * @param referrer The referrer URL
      * @param options The load options
-     * @return The webpage containing the resource
+     * @return The web asset containing the resource
      */
-    fun loadResource(url: String, referrer: String, options: LoadOptions = options()): WebPage
+    fun loadResource(url: String, referrer: String, options: LoadOptions = options()): WebAsset
 
     /**
      * Load a url as a resource without browser rendering.
@@ -823,9 +824,9 @@ interface PulsarSession : AutoCloseable {
      * @param url  The url to load
      * @param referrer The referrer URL
      * @param args The load arguments
-     * @return The webpage containing the resource
+     * @return The web asset containing the resource
      */
-    suspend fun loadResourceDeferred(url: String, referrer: String, args: String): WebPage
+    suspend fun loadResourceDeferred(url: String, referrer: String, args: String): WebAsset
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -835,9 +836,9 @@ interface PulsarSession : AutoCloseable {
      * @param url     The url to load
      * @param referrer The referrer URL
      * @param options The load options
-     * @return The webpage containing the resource
+     * @return The web asset containing the resource
      */
-    suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions = options()): WebPage
+    suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions = options()): WebAsset
     /**
      * Parse a webpage into an HTML document.
      */

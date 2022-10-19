@@ -47,109 +47,19 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS;
 import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
  * The core web page structure
  */
-final public class WebPage implements Comparable<WebPage>, WebAsset {
+public abstract class WebPage implements Comparable<WebPage>, WebAsset {
 
     private static final AtomicInteger SEQUENCER = new AtomicInteger();
 
     public static final WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
-    private Integer id = SEQUENCER.incrementAndGet();
-    /**
-     * The url is the permanent internal address, and the location is the last working address
-     */
     @NotNull
-    private String url = "";
-    /**
-     * The reversed url of the web page, it's also the key of the underlying storage of this object
-     */
-    @NotNull
-    private String reversedUrl = "";
-    /**
-     * Underlying persistent object
-     */
-    @NotNull
-    private GWebPage page;
-    /**
-     * Web page scope configuration
-     */
-    @NotNull
-    private VolatileConfig conf;
-    /**
-     * Web page scope variables
-     */
-    private final Variables variables = new Variables();
-
-    /**
-     * If this page is fetched from Internet
-     */
-    private boolean isCached = false;
-
-    /**
-     * If this page is loaded from database or is created and fetched from the web
-     */
-    private boolean isLoaded = false;
-
-    /**
-     * If this page is fetched from Internet
-     */
-    private boolean isFetched = false;
-
-    /**
-     * If this page is canceled
-     */
-    private boolean isCanceled = false;
-
-    /**
-     * If this page is fetched and updated
-     */
-    private volatile boolean isContentUpdated = false;
-
-    /**
-     * The cached content
-     */
-    private volatile ByteBuffer tmpContent = null;
-
-    /**
-     * The delay time to retry if a retry is needed
-     */
-    private Duration retryDelay = Duration.ZERO;
-
-    private WebPage(
-            @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
-    ) {
-        this.url = urlReversed ? UrlUtils.unreverseUrl(url) : url;
-        this.reversedUrl = urlReversed ? url : UrlUtils.reverseUrlOrEmpty(url);
-        this.conf = conf;
-        this.page = page;
-
-        // the url of a page might be normalized, but the baseUrl always keeps be the original
-        if (page.getBaseUrl() == null) {
-            setLocation(url);
-        }
-    }
-
-    private WebPage(
-            @NotNull String url, @NotNull String reversedUrl, @NotNull GWebPage page, @NotNull VolatileConfig conf
-    ) {
-        this.url = url;
-        this.reversedUrl = reversedUrl;
-        this.conf = conf;
-        this.page = page;
-
-        // BaseUrl is the last working address, it might redirect to url, or it might have random parameters
-        if (page.getBaseUrl() == null) {
-            setLocation(url);
-        }
-    }
-
-    @NotNull
-    public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf) {
+    public static MutableWebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf) {
         return newWebPage(url, conf, null);
     }
 
@@ -158,18 +68,18 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * */
     @Deprecated
     @NotNull
-    public static WebPage newTestWebPage(@NotNull String url) {
+    public static MutableWebPage newTestWebPage(@NotNull String url) {
         return newWebPage(url, new VolatileConfig(), null);
     }
 
     @NotNull
-    public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
+    public static MutableWebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
         return newWebPageInternal(url, conf, href);
     }
 
     @NotNull
-    private static WebPage newWebPageInternal(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
-        WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false, conf);
+    private static MutableWebPage newWebPageInternal(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
+        MutableWebPage page = new MutableWebPage(url, GWebPage.newBuilder().build(), false, conf);
 
         page.setLocation(url);
         page.setConf(conf);
@@ -184,24 +94,24 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     @NotNull
-    public static WebPage newInternalPage(@NotNull String url) {
+    public static MutableWebPage newInternalPage(@NotNull String url) {
         return newInternalPage(url, "internal", "internal");
     }
 
     @NotNull
-    public static WebPage newInternalPage(@NotNull String url, @NotNull String title) {
+    public static MutableWebPage newInternalPage(@NotNull String url, @NotNull String title) {
         return newInternalPage(url, title, "internal");
     }
 
     @NotNull
-    public static WebPage newInternalPage(@NotNull String url, @NotNull String title, @NotNull String content) {
+    public static MutableWebPage newInternalPage(@NotNull String url, @NotNull String title, @NotNull String content) {
         return newInternalPage(url, -1, title, content);
     }
 
     @NotNull
-    public static WebPage newInternalPage(@NotNull String url, int id, @NotNull String title, @NotNull String content) {
+    public static MutableWebPage newInternalPage(@NotNull String url, int id, @NotNull String title, @NotNull String content) {
         VolatileConfig unsafe = VolatileConfig.Companion.getUNSAFE();
-        WebPage page = WebPage.newWebPage(url, unsafe);
+        MutableWebPage page = MutableWebPage.newWebPage(url, unsafe);
         if (id >= 0) {
             page.id = id;
         }
@@ -228,16 +138,16 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * Initialize a WebPage with the underlying GWebPage instance.
      */
     @NotNull
-    public static WebPage box(
+    public static MutableWebPage box(
             @NotNull String url, @NotNull String reversedUrl, @NotNull GWebPage page, @NotNull VolatileConfig conf) {
-        return new WebPage(url, reversedUrl, page, conf);
+        return new MutableWebPage(url, reversedUrl, page, conf);
     }
 
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      */
     @NotNull
-    public static WebPage box(@NotNull String url, @NotNull GWebPage page, @NotNull VolatileConfig conf) {
+    public static MutableWebPage box(@NotNull String url, @NotNull GWebPage page, @NotNull VolatileConfig conf) {
         return box(url, page, false, conf);
     }
 
@@ -245,11 +155,72 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * Initialize a WebPage with the underlying GWebPage instance.
      */
     @NotNull
-    public static WebPage box(
+    public static MutableWebPage box(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
     ) {
-        return new WebPage(url, page, urlReversed, conf);
+        return new MutableWebPage(url, page, urlReversed, conf);
     }
+
+    protected Integer id = SEQUENCER.incrementAndGet();
+    /**
+     * The url is the permanent internal address, and the location is the last working address
+     */
+    @NotNull
+    protected String url = "";
+    /**
+     * The reversed url of the web page, it's also the key of the underlying storage of this object
+     */
+    @NotNull
+    protected String reversedUrl = "";
+    /**
+     * Underlying persistent object
+     */
+    @NotNull
+    protected GWebPage page;
+    /**
+     * Web page scope configuration
+     */
+    @NotNull
+    protected VolatileConfig conf;
+    /**
+     * Web page scope variables
+     */
+    protected final Variables variables = new Variables();
+
+    /**
+     * If this page is fetched from Internet
+     */
+    protected boolean isCached = false;
+
+    /**
+     * If this page is loaded from database or is created and fetched from the web
+     */
+    protected boolean isLoaded = false;
+
+    /**
+     * If this page is fetched from Internet
+     */
+    protected boolean isFetched = false;
+
+    /**
+     * If this page is canceled
+     */
+    protected boolean isCanceled = false;
+
+    /**
+     * If this page is fetched and updated
+     */
+    protected volatile boolean isContentUpdated = false;
+
+    /**
+     * The cached content
+     */
+    protected volatile ByteBuffer tmpContent = null;
+
+    /**
+     * The delay time to retry if a retry is needed
+     */
+    protected Duration retryDelay = Duration.ZERO;
 
     @NotNull
     public static Utf8 wrapKey(@NotNull Mark mark) {
@@ -295,16 +266,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @Nullable
     public String getHref() {
         return getMetadata().get(Name.HREF);
-    }
-
-    /**
-     * Set The hypertext reference of this page.
-     * It defines the address of the document, which this time is linked from
-     *
-     * @param href The hypertext reference
-     */
-    public void setHref(@Nullable String href) {
-        getMetadata().set(Name.HREF, href);
     }
 
     public boolean isNil() {
@@ -369,45 +330,16 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return variables.get(name);
     }
 
-    /**
-     * Retrieves and removes the local variable with the given name.
-     */
-    public Object removeVar(@NotNull String name) {
-        return variables.remove(name);
-    }
-
-    /**
-     * Get a page scope temporary variable
-     *
-     * @param name  The variable name.
-     * @param value The variable value.
-     */
-    public void setVar(@NotNull String name, @NotNull Object value) {
-        variables.set(name, value);
-    }
-
     public boolean isCached() {
         return isCached;
-    }
-
-    public void setCached(boolean cached) {
-        isCached = cached;
     }
 
     public boolean isLoaded() {
         return isLoaded;
     }
 
-    public void setLoaded(boolean loaded) {
-        isLoaded = loaded;
-    }
-
     public boolean isFetched() {
         return isFetched;
-    }
-
-    public void setFetched(boolean fetched) {
-        isFetched = fetched;
     }
 
     /**
@@ -419,15 +351,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return isCanceled;
     }
 
-    /**
-     * Check if the page is canceled.
-     *
-     * If a page is canceled, it should not be updated.
-     * */
-    public void setCanceled(boolean canceled) {
-        isCanceled = canceled;
-    }
-
     public boolean isContentUpdated() {
         return isContentUpdated;
     }
@@ -435,10 +358,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @NotNull
     public VolatileConfig getConf() {
         return conf;
-    }
-
-    public void setConf(@NotNull VolatileConfig conf) {
-        this.conf = conf;
     }
 
     public Metadata getMetadata() {
@@ -475,29 +394,13 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return args != null ? args.toString() : "";
     }
 
-    /**
-     * Set the arguments and clear the LoadOptions object.
-     * */
-    public void setArgs(@NotNull String args) {
-        variables.remove(VAR_LOAD_OPTIONS);
-        page.setParams(args);
-    }
-
     @NotNull
     public Duration getRetryDelay() {
         return retryDelay;
     }
-
-    public void setRetryDelay(@NotNull Duration retryDelay) {
-        this.retryDelay = retryDelay;
-    }
-
+    
     public int getMaxRetries() {
         return getMetadata().getInt(Name.FETCH_MAX_RETRY, 3);
-    }
-
-    public void setMaxRetries(int maxRetries) {
-        getMetadata().set(Name.FETCH_MAX_RETRY, maxRetries);
     }
 
     @NotNull
@@ -509,25 +412,13 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return getMetadata().getInt(Name.FETCHED_LINK_COUNT, 0);
     }
 
-    public void setFetchedLinkCount(int count) {
-        getMetadata().set(Name.FETCHED_LINK_COUNT, count);
-    }
-
     @NotNull
     public ZoneId getZoneId() {
         return page.getZoneId() == null ? DateTimes.INSTANCE.getZoneId() : ZoneId.of(page.getZoneId().toString());
     }
 
-    public void setZoneId(@NotNull ZoneId zoneId) {
-        page.setZoneId(zoneId.getId());
-    }
-
     public String getBatchId() {
         return page.getBatchId() == null ? "" : page.getBatchId().toString();
-    }
-
-    public void setBatchId(String value) {
-        page.setBatchId(value);
     }
 
     public void markSeed() {
@@ -547,20 +438,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return distance < 0 ? DISTANCE_INFINITE : distance;
     }
 
-    public void setDistance(int newDistance) {
-        page.setDistance(newDistance);
-    }
-
     @NotNull
     public FetchMode getFetchMode() {
         return FetchMode.fromString(getMetadata().get(Name.FETCH_MODE));
-    }
-
-    /**
-     * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
-     */
-    public void setFetchMode(@NotNull FetchMode mode) {
-        getMetadata().set(Name.FETCH_MODE, mode.name());
     }
 
     @NotNull
@@ -569,18 +449,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return BrowserType.fromString(browser);
     }
 
-    public void setLastBrowser(@NotNull BrowserType browser) {
-        page.setBrowser(browser.name());
-    }
-
     public boolean isResource() {
         return page.getResource() != null;
-    }
-
-    public void setResource(boolean resource) {
-        if (resource) {
-            page.setResource(1);
-        }
     }
 
     @NotNull
@@ -589,16 +459,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return HtmlIntegrity.Companion.fromString(integrity);
     }
 
-    public void setHtmlIntegrity(@NotNull HtmlIntegrity integrity) {
-        page.setHtmlIntegrity(integrity.name());
-    }
-
     public int getFetchPriority() {
         return page.getFetchPriority() > 0 ? page.getFetchPriority() : FETCH_PRIORITY_DEFAULT;
-    }
-
-    public void setFetchPriority(int priority) {
-        page.setFetchPriority(priority);
     }
 
     public int sniffFetchPriority() {
@@ -617,10 +479,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return Instant.ofEpochMilli(page.getCreateTime());
     }
 
-    public void setCreateTime(@NotNull Instant createTime) {
-        page.setCreateTime(createTime.toEpochMilli());
-    }
-
     @NotNull
     public Instant getGenerateTime() {
         String generateTime = getMetadata().get(Name.GENERATE_TIME);
@@ -631,34 +489,13 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         }
     }
 
-    public void setGenerateTime(@NotNull Instant generateTime) {
-        getMetadata().set(Name.GENERATE_TIME, generateTime.toString());
-    }
-
     public int getFetchCount() {
         return page.getFetchCount();
-    }
-
-    public void setFetchCount(int count) {
-        page.setFetchCount(count);
-    }
-
-    public void updateFetchCount() {
-        int count = getFetchCount();
-        setFetchCount(count + 1);
     }
 
     @NotNull
     public CrawlStatus getCrawlStatus() {
         return new CrawlStatus(page.getCrawlStatus().byteValue());
-    }
-
-    public void setCrawlStatus(@NotNull CrawlStatus crawlStatus) {
-        page.setCrawlStatus(crawlStatus.getCode());
-    }
-
-    public void setCrawlStatus(int value) {
-        page.setCrawlStatus(value);
     }
 
     /**
@@ -685,19 +522,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * The url is the permanent internal address, it might not still available to access the target.
-     * <p>
-     * Location is the last working address, it might redirect to url, or it might have additional random parameters.
-     * <p>
-     * Location may be different from url, it's generally normalized.
-     *
-     * @param location The location.
-     */
-    public void setLocation(@NotNull String location) {
-        page.setBaseUrl(location);
-    }
-
-    /**
      * The latest fetch time
      *
      * @return The latest fetch time
@@ -705,15 +529,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @NotNull
     public Instant getFetchTime() {
         return Instant.ofEpochMilli(page.getFetchTime());
-    }
-
-    /**
-     * The latest fetch time
-     *
-     * @param time The latest fetch time
-     */
-    public void setFetchTime(@NotNull Instant time) {
-        page.setFetchTime(time.toEpochMilli());
     }
 
     /**
@@ -726,23 +541,12 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return Instant.ofEpochMilli(page.getPrevFetchTime());
     }
 
-    public void setPrevFetchTime(@NotNull Instant time) {
-        page.setPrevFetchTime(time.toEpochMilli());
-    }
-
     /**
      * The previous crawl time, used for fat link crawl, which means both the page itself and out pages are fetched
      * */
     @NotNull
     public Instant getPrevCrawlTime1() {
         return Instant.ofEpochMilli(page.getPrevCrawlTime1());
-    }
-
-    /**
-     * The previous crawl time, used for fat link crawl, which means both the page itself and out pages are fetched
-     * */
-    public void setPrevCrawlTime1(@NotNull Instant time) {
-        page.setPrevCrawlTime1(time.toEpochMilli());
     }
 
     /**
@@ -758,27 +562,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Set fetch interval
-     * */
-    public void setFetchInterval(@NotNull Duration duration) {
-        page.setFetchInterval((int) duration.getSeconds());
-    }
-
-    /**
-     * Set fetch interval in seconds
-     * */
-    public void setFetchInterval(long seconds) {
-        page.setFetchInterval((int) seconds);
-    }
-
-    /**
-     * Set fetch interval in seconds
-     * */
-    public void setFetchInterval(float seconds) {
-        page.setFetchInterval(Math.round(seconds));
-    }
-
-    /**
      * Get protocol status
      * */
     @NotNull
@@ -788,13 +571,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
             protocolStatus = GProtocolStatus.newBuilder().build();
         }
         return ProtocolStatus.box(protocolStatus);
-    }
-
-    /**
-     * Set protocol status
-     * */
-    public void setProtocolStatus(@NotNull ProtocolStatus protocolStatus) {
-        page.setProtocolStatus(protocolStatus.unbox());
     }
 
     /**
@@ -821,16 +597,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getReprUrl() == null ? "" : page.getReprUrl().toString();
     }
 
-    public void setReprUrl(@NotNull String value) {
-        page.setReprUrl(value);
-    }
-
     public int getFetchRetries() {
         return page.getFetchRetries();
-    }
-
-    public void setFetchRetries(int value) {
-        page.setFetchRetries(value);
     }
 
     @NotNull
@@ -838,17 +606,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return Instant.ofEpochMilli(page.getModifiedTime());
     }
 
-    public void setModifiedTime(@NotNull Instant value) {
-        page.setModifiedTime(value.toEpochMilli());
-    }
-
     @NotNull
     public Instant getPrevModifiedTime() {
         return Instant.ofEpochMilli(page.getPrevModifiedTime());
-    }
-
-    public void setPrevModifiedTime(@NotNull Instant value) {
-        page.setPrevModifiedTime(value.toEpochMilli());
     }
 
     @NotNull
@@ -884,19 +644,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * category : index, detail, review, media, search, etc
-     *
-     * @param pageCategory a {@link PageCategory} object.
-     */
-    public void setPageCategory(@NotNull PageCategory pageCategory) {
-        page.setPageCategory(pageCategory.format());
-    }
-
-    public void setPageCategory(@NotNull OpenPageCategory pageCategory) {
-        page.setPageCategory(pageCategory.format());
-    }
-
-    /**
      * Get the encoding of the content.
      * Content encoding is detected just before it's parsed.
      */
@@ -906,26 +653,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Set the encoding of the content.
-     * Content encoding is detected just before it's parsed.
-     */
-    public void setEncoding(@Nullable String encoding) {
-        page.setEncoding(encoding);
-    }
-
-    /**
      * The clues are used to determine the encoding of the page content
      * */
     @NotNull
     public String getEncodingClues() {
         return getMetadata().getOrDefault(Name.ENCODING_CLUES, "");
-    }
-
-    /**
-     * The clues are used to determine the encoding of the page content
-     * */
-    public void setEncodingClues(@NotNull String clues) {
-        getMetadata().set(Name.ENCODING_CLUES, clues);
     }
 
     /**
@@ -947,13 +679,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @Nullable
     public ByteBuffer getTmpContent() {
         return tmpContent;
-    }
-
-    /**
-     * Set the cached content, keep the persisted page content unmodified
-     */
-    public void setTmpContent(ByteBuffer tmpContent) {
-        this.tmpContent = tmpContent;
     }
 
     /**
@@ -1020,52 +745,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Set the page content
-     */
-    public void setContent(@Nullable String value) {
-        if (value != null) {
-            setContent(value.getBytes());
-        } else {
-            setContent((ByteBuffer) null);
-        }
-    }
-
-    /**
-     * Set the page content
-     */
-    public void setContent(@Nullable byte[] value) {
-        if (value != null) {
-            setContent(ByteBuffer.wrap(value));
-        } else {
-            setContent((ByteBuffer) null);
-        }
-    }
-
-    /**
-     * Set the page content
-     *
-     * @param value a ByteBuffer.
-     */
-    public void setContent(@Nullable ByteBuffer value) {
-        if (value != null) {
-            page.setContent(value);
-            isContentUpdated = true;
-
-            int length = value.array().length;
-            computeContentLength(length);
-            setPersistedContentLength(length);
-        } else {
-            clearPersistContent();
-        }
-    }
-
-    public void clearPersistContent() {
-        tmpContent = page.getContent();
-        page.setContent(null);
-        setPersistedContentLength(0);
-    }
-
-    /**
      * Get the length of content in bytes.
      *
      * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
@@ -1079,14 +758,14 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * Compute the length of content in bytes.
      */
-    private void computeContentLength(long bytes) {
+    protected void computeContentLength(long bytes) {
         long lastBytes = getContentLength();
         page.setLastContentLength(lastBytes);
         page.setContentLength(bytes);
         computeAveContentLength(bytes);
     }
 
-    private void computeAveContentLength(long bytes) {
+    protected void computeAveContentLength(long bytes) {
         int count = getFetchCount();
         long lastAveBytes = page.getAveContentLength();
 
@@ -1105,10 +784,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getPersistedContentLength() != null ? page.getPersistedContentLength() : 0;
     }
 
-    private void setPersistedContentLength(long bytes) {
-        page.setPersistedContentLength(bytes);
-    }
-
     public long getLastContentLength() {
         return page.getLastContentLength() != null ? page.getLastContentLength() : 0;
     }
@@ -1122,17 +797,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getContentType() == null ? "" : page.getContentType().toString();
     }
 
-    public void setContentType(String value) {
-        page.setContentType(value.trim().toLowerCase());
-    }
-
     @Nullable
     public ByteBuffer getPrevSignature() {
         return page.getPrevSignature();
-    }
-
-    public void setPrevSignature(@Nullable ByteBuffer value) {
-        page.setPrevSignature(value);
     }
 
     @NotNull
@@ -1151,13 +818,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getProxy() == null ? null : page.getProxy().toString();
     }
 
-    /**
-     * The last proxy used to fetch the page
-     */
-    public void setProxy(@Nullable String proxy) {
-        page.setProxy(proxy);
-    }
-
     @Nullable
     public ActiveDOMStatus getActiveDOMStatus() {
         GActiveDOMStatus s = page.getActiveDOMStatus();
@@ -1173,22 +833,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         );
     }
 
-    public void setActiveDOMStatus(@Nullable ActiveDOMStatus s) {
-        if (s == null) {
-            return;
-        }
-
-        GActiveDOMStatus s2 = page.getActiveDOMStatus();
-        if (s2 != null) {
-            s2.setN(s.getN());
-            s2.setScroll(s.getScroll());
-            s2.setSt(s.getSt());
-            s2.setR(s.getR());
-            s2.setIdl(s.getIdl());
-            s2.setEc(s.getEc());
-        }
-    }
-
     @NotNull
     public Map<String, ActiveDOMStat> getActiveDOMStatTrace() {
         Map<CharSequence, GActiveDOMStat> s = page.getActiveDOMStatTrace();
@@ -1198,12 +842,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         ));
     }
 
-    public void setActiveDOMStatTrace(@NotNull Map<String, ActiveDOMStat> trace) {
-        Map<CharSequence, GActiveDOMStat> statTrace = trace.entrySet().stream().collect(
-                Collectors.toMap(Map.Entry::getKey, e -> Converters.INSTANCE.convert(e.getValue())));
-        page.setActiveDOMStatTrace(statTrace);
-    }
-
     /**
      * An implementation of a WebPage's signature from which it can be identified and referenced at any point in time.
      * This is essentially the WebPage's fingerprint representing its state for any point in time.
@@ -1211,10 +849,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @Nullable
     public ByteBuffer getSignature() {
         return page.getSignature();
-    }
-
-    public void setSignature(byte[] value) {
-        page.setSignature(ByteBuffer.wrap(value));
     }
 
     @NotNull
@@ -1231,19 +865,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getPageTitle() == null ? "" : page.getPageTitle().toString();
     }
 
-    public void setPageTitle(String pageTitle) {
-        page.setPageTitle(pageTitle);
-    }
-
     @NotNull
     public String getContentTitle() {
         return page.getContentTitle() == null ? "" : page.getContentTitle().toString();
-    }
-
-    public void setContentTitle(String contentTitle) {
-        if (contentTitle != null) {
-            page.setContentTitle(contentTitle);
-        }
     }
 
     @NotNull
@@ -1251,20 +875,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getPageText() == null ? "" : page.getPageText().toString();
     }
 
-    public void setPageText(String value) {
-        if (value != null && !value.isEmpty()) page.setPageText(value);
-    }
-
     @NotNull
     public String getContentText() {
         return page.getContentText() == null ? "" : page.getContentText().toString();
-    }
-
-    public void setContentText(String textContent) {
-        if (textContent != null && !textContent.isEmpty()) {
-            page.setContentText(textContent);
-            page.setContentTextLen(textContent.length());
-        }
     }
 
     public int getContentTextLen() {
@@ -1277,10 +890,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return ParseStatus.box(parseStatus == null ? GParseStatus.newBuilder().build() : parseStatus);
     }
 
-    public void setParseStatus(ParseStatus parseStatus) {
-        page.setParseStatus(parseStatus.unbox());
-    }
-
     public Map<CharSequence, GHypeLink> getLiveLinks() {
         return page.getLiveLinks();
     }
@@ -1288,17 +897,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     public Collection<String> getSimpleLiveLinks() {
         return CollectionUtils.collect(page.getLiveLinks().keySet(), CharSequence::toString);
     }
-
-    public void setLiveLinks(Iterable<HyperlinkPersistable> liveLinks) {
-        page.getLiveLinks().clear();
-        Map<CharSequence, GHypeLink> links = page.getLiveLinks();
-        liveLinks.forEach(l -> links.put(l.getUrl(), l.unbox()));
-    }
-
-    public void setLiveLinks(Map<CharSequence, GHypeLink> links) {
-        page.setLiveLinks(links);
-    }
-
+    
     public void addLiveLink(HyperlinkPersistable hyperLink) {
         page.getLiveLinks().put(hyperLink.getUrl(), hyperLink.unbox());
     }
@@ -1311,32 +910,16 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return CollectionUtils.collect(page.getVividLinks().keySet(), CharSequence::toString);
     }
 
-    public void setVividLinks(Map<CharSequence, CharSequence> links) {
-        page.setVividLinks(links);
-    }
-
     public List<CharSequence> getDeadLinks() {
         return page.getDeadLinks();
-    }
-
-    public void setDeadLinks(List<CharSequence> deadLinks) {
-        page.setDeadLinks(deadLinks);
     }
 
     public List<CharSequence> getLinks() {
         return page.getLinks();
     }
 
-    public void setLinks(List<CharSequence> links) {
-        page.setLinks(links);
-    }
-
     public int getImpreciseLinkCount() {
         return getMetadata().getInt(Name.TOTAL_OUT_LINKS, 0);
-    }
-
-    public void setImpreciseLinkCount(int count) {
-        getMetadata().set(Name.TOTAL_OUT_LINKS, String.valueOf(count));
     }
 
     public Map<CharSequence, CharSequence> getInlinks() {
@@ -1348,32 +931,16 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getAnchor() != null ? page.getAnchor() : "";
     }
 
-    public void setAnchor(CharSequence anchor) {
-        page.setAnchor(anchor);
-    }
-
     public String[] getInlinkAnchors() {
         return StringUtils.split(getMetadata().getOrDefault(Name.ANCHORS, ""), "\n");
-    }
-
-    public void setInlinkAnchors(Collection<CharSequence> anchors) {
-        getMetadata().set(Name.ANCHORS, StringUtils.join(anchors, "\n"));
     }
 
     public int getAnchorOrder() {
         return page.getAnchorOrder() < 0 ? MAX_LIVE_LINK_PER_PAGE : page.getAnchorOrder();
     }
 
-    public void setAnchorOrder(int order) {
-        page.setAnchorOrder(order);
-    }
-
     public Instant getContentPublishTime() {
         return Instant.ofEpochMilli(page.getContentPublishTime());
-    }
-
-    public void setContentPublishTime(Instant publishTime) {
-        page.setContentPublishTime(publishTime.toEpochMilli());
     }
 
     public boolean isValidContentModifyTime(Instant publishTime) {
@@ -1384,51 +951,25 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return Instant.ofEpochMilli(page.getPrevContentPublishTime());
     }
 
-    public void setPrevContentPublishTime(Instant publishTime) {
-        page.setPrevContentPublishTime(publishTime.toEpochMilli());
-    }
-
     public Instant getRefContentPublishTime() {
         return Instant.ofEpochMilli(page.getRefContentPublishTime());
-    }
-
-    public void setRefContentPublishTime(Instant publishTime) {
-        page.setRefContentPublishTime(publishTime.toEpochMilli());
     }
 
     public Instant getContentModifiedTime() {
         return Instant.ofEpochMilli(page.getContentModifiedTime());
     }
 
-    public void setContentModifiedTime(Instant modifiedTime) {
-        page.setContentModifiedTime(modifiedTime.toEpochMilli());
-    }
-
     public Instant getPrevContentModifiedTime() {
         return Instant.ofEpochMilli(page.getPrevContentModifiedTime());
-    }
-
-    public void setPrevContentModifiedTime(Instant modifiedTime) {
-        page.setPrevContentModifiedTime(modifiedTime.toEpochMilli());
     }
 
     public Instant getPrevRefContentPublishTime() {
         return Instant.ofEpochMilli(page.getPrevRefContentPublishTime());
     }
 
-    public void setPrevRefContentPublishTime(Instant publishTime) {
-        page.setPrevRefContentPublishTime(publishTime.toEpochMilli());
-    }
-
     @Nullable
     public String getReferrer() {
         return page.getReferrer() == null ? null : page.getReferrer().toString();
-    }
-
-    public void setReferrer(@Nullable String referrer) {
-        if (UrlUtils.isStandard(referrer)) {
-            page.setReferrer(referrer);
-        }
     }
 
     /**
@@ -1439,10 +980,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     @Nullable
     public Instant getPageModelUpdateTime() {
         return Instant.ofEpochMilli(page.getPageModelUpdateTime());
-    }
-
-    public void setPageModelUpdateTime(@Nullable Instant time) {
-        page.setPageModelUpdateTime(time == null ? 0 : time.toEpochMilli());
     }
 
     @Nullable
@@ -1468,16 +1005,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getScore();
     }
 
-    public void setScore(float value) {
-        page.setScore(value);
-    }
-
     public float getContentScore() {
         return page.getContentScore() == null ? 0.0f : page.getContentScore();
-    }
-
-    public void setContentScore(float score) {
-        page.setContentScore(score);
     }
 
     @NotNull
@@ -1485,16 +1014,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return page.getSortScore() == null ? "" : page.getSortScore().toString();
     }
 
-    public void setSortScore(String score) {
-        page.setSortScore(score);
-    }
-
     public float getCash() {
         return getMetadata().getFloat(Name.CASH_KEY, 0.0f);
-    }
-
-    public void setCash(float cash) {
-        getMetadata().set(Name.CASH_KEY, String.valueOf(cash));
     }
 
     @NotNull

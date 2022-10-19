@@ -62,7 +62,7 @@ class WebDb(
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
-    fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
+    fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): MutableWebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")

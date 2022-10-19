@@ -3,27 +3,28 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.NormURL
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 
-class FetchEntry(val page: WebPage, val options: LoadOptions) {
+class FetchEntry(val page: MutableWebPage, val options: LoadOptions) {
 
     constructor(url: String, options: LoadOptions, href: String? = null) :
             this(createPageShell(url, options, href), options)
 
     companion object {
 
-        fun createPageShell(normURL: NormURL): WebPage {
+        fun createPageShell(normURL: NormURL): MutableWebPage {
             val referer = normURL.detail?.referrer ?: normURL.options.referrer
             return createPageShell(normURL.spec, normURL.options, normURL.hrefSpec, referer)
         }
 
-        fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): WebPage {
+        fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): MutableWebPage {
             val page = WebPage.newWebPage(url, options.conf, href)
             initWebPage(page, options, href, referrer)
             return page
         }
 
-        fun initWebPage(page: WebPage, options: LoadOptions, href: String? = null, referrer: String? = null) {
+        fun initWebPage(page: MutableWebPage, options: LoadOptions, href: String? = null, referrer: String? = null) {
             page.also {
                 it.href = href
                 it.fetchMode = options.fetchMode

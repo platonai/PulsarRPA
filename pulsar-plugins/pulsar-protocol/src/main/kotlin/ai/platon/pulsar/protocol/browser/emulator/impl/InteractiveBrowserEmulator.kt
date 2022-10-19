@@ -12,6 +12,7 @@ import ai.platon.pulsar.crawl.fetch.driver.*
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -140,7 +141,7 @@ open class InteractiveBrowserEmulator(
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
         // page.lastBrowser is used by AppFiles.export, so it has to be set before export
         // TODO: page should not be modified in browser phase, it should only be updated using PageDatum
-        task.page.lastBrowser = driver.browserType
+        (task.page as MutableWebPage).lastBrowser = driver.browserType
 
         if (task.page.options.isDead()) {
             taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
