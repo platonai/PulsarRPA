@@ -249,7 +249,7 @@ class TestGoraStorage {
         webDb.flush()
 
         LOG.debug("Random url: $exampleUrl")
-        val page = WebPage.newWebPage(exampleUrl, conf)
+        val page = MutableWebPage.newWebPage(exampleUrl, conf)
 
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i

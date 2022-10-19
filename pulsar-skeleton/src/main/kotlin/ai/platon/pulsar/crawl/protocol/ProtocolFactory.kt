@@ -73,7 +73,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
         return when (fetchMode) {
             FetchMode.BROWSER -> getProtocol("browser:" + page.url)
             else -> getProtocol(page.url)
-        }?:throw ProtocolNotFound(page.url)
+        } ?: throw ProtocolNotFound(page.url)
     }
 
     /**

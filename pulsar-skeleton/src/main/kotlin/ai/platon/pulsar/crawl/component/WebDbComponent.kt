@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
@@ -38,11 +39,11 @@ class WebDbComponent(private val webDb: WebDb, private val conf: ImmutableConfig
 
     constructor(conf: ImmutableConfig) : this(WebDb(conf), conf) {}
 
-    fun put(url: String, page: WebPage) {
+    fun put(url: String, page: MutableWebPage) {
         webDb.put(page)
     }
 
-    fun put(page: WebPage) {
+    fun put(page: MutableWebPage) {
         webDb.put(page)
     }
 

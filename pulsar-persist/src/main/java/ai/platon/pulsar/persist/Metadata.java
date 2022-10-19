@@ -47,7 +47,7 @@ public class Metadata {
     }
 
     public void set(String key, String value) {
-        data.put(WebPage.u8(key), value == null ? null : ByteBuffer.wrap(value.getBytes()));
+        data.put(MutableWebPage.u8(key), value == null ? null : ByteBuffer.wrap(value.getBytes()));
     }
 
     public void set(Name name, int value) {
@@ -85,7 +85,7 @@ public class Metadata {
 
     @Nullable
     public ByteBuffer getByteBuffer(String name) {
-        return data.get(WebPage.u8(name));
+        return data.get(MutableWebPage.u8(name));
     }
 
     @Nullable

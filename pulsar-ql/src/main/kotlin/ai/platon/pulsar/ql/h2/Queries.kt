@@ -166,7 +166,7 @@ object Queries {
         val links = normURLs
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
-            .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
+            .onEach { it.completeOnTimeout(MutableWebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }
             .toList()
 
         queue.addAll(links)

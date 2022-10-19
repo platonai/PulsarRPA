@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.CrawlStatus
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -48,7 +49,7 @@ class FileBackendPageStore(
         super.put(reversedUrl, page)
 
         UrlUtils.unreverseUrlOrNull(reversedUrl)?.let {
-            val p = WebPage.box(it, page, unsafeConf)
+            val p = MutableWebPage.box(it, page, unsafeConf)
             writeAvro(p)
             writeHtml(p)
         }
@@ -128,6 +129,10 @@ class FileBackendPageStore(
 
     @Synchronized
     fun writeAvro(page: WebPage) {
+        if (page !is MutableWebPage) {
+            return
+        }
+
         val path = getPersistPath(page.url, ".avro")
 
         logger.takeIf { it.isTraceEnabled }?.trace("Putting ${page.content?.array()?.size} | $path")
@@ -165,8 +170,8 @@ class FileBackendPageStore(
         }
     }
 
-    private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): WebPage {
-        val page = WebPage.newWebPage(url, VolatileConfig.UNSAFE)
+    private fun newSuccessPage(url: String, lastModified: Instant, content: ByteArray): MutableWebPage {
+        val page = MutableWebPage.newWebPage(url, VolatileConfig.UNSAFE)
         page.also {
             it.location = url
             it.fetchCount = 1

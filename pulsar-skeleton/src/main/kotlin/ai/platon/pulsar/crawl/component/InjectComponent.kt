@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.crawl.inject.SeedBuilder
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
@@ -54,10 +55,10 @@ class InjectComponent(
 
         // already exist in db, update the status and mark it as a seed
         page.args = args
-        return if (inject(page)) page else WebPage.NIL
+        return if (inject(page)) page else MutableWebPage.NIL
     }
 
-    fun inject(page: WebPage): Boolean {
+    fun inject(page: MutableWebPage): Boolean {
         val success = seedBuilder.makeSeed(page)
         if (success) {
             webDb.put(page)
@@ -72,7 +73,7 @@ class InjectComponent(
         return configuredUrls.map { inject(UrlUtils.splitUrlArgs(it)) }
     }
 
-    fun injectAll(pages: Collection<WebPage>): List<WebPage> {
+    fun injectAll(pages: Collection<MutableWebPage>): List<WebPage> {
         val injectedPages = pages.onEach { inject(it) }.filter { it.isSeed }
         seedIndexer.indexAll(injectedPages.map { it.url })
         LOG.info("Injected " + injectedPages.size + " seeds out of " + pages.size + " pages")
@@ -87,7 +88,7 @@ class InjectComponent(
         return page
     }
 
-    fun unInject(page: WebPage): WebPage {
+    fun unInject(page: MutableWebPage): WebPage {
         if (!page.isSeed) {
             return page
         }
@@ -105,7 +106,7 @@ class InjectComponent(
         return pages
     }
 
-    fun unInjectAll(pages: Collection<WebPage>): Collection<WebPage> {
+    fun unInjectAll(pages: Collection<MutableWebPage>): Collection<WebPage> {
         pages.forEach { this.unInject(it) }
         return pages
     }

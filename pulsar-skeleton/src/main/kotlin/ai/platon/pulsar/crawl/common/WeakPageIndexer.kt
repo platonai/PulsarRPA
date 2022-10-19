@@ -120,7 +120,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         if (temporaryDeleteAllPage) {
             webDb.delete(url)
             webDb.flush()
-            indexPage = WebPage.NIL
+            indexPage = MutableWebPage.NIL
         }
 
         if (indexPage.isNil) {

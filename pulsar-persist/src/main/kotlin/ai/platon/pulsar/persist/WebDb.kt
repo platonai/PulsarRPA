@@ -43,24 +43,24 @@ class WebDb(
     val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
     val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
 
-    fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
+    fun getOrNull(originalUrl: String, field: GWebPage.Field): MutableWebPage? {
         return getOrNull(originalUrl, field.toString())
     }
 
-    fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): WebPage? {
+    fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): MutableWebPage? {
         return getOrNull(originalUrl, false, fields.map { it.toString() }.toTypedArray())
     }
 
-    fun getOrNull(originalUrl: String, field: String): WebPage? {
+    fun getOrNull(originalUrl: String, field: String): MutableWebPage? {
         return getOrNull(originalUrl, false, arrayOf(field))
     }
 
     /**
-     * Returns the WebPage corresponding to the given url.
+     * Returns the MutableWebPage corresponding to the given url.
      *
      * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
-     * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
-     * @return the WebPage corresponding to the key or null if it cannot be found
+     * @param fields the fields required in the MutableWebPage. Pass null, to retrieve all fields
+     * @return the MutableWebPage corresponding to the key or null if it cannot be found
      */
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): MutableWebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
@@ -73,7 +73,7 @@ class WebDb(
         accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
 
         if (page != null) {
-            val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
+            val p = MutableWebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
 
             tracer?.trace("Got ${p.fetchCount} ${p.prevFetchTime} ${p.fetchTime} $key")
 
@@ -84,20 +84,21 @@ class WebDb(
     }
 
     /**
-     * Returns the WebPage corresponding to the given url.
+     * Returns the MutableWebPage corresponding to the given url.
      *
      * @param originalUrl the original address of the page
-     * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
+     * @return the MutableWebPage corresponding to the key or MutableWebPage.NIL if it cannot be found
      */
-    fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPage.NIL
+    fun get(originalUrl: String, field: GWebPage.Field): MutableWebPage =
+        getOrNull(originalUrl, field) ?: MutableWebPage.NIL
 
-    fun get(originalUrl: String, fields: Iterable<GWebPage.Field>) =
-        getOrNull(originalUrl, fields) ?: WebPage.NIL
+    fun get(originalUrl: String, fields: Iterable<GWebPage.Field>): MutableWebPage =
+        getOrNull(originalUrl, fields) ?: MutableWebPage.NIL
 
-    fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: WebPage.NIL
+    fun get(originalUrl: String, field: String): MutableWebPage = getOrNull(originalUrl, field) ?: MutableWebPage.NIL
 
-    fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
-        return getOrNull(originalUrl, norm, fields) ?: WebPage.NIL
+    fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): MutableWebPage {
+        return getOrNull(originalUrl, norm, fields) ?: MutableWebPage.NIL
     }
 
     fun exists(originalUrl: String, norm: Boolean = false): Boolean {
@@ -116,6 +117,10 @@ class WebDb(
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
         // Never update NIL page
         if (page.isNil) {
+            return false
+        }
+
+        if (page !is MutableWebPage) {
             return false
         }
 
@@ -138,7 +143,7 @@ class WebDb(
         return true
     }
 
-    fun putAll(pages: Iterable<WebPage>) = pages.forEach { put(it, false) }
+    fun putAll(pages: Iterable<MutableWebPage>) = pages.forEach { put(it, false) }
 
     @JvmOverloads
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
@@ -171,9 +176,9 @@ class WebDb(
     }
 
     /**
-     * Scan all pages who's url starts with {@param originalUrl}
+     * Scan all pages whose url starts with {@param originalUrl}
      *
-     * @param originalUrl The base url
+     * @param urlBase The base url
      * @return The iterator to retrieve pages
      */
     fun scan(urlBase: String): Iterator<WebPage> {

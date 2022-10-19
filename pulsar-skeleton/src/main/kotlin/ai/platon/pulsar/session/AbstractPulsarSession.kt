@@ -16,6 +16,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.collectIfTo
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
@@ -472,7 +473,9 @@ abstract class AbstractPulsarSession(
         if (cachedPage != null) {
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
-            page.unsafeSetGPage(cachedPage.unbox())
+            if (cachedPage is MutableWebPage) {
+                page.unsafeSetGPage(cachedPage.unbox())
+            }
 
             page.isCached = true
             page.tmpContent = cachedPage.tmpContent

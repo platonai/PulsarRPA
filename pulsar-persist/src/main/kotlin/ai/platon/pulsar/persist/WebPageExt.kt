@@ -87,7 +87,7 @@ class WebPageExt(private val page: MutableWebPage) {
         }
 
         for (l in hypeLinks) {
-            val url = WebPage.u8(l.url)
+            val url = MutableWebPage.u8(l.url)
             if (!links.contains(url)) {
                 links.add(url)
             }
@@ -106,7 +106,7 @@ class WebPageExt(private val page: MutableWebPage) {
         }
 
         for (link in hypeLinks) {
-            val url = WebPage.u8(link.toString())
+            val url = MutableWebPage.u8(link.toString())
             // Use a set?
             if (!links.contains(url)) {
                 links.add(url)

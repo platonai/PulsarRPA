@@ -24,7 +24,6 @@ import java.util.Map;
 
 public interface WebAsset {
   int getId();
-
   String getUrl();
   String getKey();
   String getReversedUrl();
@@ -33,13 +32,8 @@ public interface WebAsset {
   String getArgs();
   String getConfiguredUrl();
   String getReprUrl();
-
   String getReferrer();
   String getHref();
-
-  Variables getVariables();
-  Object getVar(String name);
-  VolatileConfig getConf();
 
   Metadata getMetadata();
   CrawlMarks getMarks();
@@ -64,9 +58,6 @@ public interface WebAsset {
   Instant getPrevModifiedTime();
   PageCategory getPageCategory();
   ByteBuffer getPrevSignature();
-  String getProxy();
-  ActiveDOMStatus getActiveDOMStatus();
-  Map<String, ActiveDOMStat> getActiveDOMStatTrace();
 
   Instant getContentPublishTime();
   Instant getPrevContentPublishTime();
@@ -75,21 +66,12 @@ public interface WebAsset {
   Instant getPrevContentModifiedTime();
   Instant getPrevRefContentPublishTime();
 
-  PageCounters getPageCounters();
   Duration getRetryDelay();
-  int getMaxRetries();
-
   int getFetchedLinkCount();
-  FetchMode getFetchMode();
-  BrowserType getLastBrowser();
   Instant getGenerateTime();
   OpenPageCategory getOpenPageCategory();
-
   String getEncoding();
   String getEncodingClues();
-
-  HtmlIntegrity getHtmlIntegrity();
-
   String getPageTitle();
   String getContentTitle();
   String getPageText();
@@ -116,17 +98,7 @@ public interface WebAsset {
   String getSignatureAsString();
 
   ParseStatus getParseStatus();
-  Map<CharSequence, GHypeLink> getLiveLinks();
-  Map<CharSequence, CharSequence> getVividLinks();
-  List<CharSequence> getDeadLinks();
-  List<CharSequence> getLinks();
-  int getImpreciseLinkCount();
-  Map<CharSequence, CharSequence> getInlinks();
-  CharSequence getAnchor();
-  int getAnchorOrder();
 
-  Collection<String> getSimpleLiveLinks();
-  String[] getInlinkAnchors();
 
   float getCash();
   float getScore();

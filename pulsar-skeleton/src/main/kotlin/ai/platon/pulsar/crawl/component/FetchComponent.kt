@@ -47,7 +47,7 @@ open class FetchComponent(
 
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && AppContext.isActive
-    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = MutableWebPage.NIL.takeIf { !isActive }
 
     /**
      * Fetch an url
@@ -55,7 +55,7 @@ open class FetchComponent(
      * @param url The url of web page to fetch
      * @return The fetch result
      */
-    fun fetch(url: String) = abnormalPage ?: fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+    fun fetch(url: String) = abnormalPage ?: fetchContent(MutableWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
      * Fetch an url

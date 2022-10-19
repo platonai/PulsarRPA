@@ -67,7 +67,7 @@ class LoadComponent(
 
     @Volatile
     private var numWrite = 0
-    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
+    private val abnormalPage get() = MutableWebPage.NIL.takeIf { !isActive }
 
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
@@ -96,7 +96,7 @@ class LoadComponent(
 
     fun loadWithRetry(normURL: NormURL): WebPage {
         if (normURL.isNil) {
-            return WebPage.NIL
+            return MutableWebPage.NIL
         }
 
         var page = load0(normURL)
@@ -109,7 +109,7 @@ class LoadComponent(
 
     suspend fun loadWithRetryDeferred(normURL: NormURL): WebPage {
         if (normURL.isNil) {
-            return WebPage.NIL
+            return MutableWebPage.NIL
         }
 
         var page = loadDeferred0(normURL)
@@ -224,7 +224,7 @@ class LoadComponent(
             // the cached page can be or not be persisted, but not guaranteed
             // if a page is loaded from cache, the content remains unchanged and should not persist to database
             // TODO: clone the underlying data or not?
-            page.unsafeCloneGPage(cachedPage)
+            page.unsafeCloneGPage(cachedPage as MutableWebPage)
             page.clearPersistContent()
 
             page.tmpContent = cachedPage.content

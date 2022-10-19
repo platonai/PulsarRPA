@@ -120,7 +120,7 @@ class FetchTask constructor(
 
     companion object {
         val DEFAULT_FINGERPRINT = Fingerprint(BrowserType.PULSAR_CHROME)
-        val NIL = FetchTask(0, 0, WebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
+        val NIL = FetchTask(0, 0, MutableWebPage.NIL, DEFAULT_FINGERPRINT, id = 0)
         val instanceSequencer = AtomicInteger()
 
         fun create(url: String, conf: VolatileConfig): FetchTask {

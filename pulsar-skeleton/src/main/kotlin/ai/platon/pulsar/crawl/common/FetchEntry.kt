@@ -19,7 +19,7 @@ class FetchEntry(val page: MutableWebPage, val options: LoadOptions) {
         }
 
         fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): MutableWebPage {
-            val page = WebPage.newWebPage(url, options.conf, href)
+            val page = MutableWebPage.newWebPage(url, options.conf, href)
             initWebPage(page, options, href, referrer)
             return page
         }

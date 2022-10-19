@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.deprecated.CrawlOptions.Companion.parse
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
+import ai.platon.pulsar.persist.MutableWebPage
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.apache.commons.lang3.tuple.Pair
@@ -39,19 +40,19 @@ class SeedBuilder(
      * @return The created WebPage.
      * If the url is an invalid url or an internal url, return ai.platon.pulsar.persistWebPage.NIL
      */
-    fun create(url: String, args: String): WebPage {
+    fun create(url: String, args: String): MutableWebPage {
         if (url.isEmpty()) {
-            return WebPage.NIL
+            return MutableWebPage.NIL
         }
-        val page = WebPage.newWebPage(url, conf.toVolatileConfig())
-        return if (makeSeed(url, args, page)) page else WebPage.NIL
+        val page = MutableWebPage.newWebPage(url, conf.toVolatileConfig())
+        return if (makeSeed(url, args, page)) page else MutableWebPage.NIL
     }
 
-    fun makeSeed(page: WebPage): Boolean {
+    fun makeSeed(page: MutableWebPage): Boolean {
         return makeSeed(page.url, page.args, page)
     }
 
-    private fun makeSeed(url: String, args: String, page: WebPage): Boolean {
+    private fun makeSeed(url: String, args: String, page: MutableWebPage): Boolean {
 //        if (page.isSeed) {
 //            return false
 //        }
