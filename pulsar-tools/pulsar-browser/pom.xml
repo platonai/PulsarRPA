@@ -40,6 +40,6 @@
 
     <properties>
         <websocket.api.version>1.1</websocket.api.version>
-        <tyrus.version>1.13.1</tyrus.version>
+        <tyrus.version>2.1.0</tyrus.version>
     </properties>
 </project>

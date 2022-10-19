@@ -65,7 +65,7 @@
         <dependency>
             <groupId>com.google.code.crawler-commons</groupId>
             <artifactId>crawler-commons</artifactId>
-            <version>0.5</version>
+            <version>${crawler-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -111,4 +111,7 @@
 
     </dependencies>
 
+    <properties>
+        <crawler-commons.version>0.5</crawler-commons.version>
+    </properties>
 </project>

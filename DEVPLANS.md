@@ -1,3 +1,9 @@
+## 1.11.x
+
+1. upgrade kotlin to 1.7.20
+2. upgrade spring to 5.3.23
+3. upgrade spring-boot to 2.6.12
+
 ## 1.10.x
 
 1. advanced rest api

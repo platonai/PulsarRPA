@@ -15,7 +15,7 @@
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
-        <version>3.6.0</version>
+        <version>3.6.1-SNAPSHOT</version>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
@@ -670,22 +670,24 @@
     </dependencies>
 
     <properties>
-        <kotlin.version>1.5.32</kotlin.version>
-        <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
-<!--        <kotlin.version>1.6.20</kotlin.version>-->
-        <pulsar-h2.version>1.4.196</pulsar-h2.version>
-        <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-        <dokka.version>1.4.32</dokka.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
 
-        <commons-io.version>2.11.0</commons-io.version>
-        <spring.version>5.3.17</spring.version>
-        <!-- spring-data-mongo -->
-        <spring-data.version>3.1.15</spring-data.version>
-        <spring-boot.version>2.4.13</spring-boot.version>
-        <tika.version>2.3.0</tika.version>
+        <kotlin.version>1.7.20</kotlin.version>
+        <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
+
+        <pulsar-h2.version>1.4.196</pulsar-h2.version>
+        <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
+
+        <dokka.version>1.4.32</dokka.version>
+
+        <spring-boot.version>2.6.12</spring-boot.version>
+        <spring.version>5.3.23</spring.version>
+        <spring-data-mongodb.version>3.3.9</spring-data-mongodb.version>
+        <spring-data-commons.version>2.6.9</spring-data-commons.version>
+
+        <tika.version>2.4.1</tika.version>
         <autolink.version>0.10.0</autolink.version>
         <playwright.version>1.19.0</playwright.version>
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
-import javax.websocket.CloseReason
+import jakarta.websocket.CloseReason
 
 /*-
  * #%L

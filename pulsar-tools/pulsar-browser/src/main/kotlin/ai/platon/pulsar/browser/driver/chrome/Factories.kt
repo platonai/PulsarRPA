@@ -2,9 +2,9 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.Systems
+import jakarta.websocket.WebSocketContainer
 import org.glassfish.tyrus.client.ClientManager
 import org.glassfish.tyrus.container.grizzly.client.GrizzlyClientContainer
-import javax.websocket.WebSocketContainer
 
 @FunctionalInterface
 interface WebSocketServiceFactory {

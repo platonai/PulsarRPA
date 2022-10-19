@@ -33,10 +33,10 @@ open class FeaturedDocument(val document: Document) {
         private val instanceSequencer = AtomicInteger()
 
         var SELECTOR_IN_BOX_DEVIATION = 25
-
         var primaryGridDimension = Dimension(30, 15) // about 1 em
         var secondaryGridDimension = Dimension(5, 5)
         var densityUnitArea = 400 * 400
+        val globalNumDocuments get() = instanceSequencer.get()
 
         val NIL = FeaturedDocument(nilDocument)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()

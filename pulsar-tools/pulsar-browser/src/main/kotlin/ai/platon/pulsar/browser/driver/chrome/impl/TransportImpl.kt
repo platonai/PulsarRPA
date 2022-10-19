@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
 import com.codahale.metrics.SharedMetricRegistries
+import jakarta.websocket.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -15,7 +16,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
-import javax.websocket.*
 
 class TransportImpl : Transport {
     private val logger = LoggerFactory.getLogger(TransportImpl::class.java)
@@ -181,7 +181,7 @@ class TransportImpl : Transport {
 
         /**
          * Returns a WebSocketContainer retrieved from class defined in system property
-         * ai.platon.pulsar.browser.driver.chrome.webSocketContainerFactory.
+         * [ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory].
          * The default value is GrizzlyContainerProvider.
          *
          * @return WebSocketContainer.
