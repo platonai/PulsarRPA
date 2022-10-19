@@ -188,7 +188,6 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls The urls to normalize
      * @param args The arguments
-     * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Collection<UrlAware>, args: String): List<NormURL>
@@ -198,7 +197,6 @@ interface PulsarSession : AutoCloseable {
      *
      * @param urls The urls to normalize
      * @param options The LoadOptions applied to each url
-     * @param toItemOption If the LoadOptions is converted to item load options
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions): List<NormURL>

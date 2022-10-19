@@ -602,9 +602,14 @@ open class LoadOptions(
     /**
      * Create a new [LoadOptions] object for item pages.
      * */
-    open fun createItemOptions(): LoadOptions {
+    @JvmOverloads
+    open fun createItemOptions(referrer: String? = null): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
+
+        if (referrer != null) {
+            itemOptions.referrer = referrer
+        }
 
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE

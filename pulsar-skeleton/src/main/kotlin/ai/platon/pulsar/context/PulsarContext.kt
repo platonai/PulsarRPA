@@ -76,7 +76,7 @@ interface PulsarContext {
 
     /**
      * Normalize an url, the url can be in one of the following forms:
-     * 1. a normal url
+     * 1. a url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
