@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionDelegate
@@ -65,9 +65,9 @@ abstract class AbstractSQLContext constructor(
         status = Status.RUNNING
     }
 
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val normUrl = super.normalize(url, options, toItemOption)
-        return NormUrl(SQLUtils.unsanitizeUrl(normUrl.spec), normUrl.options, hrefSpec = normUrl.hrefSpec)
+    override fun normalize(url: String, options: LoadOptions): NormURL {
+        val normURL = super.normalize(url, options)
+        return NormURL(SQLUtils.unsanitizeUrl(normURL.spec), normURL.options, hrefSpec = normURL.hrefSpec)
     }
 
     override fun execute(sql: String) {

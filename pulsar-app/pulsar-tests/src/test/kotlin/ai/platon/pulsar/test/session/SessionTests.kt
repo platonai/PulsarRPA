@@ -18,16 +18,16 @@ class SessionTests {
 
     @Test
     fun testLoadAll() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
-        val futures = session.loadAllAsync(normUrls)
+        val normURLs = urls.take(5).map { session.normalize(it, args) }
+        val futures = session.loadAllAsync(normURLs)
 
         val future1 = CompletableFuture.allOf(*futures.toTypedArray())
         future1.join()
 
         println("The first round is finished")
 
-        val normUrls2 = urls.take(5).map { session.normalize(it, args) }
-        val futures2 = session.loadAllAsync(normUrls2)
+        val normURLs2 = urls.take(5).map { session.normalize(it, args) }
+        val futures2 = session.loadAllAsync(normURLs2)
         val future2 = CompletableFuture.allOf(*futures2.toTypedArray())
         future2.join()
 
@@ -47,16 +47,16 @@ class SessionTests {
 
     @Test
     fun testLoadAllCached() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
-        val futures = session.loadAllAsync(normUrls)
+        val normURLs = urls.take(5).map { session.normalize(it, args) }
+        val futures = session.loadAllAsync(normURLs)
 
         val future1 = CompletableFuture.allOf(*futures.toTypedArray())
         future1.join()
 
         println("The first round is finished")
 
-        val normUrls2 = urls.take(5).map { session.normalize(it) }
-        val futures2 = session.loadAllAsync(normUrls2)
+        val normURLs2 = urls.take(5).map { session.normalize(it) }
+        val futures2 = session.loadAllAsync(normURLs2)
         val future2 = CompletableFuture.allOf(*futures2.toTypedArray())
         future2.join()
 

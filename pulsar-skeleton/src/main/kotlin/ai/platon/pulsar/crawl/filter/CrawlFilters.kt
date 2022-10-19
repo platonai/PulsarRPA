@@ -56,8 +56,8 @@ class CrawlFilters(
     }
 
     fun normalizeToEmpty(url: String): String {
-        val normUrl = normalizeToNull(url)
-        return normUrl ?: ""
+        val normURL = normalizeToNull(url)
+        return normURL ?: ""
     }
 
     fun normalizeToNull(url: String, scope: String = ChainedUrlNormalizer.SCOPE_DEFAULT): String? {

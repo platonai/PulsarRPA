@@ -138,12 +138,12 @@ Pulsar 中的 URL 是一个普通的 link:https://en.wikipedia.org/wiki/URL[URL]
 
 Pulsar 中有几种基本的 URL 形式:
 
-* A link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormUrl.kt[ NormUrl]
+* A link:../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/common/urls/NormURL.kt[NormURL]
 * A String
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[UrlAware]
 * A link:../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/urls/Hyperlinks.kt[DegenerateUrl]
 
-NormUrl 代表 “规范化的 Url”，这意味着该 url 是 fetch 组件的最终形式，并且通常最终被传递给真正的浏览器。
+NormURL 代表 “规范化的 URL”，这意味着该 URL 是 fetch 组件的最终形式，并且通常最终被传递给真正的浏览器。
 
 如果未指定，字符串格式的 url 实际上意味着 “configured url” 或 “url with parameters”，例如:
 

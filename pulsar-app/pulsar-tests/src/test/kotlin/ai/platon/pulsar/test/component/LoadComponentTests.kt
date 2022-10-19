@@ -3,7 +3,7 @@ package ai.platon.pulsar.test.component
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.prependReadableClassName
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.test.TestBase
@@ -42,25 +42,25 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAll() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
-        val pages = loadComponent.loadAll(normUrls)
-        val pages2 = loadComponent.loadAll(normUrls)
+        val normURLs = urls.take(5).map { session.normalize(it, args) }
+        val pages = loadComponent.loadAll(normURLs)
+        val pages2 = loadComponent.loadAll(normURLs)
         assertEquals(pages.size, pages2.size)
     }
 
     @Test
     fun testLoadAllWithAllCached() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
-        val pages = loadComponent.loadAll(normUrls)
-        val normUrls3 = urls.take(5).map { session.normalize(it) }
-        val pages3 = loadComponent.loadAll(normUrls3)
+        val normURLs = urls.take(5).map { session.normalize(it, args) }
+        val pages = loadComponent.loadAll(normURLs)
+        val normURLs3 = urls.take(5).map { session.normalize(it) }
+        val pages3 = loadComponent.loadAll(normURLs3)
         assertEquals(pages.size, pages3.size)
     }
 
     @Test
     fun testLoadAsync() {
-        val normUrl = session.normalize(url, args)
-        val future = loadComponent.loadAsync(normUrl)
+        val normURL = session.normalize(url, args)
+        val future = loadComponent.loadAsync(normURL)
         assertFalse(future.isCancelled)
         assertFalse(future.isDone)
         future.thenAccept { println(it.url) }
@@ -71,32 +71,32 @@ class LoadComponentTests: TestBase() {
 
     @Test
     fun testLoadAllAsync() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
+        val normURLs = urls.take(5).map { session.normalize(it, args) }
         val resultUrls = mutableListOf<String>()
-        val futures = loadComponent.loadAllAsync(normUrls)
+        val futures = loadComponent.loadAllAsync(normURLs)
             .map { it.thenApply { resultUrls.add(it.url) } }
 
         val future = CompletableFuture.allOf(*futures.toTypedArray())
         future.join()
 
-        assertEquals(normUrls.size, resultUrls.size)
+        assertEquals(normURLs.size, resultUrls.size)
     }
 
     @Test
     fun testLoadAllAsFlow() {
-        val normUrls = urls.take(5).map { session.normalize(it, args) }
+        val normURLs = urls.take(5).map { session.normalize(it, args) }
 
         val resultUrls = mutableListOf<String>()
         runBlocking {
-            normUrls.asFlow()
+            normURLs.asFlow()
                 .map { loadComponent.loadDeferred(it) }
                 .onEach { resultUrls.add(it.url) }
                 .map { it.contentLength }
                 .collect()
         }
 
-        assertEquals(normUrls.size, resultUrls.size)
-        assertEquals(resultUrls[0], normUrls[0].spec)
-        assertEquals(resultUrls[1], normUrls[1].spec)
+        assertEquals(normURLs.size, resultUrls.size)
+        assertEquals(resultUrls[0], normURLs[0].spec)
+        assertEquals(resultUrls[1], normURLs[1].spec)
     }
 }

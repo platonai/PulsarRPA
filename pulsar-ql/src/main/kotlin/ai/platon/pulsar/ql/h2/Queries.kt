@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -56,9 +56,9 @@ object Queries {
 
         when (urls) {
             is ValueString -> {
-                val normUrl = session.normalize(urls.string)
+                val normURL = session.normalize(urls.string)
                 pages = ArrayList()
-                pages.add(session.load(normUrl))
+                pages.add(session.load(normURL))
             }
             is ValueArray ->
                 if (urls.list.isNotEmpty()) {
@@ -115,34 +115,34 @@ object Queries {
     ): Collection<WebPage> {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 
-        val normUrl = session.normalize(portalUrl)
-        val limit2 = min(limit, normUrl.options.topLinks)
+        val normURL = session.normalize(portalUrl)
+        val limit2 = min(limit, normURL.options.topLinks)
 
-        val document = session.loadDocument(normUrl)
+        val document = session.loadDocument(normURL)
         var links = transformer(document.document, restrictCss, offset, Int.MAX_VALUE).filter { !UrlUtils.isInternal(it) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
         }
 
-        val itemOptions = normUrl.options.createItemOptions()
+        val itemOptions = normURL.options.createItemOptions()
         val distinctLinks = session.normalize(links.toSet().take(limit2), itemOptions)
 
         return loadAll(session, distinctLinks)
     }
 
     /**
-     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout.
+     * Load all pages specified by [normURLs], wait until all pages are loaded or timeout.
      * */
     private fun loadAll(
         session: PulsarSession,
-        normUrls: Iterable<NormUrl>
+        normURLs: Iterable<NormURL>
     ): List<WebPage> {
-        if (!normUrls.iterator().hasNext()) {
+        if (!normURLs.iterator().hasNext()) {
             return listOf()
         }
 
-        val futures = session.loadAllAsync(normUrls.distinctBy { it.spec })
+        val futures = session.loadAllAsync(normURLs.distinctBy { it.spec })
 
         logger.info("Waiting for {} completable hyperlinks | @{}", futures.size, futures.hashCode())
 
@@ -157,13 +157,13 @@ object Queries {
     }
 
     /**
-     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * Load all pages specified by [normURLs], wait until all pages are loaded or timeout
      * */
-    private fun loadAll2(session: PulsarSession, normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+    private fun loadAll2(session: PulsarSession, normURLs: Iterable<NormURL>, options: LoadOptions): Collection<WebPage> {
         val globalCache = session.globalCache
         val queue = globalCache.urlPool.higher3Cache.reentrantQueue
         val timeoutSeconds = options.pageLoadTimeout.seconds + 1
-        val links = normUrls
+        val links = normURLs
             .asSequence()
             .map { CompletableListenableHyperlink<WebPage>(it.spec, args = it.args, href = it.hrefSpec) }
             .onEach { it.completeOnTimeout(WebPage.NIL, timeoutSeconds, TimeUnit.SECONDS) }

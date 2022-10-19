@@ -26,7 +26,7 @@ open class HyperlinkCollector(
     /**
      * The urls of portal pages from where hyper links are extracted from
      * */
-    val seeds: Queue<NormUrl>,
+    val seeds: Queue<NormURL>,
     /**
      * The priority of this collector
      * */
@@ -88,7 +88,7 @@ open class HyperlinkCollector(
     }
 
     @Throws(Exception::class)
-    protected fun collectToUnsafe(seed: NormUrl, sink: MutableCollection<UrlAware>): Int {
+    protected fun collectToUnsafe(seed: NormURL, sink: MutableCollection<UrlAware>): Int {
         ++parsedSeedCount
         val p = session.load(seed).takeIf { it.protocolStatus.isSuccess } ?: return 0
 
@@ -97,7 +97,7 @@ open class HyperlinkCollector(
         return collectToUnsafe(seed, pageFatLink, sink)
     }
 
-    private fun collectToUnsafe(seed: NormUrl, pageFatLink: PageFatLink, sink: MutableCollection<UrlAware>): Int {
+    private fun collectToUnsafe(seed: NormURL, pageFatLink: PageFatLink, sink: MutableCollection<UrlAware>): Int {
         val (page, fatLink) = pageFatLink
 
         page.prevCrawlTime1 = Instant.now()
@@ -135,7 +135,7 @@ open class HyperlinkCollector(
 
 open class CircularHyperlinkCollector(
     session: PulsarSession,
-    seeds: Queue<NormUrl>,
+    seeds: Queue<NormURL>,
     priority: Priority13 = Priority13.HIGHER
 ) : HyperlinkCollector(session, seeds, priority) {
     private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
@@ -151,7 +151,7 @@ open class CircularHyperlinkCollector(
 
     constructor(
         session: PulsarSession,
-        seed: NormUrl,
+        seed: NormURL,
         priority: Priority13 = Priority13.HIGHER
     ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
@@ -182,7 +182,7 @@ open class CircularHyperlinkCollector(
 
 open class PeriodicalHyperlinkCollector(
     session: PulsarSession,
-    val seed: NormUrl,
+    val seed: NormURL,
     priority: Priority13 = Priority13.HIGHER
 ) : CircularHyperlinkCollector(session, seed, priority) {
     private val log = LoggerFactory.getLogger(PeriodicalHyperlinkCollector::class.java)
@@ -236,7 +236,7 @@ open class PeriodicalHyperlinkCollector(
                 .asSequence()
                 .filterNot { it.startsWith("#") }
                 .filterNot { it.isBlank() }
-                .map { NormUrl.parse(it, session.sessionConfig.toVolatileConfig()) }
+                .map { NormURL.parse(it, session.sessionConfig.toVolatileConfig()) }
                 .filter { UrlUtils.isValidUrl(it.spec) }
                 .map { PeriodicalHyperlinkCollector(session, it, priority) }
         }

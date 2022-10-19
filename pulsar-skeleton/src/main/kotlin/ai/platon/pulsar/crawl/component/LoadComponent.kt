@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEvent
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.crawl.common.FetchEntry
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.crawl.common.GlobalCacheFactory
@@ -82,52 +82,52 @@ class LoadComponent(
     }
 
     fun load(url: URL, options: LoadOptions): WebPage {
-        return abnormalPage ?: loadWithRetry(NormUrl(url, options))
+        return abnormalPage ?: loadWithRetry(NormURL(url, options))
     }
 
-    fun load(normUrl: NormUrl): WebPage {
-        return abnormalPage ?: loadWithRetry(normUrl)
+    fun load(normURL: NormURL): WebPage {
+        return abnormalPage ?: loadWithRetry(normURL)
     }
 
-    suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        return abnormalPage ?: loadWithRetryDeferred(normUrl)
+    suspend fun loadDeferred(normURL: NormURL): WebPage {
+        return abnormalPage ?: loadWithRetryDeferred(normURL)
     }
 
-    fun loadWithRetry(normUrl: NormUrl): WebPage {
-        if (normUrl.isNil) {
+    fun loadWithRetry(normURL: NormURL): WebPage {
+        if (normURL.isNil) {
             return WebPage.NIL
         }
 
-        var page = load0(normUrl)
-        var n = normUrl.options.nJitRetry
+        var page = load0(normURL)
+        var n = normURL.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
-            page = load0(normUrl)
+            page = load0(normURL)
         }
         return page
     }
 
-    suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
-        if (normUrl.isNil) {
+    suspend fun loadWithRetryDeferred(normURL: NormURL): WebPage {
+        if (normURL.isNil) {
             return WebPage.NIL
         }
 
-        var page = loadDeferred0(normUrl)
-        var n = normUrl.options.nJitRetry
+        var page = loadDeferred0(normURL)
+        var n = normURL.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
-            page = loadDeferred0(normUrl)
+            page = loadDeferred0(normURL)
         }
         return page
     }
 
     /**
-     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * Load all pages specified by [normURLs], wait until all pages are loaded or timeout
      * */
-    fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage> {
-        if (!normUrls.iterator().hasNext()) {
+    fun loadAll(normURLs: Iterable<NormURL>): List<WebPage> {
+        if (!normURLs.iterator().hasNext()) {
             return listOf()
         }
 
-        val futures = loadAllAsync(normUrls.filter { !it.isNil })
+        val futures = loadAllAsync(normURLs.filter { !it.isNil })
 
         logger.info("Waiting for {} completable links | @{}", futures.size, futures.hashCode())
 
@@ -142,80 +142,80 @@ class LoadComponent(
     }
 
     /**
-     * Load a page specified by [normUrl]
+     * Load a page specified by [normURL]
      *
-     * @param normUrl The normalized url
+     * @param normURL The normalized url
      * @return A completable future of webpage
      * */
-    fun loadAsync(normUrl: NormUrl): CompletableFuture<WebPage> {
-        val link = normUrl.toCompletableListenableHyperlink()
+    fun loadAsync(normURL: NormURL): CompletableFuture<WebPage> {
+        val link = normURL.toCompletableListenableHyperlink()
         globalCache.urlPool.add(link)
         return link
     }
 
     /**
-     * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     * Load all pages specified by [normURLs], wait until all pages are loaded or timeout
      * */
-    fun loadAllAsync(normUrls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
-        if (!normUrls.iterator().hasNext()) {
+    fun loadAllAsync(normURLs: Iterable<NormURL>): List<CompletableFuture<WebPage>> {
+        if (!normURLs.iterator().hasNext()) {
             return listOf()
         }
 
-        val linkFutures = normUrls.asSequence().filter { !it.isNil }.distinctBy { it.spec }
+        val linkFutures = normURLs.asSequence().filter { !it.isNil }.distinctBy { it.spec }
             .map { it.toCompletableListenableHyperlink() }
             .toList()
         globalCache.urlPool.addAll(linkFutures)
         return linkFutures
     }
 
-    private fun load0(normUrl: NormUrl): WebPage {
-        val page = createPageShell(normUrl)
-        return load1(normUrl, page)
+    private fun load0(normURL: NormURL): WebPage {
+        val page = createPageShell(normURL)
+        return load1(normURL, page)
     }
 
-    private fun load1(normUrl: NormUrl, page: WebPage): WebPage {
-        onWillLoad(normUrl, page)
+    private fun load1(normURL: NormURL, page: WebPage): WebPage {
+        onWillLoad(normURL, page)
 
-        fetchContentIfNecessary(normUrl, page)
+        fetchContentIfNecessary(normURL, page)
 
-        onLoaded(page, normUrl)
+        onLoaded(page, normURL)
 
         return page
     }
 
-    private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
-        val page = createPageShell(normUrl)
-        return loadDeferred1(normUrl, page)
+    private suspend fun loadDeferred0(normURL: NormURL): WebPage {
+        val page = createPageShell(normURL)
+        return loadDeferred1(normURL, page)
     }
 
-    private suspend fun loadDeferred1(normUrl: NormUrl, page: WebPage): WebPage {
-        onWillLoad(normUrl, page)
+    private suspend fun loadDeferred1(normURL: NormURL, page: WebPage): WebPage {
+        onWillLoad(normURL, page)
 
-        fetchContentIfNecessaryDeferred(normUrl, page)
+        fetchContentIfNecessaryDeferred(normURL, page)
 
-        onLoaded(page, normUrl)
+        onLoaded(page, normURL)
 
         return page
     }
 
-    private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
+    private fun fetchContentIfNecessary(normURL: NormURL, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
-            fetchContent(page, normUrl)
+            fetchContent(page, normURL)
         }
     }
 
-    private suspend fun fetchContentIfNecessaryDeferred(normUrl: NormUrl, page: WebPage) {
+    private suspend fun fetchContentIfNecessaryDeferred(normURL: NormURL, page: WebPage) {
         if (page.removeVar(VAR_REFRESH) != null) {
-            fetchContentDeferred(page, normUrl)
+            fetchContentDeferred(page, normURL)
         }
     }
 
     /**
      * Create a page shell, the page shell is the process unit for most tasks.
      * */
-    private fun createPageShell(normUrl: NormUrl): WebPage {
-        val cachedPage = getCachedPageOrNull(normUrl)
-        var page = FetchEntry.createPageShell(normUrl)
+    private fun createPageShell(normURL: NormURL): WebPage {
+        val cachedPage = getCachedPageOrNull(normURL)
+        var page = FetchEntry.createPageShell(normURL)
 
         if (cachedPage != null) {
             pageCacheHits.incrementAndGet()
@@ -236,23 +236,23 @@ class LoadComponent(
         } else {
             // get the metadata of the page from the database, this is very fast for a crawler
             // TODO: two step loading or one step loading?
-//            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
-            val loadedPage = webDb.getOrNull(normUrl.spec)
+//            val loadedPage = webDb.getOrNull(normURL.spec, fields = metadataFields)
+            val loadedPage = webDb.getOrNull(normURL.spec)
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
-                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
+                FetchEntry.initWebPage(loadedPage, normURL.options, normURL.hrefSpec)
                 page = loadedPage
             }
 
-            initFetchState(normUrl, page, loadedPage)
+            initFetchState(normURL, page, loadedPage)
         }
 
         return page
     }
 
-    private fun initFetchState(normUrl: NormUrl, page: WebPage, loadedPage: WebPage?): CheckState {
-        val options = normUrl.options
+    private fun initFetchState(normURL: NormURL, page: WebPage, loadedPage: WebPage?): CheckState {
+        val options = normURL.options
 
         val state = when {
             loadedPage == null -> CheckState(FetchState.NEW_PAGE, "nil 1")
@@ -270,8 +270,8 @@ class LoadComponent(
         return state
     }
 
-    private fun onWillLoad(normUrl: NormUrl, page: WebPage) {
-        val options = normUrl.options
+    private fun onWillLoad(normURL: NormURL, page: WebPage) {
+        val options = normURL.options
 
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
 
@@ -282,13 +282,13 @@ class LoadComponent(
         }
     }
 
-    private fun onLoaded(page: WebPage, normUrl: NormUrl) {
-        val options = normUrl.options
+    private fun onLoaded(page: WebPage, normURL: NormURL) {
+        val options = normURL.options
         val status = page.protocolStatus
 
         // handle page content
         if (!page.isCached) {
-            // processPageContent(page, normUrl)
+            // processPageContent(page, normURL)
         }
 
         // handle cache
@@ -306,11 +306,11 @@ class LoadComponent(
         // We might use the cached page's content in parse phase
         // TODO: what if is canceled?
         if (options.parse) {
-            parse(page, normUrl.options)
+            parse(page, normURL.options)
         }
 
         try {
-            val detail = normUrl.detail
+            val detail = normURL.detail
             // we might use the cached page's content in after load handler
             if (detail is CompletableHyperlink<*>) {
                 require(page.loadEvent?.onLoaded?.isNotEmpty == true) {
@@ -342,8 +342,8 @@ class LoadComponent(
      * if the page is fetched, the content is set by the fetch component, so we do not load it from the database
      * if the protocol status is not success, the content is useless and not loaded
      * */
-    private fun processPageContent(page: WebPage, normUrl: NormUrl) {
-        val options = normUrl.options
+    private fun processPageContent(page: WebPage, normURL: NormURL) {
+        val options = normURL.options
 
         if (page.protocolStatus.isSuccess && page.content == null) {
             shouldBe(false, page.isFetched) { "Page should not be fetched | ${page.configuredUrl}" }
@@ -367,8 +367,8 @@ class LoadComponent(
         }
     }
 
-    private fun getCachedPageOrNull(normUrl: NormUrl): WebPage? {
-        val (url, options) = normUrl
+    private fun getCachedPageOrNull(normURL: NormURL): WebPage? {
+        val (url, options) = normURL
         if (options.refresh) {
             // refresh the page, do not take cached version
             return null
@@ -382,8 +382,8 @@ class LoadComponent(
             // here is a complex logic for a ScrapingHyperlink: the page have an event handlers, and the page can
             // also be loaded inside an event handler. We must handle such situation very carefully
 
-            // page.conf = normUrl.options.conf
-            // page.args = normUrl.args
+            // page.conf = normURL.options.conf
+            // page.args = normURL.args
 
             return cachedPage
         }
@@ -398,26 +398,26 @@ class LoadComponent(
         logger.takeIf { it.isDebugEnabled }?.debug("Loading url | {} {}", page.url, page.args)
     }
 
-    private fun fetchContent(page: WebPage, normUrl: NormUrl) {
+    private fun fetchContent(page: WebPage, normURL: NormURL) {
         try {
-            beforeFetch(page, normUrl.options)
+            beforeFetch(page, normURL.options)
 
-            require(page.conf == normUrl.options.conf)
-//            require(normUrl.options.eventHandler != null)
+            require(page.conf == normURL.options.conf)
+//            require(normURL.options.eventHandler != null)
 //            require(page.conf.getBeanOrNull(PulsarEventHandler::class) != null)
 
             fetchComponent.fetchContent(page)
         } finally {
-            afterFetch(page, normUrl.options)
+            afterFetch(page, normURL.options)
         }
     }
 
-    private suspend fun fetchContentDeferred(page: WebPage, normUrl: NormUrl) {
+    private suspend fun fetchContentDeferred(page: WebPage, normURL: NormURL) {
         try {
-            beforeFetch(page, normUrl.options)
+            beforeFetch(page, normURL.options)
             fetchComponent.fetchContentDeferred(page)
         } finally {
-            afterFetch(page, normUrl.options)
+            afterFetch(page, normURL.options)
         }
     }
 

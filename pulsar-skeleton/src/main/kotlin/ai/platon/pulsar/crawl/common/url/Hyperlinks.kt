@@ -271,7 +271,7 @@ internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHy
 /**
  * Create a completable listenable hyperlink
  * */
-fun NormUrl.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
+fun NormURL.toCompletableListenableHyperlink(): CompletableListenableHyperlink<WebPage> {
     val link = CompletableListenableHyperlink<WebPage>(spec, args = args, href = hrefSpec)
 
     link.event.loadEvent.onLoaded.addLast(CompleteWebPageHyperlinkHandler(link))

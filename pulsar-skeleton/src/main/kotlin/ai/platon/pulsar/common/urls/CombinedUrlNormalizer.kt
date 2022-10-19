@@ -10,7 +10,7 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
      *
      * If both url arguments and [LoadOptions] are present, the url arguments overrides the [LoadOptions].
      * */
-    fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
+    fun normalize(url: UrlAware, options: LoadOptions): NormURL {
         val (spec, args1) = UrlUtils.splitUrlArgs(url.url)
         val args2 = url.args ?: ""
         val args3 = options.toString()
@@ -18,28 +18,28 @@ class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = 
         // the later args overwrites the earlier ones.
         val args = "$args3 $args2 $args1".trim()
 
-        val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options), toItemOption)
+        val finalOptions = createLoadOptions(url, LoadOptions.parse(args, options))
         val rawEvent = finalOptions.rawEvent
 
-        var normUrl = if (rawEvent?.loadEvent?.onNormalize?.isNotEmpty == true) {
+        var normURL = if (rawEvent?.loadEvent?.onNormalize?.isNotEmpty == true) {
             // 1. normalizer in event listener has the #1 priority
-            rawEvent.loadEvent.onNormalize(spec) ?: return NormUrl.NIL
+            rawEvent.loadEvent.onNormalize(spec) ?: return NormURL.NIL
         } else {
             // 2. global normalizers has the #2 priority
             val normalizers = urlNormalizers
             if (!options.noNorm && normalizers != null) {
-                normalizers.normalize(spec) ?: return NormUrl.NIL
+                normalizers.normalize(spec) ?: return NormURL.NIL
             } else spec
         }
 
         // 3. UrlUtils.normalize comes at last to remove fragment, and query string if required
-        normUrl = UrlUtils.normalizeOrNull(normUrl, options.ignoreUrlQuery) ?: return NormUrl.NIL
+        normURL = UrlUtils.normalizeOrNull(normURL, options.ignoreUrlQuery) ?: return NormURL.NIL
 
         // already done
 //        finalOptions.overrideConfiguration()
 
         val href = url.href?.takeIf { UrlUtils.isStandard(it) }
-        return NormUrl(normUrl, finalOptions, href, url)
+        return NormURL(normURL, finalOptions, href, url)
     }
 
     private fun createLoadOptions(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): LoadOptions {

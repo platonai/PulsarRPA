@@ -71,7 +71,7 @@ class LoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
         private val withOptions: Boolean = false,
-        private val withNormUrl: Boolean = false,
+        private val withNormURL: Boolean = false,
         private val withReferer: Boolean = false,
         private val withSymbolicLink: Boolean = false
 ) {
@@ -231,7 +231,7 @@ class LoadStatusFormatter(
         if (withOptions) location += " ${page.args}"
         val readableLocation0 = if (redirected) "[R] $location <- $expectedLocation" else location
         var readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
-        if (withNormUrl) readableLocation = "$readableLocation <- $url"
+        if (withNormURL) readableLocation = "$readableLocation <- $url"
         if (withReferer) readableLocation = "$readableLocation <- ${page.referrer}"
         val doWithSymbolicLink = page.isFetched && (page.id < verboseCount || withSymbolicLink)
         return if (doWithSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation

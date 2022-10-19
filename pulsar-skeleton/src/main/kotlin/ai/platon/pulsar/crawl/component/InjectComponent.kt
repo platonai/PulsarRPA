@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.crawl.inject.SeedBuilder
@@ -36,8 +36,8 @@ class InjectComponent(
         return inject(urlArgs.first, urlArgs.second)
     }
 
-    fun inject(normUrl: NormUrl): WebPage {
-        return inject(normUrl.spec, normUrl.args)
+    fun inject(normURL: NormURL): WebPage {
+        return inject(normURL.spec, normURL.args)
     }
 
     fun inject(url: String, args: String): WebPage {

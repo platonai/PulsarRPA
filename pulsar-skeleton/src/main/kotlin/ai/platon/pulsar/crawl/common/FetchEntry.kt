@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.NormUrl
+import ai.platon.pulsar.common.urls.NormURL
 import ai.platon.pulsar.persist.WebPage
 
 class FetchEntry(val page: WebPage, val options: LoadOptions) {
@@ -12,9 +12,9 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
 
     companion object {
 
-        fun createPageShell(normUrl: NormUrl): WebPage {
-            val referer = normUrl.detail?.referrer ?: normUrl.options.referrer
-            return createPageShell(normUrl.spec, normUrl.options, normUrl.hrefSpec, referer)
+        fun createPageShell(normURL: NormURL): WebPage {
+            val referer = normURL.detail?.referrer ?: normURL.options.referrer
+            return createPageShell(normURL.spec, normURL.options, normURL.hrefSpec, referer)
         }
 
         fun createPageShell(url: String, options: LoadOptions, href: String? = null, referrer: String? = null): WebPage {

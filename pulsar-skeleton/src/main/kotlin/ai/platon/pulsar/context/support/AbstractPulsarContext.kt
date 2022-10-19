@@ -168,196 +168,78 @@ abstract class AbstractPulsarContext(
         closableObjects.add(closable)
     }
 
-    /**
-     * Normalize an url, the url can be one of the following:
-     * 1. a normal url
-     * 2. a configured url
-     * 3. a base64 encoded url
-     * 4. a base64 encoded configured url
-     *
-     * An url can be configured by appending arguments to the url, and it also can be used with load options,
-     * If both tailing arguments and load options are present, the tailing arguments override the load options.
-     * */
-    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
+    override fun normalize(url: String, options: LoadOptions): NormURL {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
-        return normalize(PlainUrl(url0), options, toItemOption)
+        return normalize(PlainUrl(url0), options)
     }
 
-    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
-        if (url == null) return null
-        return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
+    override fun normalizeOrNull(url: String?, options: LoadOptions): NormURL? {
+        return if (url == null) return null else kotlin.runCatching { normalize(url, options) }.getOrNull()
     }
 
-    /**
-     * Normalize urls, remove invalid ones
-     *
-     * @param urls The urls to normalize
-     * @param options The load options applied to each url
-     * @param toItemOption If true, [options] will be converted to item load options
-     * @return All normalized urls, all invalid input urls are removed
-     * */
-    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
-        return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
+    override fun normalize(urls: Iterable<String>, options: LoadOptions) =
+        urls.mapNotNull { normalizeOrNull(it, options) }
+
+    override fun normalize(url: UrlAware, options: LoadOptions) =
+        CombinedUrlNormalizer(urlNormalizers).normalize(url, options)
+
+    override fun normalizeOrNull(url: UrlAware?, options: LoadOptions): NormURL? {
+        return if (url == null) return null else kotlin.runCatching { normalize(url, options) }.getOrNull()
     }
 
-    /**
-     * Normalize an url.
-     *
-     * If both tailing arguments and load options are present, the tailing arguments override the load options.
-     * */
-    override fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        return CombinedUrlNormalizer(urlNormalizers).normalize(url, options, toItemOption)
-    }
+    override fun normalize(urls: Collection<UrlAware>, options: LoadOptions) =
+        urls.mapNotNull { normalizeOrNull(it, options) }
 
-    override fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
-        if (url == null) return null
-        return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
-    }
+    override fun inject(url: String) = abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
 
-    /**
-     * Normalize urls, remove invalid ones
-     *
-     * @param urls The urls to normalize
-     * @param options The LoadOptions applied to each url
-     * @param toItemOption If the LoadOptions is converted to item load options
-     * @return All normalized urls, all invalid input urls are removed
-     * */
-    override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
-        return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
-    }
+    override fun inject(url: NormURL) = abnormalPage ?: injectComponent.inject(url.spec, url.args)
 
-    /**
-     * Inject an url
-     *
-     * @param url The url which can be followed by arguments
-     * @return The web page created
-     */
-    override fun inject(url: String): WebPage {
-        return abnormalPage ?: injectComponent.inject(UrlUtils.splitUrlArgs(url))
-    }
+    override fun get(url: String): WebPage = webDbOrNull?.get(url, false) ?: WebPage.NIL
 
-    /**
-     * Inject an url
-     *
-     * @param url The url which can be followed by arguments
-     * @return The web page created
-     */
-    override fun inject(url: NormUrl): WebPage {
-        return abnormalPage ?: injectComponent.inject(url.spec, url.args)
-    }
+    override fun getOrNull(url: String) = webDbOrNull?.getOrNull(url, false)
 
-    /**
-     * Get a webpage from the storage
-     * */
-    override fun get(url: String): WebPage {
-        return webDbOrNull?.get(url, false) ?: WebPage.NIL
-    }
-
-    /**
-     * Get a webpage from the storage
-     * */
-    override fun getOrNull(url: String): WebPage? {
-        return webDbOrNull?.getOrNull(url, false)
-    }
-
-    /**
-     * Check if a page exists in the storage
-     * */
     override fun exists(url: String) = webDbOrNull?.exists(url) == true
 
-    /**
-     * Check the fetch state of a page
-     * */
     override fun fetchState(page: WebPage, options: LoadOptions) =
         loadComponentOrNull?.fetchState(page, options) ?: CheckState(FetchState.DO_NOT_FETCH, "closed")
 
-    /**
-     * Scan pages in the storage
-     * */
     override fun scan(urlPrefix: String): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
 
-    /**
-     * Scan pages in the storage
-     * */
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
-    /**
-     * Scan pages in the storage
-     * */
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
         return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
-    /**
-     * Load an page with specified options, see [LoadOptions] for all options
-     *
-     * @param url     The url which can be followed by arguments
-     * @param options The load options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    override fun load(url: String, options: LoadOptions): WebPage {
-        val normUrl = normalize(url, options)
-        return abnormalPage ?: loadComponent.load(normUrl)
-    }
+    override fun load(url: String, options: LoadOptions) =
+        abnormalPage ?: loadComponent.load(normalize(url, options))
 
-    /**
-     * Load a url with specified options, see [LoadOptions] for all options
-     *
-     * @param url     The url which can be followed by arguments
-     * @param options The load options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    override fun load(url: URL, options: LoadOptions): WebPage {
-        return abnormalPage ?: loadComponent.load(url, options)
-    }
+    override fun load(url: URL, options: LoadOptions) = abnormalPage ?: loadComponent.load(url, options)
 
-    /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
-     *
-     * @param url The url which can be followed by arguments
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    override fun load(url: NormUrl): WebPage {
-        return abnormalPage ?: loadComponent.load(url)
-    }
+    override fun load(url: NormURL) = abnormalPage ?: loadComponent.load(url)
 
-    override suspend fun loadDeferred(url: NormUrl): WebPage {
-        return abnormalPage ?: loadComponent.loadDeferred(url)
-    }
+    override suspend fun loadDeferred(url: NormURL) = abnormalPage ?: loadComponent.loadDeferred(url)
 
-    /**
-     * Load a batch of urls with the specified options.
-     *
-     * If the option indicates prefer parallel, urls are fetched in a parallel manner whenever applicable.
-     * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
-     * a pending fetch list and will be fetched in background later.
-     *
-     * If a page exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
-     *
-     * @param urls    The urls to load
-     * @param options The load options
-     * @return Pages for all urls.
-     */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(normalize(urls, options))
     }
 
-    override fun loadAll(urls: Iterable<NormUrl>): List<WebPage> {
+    override fun loadAll(urls: Iterable<NormURL>): List<WebPage> {
         startLoopIfNecessary()
         return abnormalPages ?: loadComponent.loadAll(urls)
     }
 
-    override fun loadAsync(url: NormUrl): CompletableFuture<WebPage> {
+    override fun loadAsync(url: NormURL): CompletableFuture<WebPage> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAsync(url) ?: CompletableFuture.completedFuture(WebPage.NIL)
     }
 
-    override fun loadAllAsync(urls: Iterable<NormUrl>): List<CompletableFuture<WebPage>> {
+    override fun loadAllAsync(urls: Iterable<NormURL>): List<CompletableFuture<WebPage>> {
         startLoopIfNecessary()
         return loadComponentOrNull?.loadAllAsync(urls) ?: listOf()
     }
@@ -376,61 +258,33 @@ abstract class AbstractPulsarContext(
         return this
     }
 
-    /**
-     * Parse the WebPage content using parseComponent
-     */
     override fun parse(page: WebPage): FeaturedDocument? {
         val parser = loadComponentOrNull?.parseComponent
         return parser?.parse(page, noLinkFilter = true)?.document
     }
 
-    /**
-     * Persist the page into the storage
-     * */
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
     }
 
-    /**
-     * Delete the page from the storage
-     * */
     override fun delete(url: String) {
         webDbOrNull?.delete(url)
     }
 
-    /**
-     * Delete the page from the storage
-     * */
     override fun delete(page: WebPage) {
         webDbOrNull?.delete(page.url)
     }
 
-    /**
-     * Flush the storage
-     * */
     override fun flush() {
         webDbOrNull?.flush()
     }
 
-    /**
-     * Wait until there is no tasks in the main loop
-     * */
     override fun await() {
         if (isActive) {
             crawlLoops.await()
         }
     }
 
-    /**
-     * Register a shutdown hook with the JVM runtime, closing this context
-     * on JVM shutdown unless it has already been closed at that time.
-     *
-     * Delegates to `doClose()` for the actual closing procedure.
-     * @see Runtime.addShutdownHook
-     *
-     * @see close
-     * @see doClose
-     */
     @Throws(IllegalStateException::class)
     override fun registerShutdownHook() {
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
@@ -439,14 +293,6 @@ abstract class AbstractPulsarContext(
         }
     }
 
-    /**
-     * Close this pulsar context
-     *
-     * Delegates to `doClose()` for the actual closing procedure.
-     * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
-     * @see doClose
-     * @see registerShutdownHook
-     */
     override fun close() {
         synchronized(startupShutdownMonitor) {
             doClose()

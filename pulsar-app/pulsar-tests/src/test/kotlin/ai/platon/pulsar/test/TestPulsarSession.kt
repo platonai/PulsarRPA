@@ -25,10 +25,10 @@ class TestPulsarSession: TestBase() {
 
     @Test
     fun testNormalize() {
-        val normUrl = session.normalize(url)
-        assertNotEquals(session.sessionConfig, normUrl.options.conf)
-        val page = session.load(normUrl)
-        assertEquals(normUrl.options.conf, page.conf)
+        val normURL = session.normalize(url)
+        assertNotEquals(session.sessionConfig, normURL.options.conf)
+        val page = session.load(normURL)
+        assertEquals(normURL.options.conf, page.conf)
     }
 
     @Test
