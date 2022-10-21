@@ -176,30 +176,58 @@ implementation("ai.platon.pulsar:pulsar-all:1.10.5")
 
 [source,kotlin]
 ----
-// 创建一个 PulsarR 会话
+// Create a pulsar session
 val session = PulsarContexts.createSession()
-// 示例程序使用的 url
-val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-// 加载一个页面，如果该页面已过期，或者该页面为首次加载，则从互联网上下载该页面
-val page = session.load(url, "-expires 1d")
-// 将一个网页内容解析为Jsoup文档
+// The main url we are playing with
+val url = "https://www.amazon.com/dp/B09V3KXJPB"
+
+// Load a page from local storage, or fetch it from the Internet if it does not exist or has expired
+val page = session.load(url, "-expires 10s")
+
+// Submit a url to the URL pool, the submitted url will be processed in a crawl loop
+session.submit(url, "-expires 10s")
+
+// Parse the page content into a document
 val document = session.parse(page)
-// 使用该文档做一些事情
+// do something with the document
 // ...
 
-// 或者，加载并解析
-val document2 = session.loadDocument(url, "-expires 1d")
-// 使用该文档做一些事情
+// Load and parse
+val document2 = session.loadDocument(url, "-expires 10s")
+// do something with the document
 // ...
 
-// 加载由 -outLink 指示的链出页面
-val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
-// 加载，解析并提取字段
-val fields = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
-// 加载，解析并提取具名字段
-val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-name em", "price" to ".p-price"))
-// 从由 -outLink 指示的链出页面中加载，解析并提取具名字段
-val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
+// Load the portal page and then load all links specified by `-outLink`.
+// Option `-outLink` specifies the cssSelector to select links in the portal page to load.
+// Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
+val pages = session.loadOutPages(url, "-expires 10s -itemExpires 10s -outLink a[href~=/dp/] -topLinks 10")
+
+// Load the portal page and submit the out links specified by `-outLink` to the URL pool.
+// Option `-outLink` specifies the cssSelector to select links in the portal page to submit.
+// Option `-topLinks` specifies the maximal number of links selected by `-outLink`.
+session.submitOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
+
+// Load, parse and scrape fields
+val fields = session.scrape(url, "-expires 10s", "#centerCol",
+    listOf("#title", "#acrCustomerReviewText"))
+
+// Load, parse and scrape named fields
+val fields2 = session.scrape(url, "-i 10s", "#centerCol",
+    mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
+
+// Load, parse and scrape named fields
+val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s -outLink a[href~=/dp/] -topLink 10", "#centerCol",
+    mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
+
+// Add `-parse` option to activate the parsing subsystem
+val page10 = session.load(url, "-parse -expires 10s")
+
+// Kotlin suspend calls
+val page11 = runBlocking { session.loadDeferred(url, "-expires 10s") }
+
+// Java-style async calls
+session.loadAsync(url, "-expires 10s").thenApply(session::parse).thenAccept(session::export)
+
 ----
 
 示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
