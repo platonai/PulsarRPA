@@ -82,7 +82,7 @@ fun main() {
 ----
 
 示例代码：
-link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 *#最复杂# 的数据采集项目需要从 RPA 开始：*
 
@@ -202,7 +202,7 @@ val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-n
 val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
-示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
 
 *Load options*
 
@@ -281,7 +281,7 @@ public class ContinuousCrawler {
 }
 ----
 
-示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 === RPA (机器人流程自动化）
 
@@ -347,7 +347,7 @@ TITLE                                                   | BRAND                 
 HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.10.5 | 1,349 ratings | 4.40
 ----
 
-示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
+示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[kotlin].
 
 点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
@@ -412,7 +412,7 @@ Json 格式的响应如下：
             "listprice": "$19.99",
             "price": "$12.99",
             "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
-            "baseuri": "https://www.amazon.com/dp/B00BTX5926"
+            "baseuri": "https://www.amazon.com/dp/B09V3KXJPB"
         }
     ],
     "pageStatus": "OK",

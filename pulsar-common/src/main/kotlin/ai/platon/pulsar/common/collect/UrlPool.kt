@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.UrlPool.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import com.google.common.primitives.Ints
 import org.apache.commons.collections4.queue.SynchronizedQueue
@@ -27,6 +28,8 @@ open class DelayUrl(
 ) : Delayed {
     // The time at which the delay expires
     val delayExpireAt = System.currentTimeMillis() + delay.toMillis()
+
+    constructor(url: String, delay: Duration): this(PlainUrl(url), delay)
 
     @Deprecated("Inappropriate name", ReplaceWith("delayExpires"))
     val startTime get() = delayExpireAt

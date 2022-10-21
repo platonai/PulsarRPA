@@ -9,6 +9,9 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * Print the call sequence and the event name of all page events
+ * */
 class PrintFlowEvent: DefaultPageEvent() {
     private val sequencer = AtomicInteger()
     private val seq get() = sequencer.incrementAndGet()
@@ -63,6 +66,9 @@ class PrintFlowEvent: DefaultPageEvent() {
             onBrowserLaunched.addLast { page, driver ->
                 println("$seq. onBrowserLaunched")
             }
+            onWillInteract.addLast { page, driver ->
+                println("$seq. onWillInteract")
+            }
             onWillCheckDocumentState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onWillCheckDocumentState")
             }
@@ -74,9 +80,6 @@ class PrintFlowEvent: DefaultPageEvent() {
             }
             onFeatureComputed.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. onFeatureComputed")
-            }
-            onWillInteract.addLast { page, driver ->
-                println("$seq. onWillInteract")
             }
             onDidInteract.addLast { page, driver ->
                 println("$seq. onWillInteract")
@@ -99,11 +102,15 @@ class PrintFlowEvent: DefaultPageEvent() {
                 url
             }
             onWillLoad.addLast { url: UrlAware ->
-                println("$seq. onBeforeLoad")
+                println("$seq. onWillLoad")
+                url
+            }
+            onLoad.addLast { url: UrlAware ->
+                println("$seq. onLoad")
                 url
             }
             onLoaded.addLast { url, page ->
-                println("$seq. onAfterLoad")
+                println("$seq. onLoaded")
             }
         }
     }

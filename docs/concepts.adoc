@@ -195,7 +195,7 @@ val session = PulsarContexts.createSession()
 val link = ListenableHyperlink(portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
 session.submit(link)
 ----
-The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[kotlin] and the order in which they are executed.
+The example code can be found here: link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt[kotlin] and the order in which they are executed.
 
 A CompletableListenableHyperlink helps us to do the both:
 [source,kotlin]
@@ -279,7 +279,7 @@ Check link:../pulsar-tools/pulsar-browser/src/main/kotlin/ai/platon/pulsar/brows
 
 Event handlers here are webpage event handlers that capture and process events throughout the lifecycle of webpages.
 
-Check link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/EventHandlerUsage.kt[EventHandlerUsage] for all available event handlers.
+Check link:../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt[EventHandlerUsage] for all available event handlers.
 
 === X-SQL
 

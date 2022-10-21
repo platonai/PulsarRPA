@@ -126,10 +126,20 @@ open class BrowserSettings(
         }
 
         /**
-         * Set privacy context count
+         * Set the number of privacy contexts
          * */
+        @Deprecated("Verbose name", ReplaceWith("privacy"))
         @JvmStatic
         fun privacyContext(n: Int): Companion {
+            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
+            return BrowserSettings
+        }
+
+        /**
+         * Set the number of privacy contexts
+         * */
+        @JvmStatic
+        fun privacy(n: Int): Companion {
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
             return BrowserSettings
         }

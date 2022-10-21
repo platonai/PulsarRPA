@@ -182,12 +182,12 @@ abstract class AbstractPulsarSession(
     override suspend fun loadDeferred(url: UrlAware, options: LoadOptions): WebPage =
         loadDeferred(normalize(url, options))
 
-    override suspend fun loadDeferred(normUrl: NormUrl): WebPage {
+    override suspend fun loadDeferred(url: NormUrl): WebPage {
         if (!enablePDCache) {
-            return context.loadDeferred(normUrl)
+            return context.loadDeferred(url)
         }
 
-        return createPageWithCachedCoreOrNull(normUrl) ?: loadAndCacheDeferred(normUrl)
+        return createPageWithCachedCoreOrNull(url) ?: loadAndCacheDeferred(url)
     }
 
     override fun loadAll(urls: Iterable<String>) = loadAll(urls, options())
@@ -241,11 +241,8 @@ abstract class AbstractPulsarSession(
 
     override fun submit(url: UrlAware) = submit(url, "")
 
-    override fun submit(url: UrlAware, args: String): PulsarSession {
-        url.args = LoadOptions.normalize(url.args, args)
-        context.submit(url)
-        return this
-    }
+    override fun submit(url: UrlAware, args: String) =
+        also { context.submit(url.also { it.args = LoadOptions.normalize(url.args, args) }) }
 
     override fun submitAll(urls: Iterable<String>) = submitAll(urls.map { PlainUrl(it) })
 
@@ -254,114 +251,64 @@ abstract class AbstractPulsarSession(
     override fun submitAll(urls: Iterable<String>, options: LoadOptions) =
         submitAll(urls.map { ListenableHyperlink(it, args = options.toString(), event = options.event) })
 
-    override fun submitAll(urls: Collection<UrlAware>): AbstractPulsarSession {
-        context.submitAll(urls)
-        return this
-    }
+    override fun submitAll(urls: Collection<UrlAware>) = also { context.submitAll(urls) }
 
-    override fun submitAll(urls: Collection<UrlAware>, args: String): AbstractPulsarSession {
-        urls.forEach { it.args = LoadOptions.normalize(it.args, args) }
-        context.submitAll(urls)
-        return this
-    }
+    override fun submitAll(urls: Collection<UrlAware>, args: String) =
+        also { context.submitAll(urls.onEach { it.args = LoadOptions.normalize(it.args, args) }) }
 
     override fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, options(args))
 
-    override fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage> {
-        val normUrl = normalize(portalUrl, options)
-        val opts = normUrl.options
-        val itemOpts = normUrl.options.createItemOptions()
+    override fun loadOutPages(portalUrl: String, options: LoadOptions) = loadOutPages(PlainUrl(portalUrl), options)
 
-        require(normUrl.options.rawEvent == options.rawEvent)
-        require(options.rawItemEvent == itemOpts.rawEvent)
+    override fun loadOutPages(portalUrl: UrlAware, args: String) = loadOutPages(portalUrl, options(args))
 
-        val selector = opts.outLinkSelectorOrNull ?: return listOf()
+    override fun loadOutPages(portalUrl: UrlAware, options: LoadOptions) = loadOutPages0(portalUrl, options)
 
-        val links = loadDocument(normUrl)
-            .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
-            .mapNotNullTo(mutableSetOf()) { it }
-            .take(opts.topLinks)
+    override fun submitOutPages(portalUrl: String, args: String) = submitOutPages(portalUrl, options(args))
 
-        return loadAll(links, itemOpts)
-    }
+    override fun submitOutPages(portalUrl: String, options: LoadOptions) = submitOutPages(PlainUrl(portalUrl), options)
 
-    override fun submitOutPages(portalUrl: String, args: String): AbstractPulsarSession =
-        submitOutPages(portalUrl, options(args))
+    override fun submitOutPages(portalUrl: UrlAware, args: String) = submitOutPages(portalUrl, options(args))
 
-    override fun submitOutPages(portalUrl: String, options: LoadOptions): AbstractPulsarSession {
-        val normUrl = normalize(portalUrl, options)
-        val opts = normUrl.options
-        val itemOpts = normUrl.options.createItemOptions()
-        val selector = opts.outLinkSelectorOrNull ?: return this
-
-        val outLinks = loadDocument(normUrl)
-            .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
-            .mapNotNullTo(mutableSetOf()) { it }
-            .take(opts.topLinks)
-            .map { ListenableHyperlink("$it $itemOpts") }
-            .onEach { link -> itemOpts.rawEvent?.let { link.event = it } }
-
-        submitAll(outLinks)
-
-        return this
-    }
+    override fun submitOutPages(portalUrl: UrlAware, options: LoadOptions) = submitOutPages0(portalUrl, options)
 
     override fun loadOutPagesAsync(portalUrl: String, args: String) = loadOutPagesAsync(portalUrl, options(args))
 
-    override fun loadOutPagesAsync(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>> {
-        val normUrl = normalize(portalUrl, options)
-        val opts = normUrl.options
-        val itemOpts = normUrl.options.createItemOptions()
-        val selector = opts.outLinkSelectorOrNull ?: return listOf()
+    override fun loadOutPagesAsync(portalUrl: String, options: LoadOptions) = loadOutPagesAsync0(portalUrl, options)
 
-        val outLinks = loadDocument(normUrl)
-            .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
-            .mapNotNullTo(mutableSetOf()) { it }
-            .take(opts.topLinks)
-            .map { NormUrl(it, itemOpts) }
+    override fun loadResource(url: String, referrer: String) = loadResource(url, referrer, options())
 
-        return loadAllAsync(outLinks)
-    }
+    override fun loadResource(url: String, referrer: String, args: String) = loadResource(url, referrer, options(args))
 
-    override fun loadResource(url: String, referrer: String, args: String) =
-        loadResource(url, referrer, options(args))
+    override fun loadResource(url: String, referrer: String, options: LoadOptions) =
+        load(url, options.apply { isResource = true }.also { it.referrer = referrer })
 
-    override fun loadResource(url: String, referrer: String, options: LoadOptions): WebPage {
-        options.isResource = true
-        options.referrer = referrer
-        return load(url, options)
-    }
+    override suspend fun loadResourceDeferred(url: String, referrer: String) =
+        loadResourceDeferred(url, referrer, options())
 
     override suspend fun loadResourceDeferred(url: String, referrer: String, args: String) =
         loadResourceDeferred(url, referrer, options(args))
 
-    override suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions): WebPage {
-        options.isResource = true
-        options.referrer = referrer
-        return loadDeferred(url, options)
-    }
+    override suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions) =
+        loadDeferred(url, options.apply { isResource = true }.also { it.referrer = referrer })
 
     override fun parse(page: WebPage) = parse0(page, false)
 
     override fun parse(page: WebPage, noCache: Boolean) = parse0(page, noCache)
 
-    override fun loadDocument(url: String) = loadDocument(url, options())
+    override fun loadDocument(url: String) = parse(load(url))
 
-    override fun loadDocument(url: String, args: String) = loadDocument(url, options(args))
+    override fun loadDocument(url: String, args: String) = parse(load(url, args))
 
-    override fun loadDocument(url: String, options: LoadOptions): FeaturedDocument {
-        val normUrl = normalize(url, options)
-        if (enablePDCache) {
-            val now = Instant.now()
-            val document = documentCacheOrNull?.getDatum(url, options.expires, now)
-            if (document != null) {
-                return document
-            }
-        }
-        return parse(load(normUrl))
-    }
+    override fun loadDocument(url: String, options: LoadOptions) = parse(load(url))
 
-    override fun loadDocument(normUrl: NormUrl) = parse(load(normUrl))
+    override fun loadDocument(url: UrlAware) = parse(load(url))
+
+    override fun loadDocument(url: UrlAware, args: String) = parse(load(url, args))
+
+    override fun loadDocument(url: UrlAware, options: LoadOptions) = parse(load(url, options))
+
+    override fun loadDocument(url: NormUrl) = parse(load(url))
 
     override fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?> =
         scrape(url, options(args), fieldSelectors)
@@ -436,9 +383,9 @@ abstract class AbstractPulsarSession(
         scrapeOutPages(portalUrl, args, ":root", fieldSelectors)
 
     @ExperimentalApi
-    override fun scrapeOutPages(portalUrl: String,
-                       options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>> =
-        scrapeOutPages(portalUrl, options, ":root", fieldSelectors)
+    override fun scrapeOutPages(
+        portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>> = scrapeOutPages(portalUrl, options, ":root", fieldSelectors)
 
     @ExperimentalApi
     override fun scrapeOutPages(
@@ -474,11 +421,15 @@ abstract class AbstractPulsarSession(
 
     override fun persist(page: WebPage) = ensureActive { context.webDb.put(page) }
 
+    override fun export(page: WebPage) = export(page, "")
+
     override fun export(page: WebPage, ident: String): Path {
         val filename = AppPaths.fromUri(page.url, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(page.contentAsString, path, true)
     }
+
+    override fun export(doc: FeaturedDocument) = export(doc, "")
 
     override fun export(doc: FeaturedDocument, ident: String): Path {
         val filename = AppPaths.fromUri(doc.baseUri, "", ".htm")
@@ -596,6 +547,57 @@ abstract class AbstractPulsarSession(
 
         link = link.takeUnless { ignoreQuery } ?: UrlUtils.getUrlWithoutParameters(link)
         return link.substringBeforeLast("#")
+    }
+
+    private fun loadOutPages0(portalUrl: UrlAware, options: LoadOptions): List<WebPage> {
+        val normUrl = normalize(portalUrl, options)
+        val opts = normUrl.options
+
+        val selector = opts.outLinkSelectorOrNull ?: return listOf()
+        val itemOpts = normUrl.options.createItemOptions()
+
+        require(normUrl.options.rawEvent == options.rawEvent)
+        require(options.rawItemEvent == itemOpts.rawEvent)
+
+        val links = loadDocument(normUrl)
+            .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
+            .mapNotNullTo(mutableSetOf()) { it }
+            .take(opts.topLinks)
+
+        return loadAll(links, itemOpts)
+    }
+
+    private fun submitOutPages0(portalUrl: UrlAware, options: LoadOptions): AbstractPulsarSession {
+        val normUrl = normalize(portalUrl, options)
+        val opts = normUrl.options
+        val selector = opts.outLinkSelectorOrNull ?: return this
+        val itemOpts = normUrl.options.createItemOptions()
+
+        val outLinks = loadDocument(normUrl)
+            .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
+            .mapNotNullTo(mutableSetOf()) { it }
+            .take(opts.topLinks)
+            .map { ListenableHyperlink("$it $itemOpts") }
+            .onEach { link -> itemOpts.rawEvent?.let { link.event = it } }
+
+        submitAll(outLinks)
+
+        return this
+    }
+
+    private fun loadOutPagesAsync0(portalUrl: String, options: LoadOptions): List<CompletableFuture<WebPage>> {
+        val normUrl = normalize(portalUrl, options)
+        val opts = normUrl.options
+        val itemOpts = normUrl.options.createItemOptions()
+        val selector = opts.outLinkSelectorOrNull ?: return listOf()
+
+        val outLinks = loadDocument(normUrl)
+            .select(selector) { parseNormalizedLink(it, !opts.noNorm, opts.ignoreUrlQuery) }
+            .mapNotNullTo(mutableSetOf()) { it }
+            .take(opts.topLinks)
+            .map { NormUrl(it, itemOpts) }
+
+        return loadAllAsync(outLinks)
     }
 
     private fun <T> ensureActive(action: () -> T): T =

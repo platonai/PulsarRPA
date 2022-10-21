@@ -3,6 +3,9 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.context.SQLContexts
 
+/**
+ * Demonstrates how to use X-SQL to query the Web.
+ * */
 fun main() {
     val context = SQLContexts.create()
     val sql = """

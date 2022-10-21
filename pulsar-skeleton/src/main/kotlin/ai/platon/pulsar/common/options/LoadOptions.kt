@@ -262,6 +262,8 @@ open class LoadOptions(
 
     /**
      * The fetch mode.
+     *
+     * Only BROWSER is supported currently.
      * */
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode")

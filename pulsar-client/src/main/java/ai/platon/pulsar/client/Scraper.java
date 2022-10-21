@@ -19,7 +19,7 @@ public class Scraper {
                 "            array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,\n" +
                 "            dom_base_uri(dom) as `baseUri`\n" +
                 "        from\n" +
-                "            load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')";
+                "            load_and_select('https://www.amazon.com/dp/B09V3KXJPB', ':root')";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8182/api/x/e"))

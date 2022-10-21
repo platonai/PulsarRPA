@@ -9,4 +9,4 @@ select
   array_join_to_string(dom_all_texts(dom, '#wayfinding-breadcrumbs_container ul li a'), '|') as `categories`,
   dom_base_uri(dom) as `baseUri`
 from
-  load_and_select('https://www.amazon.com/dp/B00BTX5926', ':root')
+  load_and_select('https://www.amazon.com/dp/B09V3KXJPB', ':root')

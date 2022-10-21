@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 class ChromeWebDriverTests: TestBase() {
 
     private val logger = getLogger(this)
-    private val url = "https://www.amazon.com/dp/B00BTX5926"
+    private val url = "https://www.amazon.com/dp/B09V3KXJPB"
     private val asin = url.substringAfterLast("/dp/")
     private val driverFactory get() = session.context.getBean(WebDriverFactory::class)
     private val settings = driverFactory.driverSettings

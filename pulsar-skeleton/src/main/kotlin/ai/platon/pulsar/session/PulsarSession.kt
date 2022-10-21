@@ -366,10 +366,10 @@ interface PulsarSession : AutoCloseable {
      * This method first checks the url in the local store and return the local version if the page
      * exists and matches the requirements, otherwise fetch it from the Internet.
      *
-     * @param normUrl The normal url
+     * @param url The normal url
      * @return The webpage loaded or NIL
      */
-    fun load(normUrl: NormUrl): WebPage
+    fun load(url: NormUrl): WebPage
 
     /**
      * Load a url with specified options.
@@ -440,10 +440,10 @@ interface PulsarSession : AutoCloseable {
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
-     * @param normUrl The normal url
+     * @param url The normal url
      * @return The webpage loaded or NIL
      */
-    suspend fun loadDeferred(normUrl: NormUrl): WebPage
+    suspend fun loadDeferred(url: NormUrl): WebPage
 
     /**
      * Load all urls with specified options
@@ -749,8 +749,13 @@ interface PulsarSession : AutoCloseable {
     // No such version, it's too complicated to handle events
     // fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession
 
+    // No such confusing version
+    // fun loadOutPages(portalUrl: String): List<WebPage>
+
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
      * @param portalUrl    The portal url from where to load pages
      * @param args         The load arguments
@@ -761,14 +766,46 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
      *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
      * @return The loaded out pages
      */
-    fun loadOutPages(portalUrl: String, options: LoadOptions = options()): List<WebPage>
+    fun loadOutPages(portalUrl: String, options: LoadOptions): List<WebPage>
+
+    // No such confusing version
+    // fun loadOutPages(portalUrl: UrlAware): List<WebPage>
+
+    /**
+     * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * @param portalUrl    The portal url from where to load pages
+     * @param args         The load arguments
+     * @return The loaded out pages
+     */
+    fun loadOutPages(portalUrl: UrlAware, args: String): List<WebPage>
+
+    /**
+     * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * @param portalUrl The portal url from where to load pages
+     * @param options   The load options
+     * @return The loaded out pages
+     */
+    fun loadOutPages(portalUrl: UrlAware, options: LoadOptions): List<WebPage>
+
+    // No such confusing version
+    // fun loadOutPages(portalUrl: NormUrl): List<WebPage>
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
      * @param portalUrl The portal url from where to load pages
      * @param args   The load arguments
@@ -779,6 +816,8 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
      *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
      * @return The loaded out pages
@@ -787,6 +826,8 @@ interface PulsarSession : AutoCloseable {
 
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
      *
      * The submitted urls will be processed in a crawl loop later.
      *
@@ -799,14 +840,50 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
      *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
      * The submitted urls will be processed in a crawl loop later.
      *
      * @param portalUrl The portal url from where to load pages
      * @param options   The load options
      * @return The [PulsarSession] itself to enable chained operation
      */
-    fun submitOutPages(portalUrl: String, options: LoadOptions = options()): PulsarSession
+    fun submitOutPages(portalUrl: String, options: LoadOptions): PulsarSession
 
+    /**
+     * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * The submitted urls will be processed in a crawl loop later.
+     *
+     * @param portalUrl The portal url from where to load pages
+     * @param args      The load arguments
+     * @return The [PulsarSession] itself to enable chained operation
+     */
+    fun submitOutPages(portalUrl: UrlAware, args: String): PulsarSession
+
+    /**
+     * Load the portal page and submit the out links specified by the `-outLink` option to the URL pool.
+     *
+     * Option `-outLink` specifies the cssSelector for links in the portal page to load.
+     *
+     * The submitted urls will be processed in a crawl loop later.
+     *
+     * @param portalUrl The portal url from where to load pages
+     * @param options   The load options
+     * @return The [PulsarSession] itself to enable chained operation
+     */
+    fun submitOutPages(portalUrl: UrlAware, options: LoadOptions): PulsarSession
+
+    /**
+     * Load a url as a resource without browser rendering.
+     *
+     * @param url  The url to load
+     * @param referrer The referrer URL
+     * @return The webpage containing the resource
+     */
+    fun loadResource(url: String, referrer: String): WebPage
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -824,8 +901,19 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The webpage containing the resource
      */
-    fun loadResource(url: String, referrer: String, options: LoadOptions = options()): WebPage
+    fun loadResource(url: String, referrer: String, options: LoadOptions): WebPage
 
+    /**
+     * Load a url as a resource without browser rendering.
+     *
+     * This function is a kotlin suspend function, which could be started, paused, and resume.
+     * Suspend functions are only allowed to be called from a coroutine or another suspend function.
+     *
+     * @param url  The url to load
+     * @param referrer The referrer URL
+     * @return The webpage containing the resource
+     */
+    suspend fun loadResourceDeferred(url: String, referrer: String): WebPage
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -849,7 +937,7 @@ interface PulsarSession : AutoCloseable {
      * @param options The load options
      * @return The webpage containing the resource
      */
-    suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions = options()): WebPage
+    suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions): WebPage
     /**
      * Parse a webpage into an HTML document.
      */
@@ -857,7 +945,7 @@ interface PulsarSession : AutoCloseable {
     /**
      * Parse a webpage into an HTML document.
      */
-    fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument
+    fun parse(page: WebPage, noCache: Boolean): FeaturedDocument
     /**
      * Load or fetch a webpage and parse it into an HTML document
      * */
@@ -869,11 +957,23 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load or fetch a webpage and parse it into an HTML document
      * */
-    fun loadDocument(url: String, options: LoadOptions = options()): FeaturedDocument
+    fun loadDocument(url: String, options: LoadOptions): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into an HTML document
+     * */
+    fun loadDocument(url: UrlAware): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into an HTML document
+     * */
+    fun loadDocument(url: UrlAware, args: String): FeaturedDocument
+    /**
+     * Load or fetch a webpage and parse it into an HTML document
+     * */
+    fun loadDocument(url: UrlAware, options: LoadOptions): FeaturedDocument
     /**
      * Load or fetch a webpage and then parse it into an HTML document.
      * */
-    fun loadDocument(normUrl: NormUrl): FeaturedDocument
+    fun loadDocument(url: NormUrl): FeaturedDocument
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1117,7 +1217,25 @@ interface PulsarSession : AutoCloseable {
      * @param ident File name identifier used to distinguish from other names
      * @return The path of the exported page
      * */
+    fun export(page: WebPage): Path
+
+    /**
+     * Export the content of a webpage.
+     *
+     * @param page Page to export
+     * @param ident File name identifier used to distinguish from other names
+     * @return The path of the exported page
+     * */
     fun export(page: WebPage, ident: String = ""): Path
+
+    /**
+     * Export the outer HTML of the document.
+     *
+     * @param doc Document to export
+     * @param ident File name identifier used to distinguish from other names
+     * @return The path of the exported document
+     * */
+    fun export(doc: FeaturedDocument): Path
 
     /**
      * Export the outer HTML of the document.

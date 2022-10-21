@@ -81,7 +81,7 @@ fun main() {
 }
 ----
 
-Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 *The #most complicated# crawl challenges can start with RPA:*
 
@@ -198,7 +198,7 @@ val fields2 = session.scrape(url, "-i 1d", "li[data-sku]", mapOf("name" to ".p-n
 val fields3 = session.scrapeOutPages(url, "-i 10s -ii 10s", "li[data-sku]", mapOf("name" to ".sku-name", "price" to ".p-price"))
 ----
 
-Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
+Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/BasicUsage.java[java].
 
 *Load options*
 
@@ -276,7 +276,7 @@ public class ContinuousCrawler {
 }
 ----
 
-Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
+Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
 === RPA (Robotic Process Automation)
 
@@ -343,7 +343,7 @@ TITLE                                                   | BRAND                 
 HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.11 | 1,349 ratings | 4.40
 ----
 
-Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/XSQLDemo.kt[kotlin].
+Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[kotlin].
 
 Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
@@ -406,7 +406,7 @@ The response is as follows in json format:
             "listprice": "$19.99",
             "price": "$12.99",
             "categories": "Toys & Games|Arts & Crafts|Craft Kits|Jewelry",
-            "baseuri": "https://www.amazon.com/dp/B00BTX5926"
+            "baseuri": "https://www.amazon.com/dp/B09V3KXJPB"
         }
     ],
     "pageStatus": "OK",
