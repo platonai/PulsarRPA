@@ -450,6 +450,22 @@ Json 格式的响应如下：
 
 点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
+== 循序渐进的课程
+
+我们有一个循序渐进的示例课程:
+
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt[BasicUsage]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt[LoadOptions]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_2_URLs.kt[URLs]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt[JvmAsync]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_4_Flow.kt[Flow]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[ContinuousCrawler]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt[EventHandler]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_7_RPA.kt[RPA]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt[WebDriver]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[MassiveCrawler]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[X-SQL]
+
 == 日志和指标
 
 PulsarR 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
