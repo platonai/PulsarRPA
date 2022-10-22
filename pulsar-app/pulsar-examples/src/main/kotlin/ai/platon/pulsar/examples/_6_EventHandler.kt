@@ -120,7 +120,7 @@ class PrintFlowEvent: DefaultPageEvent() {
  * Demonstrates how to use event handlers.
  * */
 fun main() {
-    val portalUrl = "https://list.jd.com/list.html?cat=652,12345,12349"
+    val portalUrl = "https://www.amazon.com/dp/B09V3KXJPB"
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(
         portalUrl, args = "-refresh -parse", event = PrintFlowEvent())
