@@ -2,10 +2,13 @@ package ai.platon.pulsar.test.session
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.persist.ext.loadEvent
+import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.session.BasicPulsarSession
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SessionTests {
@@ -15,6 +18,12 @@ class SessionTests {
 
     private val context = SQLContexts.create()
     private val session = context.createSession()
+
+    @Test
+    fun ensureSessionCreatedBySQLContextIsNotSQLSession() {
+        assertFalse { session is SQLSession }
+        assertTrue { session is BasicPulsarSession }
+    }
 
     @Test
     fun testLoadAll() {
