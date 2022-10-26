@@ -151,4 +151,4 @@ println("CompletableListenableHyperlink loaded | " + page4.url)
 
 ------
 
-[上一章](4数据提取.md) 上一章 [目录](1目录.md) 下一章 [下一章](6Java风格异步编程.md)
+[上一章](4数据提取.md) [目录](1目录.md) [下一章](6Java风格异步编程.md)

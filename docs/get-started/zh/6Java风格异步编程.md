@@ -48,4 +48,4 @@ object JvmAsync {
 
 ------
 
-[上一章](5URL.md) 上一章 [目录](1目录.md) [下一章](7Kotlin特性.md)
+[上一章](5URL.md) [目录](1目录.md) [下一章](7Kotlin特性.md)
