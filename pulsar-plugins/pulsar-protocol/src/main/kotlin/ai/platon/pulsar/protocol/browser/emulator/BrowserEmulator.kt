@@ -47,6 +47,8 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
 
     suspend fun onNavigated(page: WebPage, driver: WebDriver)
 
+    suspend fun onWillInteract(page: WebPage, driver: WebDriver)
+
     suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver)
 
     suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver)
@@ -54,6 +56,8 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
     suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver)
 
     suspend fun onFeatureComputed(page: WebPage, driver: WebDriver)
+
+    suspend fun onDidInteract(page: WebPage, driver: WebDriver)
 
     suspend fun onWillStopTab(page: WebPage, driver: WebDriver)
 

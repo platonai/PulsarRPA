@@ -57,11 +57,12 @@ abstract class AbstractCrawler(
     }
 
     override fun onLoaded(url: UrlAware, page: WebPage?) {
-        if (url is ListenableUrl) {
+        val event = page?.event?.crawlEvent
+        if (event != null) {
+            event.onLoaded(url, page)
+        } else if (url is ListenableUrl) {
             url.event.crawlEvent.onLoaded(url, page)
         }
-
-        page?.event?.crawlEvent?.onLoaded?.invoke(url, page)
     }
 
     override fun close() {

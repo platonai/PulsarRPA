@@ -72,8 +72,8 @@ open class InteractiveBrowserEmulator(
         on1(EmulateEvents.willNavigate) { page: WebPage, driver: WebDriver ->
             this.onWillNavigate(page, driver)
         }
-        on1(EmulateEvents.navigated) { page: WebPage, driver: WebDriver ->
-            this.onNavigated(page, driver)
+        on1(EmulateEvents.willInteract) { page: WebPage, driver: WebDriver ->
+            this.onWillInteract(page, driver)
         }
         on1(EmulateEvents.willCheckDocumentState) { page: WebPage, driver: WebDriver ->
             this.onWillCheckDocumentState(page, driver)
@@ -86,6 +86,12 @@ open class InteractiveBrowserEmulator(
         }
         on1(EmulateEvents.featureComputed) { page: WebPage, driver: WebDriver ->
             this.onFeatureComputed(page, driver)
+        }
+        on1(EmulateEvents.didInteract) { page: WebPage, driver: WebDriver ->
+            this.onDidInteract(page, driver)
+        }
+        on1(EmulateEvents.navigated) { page: WebPage, driver: WebDriver ->
+            this.onNavigated(page, driver)
         }
         on1(EmulateEvents.willStopTab) { page: WebPage, driver: WebDriver ->
             this.onWillStopTab(page, driver)
@@ -107,6 +113,10 @@ open class InteractiveBrowserEmulator(
         page.browseEvent?.onNavigated?.invoke(page, driver)
     }
 
+    override suspend fun onWillInteract(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onWillNavigate?.invoke(page, driver)
+    }
+
     override suspend fun onWillCheckDocumentState(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onWillCheckDocumentState?.invoke(page, driver)
     }
@@ -121,6 +131,10 @@ open class InteractiveBrowserEmulator(
 
     override suspend fun onFeatureComputed(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onFeatureComputed?.invoke(page, driver)
+    }
+
+    override suspend fun onDidInteract(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onDidInteract?.invoke(page, driver)
     }
 
     override suspend fun onWillStopTab(page: WebPage, driver: WebDriver) {

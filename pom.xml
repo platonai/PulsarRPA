@@ -681,6 +681,8 @@
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
 
         <commons-io.version>2.11.0</commons-io.version>
+        <jackson.version>2.13.4</jackson.version>
+
         <spring.version>5.3.17</spring.version>
         <!-- spring-data-mongo -->
         <spring-data.version>3.1.15</spring-data.version>

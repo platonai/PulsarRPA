@@ -970,6 +970,8 @@ open class LoadOptions(
 
 /**
  * The default load options, be careful to change the default behaviour.
+ *
+ * TODO: support new options: -referrer, -priority
  * */
 object LoadOptionDefaults {
     /**
