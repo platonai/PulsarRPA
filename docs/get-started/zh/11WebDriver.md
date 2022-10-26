@@ -1,7 +1,7 @@
 WebDriver
 =
 
-[WebDriver](https://github.com/platonai/pulsarr/blob/1.10.x/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt) 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
+[WebDriver](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/crawl/fetch/driver/WebDriver.kt) 定义了一个简洁的界面来访问网页并与之交互，所有的动作和行为都经过优化，尽可能地模仿真人，比如滚动、点击、键入文本、拖放等。
 
 该接口中的方法主要分为三类：
 
@@ -110,7 +110,7 @@ class WebDriverDemo(private val session: PulsarSession) {
 }
 ```
 
-完整代码：[kotlin](https://github.com/platonai/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt)。
+完整代码：[kotlin](../../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt)。
 
 ------
 

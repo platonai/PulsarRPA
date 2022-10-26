@@ -20,7 +20,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
   from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1d -njr 3', 'body');"
 ```
 
-示例代码可以在这里找到:[bash](https://github.com/platonai/pulsarr/blob/1.10.x/bin/scrape.sh)，[batch](https://github.com/platonai/pulsarr/blob/1.10.x/bin/scrape.bat)，[java](https://github.com/platonai/pulsarr/blob/1.10.x/pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java)，[kotlin](https://github.com/platonai/pulsarr/blob/1.10.x/pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt)，[php](https://github.com/platonai/pulsarr/blob/1.10.x/pulsar-client/src/main/php/Scraper.php)。
+示例代码可以在这里找到:[bash](./bin/scrape.sh)，[batch](../../../bin/scrape.bat)，[java](../../../pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java)，[kotlin](../../../pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt)，[php](../../../pulsar-client/src/main/php/Scraper.php)。
 
 ------
 
