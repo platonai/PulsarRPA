@@ -76,6 +76,7 @@ abstract class AbstractWebDriver(
 
     override fun jvm(): JvmWebDriver = this
 
+    @Deprecated("Not used any more")
     override val sessionId: String?
         get() = id.toString()
 

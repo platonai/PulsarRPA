@@ -43,6 +43,7 @@ class WebDriverAdapter(
     /**
      * The id of the session to the browser
      * */
+    @Deprecated("Not used any more")
     override val sessionId get() = driverOrNull?.sessionId
 
     @Throws(WebDriverException::class)

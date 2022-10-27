@@ -132,6 +132,7 @@ class MockWebDriver(
         backupDriverOrNull?.scrollTo(selector)
     }
 
+    @Deprecated("Not used any more")
     override val sessionId: String?
         @Throws(WebDriverException::class)
         get() = backupDriverOrNull?.sessionId

@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.event
 import ai.platon.pulsar.crawl.*
 
 abstract class AbstractLoadEvent(
+    @Deprecated("Url filtering should not be in load phase, crawl phase is better")
     override val onFilter: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onNormalize: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onWillLoad: UrlEventHandler = UrlEventHandler(),
@@ -36,7 +37,9 @@ abstract class AbstractLoadEvent(
 }
 
 abstract class AbstractCrawlEvent(
+    @Deprecated("Url filtering should not be in PageEvent")
     override val onFilter: UrlAwareEventFilter = UrlAwareEventFilter(),
+    @Deprecated("No need to normalize in a crawler")
     override val onNormalize: UrlAwareEventFilter = UrlAwareEventFilter(),
     override val onWillLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoad: UrlAwareEventHandler = UrlAwareEventHandler(),

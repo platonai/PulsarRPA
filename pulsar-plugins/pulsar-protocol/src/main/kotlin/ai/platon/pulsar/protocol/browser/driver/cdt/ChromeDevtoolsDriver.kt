@@ -202,6 +202,7 @@ class ChromeDevtoolsDriver(
         return null
     }
 
+    @Deprecated("Not used any more")
     override val sessionId: String?
         @Throws(WebDriverException::class)
         get() {

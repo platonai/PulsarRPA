@@ -45,6 +45,11 @@ class ConcurrentPassiveExpiringSet<E>(val ttl: Duration = Duration.ofSeconds(-1)
 
     override fun retainAll(elements: Collection<E>): Boolean = map.keys.retainAll(elements)
 
+    @Deprecated(
+        "This member is not fully supported by Kotlin compiler, so it may be absent or have different signature in next major version",
+        replaceWith = ReplaceWith(""),
+        level = DeprecationLevel.WARNING
+    )
     override fun <T : Any> toArray(generator: IntFunction<Array<T>>): Array<out T> {
         return map.keys.toArray(generator)
     }
