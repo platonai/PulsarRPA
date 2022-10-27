@@ -37,7 +37,8 @@ import kotlin.reflect.jvm.kotlinProperty
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- */
+ * TODO: support new options: -referrer, -priority
+ * */
 open class LoadOptions(
     argv: Array<String>,
     val conf: VolatileConfig,
@@ -971,7 +972,6 @@ open class LoadOptions(
 /**
  * The default load options, be careful to change the default behaviour.
  *
- * TODO: support new options: -referrer, -priority
  * */
 object LoadOptionDefaults {
     /**
