@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
