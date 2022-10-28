@@ -22,11 +22,13 @@ import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.ActiveDOMStat
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
@@ -121,6 +123,8 @@ class LoadComponent(
 
     /**
      * Load all pages specified by [normUrls], wait until all pages are loaded or timeout
+     *
+     * TODO: use coroutine
      * */
     fun loadAll(normUrls: Iterable<NormUrl>): List<WebPage> {
         if (!normUrls.iterator().hasNext()) {
@@ -137,6 +141,21 @@ class LoadComponent(
         val pages = futures.mapNotNull { it.get().takeIf { it.isNotNil } }
 
         logger.info("Finished {}/{} pages | @{}", pages.size, futures.size, futures.hashCode())
+
+        return pages
+    }
+
+    suspend fun loadAllDeferred(normUrls: Iterable<NormUrl>): List<WebPage> {
+        val deferredPages = LinkedBlockingQueue<Deferred<WebPage>>()
+        val jobs = normUrls.filter { !it.isNil }
+            .map { coroutineScope { launch { async { loadDeferred(it) }.also(deferredPages::add) } } }
+
+        logger.info("Waiting for {} completable links | @{}", jobs.size, jobs.hashCode())
+
+        jobs.joinAll()
+
+        val pages = deferredPages.mapNotNull { it.await().takeIf { it.isNotNil } }
+        logger.info("Finished {}/{} pages | @{}", pages.size, pages.size, pages.hashCode())
 
         return pages
     }

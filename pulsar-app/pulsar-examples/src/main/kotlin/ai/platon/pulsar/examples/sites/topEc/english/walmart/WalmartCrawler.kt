@@ -77,7 +77,7 @@ class WalmartCrawler(private val session: PulsarSession = PulsarContexts.createS
     }
 }
 
-fun main(argv: Array<String>) {
+fun main() {
     val portalUrl = ResourceLoader.readAllLines("seeds.walmart.txt")
         .filter { UrlUtils.isStandard(it) }
         .shuffled()

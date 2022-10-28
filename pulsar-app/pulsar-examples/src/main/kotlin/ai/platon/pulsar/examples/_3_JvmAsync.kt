@@ -47,7 +47,7 @@ internal object JvmAsync {
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     JvmAsync.loadAll()
     JvmAsync.loadAllAsync2()
     JvmAsync.loadAllAsync3()
