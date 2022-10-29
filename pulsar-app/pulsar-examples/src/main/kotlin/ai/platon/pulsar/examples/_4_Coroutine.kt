@@ -7,7 +7,7 @@ import kotlinx.coroutines.*
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * Demonstrates how to load pages in Kotlin flows.
+ * Demonstrates how to load pages with coroutines.
  * */
 internal object CrawlCoroutines {
     private val session = PulsarContexts.createSession()
