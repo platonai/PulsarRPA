@@ -18,7 +18,6 @@ jobs.joinAll()
 ```kotlin
 val deferredPages = LinkedBlockingQueue<Deferred<WebPage>>()
 val jobs = LinkExtractors.fromResource("seeds10.txt")
-    .map { "$it -expires 1s -ignoreFailure" }
     .map { scope.launch { async { session.loadDeferred(it) }.also(deferredPages::add) } }
 
 // suspends current coroutine until all given jobs are complete.

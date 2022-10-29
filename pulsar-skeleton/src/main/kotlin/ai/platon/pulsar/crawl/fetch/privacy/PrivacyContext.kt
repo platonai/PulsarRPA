@@ -38,7 +38,7 @@ class PrivacyContextMetrics {
 
 abstract class PrivacyContext(
     /**
-     * The data directory for this context, very context has it's own data directory
+     * The data directory for this context, very context has its own data directory
      * */
     val id: PrivacyContextId,
     val conf: ImmutableConfig
