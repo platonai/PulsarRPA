@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 public class Metadata {
 
-    private Map<CharSequence, ByteBuffer> data;
+    private final Map<CharSequence, ByteBuffer> data;
 
     private Metadata(Map<CharSequence, ByteBuffer> data) {
         this.data = data;

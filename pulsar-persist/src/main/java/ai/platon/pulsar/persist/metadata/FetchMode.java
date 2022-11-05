@@ -12,18 +12,9 @@ public enum FetchMode {
      * */
     NATIVE,
     /**
-     * Native renderer, for example, jbrowserdriver
-     * */
-    NATIVE_RENDERER,
-    /**
      * Fetch every page using a real browser
      * */
-    BROWSER,
-    /**
-     * Choose the fetcher automatically
-     * Not implemented
-     * */
-    AUTO;
+    BROWSER;
 
     /**
      * <p>fromString.</p>

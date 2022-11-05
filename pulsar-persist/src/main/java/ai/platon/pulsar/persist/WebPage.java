@@ -412,7 +412,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Check if the page is canceled.
-     *
+     * <p>
      * If a page is canceled, it should not be updated.
      * */
     public boolean isCanceled() {
@@ -421,7 +421,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Check if the page is canceled.
-     *
+     * <p>
      * If a page is canceled, it should not be updated.
      * */
     public void setCanceled(boolean canceled) {
@@ -454,7 +454,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * Check if a mark is marked.
-     *
+     * <p>
      * CrawlMarks are used for nutch style crawling.
      * */
     public boolean hasMark(Mark mark) {
@@ -464,7 +464,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * The load arguments is variant task by task, so the local version is the first choice,
      * while the persisted version is used for historical check only
-     *
+     * <p>
      * Underlying gora field should not use name 'args' which is already used,
      * see GProtocolStatus.args and GParseStatus.args
      */
@@ -530,53 +530,85 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setBatchId(value);
     }
 
+    /**
+     * Mark this page as a seed where a crawl job starts from.
+     * */
     public void markSeed() {
         getMetadata().set(Name.IS_SEED, YES_STRING);
     }
 
+    /**
+     * Unmark this page to be a seed.
+     * */
     public void unmarkSeed() {
         getMetadata().remove(Name.IS_SEED);
     }
 
+    /**
+     * Check whether this page is a seed.
+     * */
     public boolean isSeed() {
         return getMetadata().contains(Name.IS_SEED);
     }
 
+    /**
+     * Get the distance of the page from the seed in the graph.
+     * */
     public int getDistance() {
         int distance = page.getDistance();
         return distance < 0 ? DISTANCE_INFINITE : distance;
     }
 
+    /**
+     * Set the distance of the page from the seed in the graph.
+     * */
     public void setDistance(int newDistance) {
         page.setDistance(newDistance);
     }
 
+    /**
+     * Get the fetch mode, only BROWSER mode is supported currently.
+     * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch.
+     */
     @NotNull
     public FetchMode getFetchMode() {
         return FetchMode.fromString(getMetadata().get(Name.FETCH_MODE));
     }
 
     /**
+     * Get the fetch mode, only BROWSER mode is supported currently.
      * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
      */
     public void setFetchMode(@NotNull FetchMode mode) {
         getMetadata().set(Name.FETCH_MODE, mode.name());
     }
 
+    /**
+     * Get the browser used to fetch the page last time.
+     */
     @NotNull
     public BrowserType getLastBrowser() {
         String browser = page.getBrowser() != null ? page.getBrowser().toString() : "";
         return BrowserType.fromString(browser);
     }
 
+    /**
+     * Set the browser used to fetch the page.
+     */
     public void setLastBrowser(@NotNull BrowserType browser) {
         page.setBrowser(browser.name());
     }
 
+    /**
+     * Checks whether the page is a single resource which can be fetched by a single request.
+     */
     public boolean isResource() {
         return page.getResource() != null;
     }
 
+    /**
+     * Indicates the page to be a single resource that can be fetched by a single request.
+     */
     public void setResource(boolean resource) {
         if (resource) {
             page.setResource(1);
@@ -663,11 +695,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * The URL where the HTML was retrieved from, to resolve relative links against.
-     *
+     * <p>
      * A baseUrl has the same semantic with Jsoup.parse:
      *
      * @return a {@link String} object.
-     * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
+     * @see <a href="https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse">Jsoup.parse</a>
      * @see WebPage#getLocation
      */
     public String getBaseUrl() {
@@ -677,12 +709,12 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
-     *
+     * <p>
      * WebPage.url is the permanent internal address, it might not still available to access the target.
      * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
      * or it might have additional random parameters.
      * WebPage.location may be different from url, it's generally normalized.
-     *
+     * <p>
      * TODO: location is usually not the same as baseUrl, set it properly
      */
     public String getLocation() {
@@ -906,6 +938,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * Get the encoding of the content.
      * Content encoding is detected just before it's parsed.
+     * <p>
+     * Not used if fetch mode is browser since the page content retrieved from a browser will always be UTF-8.
      */
     @Nullable
     public String getEncoding() {
@@ -915,13 +949,17 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * Set the encoding of the content.
      * Content encoding is detected just before it's parsed.
+     * <p>
+     * Not used if fetch mode is browser since the page content retrieved from a browser will always be UTF-8.
      */
     public void setEncoding(@Nullable String encoding) {
         page.setEncoding(encoding);
     }
 
     /**
-     * The clues are used to determine the encoding of the page content
+     * The clues are used to determine the encoding of the page content.
+     * <p>
+     * Not used if fetch mode is browser since the page content retrieved from a browser will always be UTF-8.
      * */
     @NotNull
     public String getEncodingClues() {
@@ -930,6 +968,8 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     /**
      * The clues are used to determine the encoding of the page content
+     * <p>
+     * Not used if fetch mode is browser since the page content retrieved from a browser will always be UTF-8.
      * */
     public void setEncodingClues(@NotNull String clues) {
         getMetadata().set(Name.ENCODING_CLUES, clues);

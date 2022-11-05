@@ -193,7 +193,7 @@ abstract class BrowserEmulatorImplBase(
     }
 
     /**
-     * Export the page if one of the following condition triggered:
+     * Export the page if one of the following condition matches:
      * 1. the first 200 pages
      * 2. LoadOptions.test > 0
      * 3. logger level is debug or lower

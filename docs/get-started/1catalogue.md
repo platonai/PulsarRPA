@@ -1,23 +1,23 @@
-目录
+Catalogue
 =
 
-1. [基本用法](2基本用法.md)
-2. [加载参数](3加载参数.md)
-3. [数据提取](4数据提取.md)
+1. [Basic Usage](2basic-usage.md)
+2. [Load Options](3load-options.md)
+3. [Data Extraction](4data-extraction.md)
 4. [URL](5URL.md)
-5. [Java 风格异步编程](6Java风格异步编程.md)
-6. [Kotlin 特性](7Kotlin风格异步编程.md)
-7. [连续采集](8连续采集.md) 
-8. [事件处理](9事件处理.md)
-9. [机器人流程自动化(RPA)](10机器人流程自动化RPA.md)
+5. [Java-Style Asynchronous](6Java-style-async.md)
+6. [Kotlin-Style Asynchronous](7Kotlin-style-async.md)
+7. [Continuous Crawling](8continuous-crawling.md) 
+8. [Event Handling](9event-handling.md)
+9. [RPA](10RPA.md)
 10. [WebDriver](11WebDriver.md)
-11. [大规模采集](12大规模采集.md)
+11. [Massive Crawling](12massive-crawling.md)
 12. [X-SQL](13X-SQL.md)
-13. [自动提取](14自动提取.md)
-14. [REST 服务](15REST服务.md)
-15. [控制台](16控制台.md)
-16. [顶尖项目实战](17顶尖项目实战.md)
-17. [杂项](18杂项.md)
+13. [AI Extraction](14AI-extraction.md)
+14. [REST](15REST.md)
+15. [Console](16console.md)
+16. [Top Project Practice](17top-practice.md)
+17. [Miscellaneous](18miscellaneous.md)
 
 ------
 
@@ -39,4 +39,4 @@
 
 ------
 
-目录 [下一章](3加载参数.md)
+目录 [Next](3load-options.md)

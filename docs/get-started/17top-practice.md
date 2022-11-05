@@ -53,4 +53,4 @@ java -jar target/exotic-amazon-{the-actual-version}.jar
 
 ------
 
-[上一章](16控制台.md) [目录](1目录.md) [下一章](18杂项.md)
+[上一章](16console.md) [目录](1catalogue.md) [下一章](18miscellaneous.md)

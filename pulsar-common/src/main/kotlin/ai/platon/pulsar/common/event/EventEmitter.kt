@@ -42,7 +42,7 @@ interface EventEmitter<EventType> {
      * Emit an event and call any associated listeners.
      *
      * @param event - the event you'd like to emit
-     * @param eventData - any data you'd like to emit with the event
+     * @param param - any data you'd like to emit with the event
      * @returns `true` if there are any listeners, `false` if there are not.
      */
     fun emit(event: EventType): Boolean
@@ -52,7 +52,7 @@ interface EventEmitter<EventType> {
      * Emit an event and call any associated listeners.
      *
      * @param event - the event you'd like to emit
-     * @param eventData - any data you'd like to emit with the event
+     * @param param - any data you'd like to emit with the event
      * @returns `true` if there are any listeners, `false` if there are not.
      */
     fun <T> emit(event: EventType, param: T): Boolean
@@ -62,7 +62,7 @@ interface EventEmitter<EventType> {
      * Emit an event and call any associated listeners.
      *
      * @param event - the event you'd like to emit
-     * @param eventData - any data you'd like to emit with the event
+     * @param param - any data you'd like to emit with the event
      * @returns `true` if there are any listeners, `false` if there are not.
      */
     fun <T, T2> emit(event: EventType, param: T, param2: T2): Boolean
@@ -72,7 +72,7 @@ interface EventEmitter<EventType> {
      * Emit an event and call any associated listeners.
      *
      * @param event - the event you'd like to emit
-     * @param eventData - any data you'd like to emit with the event
+     * @param param - any data you'd like to emit with the event
      * @returns `true` if there are any listeners, `false` if there are not.
      */
     fun <T, T2, T3> emit(event: EventType, param: T, param2: T2, param3: T3): Boolean
@@ -139,7 +139,7 @@ interface EventEmitter<EventType> {
     fun <T, T2> once(event: EventType, handler: (T, T2) -> Unit, param: T, param2: T2): EventEmitter<EventType>
     fun <T, T2> once1(event: EventType, handler: suspend (T, T2) -> Unit, param: T, param2: T2): EventEmitter<EventType>
     /**
-     * Like `on` but the listener will only be fired once and then it will be removed.
+     * Like `on` but the listener will only be fired once, and then it will be removed.
      * @param event - the event you'd like to listen to
      * @param handler - the handler function to run when the event occurs
      * @returns `this` to enable you to chain method calls.

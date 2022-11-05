@@ -26,4 +26,4 @@ fun main() {
 
 ------
 
-[上一章](7Kotlin风格异步编程.md) [目录](1目录.md) [下一章](9事件处理.md)
+[上一章](7Kotlin-style-async.md) [目录](1catalogue.md) [下一章](9event-handling.md)

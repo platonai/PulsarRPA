@@ -13,14 +13,15 @@ import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The privacy context id defines a unique id of a privacy context.
- * Website visits through different privacy contexts should not be detected
+ * The privacy agent defines a unique agent to visit websites.
+ *
+ * Page visits through different privacy agents should not be detected
  * as the same person, even if the visits are from the same host.
  * */
-data class PrivacyContextId(
+data class PrivacyAgent(
     val contextDir: Path,
     var fingerprint: Fingerprint
-): Comparable<PrivacyContextId> {
+): Comparable<PrivacyAgent> {
 
     val ident = contextDir.last().toString()
     val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
@@ -30,7 +31,7 @@ data class PrivacyContextId(
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
     /**
-     * The PrivacyContextId equality.
+     * The PrivacyAgent equality.
      * Note: do not use the default equality function
      * */
     override fun equals(other: Any?): Boolean {
@@ -38,7 +39,7 @@ data class PrivacyContextId(
             return true
         }
 
-        return other is PrivacyContextId
+        return other is PrivacyAgent
                 && other.contextDir == contextDir
                 && other.fingerprint.browserType.toString() == fingerprint.browserType.toString()
     }
@@ -47,7 +48,7 @@ data class PrivacyContextId(
         return 31 * contextDir.hashCode() + fingerprint.browserType.toString().hashCode()
     }
 
-    override fun compareTo(other: PrivacyContextId): Int {
+    override fun compareTo(other: PrivacyAgent): Int {
         val r = contextDir.compareTo(other.contextDir)
         if (r != 0) {
             return r
@@ -58,10 +59,12 @@ data class PrivacyContextId(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
-        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
-        val PROTOTYPE = PrivacyContextId(PrivacyContext.PROTOTYPE_DIR, BrowserType.PULSAR_CHROME)
+        val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
+        val PROTOTYPE = PrivacyAgent(PrivacyContext.PROTOTYPE_DIR, BrowserType.PULSAR_CHROME)
     }
 }
+
+typealias PrivacyContextId = PrivacyAgent
 
 /**
  * The unique browser id.

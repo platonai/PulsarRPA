@@ -502,9 +502,6 @@ open class StreamingCrawler(
                 }
                 return FlowState.BREAK
             }
-            is IllegalStateException -> {
-                logger.warn("Illegal state", e)
-            }
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
                 logger.warn("{}. {}", proxyOutOfService, e.message)
@@ -526,6 +523,9 @@ open class StreamingCrawler(
                     logger.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
+            }
+            is IllegalStateException -> {
+                logger.warn("Illegal state", e)
             }
             else -> throw e
         }

@@ -116,7 +116,7 @@ public enum Name {
     TMP_IS_DETAIL("T_ID"),
     TMP_CHARS("T_C");
 
-    private String text;
+    private final String text;
 
     Name(String name) {
         this.text = name;

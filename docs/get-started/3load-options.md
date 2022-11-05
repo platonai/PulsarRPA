@@ -149,8 +149,8 @@ var pages = session.loadOutPages(url, "-expires 10s" +
 )
 ```
 
-本课程提供了[完整代码](../../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)。
+本课程提供了[完整代码](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)。
 
 ------
 
-[上一章](2基本用法.md) [目录](1目录.md) [下一章](4数据提取.md)
+[上一章](2basic-usage.md) [目录](1catalogue.md) [下一章](4data-extraction.md)

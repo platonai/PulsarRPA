@@ -52,7 +52,9 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(UNAUTHORIZED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOT_FOUND);
-    // if a task is canceled, we do not save anything, if a task is retry, all the metadata is saved
+    // NOTE:
+    // What are the differences between a canceled page and a retry page?
+    // If a task is canceled, nothing will be saved, while if a task is retry, all the metadata should be saved.
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
     public static final ProtocolStatus STATUS_EXCEPTION = ProtocolStatus.failed(EXCEPTION);
 

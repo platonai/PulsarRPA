@@ -18,7 +18,7 @@ package ai.platon.pulsar.common;
 
 /**
  * A collection of HTTP header names.
- *
+ * <p>
  * TODO: use guava HttpHeaders
  *
  * @author vincent
