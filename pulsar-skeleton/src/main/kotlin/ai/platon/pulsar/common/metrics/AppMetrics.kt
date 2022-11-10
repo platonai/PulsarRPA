@@ -103,9 +103,7 @@ class AppMetrics(
          * */
         val availableMemory get() = memoryInfo.available
 
-        val freeSpace get() = FileSystems.getDefault().fileStores
-            .filter { ByteUnitConverter.convert(it.totalSpace, "G") > 20 }
-            .map { it.unallocatedSpace }
+        val freeSpace get() = Runtimes.unallocatedDiskSpaces()
 
         init {
             mapOf(

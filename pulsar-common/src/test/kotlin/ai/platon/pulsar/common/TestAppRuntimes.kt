@@ -21,6 +21,7 @@ package ai.platon.pulsar.common
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import org.junit.Test
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -90,5 +91,20 @@ class TestAppRuntimes {
         Files.list(tmpDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
 
         assertFalse { Files.isSymbolicLink(symbolicPath) }
+    }
+
+    @Test
+    fun testUnallocatedDiskSpaces() {
+        FileSystems.getDefault().fileStores.forEach {
+            try {
+                println(String.format("%-30s%-10s%-20s%s", it.name(), it.type(),
+                    Strings.compactFormat(it.unallocatedSpace), Strings.compactFormat(it.totalSpace)))
+            } catch (e: Exception) {
+                println(e.message)
+            }
+        }
+
+        val spaces = Runtimes.unallocatedDiskSpaces()
+        assertTrue { spaces.isNotEmpty() }
     }
 }

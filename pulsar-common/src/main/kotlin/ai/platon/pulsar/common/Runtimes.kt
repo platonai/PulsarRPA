@@ -1,10 +1,13 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.measure.ByteUnitConverter
 import kotlinx.coroutines.delay
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
+import java.nio.file.FileStore
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -95,6 +98,21 @@ object Runtimes {
     suspend fun randomDelay(timeMillis: Long, delta: Int) {
         delay(timeMillis + Random.nextInt(delta))
     }
+
+    fun unallocatedDiskSpaces(): List<Long> {
+        return try {
+            FileSystems.getDefault().fileStores
+                .filter { ByteUnitConverter.convert(totalSpaceOr0(it), "G") > 20 }
+                .map { unallocatedSpaceOr0(it) }
+                .filter { it > 0 }
+        } catch (e: Throwable) {
+            return listOf()
+        }
+    }
+
+    private fun totalSpaceOr0(store: FileStore) = store.runCatching { totalSpace }.getOrNull() ?: 0L
+
+    private fun unallocatedSpaceOr0(store: FileStore) = store.runCatching { unallocatedSpace }.getOrNull() ?: 0L
 
     private fun destroyChildProcess(process: ProcessHandle) {
         process.children().forEach { destroyChildProcess(it) }
