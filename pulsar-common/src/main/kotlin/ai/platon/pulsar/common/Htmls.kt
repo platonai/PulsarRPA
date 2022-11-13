@@ -7,43 +7,82 @@ import java.util.regex.Pattern
 const val DEFAULT_SUPPORTED_CHARSETS = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
         "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
 val DEFAULT_CHARSET_PATTERN = DEFAULT_SUPPORTED_CHARSETS.replace("UTF-8\\|?", "")
-        .toPattern(Pattern.CASE_INSENSITIVE)
+    .toPattern(Pattern.CASE_INSENSITIVE)
 // All charsets are supported by the system
 val SYSTEM_AVAILABLE_CHARSETS = Charset.availableCharsets().values.joinToString("|") { it.name() }
 val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\\|?", "")
-        .toPattern(Pattern.CASE_INSENSITIVE)
+    .toPattern(Pattern.CASE_INSENSITIVE)
 
 enum class HtmlIntegrity {
     OK,
-    EMPTY_0B,  // no character at all
-    EMPTY_39B, // <html><head></head><body></body></html> and blanks, must be caused by a bad proxy
-    BLANK_BODY, // ...<body>\s*</body>...
+    /**
+     * The page content has no character at all
+     * */
+    EMPTY_0B,
+    /**
+     * The page content is as the following:
+     *
+     * `<html><head></head><body></body></html>` and blanks.
+     *
+     * It might be caused by a bad proxy ip.
+     * */
+    EMPTY_39B,
+    /**
+     * The page content is as the following:
+     *
+     * `...<body>\s*</body>...`
+     * */
+    BLANK_BODY,
+    /**
+     * The page content contains no anchor at all
+     * */
     NO_ANCHOR,
+    /**
+     * Failed to run injected javascript
+     * */
     NO_JS_OK_FLAG,
     /**
-     * the page displays captcha or something similar
+     * The page displays captcha or something similar
      * */
     ROBOT_CHECK,
     ROBOT_CHECK_2,
     ROBOT_CHECK_3,
     /**
-     * the access is forbidden
+     * The access is forbidden
      * */
     FORBIDDEN,
     /**
-     * redirected to verify page, we should fetch later, or change privacy context
+     * Redirected to verify page, we should fetch later, or change privacy context
      * */
     VERIFY,
     /**
-     * the page displays "404 Not Found" or something similar,
-     * the the server should issue a 404 error code, but not guaranteed
+     * The page displays "404 Not Found" or something similar,
+     * the server should return a 404 error code, but not guaranteed
      * */
     NOT_FOUND,
+    /**
+     * The current chosen country is not correct.
+     * */
     WRONG_COUNTRY,
+    /**
+     * The current chosen district is not correct.
+     * */
     WRONG_DISTRICT,
+    /**
+     * The current chosen language is not correct.
+     * */
     WRONG_LANG,
+    /**
+     * The page content is too small
+     * */
     TOO_SMALL,
+    /**
+     * The page content is too small compare to its history versions
+     * */
     TOO_SMALL_IN_HISTORY,
+    /**
+     * The content of the page is too small compare to other pages in the same batch
+     * */
     TOO_SMALL_IN_BATCH,
     OTHER;
 
