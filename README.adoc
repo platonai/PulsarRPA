@@ -46,7 +46,7 @@ We have released complete solutions for site-wide Web scraping of some of the la
 * Large scale: fully distributed, designed for large scale crawling
 * Big data: various backend storage support: Local File/MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
-* [Coming Soon] Information Extraction: Automatically learns web data patterns and automatically extracts every field in a webpage with remarkable precision
+* [Preview] Information Extraction: Automatically learns web data patterns and automatically extracts every field in a webpage with remarkable precision
 
 == Get started
 
@@ -140,7 +140,7 @@ We have released a standalone executable jar based on PulsarR, which includes:
 * An applet based on `self-supervised` machine learning for information extraction, AI identifies all fields on the detail page with over 90% field accuracy of 99.9% or more
 * An applet based on `self-supervised` machine learning and outputs all extract rules, which can help traditional Web scraping methods
 * An applet that scrape Web data directly from the command line, like wget or curl, without writing code
-* A PulsarR server to which we can send SQLs to collect Web data
+* An upgraded Pulsar server to which we can send SQLs to collect Web data
 * A Web UI from which we can write SQLs and send them to the server
 
 Download https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
