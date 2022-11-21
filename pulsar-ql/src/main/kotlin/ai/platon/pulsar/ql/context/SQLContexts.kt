@@ -44,6 +44,9 @@ open class H2SQLContext(
         return session as H2SQLSession
     }
 
+    /**
+     * Create a pulsar session, note that the session is not a SQLSession.
+     * */
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }

@@ -188,8 +188,19 @@ abstract class BrowserEmulatorImplBase(
         }
     }
 
+    /**
+     * Export the page if one of the following condition matches:
+     * 1. the first 200 pages
+     * 2. LoadOptions.test > 0
+     * 3. logger level is debug or lower
+     * 4. logger level is info and protocol status is failed
+     * */
     private fun exportIfNecessary(task: NavigateTask) {
-        exportIfNecessary(task.pageSource, task.pageDatum.protocolStatus, task.page)
+        try {
+            exportIfNecessary0(task.pageSource, task.pageDatum.protocolStatus, task.page)
+        } catch (e: Exception) {
+            logger.warn("Failed to export webpage | {} | \n{}", task.url, e.message)
+        }
     }
 
     /**
@@ -199,7 +210,7 @@ abstract class BrowserEmulatorImplBase(
      * 3. logger level is debug or lower
      * 4. logger level is info and protocol status is failed
      * */
-    private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage) {
+    private fun exportIfNecessary0(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
             return
         }
@@ -209,17 +220,25 @@ abstract class BrowserEmulatorImplBase(
         val shouldExport =
             id < 200 || id % 100 == 0 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
-            val path = AppFiles.export(status, pageSource, page)
+            export0(pageSource, status, page)
+        }
+    }
 
-            // Create a symbolic link with an url based, unique, shorter but not readable file name,
-            // we can generate and refer to this path at any place
-            val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
-            try {
-                Files.deleteIfExists(link)
-                Files.createSymbolicLink(link, path)
-            } catch (e: IOException) {
-                logger.warn(e.toString())
-            }
+    private fun export0(pageSource: String, status: ProtocolStatus, page: WebPage) {
+        if (pageSource.isEmpty()) {
+            return
+        }
+
+        val path = AppFiles.export(status, pageSource, page)
+
+        // Create a symbolic link with an url based, unique, shorter but not readable file name,
+        // we can generate and refer to this path at any place
+        val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
+        try {
+            Files.deleteIfExists(link)
+            Files.createSymbolicLink(link, path)
+        } catch (e: IOException) {
+            logger.warn(e.toString())
         }
     }
 
@@ -239,7 +258,7 @@ abstract class BrowserEmulatorImplBase(
                 "{}. Page is {}({}) with {} in {}({}) | file://{}",
                 task.page.id,
                 integrity.name, readableLength,
-                proxyEntry.display, domain, count, link, task.url
+                proxyEntry.display, domain, count, link
             )
         } else {
             logger.warn("{}. Page is {}({}) | file://{} | {}",

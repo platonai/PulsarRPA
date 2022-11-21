@@ -179,4 +179,4 @@ from
 
 ------
 
-[上一章](12massive-crawling.md) [目录](1catalogue.md) [下一章](14AI-extraction.md)
+[Prev](12massive-crawling.md) [Home](1home.md) [Next](14AI-extraction.md)

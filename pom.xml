@@ -25,7 +25,7 @@
 
     <name>Pulsar</name>
     <description>The easy way to crawl the Web:
-        turn large web sites into tables and charts using simple native API, SQL or REST API
+        turn large websites into tables and charts using simple native API, SQL or REST API
     </description>
 
     <licenses>
@@ -60,7 +60,7 @@
 
     <profiles>
         <profile>
-            <id>all-modules</id>
+            <id>default</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -96,23 +96,6 @@
                 <module>pulsar-plugins/pulsar-protocol</module>
                 <module>pulsar-tools/pulsar-browser</module>
                 <module>pulsar-app/pulsar-examples</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>develop-set1</id>
-
-            <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins/pulsar-protocol</module>
-
-                <module>pulsar-tools/pulsar-browser</module>
-
-                <module>pulsar-spring-support</module>
             </modules>
         </profile>
 

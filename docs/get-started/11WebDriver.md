@@ -114,4 +114,4 @@ class WebDriverDemo(private val session: PulsarSession) {
 
 ------
 
-[上一章](10RPA.md) [目录](1catalogue.md) [下一章](12massive-crawling.md)
+[Prev](10RPA.md) [Home](1home.md) [Next](12massive-crawling.md)

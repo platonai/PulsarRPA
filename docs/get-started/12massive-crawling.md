@@ -98,4 +98,4 @@ urlPool.delayCache.add(DelayUrl(url5, Duration.ofHours(2)))
 
 ------
 
-[上一章](11WebDriver.md) [目录](1catalogue.md) [下一章](13X-SQL.md)
+[Prev](11WebDriver.md) [Home](1home.md) [Next](13X-SQL.md)

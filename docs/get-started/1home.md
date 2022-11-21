@@ -39,4 +39,4 @@ Catalogue
 
 ------
 
-目录 [Next](3load-options.md)
+Home [Next](3load-options.md)

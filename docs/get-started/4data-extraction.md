@@ -51,7 +51,7 @@ PulsarR 扩展了 CSS 和 Jsoup，来解决复杂的现实问题：
 
 譬如：
 
-```CSS
+```
 /* 选择左侧栏宽 500 的链接 */
 a:expr(left < 100 && width == 500)
 
@@ -137,4 +137,4 @@ dom_first_text(dom, '#price #dealprice_savings .priceBlockSavingsString, #price 
 ```
 ------
 
-[上一章](3load-options.md) [目录](1catalogue.md) [下一章](5URL.md)
+[Prev](3load-options.md) [Home](1home.md) [Next](5URL.md)

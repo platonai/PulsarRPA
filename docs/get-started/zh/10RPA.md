@@ -37,4 +37,4 @@ session.load(url, options)
 
 ------
 
-[上一章](9event-handling.md) [目录](1catalogue.md) [下一章](11WebDriver.md)
+[上一章](9event-handling.md) [目录](1home.md) [下一章](11WebDriver.md)

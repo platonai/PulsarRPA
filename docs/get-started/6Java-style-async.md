@@ -48,4 +48,4 @@ object JvmAsync {
 
 ------
 
-[上一章](5URL.md) [目录](1catalogue.md) [下一章](7Kotlin-style-async.md)
+[Prev](5URL.md) [Home](1home.md) [Next](7Kotlin-style-async.md)

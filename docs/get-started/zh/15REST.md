@@ -24,4 +24,4 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 
 ------
 
-[上一章](14AI-extraction.md) [目录](1catalogue.md) [下一章](16console.md)
+[上一章](14AI-extraction.md) [目录](1home.md) [下一章](16console.md)

@@ -150,4 +150,4 @@ Examples:
 
 ------
 
-[上一章](15REST.md) [目录](1catalogue.md) [下一章](17top-practice.md)
+[Prev](15REST.md) [Home](1home.md) [Next](17top-practice.md)

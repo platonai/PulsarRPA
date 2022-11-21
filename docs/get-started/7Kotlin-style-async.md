@@ -27,4 +27,4 @@ deferredPages.map { it.await() }.forEach { println(it.url) }
 
 ------
 
-[上一章](6Java-style-async.md) [目录](1catalogue.md) [下一章](8continuous-crawling.md)
+[Prev](6Java-style-async.md) [Home](1home.md) [Next](8continuous-crawling.md)

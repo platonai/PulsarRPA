@@ -16,7 +16,12 @@
  */
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.AppConstants
+import org.apache.commons.lang3.RandomStringUtils
 import org.junit.Test
+import java.io.IOException
+import java.nio.file.Files
+import kotlin.random.Random
 import kotlin.test.assertTrue
 
 class TestAppPaths {
@@ -43,5 +48,38 @@ class TestAppPaths {
         path = AppPaths.DATA_DIR.resolve("scripts")
         path2 = AppPaths.get(path.toString(), filename)
         assertTrue(path2.startsWith(AppPaths.DATA_DIR), "$path -> $path2")
+    }
+
+    /**
+     * Ensure a symbolic link can be created.
+     *
+     * @see <a href='https://github.com/platonai/pulsarr/issues/20'>
+     *     #20 Failed to create symbolic link when export webpage on Windows 11</a>
+     * */
+    @Test
+    @Throws(Exception::class)
+    fun testCreateSymbolicLink() {
+        var i = 0
+        val n = 50
+
+        while(i++ < n) {
+            val filename = "" + Random.nextInt(10) + ".htm"
+            val url = AppConstants.EXAMPLE_URL + "/$filename"
+            val path = AppPaths.getTmp(AppPaths.fromUri(url))
+            Files.writeString(path, "test")
+
+            val link = AppPaths.uniqueSymbolicLinkForUri(url)
+            try {
+                Files.deleteIfExists(link)
+                Files.createSymbolicLink(link, path)
+                assertTrue { Files.exists(link) }
+            } finally {
+                if (i % 2 == 0) {
+                    Files.deleteIfExists(link)
+                    Files.deleteIfExists(path)
+                }
+            }
+        }
+
     }
 }

@@ -157,21 +157,33 @@ object AppPaths {
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
 
+    /**
+     * Create a mock page path.
+     * */
     fun mockPagePath(uri: String): Path {
         val filename = fromUri(uri, "", ".htm")
         return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
     }
 
+    /**
+     * Create a filename compatible string from the given url.
+     * */
     fun fromDomain(url: URL): String {
         val host = url.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(url.host).topPrivateDomain().toString()
         return host.replace('.', '-')
     }
 
+    /**
+     * Create a filename compatible string from the given url.
+     * */
     fun fromDomain(url: String): String {
         val u = UrlUtils.getURLOrNull(url) ?: return "unknown"
         return fromDomain(u)
     }
 
+    /**
+     * Create a filename compatible string from the given uri.
+     * */
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = UrlUtils.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
 
@@ -180,6 +192,11 @@ object AppPaths {
         return "$prefix$dirForDomain-$fileId$suffix"
     }
 
+    /**
+     * Create a symbolic link from the given uri.
+     *
+     * The symbolic link is url based, unique, shorter but not readable filename
+     * */
     fun uniqueSymbolicLinkForUri(uri: String, suffix: String = ".htm"): Path {
         return SYS_TMP_LINKS_DIR.resolve(hex(uri, "", suffix))
     }
