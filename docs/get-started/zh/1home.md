@@ -39,4 +39,4 @@
 
 ------
 
-目录 [下一章](3load-options.md)
+目录 [下一章](2basic-usage.md)

@@ -39,4 +39,4 @@ Catalogue
 
 ------
 
-Home [Next](3load-options.md)
+Home [Next](2basic-usage.md)
