@@ -128,7 +128,7 @@ open class BrowserSettings(
         /**
          * Set the number of privacy contexts
          * */
-        @Deprecated("Verbose name", ReplaceWith("privacy"))
+        @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
         @JvmStatic
         fun privacyContext(n: Int): Companion {
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
@@ -308,7 +308,8 @@ open class BrowserSettings(
      *
      * Pulsar checks document ready using javascript so just set the strategy to be none.
      *
-     * @see <a href='https://blog.knoldus.com/page-loading-strategy-in-the-selenium-webdriver/'>Page Loading Strategy</a>
+     * @see <a href='https://blog.knoldus.com/page-loading-strategy-in-the-selenium-webdriver/'>
+     *     Page Loading Strategy</a>
      * */
     var pageLoadStrategy = "none"
 
