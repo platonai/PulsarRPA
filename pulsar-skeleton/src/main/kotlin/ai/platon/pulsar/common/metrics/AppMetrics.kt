@@ -103,16 +103,18 @@ class AppMetrics(
          * */
         val availableMemory get() = memoryInfo.available
 
-        val freeSpace get() = FileSystems.getDefault().fileStores
-            .filter { ByteUnitConverter.convert(it.totalSpace, "G") > 20 }
-            .map { it.unallocatedSpace }
+
+        // TODO: disabled in this branch, because AppMetrics.freeSpace may throw an exception on Windows 11
+//        val freeSpace get() = FileSystems.getDefault().fileStores
+//            .filter { ByteUnitConverter.convert(it.totalSpace, "G") > 20 }
+//            .map { it.unallocatedSpace }
 
         init {
             mapOf(
                 "startTime" to Gauge { startTime },
                 "elapsedTime" to Gauge { elapsedTime },
                 "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
-                "freeSpace" to Gauge { freeSpace.map { Strings.readableBytes(it) } }
+//                "freeSpace" to Gauge { freeSpace.map { Strings.readableBytes(it) } }
             ).let { reg.registerAll(this, it) }
         }
     }

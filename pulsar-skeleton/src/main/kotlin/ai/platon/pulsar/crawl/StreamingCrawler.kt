@@ -246,13 +246,14 @@ open class StreamingCrawler<T : UrlAware>(
                     globalTasks, globalLoadingUrls.size, globalRunningTasks, url.configuredUrl
                 )
 
+                // TODO: disabled in this branch, because AppMetrics.freeSpace may throw an exception on Windows 11
                 // The largest disk must have at least 10 GiB remaining space
-                val freeSpace = AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
-                if (freeSpace < 10.0) {
-                    logger.error("Disk space is full!")
-                    criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
-                    return@startCrawlLoop
-                }
+//                val freeSpace = AppMetrics.freeSpace.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
+//                if (freeSpace < 10.0) {
+//                    logger.error("Disk space is full!")
+//                    criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
+//                    return@startCrawlLoop
+//                }
 
                 if (url.isNil) {
                     globalMetrics.drops.mark()
