@@ -17,6 +17,8 @@ import com.github.kklisura.cdt.protocol.types.network.Cookie
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -68,6 +70,7 @@ class ChromeDevtoolsDriver(
     private val rpc = RobustRPC(this)
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
+    private val initScripts = mutableSetOf<String>()
     private val closed = AtomicBoolean()
 
     override var lastActiveTime = Instant.now()
@@ -86,15 +89,16 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun addInitScript(script: String) {
-        try {
-            rpc.invokeDeferred("addInitScript") {
-                pageAPI?.enable()
-                val script0 = browserSettings.confuser.confuse(script)
-                pageAPI?.addScriptToEvaluateOnNewDocument(script0)
-            }
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "addInitScript")
-        }
+        initScripts.add(script)
+//        try {
+//            rpc.invokeDeferred("addInitScript") {
+//                pageAPI?.enable()
+//                val script0 = browserSettings.confuser.confuse(script)
+//                pageAPI?.addScriptToEvaluateOnNewDocument(script0)
+//            }
+//        } catch (e: ChromeRPCException) {
+//            rpc.handleRPCException(e, "addInitScript")
+//        }
     }
 
     override suspend fun addBlockedURLs(urls: List<String>) {
@@ -106,14 +110,19 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
-        browser.emit(BrowserEvents.willNavigate, entry)
         navigateHistory.add(entry)
-
         this.navigateEntry = entry
 
+        browser.emit(BrowserEvents.willNavigate, entry)
+
         try {
+            pageAPI?.enable()
+            domAPI?.enable()
+            runtimeAPI?.enable()
+            networkAPI?.enable()
+
             rpc.invokeDeferred("navigateTo") {
-                if (enableStartupScript) getInvaded(entry.url) else getNoInvaded(entry.url)
+                if (enableStartupScript) navigateInvaded(entry.url) else navigateNonInvaded(entry.url)
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "navigateTo", entry.url)
@@ -655,13 +664,8 @@ class ChromeDevtoolsDriver(
 
     override fun toString() = "DevTools driver ($lastSessionId)"
 
-    private fun getInvaded(url: String) {
-        pageAPI?.enable()
-        domAPI?.enable()
-        runtimeAPI?.enable()
-        networkAPI?.enable()
-
-        pageAPI?.addScriptToEvaluateOnNewDocument(getInjectJs())
+    private fun navigateInvaded(url: String) {
+        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
 
         if (enableUrlBlocking && blockedURLs.isNotEmpty()) {
             networkAPI?.setBlockedURLs(blockedURLs)
@@ -693,7 +697,7 @@ class ChromeDevtoolsDriver(
         pageAPI?.navigate(url)
     }
 
-    private fun getNoInvaded(url: String) {
+    private fun navigateNonInvaded(url: String) {
         pageAPI?.enable()
         navigateUrl = url
         pageAPI?.navigate(url)
@@ -707,9 +711,15 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun getInjectJs(): String {
+    private fun buildInitScripts(): String {
         val js = browserSettings.scriptLoader.getPreloadJs(false)
-        return browserSettings.confuser.confuse(js)
+        initScripts.add(js)
+        val script = browserSettings.confuser.confuse(initScripts.joinToString(";\n\n\n;"))
+        initScripts.clear()
+
+        Files.writeString(Paths.get("/tmp/1"), script)
+
+        return script
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {

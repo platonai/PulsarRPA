@@ -72,20 +72,20 @@ inline fun <reified T> nullableField(): NullableMapField<T> {
 }
 
 class ExportPaths(val uri: String) {
-    val namedPath = mutableMapOf<String, Path>()
+    private val namedPath = mutableMapOf<String, Path>()
 
-    val filename get() = AppPaths.fromUri(uri, "", ".htm")
-    val portal get() = get("portal", filename)
-    val annotatedView get() = get("annotated", filename)
-    val tileView get() = get("tile", filename)
-    val entityView get() = get("entity", filename)
+    val filename by lazy { AppPaths.fromUri(uri, "", ".htm") }
+    val portal get() = byType("portal")
+    val annotatedView get() = byType("annotated")
+    val tileView get() = byType("tile")
+    val entityView get() = byType("entity")
 
     fun byType(type: String) = namedPath.computeIfAbsent(type) { get(type, filename) }
 
     companion object {
-        fun get(first: String, second: String): Path {
-            return AppPaths.DOC_EXPORT_DIR.resolve(first).resolve(second)
-        }
+        fun get(first: String) = AppPaths.DOC_EXPORT_DIR.resolve(first)
+
+        fun get(first: String, second: String) = get(first).resolve(second)
     }
 }
 
