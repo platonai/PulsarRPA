@@ -71,6 +71,29 @@
                 <module>pulsar-skeleton</module>
                 <module>pulsar-resources</module>
                 <module>pulsar-dom</module>
+
+                <module>pulsar-tools</module>
+                <module>pulsar-ql</module>
+
+                <module>pulsar-spring-support</module>
+                <module>pulsar-rest</module>
+
+                <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>all</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>pulsar-common</module>
+                <module>pulsar-persist</module>
+                <module>pulsar-third</module>
+                <module>pulsar-skeleton</module>
+                <module>pulsar-resources</module>
+                <module>pulsar-dom</module>
                 <module>pulsar-plugins</module>
 
                 <module>pulsar-tools</module>
@@ -84,18 +107,6 @@
 
                 <module>pulsar-client</module>
                 <module>pulsar-app</module>
-            </modules>
-        </profile>
-
-        <!-- This is a temporary profile for screenshot development -->
-        <profile>
-            <id>develop-screenshot</id>
-
-            <modules>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-plugins/pulsar-protocol</module>
-                <module>pulsar-tools/pulsar-browser</module>
-                <module>pulsar-app/pulsar-examples</module>
             </modules>
         </profile>
 
