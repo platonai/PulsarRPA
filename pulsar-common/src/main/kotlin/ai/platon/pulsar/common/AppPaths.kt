@@ -169,7 +169,13 @@ object AppPaths {
      * Create a filename compatible string from the given url.
      * */
     fun fromDomain(url: URL): String {
-        val host = url.host.takeIf { Strings.isIpPortLike(it) } ?: InternetDomainName.from(url.host).topPrivateDomain().toString()
+        var host = url.host
+        host = if (Strings.isIpLike(host) || Strings.isIpPortLike(host) || host == "localhost") {
+            host
+        } else {
+            runCatching { InternetDomainName.from(host).topPrivateDomain().toString() }.getOrNull() ?: "unknown"
+        }
+
         return host.replace('.', '-')
     }
 
