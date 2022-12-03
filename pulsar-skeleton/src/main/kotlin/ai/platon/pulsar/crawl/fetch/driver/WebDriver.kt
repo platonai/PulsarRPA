@@ -130,6 +130,9 @@ interface WebDriver: Closeable {
      * its scripts were run. This is useful to amend the JavaScript environment, e.g.
      * to seed [Math.random].
      *
+     * This function should be invoked before a navigation, usually in an onWillNavigate
+     * event handler.
+     *
      * @param script Javascript source code to add.
      * */
     @Throws(WebDriverException::class)

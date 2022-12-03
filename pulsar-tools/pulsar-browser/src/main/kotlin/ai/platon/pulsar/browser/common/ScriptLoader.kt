@@ -79,8 +79,6 @@ class ScriptLoader(
 
         preloadJs = sb.toString()
 
-        reportPreloadJs(preloadJs)
-
         return preloadJs
     }
 
@@ -110,13 +108,6 @@ class ScriptLoader(
                 .filter { it.toString().endsWith(".js") }
                 .associateTo(jsCache) { it.toString() to Files.readString(it) }
         }
-    }
-
-    private fun reportPreloadJs(script: String) {
-        val dir = AppPaths.REPORT_DIR.resolve("browser/js")
-        Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.gen.js"), script)
-        logger.info("Generated js: file://$report")
     }
 
     private fun initDefaultJsParameters() {

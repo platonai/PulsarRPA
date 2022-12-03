@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
@@ -70,7 +71,7 @@ class ChromeDevtoolsDriver(
     private val rpc = RobustRPC(this)
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
-    private val initScripts = mutableSetOf<String>()
+    private val initScripts = mutableListOf<String>()
     private val closed = AtomicBoolean()
 
     override var lastActiveTime = Instant.now()
@@ -665,7 +666,8 @@ class ChromeDevtoolsDriver(
     override fun toString() = "DevTools driver ($lastSessionId)"
 
     private fun navigateInvaded(url: String) {
-        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
+//        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
+        addScriptToEvaluateOnNewDocument()
 
         if (enableUrlBlocking && blockedURLs.isNotEmpty()) {
             networkAPI?.setBlockedURLs(blockedURLs)
@@ -694,7 +696,15 @@ class ChromeDevtoolsDriver(
         }
 
         navigateUrl = url
-        pageAPI?.navigate(url)
+        // TODO: temporary solution to server local file
+        val LOCALHOST_PREFIX = "http://localfile.org"
+        if (LOCALHOST_PREFIX in url) {
+            val url0 = url.removePrefix("http://localfile.org")
+            // TODO: handle OS
+            pageAPI?.navigate("file://$url0")
+        } else {
+            pageAPI?.navigate(url)
+        }
     }
 
     private fun navigateNonInvaded(url: String) {
@@ -711,15 +721,29 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun buildInitScripts(): String {
+    private fun addScriptToEvaluateOnNewDocument(): String {
         val js = browserSettings.scriptLoader.getPreloadJs(false)
-        initScripts.add(js)
-        val script = browserSettings.confuser.confuse(initScripts.joinToString(";\n\n\n;"))
+        if (js !in initScripts) {
+            // come first
+            initScripts.add(0, js)
+        }
+
+        initScripts.forEach {
+            pageAPI?.addScriptToEvaluateOnNewDocument(it)
+        }
         initScripts.clear()
 
-        Files.writeString(Paths.get("/tmp/1"), script)
+        val script = browserSettings.confuser.confuse(initScripts.joinToString("\n;\n\n\n;\n"))
+        reportPreloadJs(script)
 
         return script
+    }
+
+    private fun reportPreloadJs(script: String) {
+        val dir = AppPaths.REPORT_DIR.resolve("browser/js")
+        Files.createDirectories(dir)
+        val report = Files.writeString(dir.resolve("preload.gen.js"), script)
+        logger.info("Generated js: file://$report")
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {

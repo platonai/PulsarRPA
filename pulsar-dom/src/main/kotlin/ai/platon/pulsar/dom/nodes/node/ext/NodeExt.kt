@@ -83,7 +83,9 @@ class ExportPaths(val uri: String) {
     fun byType(type: String) = namedPath.computeIfAbsent(type) { get(type, filename) }
 
     companion object {
-        fun get(first: String) = AppPaths.DOC_EXPORT_DIR.resolve(first)
+        val BASE_DIR = AppPaths.DOC_EXPORT_DIR
+
+        fun get(first: String) = BASE_DIR.resolve(first)
 
         fun get(first: String, second: String) = get(first).resolve(second)
     }

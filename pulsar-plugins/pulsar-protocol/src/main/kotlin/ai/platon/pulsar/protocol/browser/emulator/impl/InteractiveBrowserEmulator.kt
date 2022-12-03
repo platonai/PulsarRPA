@@ -400,8 +400,9 @@ open class InteractiveBrowserEmulator(
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.interactSettings.scriptTimeout
         val fetchTask = interactTask.fetchTask
+        val scrollCount = interactTask.interactSettings.scrollCount
 
-        val initialScroll = 5
+        val initialScroll = if (scrollCount > 0) 5 else 0
         val delayMillis = 500L * 2
 //        val maxRound = scriptTimeout.toMillis() / delayMillis
         val maxRound = 60
@@ -451,6 +452,10 @@ open class InteractiveBrowserEmulator(
 
     protected open suspend fun scrollDown(interactTask: InteractTask, result: InteractResult) {
         val interactSettings = interactTask.interactSettings
+        if (interactSettings.scrollCount <= 0) {
+            return
+        }
+
         val random = ThreadLocalRandom.current().nextInt(3)
         val scrollDownCount = (interactSettings.scrollCount + random - 1).coerceAtLeast(1)
         val scrollInterval = interactSettings.scrollInterval.toMillis()

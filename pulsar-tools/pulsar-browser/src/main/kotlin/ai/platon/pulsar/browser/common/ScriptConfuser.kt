@@ -16,7 +16,7 @@ class ScriptConfuser {
             script.replace(scriptNamePrefix, CIPHER)
         }
 
-        val IDENTIFY_NAME_MANGLER: (String) -> String = { script -> script }
+        val IDENTITY_NAME_MANGLER: (String) -> String = { script -> script }
     }
 
     var nameMangler: (String) -> String = DEFAULT_NAME_MANGLER
