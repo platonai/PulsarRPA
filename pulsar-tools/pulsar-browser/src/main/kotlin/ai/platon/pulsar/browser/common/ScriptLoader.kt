@@ -79,6 +79,8 @@ class ScriptLoader(
 
         preloadJs = sb.toString()
 
+        reportPreloadJs(preloadJs)
+
         return preloadJs
     }
 
@@ -87,7 +89,7 @@ class ScriptLoader(
         val configs = GsonBuilder().create().toJson(jsInitParameters.toMap())
 
         // set predefined variables shared between javascript and jvm program
-        val configVar = confuser.confuse( "${ScriptConfuser.scriptNamePrefix}CONFIGS")
+        val configVar = confuser.confuse( "${ScriptConfuser.SCRIPT_NAME_PREFIX}CONFIGS")
         return """
             ;
             let $configVar = $configs;
@@ -108,6 +110,13 @@ class ScriptLoader(
                 .filter { it.toString().endsWith(".js") }
                 .associateTo(jsCache) { it.toString() to Files.readString(it) }
         }
+    }
+
+    private fun reportPreloadJs(script: String) {
+        val dir = AppPaths.REPORT_DIR.resolve("browser/js")
+        Files.createDirectories(dir)
+        val report = Files.writeString(dir.resolve("preload.gen.js"), script)
+        logger.info("Generated js: file://$report")
     }
 
     private fun initDefaultJsParameters() {

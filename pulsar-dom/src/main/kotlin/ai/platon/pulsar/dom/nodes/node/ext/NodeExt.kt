@@ -251,11 +251,11 @@ val Node.rectangle get() = Rectangle(x, y, width, height)
 
 val Node.area get() = width * height
 
-/** Hidden flag set by browser */
+/** Whether the hidden flag is set by javascript */
 val Node.hasHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_HIDDEN)
-/** Overflow hidden flag set by browser */
+/** Whether the overflow hidden flag is set by javascript */
 val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HIDDEN)
-/** Check if the node is visible or not */
+/** Whether the node is visible */
 val Node.isVisible: Boolean get() {
     return when {
         isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have an empty rectangle?
@@ -263,7 +263,7 @@ val Node.isVisible: Boolean get() {
     }
 }
 
-/** Check if the node is visible or not */
+/** Whether the node is visible */
 val Node.isHidden: Boolean get() = !this.isVisible
 /** Whether the element is floating */
 // val Node.isAbsolute: Boolean get() = hasAttr("_absolute")

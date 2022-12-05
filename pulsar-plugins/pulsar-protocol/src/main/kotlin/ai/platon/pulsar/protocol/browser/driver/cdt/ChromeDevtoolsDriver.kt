@@ -19,7 +19,6 @@ import com.github.kklisura.cdt.protocol.types.page.Viewport
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -71,7 +70,7 @@ class ChromeDevtoolsDriver(
     private val rpc = RobustRPC(this)
 
     private val enableStartupScript get() = browserSettings.isStartupScriptEnabled
-    private val initScripts = mutableListOf<String>()
+    private val initScriptCache = mutableListOf<String>()
     private val closed = AtomicBoolean()
 
     override var lastActiveTime = Instant.now()
@@ -90,7 +89,7 @@ class ChromeDevtoolsDriver(
     }
 
     override suspend fun addInitScript(script: String) {
-        initScripts.add(script)
+        initScriptCache.add(script)
 //        try {
 //            rpc.invokeDeferred("addInitScript") {
 //                pageAPI?.enable()
@@ -721,29 +720,33 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    private fun addScriptToEvaluateOnNewDocument(): String {
+    private fun addScriptToEvaluateOnNewDocument() {
         val js = browserSettings.scriptLoader.getPreloadJs(false)
-        if (js !in initScripts) {
-            // come first
-            initScripts.add(0, js)
+        if (js !in initScriptCache) {
+            // utils comes first
+            initScriptCache.add(0, js)
         }
 
-        initScripts.forEach {
-            pageAPI?.addScriptToEvaluateOnNewDocument(it)
+        val confuser = browserSettings.confuser
+        initScriptCache.forEach {
+            pageAPI?.addScriptToEvaluateOnNewDocument(confuser.confuse(it))
         }
-        initScripts.clear()
 
-        val script = browserSettings.confuser.confuse(initScripts.joinToString("\n;\n\n\n;\n"))
-        reportPreloadJs(script)
+        if (logger.isDebugEnabled) {
+            reportInjectedJs()
+        }
 
-        return script
+        // the cache is used for a single navigation, so we have to clear it
+        initScriptCache.clear()
     }
 
-    private fun reportPreloadJs(script: String) {
+    private fun reportInjectedJs() {
+        val script = browserSettings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
+
         val dir = AppPaths.REPORT_DIR.resolve("browser/js")
         Files.createDirectories(dir)
-        val report = Files.writeString(dir.resolve("preload.gen.js"), script)
-        logger.info("Generated js: file://$report")
+        val report = Files.writeString(dir.resolve("preload.all.js"), script)
+        logger.info("All injected js: file://$report")
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {
