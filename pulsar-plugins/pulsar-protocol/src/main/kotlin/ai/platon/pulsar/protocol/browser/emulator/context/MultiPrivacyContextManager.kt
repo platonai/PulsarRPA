@@ -152,14 +152,20 @@ class MultiPrivacyContextManager(
     private fun startMaintainTimerIfNecessary() {
         if (maintainTimer.compareAndSet(null, java.util.Timer("PrivacyCMMT", true))) {
             val timer = maintainTimer.get()
-            timer?.scheduleAtFixedRate(Duration.ofMinutes(5), Duration.ofSeconds(10)) {
+            timer?.scheduleAtFixedRate(Duration.ofMinutes(2), Duration.ofSeconds(10)) {
                 maintain()
             }
         }
     }
 
+    /**
+     * Check if there are hang contexts, close all the hang contexts
+     * */
     private fun maintain() {
-        activeContexts.filterValues { it.isIdle }.values.forEach { close(it) }
+        activeContexts.filterValues { it.isIdle }.values.forEach {
+            logger.warn("Privacy context hangs unexpectedly | {}", it.id.display)
+            close(it)
+        }
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {

@@ -88,13 +88,14 @@ class WebDriverContext(
     }
 
     private fun doClose() {
+        val asap = !AppContext.isActive || availableMemory < memoryToReserve
         // not shutdown, wait longer
-        if (AppContext.isActive) {
+        if (asap) {
+            closeUnderlyingLayerImmediately()
+        } else {
             waitUntilAllDoneNormally(Duration.ofMinutes(3))
             // close underlying IO based modules asynchronously
             closeUnderlyingLayerGracefully()
-        } else {
-            closeUnderlyingLayerImmediately()
         }
 
         waitUntilNoRunningTasks(Duration.ofSeconds(10))
