@@ -12,50 +12,75 @@ import ai.platon.pulsar.persist.gora.generated.GPageModel
 class PageModel(
         val pageModel: GPageModel
 ) {
+    @get:Synchronized
     val fieldGroups get() = pageModel.fieldGroups
 
+    @get:Synchronized
     val numGroups get() = fieldGroups.size
 
+    @get:Synchronized
     val numFields get() = fieldGroups.sumOf { it.fields.size }
 
+    @get:Synchronized
     val numNonNullFields get() = fieldGroups.sumOf { it.fields.count { it.value != null } }
 
+    @get:Synchronized
     val numNonBlankFields get() = fieldGroups.sumOf { it.fields.count { !it.value.isNullOrBlank() } }
 
+    @get:Synchronized
     val isEmpty: Boolean get() = fieldGroups.isEmpty()
 
+    @get:Synchronized
     val isNotEmpty: Boolean get() = !isEmpty
 
+    @get:Synchronized
     val boxedFieldGroups get() = fieldGroups.map { FieldGroup.box(it) }
 
     fun unbox() = pageModel
 
+    @Synchronized
     fun firstOrNull() = if (isEmpty) null else get(0)
 
+    @Synchronized
     operator fun get(i: Int) = FieldGroup.box(fieldGroups[i])
 
+    @Synchronized
     fun add(fieldGroup: FieldGroup) = fieldGroups.add(fieldGroup.unbox())
 
+    @Synchronized
     fun add(index: Int, fieldGroup: FieldGroup) = fieldGroups.add(index, fieldGroup.unbox())
 
-    fun emplace(groupId: Int, group: String, fields: Map<String, String?>): FieldGroup {
-        return emplace(groupId, 0, group, fields)
+    @Synchronized
+    fun emplace(groupId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
+        return emplace(groupId, 0, groupName, fields)
     }
 
-    fun emplace(groupId: Int, parentId: Int, group: String, fields: Map<String, String?>): FieldGroup {
-        val fieldGroup = FieldGroup.newFieldGroup(groupId.toLong(), group, parentId.toLong())
-        fieldGroup.fields = fields
-        add(fieldGroup)
+    @Synchronized
+    fun emplace(groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
+        var fieldGroup = findById(groupId)
+        if (fieldGroup == null) {
+            fieldGroup = FieldGroup.newFieldGroup(groupId.toLong(), groupName, parentId.toLong())
+            add(fieldGroup)
+        }
+
+        // fieldGroup.fields = fields
+        fieldGroup.unbox().fields.putAll(fields)
         return fieldGroup
     }
 
-    fun clear() = fieldGroups.clear()
-
-    fun findById(id: Long): FieldGroup? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == id }
+    @Synchronized
+    fun findById(groupId: Int): FieldGroup? {
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
         return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
     }
 
+    @Synchronized
+    fun remove(groupId: Int) = fieldGroups.removeIf { it.id == groupId.toLong() }
+
+    @Synchronized
+    fun clear() = fieldGroups.clear()
+
+    @Synchronized
     fun deepCopy(): PageModel {
         val other = GPageModel.newBuilder(pageModel).build()
         return PageModel(other)

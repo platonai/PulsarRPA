@@ -31,6 +31,10 @@ class ChromeDevtoolsDriver(
     override val browser: ChromeDevtoolsBrowser,
 ) : AbstractWebDriver(browser) {
 
+    companion object {
+        val LOCALHOST_PREFIX = "http://localfile.org"
+    }
+
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
@@ -696,9 +700,8 @@ class ChromeDevtoolsDriver(
 
         navigateUrl = url
         // TODO: temporary solution to server local file
-        val LOCALHOST_PREFIX = "http://localfile.org"
         if (LOCALHOST_PREFIX in url) {
-            val url0 = url.removePrefix("http://localfile.org")
+            val url0 = url.removePrefix(LOCALHOST_PREFIX)
             // TODO: handle OS
             pageAPI?.navigate("file://$url0")
         } else {

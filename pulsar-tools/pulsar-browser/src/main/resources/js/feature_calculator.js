@@ -7,7 +7,7 @@
 /**
  * Create a new NodeFeatureCalculator
  */
-let __pulsar_NodeFeatureCalculator = function() {
+let __pulsar_NodeFeatureCalculator = __pulsar_NodeFeatureCalculator || function() {
     this.stopped = false;
 
     this.config = __pulsar_CONFIGS || __pulsar_DEFAULT_CONFIGS;

@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.browser.BrowserErrorCode
+import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -14,8 +14,6 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
-import org.apache.commons.collections4.list.FixedSizeList
-import org.apache.commons.collections4.map.PassiveExpiringMap
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -48,6 +46,7 @@ abstract class PrivacyContext(
         val IDENT_PREFIX = "cx."
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(20)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
     }
@@ -73,7 +72,12 @@ abstract class PrivacyContext(
     val startTime = Instant.now()
     var lastActiveTime = startTime
     val elapsedTime get() = Duration.between(startTime, Instant.now())
-    val idleTimeout = Duration.ofMinutes(20)
+    private val fetchTaskTimeout
+        get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
+    private val privacyContextIdleTimeout
+        get() = conf.getDuration(FETCH_PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
+    private val idleTimeout
+        get() = if (privacyContextIdleTimeout > fetchTaskTimeout) privacyContextIdleTimeout else fetchTaskTimeout
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     val numRunningTasks = AtomicInteger()
 

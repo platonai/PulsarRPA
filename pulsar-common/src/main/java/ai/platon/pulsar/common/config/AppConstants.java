@@ -141,6 +141,7 @@ public interface AppConstants {
     int FETCH_PRIORITY_EMERGENT_INJECT = 30_000;
     int FETCH_PRIORITY_MAX = 10 * 10_000;
     int FETCH_THREADS = AppContext.INSTANCE.getNCPU();
+    Duration FETCH_TASK_TIMEOUT_DEFAULT = Duration.ofMinutes(10);
 
     String CRAWL_DEPTH_FIRST = "depthFirst";
     String CRAWL_STRICT_DEPTH_FIRST = "strictDepthFirst";

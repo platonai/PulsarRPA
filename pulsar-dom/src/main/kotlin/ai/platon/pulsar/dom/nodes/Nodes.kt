@@ -14,11 +14,23 @@ import java.awt.Rectangle
 import java.util.regex.Pattern
 
 /**
- * Attribute names
+ * General labels for a node
  * */
 const val A_LABELS = "a-labels"
+/**
+ * ML labels for a node
+ * */
 const val A_ML_LABELS = "a-ml-labels"
+/**
+ * The deduced caption of a page section
+ * */
 const val A_CAPTION = "a-caption"
+/**
+ * Short name for ML label for a node. To annotate a text node, use L0, L1, L2, L3, and so on,
+ * where the suffix number is the sibling order of the text nodes.
+ * The label should consistent with the visual information: v0, v1, v2, v3, and so on.
+ * */
+const val ML_LABEL = "L"
 
 /**
  * Variable names
@@ -194,9 +206,8 @@ fun convertBox(box: String): String {
     val matcher = BOX_SYNTAX_PATTERN.matcher(box2)
     if (matcher.find()) {
         return box2.split(",")
-                .map { it.split('x', 'X') }
-                .map { "*:in-box(${it[0]}, ${it[1]})" }
-                .joinToString()
+            .map { it.split('x', 'X') }
+            .joinToString { "*:in-box(${it[0]}, ${it[1]})" }
     } else if (BOX_CSS_PATTERN.matcher(box2).matches()) {
         return box2
     }

@@ -61,14 +61,19 @@ class ChromeDevtoolsBrowser(
     }
 
     override fun maintain() {
-        listTabs().filter { it.id !in drivers.keys }.map { newDriver(it, true) }
+        listTabs().filter { it.id !in drivers.keys }.map {
+            if (it.url?.startsWith("http") == true) {
+                logger.info("Recover tab | {}", it.url)
+                newDriver(it, true)
+            }
+        }
 
 //        println("\n\n\n")
 //        chromeTabs.forEach {
 //            println(it.id + "\t" + it.parentId + "\t|\t" + it.url)
 //        }
 
-        closeRecoveredIdleDrivers()
+        // closeRecoveredIdleDrivers()
     }
 
     private fun newDriver(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {

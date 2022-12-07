@@ -3,8 +3,7 @@ package ai.platon.pulsar.crawl.impl
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.common.config.AppConstants.BROWSER_TAB_REQUIRED_MEMORY
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.UnicodeEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
@@ -143,7 +142,7 @@ open class StreamingCrawler(
     private var proxyOutOfService = 0
 
     val outOfWorkTimeout = Duration.ofMinutes(10)
-    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, Duration.ofMinutes(10))
+    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
 
     private var lastActiveTime = Instant.now()
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())

@@ -105,9 +105,9 @@ abstract class AbstractBrowseEvent(
 }
 
 abstract class AbstractPageEvent(
-    override val loadEvent: LoadEvent,
-    override val browseEvent: BrowseEvent,
-    override val crawlEvent: CrawlEvent
+    override var loadEvent: LoadEvent,
+    override var browseEvent: BrowseEvent,
+    override var crawlEvent: CrawlEvent
 ): PageEvent {
 
     override fun chain(other: PageEvent): PageEvent {
