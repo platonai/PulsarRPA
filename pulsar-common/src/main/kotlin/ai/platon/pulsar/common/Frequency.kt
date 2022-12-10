@@ -108,9 +108,12 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
         return counter.iterator()
     }
 
+    /**
+     * The ordinal for each element in the element set.
+     * */
     fun ordinalMap(): Map<T, Int> {
         val map = LinkedHashMap<T, Int>()
-        entrySet().forEachIndexed { i, e -> map[e.element] = i }
+        elementSet().forEachIndexed { i, e -> map[e] = i }
         return map
     }
 

@@ -4,8 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_HIDDEN
-import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
@@ -112,9 +111,9 @@ val nilNode = NILNode
 
 val Document.isNil get() = this === NILDocument
 
-val Document.pulsarMetaElement get() = getElementById("#${AppConstants.PULSAR_META_INFORMATION_ID}")
+val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_ID)
 
-val Document.pulsarScriptElement get() = getElementById("#${AppConstants.PULSAR_SCRIPT_SECTION_ID}")
+val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_ID)
 
 val Document.pulsarScript get() = ownerDocument.pulsarScriptElement?.text()
 
