@@ -227,8 +227,6 @@ class LoadingWebDriverPool constructor(
         synchronized(driverFactory) {
             try {
                 // create driver from remote unmanaged tabs, close unmanaged idle drivers, etc
-                _browser?.maintain()
-
                 if (shouldCreateDriver()) {
                     createWebDriver(volatileConfig)
                 }

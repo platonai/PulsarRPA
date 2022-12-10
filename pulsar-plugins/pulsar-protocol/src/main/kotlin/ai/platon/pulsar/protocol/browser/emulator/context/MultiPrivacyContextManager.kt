@@ -18,9 +18,14 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
+import kotlinx.coroutines.asCoroutineDispatcher
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 class MultiPrivacyContextManager(
@@ -41,7 +46,11 @@ class MultiPrivacyContextManager(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
-    private val maintainTimer = AtomicReference<Timer>()
+
+    /**
+     * TODO: is it better to use a global scheduled executor service?
+     * */
+    private val maintainExecutor = AtomicReference<ScheduledExecutorService>()
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
@@ -150,11 +159,8 @@ class MultiPrivacyContextManager(
     }
 
     private fun startMaintainTimerIfNecessary() {
-        if (maintainTimer.compareAndSet(null, java.util.Timer("PrivacyCMMT", true))) {
-            val timer = maintainTimer.get()
-            timer?.scheduleAtFixedRate(Duration.ofMinutes(2), Duration.ofSeconds(10)) {
-                maintain()
-            }
+        if (maintainExecutor.compareAndSet(null, Executors.newSingleThreadScheduledExecutor())) {
+            maintainExecutor.get()?.scheduleAtFixedRate(this::maintain, 60 * 2, 10, TimeUnit.SECONDS)
         }
     }
 

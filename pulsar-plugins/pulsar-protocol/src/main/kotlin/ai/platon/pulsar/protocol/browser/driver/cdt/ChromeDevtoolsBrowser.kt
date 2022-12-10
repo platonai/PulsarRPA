@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
+import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
@@ -10,6 +11,11 @@ import com.github.kklisura.cdt.protocol.ChromeDevTools
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
+import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class ChromeDevtoolsBrowser(
     id: BrowserId,
@@ -25,10 +31,16 @@ class ChromeDevtoolsBrowser(
     private val devtools: List<ChromeDevTools>
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
 
+    /**
+     * TODO: is it better to use a global scheduled executor service?
+     * */
+    private val maintainExecutor = AtomicReference<ScheduledExecutorService>()
+
     @Synchronized
     @Throws(WebDriverException::class)
     override fun newDriver(): ChromeDevtoolsDriver {
         try {
+            startMaintainTimerIfNecessary()
             // In chrome every tab is a separate process
             val chromeTab = createTab()
             return newDriver(chromeTab, false)
@@ -74,6 +86,12 @@ class ChromeDevtoolsBrowser(
 //        }
 
         // closeRecoveredIdleDrivers()
+    }
+
+    private fun startMaintainTimerIfNecessary() {
+        if (maintainExecutor.compareAndSet(null, Executors.newSingleThreadScheduledExecutor())) {
+            maintainExecutor.get()?.scheduleAtFixedRate(this::maintain, 60 * 2, 10, TimeUnit.SECONDS)
+        }
     }
 
     private fun newDriver(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {
