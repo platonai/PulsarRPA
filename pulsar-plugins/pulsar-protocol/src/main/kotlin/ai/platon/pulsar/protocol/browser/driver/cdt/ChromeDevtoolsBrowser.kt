@@ -85,7 +85,7 @@ class ChromeDevtoolsBrowser(
 //            println(it.id + "\t" + it.parentId + "\t|\t" + it.url)
 //        }
 
-        // closeRecoveredIdleDrivers()
+        closeRecoveredIdleDrivers()
     }
 
     private fun startMaintainTimerIfNecessary() {
@@ -114,9 +114,9 @@ class ChromeDevtoolsBrowser(
     private fun closeRecoveredIdleDrivers() {
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
-        val unmanagedTabTimeout = Duration.ofSeconds(30)
+        val unmanagedTabTimeout = Duration.ofSeconds(60)
         val unmanagedDrivers = chromeDrivers.filter { it.isRecovered }
-            .filter { Duration.between(lastActiveTime, Instant.now()) > unmanagedTabTimeout }
+            .filter { Duration.between(it.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         if (unmanagedDrivers.isNotEmpty()) {
             logger.debug("Closing {} unmanaged drivers", unmanagedDrivers.size)
             require(unmanagedDrivers.all { it.navigateHistory.isEmpty() }) {
