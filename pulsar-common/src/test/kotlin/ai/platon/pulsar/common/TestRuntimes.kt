@@ -26,7 +26,7 @@ import java.nio.file.Files
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class TestAppRuntimes {
+class TestRuntimes {
     @Test
     fun testEnv() {
         println(System.getenv("USER"))

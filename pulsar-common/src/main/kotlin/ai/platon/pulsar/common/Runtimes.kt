@@ -15,6 +15,9 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
+/**
+ * Runtime utility
+ * */
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
 

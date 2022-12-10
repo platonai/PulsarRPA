@@ -126,17 +126,6 @@ open class StreamingCrawler(
     val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
 
-    private val totalMemory get() = Runtime.getRuntime().totalMemory()
-    private val totalMemoryGiB get() = ByteUnit.BYTE.toGiB(totalMemory.toDouble())
-    private val availableMemory get() = AppMetrics.availableMemory
-    private val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
-    private val memoryToReserveLarge get() = conf.getDouble(BROWSER_MEMORY_TO_RESERVE_KEY, DEFAULT_BROWSER_RESERVED_MEMORY)
-    private val memoryToReserve = when {
-        totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 3 GiB
-        totalMemoryGiB >= 30 -> memoryToReserveLarge
-        else -> BROWSER_TAB_REQUIRED_MEMORY
-    }
-
     private val globalCache get() = session.globalCache
     private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull(ProxyPool::class)
     private var proxyOutOfService = 0
@@ -309,7 +298,7 @@ open class StreamingCrawler(
         }
 
         var k = 0
-        while (isActive && availableMemory < memoryToReserve) {
+        while (isActive && AppRuntime.isLowMemory) {
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
             }
@@ -582,9 +571,9 @@ open class StreamingCrawler(
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             globalRunningTasks,
-            Strings.compactFormat(availableMemory),
-            Strings.compactFormat(memoryToReserve.toLong()),
-            Strings.compactFormat(availableMemory - memoryToReserve.toLong())
+            Strings.compactFormat(AppRuntime.availableMemory),
+            Strings.compactFormat(AppRuntime.memoryToReserve.toLong()),
+            Strings.compactFormat(AppRuntime.availableMemory - AppRuntime.memoryToReserve.toLong())
         )
         session.globalCache.clearPDCaches()
 
@@ -605,7 +594,7 @@ open class StreamingCrawler(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.compactFormat(availableMemory))
+                    contextLeaksRate, Strings.compactFormat(AppRuntime.availableMemory))
             delay(1000)
 
             // trigger the meter updating

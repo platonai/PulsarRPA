@@ -279,6 +279,10 @@ public interface CapabilityTypes {
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     /**
+     * Whether reuse the recovered drivers to serve new tasks.
+     * */
+    String BROWSER_REUSE_RECOVERED_DRIVERS = "browser.reuse.recovered.drivers";
+    /**
      * @deprecated Use event handlers instead
      * */
     @Deprecated

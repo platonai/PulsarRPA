@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.AppRuntime
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -33,8 +34,6 @@ class WebDriverContext(
         private val numGlobalRunningTasks = AtomicInteger()
         private val globalTasks = AppMetrics.reg.meter(this, "globalTasks")
         private val globalFinishedTasks = AppMetrics.reg.meter(this, "globalFinishedTasks")
-        private val availableMemory get() = AppMetrics.availableMemory
-        private val memoryToReserve = ByteUnit.GIB.toBytes(2.0)
 
         init {
             AppMetrics.reg.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
@@ -88,7 +87,7 @@ class WebDriverContext(
     }
 
     private fun doClose() {
-        val asap = !AppContext.isActive || availableMemory < memoryToReserve
+        val asap = !AppContext.isActive || AppRuntime.isLowMemory
         // not shutdown, wait longer
         if (asap) {
             closeUnderlyingLayerImmediately()
@@ -143,7 +142,7 @@ class WebDriverContext(
         var n = timeout.seconds
         lock.lockInterruptibly()
         try {
-            while (runningTasks.isNotEmpty() && availableMemory > memoryToReserve && n-- > 0) {
+            while (runningTasks.isNotEmpty() && !AppRuntime.isLowMemory && n-- > 0) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
         } finally {
@@ -153,9 +152,9 @@ class WebDriverContext(
         val isShutdown = if (AppContext.isActive) "" else " (shutdown)"
         val display = browserId.display
         val message = when {
-            availableMemory < memoryToReserve ->
+            AppRuntime.isLowMemory ->
                 String.format("Low memory (%.2fGiB), close %d retired browsers immediately$isShutdown | $display",
-                    ByteUnit.BYTE.toGiB(availableMemory.toDouble()), runningTasks.size)
+                    ByteUnit.BYTE.toGiB(AppRuntime.availableMemory.toDouble()), runningTasks.size)
             n <= 0L -> String.format("Timeout (still %d running tasks)$isShutdown | $display", runningTasks.size)
             n > 0 -> String.format("All tasks return in %d seconds$isShutdown | $display", timeout.seconds - n)
             else -> ""

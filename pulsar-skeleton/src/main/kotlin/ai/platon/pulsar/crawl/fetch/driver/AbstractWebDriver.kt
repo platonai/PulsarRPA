@@ -52,6 +52,8 @@ abstract class AbstractWebDriver(
 
     override var isRecovered: Boolean = false
 
+    override var isReused: Boolean = false
+
     override val status = AtomicReference(WebDriver.Status.UNKNOWN)
 
     override var lastActiveTime: Instant = Instant.now()

@@ -3,15 +3,19 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
+import ai.platon.pulsar.common.AppRuntime
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import com.github.kklisura.cdt.protocol.ChromeDevTools
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -20,14 +24,20 @@ import java.util.concurrent.atomic.AtomicReference
 class ChromeDevtoolsBrowser(
     id: BrowserId,
     val chrome: RemoteChrome,
-    private val launcher: ChromeLauncher,
+    private val launcher: ChromeLauncher
 ): AbstractBrowser(id, launcher.options.browserSettings) {
 
     private val logger = LoggerFactory.getLogger(ChromeDevtoolsBrowser::class.java)
 
     private val toolsConfig = DevToolsConfig()
+
+    private val conf get() = browserSettings.conf
+
+    private val reuseRecovered get() = conf.getBoolean(BROWSER_REUSE_RECOVERED_DRIVERS, false)
+
     private val chromeTabs: List<ChromeTab>
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.chromeTab }
+
     private val devtools: List<ChromeDevTools>
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
 
@@ -94,7 +104,20 @@ class ChromeDevtoolsBrowser(
         }
     }
 
+    /**
+     * Create a new driver.
+     * */
     private fun newDriver(chromeTab: ChromeTab, recovered: Boolean): ChromeDevtoolsDriver {
+        if (!recovered && reuseRecovered) {
+            val driver = drivers.values
+                .filterIsInstance<ChromeDevtoolsDriver>()
+                .firstOrNull { it.isRecovered && !it.isReused }
+            if (driver != null) {
+                driver.isReused = true
+                return driver
+            }
+        }
+
         val devTools = createDevTools(chromeTab, toolsConfig)
         val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
         driver.isRecovered = recovered
@@ -114,15 +137,16 @@ class ChromeDevtoolsBrowser(
     private fun closeRecoveredIdleDrivers() {
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
-        val unmanagedTabTimeout = Duration.ofSeconds(60)
-        val unmanagedDrivers = chromeDrivers.filter { it.isRecovered }
-            .filter { Duration.between(it.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
-        if (unmanagedDrivers.isNotEmpty()) {
-            logger.debug("Closing {} unmanaged drivers", unmanagedDrivers.size)
-            require(unmanagedDrivers.all { it.navigateHistory.isEmpty() }) {
+        val seconds = if (AppRuntime.isLowMemory) 15L else 60L
+        val unmanagedTabTimeout = Duration.ofSeconds(seconds)
+        val isIdle = { driver: WebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
+        val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }
+        if (unmanagedTimeoutDrivers.isNotEmpty()) {
+            logger.debug("Closing {} unmanaged drivers", unmanagedTimeoutDrivers.size)
+            require(unmanagedTimeoutDrivers.all { it.navigateHistory.isEmpty() }) {
                 "Unmanaged driver should has no history"
             }
-            unmanagedDrivers.forEach { it.close() }
+            unmanagedTimeoutDrivers.forEach { it.close() }
         }
     }
 

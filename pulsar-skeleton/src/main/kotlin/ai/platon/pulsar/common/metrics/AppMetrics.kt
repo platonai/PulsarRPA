@@ -84,33 +84,12 @@ class AppMetrics(
         val defaultMetricRegistry = SharedMetricRegistries.getDefault() as AppMetricRegistry
         val reg = defaultMetricRegistry
 
-        val startTime = Instant.now()
-        val elapsedTime get() = Duration.between(startTime, Instant.now())
-        val systemInfo = SystemInfo()
-        // OSHI cached the value, so it's fast and safe to be called frequently
-        val memoryInfo get() = systemInfo.hardware.memory
-        /**
-         * Free memory in bytes
-         * Free memory is the amount of memory which is currently not used for anything.
-         * This number should be small, because memory which is not used is simply wasted.
-         * */
-        val freeMemory get() = Runtime.getRuntime().freeMemory()
-        val freeMemoryGiB get() = ByteUnit.BYTE.toGiB(freeMemory.toDouble())
-        /**
-         * Available memory in bytes
-         * Available memory is the amount of memory which is available for allocation to a new process or to existing
-         * processes.
-         * */
-        val availableMemory get() = memoryInfo.available
-
-        val freeSpace get() = Runtimes.unallocatedDiskSpaces()
-
         init {
             mapOf(
-                "startTime" to Gauge { startTime },
-                "elapsedTime" to Gauge { elapsedTime },
-                "availableMemory" to Gauge { Strings.compactFormat(availableMemory) },
-                "freeSpace" to Gauge { freeSpace.map { Strings.compactFormat(it) } }
+                "startTime" to Gauge { AppRuntime.startTime },
+                "elapsedTime" to Gauge { AppRuntime.elapsedTime },
+                "availableMemory" to Gauge { Strings.compactFormat(AppRuntime.availableMemory) },
+                "freeSpace" to Gauge { AppRuntime.freeSpace.map { Strings.compactFormat(it) } }
             ).let { reg.registerAll(this, it) }
         }
     }
