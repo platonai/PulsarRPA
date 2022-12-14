@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.model
 
+import ai.platon.pulsar.persist.WebPage.u8
 import ai.platon.pulsar.persist.gora.generated.GPageModel
 
 /**
@@ -51,21 +52,28 @@ class PageModel(
     fun add(index: Int, fieldGroup: FieldGroup) = fieldGroups.add(index, fieldGroup.unbox())
 
     @Synchronized
+    fun emplace(groupId: Int, fields: Map<String, String?>): FieldGroup {
+        return emplace(groupId, 0, "", fields)
+    }
+
+    @Synchronized
     fun emplace(groupId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
         return emplace(groupId, 0, groupName, fields)
     }
 
     @Synchronized
     fun emplace(groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
-        var fieldGroup = findById(groupId)
+        var fieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
         if (fieldGroup == null) {
-            fieldGroup = FieldGroup.newFieldGroup(groupId.toLong(), groupName, parentId.toLong())
-            add(fieldGroup)
+            fieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
+            fieldGroups.add(fieldGroup)
         }
 
         // fieldGroup.fields = fields
-        fieldGroup.unbox().fields.putAll(fields)
-        return fieldGroup
+        fieldGroup.fields.putAll(fields.entries.associate { u8(it.key) to it.value })
+//        fieldGroup.setDirty()
+//        pageModel.setDirty()
+        return FieldGroup.box(fieldGroup)
     }
 
     @Synchronized

@@ -1,33 +1,12 @@
-package ai.platon.pulsar.persist
+package ai.platon.pulsar.persist.tools
 
+import ai.platon.pulsar.persist.WebPage
 import org.apache.commons.lang3.StringUtils
-import org.junit.Test
 import kotlin.reflect.KType
 import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.memberExtensionProperties
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.javaType
-import kotlin.reflect.jvm.jvmErasure
-import kotlin.test.assertTrue
 
-class TestWebPageCodeGeneration {
+class WebPageCodeGenerator {
 
-    private fun convertReturnType(type: KType): String {
-        var s = type.toString().filter { it != '!' }
-            .replace("kotlin.", "")
-            .replace("java.nio.", "")
-            .replace("collections.(Mutable)", "")
-            .replace("java.time.", "")
-
-        if (!s.contains("<")) {
-            s = s.substringAfterLast(".")
-        }
-
-        return s
-    }
-
-    @Test
     fun generateJavaInterface() {
         val properties = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
@@ -46,7 +25,6 @@ class TestWebPageCodeGeneration {
         println(clazz)
     }
 
-    @Test
     fun generateJavaImmutableClass() {
         val properties = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
@@ -65,7 +43,6 @@ class TestWebPageCodeGeneration {
         println(clazz)
     }
 
-    @Test
     fun generateKotlinImmutableClass() {
         val properties = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
@@ -86,7 +63,6 @@ class TestWebPageCodeGeneration {
         println(clazz)
     }
 
-    @Test
     fun generateKotlinMutableClass() {
         val properties = WebPage::class.declaredMemberFunctions
             .filter { it.isOpen }
@@ -104,4 +80,26 @@ class TestWebPageCodeGeneration {
 
         println(clazz)
     }
+
+    private fun convertReturnType(type: KType): String {
+        var s = type.toString().filter { it != '!' }
+            .replace("kotlin.", "")
+            .replace("java.nio.", "")
+            .replace("collections.(Mutable)", "")
+            .replace("java.time.", "")
+
+        if (!s.contains("<")) {
+            s = s.substringAfterLast(".")
+        }
+
+        return s
+    }
+}
+
+fun main() {
+    val generator = WebPageCodeGenerator()
+    generator.generateJavaInterface()
+    generator.generateJavaImmutableClass()
+    generator.generateKotlinImmutableClass()
+    generator.generateKotlinMutableClass()
 }

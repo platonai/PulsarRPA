@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import com.github.kklisura.cdt.protocol.ChromeDevTools
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -114,6 +115,8 @@ class ChromeDevtoolsBrowser(
                 .firstOrNull { it.isRecovered && !it.isReused }
             if (driver != null) {
                 driver.isReused = true
+                val currentUrl = runBlocking { driver.currentUrl() }
+                logger.debug("Reuse recovered driver | {}", currentUrl)
                 return driver
             }
         }
@@ -143,9 +146,13 @@ class ChromeDevtoolsBrowser(
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }
         if (unmanagedTimeoutDrivers.isNotEmpty()) {
             logger.debug("Closing {} unmanaged drivers", unmanagedTimeoutDrivers.size)
-            require(unmanagedTimeoutDrivers.all { it.navigateHistory.isEmpty() }) {
-                "Unmanaged driver should has no history"
+            val hasHistory = unmanagedTimeoutDrivers.any { it.navigateHistory.isEmpty() }
+            if (hasHistory) {
+                logger.warn("Unmanaged driver should has no history")
             }
+//            require(unmanagedTimeoutDrivers.all { it.navigateHistory.isEmpty() }) {
+//                "Unmanaged driver should has no history"
+//            }
             unmanagedTimeoutDrivers.forEach { it.close() }
         }
     }

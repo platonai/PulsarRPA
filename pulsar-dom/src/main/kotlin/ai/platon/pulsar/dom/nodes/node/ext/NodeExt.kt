@@ -665,17 +665,13 @@ fun Node.addMlLabel(label: String) {
     addTupleItem(A_ML_LABELS, label.trim())
 }
 
-fun Node.removeMlLabel(label: String): Boolean {
-    return removeTupleItem(A_ML_LABELS, label)
-}
+fun Node.removeMlLabel(label: String) = removeTupleItem(A_ML_LABELS, label)
 
-fun Node.getMlLabels(): List<String> {
-    return getTuple(A_ML_LABELS).map { it.toString() }
-}
+fun Node.getMlLabels() = getTuple(A_ML_LABELS).map { it.toString() }
 
-fun Node.hasMlLabel(label: String): Boolean {
-    return hasTupleItem(A_ML_LABELS, label)
-}
+fun Node.hasMlLabel() = getMlLabels().isNotEmpty()
+
+fun Node.hasMlLabel(label: String) = hasTupleItem(A_ML_LABELS, label)
 
 fun Node.clearMlLabels() {
     removeTuple(A_ML_LABELS)

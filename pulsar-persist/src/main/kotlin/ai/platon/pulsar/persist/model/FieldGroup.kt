@@ -6,6 +6,7 @@
  */
 package ai.platon.pulsar.persist.model
 
+import ai.platon.pulsar.persist.WebPage.wrapKey
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 
 class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
@@ -34,11 +35,25 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
             fieldGroup.name = name
         }
 
+    @Deprecated("prone to misuse", ReplaceWith("fieldsCopy"))
     var fields: Map<String, String?>
         get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
         set(value) {
             fieldGroup.fields = value.entries.associate { it.key to it.value }
         }
+
+    val fieldsCopy: Map<String, String?>
+        get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
+
+    operator fun get(key: String): String? {
+//        println("get: " + fieldGroup.fields.keys.map { it.javaClass })
+        return fieldGroup.fields[wrapKey(key)]?.toString()
+    }
+
+    operator fun set(key: String, value: String) {
+        // Note: map
+        fieldGroup.fields[wrapKey(key)] = value
+    }
 
     override fun toString(): String {
         return FieldGroupFormatter(this).format()
@@ -46,12 +61,17 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
 
     companion object {
         @JvmOverloads
-        fun newFieldGroup(id: Long, name: String, parentId: Long = 0): FieldGroup {
+        fun newGFieldGroup(id: Int, name: String = "", parentId: Int = 0): GFieldGroup {
             val fieldGroup = GFieldGroup.newBuilder().build()
-            fieldGroup.id = id
-            fieldGroup.parentId = parentId
+            fieldGroup.id = id.toLong()
+            fieldGroup.parentId = parentId.toLong()
             fieldGroup.name = name
-            return box(fieldGroup)
+            return fieldGroup
+        }
+
+        @JvmOverloads
+        fun newFieldGroup(id: Int, name: String, parentId: Int = 0): FieldGroup {
+            return box(newGFieldGroup(id, name, parentId))
         }
 
         fun box(fieldGroup: GFieldGroup): FieldGroup {

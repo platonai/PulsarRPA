@@ -149,6 +149,8 @@ fun Node.any(predicate: (Node) -> Boolean): Boolean {
     return selectFirstOrNull(predicate) != null
 }
 
+fun Node.none(predicate: (Node) -> Boolean) = !any(predicate)
+
 fun Node.all(predicate: (Node) -> Boolean): Boolean {
     var r = true
 

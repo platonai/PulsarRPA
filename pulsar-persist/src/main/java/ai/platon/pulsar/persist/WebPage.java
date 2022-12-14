@@ -251,6 +251,14 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return new WebPage(url, page, urlReversed, conf);
     }
 
+    /**
+     * Gora wraps map with a DirtyMapWrapper and requires the key's type to be Utf8.
+     * */
+    @NotNull
+    public static Utf8 wrapKey(@NotNull String key) {
+        return u8(key);
+    }
+
     @NotNull
     public static Utf8 wrapKey(@NotNull Mark mark) {
         return u8(mark.value());
