@@ -433,7 +433,9 @@ open class LoadOptions(
                 " The option can be explained as follows:" +
                 " -refresh = -ignoreFailure -i 0s and set page.fetchRetries = 0")
     var refresh = false
-        set(value) = doRefresh(value)
+        set(value) {
+            field = doRefresh(value)
+        }
 
     /**
      * Force retry fetching the page if it's failed last time, or it's marked as gone.
@@ -802,7 +804,7 @@ open class LoadOptions(
             ?.let { appendSelectorIfMissing(it, "a") }
     }
 
-    private fun doRefresh(value: Boolean) {
+    private fun doRefresh(value: Boolean): Boolean {
         if (value) {
             expires = Duration.ZERO
             expireAt = Instant.now()
@@ -812,7 +814,7 @@ open class LoadOptions(
 
             ignoreFailure = true
         }
-        refresh = value
+        return value
     }
 
     companion object {
