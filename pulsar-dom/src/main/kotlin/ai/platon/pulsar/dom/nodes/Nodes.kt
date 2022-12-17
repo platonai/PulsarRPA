@@ -52,7 +52,7 @@ val STANDARD_ATTRIBUTES = setOf(
         "usemap", "valign", "value", "valuetype", "version", "vlink", "vspace", "width"
 )
 
-val NECESSARY_ATTRIBUTES = setOf("link", "src", "text", "title")
+val VALUABLE_ATTRIBUTES = setOf("id", "link", "src", "text", "title", "name", "value")
 
 val TEMPORARY_ATTRIBUTES = setOf(
         "_ps_lazy", "_ps_tp", "_seq", "_cw", "vi", "tv0", "tv1", "tv2", "tv3", "tv4", "tv5", "tv6"

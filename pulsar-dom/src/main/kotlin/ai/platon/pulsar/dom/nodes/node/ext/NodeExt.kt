@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.jsoup.nodes.*
 import org.jsoup.select.NodeTraversor
+import org.jsoup.select.NodeVisitor
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
@@ -133,13 +134,7 @@ fun Element.addClasses(vararg classNames: String): Element {
 
 fun Element.slimCopy(): Element {
     val clone = this.clone()
-    val removal = mutableListOf<Node>()
-    clone.forEach { node ->
-        if (shouldRemoveToSimplify(node)) {
-            removal.add(node)
-        }
-    }
-    removal.forEach { it.remove() }
+    simplifyDOM(clone)
 
     clone.clearAttributesCascaded()
 
@@ -148,38 +143,11 @@ fun Element.slimCopy(): Element {
 
 fun Element.minimalCopy(): Element {
     val clone = this.clone()
-    val removal = mutableListOf<Node>()
-    clone.forEach { node ->
-        if (shouldRemoveToSimplify(node)) {
-            removal.add(node)
-        }
-    }
-    removal.forEach { it.remove() }
+    simplifyDOM(clone)
 
     clone.removeUnnecessaryAttributesCascaded()
 
     return clone
-}
-
-private fun shouldRemoveToSimplify(node: Node): Boolean {
-    val tagName = node.nodeName().lowercase()
-
-    if (tagName in listOf("style", "script", "input")) {
-        return true
-    }
-
-    if (node is Comment || node is CDataNode || node is XmlDeclaration) {
-        return true
-    }
-
-    if (node is Element && !node.isImage && !node.isAnchor) {
-        val text = node.text().trim()
-        if (text.isEmpty()) {
-            return true
-        }
-    }
-
-    return false
 }
 
 fun Element.ownTexts(): List<String> {
@@ -211,7 +179,7 @@ fun Element.removeNonStandardAttributes(): Element {
 }
 
 fun Element.removeUnnecessaryAttributes(): Element {
-    this.attributes().map { it.key }.forEach { if (it !in NECESSARY_ATTRIBUTES) {
+    this.attributes().map { it.key }.forEach { if (it !in VALUABLE_ATTRIBUTES) {
         this.removeAttr(it)
     } }
     return this

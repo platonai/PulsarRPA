@@ -170,15 +170,33 @@ open class BrowserSettings(
 
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
+        /**
+         * Specify the browser type for all fetches.
+         * */
+        @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
             return BrowserSettings
         }
 
+        /**
+         * Indicate the network condition.
+         *
+         * The system adjusts its behavior according to different network conditions
+         * to obtain the best data quality and data collection speed.
+         * */
+        @JvmStatic
         fun withGoodNetwork(): Companion {
             return BrowserSettings
         }
 
+        /**
+         * Indicate the network condition.
+         *
+         * The system adjusts its behavior according to different network conditions
+         * to obtain the best data quality and data collection speed.
+         * */
+        @JvmStatic
         fun withWorseNetwork(): Companion {
             EmulateSettings.worseNetSettings.toSystemProperties()
             return BrowserSettings
@@ -189,6 +207,10 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Launch the browser in GUI mode.
+         * */
+        @JvmStatic
         fun withGUI(): Companion {
             if (isHeadlessOnly) {
                 logger.info("GUI is not available")
@@ -205,6 +227,16 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Launch the browser in GUI mode.
+         * */
+        @JvmStatic
+        fun headed() = withGUI()
+
+        /**
+         * Launch the browser in headless mode.
+         * */
+        @JvmStatic
         fun headless(): Companion {
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
@@ -216,32 +248,77 @@ open class BrowserSettings(
             return BrowserSettings
         }
 
+        /**
+         * Launch the browser in supervised mode.
+         * */
+        @JvmStatic
         fun supervised(): Companion {
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
-
             return BrowserSettings
         }
 
         /**
-         * Single page application
+         * Set the number of privacy contexts
          * */
+        @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
+        @JvmStatic
+        fun privacyContext(n: Int): Companion {
+            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
+            return BrowserSettings
+        }
+
+        /**
+         * Set the number of privacy contexts
+         * */
+        @JvmStatic
+        fun privacy(n: Int): Companion {
+            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
+            return BrowserSettings
+        }
+
+        /**
+         * Set the max number to open tabs in each browser context
+         * */
+        @JvmStatic
+        fun maxTabs(n: Int): Companion {
+            System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
+            return BrowserSettings
+        }
+
+        /**
+         * Tell the system to work with single page application.
+         * To collect SPA data, the execution needs to have no timeout limit.
+         * */
+        @JvmStatic
         fun withSPA(): Companion {
             System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
             System.setProperty(BROWSER_SPA_MODE, "true")
             return BrowserSettings
         }
 
+        /**
+         * Enable url blocking. If url blocking is enabled and the blocking rules are set,
+         * resources matching the rules will be blocked by the browser.
+         * */
+        @JvmStatic
         fun enableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
             return BrowserSettings
         }
 
+        /**
+         * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
+         * */
+        @JvmStatic
         fun disableUrlBlocking(): Companion {
             System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "false")
             return BrowserSettings
         }
 
-        // TODO: not implemented
+        /**
+         * Block all images.
+         * */
+        @JvmStatic
         fun blockImages(): Companion {
             // enableUrlBlocking()
             return BrowserSettings
