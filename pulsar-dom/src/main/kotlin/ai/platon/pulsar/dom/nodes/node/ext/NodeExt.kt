@@ -132,9 +132,54 @@ fun Element.addClasses(vararg classNames: String): Element {
 }
 
 fun Element.slimCopy(): Element {
-    val ele = this.clone()
-    ele.forEachElement(includeRoot = true) { it.removeNonStandardAttrs() }
-    return ele
+    val clone = this.clone()
+    val removal = mutableListOf<Node>()
+    clone.forEach { node ->
+        if (shouldRemoveToSimplify(node)) {
+            removal.add(node)
+        }
+    }
+    removal.forEach { it.remove() }
+
+    clone.clearAttributesCascaded()
+
+    return clone
+}
+
+fun Element.minimalCopy(): Element {
+    val clone = this.clone()
+    val removal = mutableListOf<Node>()
+    clone.forEach { node ->
+        if (shouldRemoveToSimplify(node)) {
+            removal.add(node)
+        }
+    }
+    removal.forEach { it.remove() }
+
+    clone.removeUnnecessaryAttributesCascaded()
+
+    return clone
+}
+
+private fun shouldRemoveToSimplify(node: Node): Boolean {
+    val tagName = node.nodeName().lowercase()
+
+    if (tagName in listOf("style", "script", "input")) {
+        return true
+    }
+
+    if (node is Comment || node is CDataNode || node is XmlDeclaration) {
+        return true
+    }
+
+    if (node is Element && !node.isImage && !node.isAnchor) {
+        val text = node.text().trim()
+        if (text.isEmpty()) {
+            return true
+        }
+    }
+
+    return false
 }
 
 fun Element.ownTexts(): List<String> {
@@ -151,17 +196,39 @@ fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
     return this
 }
 
-fun Element.removeTemporaryAttrs(): Element {
+fun Element.removeTemporaryAttributesCascaded(): Element {
     this.attributes().map { it.key }.filter { it in TEMPORARY_ATTRIBUTES || it.startsWith("tv") }.forEach {
         this.removeAttr(it)
     }
     return this
 }
 
-fun Element.removeNonStandardAttrs(): Element {
+fun Element.removeNonStandardAttributes(): Element {
     this.attributes().map { it.key }.forEach { if (it !in STANDARD_ATTRIBUTES) {
         this.removeAttr(it)
     } }
+    return this
+}
+
+fun Element.removeUnnecessaryAttributes(): Element {
+    this.attributes().map { it.key }.forEach { if (it !in NECESSARY_ATTRIBUTES) {
+        this.removeAttr(it)
+    } }
+    return this
+}
+
+fun Element.removeNonStandardAttributesCascaded(): Element {
+    this.forEachElement { it.removeNonStandardAttributes() }
+    return this
+}
+
+fun Element.removeUnnecessaryAttributesCascaded(): Element {
+    this.forEachElement { it.removeUnnecessaryAttributes() }
+    return this
+}
+
+fun Element.clearAttributesCascaded(): Element {
+    this.forEachElement { it.clearAttributes() }
     return this
 }
 
@@ -363,6 +430,26 @@ val Node?.cleanText: String get() =
         else -> ""
     }.trim()
 
+/**
+ * The trimmed text of this node.
+ *
+ * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
+ * This is a balance of space and time.
+ * */
+fun Node.joinToString(sparator: String = " ", prefix: String = "", suffix: String = ""): String {
+    val text = when (this) {
+        is TextNode -> extension.immutableText.trim()
+        is Element -> accumulateText(this, sparator).trim()
+        else -> ""
+    }.trim()
+
+    return when {
+        prefix.isEmpty() && suffix.isEmpty() -> text
+        suffix.isEmpty() -> "$prefix$text"
+        else -> "$prefix$text$suffix"
+    }
+}
+
 val Node.textRepresentation: String get() =
     when {
         isImage -> attr("abs:src")
@@ -376,12 +463,23 @@ val Node.textRepresentation: String get() =
  * TODO: slim table
  * */
 val Node.slimHtml by field {
-    val nm = it.nodeName()
+    val nm = it.nodeName().lowercase()
     when {
         it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
         it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
             String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
-        it is Element -> it.slimCopy().removeNonStandardAttrs().outerHtml()
+        it is Element -> it.slimCopy().outerHtml()
+        else -> String.format("<b>%s</b>", it.name)
+    }
+}
+
+val Node.minimalHtml by field {
+    val nm = it.nodeName().lowercase()
+    when {
+        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
+        it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
+            String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
+        it is Element -> it.minimalCopy().outerHtml()
         else -> String.format("<b>%s</b>", it.name)
     }
 }
@@ -691,17 +789,34 @@ fun Node.clearCaption() {
     removeTuple(A_CAPTION)
 }
 
-fun Node.removeAttrs(vararg attributeKeys: String) {
-    attributeKeys.forEach { this.removeAttr(it) }
+fun Node.removeAttrs(vararg attributeKeys: String): Node {
+    attributeKeys.forEach {
+        if (it == "*") {
+            this.clearAttributes()
+            return@forEach
+        } else {
+            this.removeAttr(it)
+        }
+    }
+    return this
 }
 
-fun Node.removeAttrs(attributeKeys: Iterable<String>) {
-    attributeKeys.forEach { this.removeAttr(it) }
+fun Node.removeAttrs(attributeKeys: Iterable<String>): Node {
+    attributeKeys.forEach {
+        if (it == "*") {
+            this.clearAttributes()
+            return@forEach
+        } else {
+            this.removeAttr(it)
+        }
+    }
+    return this
 }
 
-fun Node.removeAttrsIf(filter: (Attribute) -> Boolean) {
+fun Node.removeAttrsIf(filter: (Attribute) -> Boolean): Node {
     val keys = attributes().mapNotNull { it.takeIf { filter(it) }?.key }
     removeAttrs(keys)
+    return this
 }
 
 fun Node.formatEachFeatures(vararg featureKeys: Int): String {
@@ -755,17 +870,18 @@ fun Node.ancestors(): List<Element> {
     return ancestors
 }
 
-private fun accumulateText(root: Element): String {
+private fun accumulateText(root: Element, seperator: String = " "): String {
     val sb = StringBuilder()
     NodeTraversor.traverse({ node, depth ->
+        val text = node.extension.immutableText
         if (node is TextNode) {
-            if (node.extension.immutableText.isNotBlank()) {
-                sb.append(node.extension.immutableText)
+            if (text.isNotBlank()) {
+                sb.append(text)
             }
         } else if (node is Element) {
             if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
-                    && !(sb.isNotEmpty() && sb[sb.length - 1] == ' '))
-                sb.append(" ")
+                    && !(sb.isNotEmpty() && sb.endsWith(seperator)))
+                sb.append(seperator)
         }
     }, root)
 

@@ -52,6 +52,7 @@ abstract class TestBase {
                         if (printResult) {
                             println(ResultSetFormatter(rs, withHeader = true))
                         }
+                        rs.beforeFirst()
                     } else {
                         val r = stat.execute(sql)
                         if (printResult) {
@@ -64,17 +65,17 @@ abstract class TestBase {
         }
     }
 
-    fun query(sql: String, printResult: Boolean = true): ResultSet {
+    fun query(sql: String, printResult: Boolean = true, asList: Boolean = false): ResultSet {
         return context.runQuery { connection ->
-            connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
-                .use { stat ->
-                    val rs = stat.executeQuery(sql)
-                    if (printResult) {
-                        println(ResultSetFormatter(rs))
-                    }
-                    history.add("${sql.trim { it.isWhitespace() }};")
-                    rs
-                }
+            val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
+
+            val rs = stat.executeQuery(sql)
+            if (printResult) {
+                println(ResultSetFormatter(rs, asList = asList))
+            }
+            history.add("${sql.trim { it.isWhitespace() }};")
+            rs.beforeFirst()
+            rs
         }
     }
 

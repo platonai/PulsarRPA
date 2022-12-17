@@ -3,6 +3,7 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.dom.nodes.A_LABELS
+import ai.platon.pulsar.dom.nodes.node.ext.minimalHtml
 import ai.platon.pulsar.dom.nodes.node.ext.namedRect
 import ai.platon.pulsar.dom.nodes.node.ext.slimHtml
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
@@ -98,6 +99,26 @@ object DomSelectFunctions {
         return Queries.selectNthOrNull(dom, cssQuery, n) { it.slimHtml } ?: ""
     }
 
+
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
+    @JvmStatic
+    fun allMinimalHtmls(dom: ValueDom, cssQuery: String): ValueArray {
+        return Queries.select(dom, cssQuery) { it.minimalHtml }
+    }
+
+    @UDFunction(description = "Select the first element from a DOM by the given css query and return the element text")
+    @JvmStatic
+    fun firstMinimalHtml(dom: ValueDom, cssQuery: String): String {
+        return Queries.selectFirstOrNull(dom, cssQuery) { it.minimalHtml } ?: ""
+    }
+
+    @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element text")
+    @JvmStatic
+    fun nthMinimalHtml(dom: ValueDom, cssQuery: String, n: Int): String {
+        return Queries.selectNthOrNull(dom, cssQuery, n) { it.minimalHtml } ?: ""
+    }
+
+
     @UDFunction(description = "Select all the element from a DOM by the given css query " +
             "and try to extract an integer from the element text, if the text is not an integer, fill the default value")
     @JvmStatic
@@ -174,6 +195,40 @@ object DomSelectFunctions {
     fun nthAttr(dom: ValueDom, cssQuery: String, n: Int, attrName: String): String {
         return Queries.selectNthOrNull(dom, cssQuery, n) { it.attr(attrName) } ?: ""
     }
+
+
+
+    @UDFunction(description = "Select all the element from a DOM by the given css query " +
+            "and return the attribute value associated by the attribute name")
+    @JvmStatic
+    @JvmOverloads
+    fun allMultiAttrs(dom: ValueDom, cssQuery: String = ":root", attrNames: Array<String>): ValueArray {
+        return Queries.select(dom, cssQuery) { ele -> attrNames.map { ele.attr(it) } }
+    }
+
+    @UDFunction(description = "Select the first element from a DOM by the given css query " +
+            "and return the attribute value associated by the attribute name")
+    @JvmStatic
+    @JvmOverloads
+    fun firstMultiAttrs(dom: ValueDom, cssQuery: String = ":root", attrNames: Array<String>): List<String> {
+        val result = Queries.selectFirstOrNull(dom, cssQuery) { ele ->
+            attrNames.map { ele.attr(it) }
+        } ?: listOf()
+
+        return result
+    }
+
+    @UDFunction(description = "Select the nth element from a DOM by the given css query " +
+            "and return the attribute value associated by the attribute name")
+    @JvmStatic
+    fun nthMultiAttrs(dom: ValueDom, cssQuery: String, n: Int, attrNames: Array<String>): List<String> {
+        val result = Queries.selectNthOrNull(dom, cssQuery, n) { ele ->
+            attrNames.map { ele.attr(it) }
+        } ?: listOf()
+
+        return result
+    }
+
 
     @UDFunction(description = "Select all the image elements from a DOM by the given css query " +
             "and return the src of the image element")

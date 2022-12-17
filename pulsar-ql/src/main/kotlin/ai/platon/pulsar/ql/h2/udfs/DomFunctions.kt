@@ -395,6 +395,10 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
+    fun minimalHtml(dom: ValueDom) = dom.element.minimalHtml
+
+    @UDFunction
+    @JvmStatic
     fun uniqueName(dom: ValueDom) = dom.element.uniqueName
 
     @UDFunction

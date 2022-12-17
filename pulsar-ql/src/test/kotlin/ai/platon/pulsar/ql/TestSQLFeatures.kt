@@ -12,6 +12,14 @@ class TestSQLFeatures : TestBase() {
     fun testStringConcat() {
         // There different behaviour in different DBs
         execute("SELECT NULL||'A'")
+        execute("""
+SELECT 'A'||'B'||'C'
+        """.trimIndent())
+        execute("""
+SELECT 'A' ||
+       'B' ||
+       'C'
+        """.trimIndent())
     }
 
     @Test
