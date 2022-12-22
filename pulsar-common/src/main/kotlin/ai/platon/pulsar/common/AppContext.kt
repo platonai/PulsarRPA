@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes.APP_ID_STR
+import ai.platon.pulsar.common.config.CapabilityTypes.APP_TMP_DIR_KEY
 import org.apache.commons.lang3.SystemUtils
 import java.awt.GraphicsEnvironment
 import java.net.InetAddress
@@ -61,8 +63,8 @@ object AppContext {
     // The identity of this running instance
     val APP_VERSION by lazy { sniffVersion() }
     val APP_NAME = System.getProperty("app.name", "pulsar")
-    val APP_IDENT = System.getProperty("app.id.str", USER)
-    val APP_TMP_PROPERTY = System.getProperty("app.tmp.dir")
+    val APP_IDENT = System.getProperty(APP_ID_STR, USER)
+    val APP_TMP_PROPERTY = System.getProperty(APP_TMP_DIR_KEY)
     val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve(APP_NAME)
     val PROC_TMP_DIR = if (APP_TMP_PROPERTY != null) {
         Paths.get(APP_TMP_PROPERTY)

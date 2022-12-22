@@ -504,10 +504,10 @@ class LoadComponent(
 
         val domStats = page.activeDomStats
         val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
-        if (ni < options.requireImages) {
+        if (ni > 0 && ni < options.requireImages) {
             return CheckState(FetchState.MISS_FIELD, "miss image")
         }
-        if (na < options.requireAnchors) {
+        if (na > 0 && na < options.requireAnchors) {
             return CheckState(FetchState.MISS_FIELD, "miss anchor")
         }
 

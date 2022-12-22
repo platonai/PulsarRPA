@@ -45,6 +45,10 @@ open class BrowserEmulator(
 
     val numDeferredNavigates by lazy { AppMetrics.reg.meter(this, "deferredNavigates") }
 
+    var scrollDownPolicy: suspend (InteractTask, InteractResult) -> Unit = { task, result ->
+        this.jsScrollDown(task, result)
+    }
+
     init {
         params.withLogger(logger).info(true)
     }
@@ -69,6 +73,23 @@ open class BrowserEmulator(
         counterCancels.inc()
         task.cancel()
         driverPoolManager.cancel(task.url)
+    }
+
+    open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
+        val random = ThreadLocalRandom.current().nextInt(3)
+        val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
+        val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
+
+        val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
+            .map { "__pulsar_utils__.scrollToMiddle($it)" }
+            .toMutableList()
+        // some website show lazy content only when the page is in the front.
+        repeat(scrollDownCount) { i ->
+            val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
+            expressions.add("__pulsar_utils__.scrollToMiddle($ratio)")
+        }
+
+        evaluate(interactTask, expressions, scrollInterval, bringToFront = true)
     }
 
     protected open suspend fun browseWithDriver(task: FetchTask, driver: WebDriver): FetchResult {
@@ -351,20 +372,6 @@ open class BrowserEmulator(
         result.protocolStatus = status
     }
 
-    protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
-        val random = ThreadLocalRandom.current().nextInt(3)
-        val scrollDownCount = (interactTask.emulateSettings.scrollCount + random - 1).coerceAtLeast(1)
-        val scrollInterval = interactTask.emulateSettings.scrollInterval.toMillis()
-
-        val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4)
-            .map { "__pulsar_utils__.scrollToMiddle($it)" }
-            .toMutableList()
-        repeat(scrollDownCount) {
-            expressions.add("__pulsar_utils__.scrollDown()")
-        }
-        evaluate(interactTask, expressions, scrollInterval)
-    }
-
     protected open suspend fun jsWaitForElement(
         interactTask: InteractTask, requiredElements: List<String>
     ) {
@@ -448,12 +455,16 @@ open class BrowserEmulator(
     }
 
     private suspend fun evaluate(interactTask: InteractTask,
-        expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false) {
+        expressions: Iterable<String>, delayMillis: Long, bringToFront: Boolean = false, verbose: Boolean = false) {
         expressions.asSequence()
             .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
             .filterNot { it.startsWith("//") }
             .filterNot { it.startsWith("#") }
-            .forEach { expression ->
+            .forEachIndexed { i, expression ->
+                if (bringToFront && i % 2 == 0) {
+                    interactTask.driver.bringToFront()
+                }
+
                 evaluate(interactTask, expression, verbose)
                 delay(delayMillis)
             }
