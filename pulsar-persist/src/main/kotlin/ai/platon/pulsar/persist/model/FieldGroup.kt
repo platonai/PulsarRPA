@@ -46,7 +46,6 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
         get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
 
     operator fun get(key: String): String? {
-//        println("get: " + fieldGroup.fields.keys.map { it.javaClass })
         return fieldGroup.fields[wrapKey(key)]?.toString()
     }
 

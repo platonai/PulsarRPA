@@ -85,10 +85,10 @@ class FieldGroupFormatter {
     fun format(): String {
         val sb = StringBuilder()
         sb.append("id:\t").append(fieldGroup.id)
-        sb.append("parentId:\t").append(fieldGroup.parentId)
-        sb.append("group:\t").append(fieldGroup.name)
+        sb.append("\tparentId:\t").append(fieldGroup.parentId)
+        sb.append("\tgroup:\t").append(fieldGroup.name)
         val fields = fieldGroup.fields.entries.joinToString("\n") { it.key.toString() + ":\t" + it.value }
-        sb.append("fields:\t").append(fields)
+        sb.append("\tfields:\t").append(fields)
         return sb.toString()
     }
 
