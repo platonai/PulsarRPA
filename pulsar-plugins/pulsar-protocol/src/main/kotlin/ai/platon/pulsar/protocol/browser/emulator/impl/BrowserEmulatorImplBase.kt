@@ -267,12 +267,21 @@ abstract class BrowserEmulatorImplBase(
     }
 
     protected suspend fun evaluate(
-        interactTask: InteractTask, expressions: Iterable<String>, delayMillis: Long, verbose: Boolean = false
+        interactTask: InteractTask, expressions: Iterable<String>, delayMillis: Long,
+        bringToFront: Boolean = false, verbose: Boolean = false
     ) {
-        expressions.forEach { expression ->
-            evaluate(interactTask, expression, verbose)
-            delay(delayMillis)
-        }
+        expressions.asSequence()
+            .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
+            .filterNot { it.startsWith("//") }
+            .filterNot { it.startsWith("#") }
+            .forEachIndexed { i, expression ->
+                if (bringToFront && i % 2 == 0) {
+                    interactTask.driver.bringToFront()
+                }
+
+                evaluate(interactTask, expression, verbose)
+                delay(delayMillis)
+            }
     }
 
     protected suspend fun evaluate(

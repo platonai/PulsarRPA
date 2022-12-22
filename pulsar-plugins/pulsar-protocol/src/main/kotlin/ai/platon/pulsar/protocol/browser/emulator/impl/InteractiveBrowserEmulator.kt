@@ -450,23 +450,26 @@ open class InteractiveBrowserEmulator(
         result.protocolStatus = status
     }
 
-    protected open suspend fun scrollDown(interactTask: InteractTask, result: InteractResult) {
+    open suspend fun scrollDown(interactTask: InteractTask, result: InteractResult) {
         val interactSettings = interactTask.interactSettings
         if (interactSettings.scrollCount <= 0) {
             return
         }
 
         val random = ThreadLocalRandom.current().nextInt(3)
-        val scrollDownCount = (interactSettings.scrollCount + random - 1).coerceAtLeast(1)
-        val scrollInterval = interactSettings.scrollInterval.toMillis()
+        val scrollDownCount = (interactTask.interactSettings.scrollCount + random - 1).coerceAtLeast(1)
+        val scrollInterval = interactTask.interactSettings.scrollInterval.toMillis()
 
-        val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4)
+        val expressions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
             .map { "__pulsar_utils__.scrollToMiddle($it)" }
             .toMutableList()
-        repeat(scrollDownCount) {
-            expressions.add("__pulsar_utils__.scrollDown()")
+        // some website show lazy content only when the page is in the front.
+        repeat(scrollDownCount) { i ->
+            val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
+            expressions.add("__pulsar_utils__.scrollToMiddle($ratio)")
         }
-        evaluate(interactTask, expressions, scrollInterval)
+
+        evaluate(interactTask, expressions, scrollInterval, bringToFront = true)
     }
 
     protected open suspend fun waitForElement(

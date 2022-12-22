@@ -64,6 +64,12 @@ class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory
             put(META_BASE_URI, baseUri, METADATA)
         }
 
+    var title: String = ""
+        set(value) {
+            field = value
+            put(META_TITLE, title, METADATA)
+        }
+
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
@@ -72,12 +78,6 @@ class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory
         set(location) {
             field = location
             put(META_LOCATION, location, METADATA)
-        }
-
-    var title: String = ""
-        set(value) {
-            field = value
-            put(META_TITLE, title, METADATA)
         }
 
     fun isEmpty(): Boolean {

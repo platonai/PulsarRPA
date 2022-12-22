@@ -6,11 +6,11 @@ import java.util.regex.Pattern
 
 open class UrlExtractor {
     companion object {
-        val URL_PATTERN = Pattern.compile(
-                "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
-                        + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
-                        + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
-                Pattern.CASE_INSENSITIVE or Pattern.MULTILINE or Pattern.DOTALL)
+        val URL_PATTERN: Pattern = Pattern.compile(
+            "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
+                    + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
+                    + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
+            Pattern.CASE_INSENSITIVE or Pattern.MULTILINE or Pattern.DOTALL)
     }
 
     fun extract(line: String): String? {
@@ -43,6 +43,10 @@ internal class ResourceExtractor(val resource: String): UrlExtractor() {
 
 internal class FileExtractor(val path: Path): UrlExtractor() {
     fun extract(): Set<String> {
+        if (!Files.exists(path)) {
+            return setOf()
+        }
+
         val urls = mutableSetOf<String>()
         Files.readAllLines(path).forEach { extractTo(it, urls) }
         return urls
@@ -51,6 +55,10 @@ internal class FileExtractor(val path: Path): UrlExtractor() {
 
 internal class DirectoryExtractor(val baseDir: Path): UrlExtractor() {
     fun extract(): Set<String> {
+        if (!Files.exists(baseDir)) {
+            return setOf()
+        }
+
         val urls = mutableSetOf<String>()
         Files.list(baseDir).filter { Files.isRegularFile(it) }.forEach { path ->
             Files.newBufferedReader(path).forEachLine {

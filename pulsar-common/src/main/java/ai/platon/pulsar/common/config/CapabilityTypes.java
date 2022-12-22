@@ -12,6 +12,11 @@ public interface CapabilityTypes {
     /**
      * Common Parameters
      */
+
+    String APP_ID_STR = "app.id.str";
+
+    String APP_TMP_DIR_KEY = "app.tmp.dir";
+
     String LEGACY_CONFIG_PROFILE = "legacy.config.profile";
 
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
