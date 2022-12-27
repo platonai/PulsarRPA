@@ -5,8 +5,7 @@ import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.emoji.UnicodeEmoji
-import ai.platon.pulsar.common.measure.ByteUnit
+import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -551,7 +550,7 @@ open class StreamingCrawler(
 
         globalMetrics.retries.mark()
         if (page != null) {
-            val symbol = UnicodeEmoji.FENCER
+            val symbol = PopularEmoji.FENCER
             val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later | "
             taskLogger.info("{}", LoadStatusFormatter(page, prefix = prefix))
         }

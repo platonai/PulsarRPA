@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
 import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.emoji.UnicodeEmoji
+import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.common.FetchState
 import ai.platon.pulsar.persist.PageCounters
@@ -87,18 +87,18 @@ class LoadStatusFormatter(
 
     private val taskStatusSymbol: String get() = when {
         prefix.isNotBlank() -> ""
-        page.isCanceled -> "${UnicodeEmoji.CANCELLATION_X} "
-        protocolStatus.isFailed -> "${UnicodeEmoji.BROKEN_HEART} "
-        protocolStatus.isSuccess -> "${UnicodeEmoji.HUNDRED_POINTS} "
-        else -> "${UnicodeEmoji.SKULL_CROSSBONES} "
+        page.isCanceled -> "${PopularEmoji.CANCELLATION_X} "
+        protocolStatus.isFailed -> "${PopularEmoji.BROKEN_HEART} "
+        protocolStatus.isSuccess -> "${PopularEmoji.HUNDRED_POINTS} "
+        else -> "${PopularEmoji.SKULL_CROSSBONES} "
     }
     private val pageStatusSymbol get() = when {
-        page.isCanceled -> UnicodeEmoji.CANCELLATION_X // canceled
-        page.isFetched && page.fetchCount == 1 -> UnicodeEmoji.LIGHTNING // fetched new
-        page.isFetched -> UnicodeEmoji.CIRCLE_ARROW_1 // fetched, reload
-        page.isCached -> UnicodeEmoji.HOT_BEVERAGE // cached
-        page.isLoaded -> UnicodeEmoji.OPTICAL_DISC   // load from db
-        else -> UnicodeEmoji.BUG  // BUG symbol
+        page.isCanceled -> PopularEmoji.CANCELLATION_X // canceled
+        page.isFetched && page.fetchCount == 1 -> PopularEmoji.LIGHTNING // fetched new
+        page.isFetched -> PopularEmoji.CIRCLE_ARROW_1 // fetched, reload
+        page.isCached -> PopularEmoji.HOT_BEVERAGE // cached
+        page.isLoaded -> PopularEmoji.OPTICAL_DISC   // load from db
+        else -> PopularEmoji.BUG  // BUG symbol
     }
     private val pageStatusText get() = when {
         page.isCanceled -> "Canceled"

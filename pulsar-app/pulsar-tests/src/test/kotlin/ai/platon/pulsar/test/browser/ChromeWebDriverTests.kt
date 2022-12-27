@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test.browser
 
+import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
@@ -10,6 +11,10 @@ import ai.platon.pulsar.test.TestBase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.util.*
 import kotlin.jvm.Throws
@@ -18,13 +23,16 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@RunWith(SpringRunner::class)
+@SpringBootTest
+@ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class ChromeWebDriverTests: TestBase() {
 
     private val logger = getLogger(this)
     private val url = "https://www.amazon.com/dp/B09V3KXJPB"
     private val asin = url.substringAfterLast("/dp/")
     private val driverFactory get() = session.context.getBean(WebDriverFactory::class)
-    private val settings = driverFactory.driverSettings
+    private val settings get() = driverFactory.driverSettings
     private val confuser get() = settings.confuser
     private val fieldSelectors = mapOf(
         "01productTitle" to "#productTitle",
@@ -53,7 +61,9 @@ class ChromeWebDriverTests: TestBase() {
             open(url, driver, 1)
 
             val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
-            println(r)
+//            println(r)
+//            readLine()
+
             assertEquals(2, r)
 
             driver.close()

@@ -46,10 +46,16 @@ class PageModel(
     operator fun get(i: Int) = FieldGroup.box(fieldGroups[i])
 
     @Synchronized
-    fun add(fieldGroup: FieldGroup) = fieldGroups.add(fieldGroup.unbox())
+    fun add(fieldGroup: FieldGroup) {
+        fieldGroups.add(fieldGroup.unbox())
+        pageModel.setDirty()
+    }
 
     @Synchronized
-    fun add(index: Int, fieldGroup: FieldGroup) = fieldGroups.add(index, fieldGroup.unbox())
+    fun add(index: Int, fieldGroup: FieldGroup) {
+        fieldGroups.add(index, fieldGroup.unbox())
+        pageModel.setDirty()
+    }
 
     @Synchronized
     fun emplace(groupId: Int, fields: Map<String, String?>): FieldGroup {
@@ -63,17 +69,18 @@ class PageModel(
 
     @Synchronized
     fun emplace(groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
-        var fieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
-        if (fieldGroup == null) {
-            fieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
-            fieldGroups.add(fieldGroup)
+        var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        if (gFieldGroup == null) {
+            gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
+            fieldGroups.add(gFieldGroup)
         }
 
         // fieldGroup.fields = fields
-        fieldGroup.fields.putAll(fields.entries.associate { u8(it.key) to it.value })
-//        fieldGroup.setDirty()
-//        pageModel.setDirty()
-        return FieldGroup.box(fieldGroup)
+        gFieldGroup.fields.putAll(fields.entries.associate { u8(it.key) to it.value })
+        gFieldGroup.setDirty()
+        pageModel.setDirty()
+
+        return FieldGroup.box(gFieldGroup)
     }
 
     @Synchronized
@@ -83,10 +90,27 @@ class PageModel(
     }
 
     @Synchronized
-    fun remove(groupId: Int) = fieldGroups.removeIf { it.id == groupId.toLong() }
+    fun remove(groupId: Int) {
+        fieldGroups.removeIf { it.id == groupId.toLong() }
+        pageModel.setDirty()
+    }
 
     @Synchronized
-    fun clear() = fieldGroups.clear()
+    fun remove(groupId: Int, key: String): String? {
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() } ?: return null
+        val oldValue = gFieldGroup.fields.remove(u8(key)) ?: return null
+
+        gFieldGroup.setDirty()
+        pageModel.setDirty()
+
+        return oldValue.toString()
+    }
+
+    @Synchronized
+    fun clear() {
+        fieldGroups.clear()
+        pageModel.setDirty()
+    }
 
     @Synchronized
     fun deepCopy(): PageModel {

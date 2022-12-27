@@ -1,10 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.emoji.UnicodeEmoji
+import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
@@ -18,11 +17,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
-import kotlinx.coroutines.asCoroutineDispatcher
 import org.slf4j.LoggerFactory
-import java.time.Duration
-import java.util.*
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -205,7 +200,7 @@ class MultiPrivacyContextManager(
         val warnings = privacyContext.privacyLeakWarnings.get()
         val status = result.status
         if (warnings > 0) {
-            val symbol = UnicodeEmoji.WARNING
+            val symbol = PopularEmoji.WARNING
             logger.info(
                 "$symbol Privacy leak warning {}/{} | {}#{} | {}. {}",
                 warnings, privacyContext.maximumWarnings,

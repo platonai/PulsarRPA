@@ -30,10 +30,14 @@ import java.util.concurrent.ConcurrentLinkedDeque
  * Load resources
  */
 object ResourceLoader {
-    private val log = LoggerFactory.getLogger(ResourceLoader::class.java)
+    private val logger = LoggerFactory.getLogger(ResourceLoader::class.java)
     private val lastModifiedTimes = ConcurrentHashMap<Path, Instant>()
     private val userClassFactories = ConcurrentLinkedDeque<ClassFactory>()
     private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
+
+    var lineFilter: (line: String) -> Boolean = { line ->
+        !line.startsWith("#") && !line.startsWith("-- ") && line.isNotBlank()
+    }
 
     /**
      * Add a class factory in order to manage more than one class loader.
@@ -97,15 +101,19 @@ object ResourceLoader {
      * The front resource have higher priority
      */
     @JvmOverloads
-    fun readAllLines(stringResource: String?, fileResource: String, resourcePrefix: String = ""): List<String> {
-        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.useLines {
-            it.filter { it.isNotBlank() }.filter { !it.startsWith("#") }.toList()
+    fun readAllLines(
+        stringResource: String?, fileResource: String, resourcePrefix: String = "", filter: Boolean = true
+    ): List<String> {
+        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.useLines { seq ->
+            if (filter) {
+                seq.filter(lineFilter).toList()
+            } else {
+                seq.toList()
+            }
         } ?: listOf()
     }
 
-    fun readAllLines(fileResource: String): List<String> {
-        return readAllLines(fileResource, true)
-    }
+    fun readAllLines(fileResource: String) = readAllLines(fileResource, true)
 
     fun readAllLines(fileResource: String, filter: Boolean): List<String> {
         if (!filter) {
@@ -113,10 +121,7 @@ object ResourceLoader {
         }
 
         return getResourceAsReader(fileResource)?.useLines {
-            it.filter { it.isNotBlank() }
-                .filter { !it.startsWith("# ") }
-                .filter { !it.startsWith("-- ") }
-                .toList()
+            it.filter(lineFilter).toList()
         } ?: listOf()
     }
 
@@ -156,10 +161,10 @@ object ResourceLoader {
     fun getResourceAsStream(name: String): InputStream? {
         return try {
             val url = getResource(name) ?: return null
-            log.info("Find resource $name | $url")
+            logger.info("Find resource $name | $url")
             url.openStream()
         } catch (e: IOException) {
-            log.warn("Failed to read resource {} | {}", name, e.message)
+            logger.warn("Failed to read resource {} | {}", name, e.message)
             null
         }
     }

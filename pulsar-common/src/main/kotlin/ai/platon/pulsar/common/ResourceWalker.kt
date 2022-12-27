@@ -24,7 +24,7 @@ class ResourceWalker {
         var fileSystem: FileSystem? = null
         try {
             val path = if (uri.scheme == "jar") {
-                val env: MutableMap<String, String> = HashMap()
+                val env = HashMap<String, String>()
                 fileSystem = FileSystems.newFileSystem(uri, env)
                 fileSystem.getPath("$resourcePrefix$resourceBase")
             } else {
@@ -45,5 +45,15 @@ class ResourceWalker {
         } finally {
             fileSystem?.close()
         }
+    }
+
+    fun collect(resourceBase: String, maxDepth: Int): List<Path> {
+        val paths = mutableListOf<Path>()
+
+        walk(resourceBase, maxDepth) {
+            paths.add(it)
+        }
+
+        return paths
     }
 }

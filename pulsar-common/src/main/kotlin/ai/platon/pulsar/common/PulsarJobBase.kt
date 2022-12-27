@@ -18,6 +18,9 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.Params
 
+/**
+ * Hadoop's MapReduce support
+ * */
 interface PulsarJobBase {
     val status: Map<String, Any>
 

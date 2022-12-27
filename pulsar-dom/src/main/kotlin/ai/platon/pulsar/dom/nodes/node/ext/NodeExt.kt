@@ -111,9 +111,9 @@ val nilNode = NILNode
 
 val Document.isNil get() = this === NILDocument
 
-val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_SELECTOR)
+val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_ID)
 
-val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_SELECTOR)
+val Document.pulsarScriptElement get() = getElementById(PULSAR_SCRIPT_SECTION_ID)
 
 val Document.pulsarScript get() = ownerDocument.pulsarScriptElement?.text()
 

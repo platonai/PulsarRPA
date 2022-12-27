@@ -1,10 +1,6 @@
 package ai.platon.pulsar.test.component
 
-import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.prependReadableClassName
-import ai.platon.pulsar.common.urls.NormUrl
-import ai.platon.pulsar.crawl.CrawlLoops
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.test.TestBase
 import kotlinx.coroutines.flow.asFlow
@@ -14,19 +10,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
 import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-@RunWith(SpringRunner::class)
-@SpringBootTest
-@ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
 class LoadComponentTests: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
     private val urls = LinkExtractors.fromResource("categories.txt")
