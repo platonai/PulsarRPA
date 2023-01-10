@@ -85,7 +85,7 @@ class ChromeDevtoolsBrowser(
 
     override fun maintain() {
         listTabs().filter { it.id !in drivers.keys }.map {
-            if (it.url?.startsWith("http") == true) {
+            if (it.type == ChromeTab.PAGE_TYPE && it.url?.startsWith("http") == true) {
                 logger.info("Recover tab | {}", it.url)
                 newDriver(it, true)
             }
