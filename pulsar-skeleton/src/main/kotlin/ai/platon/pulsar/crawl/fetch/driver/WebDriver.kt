@@ -120,7 +120,7 @@ interface WebDriver: Closeable {
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
     /**
-     * Returns the JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
+     * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * which had difficulty handling kotlin suspend methods.
      * */
     fun jvm(): JvmWebDriver

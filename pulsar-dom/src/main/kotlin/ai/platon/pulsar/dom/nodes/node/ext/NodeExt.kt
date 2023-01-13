@@ -138,7 +138,7 @@ var Document.exportPaths by field { ExportPaths(it.baseUri()) }
 var Document.annotated by field { false }
 
 // TODO: check if this override Node.isNil or not?
-val Element.isNil get() = this === nilElement
+val Element.isNil get() = this === NILElement
 
 fun Element.addClasses(vararg classNames: String): Element {
     classNames.forEach { addClass(it) }
@@ -224,7 +224,7 @@ fun Element.getStyle(styleKey: String): String {
     return getStyle(parseStyle(), styleKey)
 }
 
-val Node.isNil get() = this === nilNode
+val Node.isNil get() = this === NILNode
 
 val Node.ownerDocument get() = Objects.requireNonNull(extension.ownerDocumentNode) as Document
 
@@ -291,7 +291,7 @@ val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HID
 /** Whether the node is visible */
 val Node.isVisible: Boolean get() {
     return when {
-        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have an empty rectangle?
+        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image has an empty rectangle?
         else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
     }
 }

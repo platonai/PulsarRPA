@@ -5,9 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.common.AppRuntime
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
@@ -43,7 +40,7 @@ class ChromeDevtoolsBrowser(
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
 
     /**
-     * TODO: is it better to use a global scheduled executor service?
+     * is it better to use a global scheduled executor service?
      * */
     private val maintainExecutor = AtomicReference<ScheduledExecutorService>()
 
@@ -84,18 +81,7 @@ class ChromeDevtoolsBrowser(
     }
 
     override fun maintain() {
-        listTabs().filter { it.id !in drivers.keys }.map {
-            if (it.type == ChromeTab.PAGE_TYPE && it.url?.startsWith("http") == true) {
-                logger.info("Recover tab | {}", it.url)
-                newDriver(it, true)
-            }
-        }
-
-//        println("\n\n\n")
-//        chromeTabs.forEach {
-//            println(it.id + "\t" + it.parentId + "\t|\t" + it.url)
-//        }
-
+        recoverUnmanagedPages()
         closeRecoveredIdleDrivers()
     }
 
@@ -125,7 +111,7 @@ class ChromeDevtoolsBrowser(
         val driver = ChromeDevtoolsDriver(chromeTab, devTools, browserSettings, this)
         driver.isRecovered = recovered
 
-        _drivers[chromeTab.id] = driver
+        mutableDrivers[chromeTab.id] = driver
 
         return driver
     }
@@ -137,10 +123,31 @@ class ChromeDevtoolsBrowser(
         }
     }
 
+    /**
+     * Pages can be open in the browser, for example, by a click. We should recover the page
+     * and create a web driver to manage it.
+     * */
+    private fun recoverUnmanagedPages() {
+        listTabs().asSequence()
+            .filter { it.id !in drivers.keys }
+            .filter { it.type == ChromeTab.PAGE_TYPE }
+            .filter { it.url?.startsWith("http") == true }
+            .map {
+                logger.info("Recover tab | {}", it.url)
+                newDriver(it, true)
+            }
+
+        // TODO: debug active tabs
+//        println("\n\n\n")
+//        chromeTabs.forEach {
+//            println(it.id + "\t" + it.parentId + "\t|\t" + it.url)
+//        }
+    }
+
     private fun closeRecoveredIdleDrivers() {
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
-        val seconds = if (AppRuntime.isLowMemory) 15L else 60L
+        val seconds = if (AppRuntime.isLowMemory) 15L else browserSettings.interactSettings.pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle = { driver: WebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }
@@ -151,7 +158,7 @@ class ChromeDevtoolsBrowser(
                 logger.warn("Unmanaged driver should has no history")
             }
 //            require(unmanagedTimeoutDrivers.all { it.navigateHistory.isEmpty() }) {
-//                "Unmanaged driver should has no history"
+//                "Unmanaged driver should have no history"
 //            }
             unmanagedTimeoutDrivers.forEach { it.close() }
         }
@@ -173,7 +180,7 @@ class ChromeDevtoolsBrowser(
 
         logger.info("Closing browser with {} devtools ... | #{}", drivers.size, id)
 
-        val nonSynchronized = drivers.toList().also { _drivers.clear() }
+        val nonSynchronized = drivers.toList().also { mutableDrivers.clear() }
         nonSynchronized.parallelStream().forEach {
             it.runCatching { close() }.onFailure { logger.warn("Failed to close the devtool", it) }
         }

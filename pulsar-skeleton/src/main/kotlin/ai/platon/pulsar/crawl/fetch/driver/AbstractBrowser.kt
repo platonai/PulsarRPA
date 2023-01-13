@@ -3,16 +3,12 @@ package ai.platon.pulsar.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.common.ScriptLoader
-import ai.platon.pulsar.browser.driver.chrome.ChromeTab
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class AbstractBrowser(
@@ -20,16 +16,16 @@ abstract class AbstractBrowser(
     val browserSettings: BrowserSettings
 ): Browser, AbstractEventEmitter<BrowserEvents>() {
 
-    protected val _navigateHistory = Collections.synchronizedList(mutableListOf<NavigateEntry>())
-    protected val _drivers = ConcurrentHashMap<String, WebDriver>()
+    protected val mutableNavigateHistory = Collections.synchronizedList(mutableListOf<NavigateEntry>())
+    protected val mutableDrivers = ConcurrentHashMap<String, WebDriver>()
 
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
 
     override val userAgent = getRandomUserAgentOrNull()
 
-    override val navigateHistory: List<NavigateEntry> get() = _navigateHistory
-    override val drivers: Map<String, WebDriver> get() = _drivers
+    override val navigateHistory: List<NavigateEntry> get() = mutableNavigateHistory
+    override val drivers: Map<String, WebDriver> get() = mutableDrivers
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
@@ -48,12 +44,12 @@ abstract class AbstractBrowser(
     }
 
     override fun onWillNavigate(entry: NavigateEntry) {
-        _navigateHistory.add(entry)
+        mutableNavigateHistory.add(entry)
     }
 
     override fun close() {
         detach()
-        _drivers.clear()
+        mutableDrivers.clear()
     }
 
     private fun getRandomUserAgentOrNull() = if (browserSettings.isUserAgentOverridingEnabled) {
