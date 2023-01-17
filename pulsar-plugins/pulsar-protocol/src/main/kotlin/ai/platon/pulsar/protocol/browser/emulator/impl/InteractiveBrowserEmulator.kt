@@ -1,14 +1,18 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.driver.*
+import ai.platon.pulsar.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
@@ -68,6 +72,9 @@ open class InteractiveBrowserEmulator(
         driverPoolManager.cancel(task.url)
     }
 
+    /**
+     * Attach event handlers
+     * */
     private fun attach() {
         on1(EmulateEvents.willNavigate) { page: WebPage, driver: WebDriver ->
             this.onWillNavigate(page, driver)

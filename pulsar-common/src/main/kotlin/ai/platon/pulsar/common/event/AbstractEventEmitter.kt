@@ -4,54 +4,53 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
-    protected val events = ConcurrentHashMap<EventType, CopyOnWriteArrayList<Any>>()
+    protected val listenerMap = ConcurrentHashMap<EventType, CopyOnWriteArrayList<Function<Any>>>()
 
-    protected var onFailure = { t: Throwable -> t.printStackTrace() }
+    val listeners: Map<EventType, List<Function<Any>>> get() = listenerMap
 
-    override fun on(event: EventType, handler: () -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun on(event: EventType, handler: () -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun on1(event: EventType, handler: suspend () -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun on1(event: EventType, handler: suspend () -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun <T> on(event: EventType, handler: (T) -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun <T> on(event: EventType, handler: (T) -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun <T> on1(event: EventType, handler: suspend (T) -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun <T> on1(event: EventType, handler: suspend (T) -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun <T, T2> on(event: EventType, handler: (T, T2) -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun <T, T2> on(event: EventType, handler: (T, T2) -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun <T, T2> on1(event: EventType, handler: suspend (T, T2) -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun <T, T2> on1(event: EventType, handler: suspend (T, T2) -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun <T, T2, T3> on(event: EventType, handler: (T, T2, T3) -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun <T, T2, T3> on(event: EventType, handler: (T, T2, T3) -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun <T, T2, T3> on1(event: EventType, handler: suspend (T, T2, T3) -> Unit): AbstractEventEmitter<EventType> {
-        events.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
+    override fun <T, T2, T3> on1(event: EventType, handler: suspend (T, T2, T3) -> Any): AbstractEventEmitter<EventType> {
+        listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
     }
 
-    override fun emit(event: EventType): Boolean {
-        val l = events[event]?.filterIsInstance<() -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it() }.onFailure { it.printStackTrace() } }
-        return true
+    override fun emit(event: EventType): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<() -> Any>() ?: return listOf()
+        return l.map { runCatching { it() }.getOrElse { it } }
     }
 
     /**
@@ -63,137 +62,125 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
      *   navigateHistory.add(entry)
      * }
      * */
-    override suspend fun emit1(event: EventType): Boolean {
-        val l = events[event]?.filterIsInstance<suspend () -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it() }.onFailure { onFailure(it) } }
-        return true
+    override suspend fun emit1(event: EventType): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<suspend () -> Any>() ?: return listOf()
+        return l.map { runCatching { it() }.getOrElse { it } }
     }
 
-    override fun <T> emit(event: EventType, param: T): Boolean {
-        val l = events[event]?.filterIsInstance<(T) -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it(param) }.onFailure { onFailure(it) } }
-        return true
+    override fun <T> emit(event: EventType, param: T): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<(T) -> Any>() ?: return listOf()
+        return l.map { runCatching { it(param) }.getOrElse { it } }
     }
 
-    override suspend fun <T> emit1(event: EventType, param: T): Boolean {
-        val l = events[event]?.filterIsInstance<suspend (T) -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it(param) }.onFailure { onFailure(it) } }
-        return true
+    override suspend fun <T> emit1(event: EventType, param: T): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<suspend (T) -> Any>() ?: return listOf()
+        return l.map { runCatching { it(param) }.getOrElse { it } }
     }
 
-    override fun <T, T2> emit(event: EventType, param: T, param2: T2): Boolean {
-        val l = events[event]?.filterIsInstance<(T, T2) -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it(param, param2) }.onFailure { onFailure(it) } }
-        return true
+    override fun <T, T2> emit(event: EventType, param: T, param2: T2): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<(T, T2) -> Any>() ?: return listOf()
+        return l.map { runCatching { it(param, param2) }.getOrElse { it } }
     }
 
-    override suspend fun <T, T2> emit1(event: EventType, param: T, param2: T2): Boolean {
-        val l = events[event]?.filterIsInstance<suspend (T, T2) -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it(param, param2) }.onFailure { onFailure(it) } }
-        return true
+    override suspend fun <T, T2> emit1(event: EventType, param: T, param2: T2): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<suspend (T, T2) -> Any>() ?: return listOf()
+        return l.map { runCatching { it(param, param2) }.getOrElse { it } }
     }
 
-    override fun <T, T2, T3> emit(event: EventType, param: T, param2: T2, param3: T3): Boolean {
-        val l = events[event]?.filterIsInstance<(T, T2, T3) -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it(param, param2, param3) }.onFailure { onFailure(it) } }
-        return true
+    override fun <T, T2, T3> emit(event: EventType, param: T, param2: T2, param3: T3): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<(T, T2, T3) -> Any>() ?: return listOf()
+        return l.map { runCatching { it(param, param2, param3) }.getOrElse { it } }
     }
 
-    override suspend fun <T, T2, T3> emit1(event: EventType, param: T, param2: T2, param3: T3): Boolean {
-        val l = events[event]?.filterIsInstance<suspend (T, T2, T3) -> Unit>() ?: return false
-        l.forEach { kotlin.runCatching { it(param, param2, param3) }.onFailure { onFailure(it) } }
-        return true
+    override suspend fun <T, T2, T3> emit1(event: EventType, param: T, param2: T2, param3: T3): List<Any> {
+        val l = listenerMap[event]?.filterIsInstance<suspend (T, T2, T3) -> Any>() ?: return listOf()
+        return l.map { runCatching { it(param, param2, param3) }.getOrElse { it } }
     }
 
     override fun off(event: EventType): AbstractEventEmitter<EventType> {
-        events.remove(event)
+        listenerMap.remove(event)
         return this
     }
 
-    override fun <T> off(event: EventType, handler: () -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun off1(event: EventType): AbstractEventEmitter<EventType> {
+        listenerMap.remove(event)
+        return this
+    }
+
+    override fun <T> off(event: EventType, handler: () -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T> off1(event: EventType, handler: suspend () -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T> off1(event: EventType, handler: suspend () -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T> off(event: EventType, handler: (T) -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T> off(event: EventType, handler: (T) -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T> off1(event: EventType, handler: suspend (T) -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T> off1(event: EventType, handler: suspend (T) -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T, T2> off(event: EventType, handler: (T, T2) -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T, T2> off(event: EventType, handler: (T, T2) -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T, T2> off1(event: EventType, handler: suspend (T, T2) -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T, T2> off1(event: EventType, handler: suspend (T, T2) -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T, T2, T3> off(event: EventType, handler: (T, T2, T3) -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T, T2, T3> off(event: EventType, handler: (T, T2, T3) -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun <T, T2, T3> off1(event: EventType, handler: suspend (T, T2, T3) -> Unit): AbstractEventEmitter<EventType> {
-        val list = events[event] ?: return this
+    override fun <T, T2, T3> off1(event: EventType, handler: suspend (T, T2, T3) -> Any): AbstractEventEmitter<EventType> {
+        val list = listenerMap[event] ?: return this
         list.removeAll { it == handler }
         if (list.isEmpty()) {
-            events.remove(event)
+            listenerMap.remove(event)
         }
         return this
     }
 
-    override fun hasListeners(event: EventType): Boolean {
-        return events.containsKey(event)
-    }
-
-    override fun count(event: EventType): Int {
-        return events[event]?.size ?: 0
-    }
-
-    override fun <T> once(
-        event: EventType, handler: (T) -> Unit, param: T
-    ): AbstractEventEmitter<EventType> {
-        val onceHandler: (T) -> Unit = { _ ->
+    override fun <T> once(event: EventType, handler: (T) -> Any, param: T): AbstractEventEmitter<EventType> {
+        val onceHandler: (T) -> Any = { _ ->
             handler(param)
             off(event, handler)
         }
@@ -201,10 +188,8 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
         return on(event, onceHandler)
     }
 
-    override fun <T> once1(
-        event: EventType, handler: suspend (T) -> Unit, param: T
-    ): AbstractEventEmitter<EventType> {
-        val onceHandler: suspend (T) -> Unit = { _ ->
+    override fun <T> once1(event: EventType, handler: suspend (T) -> Any, param: T): AbstractEventEmitter<EventType> {
+        val onceHandler: suspend (T) -> Any = { _ ->
             handler(param)
             off1(event, handler)
         }
@@ -213,9 +198,9 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
     }
 
     override fun <T, T2> once(
-        event: EventType, handler: (T, T2) -> Unit, param: T, param2: T2
+        event: EventType, handler: (T, T2) -> Any, param: T, param2: T2
     ): AbstractEventEmitter<EventType> {
-        val onceHandler: (T, T2) -> Unit = { _, _ ->
+        val onceHandler: (T, T2) -> Any = { _, _ ->
             handler(param, param2)
             off(event, handler)
         }
@@ -224,9 +209,9 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
     }
 
     override fun <T, T2> once1(
-        event: EventType, handler: suspend (T, T2) -> Unit, param: T, param2: T2
+        event: EventType, handler: suspend (T, T2) -> Any, param: T, param2: T2
     ): AbstractEventEmitter<EventType> {
-        val onceHandler: suspend (T, T2) -> Unit = { _, _ ->
+        val onceHandler: suspend (T, T2) -> Any = { _, _ ->
             handler(param, param2)
             off1(event, handler)
         }
@@ -235,9 +220,9 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
     }
 
     override fun <T, T2, T3> once(
-        event: EventType, handler: (T, T2, T3) -> Unit, param: T, param2: T2, param3: T3
+        event: EventType, handler: (T, T2, T3) -> Any, param: T, param2: T2, param3: T3
     ): AbstractEventEmitter<EventType> {
-        val onceHandler: (T, T2, T3) -> Unit = { _, _, _ ->
+        val onceHandler: (T, T2, T3) -> Any = { _, _, _ ->
             handler(param, param2, param3)
             off(event, handler)
         }
@@ -246,13 +231,21 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
     }
 
     override fun <T, T2, T3> once1(
-        event: EventType, handler: suspend (T, T2, T3) -> Unit, param: T, param2: T2, param3: T3
+        event: EventType, handler: suspend (T, T2, T3) -> Any, param: T, param2: T2, param3: T3
     ): AbstractEventEmitter<EventType> {
-        val onceHandler: suspend (T, T2, T3) -> Unit = { _, _, _ ->
+        val onceHandler: suspend (T, T2, T3) -> Any = { _, _, _ ->
             handler(param, param2, param3)
             off1(event, handler)
         }
 
         return on1(event, onceHandler)
     }
+
+    override fun hasListeners(event: EventType) = listenerMap.containsKey(event)
+
+    override fun listeners(): List<Function<Any>> = this.listenerMap.values.flatten()
+
+    override fun listeners(event: EventType) = this.listenerMap[event]?.toList() ?: listOf()
+
+    override fun count(event: EventType) = listenerMap[event]?.size ?: 0
 }

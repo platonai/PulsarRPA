@@ -24,9 +24,7 @@
     <version>1.10.8-SNAPSHOT</version>
 
     <name>Pulsar</name>
-    <description>The easy way to crawl the Web:
-        turn large websites into tables and charts using simple native API, SQL or REST API
-    </description>
+    <description>Scrape Web data at scale completely and accurately with high performance, distributed RPA.</description>
 
     <licenses>
         <license>
