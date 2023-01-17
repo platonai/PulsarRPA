@@ -272,8 +272,8 @@ abstract class BrowserEmulatorImplBase(
     ) {
         expressions.asSequence()
             .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
-            .filterNot { it.startsWith("//") }
-            .filterNot { it.startsWith("#") }
+            .filterNot { it.startsWith("// ") }
+            .filterNot { it.startsWith("# ") }
             .forEachIndexed { i, expression ->
                 if (bringToFront && i % 2 == 0) {
                     interactTask.driver.bringToFront()
