@@ -8,8 +8,10 @@ import java.time.Duration
 
 open class WebDriverPoolMonitor(
         val driverPoolManager: WebDriverPoolManager,
-        val conf: ImmutableConfig
-): GracefulScheduledExecutor(Duration.ofMinutes(20), Duration.ofSeconds(30)) {
+        val conf: ImmutableConfig,
+        initialDelay: Long = 30,
+        interval: Long = 30
+): GracefulScheduledExecutor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(interval)) {
     private val log = LoggerFactory.getLogger(WebDriverPoolMonitor::class.java)
     val isActive get() = AppContext.isActive
 

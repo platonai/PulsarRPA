@@ -18,10 +18,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  * which takes a ThreadFactory as a parameter, if you care to venture in that direction.
  * */
 abstract class GracefulScheduledExecutor(
-        var initialDelay: Duration = Duration.ofMinutes(1),
-        var watchInterval: Duration = Duration.ofSeconds(10),
-        val executor: ScheduledExecutorService = createDefaultExecutor(),
-        @Deprecated("Not used")
+    var initialDelay: Duration = Duration.ofMinutes(1),
+    var interval: Duration = Duration.ofSeconds(10),
+    val executor: ScheduledExecutorService = createDefaultExecutor(),
+    @Deprecated("Not used")
         val autoClose: Boolean = true
 ): AutoCloseable {
     private val logger = LoggerFactory.getLogger(GracefulScheduledExecutor::class.java)
@@ -80,7 +80,7 @@ abstract class GracefulScheduledExecutor(
         }
     }
 
-    fun start() = start(initialDelay, watchInterval) { run() }
+    fun start() = start(initialDelay, interval) { run() }
 
     abstract fun run()
 

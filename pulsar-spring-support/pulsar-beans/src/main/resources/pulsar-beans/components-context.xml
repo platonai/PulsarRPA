@@ -12,6 +12,8 @@
     <import resource="plugins/indexing-context.xml"/>
     <import resource="plugins/scoring-context.xml"/>
 
+    <import resource="plugins/monitor-context.xml"/>
+
     <bean id="seedBuilder" class="ai.platon.pulsar.crawl.inject.SeedBuilder">
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="conf"/>
@@ -66,5 +68,4 @@
         <constructor-arg ref="appStatusTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
-
 </beans>
