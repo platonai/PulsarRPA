@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import kotlinx.coroutines.delay
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 private enum class BarEvents {
@@ -11,9 +12,6 @@ private enum class BarEvents {
 }
 
 private class BarEventEmitter : AbstractEventEmitter<BarEvents>() {
-    fun rawListeners(): Map<BarEvents, List<Function<Any>>> {
-        return listenerMap
-    }
 }
 
 class TestReflection {
@@ -56,11 +54,11 @@ class TestReflection {
         emitter.on(BarEvents.onWillDoA) { 1 + 1 }
         emitter.on1(BarEvents.onWillDoADelayed) { delay(1) }
 
-        val listeners = emitter.rawListeners()
-        val method1 = listeners.values.first().first()
-        assertTrue { ClassReflect.isInvokable(method1.javaClass) }
+        val method1 = emitter.normalListeners().first()
+        assertTrue { ClassReflect.isNormalInvokable(method1.javaClass) }
 
-        val method2 = listeners.values.last().first()
+        val method2 = emitter.suspendListeners().last()
+        assertTrue { method1 != method2 }
         assertTrue { ClassReflect.isSuspendInvokable(method2.javaClass) }
     }
 }

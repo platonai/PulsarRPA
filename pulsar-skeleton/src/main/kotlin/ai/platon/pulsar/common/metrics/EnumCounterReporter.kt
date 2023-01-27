@@ -18,7 +18,7 @@ package ai.platon.pulsar.common.metrics
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.concurrent.ScheduledMonitor
+import ai.platon.pulsar.common.concurrent.GracefulScheduledExecutor
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readableClassName
@@ -32,7 +32,7 @@ class EnumCounterReporter(
     initialDelay: Duration = Duration.ofMinutes(3),
     watchInterval: Duration = Duration.ofSeconds(30),
     private val conf: ImmutableConfig
-): ScheduledMonitor(initialDelay, watchInterval) {
+): GracefulScheduledExecutor(initialDelay, watchInterval) {
     private var log = LoggerFactory.getLogger(EnumCounterReporter::class.java)
     private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
     private var lastStatus = ""
@@ -42,7 +42,7 @@ class EnumCounterReporter(
         this.log = log
     }
 
-    override fun watch() {
+    override fun run() {
         if (!AppContext.isActive) {
             close()
             return

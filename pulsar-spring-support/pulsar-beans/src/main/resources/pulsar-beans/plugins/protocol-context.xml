@@ -68,10 +68,19 @@
         <constructor-arg name="closeCascaded" value="false"/>
     </bean>
 
+
+
     <bean id="driverPoolMonitor" class="ai.platon.pulsar.protocol.browser.driver.WebDriverPoolMonitor"
           init-method="start" destroy-method="close" depends-on="driverPoolManager">
         <constructor-arg ref="driverPoolManager"/>
         <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserMonitor" class="ai.platon.pulsar.protocol.browser.driver.BrowserMonitor"
+          init-method="start" destroy-method="close">
+        <constructor-arg ref="browserManager"/>
+        <constructor-arg value="30"/>
+        <constructor-arg value="30"/>
     </bean>
 
 </beans>

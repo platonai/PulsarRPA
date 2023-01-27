@@ -96,7 +96,7 @@ internal class WebDriverDemo(private val session: PulsarSession = createSession(
         driver.type(searchBoxSelector, text)
         driver.click(searchBoxSubmit)
         val url = driver.currentUrl()
-        println("the page navigated to $url")
+        println("page navigated to $url")
     }
 }
 

@@ -273,7 +273,7 @@ class LoadingWebDriverPool constructor(
 
         waitUntilIdle(timeToWait)
 
-        // close drivers by browser
+        // drivers are closed by browser
         // closeAllDrivers(nonSynchronized)
     }
 

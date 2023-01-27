@@ -59,14 +59,14 @@ abstract class AbstractBrowser(
     /**
      * Attach default event handlers
      * */
-    private fun attach() {
+    protected fun attach() {
         on(BrowserEvents.willNavigate) { entry: NavigateEntry -> onWillNavigate(entry) }
     }
 
     /**
      * Detach default event handlers
      * */
-    private fun detach() {
+    protected fun detach() {
         off(BrowserEvents.willNavigate)
     }
 }

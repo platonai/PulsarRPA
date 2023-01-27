@@ -77,7 +77,7 @@ class CoreMetrics(
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
     private val systemInfo = SystemInfo()
 
-    // Exception on windows 11:
+    // Exception on Windows 11:
     // Caused by: java.lang.IllegalStateException: Unmapped relationship: 7
     //	at com.sun.jna.platform.win32.WinNT$SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX.fromPointer(WinNT.java:3033)
 //    private val processor = systemInfo.hardware.processor
@@ -110,8 +110,8 @@ class CoreMetrics(
     val unreachableHosts = ConcurrentSkipListSet<String>()
 
     /**
-     * Tracking hosts who is failed to fetch tasks.
-     * A host is considered to be a unreachable host if there are too many failure
+     * Tracking hosts who are failed to fetch tasks.
+     * A host is considered to be an unreachable host if there are too many failure
      */
     val timeoutUrls = ConcurrentSkipListSet<String>()
     val movedUrls = ConcurrentSkipListSet<String>()

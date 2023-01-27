@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import com.google.gson.Gson
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -189,7 +190,8 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun blockImages(): Companion {
-            // enableUrlBlocking()
+            enableUrlBlocking()
+            TODO("Not implemented")
             return BrowserSettings
         }
 
@@ -347,7 +349,8 @@ data class InteractSettings(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
-    var pageLoadTimeout: Duration = Duration.ofMinutes(3)
+    var pageLoadTimeout: Duration = Duration.ofMinutes(3),
+    var bringToFront: Boolean = false
 ) {
     var delayPolicy: (String) -> Long = { type ->
         when (type) {
@@ -369,6 +372,9 @@ data class InteractSettings(
         pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
     )
 
+    /**
+     * TODO: just use an InteractSettings object, instead of setting properties
+     * */
     fun overrideSystemProperties() {
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
@@ -376,7 +382,12 @@ data class InteractSettings(
         Systems.setProperty(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
+    /**
+     * TODO: just use an InteractSettings object, instead of setting conf
+     * */
     fun overrideConfiguration(conf: MutableConfig) {
+        conf["interact.settings"] = Gson().toJson(this)
+
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)

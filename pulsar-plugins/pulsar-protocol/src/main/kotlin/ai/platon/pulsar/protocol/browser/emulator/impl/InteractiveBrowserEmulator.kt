@@ -476,7 +476,8 @@ open class InteractiveBrowserEmulator(
             expressions.add("__pulsar_utils__.scrollToMiddle($ratio)")
         }
 
-        evaluate(interactTask, expressions, scrollInterval, bringToFront = true)
+        val bringToFront = interactTask.interactSettings.bringToFront
+        evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)
     }
 
     protected open suspend fun waitForElement(

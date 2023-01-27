@@ -5,15 +5,15 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.jvm.jvmErasure
 
-fun convertJVMMemberMethodSignatures(clazz: KClass<*>): List<String> {
-    return clazz.declaredFunctions.map {
-        "fun " + it.name +
-                "(" + it.parameters.joinToString { it.name + ": " + it.type.jvmErasure.simpleName } + "): " +
-                it.returnType.jvmErasure.simpleName
-    }
-}
-
 object ClassReflect {
+
+    fun convertJVMMemberMethodSignatures(clazz: KClass<*>): List<String> {
+        return clazz.declaredFunctions.map {
+            "fun " + it.name +
+                    "(" + it.parameters.joinToString { it.name + ": " + it.type.jvmErasure.simpleName } + "): " +
+                    it.returnType.jvmErasure.simpleName
+        }
+    }
 
     fun isInvokable(clazz: Class<Any>): Boolean {
         return clazz.methods.any { MethodReflect.isInvokable(it) }

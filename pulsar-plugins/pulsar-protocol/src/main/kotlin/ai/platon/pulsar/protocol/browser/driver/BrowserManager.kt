@@ -33,6 +33,10 @@ open class BrowserManager(
         return launchIfAbsent(browserId, launcherOptions, launchOptions)
     }
 
+    fun maintain() {
+        browsers.values.forEach { it.maintain() }
+    }
+
     @Synchronized
     fun closeBrowserGracefully(browserId: BrowserId) {
         _browsers.remove(browserId.userDataDir.toString())?.close()

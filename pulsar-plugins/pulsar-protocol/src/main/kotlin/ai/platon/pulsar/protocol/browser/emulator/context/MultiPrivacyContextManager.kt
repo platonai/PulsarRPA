@@ -18,10 +18,6 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 class MultiPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
@@ -41,11 +37,6 @@ class MultiPrivacyContextManager(
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
-
-    /**
-     * TODO: is it better to use a global scheduled executor service?
-     * */
-    private val maintainExecutor = AtomicReference<ScheduledExecutorService>()
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
@@ -85,8 +76,6 @@ class MultiPrivacyContextManager(
         val context = computeIfNecessary(fingerprint)
 
         if (context.isActive) {
-            // only start the maintaining timer when there is at least one context
-            startMaintainTimerIfNecessary()
             return context
         }
 
@@ -115,6 +104,16 @@ class MultiPrivacyContextManager(
     @Throws(ProxyException::class)
     override fun computeIfAbsent(id: PrivacyContextId) =
         activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
+
+    /**
+     * Check if there are hang contexts, close all the hang contexts
+     * */
+    override fun maintain() {
+        activeContexts.filterValues { it.isIdle }.values.forEach {
+            logger.warn("Privacy context hangs unexpectedly | {}", it.id.display)
+            close(it)
+        }
+    }
 
     private suspend fun run(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
@@ -151,22 +150,6 @@ class MultiPrivacyContextManager(
         }
 
         return result
-    }
-
-    private fun startMaintainTimerIfNecessary() {
-        if (maintainExecutor.compareAndSet(null, Executors.newSingleThreadScheduledExecutor())) {
-            maintainExecutor.get()?.scheduleAtFixedRate(this::maintain, 60 * 2, 10, TimeUnit.SECONDS)
-        }
-    }
-
-    /**
-     * Check if there are hang contexts, close all the hang contexts
-     * */
-    private fun maintain() {
-        activeContexts.filterValues { it.isIdle }.values.forEach {
-            logger.warn("Privacy context hangs unexpectedly | {}", it.id.display)
-            close(it)
-        }
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {

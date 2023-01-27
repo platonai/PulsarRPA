@@ -14,10 +14,6 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 class ChromeDevtoolsBrowser(
     id: BrowserId,
@@ -39,16 +35,10 @@ class ChromeDevtoolsBrowser(
     private val devtools: List<ChromeDevTools>
         get() = drivers.values.filterIsInstance<ChromeDevtoolsDriver>().map { it.devTools }
 
-    /**
-     * is it better to use a global scheduled executor service?
-     * */
-    private val maintainExecutor = AtomicReference<ScheduledExecutorService>()
-
     @Synchronized
     @Throws(WebDriverException::class)
     override fun newDriver(): ChromeDevtoolsDriver {
         try {
-            startMaintainTimerIfNecessary()
             // In chrome every tab is a separate process
             val chromeTab = createTab()
             return newDriver(chromeTab, false)
@@ -83,12 +73,6 @@ class ChromeDevtoolsBrowser(
     override fun maintain() {
         recoverUnmanagedPages()
         closeRecoveredIdleDrivers()
-    }
-
-    private fun startMaintainTimerIfNecessary() {
-        if (maintainExecutor.compareAndSet(null, Executors.newSingleThreadScheduledExecutor())) {
-            maintainExecutor.get()?.scheduleAtFixedRate(this::maintain, 60 * 2, 10, TimeUnit.SECONDS)
-        }
     }
 
     /**

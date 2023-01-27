@@ -3,26 +3,17 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppRuntime
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-
-abstract class PrivacyContextMonitor(
-    initialDelay: Long = 300,
-    watchInterval: Long = 30
-): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
 
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
@@ -40,7 +31,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
 
-    private val cleaningService = Executors.newScheduledThreadPool(1)
+    private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
     /**
      * Run a task within this privacy manager
@@ -82,6 +73,10 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 }
             }
         }
+    }
+
+    open fun maintain() {
+
     }
 
     override fun close() {
