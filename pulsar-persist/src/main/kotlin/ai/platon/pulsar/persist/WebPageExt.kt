@@ -130,6 +130,25 @@ class WebPageExt(private val page: WebPage) {
         return true
     }
 
+    fun updateContent(pageDatum: PageDatum, contentTypeHint: String? = null) {
+        var contentType = contentTypeHint
+
+        page.setOriginalContentLength(pageDatum.originalContentLength)
+        page.setContent(pageDatum.content)
+
+        if (contentType != null) {
+            pageDatum.contentType = contentType
+        } else {
+            contentType = pageDatum.contentType
+        }
+
+        if (contentType != null) {
+            page.contentType = contentType
+        } else {
+
+        }
+    }
+
     fun updateContentModifiedTime(newModifiedTime: Instant): Boolean {
         if (!page.isValidContentModifyTime(newModifiedTime)) {
             return false

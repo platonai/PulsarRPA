@@ -78,11 +78,16 @@ class PageDatum(
     var activeDOMStatTrace: ActiveDOMStatTrace? = null
     var activeDOMUrls: ActiveDOMUrls? = null
 
+    /**
+     * The media type of the retrieved content.
+     */
+    var originalContentLength: Int = -1
+
     val contentLength get() = (content?.size ?: 0).toLong()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
-            return true;
+            return true
         }
 
         return other is PageDatum

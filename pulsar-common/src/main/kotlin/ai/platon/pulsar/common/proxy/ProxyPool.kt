@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
 
-    private val log = LoggerFactory.getLogger(ProxyPool::class.java)
+    private val logger = LoggerFactory.getLogger(ProxyPool::class.java)
 
     protected val capacity: Int = conf.getInt(PROXY_POOL_CAPACITY, 100)
     protected val pollingTimeout: Duration = conf.getDuration(PROXY_POOL_POLLING_TIMEOUT, Duration.ofSeconds(20))
@@ -74,12 +74,17 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     }
 
     open fun report(proxyEntry: ProxyEntry) {
-        log.info("Ban proxy <{}> after {} pages served in {} | total ban: {} | {}",
+        logger.info("Ban proxy <{}> after {} pages served in {} | total ban: {} | {}",
                 proxyEntry.outIp, proxyEntry.numSuccessPages, proxyEntry.elapsedTime.readable(),
                 numProxyBanned, proxyEntry)
     }
 
     open fun dump() {
+        if (proxyEntries.isEmpty()) {
+            logger.info("Used total 0 proxies, do not dump")
+            return
+        }
+
         synchronized(AppPaths.PROXY_ARCHIVE_DIR) {
             try {
                 val ident = DateTimes.now("MMdd.HH")
@@ -87,10 +92,9 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
                 Files.createDirectories(currentArchiveDir)
 
                 dump(currentArchiveDir.resolve("proxies.all.txt"), proxyEntries)
-
-                log.info("Proxy pool is dumped to file://{} | {}", currentArchiveDir, this)
+                logger.info("Proxy pool is dumped to file://{} | {}", currentArchiveDir, this)
             } catch (e: IOException) {
-                log.warn(e.toString())
+                logger.warn(e.toString())
             }
         }
     }
@@ -99,7 +103,9 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            dump()
+            if (proxyEntries.isNotEmpty()) {
+                dump()
+            }
         }
     }
 
@@ -110,7 +116,7 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
             Files.createDirectories(path.parent)
             Files.writeString(path, content, StandardOpenOption.CREATE_NEW)
         } catch (e: IOException) {
-            log.warn(e.toString())
+            logger.warn(e.toString())
         }
     }
 }

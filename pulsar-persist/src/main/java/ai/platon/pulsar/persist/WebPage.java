@@ -1106,14 +1106,25 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
             page.setContent(value);
             isContentUpdated = true;
 
-            int length = value.array().length;
-            computeContentLength(length);
+            long length = value.array().length;
+            // save the length of the persisted content,
+            // so we can query the length without loading the big or even huge content field
             setPersistedContentLength(length);
+
+            length = getOriginalContentLength();
+            if (length <= 0) {
+                // TODO: it's for old version compatible
+                length = value.array().length;
+            }
+            computeContentLength(length);
         } else {
             clearPersistContent();
         }
     }
 
+    /**
+     * Clear persist content, so the content will not write to the disk.
+     * */
     public void clearPersistContent() {
         tmpContent = page.getContent();
         page.setContent(null);
@@ -1123,12 +1134,27 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * Get the length of content in bytes.
      *
-     * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
-     *
      * @return The length of the content in bytes.
      */
     public long getContentLength() {
         return page.getContentLength() != null ? page.getContentLength() : 0;
+    }
+
+    /**
+     * Get the length of the original page content in bytes, the content has no pulsar metadata inserted.
+     *
+     * @return The length of the original page content in bytes, nagative means not specified
+     * */
+    public long getOriginalContentLength() {
+        return getMetadata().getLong(Name.ORIGINAL_CONTENT_LENGTH, -1);
+    }
+
+    /**
+     * Set the length of the original page content in bytes, the content has no pulsar metadata inserted.
+     * @param length The length of the original page content in bytes, nagative means not specified
+     * */
+    public void setOriginalContentLength(int length) {
+        getMetadata().set(Name.ORIGINAL_CONTENT_LENGTH, "" + length);
     }
 
     /**
@@ -1408,11 +1434,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     public String[] getInlinkAnchors() {
-        return StringUtils.split(getMetadata().getOrDefault(Name.ANCHORS, ""), "\n");
+        return StringUtils.split(getMetadata().getOrDefault(Name.ANCHOR_COUNT, ""), "\n");
     }
 
     public void setInlinkAnchors(Collection<CharSequence> anchors) {
-        getMetadata().set(Name.ANCHORS, StringUtils.join(anchors, "\n"));
+        getMetadata().set(Name.ANCHOR_COUNT, StringUtils.join(anchors, "\n"));
     }
 
     public int getAnchorOrder() {

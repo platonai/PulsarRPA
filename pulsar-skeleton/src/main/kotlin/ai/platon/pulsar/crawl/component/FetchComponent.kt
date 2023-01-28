@@ -29,10 +29,7 @@ import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.http.ProtocolStatusTranslator
-import ai.platon.pulsar.persist.CrawlStatus
-import ai.platon.pulsar.persist.PageDatum
-import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -193,6 +190,7 @@ open class FetchComponent(
         page: WebPage, pageDatum: PageDatum?,
         protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus,
     ): WebPage {
+        val pageExt = WebPageExt(page)
         updateStatus(page, protocolStatus, crawlStatus)
 
         pageDatum?.also {
@@ -212,7 +210,7 @@ open class FetchComponent(
             it.lastBrowser?.let { page.lastBrowser = it }
 
             if (protocolStatus.isSuccess) {
-                updateContent(page, it)
+                pageExt.updateContent(it)
             }
         }
 
@@ -248,24 +246,6 @@ open class FetchComponent(
         fun updateMarks(page: WebPage) {
             val marks = page.marks
             marks.putIfNotNull(Mark.FETCH, marks[Mark.GENERATE])
-        }
-
-        fun updateContent(page: WebPage, pageDatum: PageDatum, contentTypeHint: String? = null) {
-            var contentType = contentTypeHint
-
-            page.setContent(pageDatum.content)
-
-            if (contentType != null) {
-                pageDatum.contentType = contentType
-            } else {
-                contentType = pageDatum.contentType
-            }
-
-            if (contentType != null) {
-                page.contentType = contentType
-            } else {
-                logger.warn("Failed to determine content type!")
-            }
         }
     }
 }

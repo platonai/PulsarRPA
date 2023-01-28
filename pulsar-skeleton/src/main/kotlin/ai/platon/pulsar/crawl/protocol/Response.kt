@@ -39,6 +39,6 @@ abstract class Response(
     val httpCode get() = protocolStatus.minorCode
     val length get() = pageDatum.contentLength
 
-    /** The value of a named header.  */
+    /** The value of a named header. */
     fun getHeader(name: String): String? = pageDatum.headers[name]
 }

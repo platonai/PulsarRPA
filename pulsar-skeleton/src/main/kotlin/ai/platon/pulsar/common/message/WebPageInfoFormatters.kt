@@ -206,17 +206,21 @@ class LoadStatusFormatter(
     }
 
     private fun buildContentBytes(): String {
-        var contentBytes = if (page.lastContentLength == 0L || page.lastContentLength == page.contentLength) {
+        var contentLength = if (page.lastContentLength == 0L || page.lastContentLength == page.contentLength) {
             compactFormat(page.contentLength).trim()
         } else {
             compactFormat(page.contentLength).trim() + " <- " + compactFormat(page.lastContentLength).trim()
         }
 
         if (page.content == null) {
-            contentBytes = "0 <- $contentBytes"
+            contentLength = "0 <- $contentLength"
         }
 
-        return contentBytes
+        return if (page.persistedContentLength > 0) {
+            contentLength + " [" + compactFormat(page.persistedContentLength) + "]"
+        } else {
+            contentLength
+        }
     }
 
     private fun compactFormat(bytes: Long): String {

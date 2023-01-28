@@ -520,7 +520,7 @@ open class ImmutableWebPage {
 
     open val anchor get() = page.anchor ?: ""
 
-    open val inlinkAnchors get() = StringUtils.split(metadata.getOrDefault(Name.ANCHORS, ""), "\n")
+    open val inlinkAnchors get() = StringUtils.split(metadata.getOrDefault(Name.ANCHOR_COUNT, ""), "\n")
 
     open val anchorOrder get() = page.anchorOrder
 

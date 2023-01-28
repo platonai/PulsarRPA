@@ -89,7 +89,7 @@ open class BrowserResponseHandlerImpl(
             val length = task.pageSource.length
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
 
-            val settings = InteractSettings(task.task.volatileConfig)
+            val settings = InteractSettings(task.fetchTask.volatileConfig)
             logger.info(
                 "Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                 task.pageDatum.protocolStatus.minorName,

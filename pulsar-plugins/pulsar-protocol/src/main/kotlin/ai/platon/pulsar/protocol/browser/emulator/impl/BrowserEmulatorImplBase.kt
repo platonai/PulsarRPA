@@ -86,8 +86,8 @@ abstract class BrowserEmulatorImplBase(
             task.pageSource = responseHandler.normalizePageSource(task.url, task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
-            pageDatum.protocolStatus = responseHandler.createProtocolStatusForBrokenContent(task.task, integrity)
-            logBrokenPage(task.task, task.pageSource, integrity)
+            pageDatum.protocolStatus = responseHandler.createProtocolStatusForBrokenContent(task.fetchTask, integrity)
+            logBrokenPage(task.fetchTask, task.pageSource, integrity)
         }
 
         pageDatum.apply {
@@ -303,7 +303,7 @@ abstract class BrowserEmulatorImplBase(
         if (!isActive) return null
 
         counterJsEvaluates.inc()
-        checkState(interactTask.fetchTask, interactTask.driver)
+        checkState(interactTask.navigateTask.fetchTask, interactTask.driver)
         val result = interactTask.driver.evaluate(expression)
         if (delayMillis > 0) {
             delay(delayMillis)

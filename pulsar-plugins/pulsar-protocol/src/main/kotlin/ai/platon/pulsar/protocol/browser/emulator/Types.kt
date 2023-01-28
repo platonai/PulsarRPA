@@ -12,16 +12,18 @@ import java.time.Duration
 import java.time.Instant
 
 class NavigateTask(
-        val task: FetchTask,
-        val driver: WebDriver,
-        val driverSettings: BrowserSettings
+    val fetchTask: FetchTask,
+    val driver: WebDriver,
+    val driverSettings: BrowserSettings
 ) {
     val startTime = Instant.now()
 
-    val url = task.url
-    val page = task.page
-    var pageSource = ""
+    val url = fetchTask.url
+    val page = fetchTask.page
     val pageDatum = PageDatum(url)
+
+    var originalContentLength = -1
+    var pageSource = ""
 
     init {
         pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()
@@ -35,14 +37,15 @@ class InteractResult(
 )
 
 class InteractTask(
-    val fetchTask: FetchTask,
+    val navigateTask: NavigateTask,
     val browserSettings: BrowserSettings,
     val driver: WebDriver
 ) {
-    val url get() = fetchTask.url
-    val isCanceled get() = fetchTask.isCanceled
+    val url get() = navigateTask.url
+    val page get() = navigateTask.page
+    val isCanceled get() = navigateTask.fetchTask.isCanceled
 
-    val conf get() = fetchTask.volatileConfig
+    val conf get() = navigateTask.fetchTask.volatileConfig
     val interactSettings get() = browserSettings.interactSettings
 }
 
