@@ -70,6 +70,8 @@ class LoadComponent(
     private var numWrite = 0
     private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
+    private var reportCount = 0
+
     fun fetchState(page: WebPage, options: LoadOptions): CheckState {
         val protocolStatus = page.protocolStatus
 
@@ -382,7 +384,15 @@ class LoadComponent(
         if (taskLogger.isInfoEnabled) {
             val verbose = taskLogger.isDebugEnabled
             val report = LoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
+
             taskLogger.info(report)
+
+            if (reportCount == 0) {
+                val logExplainUrl = "https://github.com/platonai/pulsarr/blob/master/docs/log-format.adoc"
+                taskLogger.info("Log explanation: $logExplainUrl")
+            }
+
+            ++reportCount
         }
     }
 

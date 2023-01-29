@@ -93,6 +93,7 @@ abstract class BrowserEmulatorImplBase(
         pageDatum.apply {
             lastBrowser = task.driver.browserType
             htmlIntegrity = integrity
+            originalContentLength = task.originalContentLength
             content = task.pageSource.toByteArray(StandardCharsets.UTF_8)
         }
 

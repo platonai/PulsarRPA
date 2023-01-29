@@ -233,7 +233,7 @@ open class InteractiveBrowserEmulator(
             it.headers.putAll(response.headers())
             it.contentType = response.contentType()
             it.content = navigateTask.pageSource.toByteArray(StandardCharsets.UTF_8)
-            it.originalContentLength = navigateTask.originalContentLength
+            it.originalContentLength = it.content?.size ?: 0
         }
 
         responseHandler.emit(BrowserResponseEvents.willCreateResponse)

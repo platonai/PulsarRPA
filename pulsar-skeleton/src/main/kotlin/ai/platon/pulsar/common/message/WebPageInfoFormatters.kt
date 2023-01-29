@@ -217,7 +217,7 @@ class LoadStatusFormatter(
         }
 
         return if (page.persistedContentLength > 0) {
-            contentLength + " [" + compactFormat(page.persistedContentLength) + "]"
+            contentLength + " [" + PopularEmoji.OPTICAL_DISC + compactFormat(page.persistedContentLength).trim() + "]"
         } else {
             contentLength
         }
