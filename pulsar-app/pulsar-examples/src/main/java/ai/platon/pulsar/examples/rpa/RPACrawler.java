@@ -69,7 +69,7 @@ public class RPACrawler {
                 driver.clickAsync(selector)
                         .thenCompose(ignored -> driver.firstTextAsync(selector))
                         .thenAcceptAsync(text -> driver.typeAsync(searchBoxSelector, text.substring(1, 4)), delayedExecutor)
-                        .thenRun(() -> { logger.info("{} clicked", selector); })
+                        .thenRun(() -> logger.info("{} clicked", selector))
                         .join();
             }
         }).join();

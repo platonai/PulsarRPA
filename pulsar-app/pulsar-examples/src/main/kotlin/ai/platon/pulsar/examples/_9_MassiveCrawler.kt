@@ -45,6 +45,6 @@ fun main() {
     // will start 2 hours later
     crawlPool.delayCache.add(DelayUrl(url5, Duration.ofHours(2)))
 
-    // wait for all tasks are done.
+    // wait for all tasks to be finished.
     session.context.await()
 }

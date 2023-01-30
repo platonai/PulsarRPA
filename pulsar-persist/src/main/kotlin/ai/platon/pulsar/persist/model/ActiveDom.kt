@@ -5,7 +5,7 @@ import ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus
 import com.google.gson.Gson
 
 /**
- * Records the status of the DOM in a real browser.
+ * Records the status of a DOM in a real browser.
  * */
 data class ActiveDOMStatus(
         val n: Int = 0,
@@ -17,7 +17,7 @@ data class ActiveDOMStatus(
 )
 
 /**
- * The statistics of the DOM in a real browser.
+ * The statistics of a DOM in a real browser.
  * */
 data class ActiveDOMStat(
         val ni: Int = 0,

@@ -29,19 +29,21 @@ import ai.platon.pulsar.persist.model.ActiveDOMUrls
 import java.util.*
 
 /**
- * The page datum to update a WebPage
+ * The page datum collected from a real page to update a WebPage.
  * */
 class PageDatum(
     /**
-     * The permanent internal address, the storage key, and is the same as the page's url if not redirected
+     * The url is the permanent internal address, and it's also the storage key.
+     * The url can differ from the original url passed by the user, because the original url might be normalized,
+     * and the url also can differ from the final location of the page, because the page can be redirected in the browser.
      */
     val url: String,
     /**
      * Returns the document location as a string.
      *
      * [location] is the last working address, retrieved by javascript,
-     * it might redirect from url, or it might have additional random parameters.
-     * [location] may be different from [url].
+     * it might redirect from the original url, or it might have additional query parameters.
+     * [location] can differ from [url].
      *
      * In javascript, the documentURI property can be used on any document types. The document.URL
      * property can only be used on HTML documents.
@@ -63,7 +65,7 @@ class PageDatum(
      */
     var contentType: String? = null,
     /**
-     * Other protocol-specific data.
+     * Protocol-specific headers.
      */
     val headers: MultiMetadata = MultiMetadata(),
     /**
@@ -71,18 +73,37 @@ class PageDatum(
      */
     val metadata: MultiMetadata = MultiMetadata(),
 ) {
-    var pageCategory: OpenPageCategory? = null
-    var proxyEntry: ProxyEntry? = null
-    var lastBrowser: BrowserType? = null
-    var htmlIntegrity: HtmlIntegrity? = null
-    var activeDOMStatTrace: ActiveDOMStatTrace? = null
-    var activeDOMUrls: ActiveDOMUrls? = null
-
     /**
-     * The media type of the retrieved content.
+     * The page category, it can be specified by the user or detected automatically
+     * */
+    var pageCategory: OpenPageCategory? = null
+    /**
+     * The proxy entry used to fetch the page
+     * */
+    var proxyEntry: ProxyEntry? = null
+    /**
+     * The browser type used to fetch the page
+     * */
+    var lastBrowser: BrowserType? = null
+    /**
+     * The html content integrity
+     * */
+    var htmlIntegrity: HtmlIntegrity? = null
+    /**
+     * Track the DOM states at different time points in a real browser, which are calculated by javascript.
+     * */
+    var activeDOMStatTrace: ActiveDOMStatTrace? = null
+    /**
+     * The page URLs in a real browser calculated by javascript.
+     * */
+    var activeDOMUrls: ActiveDOMUrls? = null
+    /**
+     * The length of the original page content in bytes, the content has no inserted pulsar metadata.
      */
     var originalContentLength: Int = -1
-
+    /**
+     * The length of the final page content in bytes, the content might has inserted pulsar metadata.
+     */
     val contentLength get() = (content?.size ?: 0).toLong()
 
     override fun equals(other: Any?): Boolean {

@@ -699,16 +699,18 @@ class ChromeDevtoolsDriver(
         }
 
         navigateUrl = url
-        // TODO: temporary solution to server local file
+        // TODO: This is a temporary solution to serve local file, for example, file:///tmp/example.html
         if (LOCALHOST_PREFIX in url) {
             val url0 = url.removePrefix(LOCALHOST_PREFIX)
-            // TODO: handle OS
             pageAPI?.navigate("file://$url0")
         } else {
             pageAPI?.navigate(url)
         }
     }
 
+    /**
+     * Navigate to a url without javascript injected, this is only for debugging
+     * */
     private fun navigateNonInvaded(url: String) {
         pageAPI?.enable()
         navigateUrl = url

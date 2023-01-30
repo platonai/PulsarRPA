@@ -229,6 +229,7 @@ public interface CapabilityTypes {
     /**
      * Browser
      * */
+    String FETCH_INTERACT_SETTINGS = "interact.settings";
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";

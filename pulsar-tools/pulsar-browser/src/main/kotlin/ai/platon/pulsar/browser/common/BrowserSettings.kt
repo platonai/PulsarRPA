@@ -44,7 +44,7 @@ open class BrowserSettings(
         /**
          * Indicate the network condition.
          *
-         * The system adjusts its behavior according to different network conditions
+         * The system adjusts its behavior according to the current network conditions
          * to obtain the best data quality and data collection speed.
          * */
         @JvmStatic
@@ -55,7 +55,7 @@ open class BrowserSettings(
         /**
          * Indicate the network condition.
          *
-         * The system adjusts its behavior according to different network conditions
+         * The system adjusts its behavior according to the current network conditions
          * to obtain the best data quality and data collection speed.
          * */
         @JvmStatic
@@ -67,7 +67,7 @@ open class BrowserSettings(
         /**
          * Indicate the network condition.
          *
-         * The system adjusts its behavior according to different network conditions
+         * The system adjusts its behavior according to the current network conditions
          * to obtain the best data quality and data collection speed.
          * */
         @JvmStatic
@@ -373,9 +373,11 @@ data class InteractSettings(
     )
 
     /**
-     * TODO: just use an InteractSettings object, instead of setting properties
+     * TODO: just use an InteractSettings object, instead of separate properties
      * */
     fun overrideSystemProperties() {
+        Systems.setProperty(FETCH_INTERACT_SETTINGS, Gson().toJson(this))
+
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         Systems.setProperty(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
@@ -383,10 +385,10 @@ data class InteractSettings(
     }
 
     /**
-     * TODO: just use an InteractSettings object, instead of setting conf
+     * TODO: just use an InteractSettings object, instead of separate properties
      * */
     fun overrideConfiguration(conf: MutableConfig) {
-        conf["interact.settings"] = Gson().toJson(this)
+        conf[FETCH_INTERACT_SETTINGS] = Gson().toJson(this)
 
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
@@ -395,10 +397,21 @@ data class InteractSettings(
     }
 
     companion object {
+        /**
+         * Default settings for Web page interaction behavior.
+         * */
         val DEFAULT = InteractSettings()
 
+        /**
+         * Web page interaction behavior settings under good network conditions, in which case we perform
+         * each action faster.
+         * */
         var goodNetSettings = InteractSettings()
 
+        /**
+         * Web page interaction behavior settings under worse network conditions, in which case we perform
+         * each action more slowly.
+         * */
         var worseNetSettings = InteractSettings(
             scrollCount = 10,
             scrollInterval = Duration.ofSeconds(1),
@@ -406,6 +419,10 @@ data class InteractSettings(
             Duration.ofMinutes(3),
         )
 
+        /**
+         * Web page interaction behavior settings under worst network conditions, in which case we perform
+         * each action very slowly.
+         * */
         var worstNetSettings = InteractSettings(
             scrollCount = 15,
             scrollInterval = Duration.ofSeconds(3),
