@@ -15,7 +15,7 @@ PulsarR [ˈpʌlsɑr] is short for Pulsar Radiation. If there is no confusion wit
 
 Extracting Web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, PulsarR has developed a range of cutting-edge technologies to solve this problem.
 
-We have released complete solutions for site-wide Web scraping of some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality and cost. They will be free and open source forever, such as:
+We have released complete solutions for site-wide Web scraping for some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality and cost. They will be free and open source forever, such as:
 
 * link:https://github.com/platonai/exotic-amazon[Exotic Amazon]
 * link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
@@ -46,7 +46,7 @@ We have released complete solutions for site-wide Web scraping of some of the la
 * Large scale: fully distributed, designed for large scale crawling
 * Big data: various backend storage support: Local File/MongoDB/HBase/Gora
 * Logs &amp; metrics: monitored closely and every event is recorded
-* [Preview] Information Extraction: Automatically learns web data patterns and automatically extracts every field in a webpage with remarkable precision
+* [Preview] Information Extraction: Learns Web data patterns and automatically extracts every field in a webpage with remarkable precision
 
 == Get started
 
