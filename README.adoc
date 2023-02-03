@@ -156,14 +156,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.8</version>
+  <version>1.10.9</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.8")
+implementation("ai.platon.pulsar:pulsar-all:1.10.9")
 ----
 
 You can also clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].
