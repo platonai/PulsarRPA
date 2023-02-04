@@ -361,6 +361,13 @@ open class WebDriverPoolManager(
             driverPool.close()
             browserManager.closeBrowserGracefully(browserId)
         } else {
+            val key = browserId.userDataDir.toString()
+            val browser = browserManager.browsers[key]
+            if (browser != null) {
+                // open for diagnosis
+                val urls = listOf("chrome://version/", "chrome://history/")
+                runBlocking { urls.forEach { browser.newDriver().navigateTo(it) } }
+            }
             logger.info("Web drivers are in {} mode, please close it manually | {} ", displayMode, browserId)
         }
     }

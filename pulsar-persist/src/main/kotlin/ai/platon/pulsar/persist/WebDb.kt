@@ -171,9 +171,9 @@ class WebDb(
     }
 
     /**
-     * Scan all pages who's url starts with {@param originalUrl}
+     * Scan all pages whose url starts with {@param urlBase}
      *
-     * @param originalUrl The base url
+     * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
     fun scan(urlBase: String): Iterator<WebPage> {
@@ -185,24 +185,24 @@ class WebDb(
     }
 
     /**
-     * Scan all pages who's url starts with {@param originalUrl}
+     * Scan all pages whose url starts with {@param urlBase}
      *
-     * @param originalUrl The base url
+     * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
-    fun scan(originalUrl: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
-        return scan(originalUrl, fields.map { it.toString() }.toTypedArray())
+    fun scan(urlBase: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
+        return scan(urlBase, fields.map { it.toString() }.toTypedArray())
     }
 
     /**
-     * Scan all pages who's url starts with {@param originalUrl}
+     * Scan all pages whose url starts with {@param urlBase}
      *
-     * @param originalUrl The base url
+     * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
-    fun scan(originalUrl: String, fields: Array<String>): Iterator<WebPage> {
+    fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
         val query = dataStore.newQuery()
-        query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
+        query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
         val result = dataStore.execute(query)
@@ -210,16 +210,16 @@ class WebDb(
     }
 
     /**
-     * Scan all pages who's url starts with {@param originalUrl}
+     * Scan all pages whose url starts with {@param urlBase}
      *
-     * @param originalUrl The base url
+     * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
-    fun scan(originalUrl: String, fields: Array<String>, filter: Filter<String, GWebPage>): Iterator<WebPage> {
+    fun scan(urlBase: String, fields: Array<String>, filter: Filter<String, GWebPage>): Iterator<WebPage> {
         val query = dataStore.newQuery()
 
         query.filter = filter
-        query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
+        query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
         val result = dataStore.execute(query)

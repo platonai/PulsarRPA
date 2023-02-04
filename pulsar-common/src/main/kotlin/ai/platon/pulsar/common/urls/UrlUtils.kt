@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.urls
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
 import org.apache.commons.lang3.StringUtils
+import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
 import java.net.URI
@@ -153,6 +154,16 @@ object UrlUtils {
     @JvmStatic
     fun normalizeUrls(urls: Iterable<String>, ignoreQuery: Boolean = false): List<String> {
         return urls.mapNotNull { normalizeOrNull(it, ignoreQuery) }
+    }
+
+    @Throws(URISyntaxException::class)
+    fun splitQueryParameters(url: String): Map<String, String> {
+        return URIBuilder(url).queryParams?.associate { it.name to it.value } ?: mapOf()
+    }
+
+    @Throws(URISyntaxException::class)
+    fun getQueryParameters(url: String, parameterName: String): String? {
+        return URIBuilder(url).queryParams?.firstOrNull { it.name == parameterName }?.value
     }
 
     @Throws(URISyntaxException::class)

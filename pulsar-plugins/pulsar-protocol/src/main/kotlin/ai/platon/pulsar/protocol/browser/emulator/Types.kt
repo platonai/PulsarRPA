@@ -18,8 +18,8 @@ class NavigateTask(
 ) {
     val startTime = Instant.now()
 
-    val url = fetchTask.url
-    val page = fetchTask.page
+    val url get() = fetchTask.url
+    val page get() = fetchTask.page
     val pageDatum = PageDatum(url)
 
     var originalContentLength = -1

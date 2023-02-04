@@ -36,7 +36,7 @@ object ResourceLoader {
     private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
 
     var lineFilter: (line: String) -> Boolean = { line ->
-        !line.startsWith("#") && !line.startsWith("-- ") && line.isNotBlank()
+        !line.startsWith("# ") && !line.startsWith("-- ") && line.isNotBlank()
     }
 
     /**
@@ -161,7 +161,9 @@ object ResourceLoader {
     fun getResourceAsStream(name: String): InputStream? {
         return try {
             val url = getResource(name) ?: return null
-            logger.info("Find resource $name | $url")
+            if (logger.isDebugEnabled) {
+                logger.debug("Find resource $name | $url")
+            }
             url.openStream()
         } catch (e: IOException) {
             logger.warn("Failed to read resource {} | {}", name, e.message)

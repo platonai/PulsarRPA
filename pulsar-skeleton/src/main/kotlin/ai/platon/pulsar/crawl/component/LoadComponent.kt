@@ -475,7 +475,7 @@ class LoadComponent(
             return CheckState(FetchState.RETRY, "retry")
         } else if (protocolStatus.isFailed && !ignoreFailure) {
             // Failed to fetch the page last time, it might be caused by page is gone
-            // in such case, do not fetch it even it it's expired, unless the retryFailed flag is set
+            // in such case, do not fetch it even it's expired, unless the retryFailed flag is set
             return CheckState(FetchState.DO_NOT_FETCH, "failed")
         }
 

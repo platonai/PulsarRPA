@@ -321,7 +321,7 @@ open class InteractiveBrowserEmulator(
 
         // href has the higher priority to locate a resource
         require(task.url == page.url)
-        val finalUrl = fetchTask.href ?: task.url
+        val finalUrl = fetchTask.href ?: fetchTask.url
         val navigateEntry = NavigateEntry(finalUrl, page.id, task.url, pageReferrer = page.referrer)
 
         emit1(EmulateEvents.willNavigate, page, driver)
