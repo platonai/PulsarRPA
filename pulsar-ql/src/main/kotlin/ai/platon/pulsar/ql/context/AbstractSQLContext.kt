@@ -84,12 +84,14 @@ abstract class AbstractSQLContext constructor(
     @Throws(Exception::class)
     override fun executeQuery(sql: String): ResultSet {
         val conn = connectionPool.poll() ?: randomConnection
-
-        return conn.createStatement(resultSetType, resultSetConcurrency).runCatching {
-            executeQuery(sql)
-        }.getOrElse { t ->
+        return try {
+            conn.createStatement(resultSetType, resultSetConcurrency).use { stat ->
+                stat.executeQuery(sql)
+            }
+        } catch (e: Exception) {
+            throw e
+        } finally {
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
-            throw t
         }
     }
 
