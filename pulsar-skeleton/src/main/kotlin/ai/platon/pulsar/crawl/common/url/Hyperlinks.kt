@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.common.url
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.crawl.PageEvent
@@ -109,12 +110,6 @@ open class ParsableHyperlink(
      * */
     constructor(url: String, onParse: BiConsumer<WebPage, FeaturedDocument>):
             this(url, { page, document -> onParse.accept(page, document) })
-
-    override var args: String? = null
-        get() = super.args
-        set(value) {
-            field = if (value == null) "-parse" else "-parse " + value.replace(" -parse ", " ")
-        }
 
     override var event: PageEvent = DefaultPageEvent().also {
         it.loadEvent.onHTMLDocumentParsed.addLast { page, document ->

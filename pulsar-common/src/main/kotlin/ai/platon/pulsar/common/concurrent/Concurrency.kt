@@ -36,9 +36,9 @@ fun stopExecution(name: String, executor: ExecutorService, future: Future<*>?, s
                 }
             }
         } catch (e: InterruptedException) {
-            System.err.println("Shutting down now | $name")
+            System.err.println("Interrupted, shutting down now (shutdown?$shutdown) | $name")
             // (Re-)Cancel if current thread also interrupted
-            executor.shutdownNow()
+            runCatching { executor.shutdownNow() }.onFailure { it.printStackTrace(System.err) }
             // Preserve interrupt status
             Thread.currentThread().interrupt()
         }

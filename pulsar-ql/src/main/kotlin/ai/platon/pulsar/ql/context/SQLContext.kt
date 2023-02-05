@@ -9,7 +9,6 @@ import java.sql.ResultSet
 import kotlin.jvm.Throws
 
 interface SQLContext: PulsarContext {
-    val isActive: Boolean
 
     fun createSession(sessionDelegate: SessionDelegate): SQLSession
 

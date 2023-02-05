@@ -74,7 +74,7 @@ abstract class AbstractPulsarContext(
     /**
      * Check if the context is active
      * */
-    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
+    override val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
      * The context id

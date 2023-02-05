@@ -925,6 +925,11 @@ open class LoadOptions(
         fun create(conf: VolatileConfig) = LoadOptions(arrayOf(), conf).apply { parse() }
 
         /**
+         * Create an empty [LoadOptions].
+         * */
+        fun createUnsafe() = create(VolatileConfig.UNSAFE)
+
+        /**
          * Normalize [args], all option names in a normalized argument string match the field name in [LoadOptions].
          * */
         fun normalize(vararg args: String?) = parse(args.filterNotNull().joinToString(" ")).toString()
