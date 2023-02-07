@@ -4,10 +4,6 @@ import ai.platon.pulsar.common.event.EventEmitter
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import java.util.*
 
-enum class BrowserEvents {
-    willNavigate
-}
-
 /**
  * The Browser defines methods and events to manipulate a real browser.
  */

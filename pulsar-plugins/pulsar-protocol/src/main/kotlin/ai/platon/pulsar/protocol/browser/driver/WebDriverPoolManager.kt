@@ -58,15 +58,30 @@ open class WebDriverPoolManager(
     private val logger = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
+    /**
+     * Active driver pools
+     * */
     private val _driverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
-    private val _retiredDriverPools = ConcurrentSkipListSet<BrowserId>()
+    /**
+     * Retired but not closed driver pools
+     * */
+    private val _retiredDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
+    /**
+     * Closed driver pool ids
+     * */
+    private val _closedDriverPools = ConcurrentSkipListSet<BrowserId>()
+    /**
+     * The deferred tasks
+     * */
     private val _deferredTasks = ConcurrentSkipListMap<Int, Deferred<FetchResult?>>()
 
     val driverSettings get() = driverFactory.driverSettings
     val idleTimeout = Duration.ofMinutes(18)
 
     val driverPools: Map<BrowserId, LoadingWebDriverPool> get() = _driverPools
-    val retiredDriverPools: Set<BrowserId> get() = _retiredDriverPools
+    val retiredDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _retiredDriverPools
+
+    val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
 
     val startTime = Instant.now()
     var lastActiveTime = startTime
@@ -89,7 +104,7 @@ open class WebDriverPoolManager(
 
     val numWaiting get() = driverPools.values.sumOf { it.numWaiting.get() }
     val numFreeDrivers get() = driverPools.values.sumOf { it.numFree }
-    val numWorkingDrivers get() = driverPools.values.sumOf { it.numWorking.get() }
+    val numWorkingDrivers get() = driverPools.values.sumOf { it.numIsWorking.get() }
     val numAvailableDrivers get() = driverPools.values.sumOf { it.numAvailable }
     val numOnline get() = driverPools.values.sumOf { it.onlineDrivers.size }
 
@@ -331,36 +346,50 @@ open class WebDriverPoolManager(
     }
 
     private fun closeDriverPoolGracefully0(browserId: BrowserId) {
-        _driverPools[browserId]?.also {
-            // Force the page stop all navigations and RELEASES all resources.
-            it.onlineDrivers.forEach { kotlin.runCatching { runBlocking { it.stop() } } }
-            it.isRetired = true
-            _retiredDriverPools.add(browserId)
+        val retiredDriverPool = _driverPools[browserId]
+        if (retiredDriverPool != null) {
+            retireDriverPool(browserId, retiredDriverPool)
         }
 
+        closeDriverPoolGracefully1(browserId, retiredDriverPool)
+    }
+
+    private fun retireDriverPool(browserId: BrowserId, driverPool: LoadingWebDriverPool) {
+        // Force the page stop all navigations and RELEASES all resources.
+        driverPool.onlineDrivers.forEach { driver ->
+            kotlin.runCatching { runBlocking { driver.stop() } }
+        }
+        // mark the driver pool be retired, but not closed yet
+        driverPool.isRetired = true
+        _retiredDriverPools[browserId] = driverPool
+        _driverPools.remove(browserId)
+    }
+
+    private fun closeDriverPoolGracefully1(browserId: BrowserId, retiredDriverPool: LoadingWebDriverPool?) {
         val isGUI = driverSettings.isGUI
         val displayMode = driverSettings.displayMode
         // Issue #17: when counting retired web drivers, all retired drivers in all driver pools should be counted.
-        val totalRetiredDrivers = driverPools.values.sumOf { it.onlineDrivers.count { it.isRetired } }
+        val totalDyingDrivers = _retiredDriverPools.values.sumOf { it.numDying }
         // Maximum allowed number of retired drives, if it's exceeded, the oldest driver pool should be closed.
-        val maxAllowedRetiredDrivers = 10
+        val maxAllowedDyingDrivers = 10
         // Keep some web drivers in GUI mode open for diagnostic purposes.
-        val driverPool = when {
-            !isGUI -> _driverPools.remove(browserId)
+        val dyingDriverPool = when {
+            !isGUI -> retiredDriverPool
             // The drivers are in GUI mode and there is many open drivers.
-            totalRetiredDrivers > maxAllowedRetiredDrivers -> {
+            totalDyingDrivers > maxAllowedDyingDrivers -> {
                 // Find out the oldest retired driver pool
-                driverPools.values.filter { it.isRetired }.minByOrNull { it.lastActiveTime }
+                _retiredDriverPools.values.minByOrNull { it.lastActiveTime }
             }
             else -> null
         }
 
-        if (driverPool != null) {
-            logger.info(driverPool.formatStatus(verbose = true))
-            logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
-            driverPool.close()
-            browserManager.closeBrowserGracefully(browserId)
-        } else {
+        if (logger.isDebugEnabled) {
+            logger.debug("There are {} dying drivers in {} retired driver pools",
+                totalDyingDrivers, _retiredDriverPools.size)
+            logger.debug(formatStatus(true))
+        }
+
+        if (isGUI) {
             val key = browserId.userDataDir.toString()
             val browser = browserManager.browsers[key]
             if (browser != null) {
@@ -368,7 +397,21 @@ open class WebDriverPoolManager(
                 val urls = listOf("chrome://version/", "chrome://history/")
                 runBlocking { urls.forEach { browser.newDriver().navigateTo(it) } }
             }
-            logger.info("Web drivers are in {} mode, please close it manually | {} ", displayMode, browserId)
+        }
+
+        if (dyingDriverPool != null) {
+            logger.info(dyingDriverPool.formatStatus(verbose = true))
+            logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
+
+            require(!driverPools.containsKey(browserId)) {
+                "The active driver pool should not contain the retired browser | $browserId" }
+            _retiredDriverPools.remove(browserId)
+            _closedDriverPools.add(browserId)
+
+            dyingDriverPool.runCatching { close() }.onFailure { logger.warn(it.stringify()) }
+            browserManager.runCatching { closeBrowserGracefully(browserId) }.onFailure { logger.warn(it.stringify()) }
+        } else {
+            logger.info("Web drivers are in {} mode, please close them manually | {} ", displayMode, browserId)
         }
     }
 

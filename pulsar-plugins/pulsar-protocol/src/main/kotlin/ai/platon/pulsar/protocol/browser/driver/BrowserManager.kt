@@ -4,7 +4,9 @@ import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.driver.Browser
+import ai.platon.pulsar.crawl.fetch.driver.BrowserEvents
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
@@ -34,7 +36,11 @@ open class BrowserManager(
     }
 
     fun maintain() {
-        browsers.values.forEach { it.maintain() }
+        browsers.values.forEach {
+            it.emit(BrowserEvents.willMaintain)
+            it.emit(BrowserEvents.maintain)
+            it.emit(BrowserEvents.didMaintain)
+        }
     }
 
     @Synchronized
@@ -45,8 +51,8 @@ open class BrowserManager(
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _browsers.values.parallelStream().forEach {
-                it.runCatching { close() }.onFailure { logger.warn("Failed to close", it) }
+            _browsers.values.parallelStream().forEach { browser ->
+                browser.runCatching { close() }.onFailure { logger.warn(it.stringify()) }
             }
             _browsers.clear()
         }

@@ -67,20 +67,27 @@ class LoadingWebDriverPool constructor(
     val counterRetired = registry.counter(this, "retired")
     val counterQuit = registry.counter(this, "quit")
 
+    /**
+     * Retired but not closed yet.
+     * */
     var isRetired = false
     val isActive get() = !isRetired && !closed.get() && AppContext.isActive
     val launched = AtomicBoolean()
     val numWaiting = AtomicInteger()
-    val numWorking = AtomicInteger()
+    /**
+     * The number of drivers who are at work.
+     * */
+    val numIsWorking = AtomicInteger()
     val numFree get() = freeDrivers.size
-    val numActive get() = numWorking.get() + numFree
-    val numAvailable get() = capacity - numWorking.get()
+    val numActive get() = numIsWorking.get() + numFree
+    val numAvailable get() = capacity - numIsWorking.get()
     val numOnline get() = onlineDrivers.size
+    val numDying get() = numOnline - numFree - numIsWorking.get()
 
     var lastActiveTime = Instant.now()
     var idleTimeout = immutableConfig.getDuration(BROWSER_DRIVER_POOL_IDLE_TIMEOUT, Duration.ofMinutes(10))
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    val isIdle get() = (numWorking.get() == 0 && idleTime > idleTimeout)
+    val isIdle get() = (numIsWorking.get() == 0 && idleTime > idleTimeout)
 
     /**
      * Allocate [capacity] drivers
@@ -118,33 +125,40 @@ class LoadingWebDriverPool constructor(
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         return poll0(priority, conf, timeout, unit).also {
-            numWorking.incrementAndGet()
+            numIsWorking.incrementAndGet()
             lastActiveTime = Instant.now()
         }
     }
 
     fun put(driver: WebDriver) {
+        lastActiveTime = Instant.now()
+
         try {
-            numWorking.decrementAndGet()
-
-            // close open tabs to reduce memory usage
-            if (availableMemory < BROWSER_TAB_REQUIRED_MEMORY) {
-                if (numOnline > 0.5 * capacity) {
-                    driver.retire()
-                }
-            }
-
-            if (numOnline > capacity) {
-                driver.retire()
-            }
-
-            if (driver.isWorking) offer(driver) else dismiss(driver)
+            numIsWorking.decrementAndGet()
+            put0(driver)
         } finally {
-            lastActiveTime = Instant.now()
-
-            if (numWorking.get() == 0) {
+            if (numIsWorking.get() == 0) {
                 lock.withLock { notBusy.signalAll() }
             }
+        }
+    }
+
+    private fun put0(driver: WebDriver) {
+        // close open tabs to reduce memory usage
+        if (availableMemory < BROWSER_TAB_REQUIRED_MEMORY) {
+            if (numOnline > 0.5 * capacity) {
+                driver.retire()
+            }
+        }
+
+        if (numOnline > capacity) {
+            driver.retire()
+        }
+
+        if (driver.isWorking) {
+            offer(driver)
+        } else {
+            dismiss(driver)
         }
     }
 
@@ -170,10 +184,10 @@ class LoadingWebDriverPool constructor(
         val p = this
         val status = if (verbose) {
             String.format("online: %d, free: %d, waiting: %d, working: %d, active: %d",
-                    p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
+                    p.numOnline, p.numFree, p.numWaiting.get(), p.numIsWorking.get(), p.numActive)
         } else {
             String.format("%d/%d/%d/%d/%d (online/free/waiting/working/active)",
-                    p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
+                    p.numOnline, p.numFree, p.numWaiting.get(), p.numIsWorking.get(), p.numActive)
         }
 
         val time = idleTime.readable()
@@ -268,13 +282,10 @@ class LoadingWebDriverPool constructor(
         _onlineDrivers.forEach { it.cancel() }
         _onlineDrivers.clear()
 
-//        val nonSynchronized = onlineDrivers.toList().also { _onlineDrivers.clear() }
-//        nonSynchronized.forEach { it.cancel() }
-
         waitUntilIdle(timeToWait)
 
         // drivers are closed by browser
-        // closeAllDrivers(nonSynchronized)
+//         closeAllDrivers(nonSynchronized)
     }
 
     /**

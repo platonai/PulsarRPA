@@ -20,20 +20,6 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-open class PrivacyContextException(message: String) : Exception(message)
-
-class PrivacyContextMetrics {
-    private val registry get() = AppMetrics.defaultMetricRegistry
-    val contexts = registry.multiMetric(this, "contexts")
-    val tasks = registry.multiMetric(this, "tasks")
-    val successes = registry.multiMetric(this, "successes")
-    val finishes = registry.multiMetric(this, "finishes")
-    val smallPages = registry.multiMetric(this, "smallPages")
-    val leakWarnings = registry.multiMetric(this, "leakWarnings")
-    val minorLeakWarnings = registry.multiMetric(this, "minorLeakWarnings")
-    val contextLeaks = registry.multiMetric(this, "contextLeaks")
-}
-
 abstract class PrivacyContext(
     /**
      * The data directory for this context, very context has its own data directory

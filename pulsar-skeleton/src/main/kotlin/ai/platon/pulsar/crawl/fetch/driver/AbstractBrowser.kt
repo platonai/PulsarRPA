@@ -61,6 +61,7 @@ abstract class AbstractBrowser(
      * */
     protected fun attach() {
         on(BrowserEvents.willNavigate) { entry: NavigateEntry -> onWillNavigate(entry) }
+        on(BrowserEvents.maintain) { maintain() }
     }
 
     /**
@@ -68,5 +69,6 @@ abstract class AbstractBrowser(
      * */
     protected fun detach() {
         off(BrowserEvents.willNavigate)
+        off(BrowserEvents.maintain)
     }
 }

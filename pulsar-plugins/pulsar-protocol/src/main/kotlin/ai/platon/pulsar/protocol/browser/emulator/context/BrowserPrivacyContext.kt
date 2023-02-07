@@ -71,6 +71,7 @@ open class BrowserPrivacyContext(
      * Block until all the drivers are closed and the proxy is offline
      * */
     override fun close() {
+        logger.debug("Closing browser privacy context ...")
         if (closed.compareAndSet(false, true)) {
             try {
                 report()

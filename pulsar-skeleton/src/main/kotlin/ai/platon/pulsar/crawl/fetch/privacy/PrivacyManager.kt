@@ -2,7 +2,9 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppRuntime
+import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_CLOSE_LAZY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -20,11 +22,14 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val closed = AtomicBoolean()
     private val isClosed get() = closed.get()
 
+    private val closeStrategy get() = conf.get(PRIVACY_CONTEXT_CLOSE_LAZY, CloseStrategy.ASAP.name)
+
     private val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
 
     open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
 
     val isActive get() = !closed.get() && AppContext.isActive
+
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
      * NOTE: we can use a priority queue and every time we need a context, take the top one
@@ -59,6 +64,11 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
 
     open fun close(privacyContext: PrivacyContext) {
+        if (logger.isDebugEnabled) {
+            logger.debug("Closing privacy context | {}", privacyContext.id)
+            logger.debug("Active contexts: {}, zombie contexts: {}", activeContexts.size, zombieContexts.size)
+        }
+
         val id = privacyContext.id
 
         synchronized(activeContexts) {
@@ -66,10 +76,11 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 activeContexts.remove(id)
                 zombieContexts.add(privacyContext)
 
-                if (!AppRuntime.isLowMemory) {
-                    cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
-                } else {
-                    closeZombieContexts()
+                val lazyClose = closeStrategy == CloseStrategy.LAZY.name
+                when {
+                    AppRuntime.isLowMemory -> closeZombieContexts()
+                    lazyClose -> cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
+                    else -> closeZombieContexts()
                 }
             }
         }
@@ -81,7 +92,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            logger.info("Closing privacy contexts")
+            logger.info("Closing privacy contexts ...")
 
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
@@ -92,12 +103,16 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     }
 
     private fun closeZombieContexts() {
+        logger.debug("Closing zombie contexts ...")
+
         val pendingContexts = zombieContexts.filter { !it.closed.get() }
         if (isClosed) {
             zombieContexts.clear()
         }
 
         if (pendingContexts.isNotEmpty()) {
+            logger.debug("Closing {} pending zombie contexts ...", pendingContexts.size)
+
             pendingContexts.parallelStream().forEach {
                 kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) }
             }

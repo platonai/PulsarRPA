@@ -238,7 +238,7 @@ public interface CapabilityTypes {
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
-     * Privacy control
+     * Privacy context
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
     /** The class name of privacy context id generator */
@@ -246,6 +246,10 @@ public interface CapabilityTypes {
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
     String PRIVACY_MAX_WARNINGS = "privacy.max.warnings";
     String PRIVACY_CONTEXT_MIN_THROUGHPUT = "privacy.context.min.throughput";
+    /**
+     * The strategy to close privacy context: asap, lazy
+     * */
+    String PRIVACY_CONTEXT_CLOSE_LAZY = "privacy.context.close.strategy";
     /**
      * The max value of tabs a browser can open
      */

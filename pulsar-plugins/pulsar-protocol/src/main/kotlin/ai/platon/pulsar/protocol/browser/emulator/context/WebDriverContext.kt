@@ -88,11 +88,14 @@ class WebDriverContext(
 
     private fun doClose() {
         val asap = !AppContext.isActive || AppRuntime.isLowMemory
+
+        logger.debug("Closing web driver context, asap: $asap")
+
         // not shutdown, wait longer
         if (asap) {
             closeUnderlyingLayerImmediately()
         } else {
-            waitUntilAllDoneNormally(Duration.ofMinutes(3))
+            waitUntilAllDoneNormally(Duration.ofMinutes(1))
             // close underlying IO based modules asynchronously
             closeUnderlyingLayerGracefully()
         }

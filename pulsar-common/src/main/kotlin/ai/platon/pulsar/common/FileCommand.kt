@@ -54,9 +54,9 @@ object FileCommand {
                 if (lastCheckTime <= modifiedTime && now - lastCheckTime >= checkInterval.toMillis()) {
                     LAST_CHECK_TIME[command] = now
                     val lines = Files.readAllLines(COMMAND_FILE)
-                    exist = lines.stream().anyMatch { line: String -> line.contains(command) }
+                    exist = lines.any { it.contains(command) }
                     if (exist) {
-                        if (!StringUtils.containsIgnoreCase(command, " -perm")) {
+                        if (!command.contains( "-perm", ignoreCase = true)) {
                             lines.remove(command)
                             Files.write(COMMAND_FILE, lines)
                         }
