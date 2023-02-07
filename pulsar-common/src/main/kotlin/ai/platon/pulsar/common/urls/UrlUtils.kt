@@ -32,7 +32,9 @@ object UrlUtils {
      */
     @JvmStatic
     fun getURLOrNull(spec: String?): URL? {
-        if (spec.isNullOrBlank()) return null
+        if (spec.isNullOrBlank()) {
+            return null
+        }
 
         return kotlin.runCatching { URL(spec) }.getOrNull()
     }

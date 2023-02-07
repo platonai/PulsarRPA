@@ -78,11 +78,11 @@ class LoadingWebDriverPool constructor(
      * The number of drivers who are at work.
      * */
     val numIsWorking = AtomicInteger()
-    val numFree get() = freeDrivers.size
-    val numActive get() = numIsWorking.get() + numFree
+    val numIsFree get() = freeDrivers.size
+    val numActive get() = numIsWorking.get() + numIsFree
     val numAvailable get() = capacity - numIsWorking.get()
     val numOnline get() = onlineDrivers.size
-    val numDying get() = numOnline - numFree - numIsWorking.get()
+    val numDying get() = numOnline - numIsFree - numIsWorking.get()
 
     var lastActiveTime = Instant.now()
     var idleTimeout = immutableConfig.getDuration(BROWSER_DRIVER_POOL_IDLE_TIMEOUT, Duration.ofMinutes(10))
@@ -174,20 +174,14 @@ class LoadingWebDriverPool constructor(
         onlineDrivers.forEach { it.cancel() }
     }
 
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            closeGracefully(Duration.ofSeconds(5))
-        }
-    }
-
-    fun formatStatus(verbose: Boolean = false): String {
+    fun report(verbose: Boolean = false): String {
         val p = this
         val status = if (verbose) {
             String.format("online: %d, free: %d, waiting: %d, working: %d, active: %d",
-                    p.numOnline, p.numFree, p.numWaiting.get(), p.numIsWorking.get(), p.numActive)
+                    p.numOnline, p.numIsFree, p.numWaiting.get(), p.numIsWorking.get(), p.numActive)
         } else {
             String.format("%d/%d/%d/%d/%d (online/free/waiting/working/active)",
-                    p.numOnline, p.numFree, p.numWaiting.get(), p.numIsWorking.get(), p.numActive)
+                    p.numOnline, p.numIsFree, p.numWaiting.get(), p.numIsWorking.get(), p.numActive)
         }
 
         val time = idleTime.readable()
@@ -198,7 +192,23 @@ class LoadingWebDriverPool constructor(
         }
     }
 
-    override fun toString(): String = formatStatus(false)
+    /**
+     * Closing call stack:
+     *
+     * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
+     * */
+    @Synchronized
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            closeGracefully(Duration.ofSeconds(5))
+        }
+    }
+
+    @Synchronized
+    override fun toString(): String = report(false)
 
     @Synchronized
     private fun offer(driver: WebDriver) {
@@ -233,7 +243,7 @@ class LoadingWebDriverPool constructor(
             numWaiting.decrementAndGet()
         }
 
-        return driver ?: throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + formatStatus() + ")")
+        return driver ?: throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + report() + ")")
     }
 
     @Throws(BrowserLaunchException::class)

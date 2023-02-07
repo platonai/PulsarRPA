@@ -20,6 +20,7 @@ open class BrowserManager(
     private val browserFactory = BrowserFactory()
     // TODO: use browser id as the key directly
     private val _browsers = ConcurrentHashMap<String, Browser>()
+    private val closedBrowserIds = mutableListOf<BrowserId>()
 
     val browsers: Map<String, Browser> = _browsers
 
@@ -46,13 +47,14 @@ open class BrowserManager(
     @Synchronized
     fun closeBrowserGracefully(browserId: BrowserId) {
         _browsers.remove(browserId.userDataDir.toString())?.close()
+        closedBrowserIds.add(browserId)
     }
 
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _browsers.values.parallelStream().forEach { browser ->
-                browser.runCatching { close() }.onFailure { logger.warn(it.stringify()) }
+                runCatching { browser.close() }.onFailure { logger.warn(it.stringify()) }
             }
             _browsers.clear()
         }

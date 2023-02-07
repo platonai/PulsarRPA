@@ -103,7 +103,7 @@ open class WebDriverPoolManager(
     ).takeUnless { suppressMetrics }
 
     val numWaiting get() = driverPools.values.sumOf { it.numWaiting.get() }
-    val numFreeDrivers get() = driverPools.values.sumOf { it.numFree }
+    val numFreeDrivers get() = driverPools.values.sumOf { it.numIsFree }
     val numWorkingDrivers get() = driverPools.values.sumOf { it.numIsWorking.get() }
     val numAvailableDrivers get() = driverPools.values.sumOf { it.numAvailable }
     val numOnline get() = driverPools.values.sumOf { it.onlineDrivers.size }
@@ -225,9 +225,17 @@ open class WebDriverPoolManager(
     }
 
     fun formatStatus(browserId: BrowserId, verbose: Boolean = false): String {
-        return _driverPools[browserId]?.formatStatus(verbose)?:""
+        return _driverPools[browserId]?.report(verbose)?:""
     }
 
+    /**
+     * Closing call stack:
+     *
+     * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
+     * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _deferredTasks.values.forEach {
@@ -400,7 +408,7 @@ open class WebDriverPoolManager(
         }
 
         if (dyingDriverPool != null) {
-            logger.info(dyingDriverPool.formatStatus(verbose = true))
+            logger.info(dyingDriverPool.report(verbose = true))
             logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
 
             require(!driverPools.containsKey(browserId)) {
@@ -418,7 +426,7 @@ open class WebDriverPoolManager(
     private fun formatStatus(verbose: Boolean = false): String {
         val sb = StringBuilder()
         if (driverPools.isNotEmpty()) {
-            driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
+            driverPools.entries.joinTo(sb, "\n") { it.value.report(verbose) + " | " + it.key }
         }
         return sb.toString()
     }

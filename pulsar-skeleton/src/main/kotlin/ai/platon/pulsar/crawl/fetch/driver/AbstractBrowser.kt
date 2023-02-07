@@ -18,6 +18,8 @@ abstract class AbstractBrowser(
 
     protected val mutableNavigateHistory = Collections.synchronizedList(mutableListOf<NavigateEntry>())
     protected val mutableDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val mutableRecoveredDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val mutableReusedDrivers = ConcurrentHashMap<String, WebDriver>()
 
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
@@ -49,6 +51,7 @@ abstract class AbstractBrowser(
 
     override fun close() {
         detach()
+        mutableRecoveredDrivers.clear()
         mutableDrivers.clear()
     }
 

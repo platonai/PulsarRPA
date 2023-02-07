@@ -90,6 +90,16 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     }
 
+    /**
+     * Block until all the drivers are closed and the proxy is offline.
+     *
+     * Closing call stack:
+     *
+     * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
+     * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             logger.info("Closing privacy contexts ...")

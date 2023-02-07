@@ -59,7 +59,7 @@ class TestWebDriverPool {
         }
 
         assertEquals(10, driverPool.numIsWorking.get())
-        assertEquals(0, driverPool.numFree)
+        assertEquals(0, driverPool.numIsFree)
         assertEquals(10, driverPool.numActive)
         assertEquals(10, driverPool.numOnline)
 
@@ -69,13 +69,13 @@ class TestWebDriverPool {
         }
 
         assertEquals(0, driverPool.numIsWorking.get())
-        assertEquals(5, driverPool.numFree)
+        assertEquals(5, driverPool.numIsFree)
         assertEquals(5, driverPool.counterRetired.count)
 
         driverPool.close()
 
         assertEquals(0, driverPool.numIsWorking.get())
-        assertEquals(0, driverPool.numFree)
+        assertEquals(0, driverPool.numIsFree)
         assertEquals(10, driverPool.counterQuit.count)
     }
 

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
@@ -73,9 +74,9 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            parseFilters.forEach {
-                it.runCatching { close() }.onFailure { t ->
-                    logger.warn("Cannot close ${this.javaClass.simpleName}", t)
+            parseFilters.forEach { filter ->
+                runCatching { filter.close() }.onFailure { t ->
+                    logger.warn(t.brief("Failed to close ${filter.javaClass.simpleName}"))
                 }
             }
         }

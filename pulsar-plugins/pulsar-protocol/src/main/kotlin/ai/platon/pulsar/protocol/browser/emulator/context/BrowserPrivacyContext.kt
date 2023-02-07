@@ -68,7 +68,14 @@ open class BrowserPrivacyContext(
     }
 
     /**
-     * Block until all the drivers are closed and the proxy is offline
+     * Block until all the drivers are closed and the proxy is offline.
+     *
+     * Closing call stack:
+     *
+     * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
      * */
     override fun close() {
         logger.debug("Closing browser privacy context ...")

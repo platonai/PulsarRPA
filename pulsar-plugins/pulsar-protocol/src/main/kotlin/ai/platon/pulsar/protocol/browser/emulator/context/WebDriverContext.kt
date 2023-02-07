@@ -80,6 +80,14 @@ class WebDriverContext(
         }
     }
 
+    /**
+     * Closing call stack:
+     *
+     * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
+     * -> BrowserManager.close -> Browser.close -> WebDriver.close
+     * |-> LoadingWebDriverPool.close
+     *
+     * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching { doClose() }.onFailure { logger.warn(it.stringify()) }
