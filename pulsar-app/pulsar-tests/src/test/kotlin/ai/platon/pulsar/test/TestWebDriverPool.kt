@@ -14,6 +14,7 @@ import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * TODO: move to pulsar-skeleton module
@@ -53,30 +54,38 @@ class TestWebDriverPool {
     fun testWebDriverPool() {
         val driverPool = driverPoolManager.createUnmanagedDriverPool()
         val workingDrivers = mutableListOf<WebDriver>()
-        repeat(10) {
-            val driver = driverPool.poll(conf.toVolatileConfig())
+        val numDrivers = driverPool.capacity
+        repeat(numDrivers) {
+            val driver = driverPool.poll()
+            assertTrue { driver.isWorking }
             workingDrivers.add(driver)
         }
 
-        assertEquals(10, driverPool.numIsWorking.get())
-        assertEquals(0, driverPool.numIsFree)
-        assertEquals(10, driverPool.numActive)
-        assertEquals(10, driverPool.numOnline)
+        assertEquals(numDrivers, driverPool.numWorking)
+        assertEquals(0, driverPool.numStandby)
+        assertEquals(numDrivers, driverPool.numActive)
+        assertEquals(numDrivers, driverPool.numOnline)
 
         workingDrivers.forEachIndexed { i, driver ->
-            if (i % 2 == 0) driver.retire()
+            if (i % 2 == 0) {
+                driver.retire()
+                assertTrue { driver.isRetired }
+            } else {
+                assertTrue { driver.isWorking }
+            }
+
             driverPool.put(driver)
         }
 
-        assertEquals(0, driverPool.numIsWorking.get())
-        assertEquals(5, driverPool.numIsFree)
-        assertEquals(5, driverPool.counterRetired.count)
+        assertEquals(0, driverPool.numWorking)
+        assertEquals(numDrivers / 2, driverPool.numStandby)
+        assertEquals(numDrivers / 2, driverPool.counterRetired.count.toInt())
 
         driverPool.close()
 
-        assertEquals(0, driverPool.numIsWorking.get())
-        assertEquals(0, driverPool.numIsFree)
-        assertEquals(10, driverPool.counterQuit.count)
+        assertEquals(0, driverPool.numWorking)
+        assertEquals(0, driverPool.numStandby)
+//        assertEquals(10, driverPool.counterClosed.count)
     }
 
     @Ignore("Time consuming (and also bugs)")

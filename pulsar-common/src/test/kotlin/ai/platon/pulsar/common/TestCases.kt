@@ -68,6 +68,12 @@ class TestCases {
     )
 
     @Test
+    fun testPostIncrementOperator() {
+        var i = 0
+        assertTrue { i++ == 0 }
+    }
+
+    @Test
     fun testOptional() {
         val s1 = Optional.ofNullable("hello")
         val s2 = Optional.ofNullable<String>(null)

@@ -58,11 +58,11 @@ abstract class AbstractWebDriver(
 
     override var lastActiveTime: Instant = Instant.now()
 
+    override val isFree get() = status.get().isFree
     override val isWorking get() = status.get().isWorking
     override val isRetired get() = status.get().isRetired
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
-    override val isFree get() = status.get().isFree
     override val isCrashed get() = status.get().isCrashed
 
     private val jsoupCreateDestroyMonitor = Any()

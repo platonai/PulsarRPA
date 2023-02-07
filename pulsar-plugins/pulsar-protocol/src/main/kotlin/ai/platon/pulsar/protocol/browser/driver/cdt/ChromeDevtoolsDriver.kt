@@ -737,7 +737,7 @@ class ChromeDevtoolsDriver(
             pageAPI?.addScriptToEvaluateOnNewDocument(confuser.confuse(it))
         }
 
-        if (logger.isDebugEnabled) {
+        if (logger.isTraceEnabled) {
             reportInjectedJs()
         }
 
@@ -748,10 +748,11 @@ class ChromeDevtoolsDriver(
     private fun reportInjectedJs() {
         val script = browserSettings.confuser.confuse(initScriptCache.joinToString("\n;\n\n\n;\n"))
 
+        // TODO: write to driver specific directory
         val dir = AppPaths.REPORT_DIR.resolve("browser/js")
         Files.createDirectories(dir)
         val report = Files.writeString(dir.resolve("preload.all.js"), script)
-        logger.info("All injected js: file://$report")
+        logger.trace("All injected js: file://$report")
     }
 
     private suspend fun isMainFrame(frameId: String): Boolean {

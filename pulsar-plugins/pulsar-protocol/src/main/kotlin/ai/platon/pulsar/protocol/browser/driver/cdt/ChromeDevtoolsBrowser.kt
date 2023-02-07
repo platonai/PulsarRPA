@@ -64,13 +64,13 @@ class ChromeDevtoolsBrowser(
     @Throws(WebDriverException::class)
     fun closeTab(tab: ChromeTab) {
         logger.debug("Closing tab | {}", tab.url)
-        return chrome.runCatching { closeTab(tab) }.getOrElse { throw WebDriverException("closeTab", it) }
+        return runCatching { chrome.closeTab(tab) }.getOrElse { throw WebDriverException("closeTab", it) }
     }
 
     @Synchronized
     @Throws(WebDriverException::class)
     fun listTabs(): Array<ChromeTab> {
-        return chrome.runCatching { listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
+        return runCatching { chrome.listTabs() }.getOrElse { throw WebDriverException("listTabs", it) }
     }
 
     override fun maintain() {

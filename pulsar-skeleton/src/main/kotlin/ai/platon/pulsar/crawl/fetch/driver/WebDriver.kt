@@ -352,7 +352,10 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
-    /** Quits this driver, closing every associated window. */
+    /**
+     * Quits this driver, closing every associated window.
+     * */
+    @Deprecated("Inappropriate name", ReplaceWith("close()"))
     @Throws(Exception::class)
     fun quit()
     /** Wait until the tab is terminated and closed. */
