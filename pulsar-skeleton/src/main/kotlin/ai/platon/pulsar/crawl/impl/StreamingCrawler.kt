@@ -55,6 +55,7 @@ private class StreamingCrawlerMetrics {
 }
 
 private enum class CriticalWarning(val message: String) {
+    HIGH_CPU_LOAD("HIGH CPU LOAD"),
     OUT_OF_MEMORY("OUT OF MEMORY"),
     OUT_OF_DISK_STORAGE("OUT OF DISK STORAGE"),
     NO_PROXY("NO PROXY AVAILABLE"),
@@ -293,6 +294,11 @@ open class StreamingCrawler(
                 logger.info("$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
                     idleTime.readable())
             }
+            delay(1000)
+        }
+
+        while (isActive && AppRuntime.isHighCPULoad) {
+            criticalWarning = CriticalWarning.HIGH_CPU_LOAD
             delay(1000)
         }
 

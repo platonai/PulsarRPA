@@ -7,10 +7,10 @@ import kotlinx.coroutines.withContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.IOException
-import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
@@ -22,6 +22,11 @@ abstract class AbstractWebDriver(
     companion object {
         val instanceSequencer = AtomicInteger()
     }
+
+    private val jsoupCreateDestroyMonitor = Any()
+    private var jsoupSession: Connection? = null
+    private val canceled = AtomicBoolean()
+    private val crashed = AtomicBoolean()
 
     override var idleTimeout: Duration = Duration.ofMinutes(10)
 
@@ -54,31 +59,45 @@ abstract class AbstractWebDriver(
 
     override var isReused: Boolean = false
 
-    override val status = AtomicReference(WebDriver.Status.UNKNOWN)
+    override val state = AtomicReference(WebDriver.State.INIT)
 
     override var lastActiveTime: Instant = Instant.now()
 
-    override val isFree get() = status.get().isFree
-    override val isWorking get() = status.get().isWorking
-    override val isRetired get() = status.get().isRetired
-    override val isCanceled get() = status.get().isCanceled
-    override val isQuit get() = status.get().isQuit
-    override val isCrashed get() = status.get().isCrashed
+    override val isInit get() = state.get().isInit
+    override val isReady get() = state.get().isReady
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("isReady()"))
+    override val isFree get() = isReady
+    override val isWorking get() = state.get().isWorking
+    override val isRetired get() = state.get().isRetired
+    override val isQuit get() = state.get().isQuit
 
-    private val jsoupCreateDestroyMonitor = Any()
-    private var jsoupSession: Connection? = null
+    override val isCanceled get() = state.get().isCanceled
+    override val isCrashed get() = state.get().isCrashed
 
-    override fun free() = status.set(WebDriver.Status.FREE)
-    override fun startWork() = status.set(WebDriver.Status.WORKING)
-    override fun retire() = status.set(WebDriver.Status.RETIRED)
-    override fun cancel() {
-        if (status.compareAndSet(WebDriver.Status.WORKING, WebDriver.Status.CANCELED)) {
+    override fun free() {
+        canceled.set(false)
+        crashed.set(false)
+        if (!isInit && !isWorking) {
+            throw IllegalStateException("A driver has to be ready before work, actual $state")
         }
+        state.set(WebDriver.State.READY)
+    }
+    override fun startWork() {
+        canceled.set(false)
+        crashed.set(false)
+        if (!isInit && !isReady) {
+            throw IllegalStateException("A driver has to be ready before work, actual $state")
+        }
+        state.set(WebDriver.State.WORKING)
+    }
+    override fun retire() = state.set(WebDriver.State.RETIRED)
+    override fun cancel() {
+        canceled.set(true)
     }
 
     override fun jvm(): JvmWebDriver = this
 
-    @Deprecated("Not used any more")
+    @Deprecated("Not used any more", ReplaceWith("id.toString()"))
     override val sessionId: String?
         get() = id.toString()
 

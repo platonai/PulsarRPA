@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.fetch.driver
 
 import ai.platon.pulsar.common.event.EventEmitter
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
-import java.util.*
 
 /**
  * The Browser defines methods and events to manipulate a real browser.
@@ -36,6 +35,9 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * */
     @Throws(WebDriverException::class)
     fun newDriver(): WebDriver
+
+    fun destroyDriver(driver: WebDriver)
+
     /**
      * Register event handler when a url is about to navigate.
      * */

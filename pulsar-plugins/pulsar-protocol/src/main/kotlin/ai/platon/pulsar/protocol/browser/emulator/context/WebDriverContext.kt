@@ -95,7 +95,7 @@ class WebDriverContext(
     }
 
     private fun doClose() {
-        val asap = !AppContext.isActive || AppRuntime.isLowMemory
+        val asap = !AppContext.isActive || AppRuntime.isInsufficientHardwareResources
 
         logger.debug("Closing web driver context, asap: $asap")
 
@@ -153,7 +153,7 @@ class WebDriverContext(
         var n = timeout.seconds
         lock.lockInterruptibly()
         try {
-            while (runningTasks.isNotEmpty() && !AppRuntime.isLowMemory && n-- > 0) {
+            while (runningTasks.isNotEmpty() && !AppRuntime.isInsufficientHardwareResources && n-- > 0) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
         } finally {

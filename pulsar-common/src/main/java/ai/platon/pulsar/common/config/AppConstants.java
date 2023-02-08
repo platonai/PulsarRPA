@@ -195,7 +195,7 @@ public interface AppConstants {
     /**
      * Browser
      * */
-    double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.GIB.toBytes(1); // 500 MiB
+    double BROWSER_TAB_REQUIRED_MEMORY = ByteUnit.GIB.toBytes(1); // 1 GiB
 
     double DEFAULT_BROWSER_RESERVED_MEMORY = ByteUnit.GIB.toBytes(5.0); // 5 GiB
 

@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppRuntime
-import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_CLOSE_LAZY
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -16,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
@@ -44,17 +44,17 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     /**
-     * Create a new context or return an exist one
+     * Create a new context or return an existing one.
      * */
     abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
 
     /**
-     * Create a new context or return an exist one
+     * Create a new context or return an existing one
      * */
     abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext
 
     /**
-     * Create a context with [id] and add to active context list if not absent
+     * Create a context with [id] and add it to active context list if not absent
      * */
     abstract fun computeIfAbsent(id: PrivacyContextId): PrivacyContext
 
@@ -78,8 +78,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
                 val lazyClose = closeStrategy == CloseStrategy.LAZY.name
                 when {
-                    AppRuntime.isLowMemory -> closeZombieContexts()
-                    lazyClose -> cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
+                    AppRuntime.isInsufficientHardwareResources -> closeZombieContexts()
+                    lazyClose -> closeZombieContextsLazily()
                     else -> closeZombieContexts()
                 }
             }
@@ -91,7 +91,6 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     }
 
     /**
-     * Block until all the drivers are closed and the proxy is offline.
      *
      * Closing call stack:
      *
@@ -112,6 +111,20 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         }
     }
 
+    /**
+     * Close zombie contexts lazily, hope the tasks returns better.
+     *
+     * It seems not very useful:
+     * 1. lazy closing causes the resource releases later
+     * 2. tasks canceling is good, no need to wait for the tasks
+     * */
+    private fun closeZombieContextsLazily() {
+        cleaningService.schedule({ closeZombieContexts() }, 5, TimeUnit.SECONDS)
+    }
+
+    /**
+     * Close the zombie contexts, and the resources release immediately.
+     * */
     private fun closeZombieContexts() {
         logger.debug("Closing zombie contexts ...")
 

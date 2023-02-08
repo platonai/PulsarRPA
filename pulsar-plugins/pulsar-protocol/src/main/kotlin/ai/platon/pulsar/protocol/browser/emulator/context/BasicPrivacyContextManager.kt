@@ -45,6 +45,7 @@ class BasicPrivacyContextManager(
     }
 
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
+        // TODO: the outer check is not necessary
         if (activeContexts.size < numPrivacyContexts) {
             synchronized(activeContexts) {
                 if (activeContexts.size < numPrivacyContexts) {

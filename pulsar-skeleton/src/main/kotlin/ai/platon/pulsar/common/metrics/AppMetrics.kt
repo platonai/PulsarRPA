@@ -5,19 +5,14 @@ import ai.platon.pulsar.common.chrono.scheduleAtFixedRate
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.measure.ByteUnit
-import ai.platon.pulsar.common.measure.ByteUnitConverter
 import com.codahale.metrics.*
 import com.codahale.metrics.graphite.GraphiteReporter
 import com.codahale.metrics.graphite.PickledGraphite
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
-import oshi.SystemInfo
 import java.net.InetSocketAddress
-import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.time.Duration
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
@@ -89,7 +84,7 @@ class AppMetrics(
                 "startTime" to Gauge { AppRuntime.startTime },
                 "elapsedTime" to Gauge { AppRuntime.elapsedTime },
                 "availableMemory" to Gauge { Strings.compactFormat(AppRuntime.availableMemory) },
-                "freeSpace" to Gauge { AppRuntime.freeSpace.map { Strings.compactFormat(it) } }
+                "freeSpace" to Gauge { AppRuntime.freeDiskSpaces.map { Strings.compactFormat(it) } }
             ).let { reg.registerAll(this, it) }
         }
     }

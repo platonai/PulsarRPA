@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.Throws
 
@@ -42,6 +43,10 @@ internal class RobustRPC(
     }
 
     suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
+        if (!driver.checkState(action)) {
+            return null
+        }
+
         var i = maxRetry
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
         while (result.isFailure && i-- > 0 && driver.checkState()) {
@@ -52,7 +57,9 @@ internal class RobustRPC(
     }
 
     private suspend fun <T> invokeDeferred0(action: String, block: suspend CoroutineScope.() -> T): T? {
-        if (!driver.checkState()) return null
+        if (!driver.checkState()) {
+            return null
+        }
 
         return withContext(Dispatchers.IO) {
             if (!driver.checkState(action)) {

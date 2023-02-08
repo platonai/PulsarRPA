@@ -652,11 +652,7 @@ class ChromeDevtoolsDriver(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                browser.closeTab(chromeTab)
-            } catch (e: WebDriverException) {
-                // ignored
-            }
+            browser.destroyDriver(this)
 
             try {
                 devTools.close()

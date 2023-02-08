@@ -64,7 +64,6 @@ class TestWebDriverPool {
         assertEquals(numDrivers, driverPool.numWorking)
         assertEquals(0, driverPool.numStandby)
         assertEquals(numDrivers, driverPool.numActive)
-        assertEquals(numDrivers, driverPool.numOnline)
 
         workingDrivers.forEachIndexed { i, driver ->
             if (i % 2 == 0) {
@@ -79,7 +78,7 @@ class TestWebDriverPool {
 
         assertEquals(0, driverPool.numWorking)
         assertEquals(numDrivers / 2, driverPool.numStandby)
-        assertEquals(numDrivers / 2, driverPool.counterRetired.count.toInt())
+        assertEquals(numDrivers / 2, driverPool.counterClosed.count.toInt())
 
         driverPool.close()
 

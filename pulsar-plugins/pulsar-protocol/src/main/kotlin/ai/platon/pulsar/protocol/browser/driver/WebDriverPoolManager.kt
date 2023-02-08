@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
@@ -58,18 +59,22 @@ open class WebDriverPoolManager(
     private val logger = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && AppContext.isActive
+
     /**
      * Working driver pools
      * */
     private val _workingDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
+
     /**
      * Retired but not closed driver pools
      * */
     private val _retiredDriverPools = ConcurrentSkipListMap<BrowserId, LoadingWebDriverPool>()
+
     /**
      * Closed driver pool ids
      * */
     private val _closedDriverPools = ConcurrentSkipListSet<BrowserId>()
+
     /**
      * The deferred tasks
      * */
@@ -78,7 +83,8 @@ open class WebDriverPoolManager(
     val driverSettings get() = driverFactory.driverSettings
     val idleTimeout = Duration.ofMinutes(18)
 
-    val driverPools: Map<BrowserId, LoadingWebDriverPool> get() = _workingDriverPools
+    val workingDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _workingDriverPools
+
     val retiredDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _retiredDriverPools
 
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
@@ -91,24 +97,24 @@ open class WebDriverPoolManager(
     val numReset by lazy { AppMetrics.reg.meter(this, "numReset") }
     val numTimeout by lazy { AppMetrics.reg.meter(this, "numTimeout") }
     val gauges = mapOf(
-            "waitingDrivers" to Gauge { numWaitingDrivers },
-            "standbyDrivers" to Gauge { numStandbyDrivers },
-            "workingDrivers" to Gauge { numWorkingDrivers },
-            "onlineDrivers" to Gauge { numOnlineDrivers },
-            "pTasks" to Gauge { numPreemptiveTasks.get() },
-            "runningPTasks" to Gauge { numRunningPreemptiveTasks.get() },
-            "pendingNTasks" to Gauge { numPendingNormalTasks.get() },
-            "runningNTasks" to Gauge { numRunningNormalTasks.get() },
-            "idleTime" to Gauge { idleTime.readable() }
+        "waitingDrivers" to Gauge { numWaitingDrivers },
+        "standbyDrivers" to Gauge { numStandbyDrivers },
+        "workingDrivers" to Gauge { numWorkingDrivers },
+        "onlineDrivers" to Gauge { numOnlineDrivers },
+        "pTasks" to Gauge { numPreemptiveTasks.get() },
+        "runningPTasks" to Gauge { numRunningPreemptiveTasks.get() },
+        "pendingNTasks" to Gauge { numPendingNormalTasks.get() },
+        "runningNTasks" to Gauge { numRunningNormalTasks.get() },
+        "idleTime" to Gauge { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
-    val numWaitingDrivers get() = driverPools.values.sumOf { it.numWaiting }
-    val numStandbyDrivers get() = driverPools.values.sumOf { it.numStandby }
-    val numWorkingDrivers get() = driverPools.values.sumOf { it.numWorking }
-    val numAvailableDrivers get() = driverPools.values.sumOf { it.numAvailable }
-    val numOnlineDrivers get() = driverPools.values.sumOf { it.onlineDrivers.size }
+    val numWaitingDrivers get() = workingDriverPools.values.sumOf { it.numWaiting }
+    val numStandbyDrivers get() = workingDriverPools.values.sumOf { it.numStandby }
+    val numWorkingDrivers get() = workingDriverPools.values.sumOf { it.numWorking }
+    val numAvailableDrivers get() = workingDriverPools.values.sumOf { it.numSlots }
+    val numOnlineDrivers get() = workingDriverPools.values.sumOf { it.availableDrivers.size }
 
-//    private val launchLock = ReentrantLock()
+    //    private val launchLock = ReentrantLock()
     private val launchMutex = Mutex()
 
     // Maximum allowed number of retired drives, if it's exceeded, the oldest driver pool should be closed.
@@ -131,8 +137,9 @@ open class WebDriverPoolManager(
      * @return The result of action, or null if timeout
      * */
     @Throws(WebDriverException::class, WebDriverPoolException::class)
-    suspend fun run(browserId: BrowserId, task: FetchTask,
-                        browseFun: suspend (driver: WebDriver) -> FetchResult?
+    suspend fun run(
+        browserId: BrowserId, task: FetchTask,
+        browseFun: suspend (driver: WebDriver) -> FetchResult?
     ) = run(WebDriverTask(browserId, task.page, task.priority, browseFun))
 
     @Throws(WebDriverException::class, WebDriverPoolException::class)
@@ -164,7 +171,7 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Create a driver pool, but the driver pool is not added to [driverPools].
+     * Create a driver pool, but the driver pool is not added to [workingDriverPools].
      * */
     fun createUnmanagedDriverPool(
         browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0
@@ -180,8 +187,8 @@ open class WebDriverPoolManager(
      * */
     fun cancel(url: String): WebDriver? {
         var driver: WebDriver? = null
-        driverPools.values.forEach { driverPool ->
-            driver = driverPool.onlineDrivers.lastOrNull { it.navigateEntry.pageUrl == url }?.also {
+        workingDriverPools.values.forEach { driverPool ->
+            driver = driverPool.availableDrivers.lastOrNull { it.navigateEntry.pageUrl == url }?.also {
                 it.cancel()
             }
         }
@@ -193,7 +200,7 @@ open class WebDriverPoolManager(
      * NOTE: A cancel request should run immediately not waiting for any browser task return.
      * */
     fun cancel(browserId: BrowserId, url: String): WebDriver? {
-        val driverPool = driverPools[browserId] ?: return null
+        val driverPool = workingDriverPools[browserId] ?: return null
         return driverPool.firstOrNull { it.navigateEntry.pageUrl == url }?.also { it.cancel() }
     }
 
@@ -201,19 +208,19 @@ open class WebDriverPoolManager(
      * Cancel all the fetch tasks, stop loading all pages.
      * */
     fun cancelAll() {
-        driverPools.values.forEach { it.cancelAll() }
+        workingDriverPools.values.forEach { it.cancelAll() }
     }
 
     /**
      * Cancel all the fetch tasks, stop loading all pages.
      * */
     fun cancelAll(browserId: BrowserId) {
-        val driverPool = driverPools[browserId] ?: return
+        val driverPool = workingDriverPools[browserId] ?: return
         driverPool.cancelAll()
     }
 
     /**
-     * Find the driver pool with browserId of [browserId], cancel all running tasks in it, and close all drivers in it.
+     * Find the driver pool with [browserId], cancel all running tasks in it, and close all drivers in it.
      *
      * When we close a driver pool, all threads that are trying to get a driver should wait.
      * */
@@ -228,11 +235,13 @@ open class WebDriverPoolManager(
     }
 
     fun maintain() {
-        closeLeastValuableDriverPool()
+        preempt {
+            closeLeastValuableDrivers()
+        }
     }
 
     fun report(browserId: BrowserId, verbose: Boolean = false): String {
-        return _workingDriverPools[browserId]?.report(verbose)?:""
+        return _workingDriverPools[browserId]?.report(verbose) ?: ""
     }
 
     /**
@@ -315,8 +324,10 @@ open class WebDriverPoolManager(
         } catch (e: TimeoutCancellationException) {
             numTimeout.mark()
             val browserId = driver.browser.id
-            logger.warn("Coroutine canceled({}) (by [withTimeout]) | {} | {}",
-                fetchTaskTimeout.readable(), report(browserId), browserId)
+            logger.warn(
+                "Coroutine canceled({}) (by [withTimeout]) | {} | {}",
+                fetchTaskTimeout.readable(), report(browserId), browserId
+            )
             null
         } finally {
             _deferredTasks.remove(task.id)
@@ -349,14 +360,12 @@ open class WebDriverPoolManager(
     private fun pollWebDriver(driverPool: LoadingWebDriverPool, task: WebDriverTask): WebDriver {
         val timeout = driverSettings.pollingDriverTimeout
         val driver = driverPool.poll(task.priority, task.volatileConfig, timeout)
-        driver.startWork()
+        require(driver.isWorking)
         return driver
     }
 
     @Synchronized
-    private fun computeDriverPoolIfAbsent(
-        browserId: BrowserId, task: WebDriverTask
-    ): LoadingWebDriverPool {
+    private fun computeDriverPoolIfAbsent(browserId: BrowserId, task: WebDriverTask): LoadingWebDriverPool {
         return _workingDriverPools.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, task.priority) }
     }
 
@@ -381,8 +390,7 @@ open class WebDriverPoolManager(
     private fun openInformationPages(browserId: BrowserId) {
         val isGUI = driverSettings.isGUI
         if (isGUI) {
-            val key = browserId.userDataDir.toString()
-            val browser = browserManager.browsers[key]
+            val browser = browserManager.findBrowser(browserId)
             if (browser != null) {
                 // open for diagnosis
                 val urls = listOf("chrome://version/", "chrome://history/")
@@ -408,26 +416,58 @@ open class WebDriverPoolManager(
         }
     }
 
-    private fun closeLeastValuableDriverPool() {
+    private fun closeLeastValuableDrivers() {
         val dyingDriverPool = findOldestRetiredDriverPoolOrNull()
 
         if (dyingDriverPool != null) {
             closeBrowserAndDriverPool(dyingDriverPool)
         }
+
+        // do not close single driver, might break the driver state logic
+//        if (AppRuntime.isInsufficientHardwareResources) {
+//            browserManager.findLeastValuableDriver()?.let { closeDriver(it) }
+//        }
     }
 
-    private fun closeBrowserAndDriverPool(dyingDriverPool: LoadingWebDriverPool) {
-        val browserId = dyingDriverPool.browserId
-        val displayMode = driverSettings.displayMode
-        logger.info(dyingDriverPool.report(verbose = true))
-        logger.info("Closing driver pool with {} mode | {}", displayMode, browserId)
+    /**
+     * NOTE: do not close single driver, might break the driver state logic
+     * */
+    private fun closeDriver(driver: WebDriver) {
+        if (alwaysTrue()) {
+            throw RuntimeException("do not close single driver here, might break the driver state logic")
+        }
+        val browserId = driver.browser.id
+        val driverPool = retiredDriverPools[browserId] ?: workingDriverPools[browserId]
+        driverPool?.closeDriver(driver)
+        browserManager.closeDriver(driver)
+    }
+
+    private fun closeDriverPool(driverPool: LoadingWebDriverPool) {
+        val browserId = driverPool.browserId
+        logger.info(driverPool.report(verbose = true))
 
         _workingDriverPools.remove(browserId)
         _retiredDriverPools.remove(browserId)
         _closedDriverPools.add(browserId)
 
-        runCatching { dyingDriverPool.close() }.onFailure { logger.warn(it.stringify()) }
-        runCatching { browserManager.closeBrowserGracefully(browserId) }.onFailure { logger.warn(it.stringify()) }
+        driverPool.close()
+    }
+
+    private fun closeBrowserAndDriverPool(driverPool: LoadingWebDriverPool) {
+        val browser = browserManager.findBrowser(driverPool.browserId)
+        requireNotNull(browser) { "Browser should exists when driver pool exists" }
+        closeBrowserAndDriverPool(browser, driverPool)
+    }
+
+    private fun closeBrowserAndDriverPool(browser: Browser, driverPool: LoadingWebDriverPool) {
+        require(browser.id == driverPool.browserId)
+
+        val browserId = driverPool.browserId
+        val displayMode = driverSettings.displayMode
+        logger.info("Closing browser & driver pool with {} mode | {}", displayMode, browserId)
+
+        closeDriverPool(driverPool)
+        browserManager.closeBrowser(browser)
     }
 
     private fun findOldestRetiredDriverPoolOrNull(): LoadingWebDriverPool? {
@@ -443,7 +483,7 @@ open class WebDriverPoolManager(
 
         return when {
             // low memory
-            AppRuntime.isLowMemory -> oldestRetiredDriverPool
+            AppRuntime.isInsufficientHardwareResources -> oldestRetiredDriverPool
             // The drivers are in GUI mode and there are many open drivers.
             totalDyingDrivers > maxAllowedDyingDrivers -> oldestRetiredDriverPool
             else -> null
@@ -452,8 +492,8 @@ open class WebDriverPoolManager(
 
     private fun report(verbose: Boolean = false): String {
         val sb = StringBuilder()
-        if (driverPools.isNotEmpty()) {
-            driverPools.entries.joinTo(sb, "\n") { it.value.report(verbose) + " | " + it.key }
+        if (workingDriverPools.isNotEmpty()) {
+            workingDriverPools.entries.joinTo(sb, "\n") { it.value.report(verbose) + " | " + it.key }
         }
         return sb.toString()
     }

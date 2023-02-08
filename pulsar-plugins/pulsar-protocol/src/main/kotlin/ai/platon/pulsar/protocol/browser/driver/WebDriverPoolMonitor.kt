@@ -21,14 +21,21 @@ open class WebDriverPoolMonitor(
             return
         }
 
-        driverPoolManager.maintain()
+        maintain()
 
+        releaseLocks()
+    }
+
+    private fun maintain() = driverPoolManager.maintain()
+
+    private fun releaseLocks() {
         if (driverPoolManager.isIdle) {
             if (driverPoolManager.hasEvent) {
                 log.info("[Idle] {}", driverPoolManager.toString())
             }
 
             if (driverPoolManager.isPreempted) {
+                // seems never happen
                 driverPoolManager.releaseLocks()
             }
         }

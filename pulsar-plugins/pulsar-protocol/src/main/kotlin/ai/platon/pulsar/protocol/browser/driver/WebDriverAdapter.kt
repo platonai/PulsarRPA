@@ -23,7 +23,7 @@ class WebDriverAdapter(
         get() = driver.waitForTimeout
         set(value) { driver.waitForTimeout = value }
 
-    override val status get() = driver.status
+    override val state get() = driver.state
 
     override var navigateEntry: NavigateEntry
         get() = driver.navigateEntry

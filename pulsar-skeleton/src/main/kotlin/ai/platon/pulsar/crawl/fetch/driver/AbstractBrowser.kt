@@ -41,6 +41,10 @@ abstract class AbstractBrowser(
         attach()
     }
 
+    override fun destroyDriver(driver: WebDriver) {
+        // Nothing to do
+    }
+
     override fun maintain() {
         // Nothing to do
     }

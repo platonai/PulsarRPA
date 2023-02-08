@@ -30,15 +30,33 @@ import kotlin.random.Random
  * * [pageSource]: retrieve the source code of a webpage.
  */
 interface WebDriver: Closeable {
-    enum class Status {
-        UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
+    /**
+     * Lifetime status
+     * */
+    enum class State {
+        INIT,
+        READY,
+        @Deprecated("Inappropriate name", ReplaceWith("READY"))
+        FREE,
+        WORKING,
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.canceled"))
+        CANCELED,
+        RETIRED,
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.crashed"))
+        CRASHED,
+        QUIT;
 
+        val isInit get() = this == INIT
+        @Deprecated("Inappropriate name", ReplaceWith("isReady"))
         val isFree get() = this == FREE
+        val isReady get() = this == READY || isFree
         val isWorking get() = this == WORKING
-        val isCanceled get() = this == CANCELED
-        val isRetired get() = this == RETIRED
-        val isCrashed get() = this == CRASHED
         val isQuit get() = this == QUIT
+        val isRetired get() = this == RETIRED
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCanceled"))
+        val isCanceled get() = this == CANCELED
+        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCrashed"))
+        val isCrashed get() = this == CRASHED
     }
 
     /**
@@ -86,7 +104,7 @@ interface WebDriver: Closeable {
     /**
      * The driver status.
      * */
-    val status: AtomicReference<Status>
+    val state: AtomicReference<State>
     /**
      * The time of the last action.
      * */
@@ -104,11 +122,15 @@ interface WebDriver: Closeable {
      * */
     var waitForTimeout: Duration
 
-    val isCanceled: Boolean
-    val isWorking: Boolean
-    val isQuit: Boolean
-    val isRetired: Boolean
+    val isInit: Boolean
+    val isReady: Boolean
+    @Deprecated("Inappropriate name", ReplaceWith("isReady()"))
     val isFree: Boolean
+    val isWorking: Boolean
+    val isRetired: Boolean
+    val isQuit: Boolean
+
+    val isCanceled: Boolean
     val isCrashed: Boolean
 
     @Deprecated("Not used any more")
