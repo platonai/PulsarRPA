@@ -106,12 +106,28 @@ class MultiPrivacyContextManager(
         activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
 
     /**
-     * Check if there are hang contexts, close all the hang contexts
+     * Maintain the system in a separate thread, usually in a scheduled service.
      * */
     override fun maintain() {
-        activeContexts.filterValues { it.isIdle }.values.forEach {
-            logger.warn("Privacy context hangs unexpectedly | {}", it.id.display)
-            close(it)
+        closeDyingContexts()
+
+        // comes later
+        activeContexts.values.forEach { context ->
+            context.maintain()
+        }
+    }
+
+    private fun closeDyingContexts() {
+        activeContexts.values.forEach {
+            if (!it.isActive) {
+                logger.warn("Privacy context is dead | {}", it.id.display)
+                close(it)
+            }
+
+            if (it.isIdle) {
+                logger.warn("Privacy context hangs unexpectedly | {}", it.id.display)
+                close(it)
+            }
         }
     }
 

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-class WebDriverContext(
+open class WebDriverContext(
     val browserId: BrowserId,
     private val driverPoolManager: WebDriverPoolManager,
     private val unmodifiedConfig: ImmutableConfig
@@ -78,6 +78,12 @@ class WebDriverContext(
                 logger.debug("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
             }
         }
+    }
+
+    open fun maintain() {
+        // close dead, valueless, idle driver pools, etc
+        // TODO: called by every web driver context, which is not expected.
+        driverPoolManager.maintain()
     }
 
     /**

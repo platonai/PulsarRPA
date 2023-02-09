@@ -228,16 +228,23 @@ open class WebDriverPoolManager(
         numReset.mark()
 
         // Wait until there is no normal tasks, and if there is at least one preemptive task
-        // in the critical section, all normal tasks must wait.
+        // in the critical section, all normal tasks have to wait.
         preempt {
             closeDriverPoolGracefully0(browserId)
         }
     }
 
     fun maintain() {
-        preempt {
-            closeLeastValuableDrivers()
-        }
+        // since we close the retired driver pool, no need to wait for normal tasks
+        closeOldestRetiredDriverPoolSafely()
+        closeIdleDriverPoolsSafely()
+
+//        preempt {
+//            closeLeastValuableDrivers()
+//        }
+
+        // maintain in a separate monitor
+//        browserManager.maintain()
     }
 
     fun report(browserId: BrowserId, verbose: Boolean = false): String {
@@ -388,6 +395,11 @@ open class WebDriverPoolManager(
     }
 
     private fun openInformationPages(browserId: BrowserId) {
+        if (!isActive) {
+            // do not say anything to a browser when it's dying
+            return
+        }
+
         val isGUI = driverSettings.isGUI
         if (isGUI) {
             val browser = browserManager.findBrowser(browserId)
@@ -416,17 +428,19 @@ open class WebDriverPoolManager(
         }
     }
 
-    private fun closeLeastValuableDrivers() {
+    private fun closeOldestRetiredDriverPoolSafely() {
         val dyingDriverPool = findOldestRetiredDriverPoolOrNull()
 
         if (dyingDriverPool != null) {
             closeBrowserAndDriverPool(dyingDriverPool)
         }
+    }
 
-        // do not close single driver, might break the driver state logic
-//        if (AppRuntime.isInsufficientHardwareResources) {
-//            browserManager.findLeastValuableDriver()?.let { closeDriver(it) }
-//        }
+    private fun closeIdleDriverPoolsSafely() {
+        workingDriverPools.values.filter { it.isIdle }.forEach {
+            logger.info("Driver pool is idle, closing it ... | {}", it.browserId)
+            closeDriverPool(it)
+        }
     }
 
     /**

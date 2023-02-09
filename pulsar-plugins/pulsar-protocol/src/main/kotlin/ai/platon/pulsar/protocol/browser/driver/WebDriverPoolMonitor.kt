@@ -6,6 +6,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
+/**
+ *
+ * */
 open class WebDriverPoolMonitor(
         val driverPoolManager: WebDriverPoolManager,
         val conf: ImmutableConfig,
@@ -21,12 +24,11 @@ open class WebDriverPoolMonitor(
             return
         }
 
-        maintain()
+        // should maintain in a global monitor
+        // driverPoolManager.maintain()
 
         releaseLocks()
     }
-
-    private fun maintain() = driverPoolManager.maintain()
 
     private fun releaseLocks() {
         if (driverPoolManager.isIdle) {

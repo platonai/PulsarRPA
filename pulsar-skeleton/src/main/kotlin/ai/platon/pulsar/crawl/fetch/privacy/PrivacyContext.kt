@@ -116,6 +116,8 @@ abstract class PrivacyContext(
     @Throws(ProxyException::class)
     abstract suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
+    abstract fun maintain()
+
     protected fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()
         meterTasks.mark()

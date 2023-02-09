@@ -3,7 +3,9 @@ package ai.platon.pulsar.crawl.fetch.privacy
 import ai.platon.pulsar.common.metrics.AppMetrics
 
 enum class CloseStrategy {
-    ASAP, LAZY
+    ASAP,
+    // it might be a bad idea to close lazily
+    LAZY
 }
 
 open class PrivacyContextException(message: String) : Exception(message)

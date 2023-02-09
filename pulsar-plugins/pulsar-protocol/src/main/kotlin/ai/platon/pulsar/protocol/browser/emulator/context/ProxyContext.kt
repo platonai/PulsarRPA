@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
-class ProxyContext(
+open class ProxyContext(
     var proxyEntry: ProxyEntry? = null,
     private val proxyPoolManager: ProxyPoolManager,
     private val driverContext: WebDriverContext,
@@ -95,6 +95,10 @@ class ProxyContext(
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
+    }
+
+    open fun maintain() {
+        // nothing to do currently
     }
 
     @Throws(ProxyException::class)

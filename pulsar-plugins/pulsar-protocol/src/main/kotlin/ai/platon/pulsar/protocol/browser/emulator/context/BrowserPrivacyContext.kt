@@ -42,6 +42,11 @@ open class BrowserPrivacyContext(
             driverContext.run(task, browseFun)
     }
 
+    override fun maintain() {
+        proxyContext?.maintain()
+        driverContext.maintain()
+    }
+
     override fun report() {
         val isIdle = proxyContext?.proxyEntry?.isIdle == true
         logger.info("Privacy context #{}{}{} has lived for {}" +

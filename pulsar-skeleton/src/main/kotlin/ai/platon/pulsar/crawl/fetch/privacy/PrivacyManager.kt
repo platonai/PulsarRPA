@@ -71,11 +71,15 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
         val id = privacyContext.id
 
+        /**
+         * activeContexts is locked so no new context should be allocated before the dead context releases its resource
+         * */
         synchronized(activeContexts) {
             if (activeContexts.containsKey(id)) {
                 activeContexts.remove(id)
                 zombieContexts.add(privacyContext)
 
+                // it might be a bad idea to close lazily
                 val lazyClose = closeStrategy == CloseStrategy.LAZY.name
                 when {
                     AppRuntime.isInsufficientHardwareResources -> closeZombieContexts()
@@ -87,11 +91,10 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     }
 
     open fun maintain() {
-
+        // do nothing by default
     }
 
     /**
-     *
      * Closing call stack:
      *
      * PrivacyManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
