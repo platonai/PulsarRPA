@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
+import java.awt.Robot
 import java.io.IOException
 import java.util.*
 import kotlin.test.assertEquals
@@ -195,13 +196,13 @@ class ChromeWebDriverTests: TestBase() {
     }
 
     @Test
-    fun testMouseMove() = runWebDriverTest { driver ->
-        open(url, driver)
-
+    fun testMouseMove() = runWebDriverTest(url) { driver ->
         repeat(10) { i ->
             val x = 100.0 + 2 * i
             val y = 100.0 + 3 * i
+
             driver.moveMouseTo(x, y)
+
             delay(500)
         }
     }

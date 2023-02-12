@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.sql
 
+import ai.platon.pulsar.common.Strings
 import org.apache.commons.lang3.StringUtils
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -10,6 +11,7 @@ class ResultSetFormatter(
     private val rs: ResultSet,
     private val asList: Boolean = false,
     private val withHeader: Boolean = false,
+    @Deprecated("Not used anymore")
     private val textOnly: Boolean = false,
     private val maxColumnLength: Int = 120,
     val buffer: StringBuilder = StringBuilder()
@@ -25,6 +27,8 @@ class ResultSetFormatter(
     var numFields = 0
         private set
 
+    var fieldSeparator = Strings.COMMA
+    var fieldSeparatorReplace = Strings.FULL_WIDTH_COMMA
     var maxRowBuffer = 5000
     var boxVertical = '|'
 
@@ -92,18 +96,19 @@ class ResultSetFormatter(
                     buffer.append('\n')
                 }
 
-                val th = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
-                var td = rs.getString(i + 1)
-                td = StringUtils.abbreviateMiddle(td, "...", maxColumnLength)
-                buffer.append(th).append(td)
+                val key = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
+                val value = rs.getString(i + 1)
 
                 ++numFields
-                if (td != null) {
+                if (value != null) {
                     ++numNonNullFields
-                    if (td.isNotBlank()) {
+                    if (value.isNotBlank()) {
                         ++numNonBlankFields
                     }
                 }
+
+                val cellText = abbreviateTextCell(value)
+                buffer.append(key).append(cellText)
             }
 
             buffer.append("\n")
@@ -135,9 +140,9 @@ class ResultSetFormatter(
      */
     @Throws(SQLException::class)
     private fun formatCell(columnIndex: Int): String {
-        if (textOnly) {
-            return rs.getString(columnIndex)?.replace("\n", "") ?: "null"
-        }
+//        if (textOnly) {
+//            return rs.getString(columnIndex)?.replace("\n", "") ?: "null"
+//        }
 
         return when (rs.metaData.getColumnType(columnIndex)) {
             Types.DOUBLE, Types.FLOAT, Types.REAL -> {
@@ -148,12 +153,17 @@ class ResultSetFormatter(
             Types.ARRAY -> {
                 when (val array = rs.getArray(columnIndex)?.array) {
                     null -> "null"
-                    is Array<*> -> array.joinToString { it.toString() }
+                    is Array<*> -> array.joinToString("$fieldSeparator", "(", ")") { sanitize(it.toString()) }
                     else -> array.toString()
                 }
             }
-            else -> rs.getString(columnIndex)?.replace("\n", "") ?: "null"
+            else -> sanitize(rs.getString(columnIndex))
         }
+    }
+
+    private fun sanitize(value: String?): String {
+        if (value == null) return "null"
+        return value.replace("\n", "\t").replace(fieldSeparator, fieldSeparatorReplace)
     }
 
     private fun getFloatColumnFormat(columnIndex: Int): String {

@@ -29,14 +29,7 @@ import java.util.regex.Pattern;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
-/**
- * A minimal String utility class. Designed for internal dom use only.
- *
- * @author vincent
- * @version $Id: $Id
- */
 public final class Strings {
-
 
   final public static String[] emptyStringArray = {};
 
@@ -44,12 +37,15 @@ public final class Strings {
 
   final public static String COMMA_STR = ",";
 
+  final public static char FULL_WIDTH_COMMA = '，';
+
+  final public static String FULL_WIDTH_COMMA_STR = "，";
+
   final public static char ESCAPE_CHAR = '\\';
 
   // public static final Pattern HTML_CHARSET_PATTERN = Pattern.compile("^<meta(?!\\s*(?:name|value)\\s*=)(?:[^>]*?content\\s*=[\\s\"']*)?([^>]*?)[\\s\"';]*charset\\s*=[\\s\"']([a-zA-Z0-9]{3,8})([^\\s\"'(/>)]*)", CASE_INSENSITIVE);
 
   public static final Pattern HTML_CHARSET_PATTERN = Pattern.compile("^<meta.+charset\\s*=[\\s\"']*([a-zA-Z0-9\\-]{3,8})[\\s\"'/>]*", CASE_INSENSITIVE);
-
 
   public static final Pattern PRICE_PATTERN = Pattern.compile("[1-9](,{0,1}\\d+){0,8}(\\.\\d{1,2})|[1-9](,{0,1}\\d+){0,8}");
 
@@ -57,36 +53,25 @@ public final class Strings {
 
   public static final String DEFAULT_KEEP_CHARS = "~!@#$%^&*()_+`-={}|[]\\:\";'<>?,./' \n\r\t";
 
-
   public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
-
 
   public static final String FLOAT_REGEX = "^([+-]?(\\d+\\.)?\\d+)$";
 
-
   public static Pattern FLOAT_PATTERN = Pattern.compile(FLOAT_REGEX);
-
 
   public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
 
-
   public static final String NUMERIC_LIKE_REGEX = "^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$";
-
 
   public static Pattern NUMERIC_LIKE_PATTERN = Pattern.compile(NUMERIC_LIKE_REGEX);
 
-
   public static final String MONEY_LIKE_REGEX = "^[¥￥$]?[0-9]+(\\.[0-9]{1,2})?$";
-
 
   public static Pattern MONEY_LIKE_PATTERN = Pattern.compile(MONEY_LIKE_REGEX);
 
-
   public static final String CHINESE_PHONE_NUMBER_LIKE_REGEX = "^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,1,2,5-9])|(177))\\d{8}$";
 
-
   public static Pattern CHINESE_PHONE_NUMBER_LIKE_PATTERN = Pattern.compile(CHINESE_PHONE_NUMBER_LIKE_REGEX);
-
 
   public static final String IP_PORT_REGEX = "^"
           + "(((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}" // Domain name
@@ -97,20 +82,16 @@ public final class Strings {
           + ":"
           + "[0-9]{1,5}$"; // Port
 
-
   public static final Pattern IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX); // Port
-
 
   public static final int CODE_KEYBOARD_WHITESPACE = 32;
 
   public static final int CODE_NBSP = 160;
 
-
   public static final String KEYBOARD_WHITESPACE = String.valueOf(CODE_KEYBOARD_WHITESPACE);
   // Html entity: {@code &nbsp;} looks just like a white space
 
   public static final String NBSP = String.valueOf(CODE_NBSP);
-
 
   public static final char[] HEX_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
           'f'};
@@ -120,7 +101,6 @@ public final class Strings {
   public static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
           "         ", "          "};
 
-
   public static final Comparator<String> LongerFirstComparator = (s, s2) -> {
     int result = Integer.compare(s2.length(), s.length());
     if (result == 0)
@@ -128,18 +108,10 @@ public final class Strings {
     return result;
   };
 
-
   public static final Comparator<String> ShorterFirstComparator = (s, s2) -> LongerFirstComparator.compare(s2, s);
-
 
   public static final Pattern PatternTime = Pattern.compile("[0-2][0-3]:[0-5][0-9]");
 
-  /**
-   * <p>countTimeString.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a int.
-   */
   public static int countTimeString(String text) {
     Matcher matcher = PatternTime.matcher(text);
     int count = 0;
@@ -243,12 +215,6 @@ public final class Strings {
 
   // 根据Unicode编码完美的判断中文汉字和符号
 
-  /**
-   * <p>isChinese.</p>
-   *
-   * @param c a char.
-   * @return a boolean.
-   */
   public static boolean isChinese(char c) {
     Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
     return ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
@@ -263,16 +229,9 @@ public final class Strings {
 
   // 完整的判断中文汉字和符号
 
-  /**
-   * <p>isChinese.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a boolean.
-   */
   public static boolean isChinese(String text) {
     char[] ch = text.toCharArray();
-    for (int i = 0; i < ch.length; i++) {
-      char c = ch[i];
+    for (char c : ch) {
       if (isChinese(c)) {
         return true;
       }
@@ -281,32 +240,19 @@ public final class Strings {
     return false;
   }
 
-  /**
-   * <p>isMainlyChinese.</p>
-   *
-   * @param text       a {@link java.lang.String} object.
-   * @param percentage a double.
-   * @return a boolean.
-   */
   public static boolean isMainlyChinese(String text, double percentage) {
     if ("".equals(text)) return false;
 
     return 1.0 * countChinese(text) / text.length() >= percentage;
   }
 
-  /**
-   * <p>countChinese.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a int.
-   */
   public static int countChinese(String text) {
     if ("".equals(text)) return 0;
 
     int count = 0;
     char[] ch = text.toCharArray();
-    for (int i = 0; i < ch.length; i++) {
-      if (isChinese(ch[i])) {
+    for (char c : ch) {
+      if (isChinese(c)) {
         ++count;
       }
     }
@@ -316,12 +262,6 @@ public final class Strings {
 
   // 只能判断部分CJK字符（CJK统一汉字）
 
-  /**
-   * <p>isChineseByREG.</p>
-   *
-   * @param str a {@link java.lang.String} object.
-   * @return a boolean.
-   */
   public static boolean isChineseByREG(String str) {
     if (str == null) {
       return false;
@@ -333,24 +273,12 @@ public final class Strings {
 
   // 只能判断部分CJK字符（CJK统一汉字）
 
-  /**
-   * <p>isChineseCharByREG.</p>
-   *
-   * @param ch a char.
-   * @return a boolean.
-   */
   public static boolean isChineseCharByREG(char ch) {
     return ch >= '\u4E00' && ch <= '\u9FBF';
   }
 
   // 只能判断部分CJK字符（CJK统一汉字）
 
-  /**
-   * <p>isChineseByName.</p>
-   *
-   * @param str a {@link java.lang.String} object.
-   * @return a boolean.
-   */
   public static boolean isChineseByName(String str) {
     if (str == null) {
       return false;
@@ -372,23 +300,10 @@ public final class Strings {
   // "");
   // the "blank" characters in the above phrase can not be stripped
 
-  /**
-   * <p>stripNonChar.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String stripNonChar(String text) {
     return stripNonChar(text, null);
   }
 
-  /**
-   * <p>stripNonChar.</p>
-   *
-   * @param text  a {@link java.lang.String} object.
-   * @param keeps a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String stripNonChar(String text, String keeps) {
     StringBuilder builder = new StringBuilder();
 
@@ -408,12 +323,6 @@ public final class Strings {
     return builder.toString();
   }
 
-  /**
-   * <p>trimNonChar.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String trimNonChar(String text) {
     return trimNonChar(text, null);
   }
@@ -456,12 +365,6 @@ public final class Strings {
     return text.substring(start, end);
   }
 
-  /**
-   * <p>isCJK.</p>
-   *
-   * @param ch a char.
-   * @return a boolean.
-   */
   public static boolean isCJK(char ch) {
     return Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS;
   }
@@ -474,23 +377,10 @@ public final class Strings {
   // attrName = StringUtils.strip(attrName).replaceAll("[\\s+:：(&nbsp;)]", "");
   // the "blank" characters in the above phrase can not be stripped
 
-  /**
-   * <p>stripNonCJKChar.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String stripNonCJKChar(String text) {
     return stripNonCJKChar(text, null);
   }
 
-  /**
-   * <p>stripNonCJKChar.</p>
-   *
-   * @param text  a {@link java.lang.String} object.
-   * @param keeps a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String stripNonCJKChar(String text, String keeps) {
     StringBuilder builder = new StringBuilder();
 
@@ -510,12 +400,6 @@ public final class Strings {
     return builder.toString();
   }
 
-  /**
-   * <p>trimNonCJKChar.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String trimNonCJKChar(String text) {
     return trimNonCJKChar(text, null);
   }
@@ -524,13 +408,6 @@ public final class Strings {
   // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
   // 2. 去除网页空白：&nbsp;
 
-  /**
-   * <p>trimNonCJKChar.</p>
-   *
-   * @param text  a {@link java.lang.String} object.
-   * @param keeps a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String trimNonCJKChar(String text, String keeps) {
     int start = 0;
     int end = text.length();
@@ -556,12 +433,6 @@ public final class Strings {
     return text.substring(start, end);
   }
 
-  /**
-   * <p>stripNonPrintableChar.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String stripNonPrintableChar(String text) {
     if (text == null) {
       return null;
@@ -589,37 +460,17 @@ public final class Strings {
     return builder.toString();
   }
 
-  /**
-   * <p>isPrintableUnicodeChar.</p>
-   *
-   * @param ch a char.
-   * @return a boolean.
-   * @link {https://stackoverflow.com/questions/220547/printable-char-in-java}
-   */
   public static boolean isPrintableUnicodeChar(char ch) {
     Character.UnicodeBlock block = Character.UnicodeBlock.of(ch);
     return (!Character.isISOControl(ch)) && ch != KeyEvent.CHAR_UNDEFINED
             && block != null && block != Character.UnicodeBlock.SPECIALS;
   }
 
-  /**
-   * Copy from pulsar , remove "�"
-   *
-   * @param value the dirty String value.
-   * @return clean String
-   */
   public static String cleanField(String value) {
     value = value.replaceAll("�", "");
     return value;
   }
 
-  /**
-   * <p>getLongestPart.</p>
-   *
-   * @param text    a {@link java.lang.String} object.
-   * @param pattern a {@link java.util.regex.Pattern} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String getLongestPart(final String text, final Pattern pattern) {
     String[] parts = pattern.split(text);
 
@@ -628,9 +479,7 @@ public final class Strings {
     }
 
     String longestPart = "";
-    for (int i = 0; i < parts.length; i++) {
-      String p = parts[i];
-
+    for (String p : parts) {
       if (p.length() > longestPart.length()) {
         longestPart = p;
       }
@@ -643,23 +492,10 @@ public final class Strings {
     }
   }
 
-  /**
-   * <p>getLongestPart.</p>
-   *
-   * @param text  a {@link java.lang.String} object.
-   * @param regex a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String getLongestPart(final String text, final String regex) {
     return getLongestPart(text, Pattern.compile(regex));
   }
 
-  /**
-   * <p>csslize.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String csslize(String text) {
     text = StringUtils.uncapitalize(text).trim();
     text = StringUtils.join(text.split("(?=\\p{Upper})"), "-").toLowerCase();
@@ -671,12 +507,6 @@ public final class Strings {
 
   // nav_top -> nav top, mainMenu -> main menu, image-detail -> image detail
 
-  /**
-   * <p>humanize.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String humanize(String text) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), " ");
     text = text.replaceAll("[-_]", " ").toLowerCase().trim();
@@ -684,13 +514,6 @@ public final class Strings {
     return text;
   }
 
-  /**
-   * <p>humanize.</p>
-   *
-   * @param text      a {@link java.lang.String} object.
-   * @param seperator a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String humanize(String text, String seperator) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -698,14 +521,6 @@ public final class Strings {
     return text;
   }
 
-  /**
-   * <p>humanize.</p>
-   *
-   * @param text      a {@link java.lang.String} object.
-   * @param suffix    a {@link java.lang.String} object.
-   * @param seperator a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String humanize(String text, String suffix, String seperator) {
     text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -713,14 +528,6 @@ public final class Strings {
     return text + seperator + suffix;
   }
 
-  /**
-   * <p>humanize.</p>
-   *
-   * @param clazz     a {@link java.lang.Class} object.
-   * @param suffix    a {@link java.lang.String} object.
-   * @param seperator a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String humanize(Class clazz, String suffix, String seperator) {
     String text = StringUtils.join(clazz.getSimpleName().split("(?=\\p{Upper})"), seperator);
     text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
@@ -728,13 +535,6 @@ public final class Strings {
     return text + seperator + suffix;
   }
 
-  /**
-   * <p>getLeadingInteger.</p>
-   *
-   * @param s            a {@link java.lang.String} object.
-   * @param defaultValue a int.
-   * @return a int.
-   */
   public static int getLeadingInteger(String s, int defaultValue) {
     int numberEnd = StringUtils.lastIndexOfAny(s, "123456789");
     if (numberEnd == StringUtils.INDEX_NOT_FOUND) {
@@ -743,13 +543,6 @@ public final class Strings {
     return NumberUtils.toInt(s.substring(0, numberEnd), defaultValue);
   }
 
-  /**
-   * <p>getTailingInteger.</p>
-   *
-   * @param s            a {@link java.lang.String} object.
-   * @param defaultValue a int.
-   * @return a int.
-   */
   public static int getTailingInteger(String s, int defaultValue) {
     int numberStart = StringUtils.indexOfAny(s, "123456789");
     if (numberStart == StringUtils.INDEX_NOT_FOUND) {
@@ -758,13 +551,6 @@ public final class Strings {
     return NumberUtils.toInt(s.substring(numberStart), defaultValue);
   }
 
-  /**
-   * <p>getFirstInteger.</p>
-   *
-   * @param s            The string that might contain a integer number.
-   * @param defaultValue the default value if the string has no any integer number.
-   * @return the extracted or the default integer number.
-   */
   public static int getFirstInteger(String s, int defaultValue) {
     int numberStart = StringUtils.indexOfAny(s, "123456789");
     if (numberStart == StringUtils.INDEX_NOT_FOUND) {
@@ -788,15 +574,6 @@ public final class Strings {
     return NumberUtils.toInt(sb.toString(), defaultValue);
   }
 
-  /**
-   * <p>getLastInteger.</p>
-   * <p>
-   * TODO: do not support prefix +-
-   *
-   * @param s            The string that might contain a integer number.
-   * @param defaultValue the default value if the string has no any integer number.
-   * @return the extracted or the default integer number.
-   */
   public static int getLastInteger(String s, int defaultValue) {
     s = s.replaceAll("[,_]", "");
     s = StringUtils.reverse(s);
@@ -810,13 +587,6 @@ public final class Strings {
     return defaultValue;
   }
 
-  /**
-   * <p>getFirstFloatNumber.</p>
-   *
-   * @param s            The string that might contain a float number.
-   * @param defaultValue the default value if the string has no any float number.
-   * @return the extracted or the default float number.
-   */
   public static float getFirstFloatNumber(String s, float defaultValue) {
     s = s.replaceAll("[,_]", "");
     Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
@@ -829,13 +599,6 @@ public final class Strings {
     return defaultValue;
   }
 
-  /**
-   * <p>getLastFloatNumber.</p>
-   *
-   * @param s            The string that might contain a float number.
-   * @param defaultValue the default value if the string has no any float number.
-   * @return the extracted or the default float number.
-   */
   public static float getLastFloatNumber(String s, float defaultValue) {
     s = s.replaceAll("[,_]", "");
     Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
@@ -848,13 +611,6 @@ public final class Strings {
     return defaultValue;
   }
 
-  /**
-   * <p>contains.</p>
-   *
-   * @param text                a {@link java.lang.String} object.
-   * @param searchCharSequences a {@link java.lang.CharSequence} object.
-   * @return a boolean.
-   */
   public static boolean contains(String text, CharSequence... searchCharSequences) {
     Validate.notNull(searchCharSequences);
 
@@ -865,13 +621,6 @@ public final class Strings {
     return true;
   }
 
-  /**
-   * <p>containsAny.</p>
-   *
-   * @param text                a {@link java.lang.String} object.
-   * @param searchCharSequences a {@link java.lang.CharSequence} object.
-   * @return a boolean.
-   */
   public static boolean containsAny(String text, CharSequence... searchCharSequences) {
     Validate.notNull(searchCharSequences);
 
@@ -882,13 +631,6 @@ public final class Strings {
     return false;
   }
 
-  /**
-   * <p>containsNone.</p>
-   *
-   * @param text                a {@link java.lang.String} object.
-   * @param searchCharSequences a {@link java.lang.CharSequence} object.
-   * @return a boolean.
-   */
   public static boolean containsNone(String text, CharSequence... searchCharSequences) {
     Validate.notNull(searchCharSequences);
 
@@ -899,12 +641,6 @@ public final class Strings {
     return true;
   }
 
-  /**
-   * <p>reverse.</p>
-   *
-   * @param s a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String reverse(String s) {
     if (s == null || s.isEmpty()) {
       return s;
@@ -914,12 +650,6 @@ public final class Strings {
     return sb.reverse().toString();
   }
 
-  /**
-   * <p>doubleQuoteIfContainsWhitespace.</p>
-   *
-   * @param s a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String doubleQuoteIfContainsWhitespace(String s) {
     if (StringUtils.containsWhitespace(s)) return "\"" + s + "\"";
     else return s;
@@ -1140,13 +870,6 @@ public final class Strings {
     return lines;
   }
 
-  /**
-   * <p>getLongestCommonSubstring.</p>
-   *
-   * @param a a {@link java.lang.String} object.
-   * @param b a {@link java.lang.String} object.
-   * @return a int.
-   */
   public static int getLongestCommonSubstring(String a, String b) {
     int m = a.length();
     int n = b.length();
@@ -1174,13 +897,6 @@ public final class Strings {
     return max;
   }
 
-  /**
-   * Not completely tested
-   *
-   * @param html    a {@link java.lang.String} object.
-   * @param charset a {@link java.lang.String} object.
-   * @return a {@link java.lang.String} object.
-   */
   public static String replaceCharsetInHtml(String html, String charset) {
     Matcher matcher = HTML_CHARSET_PATTERN.matcher(html);
     if (matcher.find()) {
@@ -1190,12 +906,6 @@ public final class Strings {
     return html;
   }
 
-  /**
-   * Returns an arraylist of strings.
-   *
-   * @param str the comma seperated string values
-   * @return the arraylist of the comma seperated string values
-   */
   public static String[] getStrings(String str) {
     Collection<String> values = getStringCollection(str);
     if (values.size() == 0) {
@@ -1204,12 +914,6 @@ public final class Strings {
     return values.toArray(new String[0]);
   }
 
-  /**
-   * <p>arrayToString.</p>
-   *
-   * @param strs an array of {@link java.lang.String} objects.
-   * @return a {@link java.lang.String} object.
-   */
   public static String arrayToString(String[] strs) {
     if (strs.length == 0) {
       return "";
@@ -1223,24 +927,11 @@ public final class Strings {
     return sbuf.toString();
   }
 
-  /**
-   * Returns a collection of strings.
-   *
-   * @param str comma seperated string values
-   * @return an <code>ArrayList</code> of string values
-   */
   public static Collection<String> getStringCollection(String str) {
     String delim = ",";
     return getStringCollection(str, delim);
   }
 
-  /**
-   * Returns a collection of strings.
-   *
-   * @param str   String to parse
-   * @param delim delimiter to separate the values
-   * @return Collection of parsed elements.
-   */
   public static Collection<String> getStringCollection(String str, String delim) {
     List<String> values = new ArrayList<String>();
     if (str == null)
@@ -1279,33 +970,15 @@ public final class Strings {
     return str.trim().split("\\s*,\\s*");
   }
 
-  /**
-   * <p>hasHTMLTags.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a boolean.
-   */
   public static boolean hasHTMLTags(String text) {
     Matcher matcher = HTML_TAG_PATTERN.matcher(text);
     return matcher.find();
   }
 
-  /**
-   * <p>isFloat.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a boolean.
-   */
   public static boolean isFloat(String text) {
     return FLOAT_PATTERN.matcher(text).matches();
   }
 
-  /**
-   * <p>isNumericLike.</p>
-   *
-   * @param text a {@link java.lang.String} object.
-   * @return a boolean.
-   */
   public static boolean isNumericLike(String text) {
     return NUMERIC_LIKE_PATTERN.matcher(text).matches();
   }

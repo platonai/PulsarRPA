@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils
 object SQLUtils {
     /**
      * A single quote is replaced to be %27 by URLEncoder, to properly handle a url-encoded url, we should choose
-     * another place holder
+     * another placeholder
      * */
     const val SINGLE_QUOTE_PLACE_HOLDER = "^27"
 

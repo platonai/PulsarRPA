@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
+import java.awt.Robot
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -200,15 +201,32 @@ class Mouse(private val devTools: ChromeDevTools) {
         moveTo(point.x, point.y, steps, delayMillis)
     }
 
-    /**
-     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
-     * */
     suspend fun moveTo(x: Double, y: Double, steps: Int = 1, delayMillis: Long = 50) {
+        val fromX = currentX
+        val fromY = currentY
+
         currentX = x
         currentY = y
 
-        println("Moving to $x, $y")
+        var i = 0
+        while (i < steps) {
+            val x1 = fromX + (currentX - fromX) * (i.toDouble() / steps)
+            val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
 
+            chromeMoveTo(x1, y1)
+
+            if (delayMillis > 0) {
+                delay(delayMillis)
+            }
+
+            ++i
+        }
+    }
+
+    /**
+     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
+     * */
+    private fun chromeMoveTo(x: Double, y: Double) {
         input.dispatchMouseEvent(
             DispatchMouseEventType.MOUSE_MOVED, x, y,
             null, null,
@@ -226,43 +244,9 @@ class Mouse(private val devTools: ChromeDevTools) {
         )
     }
 
-    /**
-     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
-     * */
-    suspend fun moveTo2(x: Double, y: Double, steps: Int = 1, delayMillis: Long = 50) {
-        val fromX = currentX
-        val fromY = currentY
-
-        currentX = x
-        currentY = y
-
-        var i = 0
-        while (i < steps) {
-            val x1 = fromX + (currentX - fromX) * (i.toDouble() / steps)
-            val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
-
-            input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_MOVED, x1, y1,
-                null, null,
-                null, // button
-                null, // buttons
-                null,
-                null, // force
-                null,
-                null,
-                null,
-                null, // twist
-                null,
-                null,
-                null
-            )
-
-            if (delayMillis > 0) {
-                // delay(delayMillis)
-            }
-
-            ++i
-        }
+    private fun awtMoveTo(x: Double, y: Double) {
+        val robot = Robot()
+        robot.mouseMove(x.toInt(), y.toInt())
     }
 
     /**
