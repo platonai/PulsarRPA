@@ -74,11 +74,15 @@ interface BrowseEvent {
     val onWillCheckDocumentState: WebPageWebDriverEventHandler
     @Deprecated("Inappropriate name", ReplaceWith("onDocumentActuallyReady"))
     val onDOMStateChecked: WebPageWebDriverEventHandler get() = onDocumentActuallyReady
+
     /**
      * Fire when the document is actually ready. The document state is checked(computed)
      * using an algorithm in javascript.
      * */
     val onDocumentActuallyReady: WebPageWebDriverEventHandler
+
+    val onWillScroll: WebPageWebDriverEventHandler
+    val onDidScroll: WebPageWebDriverEventHandler
 
     val onWillComputeFeature: WebPageWebDriverEventHandler
     val onFeatureComputed: WebPageWebDriverEventHandler

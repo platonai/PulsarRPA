@@ -88,6 +88,12 @@ open class InteractiveBrowserEmulator(
         on1(EmulateEvents.documentActuallyReady) { page: WebPage, driver: WebDriver ->
             this.onDocumentActuallyReady(page, driver)
         }
+        on1(EmulateEvents.willScroll) { page: WebPage, driver: WebDriver ->
+            this.onWillScroll(page, driver)
+        }
+        on1(EmulateEvents.didScroll) { page: WebPage, driver: WebDriver ->
+            this.onDidScroll(page, driver)
+        }
         on1(EmulateEvents.willComputeFeature) { page: WebPage, driver: WebDriver ->
             this.onWillComputeFeature(page, driver)
         }
@@ -130,6 +136,14 @@ open class InteractiveBrowserEmulator(
 
     override suspend fun onDocumentActuallyReady(page: WebPage, driver: WebDriver) {
         page.browseEvent?.onDocumentActuallyReady?.invoke(page, driver)
+    }
+
+    override suspend fun onWillScroll(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onWillScroll?.invoke(page, driver)
+    }
+
+    override suspend fun onDidScroll(page: WebPage, driver: WebDriver) {
+        page.browseEvent?.onDidScroll?.invoke(page, driver)
     }
 
     override suspend fun onWillComputeFeature(page: WebPage, driver: WebDriver) {
@@ -386,17 +400,22 @@ open class InteractiveBrowserEmulator(
         }
 
         if (result.state.isContinue) {
-            scrollDown(task, result)
-        }
+            emit1(EmulateEvents.willScroll, page, driver)
 
-        task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
+            scrollDown(task, result)
+
+            emit1(EmulateEvents.didScroll, page, driver)
+        }
 
         if (result.state.isContinue) {
             emit1(EmulateEvents.willComputeFeature, page, driver)
 
+            task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
             computeDocumentFeatures(task, result)
 
             emit1(EmulateEvents.featureComputed, page, driver)
+        } else {
+            task.navigateTask.originalContentLength = driver.pageSource()?.length ?: 0
         }
 
         return result

@@ -78,6 +78,11 @@ class MockWebDriver(
         return backupDriverOrNull?.waitForNavigation(timeout) ?: 0
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
+        return backupDriverOrNull?.waitForPage(url, timeout)
+    }
+
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 

@@ -242,6 +242,9 @@ interface WebDriver: Closeable {
     suspend fun waitForNavigation(timeout: Duration): Long
 
     @Throws(WebDriverException::class)
+    suspend fun waitForPage(url: String, timeout: Duration): WebDriver?
+
+    @Throws(WebDriverException::class)
     suspend fun exists(selector: String): Boolean
     @Throws(WebDriverException::class)
     suspend fun isHidden(selector: String): Boolean = !isVisible(selector)

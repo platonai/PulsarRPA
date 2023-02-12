@@ -85,6 +85,9 @@ class WebDriverAdapter(
     override suspend fun waitForNavigation(timeout: Duration) = driverOrNull?.waitForNavigation(timeout) ?: 0
 
     @Throws(WebDriverException::class)
+    override suspend fun waitForPage(url: String, timeout: Duration) = driverOrNull?.waitForPage(url, timeout)
+
+    @Throws(WebDriverException::class)
     override suspend fun exists(selector: String) = driverOrNull?.exists(selector) ?: false
 
     @Throws(WebDriverException::class)

@@ -352,6 +352,19 @@ class ChromeDevtoolsDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun waitForPage(url: String, timeout: Duration): WebDriver? {
+        var now = Instant.now()
+        val endTime = now + timeout
+        var driver = browser.findDriver(url)
+        while (driver == null && now < endTime) {
+            delay(1000)
+            now = Instant.now()
+            driver = browser.findDriver(url)
+        }
+        return driver
+    }
+
+    @Throws(WebDriverException::class)
     private suspend fun isNavigated(oldUrl: String): Boolean {
         if (oldUrl != currentUrl()) {
             return true

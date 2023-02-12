@@ -72,6 +72,13 @@ class ChromeDevtoolsBrowser(
         }
     }
 
+    @Synchronized
+    @Throws(WebDriverException::class)
+    fun findDriver(url: String): ChromeDevtoolsDriver? {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<ChromeDevtoolsDriver>().firstOrNull { currentUrl(it) == url }
+    }
+
     override fun destroyDriver(driver: WebDriver) {
         if (driver is ChromeDevtoolsDriver) {
             val chromTab = driver.chromeTab
@@ -105,6 +112,8 @@ class ChromeDevtoolsBrowser(
             super.close()
         }
     }
+
+    private fun currentUrl(driver: WebDriver) = runBlocking { driver.currentUrl() }
 
     /**
      * Create a new driver.
