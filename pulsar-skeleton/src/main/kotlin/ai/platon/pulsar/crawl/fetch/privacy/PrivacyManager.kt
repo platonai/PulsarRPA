@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReentrantLock
 
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
@@ -82,7 +81,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 // it might be a bad idea to close lazily
                 val lazyClose = closeStrategy == CloseStrategy.LAZY.name
                 when {
-                    AppRuntime.isInsufficientHardwareResources -> closeZombieContexts()
+                    AppRuntime.isCriticalResources -> closeZombieContexts()
                     lazyClose -> closeZombieContextsLazily()
                     else -> closeZombieContexts()
                 }

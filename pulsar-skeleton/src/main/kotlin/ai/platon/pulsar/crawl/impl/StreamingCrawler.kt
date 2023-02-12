@@ -297,13 +297,13 @@ open class StreamingCrawler(
             delay(1000)
         }
 
-        while (isActive && AppRuntime.isHighCPULoad) {
+        while (isActive && AppRuntime.isCriticalCPULoad) {
             criticalWarning = CriticalWarning.HIGH_CPU_LOAD
             delay(1000)
         }
 
         var k = 0
-        while (isActive && AppRuntime.isLowMemory) {
+        while (isActive && AppRuntime.isCriticalLowMemory) {
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
             }

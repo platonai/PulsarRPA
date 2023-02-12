@@ -5,6 +5,8 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.types.dom.Rect
+import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
+import com.google.gson.Gson
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -99,8 +101,18 @@ class PageHandler(
      * @param expression Javascript expression to evaluate
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
+    fun evaluateDetail(expression: String): Evaluate? {
+        return runtime?.evaluate(browserSettings.confuser.confuse(expression))
+    }
+
+    /**
+     * Evaluates expression on global object.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return Remote object value in case of primitive values or JSON values (if it was requested).
+     * */
     fun evaluate(expression: String): Any? {
-        val evaluate = runtime?.evaluate(browserSettings.confuser.confuse(expression))
+        val evaluate = evaluateDetail(expression)
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
@@ -109,7 +121,7 @@ class PageHandler(
             logger.info(exception.description + "\n>>>$expression<<<")
         }
 
-//        println(Gson().toJson(evaluate))
+        // println(Gson().toJson(evaluate))
 
         val result = evaluate?.result
         return result?.value

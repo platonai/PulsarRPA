@@ -128,6 +128,11 @@ class MockWebDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun evaluateDetail(expression: String): JsEvaluation? {
+        return backupDriverOrNull?.evaluateDetail(expression)
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
         backupDriverOrNull?.scrollTo(selector)
     }
@@ -152,6 +157,11 @@ class MockWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String) = backupDriverOrNull?.isVisible(selector) ?: false
+
+    @Throws(WebDriverException::class)
+    override suspend fun focus(selector: String) {
+        backupDriverOrNull?.focus(selector)
+    }
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
@@ -186,6 +196,11 @@ class MockWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
         backupDriverOrNull?.moveMouseTo(x, y)
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int) {
+        backupDriverOrNull?.moveMouseTo(selector, deltaX, deltaY)
     }
 
     @Throws(WebDriverException::class)

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
 import com.github.kklisura.cdt.protocol.types.page.Viewport
+import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
 import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
@@ -215,6 +216,42 @@ class ChromeDevtoolsDriver(
         return null
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateDetail(expression: String): JsEvaluation? {
+        try {
+            return rpc.invokeDeferred("evaluateDetail") {
+                createJsEvaluate(page.evaluateDetail(expression))
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "evaluateDetail")
+        }
+
+        return null
+    }
+
+    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
+        evaluate ?: return null
+
+        val result = evaluate.result
+        val exception = evaluate.exceptionDetails
+        return if (exception != null) {
+            val jsException = JsException(
+                text = exception.text,
+                lineNumber = exception.lineNumber,
+                columnNumber = exception.columnNumber,
+                url = exception.url,
+            )
+            JsEvaluation(exception = jsException)
+        } else {
+            JsEvaluation(
+                value = result.value,
+                unserializableValue = result.unserializableValue,
+                className = result.className,
+                description = result.description
+            )
+        }
+    }
+
     @Deprecated("Not used any more")
     override val sessionId: String?
         @Throws(WebDriverException::class)
@@ -359,11 +396,39 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    /**
+     * TODO: test is required
+     * */
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
         try {
             rpc.invokeDeferred("moveMouseTo") {
-                mouse?.move(x, y)
+                mouse?.moveTo(x, y)
+            }
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "moveMouseTo")
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int) {
+        try {
+            val nodeId = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
+                page.scrollIntoViewIfNeeded(selector)
+            } ?: return
+
+            val offset = OffsetD(4.0, 4.0)
+            val p = pageAPI
+            val d = domAPI
+            if (p != null && d != null) {
+                rpc.invokeDeferred("moveMouseTo") {
+                    val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value
+                    if (point != null) {
+                        val point2 = PointD(point.x + deltaX, point.y + deltaY)
+                        mouse?.moveTo(point2)
+                    }
+                    gap()
+                }
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "moveMouseTo")
@@ -421,6 +486,11 @@ class ChromeDevtoolsDriver(
             val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value ?: return
             mouse?.click(point.x, point.y, count, delayPolicy("click"))
         }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun focus(selector: String) {
+        focusOnSelector(selector)
     }
 
     @Throws(WebDriverException::class)

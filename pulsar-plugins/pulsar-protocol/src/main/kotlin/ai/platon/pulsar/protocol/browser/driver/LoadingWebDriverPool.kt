@@ -91,7 +91,7 @@ class LoadingWebDriverPool constructor(
     /**
      * Standby drivers and working drivers
      * */
-    val availableDrivers: Collection<WebDriver> get() = _standbyDrivers + _workingDrivers
+    val activeDrivers: Collection<WebDriver> get() = _standbyDrivers + _workingDrivers
 
     val counterClosed = registry.counter(this, "closed")
 
@@ -127,7 +127,7 @@ class LoadingWebDriverPool constructor(
     /**
      * Number of available slots to allocate new drivers
      * */
-    val numSlots get() = capacity - numCreated
+    val numDriverSlots get() = capacity - numCreated
 
     var lastActiveTime: Instant = Instant.now()
         private set
@@ -198,9 +198,9 @@ class LoadingWebDriverPool constructor(
         }
     }
 
-    fun forEach(action: (WebDriver) -> Unit) = availableDrivers.forEach(action)
+    fun forEach(action: (WebDriver) -> Unit) = activeDrivers.forEach(action)
 
-    fun firstOrNull(predicate: (WebDriver) -> Boolean) = availableDrivers.firstOrNull(predicate)
+    fun firstOrNull(predicate: (WebDriver) -> Boolean) = activeDrivers.firstOrNull(predicate)
 
     /**
      * Cancel all the fetch tasks, stop loading all pages
@@ -214,10 +214,10 @@ class LoadingWebDriverPool constructor(
         val p = this
         val status = if (verbose) {
             String.format("active: %d, free: %d, waiting: %d, working: %d, slots: %d",
-                    p.numActive, p.numStandby, p.numWaiting, p.numWorking, p.numSlots)
+                    p.numActive, p.numStandby, p.numWaiting, p.numWorking, p.numDriverSlots)
         } else {
             String.format("%d/%d/%d/%d/%d (online/free/waiting/working/slots)",
-                    p.numActive, p.numStandby, p.numWaiting, p.numWorking, p.numSlots)
+                    p.numActive, p.numStandby, p.numWaiting, p.numWorking, p.numDriverSlots)
         }
 
         val time = idleTime.readable()
@@ -236,6 +236,8 @@ class LoadingWebDriverPool constructor(
         _closedDrivers.add(driver)
 
         counterClosed.inc()
+
+        // TODO: drivers should be closed by the driver pool manager, not the driver pool.
         runCatching { driver.close() }.onFailure { logger.warn(it.brief("[Unexpected] Quit $driver")) }
     }
 
@@ -323,7 +325,7 @@ class LoadingWebDriverPool constructor(
 
     private fun shouldCreateWebDriver(): Boolean {
         val onlineDriverCount = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
-        return isActive && !AppRuntime.isInsufficientHardwareResources && onlineDriverCount < capacity
+        return isActive && !AppRuntime.isCriticalResources && onlineDriverCount < capacity
     }
 
     @Throws(BrowserLaunchException::class)

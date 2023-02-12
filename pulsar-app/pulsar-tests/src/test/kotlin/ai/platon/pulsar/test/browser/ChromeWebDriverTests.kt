@@ -17,7 +17,6 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.IOException
 import java.util.*
-import kotlin.jvm.Throws
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -184,54 +183,52 @@ class ChromeWebDriverTests: TestBase() {
     }
 
     @Test
-    fun testClickNthAnchor() {
-        val driver = driverFactory.create()
+    fun testClickNthAnchor() = runWebDriverTest { driver ->
+        open(url, driver)
 
-        runBlocking {
-            open(url, driver)
+        val href = driver.clickNthAnchor(100, "body")
+        println(href)
 
-            val href = driver.clickNthAnchor(100, "body")
-            println(href)
+        driver.waitForNavigation()
+        driver.waitForSelector("body")
+        driver.scrollDown(5)
+    }
 
-            driver.waitForNavigation()
-            driver.waitForSelector("body")
-            driver.scrollDown(5)
+    @Test
+    fun testMouseMove() = runWebDriverTest { driver ->
+        open(url, driver)
+
+        repeat(10) { i ->
+            val x = 100.0 + 2 * i
+            val y = 100.0 + 3 * i
+            driver.moveMouseTo(x, y)
+            delay(500)
         }
     }
 
     @Test
-    fun testMouseWheel() {
-        val driver = driverFactory.create()
+    fun testMouseWheel() = runWebDriverTest(url) { driver ->
+        driver.mouseWheelDown(5)
 
-        runBlocking {
-            open(url, driver)
+        val box = driver.boundingBox("body")
+        println(box)
+        assertNotNull(box)
 
-            driver.mouseWheelDown(5)
+        delay(3000)
 
-            val box = driver.boundingBox("body")
-            println(box)
-            assertNotNull(box)
+        driver.mouseWheelUp(5)
 
-            delay(3000)
-
-            driver.mouseWheelUp(5)
-
-            val box2 = driver.boundingBox("body")
-            println(box2)
-            assertNotNull(box2)
-            assertTrue { box2.y < box.y }
-
-            driver.stop()
-        }
+        val box2 = driver.boundingBox("body")
+        println(box2)
+        assertNotNull(box2)
+        assertTrue { box2.y < box.y }
     }
 
     @Test
     fun testCaptureScreenshot() {
         System.setProperty("debugLevel", "0")
 
-        val driver = driverFactory.create()
-
-        runBlocking {
+        runWebDriverTest { driver ->
             open(url, driver)
 
             assertTrue { driver.exists("body") }
@@ -249,8 +246,6 @@ class ChromeWebDriverTests: TestBase() {
                     logger.info("Can not take screenshot for {}", selector)
                 }
             }
-
-            driver.stop()
         }
     }
 
@@ -273,6 +268,23 @@ class ChromeWebDriverTests: TestBase() {
         }
 
         readLine()
+    }
+
+    private fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            driverFactory.create().use { driver ->
+                open(url, driver)
+                block(driver)
+            }
+        }
+    }
+
+    private fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            driverFactory.create().use { driver ->
+                block(driver)
+            }
+        }
     }
 
     private suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 5) {

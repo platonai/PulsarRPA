@@ -156,7 +156,7 @@ class ChromeDevtoolsBrowser(
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
         val pageLoadTimeout = browserSettings.interactSettings.pageLoadTimeout
-        val seconds = if (AppRuntime.isInsufficientHardwareResources) 15L else pageLoadTimeout.seconds
+        val seconds = if (AppRuntime.isCriticalResources) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle = { driver: WebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }

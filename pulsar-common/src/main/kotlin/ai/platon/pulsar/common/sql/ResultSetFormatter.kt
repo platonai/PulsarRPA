@@ -1,18 +1,18 @@
 package ai.platon.pulsar.common.sql
 
 import org.apache.commons.lang3.StringUtils
-import java.lang.Exception
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
 import java.util.*
 
 class ResultSetFormatter(
-        private val rs: ResultSet,
-        private val asList: Boolean = false,
-        private val withHeader: Boolean = false,
-        private val textOnly: Boolean = false,
-        val buffer: StringBuilder = StringBuilder()
+    private val rs: ResultSet,
+    private val asList: Boolean = false,
+    private val withHeader: Boolean = false,
+    private val textOnly: Boolean = false,
+    private val maxColumnLength: Int = 120,
+    val buffer: StringBuilder = StringBuilder()
 ) {
     private val meta = rs.metaData
     private val numColumns = meta.columnCount
@@ -24,6 +24,9 @@ class ResultSetFormatter(
         private set
     var numFields = 0
         private set
+
+    var maxRowBuffer = 5000
+    var boxVertical = '|'
 
     private val rows = ArrayList<List<String>>()
     private val columns = IntRange(1, numColumns).map { meta.getColumnLabel(it) ?: "" }
@@ -58,7 +61,7 @@ class ResultSetFormatter(
             }
 
             formatCurrentRow()
-            if (numRows++ > MAX_ROW_BUFFER) {
+            if (numRows++ > maxRowBuffer) {
                 overflow()
             }
         }
@@ -90,7 +93,8 @@ class ResultSetFormatter(
                 }
 
                 val th = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
-                val td = rs.getString(i + 1)
+                var td = rs.getString(i + 1)
+                td = StringUtils.abbreviateMiddle(td, "...", maxColumnLength)
                 buffer.append(th).append(td)
 
                 ++numFields
@@ -114,8 +118,11 @@ class ResultSetFormatter(
 
     @Throws(SQLException::class)
     private fun formatCurrentRow() {
-        IntRange(1, numColumns).map { StringUtils.abbreviateMiddle(formatColumn(it), "..", MAX_COLUMN_LENGTH) }
-                .also { rows.add(it) }
+        IntRange(1, numColumns).map { abbreviateTextCell(formatCell(it)) }.also { rows.add(it) }
+    }
+
+    private fun abbreviateTextCell(cellText: String): String {
+        return StringUtils.abbreviateMiddle(cellText, "...", maxColumnLength)
     }
 
     /**
@@ -127,7 +134,7 @@ class ResultSetFormatter(
      * @link {https://docs.microsoft.com/en-us/sql/t-sql/data-types/precision-scale-and-length-transact-sql?view=sql-server-2017}
      */
     @Throws(SQLException::class)
-    private fun formatColumn(columnIndex: Int): String {
+    private fun formatCell(columnIndex: Int): String {
         if (textOnly) {
             return rs.getString(columnIndex)?.replace("\n", "") ?: "null"
         }
@@ -163,7 +170,7 @@ class ResultSetFormatter(
                 max = max.coerceAtLeast(row[i].length)
             }
             if (numColumns > 1) {
-                max = MAX_COLUMN_LENGTH.coerceAtMost(max)
+                max = maxColumnLength.coerceAtMost(max)
             }
             columnSizes[i] = max
         }
@@ -171,7 +178,7 @@ class ResultSetFormatter(
         rows.forEach { row ->
             row.forEachIndexed { j, value ->
                 if (j > 0) {
-                    buffer.append(' ').append(BOX_VERTICAL).append(' ')
+                    buffer.append(' ').append(boxVertical).append(' ')
                 }
 
                 buffer.append(value)
@@ -188,11 +195,5 @@ class ResultSetFormatter(
 
             buffer.append("\n")
         }
-    }
-
-    companion object {
-        var MAX_ROW_BUFFER = 5000
-        var MAX_COLUMN_LENGTH = 1000
-        var BOX_VERTICAL = '|'
     }
 }

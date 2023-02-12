@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.geometric.DimD
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.ChromeDevTools
 import com.github.kklisura.cdt.protocol.commands.DOM
 import com.github.kklisura.cdt.protocol.commands.Page
@@ -187,7 +186,7 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y - Vertical position of the mouse.
      */
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
-        move(x, y)
+        moveTo(x, y)
         down(x, y, clickCount)
 
         if (delayMillis > 0) {
@@ -197,11 +196,40 @@ class Mouse(private val devTools: ChromeDevTools) {
         up(x, y, clickCount)
     }
 
-    suspend fun move(point: PointD, steps: Int = 5, delayMillis: Long = 50) {
-        move(point.x, point.y, steps, delayMillis)
+    suspend fun moveTo(point: PointD, steps: Int = 5, delayMillis: Long = 50) {
+        moveTo(point.x, point.y, steps, delayMillis)
     }
 
-    suspend fun move(x: Double, y: Double, steps: Int = 5, delayMillis: Long = 50) {
+    /**
+     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
+     * */
+    suspend fun moveTo(x: Double, y: Double, steps: Int = 1, delayMillis: Long = 50) {
+        currentX = x
+        currentY = y
+
+        println("Moving to $x, $y")
+
+        input.dispatchMouseEvent(
+            DispatchMouseEventType.MOUSE_MOVED, x, y,
+            null, null,
+            null, // button
+            null, // buttons
+            null,
+            null, // force
+            null,
+            null,
+            null,
+            null, // twist
+            null,
+            null,
+            null
+        )
+    }
+
+    /**
+     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
+     * */
+    suspend fun moveTo2(x: Double, y: Double, steps: Int = 1, delayMillis: Long = 50) {
         val fromX = currentX
         val fromY = currentY
 
@@ -209,7 +237,7 @@ class Mouse(private val devTools: ChromeDevTools) {
         currentY = y
 
         var i = 0
-        while (i <= steps) {
+        while (i < steps) {
             val x1 = fromX + (currentX - fromX) * (i.toDouble() / steps)
             val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
 
@@ -230,7 +258,7 @@ class Mouse(private val devTools: ChromeDevTools) {
             )
 
             if (delayMillis > 0) {
-                delay(delayMillis)
+                // delay(delayMillis)
             }
 
             ++i
@@ -419,9 +447,9 @@ class Mouse(private val devTools: ChromeDevTools) {
             }
         }
 
-        move(start, 5, 100)
+        moveTo(start, 5, 100)
         down(currentX, currentY)
-        move(target, 3, 500)
+        moveTo(target, 3, 500)
 
         return dragData
     }

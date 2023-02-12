@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
+import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
@@ -252,6 +253,8 @@ interface WebDriver: Closeable {
     suspend fun isChecked(selector: String): Boolean
 
     @Throws(WebDriverException::class)
+    suspend fun focus(selector: String)
+    @Throws(WebDriverException::class)
     suspend fun type(selector: String, text: String)
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
@@ -285,6 +288,8 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun moveMouseTo(x: Double, y: Double)
     @Throws(WebDriverException::class)
+    suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int = 0)
+    @Throws(WebDriverException::class)
     suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int = 0)
 
     @Throws(WebDriverException::class)
@@ -306,6 +311,16 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun evaluate(expression: String): Any?
+    /**
+     * Executes JavaScript in the context of the currently selected frame or window. The script
+     * fragment provided will be executed as the body of an anonymous function.
+     *
+     * @param expression Javascript expression to evaluate
+     * @return expression result
+     * */
+    @Beta
+    @Throws(WebDriverException::class)
+    suspend fun evaluateDetail(expression: String): JsEvaluation?
     /**
      * Executes JavaScript in the context of the currently selected frame or window. The script
      * fragment provided will be executed as the body of an anonymous function.

@@ -120,6 +120,9 @@ class WebDriverAdapter(
     override suspend fun scrollTo(selector: String) = driverOrNull?.scrollTo(selector) ?: Unit
 
     @Throws(WebDriverException::class)
+    override suspend fun focus(selector: String) = driverOrNull?.focus(selector) ?: Unit
+
+    @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) = driverOrNull?.type(selector, text) ?: Unit
 
     @Throws(WebDriverException::class)
@@ -138,6 +141,11 @@ class WebDriverAdapter(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int) {
+        driverOrNull?.moveMouseTo(selector, deltaX, deltaY)
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         driverOrNull?.dragAndDrop(selector, deltaX, deltaY)
     }
@@ -150,6 +158,9 @@ class WebDriverAdapter(
 
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String) = driverOrNull?.evaluate(expression)
+
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateDetail(expression: String) = driverOrNull?.evaluateDetail(expression)
 
     @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders() = driverOrNull?.mainRequestHeaders() ?: mapOf()

@@ -15,6 +15,8 @@ class AppRuntime {
     companion object {
         private var prevCPUTicks = LongArray(CentralProcessor.TickType.values().size)
 
+        var CRITICAL_CPU_THRESHOLD = 0.95
+
         val startTime = Instant.now()
         val elapsedTime get() = Duration.between(startTime, Instant.now())
 
@@ -27,9 +29,9 @@ class AppRuntime {
          * */
         val systemCpuLoad get() = computeSystemCpuLoad()
 
-        val isHighCPULoad get() = systemCpuLoad > 0.95
+        val isCriticalCPULoad get() = systemCpuLoad > CRITICAL_CPU_THRESHOLD
         /**
-         * Free memory in bytes
+         * Free memory in bytes.
          * Free memory is the amount of memory which is currently not used for anything.
          * This number should be small, because memory which is not used is simply wasted.
          * */
@@ -56,13 +58,13 @@ class AppRuntime {
             else -> AppConstants.BROWSER_TAB_REQUIRED_MEMORY
         }
 
-        val isLowMemory get() = availableMemory < memoryToReserve
+        val isCriticalLowMemory get() = availableMemory < memoryToReserve
 
         val freeDiskSpaces get() = Runtimes.unallocatedDiskSpaces()
 
-        val isLowDiskSpace get() = checkIsOutOfDisk()
+        val isCriticalLowDiskSpace get() = checkIsOutOfDisk()
 
-        val isInsufficientHardwareResources get() = isLowMemory || isHighCPULoad || isLowDiskSpace
+        val isCriticalResources get() = isCriticalLowMemory || isCriticalCPULoad || isCriticalLowDiskSpace
 
         private fun checkIsOutOfDisk(): Boolean {
             val freeSpace = freeDiskSpaces.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0

@@ -29,6 +29,9 @@ class TestSQLFeatures : TestBase() {
 
         execute("SET @r=make_array('a', 'b', 1 + 3)")
         query("SELECT @r")
+
+        query("SELECT LENGTH(@r)")
+        query("SELECT ARRAY_LENGTH(@r)")
     }
 
     @Test
