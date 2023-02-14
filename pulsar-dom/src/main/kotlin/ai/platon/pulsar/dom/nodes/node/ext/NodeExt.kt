@@ -199,17 +199,17 @@ fun Element.removeUnnecessaryAttributes(): Element {
 }
 
 fun Element.removeNonStandardAttributesCascaded(): Element {
-    this.forEachElement { it.removeNonStandardAttributes() }
+    this.forEachElement(includeRoot = true) { it.removeNonStandardAttributes() }
     return this
 }
 
 fun Element.removeUnnecessaryAttributesCascaded(): Element {
-    this.forEachElement { it.removeUnnecessaryAttributes() }
+    this.forEachElement(includeRoot = true) { it.removeUnnecessaryAttributes() }
     return this
 }
 
 fun Element.clearAttributesCascaded(): Element {
-    this.forEachElement { it.clearAttributes() }
+    this.forEachElement(includeRoot = true) { it.clearAttributes() }
     return this
 }
 

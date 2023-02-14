@@ -200,7 +200,7 @@ abstract class BrowserEmulatorImplBase(
         try {
             exportIfNecessary0(task.pageSource, task.pageDatum.protocolStatus, task.page)
         } catch (e: Exception) {
-            logger.warn("Failed to export webpage | {} | \n{}", task.url, e.message)
+            logger.warn("Failed to export webpage | {} | \n{}", task.url, e.stringify())
         }
     }
 
