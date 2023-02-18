@@ -8,6 +8,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.PropertyAccessor
 import com.google.gson.Gson
 import java.nio.file.Files
 import java.nio.file.Path
@@ -352,6 +355,7 @@ data class InteractSettings(
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
     var bringToFront: Boolean = false
 ) {
+    @JsonIgnore
     var delayPolicy: (String) -> Long = { type ->
         when (type) {
             "gap" -> 500L + Random.nextInt(500)
@@ -376,7 +380,8 @@ data class InteractSettings(
      * TODO: just use an InteractSettings object, instead of separate properties
      * */
     fun overrideSystemProperties() {
-        Systems.setProperty(FETCH_INTERACT_SETTINGS, Gson().toJson(this))
+        Systems.setProperty(FETCH_INTERACT_SETTINGS,
+            pulsarObjectMapper().writeValueAsString(this))
 
         Systems.setProperty(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         Systems.setProperty(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)

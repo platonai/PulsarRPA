@@ -92,11 +92,13 @@ if [ -z "$APP_ENV_INIT" ]; then
   export APP_ENV_INIT="true"
 fi
 
-# Now having JAVA_HOME defined is required
-JAVAC=$(command -v javac)
-if [[ -e $JAVAC ]]; then
-  JAVA_HOME=$(readlink -f "$JAVAC" | sed "s:bin/javac::")
-  export JAVA_HOME
+if [[ -z "$JAVA_HOME" ]]; then
+  # Now having JAVA_HOME defined is required
+  JAVAC=$(command -v javac)
+  if [[ -e $JAVAC ]]; then
+    JAVA_HOME=$(readlink -f "$JAVAC" | sed "s:bin/javac::")
+    export JAVA_HOME
+  fi
 fi
 
 # Now having JAVA_HOME defined is required

@@ -656,6 +656,7 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
         </dependency>
+
     </dependencies>
 
     <properties>
@@ -671,6 +672,7 @@
 
         <commons-io.version>2.11.0</commons-io.version>
         <jackson.version>2.13.4</jackson.version>
+        <gson.version>2.10.1</gson.version>
 
         <spring.version>5.3.17</spring.version>
         <!-- spring-data-mongo -->
