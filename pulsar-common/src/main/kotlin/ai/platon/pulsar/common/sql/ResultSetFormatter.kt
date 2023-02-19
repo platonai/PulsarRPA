@@ -126,8 +126,9 @@ class ResultSetFormatter(
         IntRange(1, numColumns).map { abbreviateTextCell(formatCell(it)) }.also { rows.add(it) }
     }
 
-    private fun abbreviateTextCell(cellText: String): String {
-        return StringUtils.abbreviateMiddle(cellText, "...", maxColumnLength)
+    private fun abbreviateTextCell(cellText: String?): String {
+        return if (cellText == null) "(null)"
+        else StringUtils.abbreviateMiddle(cellText, "...", maxColumnLength)
     }
 
     /**
