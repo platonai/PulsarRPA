@@ -167,6 +167,10 @@ fun Element.ownTexts(): List<String> {
     return this.childNodes().mapNotNullTo(mutableListOf()) { (it as? TextNode)?.text() }
 }
 
+fun Element.wholeTexts(): List<String> {
+    return this.childNodes().mapNotNullTo(mutableListOf()) { (it as? TextNode)?.wholeText() }
+}
+
 fun Element.qualifiedClassNames(): Set<String> {
     val classNames = className().split("\\s+".toRegex()).toMutableSet()
     return getQualifiedClassNames(classNames)

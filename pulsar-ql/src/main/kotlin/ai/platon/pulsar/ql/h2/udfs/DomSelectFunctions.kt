@@ -81,6 +81,31 @@ object DomSelectFunctions {
         return Queries.selectNthOrNull(dom, cssQuery, n) { it.ownText() } ?: ""
     }
 
+
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element whole texts")
+    @JvmStatic
+    fun wholeTexts(dom: ValueDom, cssQuery: String): ValueArray {
+        return Queries.select(dom, cssQuery) { it.wholeText() }
+    }
+
+    @UDFunction(description = "Select the first element from a DOM by the given css query and return the element whole text")
+    @JvmStatic
+    fun firstWholeText(dom: ValueDom, cssQuery: String): String {
+        return Queries.selectFirstOrNull(dom, cssQuery) { it.wholeText() } ?: ""
+    }
+
+    @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element whole text")
+    @JvmStatic
+    fun nthWholeText(dom: ValueDom, cssQuery: String, n: Int): String {
+        return Queries.selectNthOrNull(dom, cssQuery, n) { it.wholeText() } ?: ""
+    }
+
+
+
+
+
+
+
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
     @JvmStatic
     fun allSlimHtmls(dom: ValueDom, cssQuery: String): ValueArray {

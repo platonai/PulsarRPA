@@ -127,8 +127,7 @@ class ResultSetFormatter(
     }
 
     private fun abbreviateTextCell(cellText: String?): String {
-        return if (cellText == null) "(null)"
-        else StringUtils.abbreviateMiddle(cellText, "...", maxColumnLength)
+        return StringUtils.abbreviateMiddle(sanitize(cellText), "...", maxColumnLength)
     }
 
     /**
@@ -163,7 +162,7 @@ class ResultSetFormatter(
     }
 
     private fun sanitize(value: String?): String {
-        if (value == null) return "null"
+        if (value == null) return "(null)"
         return value.replace("\n", "\t").replace(fieldSeparator, fieldSeparatorReplace)
     }
 

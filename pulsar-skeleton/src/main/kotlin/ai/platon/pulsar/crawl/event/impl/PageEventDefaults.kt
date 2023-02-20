@@ -29,14 +29,17 @@ class PerfectTraceBrowseEvent(
     }
 }
 
-typealias DefaultBrowseEvent = PerfectTraceBrowseEvent
-
 class EmptyBrowseEvent(
     val rpa: BrowseRPA = DefaultBrowseRPA()
 ): AbstractBrowseEvent() {
 
 }
 
+typealias DefaultBrowseEvent = EmptyBrowseEvent
+
+/**
+ * TODO: use a page event factory
+ * */
 open class DefaultPageEvent(
     loadEvent: LoadEvent = DefaultLoadEvent(),
     browseEvent: BrowseEvent = DefaultBrowseEvent(),

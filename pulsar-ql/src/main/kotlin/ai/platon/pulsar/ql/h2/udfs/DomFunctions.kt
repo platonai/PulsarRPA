@@ -141,7 +141,7 @@ object DomFunctions {
     fun uri(dom: ValueDom): String {
         return dom.element.ownerDocument()!!.selectFirstOrNull("#PulsarMetaInformation")
             ?.attr("normalizedUrl")
-            ?.takeIf { UrlUtils.isValidUrl(it) }
+            ?.takeIf { UrlUtils.isStandard(it) }
             ?: baseUri(dom)
     }
 
@@ -251,6 +251,18 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun ownTextLen(dom: ValueDom) = dom.element.ownText().length
+
+    @UDFunction
+    @JvmStatic
+    fun wholeText(dom: ValueDom) = dom.element.wholeText()
+
+    @UDFunction
+    @JvmStatic
+    fun wholeTexts(dom: ValueDom) = ValueArray.get(dom.element.wholeTexts().map { ValueString.get(it) }.toTypedArray())
+
+    @UDFunction
+    @JvmStatic
+    fun wholeTextLen(dom: ValueDom) = dom.element.wholeText().length
 
     @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher() over the node text")
     @JvmStatic
