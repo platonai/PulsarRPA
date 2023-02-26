@@ -297,13 +297,13 @@ open class StreamingCrawler(
             delay(1000)
         }
 
-        while (isActive && AppRuntime.isCriticalCPULoad) {
+        while (isActive && AppSystemInfo.isCriticalCPULoad) {
             criticalWarning = CriticalWarning.HIGH_CPU_LOAD
             delay(1000)
         }
 
         var k = 0
-        while (isActive && AppRuntime.isCriticalLowMemory) {
+        while (isActive && AppSystemInfo.isCriticalMemory) {
             if (k++ % 20 == 0) {
                 handleMemoryShortage(k)
             }
@@ -576,9 +576,9 @@ open class StreamingCrawler(
         logger.info(
             "$j.\tnumRunning: {}, availableMemory: {}, memoryToReserve: {}, shortage: {}",
             globalRunningTasks,
-            Strings.compactFormat(AppRuntime.availableMemory),
-            Strings.compactFormat(AppRuntime.memoryToReserve.toLong()),
-            Strings.compactFormat(AppRuntime.availableMemory - AppRuntime.memoryToReserve.toLong())
+            Strings.compactFormat(AppSystemInfo.availableMemory),
+            Strings.compactFormat(AppSystemInfo.actualCriticalMemory.toLong()),
+            Strings.compactFormat(AppSystemInfo.availableMemory - AppSystemInfo.actualCriticalMemory.toLong())
         )
         session.globalCache.clearPDCaches()
 
@@ -599,7 +599,7 @@ open class StreamingCrawler(
         while (isActive && contextLeaksRate >= 5 / 60f && ++k < 600) {
             logger.takeIf { k % 60 == 0 }?.warn(
                     "Context leaks too fast: {} leaks/seconds, available memory: {}",
-                    contextLeaksRate, Strings.compactFormat(AppRuntime.availableMemory))
+                    contextLeaksRate, Strings.compactFormat(AppSystemInfo.availableMemory))
             delay(1000)
 
             // trigger the meter updating

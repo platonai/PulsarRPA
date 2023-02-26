@@ -256,9 +256,11 @@ class LoadComponent(
             assert(page.isNotInternal)
         } else {
             // get the metadata of the page from the database, this is very fast for a crawler
-            // TODO: two step loading or one step loading?
+            // TODO: two step loading, or lazy loading page content
 //            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
+            // loadedPage?.setLazyFieldLoader { webDb.getOrNull(normUrl.spec, field = GWebPage.Field.CONTENT) }
             val loadedPage = webDb.getOrNull(normUrl.spec)
+
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppRuntime
+import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_CLOSE_LAZY
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -81,7 +81,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
                 // it might be a bad idea to close lazily
                 val lazyClose = closeStrategy == CloseStrategy.LAZY.name
                 when {
-                    AppRuntime.isCriticalResources -> closeZombieContexts()
+                    AppSystemInfo.isCriticalResources -> closeZombieContexts()
                     lazyClose -> closeZombieContextsLazily()
                     else -> closeZombieContexts()
                 }

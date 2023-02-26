@@ -353,7 +353,9 @@ data class InteractSettings(
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
-    var bringToFront: Boolean = false
+    var bringToFront: Boolean = false,
+    // val scrollPositions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
+    var initScrollPositions: List<Double> = listOf(0.3, 0.75, 0.4, 0.5)
 ) {
     @JsonIgnore
     var delayPolicy: (String) -> Long = { type ->
@@ -399,6 +401,24 @@ data class InteractSettings(
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+    }
+
+    fun buildScrollPositions(): List<Double> {
+        val positions = initScrollPositions.toMutableList()
+
+        if (scrollCount <= 0) {
+            return positions
+        }
+
+        val random = Random.nextInt(3)
+        val enhancedScrollCount = (scrollCount + random - 1).coerceAtLeast(1)
+        // some website show lazy content only when the page is in the front.
+        repeat(enhancedScrollCount) { i ->
+            val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
+            positions.add(ratio)
+        }
+
+        return positions
     }
 
     companion object {

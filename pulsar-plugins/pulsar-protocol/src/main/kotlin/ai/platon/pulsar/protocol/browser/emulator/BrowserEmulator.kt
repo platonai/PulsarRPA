@@ -39,7 +39,16 @@ interface BrowserEmulator: EventEmitter<EmulateEvents>, AutoCloseable {
      * @param task The task to fetch
      * @return The result of this fetch
      * */
+    @Deprecated("Inappropriate name", ReplaceWith("visit(task, driver)"))
     suspend fun fetch(task: FetchTask, driver: WebDriver): FetchResult
+
+    /**
+     * Fetch a page using a browser which can render the DOM and execute scripts.
+     *
+     * @param task The task to fetch
+     * @return The result of this fetch
+     * */
+    suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult
 
     fun cancelNow(task: FetchTask)
 

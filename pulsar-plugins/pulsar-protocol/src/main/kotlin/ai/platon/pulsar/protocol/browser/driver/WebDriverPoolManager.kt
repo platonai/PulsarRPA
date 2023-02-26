@@ -382,12 +382,27 @@ open class WebDriverPoolManager(
 
     private fun closeDriverPoolGracefully0(browserId: BrowserId) {
         val retiredDriverPool = _workingDriverPools[browserId]
+
+        // TODO: configurable
+        val isBusySystem = alwaysTrue()
+        val diagnosis = !isBusySystem
+
         if (retiredDriverPool != null) {
-            openInformationPages(browserId)
+            if (diagnosis) {
+                openInformationPages(browserId)
+            }
+
             retireDriverPool(browserId, retiredDriverPool)
+
+            // if diagnosis is not needed, close the browser immediately
+            if (!diagnosis) {
+                closeBrowserAndDriverPool(retiredDriverPool)
+            }
         }
 
-        closeLeastValuableDriverPool(browserId, retiredDriverPool)
+        if (diagnosis) {
+            closeLeastValuableDriverPool(browserId, retiredDriverPool)
+        }
     }
 
     private fun retireDriverPool(browserId: BrowserId, driverPool: LoadingWebDriverPool) {
@@ -495,7 +510,7 @@ open class WebDriverPoolManager(
 
         return when {
             // low memory
-            AppRuntime.isCriticalResources -> oldestRetiredDriverPool
+            AppSystemInfo.isCriticalResources -> oldestRetiredDriverPool
             // The drivers are in GUI mode and there are many open drivers.
             totalDyingDrivers > maxAllowedDyingDrivers -> oldestRetiredDriverPool
             else -> null

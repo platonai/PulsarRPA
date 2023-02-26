@@ -91,12 +91,10 @@ open class BrowserEmulatedFetcherImpl(
         }
 
         emit(EventType.willFetch, task.page, driver)
-//        notify("onWillFetch") { event?.onWillFetch?.invoke(task.page, driver) }
 
-        val result = browserEmulator.fetch(task, driver)
+        val result = browserEmulator.visit(task, driver)
 
         emit(EventType.fetched, task.page, driver)
-//        notify("onFetched") { event?.onFetched?.invoke(task.page, driver) }
 
         return result
     }

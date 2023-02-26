@@ -19,9 +19,9 @@ class WebDriverAdapter(
         get() = driver.idleTimeout
         set(value) { driver.idleTimeout = value }
 
-    override var waitForTimeout: Duration
-        get() = driver.waitForTimeout
-        set(value) { driver.waitForTimeout = value }
+    override var waitForElementTimeout: Duration
+        get() = driver.waitForElementTimeout
+        set(value) { driver.waitForElementTimeout = value }
 
     override val state get() = driver.state
 

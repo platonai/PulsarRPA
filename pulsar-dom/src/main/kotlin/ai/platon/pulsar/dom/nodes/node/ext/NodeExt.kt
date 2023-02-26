@@ -46,7 +46,7 @@ class IntFeature(val name: Int) {
 
 class MapField<T>(val initializer: (Node) -> T) {
     operator fun getValue(thisRef: Node, property: KProperty<*>): T =
-            thisRef.extension.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+        thisRef.extension.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: T): T {
         thisRef.extension.variables[property.name] = value
@@ -167,10 +167,6 @@ fun Element.ownTexts(): List<String> {
     return this.childNodes().mapNotNullTo(mutableListOf()) { (it as? TextNode)?.text() }
 }
 
-fun Element.wholeTexts(): List<String> {
-    return this.childNodes().mapNotNullTo(mutableListOf()) { (it as? TextNode)?.wholeText() }
-}
-
 fun Element.qualifiedClassNames(): Set<String> {
     val classNames = className().split("\\s+".toRegex()).toMutableSet()
     return getQualifiedClassNames(classNames)
@@ -189,16 +185,20 @@ fun Element.removeTemporaryAttributesCascaded(): Element {
 }
 
 fun Element.removeNonStandardAttributes(): Element {
-    this.attributes().map { it.key }.forEach { if (it !in STANDARD_ATTRIBUTES) {
-        this.removeAttr(it)
-    } }
+    this.attributes().map { it.key }.forEach {
+        if (it !in STANDARD_ATTRIBUTES) {
+            this.removeAttr(it)
+        }
+    }
     return this
 }
 
 fun Element.removeUnnecessaryAttributes(): Element {
-    this.attributes().map { it.key }.forEach { if (it !in VALUABLE_ATTRIBUTES) {
-        this.removeAttr(it)
-    } }
+    this.attributes().map { it.key }.forEach {
+        if (it !in VALUABLE_ATTRIBUTES) {
+            this.removeAttr(it)
+        }
+    }
     return this
 }
 
@@ -219,9 +219,9 @@ fun Element.clearAttributesCascaded(): Element {
 
 fun Element.parseStyle(): Array<String> {
     return Strings.stripNonChar(attr("style"), ":;")
-            .split(";".toRegex())
-            .dropLastWhile { it.isEmpty() }
-            .toTypedArray()
+        .split(";".toRegex())
+        .dropLastWhile { it.isEmpty() }
+        .toTypedArray()
 }
 
 fun Element.getStyle(styleKey: String): String {
@@ -290,33 +290,49 @@ val Node.area get() = width * height
 
 /** Whether the hidden flag is set by javascript */
 val Node.hasHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_HIDDEN)
+
 /** Whether the overflow hidden flag is set by javascript */
 val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HIDDEN)
+
 /** Whether the node is visible */
-val Node.isVisible: Boolean get() {
-    return when {
-        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image has an empty rectangle?
-        else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
+val Node.isVisible: Boolean
+    get() {
+        return when {
+            isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image has an empty rectangle?
+            else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
+        }
     }
-}
 
 /** Whether the node is visible */
 val Node.isHidden: Boolean get() = !this.isVisible
+
 /** Whether the element is floating */
 // val Node.isAbsolute: Boolean get() = hasAttr("_absolute")
 // val Node.isFixed: Boolean get() = hasAttr("_fixed")
 
 val Node.isText: Boolean get() = this is TextNode
 
-val Node.isBlankText: Boolean get() { return this is TextNode && this.isBlank }
+val Node.isBlankText: Boolean
+    get() {
+        return this is TextNode && this.isBlank
+    }
 
-val Node.isNonBlankText: Boolean get() { return this is TextNode && !this.isBlank }
+val Node.isNonBlankText: Boolean
+    get() {
+        return this is TextNode && !this.isBlank
+    }
 
-val Node.isRegularText: Boolean get() { return isVisible && isNonBlankText }
+val Node.isRegularText: Boolean
+    get() {
+        return isVisible && isNonBlankText
+    }
 
 val Node.isImage: Boolean get() = this.nodeName() == "img"
 
-val Node.isRegularImage: Boolean get() { return isImage && isVisible && hasAttr("src") }
+val Node.isRegularImage: Boolean
+    get() {
+        return isImage && isVisible && hasAttr("src")
+    }
 
 /**
  * A <img> tag can contain any tag
@@ -371,6 +387,7 @@ val Node.doubleValue by field { SParser(it.cleanText).getDouble(Double.NaN) }
 var Node.numChars by IntFeature(CH)
 var Node.numSiblings by IntFeature(SIB)
 var Node.numChildren by IntFeature(C)
+
 /** Number of descend text nodes */
 var Node.numTextNodes by IntFeature(TN)
 
@@ -408,12 +425,13 @@ val Node.captionOrSelector: String
  * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
  * This is a balance of space and time.
  * */
-val Node?.cleanText: String get() =
-    when (this) {
-        is TextNode -> extension.immutableText.trim()
-        is Element -> accumulateText(this).trim()
-        else -> ""
-    }.trim()
+val Node?.cleanText: String
+    get() =
+        when (this) {
+            is TextNode -> extension.immutableText.trim()
+            is Element -> accumulateText(this).trim()
+            else -> ""
+        }.trim()
 
 /**
  * The trimmed text of this node.
@@ -442,14 +460,15 @@ fun Node.joinToString(sparator: String = " ", prefix: String = "", suffix: Strin
     }
 }
 
-val Node.textRepresentation: String get() =
-    when {
-        isImage -> attr("abs:src")
-        isAnchor -> attr("abs:href")
-        this is TextNode -> cleanText
-        this is Element -> cleanText
-        else -> ""
-    }
+val Node.textRepresentation: String
+    get() =
+        when {
+            isImage -> attr("abs:src")
+            isAnchor -> attr("abs:href")
+            this is TextNode -> cleanText
+            this is Element -> cleanText
+            else -> ""
+        }
 
 /**
  * TODO: slim table
@@ -457,9 +476,13 @@ val Node.textRepresentation: String get() =
 val Node.slimHtml by field {
     val nm = it.nodeName().lowercase()
     when {
-        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
+        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(
+            it
+        )
+
         it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
             String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
+
         it is Element -> it.slimCopy().outerHtml()
         else -> String.format("<b>%s</b>", it.name)
     }
@@ -468,9 +491,13 @@ val Node.slimHtml by field {
 val Node.minimalHtml by field {
     val nm = it.nodeName().lowercase()
     when {
-        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
+        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(
+            it
+        )
+
         it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
             String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
+
         it is Element -> it.minimalCopy().outerHtml()
         else -> String.format("<b>%s</b>", it.name)
     }
@@ -489,14 +516,18 @@ private fun atomSlimHtml(node: Node): String {
     }
 }
 
-private fun createSlimImageHtml(node: Node): String = node.run { String.format("<img src='%s' vi='%s' alt='%s'/>",
-        absUrl("src"), attr("vi"), attr("alt")) }
+private fun createSlimImageHtml(node: Node): String = node.run {
+    String.format(
+        "<img src='%s' vi='%s' alt='%s'/>",
+        absUrl("src"), attr("vi"), attr("alt")
+    )
+}
 
 val Node.key: String get() = "$location#$sequence"
 
 val Node.name: String
     get() {
-        return when(this) {
+        return when (this) {
             is Document -> ":root"
             is Element -> {
                 val id = id()
@@ -511,22 +542,25 @@ val Node.name: String
 
                 nodeName()
             }
+
             is TextNode -> {
                 val postfix = if (siblingNodes().size > 1) {
                     "~" + siblingIndex()
                 } else ""
                 return bestElement.name + postfix
             }
+
             else -> nodeName()
         }
     }
 
 val Node.canonicalName: String
     get() {
-        when(this) {
+        when (this) {
             is Document -> {
                 return location
             }
+
             is Element -> {
                 var id = id().trim()
                 if (!id.isEmpty()) {
@@ -543,12 +577,14 @@ val Node.canonicalName: String
 
                 return "${nodeName()}$id$classes"
             }
+
             is TextNode -> {
                 val postfix = if (siblingNodes().size > 1) {
                     "~" + siblingIndex()
                 } else ""
                 return bestElement.canonicalName + postfix
             }
+
             else -> return nodeName()
         }
     }
@@ -568,7 +604,7 @@ val Node.parentElement get() = this.parent() as Element
  * Returns a best element to represent this node: if the node itself is an element, returns itself
  * otherwise, returns it's parent
  * */
-val Node.bestElement get() = (this as? Element)?:parentElement
+val Node.bestElement get() = (this as? Element) ?: parentElement
 
 /**
  * The caption of an Element is a joined text values of all non-blank text nodes
@@ -688,15 +724,15 @@ fun Node.addTupleItem(tupleName: String, item: Any): Boolean {
  *
  * */
 fun Node.removeTupleItem(tupleName: String, item: Any): Boolean {
-    return extension.tuples[tupleName]?.remove(item)?:return false
+    return extension.tuples[tupleName]?.remove(item) ?: return false
 }
 
 fun Node.getTuple(tupleName: String): List<Any> {
-    return extension.tuples[tupleName]?:return listOf()
+    return extension.tuples[tupleName] ?: return listOf()
 }
 
 fun Node.hasTupleItem(tupleName: String, item: String): Boolean {
-    return extension.tuples[tupleName]?.contains(item)?:return false
+    return extension.tuples[tupleName]?.contains(item) ?: return false
 }
 
 fun Node.hasTuple(tupleName: String): Boolean {
@@ -844,11 +880,11 @@ fun Node.hasAncestor(stop: (Node) -> Boolean, predicate: (Element) -> Boolean): 
 }
 
 fun Node.isAncestorOf(other: Node): Boolean {
-    return other.findFirstAncestor { it == this} != null
+    return other.findFirstAncestor { it == this } != null
 }
 
 fun Node.isAncestorOf(other: Node, stop: (Node) -> Boolean): Boolean {
-    return other.findFirstAncestor(stop) { it == this} != null
+    return other.findFirstAncestor(stop) { it == this } != null
 }
 
 fun Node.ancestors(): List<Element> {
@@ -872,7 +908,8 @@ private fun accumulateText(root: Element, seperator: String = " "): String {
             }
         } else if (node is Element) {
             if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
-                    && !(sb.isNotEmpty() && sb.endsWith(seperator)))
+                && !(sb.isNotEmpty() && sb.endsWith(seperator))
+            )
                 sb.append(seperator)
         }
     }, root)

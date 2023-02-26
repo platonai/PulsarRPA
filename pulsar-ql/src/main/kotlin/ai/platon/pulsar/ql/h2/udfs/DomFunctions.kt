@@ -258,10 +258,6 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun wholeTexts(dom: ValueDom) = ValueArray.get(dom.element.wholeTexts().map { ValueString.get(it) }.toTypedArray())
-
-    @UDFunction
-    @JvmStatic
     fun wholeTextLen(dom: ValueDom) = dom.element.wholeText().length
 
     @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher() over the node text")

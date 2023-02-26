@@ -40,12 +40,14 @@ class CoreMetrics(
     companion object {
         var runningChromeProcesses = 0
         var usedMemory = 0L
+        var cpuLoad = 0.0
 
         init {
             mapOf(
                 "version" to Gauge { AppContext.APP_VERSION },
                 "runningChromeProcesses" to Gauge { runningChromeProcesses },
                 "usedMemory" to Gauge { Strings.compactFormat(usedMemory) },
+                "cpuLoad" to Gauge { String.format("%.2f", cpuLoad) },
 
                 "pulsarSessionPageCacheHits" to Gauge { AbstractPulsarSession.pageCacheHits },
                 "pulsarSessionPageCacheHits/s" to Gauge { 1.0 * AbstractPulsarSession.pageCacheHits.get() / DateTimes.elapsedSeconds() },
@@ -410,7 +412,8 @@ class CoreMetrics(
         meterTotalNetworkIFsRecvMBytes.mark(totalNetworkIFsRecvBytes / 1024 / 1024)
 
         runningChromeProcesses = Runtimes.countSystemProcess("chrome")
-        usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
+        usedMemory = AppSystemInfo.usedMemory
+        cpuLoad = AppSystemInfo.systemCpuLoad
     }
 
     private fun startReporter() {

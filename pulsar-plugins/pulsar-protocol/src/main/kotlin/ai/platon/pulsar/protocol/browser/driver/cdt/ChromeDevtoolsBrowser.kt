@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
-import ai.platon.pulsar.common.AppRuntime
+import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -165,7 +165,7 @@ class ChromeDevtoolsBrowser(
         val chromeDrivers = drivers.values.filterIsInstance<ChromeDevtoolsDriver>()
 
         val pageLoadTimeout = browserSettings.interactSettings.pageLoadTimeout
-        val seconds = if (AppRuntime.isCriticalResources) 15L else pageLoadTimeout.seconds
+        val seconds = if (AppSystemInfo.isCriticalResources) 15L else pageLoadTimeout.seconds
         val unmanagedTabTimeout = Duration.ofSeconds(seconds)
         val isIdle = { driver: WebDriver -> Duration.between(driver.lastActiveTime, Instant.now()) > unmanagedTabTimeout }
         val unmanagedTimeoutDrivers = chromeDrivers.filter { it.isRecovered && !it.isReused && isIdle(it) }

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.AppRuntime
-import ai.platon.pulsar.common.Runtimes
+import ai.platon.pulsar.common.AppSystemInfo
 import org.junit.Test
 import oshi.hardware.CentralProcessor.TickType
 import java.time.Instant
@@ -12,7 +11,7 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 
-class TestAppRuntime {
+class TestAppSystemInfo {
     var sum = 0.0
     var prevTicks = LongArray(TickType.values().size)
 
@@ -23,7 +22,7 @@ class TestAppRuntime {
             measureCPU()
         }, 2, 2, TimeUnit.SECONDS)
 
-        val nThreads = AppRuntime.systemInfo.hardware.processor.logicalProcessorCount - 2
+        val nThreads = AppSystemInfo.systemInfo.hardware.processor.logicalProcessorCount - 2
         val executor = Executors.newFixedThreadPool(nThreads)
         repeat(nThreads) {
             executor.submit { compute() }
@@ -43,7 +42,7 @@ class TestAppRuntime {
     }
 
     fun measureCPU() {
-        val processor = AppRuntime.systemInfo.hardware.processor
+        val processor = AppSystemInfo.systemInfo.hardware.processor
 
         val cpuLoad = processor.getSystemCpuLoadBetweenTicks(prevTicks) * 100
         prevTicks = processor.systemCpuLoadTicks

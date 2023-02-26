@@ -9,18 +9,19 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Project specific application runtime information
+ * Application specific system information
  * */
-class AppRuntime {
+class AppSystemInfo {
     companion object {
         private var prevCPUTicks = LongArray(CentralProcessor.TickType.values().size)
 
-        var CRITICAL_CPU_THRESHOLD = 0.95
+        var CRITICAL_CPU_THRESHOLD = System.getProperty("critical.cpu.threshold") ?.toDoubleOrNull() ?: 0.85
 
         val startTime = Instant.now()
         val elapsedTime get() = Duration.between(startTime, Instant.now())
 
         val systemInfo = SystemInfo()
+
         // OSHI cached the value, so it's fast and safe to be called frequently
         val memoryInfo get() = systemInfo.hardware.memory
 
@@ -30,6 +31,7 @@ class AppRuntime {
         val systemCpuLoad get() = computeSystemCpuLoad()
 
         val isCriticalCPULoad get() = systemCpuLoad > CRITICAL_CPU_THRESHOLD
+
         /**
          * Free memory in bytes.
          * Free memory is the amount of memory which is currently not used for anything.
@@ -37,6 +39,7 @@ class AppRuntime {
          * */
         val freeMemory get() = Runtime.getRuntime().freeMemory()
         val freeMemoryGiB get() = ByteUnit.BYTE.toGiB(freeMemory.toDouble())
+
         /**
          * Available memory in bytes.
          * Available memory is the amount of memory which is available for allocation to a new process or to existing
@@ -44,27 +47,31 @@ class AppRuntime {
          * */
         val availableMemory get() = memoryInfo.available
 
+        val usedMemory get() = memoryInfo.total - memoryInfo.available
+
         val totalMemory get() = Runtime.getRuntime().totalMemory()
         val totalMemoryGiB get() = ByteUnit.BYTE.toGiB(totalMemory.toDouble())
         val availableMemoryGiB get() = ByteUnit.BYTE.toGiB(availableMemory.toDouble())
+
         //        private val memoryToReserveLarge get() = conf.getDouble(
 //            CapabilityTypes.BROWSER_MEMORY_TO_RESERVE_KEY,
 //            AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
 //        )
-        // TODO: configurable
-        val memoryToReserve = when {
+        val criticalMemoryMiB get() = System.getProperty("critical.memory.MiB")?.toDouble() ?: 0.0
+        val actualCriticalMemory = when {
+            criticalMemoryMiB > 0 -> ByteUnit.MIB.toBytes(criticalMemoryMiB)
             totalMemoryGiB >= 14 -> ByteUnit.GIB.toBytes(3.0) // 3 GiB
             totalMemoryGiB >= 30 -> AppConstants.DEFAULT_BROWSER_RESERVED_MEMORY
             else -> AppConstants.BROWSER_TAB_REQUIRED_MEMORY
         }
 
-        val isCriticalLowMemory get() = availableMemory < memoryToReserve
+        val isCriticalMemory get() = availableMemory < actualCriticalMemory
 
         val freeDiskSpaces get() = Runtimes.unallocatedDiskSpaces()
 
-        val isCriticalLowDiskSpace get() = checkIsOutOfDisk()
+        val isCriticalDiskSpace get() = checkIsOutOfDisk()
 
-        val isCriticalResources get() = isCriticalLowMemory || isCriticalCPULoad || isCriticalLowDiskSpace
+        val isCriticalResources get() = isCriticalMemory || isCriticalCPULoad || isCriticalDiskSpace
 
         private fun checkIsOutOfDisk(): Boolean {
             val freeSpace = freeDiskSpaces.maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
@@ -89,3 +96,6 @@ class AppRuntime {
         }
     }
 }
+
+@Deprecated("Inappropriate name", ReplaceWith("HardwareResource"))
+typealias AppRuntime = AppSystemInfo

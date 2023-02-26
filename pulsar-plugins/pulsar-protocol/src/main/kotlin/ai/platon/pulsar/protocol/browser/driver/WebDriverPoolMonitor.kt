@@ -24,13 +24,13 @@ open class WebDriverPoolMonitor(
             return
         }
 
-        // should maintain in a global monitor
-        // driverPoolManager.maintain()
+        releaseLocksIfNecessary()
 
-        releaseLocks()
+        // should maintain in a global monitor
+        driverPoolManager.maintain()
     }
 
-    private fun releaseLocks() {
+    private fun releaseLocksIfNecessary() {
         if (driverPoolManager.isIdle) {
             if (driverPoolManager.hasEvent) {
                 log.info("[Idle] {}", driverPoolManager.toString())

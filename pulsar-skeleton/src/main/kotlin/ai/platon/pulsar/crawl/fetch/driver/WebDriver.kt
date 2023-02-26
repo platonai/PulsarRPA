@@ -121,7 +121,7 @@ interface WebDriver: Closeable {
     /**
      * The timeout to wait for some object.
      * */
-    var waitForTimeout: Duration
+    var waitForElementTimeout: Duration
 
     val isInit: Boolean
     val isReady: Boolean

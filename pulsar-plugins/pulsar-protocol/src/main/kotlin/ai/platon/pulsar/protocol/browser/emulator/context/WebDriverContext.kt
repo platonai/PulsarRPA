@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppRuntime
+import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -83,7 +83,7 @@ open class WebDriverContext(
     open fun maintain() {
         // close dead, valueless, idle driver pools, etc
         // TODO: called by every web driver context, which is not expected.
-        driverPoolManager.maintain()
+        // driverPoolManager.maintain()
     }
 
     /**
@@ -101,7 +101,7 @@ open class WebDriverContext(
     }
 
     private fun doClose() {
-        val asap = !AppContext.isActive || AppRuntime.isCriticalResources
+        val asap = !AppContext.isActive || AppSystemInfo.isCriticalResources
 
         logger.debug("Closing web driver context, asap: $asap")
 
@@ -159,7 +159,7 @@ open class WebDriverContext(
         var n = timeout.seconds
         lock.lockInterruptibly()
         try {
-            while (runningTasks.isNotEmpty() && !AppRuntime.isCriticalResources && n-- > 0) {
+            while (runningTasks.isNotEmpty() && !AppSystemInfo.isCriticalResources && n-- > 0) {
                 notBusy.await(1, TimeUnit.SECONDS)
             }
         } finally {
@@ -169,9 +169,9 @@ open class WebDriverContext(
         val isShutdown = if (AppContext.isActive) "" else " (shutdown)"
         val display = browserId.display
         val message = when {
-            AppRuntime.isCriticalLowMemory ->
+            AppSystemInfo.isCriticalMemory ->
                 String.format("Low memory (%.2fGiB), close %d retired browsers immediately$isShutdown | $display",
-                    ByteUnit.BYTE.toGiB(AppRuntime.availableMemory.toDouble()), runningTasks.size)
+                    ByteUnit.BYTE.toGiB(AppSystemInfo.availableMemory.toDouble()), runningTasks.size)
             n <= 0L -> String.format("Timeout (still %d running tasks)$isShutdown | $display", runningTasks.size)
             n > 0 -> String.format("All tasks return in %d seconds$isShutdown | $display", timeout.seconds - n)
             else -> ""

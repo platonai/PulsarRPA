@@ -81,10 +81,10 @@ class AppMetrics(
 
         init {
             mapOf(
-                "startTime" to Gauge { AppRuntime.startTime },
-                "elapsedTime" to Gauge { AppRuntime.elapsedTime },
-                "availableMemory" to Gauge { Strings.compactFormat(AppRuntime.availableMemory) },
-                "freeSpace" to Gauge { AppRuntime.freeDiskSpaces.map { Strings.compactFormat(it) } }
+                "startTime" to Gauge { AppSystemInfo.startTime },
+                "elapsedTime" to Gauge { AppSystemInfo.elapsedTime },
+                "availableMemory" to Gauge { Strings.compactFormat(AppSystemInfo.availableMemory) },
+                "freeSpace" to Gauge { AppSystemInfo.freeDiskSpaces.map { Strings.compactFormat(it) } }
             ).let { reg.registerAll(this, it) }
         }
     }

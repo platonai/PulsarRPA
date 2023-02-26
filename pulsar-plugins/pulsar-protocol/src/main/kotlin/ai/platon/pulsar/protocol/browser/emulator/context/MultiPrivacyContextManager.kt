@@ -97,7 +97,7 @@ class MultiPrivacyContextManager(
             }
         }
 
-        // TODO: is synchronized necessary?
+        // TODO: is synchronization necessary?
         return synchronized(activeContexts) { iterator.next() }
     }
 
@@ -111,7 +111,7 @@ class MultiPrivacyContextManager(
     override fun maintain() {
         closeDyingContexts()
 
-        // comes later
+        // and then check the active context list
         activeContexts.values.forEach { context ->
             context.maintain()
         }
@@ -120,12 +120,12 @@ class MultiPrivacyContextManager(
     private fun closeDyingContexts() {
         activeContexts.values.forEach {
             if (!it.isActive) {
-                logger.warn("Privacy context is dead | {}", it.id.display)
+                logger.warn("Privacy context is dead, closing it | {}", it.id.display)
                 close(it)
             }
 
             if (it.isIdle) {
-                logger.warn("Privacy context hangs unexpectedly | {}", it.id.display)
+                logger.warn("Privacy context hangs unexpectedly, closing it | {}", it.id.display)
                 close(it)
             }
         }

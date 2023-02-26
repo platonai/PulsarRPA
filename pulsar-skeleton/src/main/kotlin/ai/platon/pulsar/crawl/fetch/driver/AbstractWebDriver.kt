@@ -30,7 +30,7 @@ abstract class AbstractWebDriver(
 
     override var idleTimeout: Duration = Duration.ofMinutes(10)
 
-    override var waitForTimeout = Duration.ofMinutes(1)
+    override var waitForElementTimeout = Duration.ofSeconds(20)
 
     override val name get() = javaClass.simpleName + "-" + id
 
@@ -42,7 +42,7 @@ abstract class AbstractWebDriver(
             "mouseWheel" -> 800L + Random.nextInt(500)
             "dragAndDrop" -> 800L + Random.nextInt(500)
             "waitForNavigation" -> 500L
-            "waitForSelector" -> 500L
+            "waitForSelector" -> 1000L
             else -> 100L + Random.nextInt(500)
         }
     }
@@ -109,7 +109,7 @@ abstract class AbstractWebDriver(
         waitForSelector(selector, Duration.ofMillis(timeoutMillis))
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForTimeout)
+    override suspend fun waitForSelector(selector: String): Long = waitForSelector(selector, waitForElementTimeout)
 
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation(): Long = waitForNavigation(Duration.ofSeconds(10))

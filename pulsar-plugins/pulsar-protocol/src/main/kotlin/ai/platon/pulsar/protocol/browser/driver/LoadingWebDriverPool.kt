@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppRuntime
+import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
@@ -325,7 +325,7 @@ class LoadingWebDriverPool constructor(
 
     private fun shouldCreateWebDriver(): Boolean {
         val onlineDriverCount = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
-        return isActive && !AppRuntime.isCriticalResources && onlineDriverCount < capacity
+        return isActive && !AppSystemInfo.isCriticalResources && onlineDriverCount < capacity
     }
 
     @Throws(BrowserLaunchException::class)

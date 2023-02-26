@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.PulsarParams.VAR_LOAD_OPTIONS;
@@ -119,6 +121,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * The delay time to retry if a retry is needed
      */
     private Duration retryDelay = Duration.ZERO;
+
+    /**
+     * The field loader to load fields lazily.
+     */
+    private Function<String, Object> lazyFieldLoader = null;
 
     private WebPage(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
@@ -498,6 +505,10 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     public void setRetryDelay(@NotNull Duration retryDelay) {
         this.retryDelay = retryDelay;
+    }
+
+    public void setLazyFieldLoader(Function<String, Object> lazyFieldLoader) {
+        this.lazyFieldLoader = lazyFieldLoader;
     }
 
     public int getMaxRetries() {
@@ -993,6 +1004,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         if (tmpContent != null) {
             return tmpContent;
         }
+
+        if (lazyFieldLoader != null) {
+            return (ByteBuffer)lazyFieldLoader.apply(GWebPage.Field.CONTENT.getName());
+        }
+
         return page.getContent();
     }
 

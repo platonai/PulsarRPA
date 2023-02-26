@@ -24,6 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 
 class ChromeDevtoolsDriver(
     val chromeTab: ChromeTab,
@@ -752,6 +753,11 @@ class ChromeDevtoolsDriver(
         addScriptToEvaluateOnNewDocument()
 
         if (enableUrlBlocking && blockedURLs.isNotEmpty()) {
+            // random drop image requests
+//            val rand = Random.nextInt(3)
+//            if (rand == 0) {
+//            }
+
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
@@ -760,15 +766,19 @@ class ChromeDevtoolsDriver(
                 mainRequestId = it.requestId
                 mainRequestHeaders = it.request.headers
             }
+
+            if (it.request.url.endsWith("*.jpg")) {
+                // random drop
+            }
         }
 
         networkAPI?.onResponseReceived {
-            if (mainRequestId != null) {
+            if (mainRequestId.isNotBlank()) {
                 // split the `if` to make it clearer
                 if (numResponseReceived.incrementAndGet() == 100) {
                     // Disables network tracking, prevents network events from being sent to the client.
                     networkAPI?.disable()
-                    // logger.info("Network tracking for driver #{} is disabled", id)
+                    // logger.info("Network API for driver #{} is disabled", id)
                 }
             }
         }
