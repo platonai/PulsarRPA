@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -46,7 +47,11 @@ class InteractTask(
     val isCanceled get() = navigateTask.fetchTask.isCanceled
 
     val conf get() = navigateTask.fetchTask.volatileConfig
-    val interactSettings get() = browserSettings.interactSettings
+    /**
+     * TODO: this is a temporary solution to set page scope interaction settings, it should be reviewed and improved
+     * */
+    val interactSettings get() = page.getVar("InteractSettings") as? InteractSettings
+        ?: browserSettings.interactSettings
 }
 
 class BrowserStatus(

@@ -403,7 +403,11 @@ data class InteractSettings constructor(
     }
 
     fun buildInitScrollPositions(): List<Double> {
-        return initScrollPositions.split(",").mapNotNull { it.toDoubleOrNull() }
+        if (initScrollPositions.isBlank()) {
+            return listOf()
+        }
+
+        return initScrollPositions.split(",").mapNotNull { it.trim().toDoubleOrNull() }
     }
 
     fun buildScrollPositions(): List<Double> {

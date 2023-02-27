@@ -362,9 +362,6 @@ open class InteractiveBrowserEmulator(
         }
 
         val interactTask = InteractTask(task, settings, driver)
-        // TODO: this is a temporary solution to modify InteractSettings in page events
-        val VAR_INTERACT_TASK = "InteractTask"
-        interactTask.page.setVar(VAR_INTERACT_TASK, this)
 
         val result = try {
             emit1(EmulateEvents.willInteract, page, driver)
@@ -376,7 +373,6 @@ open class InteractiveBrowserEmulator(
             }
         } finally {
             emit1(EmulateEvents.didInteract, page, driver)
-            interactTask.page.removeVar(VAR_INTERACT_TASK)
         }
 
         return result
