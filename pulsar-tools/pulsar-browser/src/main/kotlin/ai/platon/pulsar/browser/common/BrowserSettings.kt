@@ -30,6 +30,7 @@ open class BrowserSettings(
 
         /**
          * Check if the current environment supports only headless mode.
+         * TODO: this doesn't work sometimes
          * */
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
@@ -268,8 +269,11 @@ open class BrowserSettings(
      * supervised
      * */
     val displayMode
-        get() = if (isHeadlessOnly) DisplayMode.HEADLESS
-        else conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.GUI)
+        get() = when {
+            conf[BROWSER_DISPLAY_MODE] != null -> conf.getEnum(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS)
+            isHeadlessOnly -> DisplayMode.HEADLESS
+            else -> DisplayMode.GUI
+        }
 
     /**
      * If true, the browser will run in supervised mode.
