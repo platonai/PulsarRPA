@@ -352,7 +352,7 @@ data class InteractSettings constructor(
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
     var bringToFront: Boolean = false,
-    // val scrollPositions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
+    // (0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
     @JsonIgnore
@@ -401,6 +401,28 @@ data class InteractSettings constructor(
         conf.setDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
+    
+    fun copy(settings: InteractSettings): InteractSettings {
+        scrollCount = settings.scrollCount
+        scrollInterval = settings.scrollInterval
+        scriptTimeout = settings.scriptTimeout
+        pageLoadTimeout = settings.pageLoadTimeout
+        bringToFront = settings.bringToFront
+        initScrollPositions = settings.initScrollPositions
+
+        return this
+    }
+
+    fun noScroll(): InteractSettings {
+        initScrollPositions = ""
+        return this
+    }
+
+    fun goodNetwork() = copy(goodNetSettings)
+
+    fun worseNetwork() = copy(worseNetSettings)
+
+    fun worstNetwork() = copy(worstNetSettings)
 
     fun buildInitScrollPositions(): List<Double> {
         if (initScrollPositions.isBlank()) {
