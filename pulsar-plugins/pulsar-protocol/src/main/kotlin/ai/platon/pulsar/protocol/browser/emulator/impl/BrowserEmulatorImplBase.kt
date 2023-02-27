@@ -177,7 +177,7 @@ abstract class BrowserEmulatorImplBase(
 
     protected fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
-            val settings = InteractSettings(task.volatileConfig)
+            val settings = driverSettings.interactSettings
             logger.trace(
                 "Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
                 task.batchTaskId, task.batchSize, task.id,

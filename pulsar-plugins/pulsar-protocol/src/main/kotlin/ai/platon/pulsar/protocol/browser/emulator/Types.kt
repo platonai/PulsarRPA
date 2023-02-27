@@ -11,7 +11,7 @@ import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import java.time.Duration
 import java.time.Instant
 
-class NavigateTask(
+class NavigateTask constructor(
     val fetchTask: FetchTask,
     val driver: WebDriver,
     val driverSettings: BrowserSettings

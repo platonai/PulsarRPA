@@ -10,8 +10,6 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.PropertyAccessor
-import com.google.gson.Gson
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -348,14 +346,14 @@ enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
 /**
  * The interaction settings
  * */
-data class InteractSettings(
+data class InteractSettings constructor(
     var scrollCount: Int = 10,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
     var bringToFront: Boolean = false,
     // val scrollPositions = listOf(0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
-    var initScrollPositions: List<Double> = listOf(0.3, 0.75, 0.4, 0.5)
+    var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
     @JsonIgnore
     var delayPolicy: (String) -> Long = { type ->
@@ -395,7 +393,8 @@ data class InteractSettings(
      * TODO: just use an InteractSettings object, instead of separate properties
      * */
     fun overrideConfiguration(conf: MutableConfig) {
-        conf[FETCH_INTERACT_SETTINGS] = Gson().toJson(this)
+        Systems.setProperty(FETCH_INTERACT_SETTINGS,
+            pulsarObjectMapper().writeValueAsString(this))
 
         conf.setInt(FETCH_SCROLL_DOWN_COUNT, scrollCount)
         conf.setDuration(FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
@@ -403,8 +402,12 @@ data class InteractSettings(
         conf.setDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
+    fun buildInitScrollPositions(): List<Double> {
+        return initScrollPositions.split(",").mapNotNull { it.toDoubleOrNull() }
+    }
+
     fun buildScrollPositions(): List<Double> {
-        val positions = initScrollPositions.toMutableList()
+        val positions = buildInitScrollPositions().toMutableList()
 
         if (scrollCount <= 0) {
             return positions

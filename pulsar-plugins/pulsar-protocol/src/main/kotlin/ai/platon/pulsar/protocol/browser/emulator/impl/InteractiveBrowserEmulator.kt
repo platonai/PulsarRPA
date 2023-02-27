@@ -55,6 +55,7 @@ open class InteractiveBrowserEmulator(
      * @param task The task to fetch
      * @return The result of this fetch
      * */
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("visit(task, driver)"))
     override suspend fun fetch(task: FetchTask, driver: WebDriver) = visit(task, driver)
 
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
@@ -361,15 +362,24 @@ open class InteractiveBrowserEmulator(
         }
 
         val interactTask = InteractTask(task, settings, driver)
-        return if (settings.isStartupScriptEnabled) {
+        // TODO: this is a temporary solution to modify InteractSettings in page events
+        val VAR_INTERACT_TASK = "InteractTask"
+        interactTask.page.setVar(VAR_INTERACT_TASK, this)
+
+        val result = try {
             emit1(EmulateEvents.willInteract, page, driver)
 
-            interact(interactTask).also {
-                emit1(EmulateEvents.didInteract, page, driver)
+            if (settings.isStartupScriptEnabled) {
+                interact(interactTask)
+            } else {
+                interactNoJsInvaded(interactTask)
             }
-        } else {
-            interactNoJsInvaded(interactTask)
+        } finally {
+            emit1(EmulateEvents.didInteract, page, driver)
+            interactTask.page.removeVar(VAR_INTERACT_TASK)
         }
+
+        return result
     }
 
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
@@ -506,7 +516,8 @@ open class InteractiveBrowserEmulator(
      * */
     private fun buildScrollExpressions(interactTask: InteractTask): List<String> {
         val interactSettings = interactTask.interactSettings
-        val expressions = interactSettings.initScrollPositions.map { "__pulsar_utils__.scrollToMiddle($it)" }
+        val expressions = interactSettings.buildInitScrollPositions()
+            .map { "__pulsar_utils__.scrollToMiddle($it)" }
             .toMutableList()
 
         val scrollCount = interactSettings.scrollCount
