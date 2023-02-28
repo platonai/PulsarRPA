@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.random.Random
 
 private class StreamingCrawlerMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
@@ -294,12 +295,14 @@ open class StreamingCrawler(
                 logger.info("$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
                     idleTime.readable())
             }
-            delay(1000)
+            delay(500L + Random.nextInt(500))
         }
 
         while (isActive && AppSystemInfo.isCriticalCPULoad) {
             criticalWarning = CriticalWarning.HIGH_CPU_LOAD
-            delay(1000)
+            // CPU load changes very fast, it drops immediately when a web driver becomes free,
+            // so we delay for shorter time.
+            randomDelay(200, 300)
         }
 
         var k = 0
@@ -308,7 +311,7 @@ open class StreamingCrawler(
                 handleMemoryShortage(k)
             }
             criticalWarning = CriticalWarning.OUT_OF_MEMORY
-            delay(1000)
+            randomDelay(500, 500)
         }
 
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
@@ -648,6 +651,8 @@ open class StreamingCrawler(
             delay(1000)
         }
     }
+
+    private suspend fun randomDelay(baseMills: Int, randomDelta: Int) = delay(baseMills.toLong() + Random.nextInt(randomDelta))
 
     private fun generateFinishCommand() {
         if (SystemUtils.IS_OS_UNIX) {
