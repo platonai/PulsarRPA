@@ -120,12 +120,14 @@ class MultiPrivacyContextManager(
     private fun closeDyingContexts() {
         activeContexts.values.forEach {
             if (!it.isActive) {
-                logger.warn("Privacy context is dead, closing it | {}", it.id.display)
+                logger.warn("Privacy context is dead, closing it | {} {} | {}",
+                    it.startTime, it.elapsedTime, it.id.display)
                 close(it)
             }
 
             if (it.isIdle) {
-                logger.warn("Privacy context hangs unexpectedly, closing it | {}", it.id.display)
+                logger.warn("Privacy context hangs unexpectedly, closing it | {} {} | {}",
+                    it.startTime, it.elapsedTime, it.id.display)
                 close(it)
             }
         }

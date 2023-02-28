@@ -56,14 +56,17 @@ abstract class PrivacyContext(
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()
-    var lastActiveTime = startTime
+    var lastActiveTime = Instant.now()
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     private val fetchTaskTimeout
         get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
     private val privacyContextIdleTimeout
         get() = conf.getDuration(FETCH_PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
     private val idleTimeout
-        get() = if (privacyContextIdleTimeout > fetchTaskTimeout) privacyContextIdleTimeout else fetchTaskTimeout
+        get() = when {
+            privacyContextIdleTimeout > fetchTaskTimeout -> privacyContextIdleTimeout
+            else -> fetchTaskTimeout
+        }
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
     val numRunningTasks = AtomicInteger()
 
