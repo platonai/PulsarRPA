@@ -84,10 +84,10 @@ open class WebDriverFactory(
 
     @Throws(BrowserLaunchException::class)
     private fun createChromeDevtoolsDriver(
-        instanceId: BrowserId, capabilities: Map<String, Any>,
+        browserId: BrowserId, capabilities: Map<String, Any>,
     ): Pair<ChromeDevtoolsBrowser, ChromeDevtoolsDriver> {
-        require(instanceId.browserType == BrowserType.PULSAR_CHROME)
-        val browser = browserManager.launch(instanceId, driverSettings, capabilities) as ChromeDevtoolsBrowser
+        require(browserId.browserType == BrowserType.PULSAR_CHROME)
+        val browser = browserManager.launch(browserId, driverSettings, capabilities) as ChromeDevtoolsBrowser
         return browser to browser.newDriver()
     }
 

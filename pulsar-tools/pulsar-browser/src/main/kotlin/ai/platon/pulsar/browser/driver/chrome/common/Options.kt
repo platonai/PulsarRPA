@@ -34,7 +34,7 @@ annotation class ChromeParameter(val value: String)
  * The options to open chrome devtools
  * */
 class ChromeOptions(
-    // user data dir is set in LauncherOptions
+    // user data dir is set as a constructor parameter of ChromeLauncher
 //        @ChromeParameter("user-data-dir")
 //        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
     @ChromeParameter("proxy-server")

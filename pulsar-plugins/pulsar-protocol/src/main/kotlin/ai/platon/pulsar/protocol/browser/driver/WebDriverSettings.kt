@@ -95,6 +95,7 @@ open class WebDriverSettings(conf: ImmutableConfig): BrowserSettings(conf) {
         chromeOptions.headless = isHeadless
         chromeOptions.noSandbox = noSandbox
 
+        // TODO: window-size seems not working
         chromeOptions.addArgument("window-size", formatViewPort())
             .addArgument("pageLoadStrategy", pageLoadStrategy)
             .addArgument("throwExceptionOnScriptError", "true")

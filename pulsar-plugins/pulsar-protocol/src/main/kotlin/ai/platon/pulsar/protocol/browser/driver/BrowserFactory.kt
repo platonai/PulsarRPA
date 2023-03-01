@@ -35,7 +35,7 @@ class BrowserFactory {
     private fun launchChromeDevtoolsBrowser(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): ChromeDevtoolsBrowser {
-        val launcher = ChromeLauncher(options = launcherOptions)
+        val launcher = ChromeLauncher(userDataDir = browserId.userDataDir, options = launcherOptions)
 
         val chrome = launcher.runCatching { launch(launchOptions) }
             .getOrElse { throw BrowserLaunchException("launch", it) }
