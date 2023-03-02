@@ -17,6 +17,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
+import java.io.FileFilter
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
@@ -232,8 +233,13 @@ class ChromeLauncher(
                 if (!Files.exists(userDataDir.resolve("Default"))) {
                     logger.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
                     // remove dead symbolic links
-                    Files.list(prototypeUserDataDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
-                    FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
+                    Files.list(prototypeUserDataDir)
+                        .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
+                        .forEach { Files.delete(it) }
+                    // ISSUE#29: https://github.com/platonai/pulsarr/issues/29
+                    // Failed to copy chrome data dir when there is a SingletonSocket symbol link
+                    val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
+                    FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
                     val leveldb = userDataDir.resolve("Default/Local Storage/leveldb")
