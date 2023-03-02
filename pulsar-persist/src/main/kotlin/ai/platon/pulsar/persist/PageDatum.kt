@@ -26,6 +26,7 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.model.ActiveDOMStatTrace
 import ai.platon.pulsar.persist.model.ActiveDOMUrls
+import java.lang.ref.WeakReference
 import java.util.*
 
 /**
@@ -105,6 +106,8 @@ class PageDatum(
      * The length of the final page content in bytes, the content might has inserted pulsar metadata.
      */
     val contentLength get() = (content?.size ?: 0).toLong()
+
+    var page = WeakReference<WebPage>(null)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {

@@ -84,6 +84,7 @@ open class BrowserEmulatedFetcherImpl(
      * Fetch page content
      * */
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
+        // TODO: it's a temporary solution to specify the web driver to fetch the page
         val driver = task.page.getVar("WEB_DRIVER") as? WebDriver
         if (driver != null) {
             return doFetch(task, driver).response

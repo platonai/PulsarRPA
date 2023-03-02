@@ -9,6 +9,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
+import java.lang.ref.WeakReference
 import java.time.Duration
 import java.time.Instant
 
@@ -28,6 +29,7 @@ class NavigateTask constructor(
 
     init {
         pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()
+        pageDatum.page = WeakReference(fetchTask.page)
     }
 }
 
