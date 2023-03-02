@@ -86,7 +86,7 @@ open class BrowserEmulatedFetcherImpl(
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
         val driver = task.page.getVar("WEB_DRIVER") as? WebDriver
         if (driver != null) {
-            doFetch(task, driver)
+            return doFetch(task, driver).response
         }
 
         return privacyManager.run(task) { _, driver -> doFetch(task, driver) }.response
