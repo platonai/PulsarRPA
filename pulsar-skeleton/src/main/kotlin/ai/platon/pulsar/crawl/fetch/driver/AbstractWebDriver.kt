@@ -71,8 +71,8 @@ abstract class AbstractWebDriver(
     override val isRetired get() = state.get().isRetired
     override val isQuit get() = state.get().isQuit
 
-    override val isCanceled get() = state.get().isCanceled
-    override val isCrashed get() = state.get().isCrashed
+    override val isCanceled get() = canceled.get()
+    override val isCrashed get() = crashed.get()
 
     override fun free() {
         canceled.set(false)

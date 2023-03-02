@@ -16,8 +16,10 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverTask
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -82,6 +84,11 @@ open class BrowserEmulatedFetcherImpl(
      * Fetch page content
      * */
     private suspend fun fetchTaskDeferred(task: FetchTask): Response {
+        val driver = task.page.getVar("WEB_DRIVER") as? WebDriver
+        if (driver != null) {
+            doFetch(task, driver)
+        }
+
         return privacyManager.run(task) { _, driver -> doFetch(task, driver) }.response
     }
 
@@ -92,7 +99,12 @@ open class BrowserEmulatedFetcherImpl(
 
         emit(EventType.willFetch, task.page, driver)
 
-        val result = browserEmulator.visit(task, driver)
+        val result = try {
+            browserEmulator.visit(task, driver)
+        } catch (e: Throwable) {
+            logger.warn(e.stringify("[Unexpected] Failed to visit page | ${task.url}\n"))
+            FetchResult.failed(task, e)
+        }
 
         emit(EventType.fetched, task.page, driver)
 

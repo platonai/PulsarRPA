@@ -283,7 +283,14 @@ open class WebDriverPoolManager(
     override fun toString(): String = report(false)
 
     @Throws(WebDriverException::class, WebDriverPoolException::class)
-    private suspend fun run0(task: WebDriverTask): FetchResult? {
+    private suspend fun run0(task: WebDriverTask) = runWithPolledDriver(task)
+
+    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    private suspend fun runWithSpecifiedDriver(task: WebDriverTask, driver: WebDriver) =
+        runCancelableWithTimeout(task, driver)
+
+    @Throws(WebDriverException::class, WebDriverPoolException::class)
+    private suspend fun runWithPolledDriver(task: WebDriverTask): FetchResult? {
         val browserId = task.browserId
         var result: FetchResult? = null
         whenNormalDeferred {
