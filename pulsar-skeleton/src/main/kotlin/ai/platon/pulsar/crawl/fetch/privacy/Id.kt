@@ -60,7 +60,7 @@ data class PrivacyAgent(
 
     companion object {
         val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
-        val PROTOTYPE = PrivacyAgent(PrivacyContext.PROTOTYPE_DIR, BrowserType.PULSAR_CHROME)
+        val PROTOTYPE = PrivacyAgent(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
 }
 
@@ -79,7 +79,10 @@ data class BrowserId constructor(
     val browserType: BrowserType get() = fingerprint.browserType
     val proxyServer: String? get() = fingerprint.proxyServer
 
-    val userDataDir get() = contextDir.resolve(browserType.name.lowercase())
+    val userDataDir: Path get() = when {
+        contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR -> PrivacyContext.PROTOTYPE_DATA_DIR
+        else -> contextDir.resolve(browserType.name.lowercase())
+    }
     val ident get() = contextDir.last().toString() + browserType.ordinal
     val display get() = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
 
@@ -113,6 +116,7 @@ data class BrowserId constructor(
 
     companion object {
         val DEFAULT = BrowserId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
+        val PROTOTYPE = BrowserId(PrivacyContext.PROTOTYPE_CONTEXT_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
     }
 }
 
@@ -124,15 +128,17 @@ interface PrivacyContextIdGenerator {
 }
 
 class DefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyContextId = PrivacyContextId(PrivacyContext.DEFAULT_DIR, fingerprint)
+    override fun invoke(fingerprint: Fingerprint): PrivacyContextId =
+        PrivacyContextId(PrivacyContext.DEFAULT_DIR, fingerprint)
 }
 
 class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyContextId = PrivacyContextId(PrivacyContext.PROTOTYPE_DIR.parent, fingerprint)
+    override fun invoke(fingerprint: Fingerprint) = PrivacyContextId.PROTOTYPE
 }
 
 class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyContextId = PrivacyContextId(nextContextDir(), fingerprint)
+    override fun invoke(fingerprint: Fingerprint): PrivacyContextId =
+        PrivacyContextId(nextContextDir(), fingerprint)
 
     @Synchronized
     private fun nextContextDir(): Path {

@@ -24,14 +24,15 @@ abstract class PrivacyContext(
     /**
      * The data directory for this context, very context has its own data directory
      * */
-    val id: PrivacyContextId,
+    val id: PrivacyAgent,
     val conf: ImmutableConfig
 ) : AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
         val IDENT_PREFIX = "cx."
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
-        val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        val PROTOTYPE_CONTEXT_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
+        val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(20)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }

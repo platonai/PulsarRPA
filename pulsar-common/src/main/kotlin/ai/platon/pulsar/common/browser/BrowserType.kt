@@ -16,12 +16,12 @@ enum class BrowserType {
         /**
          * Create a browser type from a string.
          *
-         * @param s the name of the browser type.
+         * @param name the name of the browser type.
          * @return the BrowserType.
          */
         @JvmStatic
         fun fromString(name: String?): BrowserType {
-            return if (name == null || name.isEmpty()) {
+            return if (name.isNullOrEmpty()) {
                 PULSAR_CHROME
             } else try {
                 valueOf(name.uppercase(Locale.getDefault()))

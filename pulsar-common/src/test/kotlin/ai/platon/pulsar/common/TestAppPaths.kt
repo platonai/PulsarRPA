@@ -31,6 +31,12 @@ class TestAppPaths {
 
     @Test
     @Throws(Exception::class)
+    fun testPathStartWith() {
+        assertTrue { AppPaths.CHROME_DATA_DIR_PROTOTYPE.startsWith(AppPaths.BROWSER_DATA_DIR) }
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun testGet() {
         val filename = "finish_job-1217.20347.sh"
 
