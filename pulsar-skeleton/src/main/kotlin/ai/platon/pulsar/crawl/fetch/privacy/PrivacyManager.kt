@@ -62,6 +62,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * */
     abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
 
+    /**
+     * Close a given privacy context, remove it from the active list and add it to the zombie list.
+     * */
     open fun close(privacyContext: PrivacyContext) {
         if (logger.isDebugEnabled) {
             logger.debug("Closing privacy context | {}", privacyContext.id)
@@ -74,10 +77,11 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
          * activeContexts is locked so no new context should be allocated before the dead context releases its resource
          * */
         synchronized(activeContexts) {
-            if (activeContexts.containsKey(id)) {
-                activeContexts.remove(id)
-                zombieContexts.add(privacyContext)
+            activeContexts.remove(id)
+            if (zombieContexts.contains(privacyContext)) {
+                logger.warn("Privacy context is already in the zombie list | {}", privacyContext.id)
             }
+            zombieContexts.add(privacyContext)
 
             // it might be a bad idea to close lazily
             val lazyClose = closeStrategy == CloseStrategy.LAZY.name
