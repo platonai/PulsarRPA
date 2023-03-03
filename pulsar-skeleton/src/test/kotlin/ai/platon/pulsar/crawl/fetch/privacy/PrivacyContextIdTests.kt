@@ -1,13 +1,11 @@
-package ai.platon.pulsar.crawl.fetch
+package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import java.nio.file.Files
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.*
 
-class PrivacyContextTests {
+class PrivacyContextIdTests {
     private val contextPathBase = Files.createTempDirectory("test-")
     private val contextPath = contextPathBase.resolve("cx.5kDMDS2")
     private val contextPath2 = contextPathBase.resolve("cx.7KmtAC2")

@@ -77,14 +77,14 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             if (activeContexts.containsKey(id)) {
                 activeContexts.remove(id)
                 zombieContexts.add(privacyContext)
+            }
 
-                // it might be a bad idea to close lazily
-                val lazyClose = closeStrategy == CloseStrategy.LAZY.name
-                when {
-                    AppSystemInfo.isCriticalResources -> closeZombieContexts()
-                    lazyClose -> closeZombieContextsLazily()
-                    else -> closeZombieContexts()
-                }
+            // it might be a bad idea to close lazily
+            val lazyClose = closeStrategy == CloseStrategy.LAZY.name
+            when {
+                AppSystemInfo.isCriticalResources -> closeZombieContexts()
+                lazyClose -> closeZombieContextsLazily()
+                else -> closeZombieContexts()
             }
         }
     }

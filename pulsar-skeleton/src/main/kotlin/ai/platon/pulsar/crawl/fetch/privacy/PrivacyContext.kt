@@ -26,7 +26,7 @@ abstract class PrivacyContext(
      * */
     val id: PrivacyAgent,
     val conf: ImmutableConfig
-) : AutoCloseable {
+) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
         val IDENT_PREFIX = "cx."
@@ -121,6 +121,12 @@ abstract class PrivacyContext(
     abstract suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
     abstract fun maintain()
+
+    override fun compareTo(other: PrivacyContext) = id.compareTo(other.id)
+
+    override fun equals(other: Any?) = other is PrivacyContext && other.id == id
+
+    override fun hashCode() = id.hashCode()
 
     protected fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()

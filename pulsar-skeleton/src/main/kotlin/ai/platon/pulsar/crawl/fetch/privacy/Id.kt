@@ -41,11 +41,11 @@ data class PrivacyAgent(
 
         return other is PrivacyAgent
                 && other.contextDir == contextDir
-                && other.fingerprint.browserType.toString() == fingerprint.browserType.toString()
+                && other.fingerprint == fingerprint
     }
 
     override fun hashCode(): Int {
-        return 31 * contextDir.hashCode() + fingerprint.browserType.toString().hashCode()
+        return 31 * contextDir.hashCode() + fingerprint.hashCode()
     }
 
     override fun compareTo(other: PrivacyAgent): Int {
@@ -53,7 +53,7 @@ data class PrivacyAgent(
         if (r != 0) {
             return r
         }
-        return fingerprint.browserType.toString().compareTo(other.fingerprint.browserType.toString())
+        return fingerprint.compareTo(other.fingerprint)
     }
 
 //    override fun toString() = /** AUTO GENERATED **/
@@ -128,8 +128,13 @@ interface PrivacyContextIdGenerator {
 }
 
 class DefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyContextId =
-        PrivacyContextId(PrivacyContext.DEFAULT_DIR, fingerprint)
+    companion object {
+        private val sequencer = AtomicInteger()
+        private val nextContextDir
+            get() = PrivacyContext.DEFAULT_DIR.resolve(sequencer.incrementAndGet().toString())
+    }
+
+    override fun invoke(fingerprint: Fingerprint): PrivacyContextId = PrivacyContextId(nextContextDir, fingerprint)
 }
 
 class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {

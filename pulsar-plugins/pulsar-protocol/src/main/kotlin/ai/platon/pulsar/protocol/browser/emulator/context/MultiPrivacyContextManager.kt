@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -7,6 +8,7 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -18,6 +20,8 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
 
 class MultiPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
@@ -40,6 +44,9 @@ class MultiPrivacyContextManager(
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
+    private val lastMaintainTime = Instant.now()
+    private val minMaintainInterval = Duration.ofSeconds(10)
+    private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
 
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
@@ -109,6 +116,10 @@ class MultiPrivacyContextManager(
      * Maintain the system in a separate thread, usually in a scheduled service.
      * */
     override fun maintain() {
+        if (tooFrequentMaintenance) {
+            return
+        }
+
         closeDyingContexts()
 
         // and then check the active context list
@@ -167,6 +178,8 @@ class MultiPrivacyContextManager(
             result.status.upgradeRetry(RetryScope.CRAWL)
         }
 
+        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
+
         return result
     }
 
@@ -192,7 +205,9 @@ class MultiPrivacyContextManager(
 
         val status = result.response.protocolStatus
         when {
-            status.isRetry(RetryScope.PRIVACY) -> logPrivacyLeakWarning(privacyContext, result)
+            // TODO: review all retry scope
+//            status.isRetry(RetryScope.PRIVACY) -> logPrivacyLeakWarning(privacyContext, result)
+            status.isRetry -> logPrivacyLeakWarning(privacyContext, result)
             status.isSuccess -> metrics.successes.mark()
         }
     }
