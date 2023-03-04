@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory
 /**
  * The privacy context, the context is closed if privacy is leaked
  * */
-open class BrowserPrivacyContext(
+open class BrowserPrivacyContext constructor(
     val proxyPoolManager: ProxyPoolManager? = null,
     val driverPoolManager: WebDriverPoolManager,
     val coreMetrics: CoreMetrics? = null,

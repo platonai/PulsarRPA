@@ -45,16 +45,13 @@ class BasicPrivacyContextManager(
     }
 
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
-        // TODO: the outer check is not necessary
-        if (activeContexts.size < numPrivacyContexts) {
-            synchronized(activeContexts) {
-                if (activeContexts.size < numPrivacyContexts) {
-                    computeIfAbsent(privacyContextIdGenerator(fingerprint))
-                }
+        synchronized(activeContexts) {
+            if (activeContexts.size < numPrivacyContexts) {
+                computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
-        }
 
-        return synchronized(activeContexts) { iterator.next() }
+            return iterator.next()
+        }
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }

@@ -8,6 +8,8 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
 
     val listeners: Map<EventType, List<Function<Any>>> get() = listenerMap
 
+    var eventExceptionHandler: (Throwable) -> Unit = { it.printStackTrace() }
+
     override fun on(event: EventType, handler: () -> Any): AbstractEventEmitter<EventType> {
         listenerMap.computeIfAbsent(event) { CopyOnWriteArrayList() }.add(handler)
         return this
@@ -50,7 +52,7 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
 
     override fun emit(event: EventType): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<() -> Any>() ?: return listOf()
-        return l.map { runCatching { it() }.getOrElse { it } }
+        return l.map { runCatching { it() }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     /**
@@ -64,37 +66,37 @@ abstract class AbstractEventEmitter<EventType>: EventEmitter<EventType> {
      * */
     override suspend fun emit1(event: EventType): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<suspend () -> Any>() ?: return listOf()
-        return l.map { runCatching { it() }.getOrElse { it } }
+        return l.map { runCatching { it() }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override fun <T> emit(event: EventType, param: T): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<(T) -> Any>() ?: return listOf()
-        return l.map { runCatching { it(param) }.getOrElse { it } }
+        return l.map { runCatching { it(param) }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override suspend fun <T> emit1(event: EventType, param: T): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<suspend (T) -> Any>() ?: return listOf()
-        return l.map { runCatching { it(param) }.getOrElse { it } }
+        return l.map { runCatching { it(param) }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override fun <T, T2> emit(event: EventType, param: T, param2: T2): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<(T, T2) -> Any>() ?: return listOf()
-        return l.map { runCatching { it(param, param2) }.getOrElse { it } }
+        return l.map { runCatching { it(param, param2) }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override suspend fun <T, T2> emit1(event: EventType, param: T, param2: T2): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<suspend (T, T2) -> Any>() ?: return listOf()
-        return l.map { runCatching { it(param, param2) }.getOrElse { it } }
+        return l.map { runCatching { it(param, param2) }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override fun <T, T2, T3> emit(event: EventType, param: T, param2: T2, param3: T3): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<(T, T2, T3) -> Any>() ?: return listOf()
-        return l.map { runCatching { it(param, param2, param3) }.getOrElse { it } }
+        return l.map { runCatching { it(param, param2, param3) }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override suspend fun <T, T2, T3> emit1(event: EventType, param: T, param2: T2, param3: T3): List<Any> {
         val l = listenerMap[event]?.filterIsInstance<suspend (T, T2, T3) -> Any>() ?: return listOf()
-        return l.map { runCatching { it(param, param2, param3) }.getOrElse { it } }
+        return l.map { runCatching { it(param, param2, param3) }.onFailure(eventExceptionHandler).getOrElse { it } }
     }
 
     override fun off(event: EventType): AbstractEventEmitter<EventType> {

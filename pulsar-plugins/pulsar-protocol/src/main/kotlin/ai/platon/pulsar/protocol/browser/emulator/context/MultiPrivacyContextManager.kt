@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -86,6 +87,7 @@ class MultiPrivacyContextManager(
             return context
         }
 
+        assert(!context.isActive)
         close(context)
 
         return computeIfAbsent(privacyContextIdGenerator(fingerprint))
@@ -96,16 +98,13 @@ class MultiPrivacyContextManager(
      * otherwise return the next one.
      * */
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
-        if (activeContexts.size < numPrivacyContexts) {
-            synchronized(activeContexts) {
-                if (activeContexts.size < numPrivacyContexts) {
-                    computeIfAbsent(privacyContextIdGenerator(fingerprint))
-                }
+        synchronized(activeContexts) {
+            if (activeContexts.size < numPrivacyContexts) {
+                computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
-        }
 
-        // TODO: is synchronization necessary?
-        return synchronized(activeContexts) { iterator.next() }
+            return iterator.next()
+        }
     }
 
     @Throws(ProxyException::class)
@@ -129,18 +128,18 @@ class MultiPrivacyContextManager(
     }
 
     private fun closeDyingContexts() {
-        activeContexts.values.forEach {
-            if (!it.isActive) {
-                logger.warn("Privacy context is dead, closing it | {} {} | {}",
-                    it.startTime, it.elapsedTime, it.id.display)
-                close(it)
-            }
+        // weakly consistent, which is OK
+        activeContexts.filterValues { !it.isActive }.values.forEach {
+            activeContexts.remove(it.id)
+            logger.info("Privacy context is dead, closing it | {} | {}", it.elapsedTime.readable(), it.id.display)
+            close(it)
+        }
 
-            if (it.isIdle) {
-                logger.warn("Privacy context hangs unexpectedly, closing it | {} {} | {}",
-                    it.startTime, it.elapsedTime, it.id.display)
-                close(it)
-            }
+        // TODO: check the consistent
+        activeContexts.filterValues { it.isIdle }.values.forEach {
+            activeContexts.remove(it.id)
+            logger.warn("Privacy context hangs unexpectedly, closing it | {} | {}", it.elapsedTime.readable(), it.id.display)
+            close(it)
         }
     }
 

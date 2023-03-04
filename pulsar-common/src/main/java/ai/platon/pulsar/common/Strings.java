@@ -760,7 +760,10 @@ public final class Strings {
    */
   public static String compactFormat(long number, int scale, boolean si) {
     int unit = si ? 1000 : 1024;
-    if (number < unit) return number + " B";
+    if (number < unit) {
+      return number + " B";
+    }
+
     int exp = (int) (Math.log(number) / Math.log(unit));
     String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
     String format = scale > 0 ? "%," + scale + ".2f %sB" : "%,.2f %sB";

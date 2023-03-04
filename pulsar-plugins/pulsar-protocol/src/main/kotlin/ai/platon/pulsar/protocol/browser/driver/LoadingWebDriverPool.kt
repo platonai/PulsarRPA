@@ -37,7 +37,6 @@ class LoadingWebDriverPool constructor(
     val driverFactory: WebDriverFactory,
     val immutableConfig: ImmutableConfig
 ) {
-
     companion object {
         var CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
         var POLLING_TIMEOUT = Duration.ofSeconds(60)

@@ -78,12 +78,13 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
          * */
         synchronized(activeContexts) {
             activeContexts.remove(id)
-            if (zombieContexts.contains(privacyContext)) {
-                logger.warn("Privacy context is already in the zombie list | {}", privacyContext.id)
+            if (!zombieContexts.contains(privacyContext)) {
+                // every time we add the item to the head, so when we report the deque, the latest contexts are reported.
+                zombieContexts.addFirst(privacyContext)
             }
-            zombieContexts.add(privacyContext)
 
-            // it might be a bad idea to close lazily
+            // it might be a bad idea to close lazily:
+            // 1. hard to control the hardware resources, especially the memory
             val lazyClose = closeStrategy == CloseStrategy.LAZY.name
             when {
                 AppSystemInfo.isCriticalResources -> closeZombieContexts()
@@ -142,7 +143,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         if (pendingContexts.isNotEmpty()) {
             logger.debug("Closing {} pending zombie contexts ...", pendingContexts.size)
 
-            pendingContexts.parallelStream().forEach {
+            pendingContexts.forEach {
                 kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) }
             }
 
@@ -154,6 +155,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         if (zombieContexts.isNotEmpty()) {
             val prefix = "The latest context throughput: "
             val postfix = " (success/min)"
+            // zombieContexts is a deque, so here we take the latest n contexts.
             zombieContexts.take(15)
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }

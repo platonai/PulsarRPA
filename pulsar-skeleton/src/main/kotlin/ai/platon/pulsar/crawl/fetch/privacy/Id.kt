@@ -1,16 +1,33 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.readableClassName
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
+
+data class PrivacyAgentId(
+    val contextDir: Path,
+    val browserType: BrowserType
+): Comparable<PrivacyAgentId> {
+    override fun compareTo(other: PrivacyAgentId): Int {
+        return contextDir.compareTo(other.contextDir)
+    }
+
+    val isDefault get() = this == DEFAULT
+    val isPrototype get() = this == PROTOTYPE
+
+    companion object {
+        val DEFAULT = PrivacyAgentId(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
+        val PROTOTYPE = PrivacyAgentId(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
+    }
+}
 
 /**
  * The privacy agent defines a unique agent to visit websites.
@@ -23,10 +40,10 @@ data class PrivacyAgent(
     var fingerprint: Fingerprint
 ): Comparable<PrivacyAgent> {
 
+    val id = PrivacyAgentId(contextDir, fingerprint.browserType)
     val ident = contextDir.last().toString()
     val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
-    val isDefault get() = this == DEFAULT
-    val isPrototype get() = this == PROTOTYPE
+    val browserType get() = fingerprint.browserType
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
@@ -41,11 +58,11 @@ data class PrivacyAgent(
 
         return other is PrivacyAgent
                 && other.contextDir == contextDir
-                && other.fingerprint == fingerprint
+                && other.browserType.name == browserType.name
     }
 
     override fun hashCode(): Int {
-        return 31 * contextDir.hashCode() + fingerprint.hashCode()
+        return 31 * contextDir.hashCode() + browserType.name.hashCode()
     }
 
     override fun compareTo(other: PrivacyAgent): Int {
@@ -53,7 +70,8 @@ data class PrivacyAgent(
         if (r != 0) {
             return r
         }
-        return fingerprint.compareTo(other.fingerprint)
+//        return fingerprint.compareTo(other.fingerprint)
+        return browserType.name.compareTo(other.browserType.name)
     }
 
 //    override fun toString() = /** AUTO GENERATED **/
@@ -64,6 +82,7 @@ data class PrivacyAgent(
     }
 }
 
+@Deprecated("Inappropriate name", ReplaceWith("PrivacyAgentId"))
 typealias PrivacyContextId = PrivacyAgent
 
 /**
@@ -95,11 +114,11 @@ data class BrowserId constructor(
 
         return other is BrowserId
                 && other.contextDir == contextDir
-                && other.fingerprint.toString() == fingerprint.toString()
+                && other.browserType.name == browserType.name
     }
 
     override fun hashCode(): Int {
-        return 31 * contextDir.hashCode() + fingerprint.toString().hashCode()
+        return 31 * contextDir.hashCode() + browserType.name.hashCode()
     }
 
     override fun compareTo(other: BrowserId): Int {
@@ -107,7 +126,7 @@ data class BrowserId constructor(
         if (r != 0) {
             return r
         }
-        return fingerprint.toString().compareTo(other.fingerprint.toString())
+        return browserType.name.compareTo(other.browserType.name)
     }
 
     override fun toString(): String {

@@ -1,11 +1,22 @@
 package ai.platon.pulsar.common
 
+import org.apache.commons.collections4.queue.CircularFifoQueue
 import org.apache.commons.lang3.RandomStringUtils
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedDeque
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TestCollections {
+
+    @Test
+    fun testDeque() {
+        val deque = ConcurrentLinkedDeque<Int>()
+        IntRange(1, 10).forEach { deque.addFirst(it) }
+//        deque.take(5).joinToString().let { println(it) }
+        assertEquals("10, 9, 8, 7, 6", deque.take(5).joinToString())
+    }
 
     @Test
     fun `When group by than the order of keys are reserved`() {
