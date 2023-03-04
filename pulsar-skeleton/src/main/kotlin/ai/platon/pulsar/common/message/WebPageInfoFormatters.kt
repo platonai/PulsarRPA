@@ -147,7 +147,8 @@ class LoadStatusFormatter(
         else -> String.format("%d", page.fetchCount)
     }
     private val fieldCountFmt get() = if (m == null || m.numFields == 0) "%s" else " | nf:%-10s"
-    private val failure get() = if (page.protocolStatus.isFailed) String.format(" %s", page.protocolStatus) else ""
+    private val failure get() = if (page.protocolStatus.isFailed)
+        String.format(" %s", page.protocolStatus.toString()) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
 

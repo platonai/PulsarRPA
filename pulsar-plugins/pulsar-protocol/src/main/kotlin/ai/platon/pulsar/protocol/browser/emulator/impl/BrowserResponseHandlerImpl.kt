@@ -34,6 +34,7 @@ open class BrowserResponseHandlerImpl(
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
     protected val bannedPages by lazy { registry.meter(this, "bannedPages") }
     protected val notFoundPages by lazy { registry.meter(this, "notFoundPages") }
+    protected val missingFieldPages by lazy { registry.meter(this, "missingFieldPages") }
 
     protected val numNavigates = AtomicInteger()
     protected val smallPages by lazy { registry.meter(this, "smallPages") }
@@ -136,6 +137,8 @@ open class BrowserResponseHandlerImpl(
                 smallPages.mark()
                 smallPageRateHistogram.update(smallPageRate)
             }
+            htmlIntegrity.hasMissingField -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
+                .also { missingFieldPages.mark() }
             else -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
         }
     }
