@@ -89,7 +89,7 @@ class ChromeDevtoolsBrowser(
             mutableDrivers.remove(chromTabId)
 
             kotlin.runCatching { closeTab(driver.chromeTab) }.onFailure { logger.warn(it.brief()) }
-            kotlin.runCatching { driver.close() }.onFailure { logger.warn(it.brief()) }
+            kotlin.runCatching { driver.doClose() }.onFailure { logger.warn(it.brief()) }
         }
     }
 

@@ -80,7 +80,7 @@ class ChromeDevtoolsDriver(
     private val closed = AtomicBoolean()
 
     override var lastActiveTime = Instant.now()
-    val isGone get() = closed.get() || !AppContext.isActive || !devTools.isOpen
+    val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
     val isActive get() = !isGone
     /**
      * Expose the underlying implementation, used for development purpose
@@ -89,7 +89,7 @@ class ChromeDevtoolsDriver(
 
     init {
         val userAgent = browser.userAgent
-        if (userAgent != null && userAgent.isNotEmpty()) {
+        if (!userAgent.isNullOrEmpty()) {
             emulationAPI?.setUserAgentOverride(userAgent)
         }
     }
@@ -735,8 +735,13 @@ class ChromeDevtoolsDriver(
      * Close the tab hold by this driver
      * */
     override fun close() {
+        browser.destroyDriver(this)
+        doClose()
+    }
+
+    fun doClose() {
         if (closed.compareAndSet(false, true)) {
-            browser.destroyDriver(this)
+            state.set(WebDriver.State.QUIT)
 
             try {
                 devTools.close()

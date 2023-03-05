@@ -175,6 +175,8 @@ class MultiPrivacyContextManager(
             result.status.upgradeRetry(RetryScope.CRAWL)
         }
 
+        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
+
         return result
     }
 

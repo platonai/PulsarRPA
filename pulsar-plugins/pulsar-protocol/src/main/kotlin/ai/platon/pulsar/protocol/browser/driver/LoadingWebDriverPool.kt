@@ -172,7 +172,13 @@ class LoadingWebDriverPool constructor(
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
-        return driver ?: throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + report() + ")")
+        if (driver == null) {
+            logger.warn("Driver pool is exhausted")
+            report(true)
+            throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + report() + ")")
+        }
+
+        return driver
     }
 
     fun put(driver: WebDriver) {
@@ -237,7 +243,8 @@ class LoadingWebDriverPool constructor(
         counterClosed.inc()
 
         // TODO: drivers should be closed by the driver pool manager, not the driver pool.
-        runCatching { driver.close() }.onFailure { logger.warn(it.brief("[Unexpected] Quit $driver")) }
+        runCatching { _browser?.destroyDriver(driver) }
+            .onFailure { logger.warn(it.brief("[Unexpected] Quit $driver")) }
     }
 
     /**

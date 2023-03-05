@@ -336,7 +336,7 @@ open class WebDriverPoolManager(
             }
         }
 
-        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
+//        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
 
         return result
     }
