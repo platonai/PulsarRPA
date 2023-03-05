@@ -57,7 +57,7 @@ open class BrowserManager(
 
     @Synchronized
     fun closeDriver(driver: WebDriver) {
-        runCatching { driver.close() }.onFailure { logger.warn(it.brief("Failed to close driver\n")) }
+        kotlin.runCatching { driver.close() }.onFailure { logger.warn(it.brief("Failed to close driver\n")) }
     }
 
     @Synchronized
@@ -90,8 +90,8 @@ open class BrowserManager(
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            _browsers.values.parallelStream().forEach { browser ->
-                runCatching { browser.close() }.onFailure { logger.warn(it.stringify()) }
+            _browsers.values.forEach { browser ->
+                kotlin.runCatching { browser.close() }.onFailure { logger.warn(it.stringify()) }
             }
             _browsers.clear()
         }
