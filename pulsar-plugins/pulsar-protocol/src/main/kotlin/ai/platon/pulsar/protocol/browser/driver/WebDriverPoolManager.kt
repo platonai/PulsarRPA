@@ -105,6 +105,7 @@ open class WebDriverPoolManager(
         "availableDriverSlots" to Gauge { numAvailableDriverSlots },
         "activeDrivers" to Gauge { numActiveDrivers },
         "dyingDrivers" to Gauge { numDyingDrivers },
+        "closedDrivers" to Gauge { numClosedDrivers },
         "pTasks" to Gauge { numPreemptiveTasks.get() },
         "runningPTasks" to Gauge { numRunningPreemptiveTasks.get() },
         "pendingNTasks" to Gauge { numPendingNormalTasks.get() },
@@ -119,6 +120,8 @@ open class WebDriverPoolManager(
     val numActiveDrivers get() = workingDriverPools.values.sumOf { it.activeDrivers.size }
 
     val numDyingDrivers get() = retiredDriverPools.values.sumOf { it.numCreated }
+
+    val numClosedDrivers get() = closedDriverPools.size
 
     //    private val launchLock = ReentrantLock()
     private val launchMutex = Mutex()

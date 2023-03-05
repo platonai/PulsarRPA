@@ -145,7 +145,7 @@ class MultiPrivacyContextManager(
 
     private suspend fun run(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
-    ) = takeIf { isActive }?.run0(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task)
+    ) = takeIf { isActive }?.run0(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task, "Inactive privacy context")
 
     private suspend fun run0(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
@@ -154,30 +154,26 @@ class MultiPrivacyContextManager(
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
-        var result = FetchResult.crawlRetry(task)
-
-        try {
+        val result: FetchResult = try {
             require(!task.isCanceled)
             require(task.state.get() == FetchTask.State.NOT_READY)
             require(task.proxyEntry == null)
 
             task.markReady()
-            result = privacyContext.run(task) { _, driver ->
+            privacyContext.run(task) { _, driver ->
                 task.startWork()
                 fetchFun(task, driver)
             }
         } finally {
             task.done()
             task.page.variables["CONTEXT_INFO"] = formatPrivacyContext(privacyContext)
-            updatePrivacyContext(privacyContext, result)
         }
 
+        updatePrivacyContext(privacyContext, result)
         // All retry is forced to do in crawl scope
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL)
         }
-
-        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
 
         return result
     }

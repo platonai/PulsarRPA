@@ -204,7 +204,7 @@ open class InteractiveBrowserEmulator(
             logger.warn("Web driver session #{} is lost | {}", e.driver?.id, e.brief())
             driver.retire()
             exception = e
-            response = ForwardingResponse.privacyRetry(task.page)
+            response = ForwardingResponse.privacyRetry(task.page, "Browser session lost")
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 logger.warn("Web driver is disconnected - {}", e.brief())
@@ -214,7 +214,7 @@ open class InteractiveBrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse.crawlRetry(task.page)
+            response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: TimeoutCancellationException) {
             logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.brief())
             response = ForwardingResponse.crawlRetry(task.page, e)
@@ -470,7 +470,7 @@ open class InteractiveBrowserEmulator(
                         "Timeout to wait for document ready after ${i.dec()} round, " +
                                 "retry is supposed | {}", interactTask.url
                     )
-                    status = ProtocolStatus.retry(RetryScope.PRIVACY)
+                    status = ProtocolStatus.retry(RetryScope.PRIVACY, "Timeout to wait for document ready")
                     result.state = FlowState.BREAK
                 }
             } else if (message == "timeout") {

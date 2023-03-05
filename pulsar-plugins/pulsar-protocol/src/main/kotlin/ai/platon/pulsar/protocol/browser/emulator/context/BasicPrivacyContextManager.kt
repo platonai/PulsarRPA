@@ -56,9 +56,12 @@ class BasicPrivacyContextManager(
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
 
-    private suspend fun run0(privacyContext: PrivacyContext, task: FetchTask,
-                            fetchFun: suspend (FetchTask, WebDriver) -> FetchResult)
-            = takeIf { isActive }?.run1(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task)
+    private suspend fun run0(
+        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
+    ): FetchResult {
+        return takeIf { isActive } ?.run1(privacyContext, task, fetchFun) ?:
+        FetchResult.crawlRetry(task, "Inactive privacy context")
+    }
 
     private suspend fun run1(privacyContext: PrivacyContext, task: FetchTask,
                              fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {

@@ -95,7 +95,7 @@ abstract class AbstractHttpProtocol: Protocol {
     override suspend fun getProtocolOutputDeferred(page: WebPage): ProtocolOutput {
         val startTime = Instant.now()
         val response = getResponseDeferred(page, false)
-                ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL))
+                ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL, "Null response from protocol"))
         setResponseTime(startTime, page, response)
         return getOutputWithHttpCodeTranslated(page.url, response)
     }

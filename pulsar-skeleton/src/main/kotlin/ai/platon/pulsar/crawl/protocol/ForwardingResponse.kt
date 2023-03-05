@@ -33,8 +33,8 @@ open class ForwardingResponse(
 ) : Response(page, pageDatum) {
     constructor(status: ProtocolStatus, page: WebPage) : this("", status, MultiMetadata(), page)
 
-    constructor(retryScope: RetryScope, page: WebPage):
-            this("", ProtocolStatus.retry(retryScope), MultiMetadata(), page)
+    constructor(retryScope: RetryScope, reason: String, page: WebPage):
+            this("", ProtocolStatus.retry(retryScope, reason), MultiMetadata(), page)
 
     constructor(retryScope: RetryScope, retryReason: Exception, page: WebPage):
             this("", ProtocolStatus.retry(retryScope, retryReason), MultiMetadata(), page)
@@ -52,13 +52,13 @@ open class ForwardingResponse(
         // TODO: define the difference between a canceled task and a retry task
         fun canceled(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
 
-        fun retry(page: WebPage, retryScope: RetryScope) = ForwardingResponse(retryScope, page)
+        fun retry(page: WebPage, retryScope: RetryScope, reason: String) = ForwardingResponse(retryScope, reason, page)
         fun retry(page: WebPage, retryScope: RetryScope, retryReason: Exception) = ForwardingResponse(retryScope, retryReason, page)
 
-        fun privacyRetry(page: WebPage) = retry(page, RetryScope.PRIVACY)
+        fun privacyRetry(page: WebPage, reason: String) = retry(page, RetryScope.PRIVACY, reason)
         fun privacyRetry(page: WebPage, reason: Exception) = retry(page, RetryScope.PRIVACY, reason)
 
-        fun crawlRetry(page: WebPage) = retry(page, RetryScope.CRAWL)
+        fun crawlRetry(page: WebPage, reason: String) = retry(page, RetryScope.CRAWL, reason)
         fun crawlRetry(page: WebPage, reason: Exception) = retry(page, RetryScope.CRAWL, reason)
 
         fun failed(page: WebPage, e: Throwable?) = ForwardingResponse(e, page)

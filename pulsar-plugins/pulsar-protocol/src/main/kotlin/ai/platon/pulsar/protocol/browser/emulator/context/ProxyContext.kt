@@ -137,17 +137,17 @@ open class ProxyContext(
             }
             is ProxyRetiredException -> {
                 logger.warn("{}, context reset will be triggered | {}", e.message, task.proxyEntry?:"<no proxy>")
-                FetchResult.privacyRetry(task, reason = e)
+                FetchResult.privacyRetry(task, e)
             }
             is NoProxyException -> {
                 numProxyAbsence.incrementAndGet()
                 checkProxyAbsence()
                 logger.warn("No proxy available temporary the {}th times, cause: {}", numProxyAbsence, e.message)
-                FetchResult.crawlRetry(task)
+                FetchResult.crawlRetry(task, "No proxy")
             }
             else -> {
                 logger.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
-                FetchResult.privacyRetry(task)
+                FetchResult.privacyRetry(task, e)
             }
         }
     }

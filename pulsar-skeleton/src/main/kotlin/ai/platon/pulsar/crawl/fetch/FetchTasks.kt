@@ -160,8 +160,8 @@ class FetchResult(
         response = ForwardingResponse.canceled(task.page)
     }
 
-    fun retry(retryScope: RetryScope) {
-        response = ForwardingResponse.retry(task.page, retryScope)
+    fun retry(retryScope: RetryScope, reason: String) {
+        response = ForwardingResponse.retry(task.page, retryScope, reason)
     }
 
     fun failed(t: Throwable?) {
@@ -173,14 +173,16 @@ class FetchResult(
         fun unchanged(task: FetchTask) = FetchResult(task, ForwardingResponse.unchanged(task.page))
         fun unfetched(task: FetchTask) = FetchResult(task, ForwardingResponse.unfetched(task.page))
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
-        fun retry(task: FetchTask, retryScope: RetryScope) = FetchResult(task, ForwardingResponse.retry(task.page, retryScope))
+        fun retry(task: FetchTask, retryScope: RetryScope, reason: String) =
+            FetchResult(task, ForwardingResponse.retry(task.page, retryScope, reason))
 
-        fun privacyRetry(task: FetchTask) = retry(task, RetryScope.PRIVACY)
+        fun privacyRetry(task: FetchTask, reason: String) = retry(task, RetryScope.PRIVACY, reason)
         fun privacyRetry(task: FetchTask, reason: Exception) = FetchResult(task, ForwardingResponse.privacyRetry(task.page, reason))
 
-        fun crawlRetry(task: FetchTask) = FetchResult(task, ForwardingResponse.crawlRetry(task.page))
-        fun crawlRetry(task: FetchTask, delay: Duration) = FetchResult(task, ForwardingResponse.crawlRetry(task.page))
-            .also { task.page.retryDelay = delay }
+        fun crawlRetry(task: FetchTask, reason: String) =
+            FetchResult(task, ForwardingResponse.crawlRetry(task.page, reason))
+        fun crawlRetry(task: FetchTask, delay: Duration, message: String) =
+            FetchResult(task, ForwardingResponse.crawlRetry(task.page, message)).also { task.page.retryDelay = delay }
         fun crawlRetry(task: FetchTask, reason: Exception) = FetchResult(task, ForwardingResponse.crawlRetry(task.page, reason))
 
         fun failed(task: FetchTask, e: Throwable?) = FetchResult(task, ForwardingResponse.failed(task.page, e))

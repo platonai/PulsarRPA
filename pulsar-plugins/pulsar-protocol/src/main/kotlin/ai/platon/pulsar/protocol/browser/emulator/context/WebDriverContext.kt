@@ -55,16 +55,16 @@ open class WebDriverContext(
             numGlobalRunningTasks.incrementAndGet()
             driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
-            }?:FetchResult.crawlRetry(task)
+            }?:FetchResult.crawlRetry(task, "Null response from driver pool manager")
         } catch (e: WebDriverPoolExhaustedException) {
             logger.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task, Duration.ofSeconds(20))
+            FetchResult.crawlRetry(task, Duration.ofSeconds(20), "Driver pool exhausted")
         } catch (e: WebDriverPoolException) {
             logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task)
+            FetchResult.crawlRetry(task, "Driver pool exception")
         } catch (e: WebDriverException) {
             logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task)
+            FetchResult.crawlRetry(task, "Driver exception")
         } finally {
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
