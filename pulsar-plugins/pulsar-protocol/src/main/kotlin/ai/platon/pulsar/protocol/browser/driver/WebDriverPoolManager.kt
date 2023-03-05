@@ -151,7 +151,7 @@ private class LoadingDriverPoolCloser(
     fun closeIdleDriverPoolsSafely() {
         workingDriverPools.values.filter { it.isIdle }.forEach { driverPool ->
             logger.info("Driver pool is idle, closing it ... | {}", driverPool.browserId)
-            logger.info(driverPool.buildReport(verbose = true))
+            logger.info(driverPool.buildReport().format(true))
             statefulLoadingDriverPool.close(driverPool)
         }
     }
@@ -443,7 +443,7 @@ open class WebDriverPoolManager(
     }
 
     fun buildReport(browserId: BrowserId, verbose: Boolean = false): String {
-        return workingDriverPools[browserId]?.buildReport(verbose) ?: ""
+        return workingDriverPools[browserId]?.buildReport()?.format(verbose) ?: ""
     }
 
     /**
@@ -579,7 +579,7 @@ open class WebDriverPoolManager(
     private fun buildReport(verbose: Boolean = false): String {
         val sb = StringBuilder()
         if (workingDriverPools.isNotEmpty()) {
-            workingDriverPools.entries.joinTo(sb, "\n") { it.value.buildReport(verbose) + " | " + it.key }
+            workingDriverPools.entries.joinTo(sb, "\n") { it.value.buildReport().format(verbose) + " | " + it.key }
         }
         return sb.toString()
     }

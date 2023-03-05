@@ -14,7 +14,6 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import org.slf4j.LoggerFactory
-import oshi.SystemInfo
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -124,6 +123,42 @@ class LoadingWebDriverPool constructor(
      * */
     val isIdle get() = (numWorking == 0 && idleTime > idleTimeout)
 
+    class ReportRecord(
+        val numActive: Int,
+        val numStandby: Int,
+        val numWaiting: Int,
+        val numWorking: Int,
+        val numDriverSlots: Int,
+        val numRetired: Int,
+        val numClosed: Int,
+        val isRetired: Boolean,
+        val isIdle: Boolean,
+        val idleTime: Duration
+    ) {
+        fun format(verbose: Boolean): String {
+            val status = if (verbose) {
+                String.format(
+                    "active: %d, free: %d, waiting: %d, working: %d, slots: %d, retired: %d, closed: %d",
+                    numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
+                )
+            } else {
+                String.format(
+                    "%d/%d/%d/%d/%d/%d/%d (active/free/waiting/working/slots/retired/closed)",
+                    numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
+                )
+            }
+
+            val time = idleTime.readable()
+            return when {
+                isIdle -> "[Idle] $time | $status"
+                isRetired -> "[Retired] | $status"
+                else -> status
+            }
+        }
+
+        override fun toString() = format(false)
+    }
+
     /**
      * Allocate [capacity] drivers
      * */
@@ -158,8 +193,10 @@ class LoadingWebDriverPool constructor(
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
-            logger.warn("Driver pool is exhausted\n{}", buildReport(true))
-            throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + buildReport() + ")")
+            val report = buildReport()
+            val message = String.format("Driver pool is exhausted | %s", report.format(true))
+            logger.warn(message)
+            throw WebDriverPoolExhaustedException("Driver pool is exhausted ($report)")
         }
 
         return driver
@@ -211,27 +248,21 @@ class LoadingWebDriverPool constructor(
         statefulDriverPool.cancelAll()
     }
 
-    override fun toString(): String = buildReport(false)
+    override fun toString(): String = buildReport().format(false)
 
-    fun buildReport(verbose: Boolean = false): String {
-        val status = if (verbose) {
-            String.format(
-                "active: %d, free: %d, waiting: %d, working: %d, slots: %d, retired: %d, closed: %d",
-                numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
-            )
-        } else {
-            String.format(
-                "%d/%d/%d/%d/%d/%d/%d (active/free/waiting/working/slots/retired/closed)",
-                numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
-            )
-        }
-
-        val time = idleTime.readable()
-        return when {
-            isIdle -> "[Idle] $time | $status"
-            isRetired -> "[Retired] | $status"
-            else -> status
-        }
+    fun buildReport(): ReportRecord {
+        return ReportRecord(
+            numActive,
+            numStandby,
+            numWaiting,
+            numWorking,
+            numDriverSlots,
+            numRetired,
+            numClosed,
+            isRetired,
+            isIdle,
+            idleTime,
+        )
     }
 
     @Throws(BrowserLaunchException::class)
