@@ -9,7 +9,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
 
-class StatefulDriverPool(
+class ConcurrentStatefulDriverPool(
     private val browserManager: BrowserManager,
     private val capacity: Int
 ) {

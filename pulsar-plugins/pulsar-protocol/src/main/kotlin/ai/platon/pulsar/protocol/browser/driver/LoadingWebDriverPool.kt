@@ -56,7 +56,7 @@ class LoadingWebDriverPool constructor(
     /**
      * The consistent stateful driver
      * */
-    private val statefulDriverPool = StatefulDriverPool(driverPoolManager.browserManager, capacity)
+    private val statefulDriverPool = ConcurrentStatefulDriverPool(driverPoolManager.browserManager, capacity)
 
     /**
      * Standby drivers and working drivers
@@ -123,7 +123,7 @@ class LoadingWebDriverPool constructor(
      * */
     val isIdle get() = (numWorking == 0 && idleTime > idleTimeout)
 
-    class ReportRecord(
+    class Snapshot(
         val numActive: Int,
         val numStandby: Int,
         val numWaiting: Int,
@@ -193,10 +193,10 @@ class LoadingWebDriverPool constructor(
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
-            val report = buildReport()
-            val message = String.format("Driver pool is exhausted | %s", report.format(true))
+            val snapshot = takeImpreciseSnapshot()
+            val message = String.format("Driver pool is exhausted | %s", snapshot.format(true))
             logger.warn(message)
-            throw WebDriverPoolExhaustedException("Driver pool is exhausted ($report)")
+            throw WebDriverPoolExhaustedException("Driver pool is exhausted ($snapshot)")
         }
 
         return driver
@@ -248,10 +248,13 @@ class LoadingWebDriverPool constructor(
         statefulDriverPool.cancelAll()
     }
 
-    override fun toString(): String = buildReport().format(false)
+    override fun toString(): String = takeImpreciseSnapshot().format(false)
 
-    fun buildReport(): ReportRecord {
-        return ReportRecord(
+    /**
+     * Take an imprecise snapshot
+     * */
+    fun takeImpreciseSnapshot(): Snapshot {
+        return Snapshot(
             numActive,
             numStandby,
             numWaiting,
@@ -270,7 +273,7 @@ class LoadingWebDriverPool constructor(
         _numWaitingTasks.incrementAndGet()
 
         val driver = try {
-            threadSafeCreateDriverIfNecessary(priority, conf)
+            resourceSafeCreateDriverIfNecessary(priority, conf)
             statefulDriverPool.poll(timeout, unit)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
@@ -283,22 +286,26 @@ class LoadingWebDriverPool constructor(
         return driver
     }
 
+    /**
+     * Create driver if necessary.
+     * Web drivers are opened in sequence, so memory and CPU usage will not suddenly skyrocket.
+     * */
     @Throws(BrowserLaunchException::class)
-    private fun threadSafeCreateDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
+    private fun resourceSafeCreateDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
         synchronized(driverFactory) {
-            doCreateDriverIfNecessary(priority, volatileConfig)
+            if (!shouldCreateWebDriver()) {
+                return
+            }
+
+            createDriver(priority, volatileConfig)
         }
     }
 
     @Throws(BrowserLaunchException::class)
-    private fun doCreateDriverIfNecessary(priority: Int, volatileConfig: VolatileConfig) {
-        if (!shouldCreateWebDriver()) {
-            return
-        }
-
+    private fun createDriver(priority: Int, volatileConfig: VolatileConfig) {
         try {
             // create a driver from remote unmanaged tabs, close unmanaged idle drivers, etc
-            createWebDriver(volatileConfig)
+            doCreateDriver(volatileConfig)
         } catch (e: BrowserLaunchException) {
             logger.debug("[Unexpected]", e)
 
@@ -321,7 +328,7 @@ class LoadingWebDriverPool constructor(
     }
 
     @Throws(BrowserLaunchException::class)
-    private fun createWebDriver(volatileConfig: VolatileConfig) {
+    private fun doCreateDriver(volatileConfig: VolatileConfig) {
         // TODO: the code below might be better
         // val b = browserManager.launch(browserId, driverSettings, capabilities)
         // val driver = b.newDriver()

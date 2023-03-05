@@ -82,6 +82,8 @@ abstract class PrivacyContext(
         globalMetrics.contexts.mark()
     }
 
+    abstract fun standByDriverCount(): Int
+
     fun markSuccess() {
         privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
         meterSuccesses.mark()

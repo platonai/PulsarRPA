@@ -103,7 +103,8 @@ class MultiPrivacyContextManager(
                 computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
 
-            return iterator.next()
+            // Choose the most idle browser.
+            return chooseMostIdleBrowser() ?: iterator.next()
         }
     }
 
@@ -125,6 +126,10 @@ class MultiPrivacyContextManager(
         activeContexts.values.forEach { context ->
             context.maintain()
         }
+    }
+
+    private fun chooseMostIdleBrowser(): PrivacyContext? {
+        return activeContexts.values.maxByOrNull { it.standByDriverCount() }
     }
 
     private fun closeDyingContexts() {

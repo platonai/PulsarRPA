@@ -11,8 +11,8 @@ import kotlin.concurrent.withLock
  * TODO: compare with ReadWriteLock
  *
  * 1. both channel allows multiple threads
- * 2. new workers have to wait until there is no ready freeze nor running freezer
- * 3. a freezer locks the working channel immediately, but have to wait to run util all workers are finished
+ * 2. new workers have to wait until there is no ready preemptive tasks nor running preemptive tasks
+ * 3. a preemptive task locks the working channel immediately, but have to wait to run util all workers are finished
  *
  *                     |------ waiting ------------|- ready -|-------------- critical  -------------------|---finished----
  *
