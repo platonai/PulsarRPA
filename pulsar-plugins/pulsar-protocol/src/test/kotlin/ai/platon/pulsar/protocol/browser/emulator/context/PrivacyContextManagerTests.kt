@@ -115,7 +115,7 @@ class PrivacyContextManagerTests {
     }
 
     @Test
-    fun `When close a privacy context then it's removed from the active contexts queue`() {
+    fun `When close a privacy context then it's removed from the active context queue`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
 
         val id = PrivacyContextId(contextPath, BrowserType.MOCK_CHROME)

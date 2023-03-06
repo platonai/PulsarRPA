@@ -103,8 +103,7 @@ class MultiPrivacyContextManager(
                 computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
 
-            // Choose the most idle browser.
-            return chooseMostIdleBrowser() ?: iterator.next()
+            return iterator.next()
         }
     }
 
@@ -128,8 +127,25 @@ class MultiPrivacyContextManager(
         }
     }
 
-    private fun chooseMostIdleBrowser(): PrivacyContext? {
-        return activeContexts.values.maxByOrNull { it.standByDriverCount() }
+    /**
+     * There is a problem with computeNextContext
+     * 1. every time the manager accepts a task, privacy contexts are chosen in sequential
+     * 2. the next privacy context might have no stand by drivers, the task return with driver pool exhaust exception
+     * 3. it's better to always choose the next driver who is stand by
+     * 4. chooseMostIdleBrowser() caused more bugs
+     * */
+    private fun chooseMostIdleBrowser(): PrivacyContext {
+        val privacyContext = activeContexts.values.maxByOrNull { it.realTimeStandByDriverCount() }
+
+        if (privacyContext == null) {
+            val message = String.format(
+                "[Unexpected] Failed to choose most idle browser from %d active contexts",
+                activeContexts.size)
+            logger.warn(message)
+            throw NoSuchElementException(message)
+        }
+
+        return privacyContext
     }
 
     private fun closeDyingContexts() {

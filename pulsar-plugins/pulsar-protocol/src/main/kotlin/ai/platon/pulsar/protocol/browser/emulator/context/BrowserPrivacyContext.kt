@@ -47,7 +47,7 @@ open class BrowserPrivacyContext constructor(
         driverContext.maintain()
     }
 
-    override fun standByDriverCount() = driverPoolManager.standByDriverCount(browserId)
+    override fun realTimeStandByDriverCount() = driverPoolManager.realTimeStandByDriverCount(browserId)
 
     override fun report() {
         val isIdle = proxyContext?.proxyEntry?.isIdle == true

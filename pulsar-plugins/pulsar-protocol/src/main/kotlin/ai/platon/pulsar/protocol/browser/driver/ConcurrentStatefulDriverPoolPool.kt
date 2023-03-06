@@ -31,6 +31,11 @@ class ConcurrentStatefulDriverPoolPool {
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
 
     @Synchronized
+    fun realTimeStandByDriverCount(browserId: BrowserId): Int {
+        return _workingDriverPools[browserId]?.numStandby ?: 0
+    }
+
+    @Synchronized
     fun computeIfAbsent(browserId: BrowserId, mappingFunction: (BrowserId) -> LoadingWebDriverPool): LoadingWebDriverPool {
         return _workingDriverPools.computeIfAbsent(browserId, mappingFunction)
     }
