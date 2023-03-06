@@ -38,6 +38,10 @@ class MultiPrivacyContextManager(
         val finishes = registry.multiMetric(this, "finishes")
     }
 
+    companion object {
+        val VAR_CONTEXT_INFO = "CONTEXT_INFO"
+    }
+
     private val logger = LoggerFactory.getLogger(MultiPrivacyContextManager::class.java)
     private val tracer = logger.takeIf { it.isTraceEnabled }
     private var numTasksAtLastReportTime = 0L
@@ -56,11 +60,16 @@ class MultiPrivacyContextManager(
     constructor(
         driverPoolManager: WebDriverPoolManager,
         immutableConfig: ImmutableConfig
-    ): this(driverPoolManager, null, null, immutableConfig)
+    ) : this(driverPoolManager, null, null, immutableConfig)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        if (!isActive) {
+            return FetchResult.crawlRetry(task, "Inactive privacy context")
+        }
+
         metrics.tasks.mark()
-        return run(computeNextContext(task.fingerprint), task, fetchFun).also { metrics.finishes.mark() }
+        val privacyContext = computeNextContext(task.fingerprint)
+        return runIfPrivacyContextReady(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
     }
 
     @Throws(ProxyException::class)
@@ -103,7 +112,8 @@ class MultiPrivacyContextManager(
                 computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
 
-            return iterator.next()
+//            return iterator.next()
+            return nextAvailableContextPrivacy()
         }
     }
 
@@ -127,25 +137,15 @@ class MultiPrivacyContextManager(
         }
     }
 
-    /**
-     * There is a problem with computeNextContext
-     * 1. every time the manager accepts a task, privacy contexts are chosen in sequential
-     * 2. the next privacy context might have no stand by drivers, the task return with driver pool exhaust exception
-     * 3. it's better to always choose the next driver who is stand by
-     * 4. chooseMostIdleBrowser() caused more bugs
-     * */
-    private fun chooseMostIdleBrowser(): PrivacyContext {
-        val privacyContext = activeContexts.values.maxByOrNull { it.realTimeStandByDriverCount() }
+    private fun nextAvailableContextPrivacy(): PrivacyContext {
+        var n = activeContexts.size
 
-        if (privacyContext == null) {
-            val message = String.format(
-                "[Unexpected] Failed to choose most idle browser from %d active contexts",
-                activeContexts.size)
-            logger.warn(message)
-            throw NoSuchElementException(message)
+        var pc = iterator.next()
+        while (n-- > 0 && pc.availableDriverCount() <= 0) {
+            pc = iterator.next()
         }
 
-        return privacyContext
+        return pc
     }
 
     private fun closeDyingContexts() {
@@ -159,22 +159,48 @@ class MultiPrivacyContextManager(
         // TODO: check the consistent
         activeContexts.filterValues { it.isIdle }.values.forEach {
             activeContexts.remove(it.id)
-            logger.warn("Privacy context hangs unexpectedly, closing it | {} | {}", it.elapsedTime.readable(), it.id.display)
+            logger.warn(
+                "Privacy context hangs unexpectedly, closing it | {} | {}",
+                it.elapsedTime.readable(),
+                it.id.display
+            )
             close(it)
         }
     }
 
-    private suspend fun run(
-        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
-    ) = takeIf { isActive }?.run0(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task, "Inactive privacy context")
-
-    private suspend fun run0(
+    private suspend fun runIfPrivacyContextReady(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
+        if (privacyContext.availableDriverCount() <= 0) {
+            return FetchResult.crawlRetry(task, "No available driver")
+        }
+
         if (privacyContext !is BrowserPrivacyContext) {
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
+        return runAndMaintain(privacyContext, task, fetchFun)
+    }
+
+    private suspend fun runAndMaintain(
+        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
+    ): FetchResult {
+        val result = doRun(privacyContext, task, fetchFun)
+
+        updatePrivacyContext(privacyContext, result)
+        // All retry is forced to do in crawl scope
+        if (result.isPrivacyRetry) {
+            result.status.upgradeRetry(RetryScope.CRAWL)
+        }
+
+        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
+
+        return result
+    }
+
+    private suspend fun doRun(
+        privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
+    ): FetchResult {
         val result: FetchResult = try {
             require(!task.isCanceled)
             require(task.state.get() == FetchTask.State.NOT_READY)
@@ -187,16 +213,8 @@ class MultiPrivacyContextManager(
             }
         } finally {
             task.done()
-            task.page.variables["CONTEXT_INFO"] = formatPrivacyContext(privacyContext)
+            task.page.variables[VAR_CONTEXT_INFO] = formatPrivacyContext(privacyContext)
         }
-
-        updatePrivacyContext(privacyContext, result)
-        // All retry is forced to do in crawl scope
-        if (result.isPrivacyRetry) {
-            result.status.upgradeRetry(RetryScope.CRAWL)
-        }
-
-        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
 
         return result
     }

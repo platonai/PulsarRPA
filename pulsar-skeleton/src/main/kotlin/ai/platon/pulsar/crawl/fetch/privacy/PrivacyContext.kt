@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverUnavailableException
 import ai.platon.pulsar.persist.RetryScope
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -82,7 +83,7 @@ abstract class PrivacyContext(
         globalMetrics.contexts.mark()
     }
 
-    abstract fun realTimeStandByDriverCount(): Int
+    abstract fun availableDriverCount(): Int
 
     fun markSuccess() {
         privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()

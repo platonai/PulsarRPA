@@ -315,7 +315,7 @@ open class WebDriverPoolManager(
         return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
     }
 
-    fun realTimeStandByDriverCount(browserId: BrowserId) = driverPoolPool.realTimeStandByDriverCount(browserId)
+    fun availableDriverCount(browserId: BrowserId) = driverPoolPool.availableDriverCount(browserId)
 
     fun isRetiredPool(browserId: BrowserId) = retiredDriverPools.contains(browserId)
 

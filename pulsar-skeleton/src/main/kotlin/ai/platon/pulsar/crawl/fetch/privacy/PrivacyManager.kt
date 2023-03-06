@@ -50,7 +50,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Create a new context or return an existing one
      * */
-    abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext
+    abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
 
     /**
      * Create a context with [id] and add it to active context list if not absent

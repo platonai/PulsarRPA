@@ -85,6 +85,10 @@ class LoadingWebDriverPool constructor(
      * Number of drivers on standby.
      * */
     val numStandby get() = statefulDriverPool.standbyDrivers.size
+    /**
+     * Number of all possible working drivers
+     * */
+    val numAvailable get() = numStandby + numDriverSlots
 
     /**
      * Number of drivers at work.

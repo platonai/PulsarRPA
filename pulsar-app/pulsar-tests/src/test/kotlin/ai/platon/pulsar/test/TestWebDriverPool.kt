@@ -78,7 +78,7 @@ class TestWebDriverPool {
 
         assertEquals(0, driverPool.numWorking)
         assertEquals(numDrivers / 2, driverPool.numStandby)
-        assertEquals(numDrivers / 2, driverPool.counterClosed.count.toInt())
+        assertEquals(numDrivers / 2, driverPool.meterClosed.count.toInt())
 
         driverPool.close()
 

@@ -156,17 +156,13 @@ class ChromeWebDriverTests: TestBase() {
     }
 
     @Test
-    fun testClickMatches() {
-        val driver = driverFactory.create()
+    fun testClickMatches() = runWebDriverTest { driver ->
+        open(url, driver)
 
-        runBlocking {
-            open(url, driver)
-
-            driver.clickMatches("ol li a", "href", "product-reviews")
-            driver.waitForNavigation()
-            driver.waitForSelector("body")
-            assertNotEquals(url, driver.currentUrl())
-        }
+        driver.clickMatches("a", "href", ".+stores.+")
+        driver.waitForNavigation()
+        driver.waitForSelector("body")
+        assertNotEquals(url, driver.currentUrl())
     }
 
     @Test

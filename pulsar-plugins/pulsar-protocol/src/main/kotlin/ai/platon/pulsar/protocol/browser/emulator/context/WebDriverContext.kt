@@ -10,6 +10,7 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverUnavailableException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
@@ -57,10 +58,12 @@ open class WebDriverContext(
                 browseFun(task, it)
             }?:FetchResult.crawlRetry(task, "Null response from driver pool manager")
         } catch (e: WebDriverPoolExhaustedException) {
-            logger.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
-            FetchResult.crawlRetry(task, Duration.ofSeconds(20), "Driver pool exhausted")
+            val message = String.format("%s. Retry task %s in crawl scope | cause by: %s",
+                task.page.id, task.id, e.message)
+            logger.warn(message)
+            FetchResult.crawlRetry(task, WebDriverUnavailableException(message, e))
         } catch (e: WebDriverPoolException) {
-            logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
+            logger.warn("{}. Retry task {} in crawl scope", task.page.id, task.id)
             FetchResult.crawlRetry(task, "Driver pool exception")
         } catch (e: WebDriverException) {
             logger.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
