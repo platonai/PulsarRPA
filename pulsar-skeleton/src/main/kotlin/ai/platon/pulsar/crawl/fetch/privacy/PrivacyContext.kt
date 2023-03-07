@@ -57,7 +57,16 @@ abstract class PrivacyContext(
     val meterSmallPages = registry.meter(this, "$sequence$sms", "smallPages")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
     val successRate = meterSuccesses.count.toFloat() / meterTasks.count
+    /**
+     * The rate of failures. Failure rate is meaningless when there are few tasks.
+     * */
     val failureRate get() = 1 - successRate
+    val failureRateThreshold = conf.getFloat(PRIVACY_CONTEXT_FAILURE_RATE_THRESHOLD, 0.6f)
+    /**
+     * Check if failure rate is too high.
+     * High failure rate make sense only when there are many tasks.
+     * */
+    val isHighFailureRate get() = meterTasks.count > 100 && failureRate > failureRateThreshold
 
     val startTime = Instant.now()
     var lastActiveTime = Instant.now()
@@ -65,7 +74,7 @@ abstract class PrivacyContext(
     private val fetchTaskTimeout
         get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
     private val privacyContextIdleTimeout
-        get() = conf.getDuration(FETCH_PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
+        get() = conf.getDuration(PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
     private val idleTimeout
         get() = when {
             privacyContextIdleTimeout > fetchTaskTimeout -> privacyContextIdleTimeout
@@ -80,6 +89,18 @@ abstract class PrivacyContext(
     val isGood get() = meterSuccesses.meanRate >= minimumThroughput
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     val isActive get() = !isLeaked && !closed.get()
+
+    /**
+     * A ready privacy context has to match the following requirements:
+     * 1. is active
+     * 2. not idle
+     * 3. the associated driver pool promises to provide an available driver, ether one of the following:
+     *    1. it has slots to create new drivers
+     *    2. it has standby drivers
+     *
+     * Note: this flag does not guarantee consistency, and can change immediately after it's read
+     * */
+    val isReady get() = availableDriverCount() > 0 && isActive && !isIdle
 
     init {
         globalMetrics.contexts.mark()

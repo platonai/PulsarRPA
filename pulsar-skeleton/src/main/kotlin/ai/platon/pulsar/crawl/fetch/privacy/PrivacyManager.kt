@@ -30,6 +30,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     val isActive get() = !closed.get() && AppContext.isActive
 
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
+
     /**
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
@@ -66,6 +67,13 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
      * */
     open fun close(privacyContext: PrivacyContext) {
+        kotlin.runCatching { doClose(privacyContext) }.onFailure { logger.warn(it.stringify()) }
+    }
+
+    /**
+     * Close a given privacy context, remove it from the active list and add it to the zombie list.
+     * */
+    private fun doClose(privacyContext: PrivacyContext) {
         if (logger.isDebugEnabled) {
             logger.debug("Closing privacy context | {}", privacyContext.id)
             logger.debug("Active contexts: {}, zombie contexts: {}", activeContexts.size, zombieContexts.size)

@@ -63,11 +63,12 @@ class MultiPrivacyContextManager(
     ) : this(driverPoolManager, null, null, immutableConfig)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+        metrics.tasks.mark()
+
         if (!isActive) {
             return FetchResult.crawlRetry(task, "Inactive privacy context")
         }
 
-        metrics.tasks.mark()
         val privacyContext = computeNextContext(task.fingerprint)
         val result = runIfPrivacyContextReady(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
@@ -117,7 +118,7 @@ class MultiPrivacyContextManager(
             }
 
 //            return iterator.next()
-            return nextReadyContextPrivacy()
+            return nextReadyPrivacyContext()
         }
     }
 
@@ -126,38 +127,36 @@ class MultiPrivacyContextManager(
         activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
 
     /**
-     * Maintain the system in a separate thread, usually in a scheduled service.
+     * Maintain all the privacy contexts, usually in a scheduled service.
      * */
     override fun maintain() {
         if (tooFrequentMaintenance) {
             return
         }
 
-        try {
-            closeDyingContexts()
+        closeDyingContexts()
 
-            // and then check the active context list
-            activeContexts.values.forEach { context ->
-                context.maintain()
-            }
-        } catch (t: Throwable) {
-            logger.warn(t.stringify("Unexpected exception when maintain privacy contexts\n"))
+        // and then check the active context list
+        activeContexts.values.forEach { context ->
+            context.maintain()
         }
     }
 
-    private fun nextReadyContextPrivacy(): PrivacyContext {
+    /**
+     * A ready privacy context is:
+     * 1. is active
+     * 2. not idle
+     * 3. the associated driver pool promises to provide an available driver
+     * */
+    private fun nextReadyPrivacyContext(): PrivacyContext {
         var n = activeContexts.size
 
         var pc = iterator.next()
-        while (n-- > 0 && !isReadyPrivacyContext(pc)) {
+        while (n-- > 0 && !pc.isReady) {
             pc = iterator.next()
         }
 
         return pc
-    }
-
-    private fun isReadyPrivacyContext(pc: PrivacyContext): Boolean {
-        return pc.availableDriverCount() > 0 && pc.isActive && !pc.isIdle
     }
 
     private fun closeDyingContexts() {
@@ -179,8 +178,7 @@ class MultiPrivacyContextManager(
             close(it)
         }
 
-        val failureRateThreshold = 0.6
-        activeContexts.filterValues { it.failureRate > failureRateThreshold }.values.forEach {
+        activeContexts.filterValues { it.isHighFailureRate }.values.forEach {
             activeContexts.remove(it.id)
             logger.warn(
                 "Privacy context has too high failure rate: {}, closing it | {} | {}",
@@ -216,7 +214,7 @@ class MultiPrivacyContextManager(
         val result = doRun(privacyContext, task, fetchFun)
 
         updatePrivacyContext(privacyContext, result)
-        // All retry is forced to do in crawl scope
+        // All retries are forced to do in crawl scope
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL)
         }

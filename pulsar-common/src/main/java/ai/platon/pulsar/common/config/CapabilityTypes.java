@@ -188,7 +188,6 @@ public interface CapabilityTypes {
 
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
 
-    String FETCH_PRIVACY_CONTEXT_IDLE_TIMEOUT = "fetch.privacy.context.idle.timeout";
 
     String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
 
@@ -244,12 +243,16 @@ public interface CapabilityTypes {
     /** The class name of privacy context id generator */
     String PRIVACY_CONTEXT_ID_GENERATOR_CLASS = "privacy.context.id.generator.class";
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
+
+    String PRIVACY_CONTEXT_IDLE_TIMEOUT = "privacy.idle.timeout";
+
+    String PRIVACY_CONTEXT_FAILURE_RATE_THRESHOLD = "privacy.failure.rate.threshold";
     String PRIVACY_MAX_WARNINGS = "privacy.max.warnings";
     String PRIVACY_CONTEXT_MIN_THROUGHPUT = "privacy.context.min.throughput";
     /**
      * The strategy to close privacy context: asap, lazy
      * */
-    String PRIVACY_CONTEXT_CLOSE_LAZY = "privacy.context.close.strategy";
+    String PRIVACY_CONTEXT_CLOSE_LAZY = "privacy.close.strategy";
     /**
      * The max value of tabs a browser can open
      */
