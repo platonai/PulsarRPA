@@ -32,8 +32,25 @@ open class BrowserPrivacyContext constructor(
     private val browserId = BrowserId(id.contextDir, id.fingerprint)
     private val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
+    /**
+     * A ready privacy context has to meet the following requirements:
+     * 1. not closed
+     * 2. not leaked
+     * 3. not idle
+     * 4. if there is a proxy, the proxy has to be ready
+     * 5. the associated driver pool promises to provide an available driver, ether one of the following:
+     *    1. it has slots to create new drivers
+     *    2. it has standby drivers
+     *
+     * Note: this flag does not guarantee consistency, and can change immediately after it's read
+     * */
+    override val isReady: Boolean get() {
+        val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
+        val isDriverContextReady = driverContext.isReady
+        return isProxyContextReady && isDriverContextReady && super.isReady
+    }
 
-    @Throws(NoProxyException::class, ProxyVendorUntrustedException::class)
+    @Throws(ProxyException::class)
     override suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         initialize(task)
 

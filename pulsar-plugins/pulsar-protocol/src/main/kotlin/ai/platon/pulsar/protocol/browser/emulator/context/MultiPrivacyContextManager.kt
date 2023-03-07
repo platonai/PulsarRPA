@@ -146,7 +146,7 @@ class MultiPrivacyContextManager(
      * A ready privacy context is:
      * 1. is active
      * 2. not idle
-     * 3. the associated driver pool promises to provide an available driver
+     * 3. the associated driver pool promises to provide an available driver (but can be failed)
      * */
     private fun nextReadyPrivacyContext(): PrivacyContext {
         var n = activeContexts.size

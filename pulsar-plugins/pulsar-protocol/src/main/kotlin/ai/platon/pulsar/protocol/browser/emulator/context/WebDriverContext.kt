@@ -47,7 +47,20 @@ open class WebDriverContext(
     private val notBusy = lock.newCondition()
 
     private val closed = AtomicBoolean()
-    private val isActive get() = !closed.get() && AppContext.isActive
+    /**
+     * The driver context is active if the following conditions meet:
+     * 1. the context is not closed
+     * 2. the application is active
+     * */
+    open val isActive get() = !closed.get() && AppContext.isActive
+    /**
+     * The driver context is ready to serve
+     * */
+    open val isReady: Boolean
+        get() {
+            val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.availableDriverCount(browserId) > 0
+            return isActive && isDriverPoolReady
+        }
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         globalTasks.mark()

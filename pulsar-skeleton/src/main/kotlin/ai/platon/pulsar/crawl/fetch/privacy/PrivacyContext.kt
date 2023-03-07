@@ -13,7 +13,6 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.driver.WebDriverUnavailableException
 import ai.platon.pulsar.persist.RetryScope
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -43,6 +42,7 @@ abstract class PrivacyContext(
     val sequence = instanceSequencer.incrementAndGet()
     val display get() = id.display
 
+    protected val numRunningTasks = AtomicInteger()
     val minimumThroughput = conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
     val maximumWarnings = conf.getInt(PRIVACY_MAX_WARNINGS, 8)
     val minorWarningFactor = conf.getInt(PRIVACY_MINOR_WARNING_FACTOR, 5)
@@ -80,27 +80,36 @@ abstract class PrivacyContext(
             privacyContextIdleTimeout > fetchTaskTimeout -> privacyContextIdleTimeout
             else -> fetchTaskTimeout
         }
-    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-    val numRunningTasks = AtomicInteger()
+    open val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
 //    val historyUrls = PassiveExpiringMap<String, String>()
 
-    val closed = AtomicBoolean()
-    val isGood get() = meterSuccesses.meanRate >= minimumThroughput
-    val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
-    val isActive get() = !isLeaked && !closed.get()
-
+    protected val closed = AtomicBoolean()
     /**
-     * A ready privacy context has to match the following requirements:
-     * 1. is active
-     * 2. not idle
-     * 3. the associated driver pool promises to provide an available driver, ether one of the following:
+     * The privacy context works fine and the fetch speed is qualified.
+     * */
+    open val isGood get() = meterSuccesses.meanRate >= minimumThroughput
+    /**
+     * The privacy has been leaked since there are too many warnings about privacy leakage.
+     * */
+    open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
+    /**
+     * The privacy context is not closed nor leaked
+     * */
+    open val isActive get() = !isLeaked && !closed.get()
+    /**
+     * A ready privacy context has to meet the following requirements:
+     * 1. not closed
+     * 2. not leaked
+     * 3. not idle
+     * 4. if there is a proxy, the proxy has to be ready
+     * 5. the associated driver pool promises to provide an available driver, ether one of the following:
      *    1. it has slots to create new drivers
      *    2. it has standby drivers
      *
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
-    val isReady get() = availableDriverCount() > 0 && isActive && !isIdle
+    open val isReady get() = availableDriverCount() > 0 && isActive && !isIdle
 
     init {
         globalMetrics.contexts.mark()

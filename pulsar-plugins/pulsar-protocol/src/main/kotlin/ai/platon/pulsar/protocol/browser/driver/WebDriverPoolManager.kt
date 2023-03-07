@@ -197,6 +197,8 @@ open class WebDriverPoolManager(
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && AppContext.isActive
 
+    val isReady get() = isActive
+
     private val driverPoolPool = ConcurrentStatefulDriverPoolPool()
 
     /**

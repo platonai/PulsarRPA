@@ -114,6 +114,11 @@ class ProxyEntry(
     var idleTimeout = Duration.ofMinutes(10)
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isIdle get() = (numRunningTasks.get() == 0 && idleTime > idleTimeout)
+    /**
+     * Check if this proxy is ready to work.
+     * TODO: isWorking
+     * */
+    val isReady get() = !isGone && !isExpired && !isRetired && !isIdle && !isBanned
 
     enum class BanState {
         OK, SEGMENT, HOST, OTHER;

@@ -88,6 +88,10 @@ open class ProxyContext(
 
     val isEnabled get() = proxyPoolManager.isEnabled
     val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
+    val isReady: Boolean get() {
+        val isProxyReady = proxyEntry == null || proxyEntry?.isReady == true
+        return isProxyReady && isActive
+    }
 
     init {
         maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
