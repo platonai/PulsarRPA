@@ -109,13 +109,13 @@ abstract class PrivacyContext(
      *
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
-    open val isReady get() = availableDriverCount() > 0 && isActive && !isIdle
+    open val isReady get() = promisedDriverCount() > 0 && isActive && !isIdle
 
     init {
         globalMetrics.contexts.mark()
     }
 
-    abstract fun availableDriverCount(): Int
+    abstract fun promisedDriverCount(): Int
 
     fun markSuccess() {
         privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()

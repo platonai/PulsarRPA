@@ -197,7 +197,7 @@ class MultiPrivacyContextManager(
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
-        if (privacyContext.availableDriverCount() <= 0) {
+        if (privacyContext.promisedDriverCount() <= 0) {
             return FetchResult.crawlRetry(task, "No available driver")
         }
 
@@ -265,7 +265,7 @@ class MultiPrivacyContextManager(
 
         val status = result.response.protocolStatus
         when {
-            // TODO: review all retry scope
+            // TODO: review all retries
 //            status.isRetry(RetryScope.PRIVACY) -> logPrivacyLeakWarning(privacyContext, result)
             status.isRetry -> logPrivacyLeakWarning(privacyContext, result)
             status.isSuccess -> metrics.successes.mark()

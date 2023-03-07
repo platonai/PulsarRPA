@@ -18,7 +18,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.slf4j.LoggerFactory
 
 /**
- * The privacy context, the context is closed if privacy is leaked
+ * The privacy context. The privacy context will be closed when privacy is leaked.
  * */
 open class BrowserPrivacyContext constructor(
     val proxyPoolManager: ProxyPoolManager? = null,
@@ -28,7 +28,7 @@ open class BrowserPrivacyContext constructor(
     id: PrivacyContextId
 ): PrivacyContext(id, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
-    var proxyEntry: ProxyEntry? = null
+    private var proxyEntry: ProxyEntry? = null
     private val browserId = BrowserId(id.contextDir, id.fingerprint)
     private val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
@@ -64,7 +64,7 @@ open class BrowserPrivacyContext constructor(
         driverContext.maintain()
     }
 
-    override fun availableDriverCount() = driverPoolManager.availableDriverCount(browserId)
+    override fun promisedDriverCount() = driverPoolManager.availableDriverCount(browserId)
 
     override fun report() {
         // val isIdle = proxyContext?.proxyEntry?.isIdle == true
