@@ -20,10 +20,10 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * A privacy context will be closed when the privacy is leaked.
+ * */
 abstract class PrivacyContext(
-    /**
-     * The data directory for this context, very context has its own data directory
-     * */
     val id: PrivacyAgent,
     val conf: ImmutableConfig
 ) : Comparable<PrivacyContext>, AutoCloseable {

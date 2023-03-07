@@ -3,11 +3,12 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.concurrent.GracefulScheduledExecutor
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.stringify
 import org.slf4j.LoggerFactory
 import java.time.Duration
 
 /**
- *
+ * The web driver pool monitor.
  * */
 open class WebDriverPoolMonitor(
         val driverPoolManager: WebDriverPoolManager,
@@ -15,25 +16,25 @@ open class WebDriverPoolMonitor(
         initialDelay: Long = 30,
         interval: Long = 30
 ): GracefulScheduledExecutor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(interval)) {
-    private val log = LoggerFactory.getLogger(WebDriverPoolMonitor::class.java)
-    val isActive get() = AppContext.isActive
+    private val logger = LoggerFactory.getLogger(WebDriverPoolMonitor::class.java)
+    val isActive get() = !isClosed && AppContext.isActive
 
     override fun run() {
-        if (!AppContext.isActive) {
+        if (!isActive) {
             close()
             return
         }
 
-        releaseLocksIfNecessary()
+        kotlin.runCatching { releaseLocksIfNecessary() }.onFailure { logger.warn(it.stringify()) }
 
         // should maintain in a global monitor
-        driverPoolManager.maintain()
+        kotlin.runCatching { driverPoolManager.maintain() }.onFailure { logger.warn(it.stringify()) }
     }
 
     private fun releaseLocksIfNecessary() {
         if (driverPoolManager.isIdle) {
             if (driverPoolManager.hasEvent) {
-                log.info("[Idle] {}", driverPoolManager.toString())
+                logger.info("[Idle] {}", driverPoolManager.toString())
             }
 
             if (driverPoolManager.isPreempted) {

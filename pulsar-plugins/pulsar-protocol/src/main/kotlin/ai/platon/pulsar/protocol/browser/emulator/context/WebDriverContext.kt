@@ -26,6 +26,10 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * The web driver context.
+ * Web page fetch tasks run in web driver contexts.
+ * */
 open class WebDriverContext(
     val browserId: BrowserId,
     private val driverPoolManager: WebDriverPoolManager,

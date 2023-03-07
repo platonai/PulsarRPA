@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.CapabilityTypes.APP_ID_STR
-import ai.platon.pulsar.common.config.CapabilityTypes.APP_TMP_DIR_KEY
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import org.apache.commons.lang3.SystemUtils
 import java.awt.GraphicsEnvironment
 import java.net.InetAddress
@@ -22,13 +21,23 @@ object AppContext {
      */
     val NCPU get() = Runtime.getRuntime().availableProcessors()
 
-    // User's current working directory
+    /**
+     * Gets the host name for this IP address.
+     * If this InetAddress was created with a host name, this host name will be remembered and returned;
+     * otherwise, a reverse name lookup will be performed and the result will be returned based on the
+     * system configured name lookup service.
+     * */
     val HOST_NAME get() = InetAddress.getLocalHost().hostName
 
+    /**
+     * The name of the current user
+     * */
     val USER get() = SystemUtils.USER_NAME
 
     /**
-     * Directories
+     * The java.io.tmpdir System Property. Default temp file path.
+     * Defaults to null if the runtime does not have security access to read this property or the property does not exist.
+     * This value is initialized when the class is loaded.
      */
     val TMP_DIR get() = SystemUtils.JAVA_IO_TMPDIR
 
@@ -51,7 +60,9 @@ object AppContext {
      * @see https://www.freedesktop.org/software/systemd/man/pam_systemd.html
      * */
     val OS_IS_LINUX_DESKTOP by lazy { checkIsLinuxDesktop() }
-
+    /**
+     * Check if GUI is available, so we can run pulsar in GUI mode and supervised mode.
+     * */
     val isGUIAvailable: Boolean get() {
         return when {
             OS_IS_LINUX_DESKTOP -> true
@@ -59,24 +70,75 @@ object AppContext {
             else -> !GraphicsEnvironment.isHeadless()
         }
     }
-
-    // The identity of this running instance
+    /**
+     * The application version
+     * */
     val APP_VERSION by lazy { sniffVersion() }
-    val APP_NAME = System.getProperty("app.name", "pulsar")
-    val APP_IDENT = System.getProperty(APP_ID_STR, USER)
-    val APP_TMP_PROPERTY = System.getProperty(APP_TMP_DIR_KEY)
-    val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve(APP_NAME)
-    val PROC_TMP_DIR = if (APP_TMP_PROPERTY != null) {
-        Paths.get(APP_TMP_PROPERTY)
-    } else {
-        Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
+    /**
+     * The real time application name, can be specified by system environment variable or system property.
+     * The real time version is used for test only.
+     * */
+    val APP_NAME_RT get() = System.getenv(APP_NAME_KEY) ?: System.getProperty(APP_NAME_KEY, "pulsar")
+    /**
+     * The application name, can be specified by system environment variable or system property.
+     * */
+    val APP_NAME = APP_NAME_RT
+    /**
+     * The real time application identity string, can be specified by system environment variable or system property.
+     * The real time version is used for test only.
+     * */
+    val APP_IDENT_RT get() = System.getenv(APP_ID_KEY) ?: System.getProperty(APP_ID_KEY, USER)
+    /**
+     * The application identity string, can be specified by system environment variable or system property.
+     * */
+    val APP_IDENT = APP_IDENT_RT
+    /**
+     * The real time user specified temp dir used by the application, can be specified by system environment
+     * variable or system property.
+     * The real time version is used for test only.
+     * */
+    val APP_TMP_SPECIFIED_RT get() = System.getenv(APP_TMP_DIR_KEY) ?: System.getProperty(APP_TMP_DIR_KEY)
+    /**
+     * The user specified temp dir used by the application, can be specified by system environment
+     * variable or system property.
+     * */
+    val APP_TMP_SPECIFIED = APP_TMP_SPECIFIED_RT
+    /**
+     * The real time temp directory used by all processes.
+     * The real time version is used for test only.
+     * */
+    val APP_TMP_DIR_RT get() = when {
+        APP_TMP_SPECIFIED_RT != null -> Paths.get(APP_TMP_SPECIFIED_RT).resolve(APP_NAME_RT)
+        else -> Paths.get(TMP_DIR).resolve(APP_NAME_RT)
     }
-    // Special users such as tomcat do not have its own home
-    val APP_DATA_DIR = listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
-        .first { Files.isWritable(it) }.resolve(".$APP_NAME")
-
+    /**
+     * The temp directory used by all processes
+     * */
+    val APP_TMP_DIR = APP_TMP_DIR_RT
+    /**
+     * The real time temp directory used by processes with APP_IDENT
+     * The real time version is used for test only.
+     * */
+    val APP_PROC_TMP_DIR_RT get() =
+        APP_TMP_DIR_RT.resolveSibling("$APP_NAME_RT-$APP_IDENT_RT")
+    /**
+     * The temp directory used by processes with APP_IDENT
+     * */
+    val APP_PROC_TMP_DIR = APP_PROC_TMP_DIR_RT
+    /**
+     * The data directory used by the application, the default data dir is $HOME/.pulsar.
+     * Special users such as tomcat do not have its own home, $TMP_DIR/.$APP_NAME is used in such case.
+     * */
+    val APP_DATA_DIR_RT get() = listOf(USER_HOME, TMP_DIR).map { Paths.get(it) }
+        .first { Files.isWritable(it) }.resolve(".$APP_NAME_RT")
+    val APP_DATA_DIR = APP_DATA_DIR_RT
+    /**
+     * The application's runtime state
+     * */
     val state = AtomicReference(State.NEW)
-
+    /**
+     * The application is active.
+     * */
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
 
     fun start() = state.set(State.RUNNING)

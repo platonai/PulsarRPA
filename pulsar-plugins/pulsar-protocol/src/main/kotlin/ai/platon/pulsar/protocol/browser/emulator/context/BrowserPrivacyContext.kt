@@ -18,7 +18,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.slf4j.LoggerFactory
 
 /**
- * The privacy context. The privacy context will be closed when privacy is leaked.
+ * A privacy context will be closed when the privacy is leaked.
  * */
 open class BrowserPrivacyContext constructor(
     val proxyPoolManager: ProxyPoolManager? = null,
@@ -92,8 +92,6 @@ open class BrowserPrivacyContext constructor(
     }
 
     /**
-     * Block until all the drivers are closed and the proxy is offline.
-     *
      * Closing call stack:
      *
      * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close

@@ -248,8 +248,7 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     * Handle when after run
-     * @return true if privacy is leaked
+     * Handle after run
      * */
     private fun updatePrivacyContext(privacyContext: PrivacyContext, result: FetchResult) {
         if (!privacyContext.isActive) {

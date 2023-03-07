@@ -22,12 +22,13 @@ abstract class GracefulScheduledExecutor(
     var interval: Duration = Duration.ofSeconds(10),
     val executor: ScheduledExecutorService = createDefaultExecutor(),
     @Deprecated("Not used")
-        val autoClose: Boolean = true
+    val autoClose: Boolean = true
 ): AutoCloseable {
     private val logger = LoggerFactory.getLogger(GracefulScheduledExecutor::class.java)
 
     private val closed = AtomicBoolean()
     protected var scheduledFuture: ScheduledFuture<*>? = null
+    val isClosed get() = closed.get()
 
     /**
      * Starts the monitor at the given period with the specific runnable action
@@ -98,6 +99,7 @@ abstract class GracefulScheduledExecutor(
 //                .setDaemon(true)
                 .build()
             val service = Executors.newSingleThreadScheduledExecutor(factory)
+            // google guava's Executor implementations
 //            MoreExecutors.addDelayedShutdownHook(service, Duration.ofSeconds(1))
             return service
         }

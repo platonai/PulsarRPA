@@ -17,17 +17,62 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.lang3.RandomStringUtils
+import org.apache.commons.lang3.SystemUtils
 import org.junit.Test
 import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.random.Random
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TestAppPaths {
     private val tmpDirStr get() = AppPaths.TMP_DIR.toString()
     private val homeDirStr get() = AppPaths.DATA_DIR.toString()
+
+    val home = SystemUtils.USER_HOME
+    val tmp = SystemUtils.JAVA_IO_TMPDIR
+    val appName = AppContext.APP_NAME
+    val ident = AppContext.APP_IDENT
+
+    @BeforeTest
+    fun setup() {
+        System.clearProperty(CapabilityTypes.APP_TMP_DIR_KEY)
+        System.clearProperty(CapabilityTypes.APP_NAME_KEY)
+        System.clearProperty(CapabilityTypes.APP_ID_KEY)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Files.deleteIfExists(Paths.get("$home/prometheus"))
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testAppContextDirs() {
+        assertEquals("pulsar", appName)
+        assertEquals(AppContext.APP_TMP_DIR.toString(), "$tmp/$appName")
+        assertEquals(AppContext.APP_PROC_TMP_DIR.toString(), "$tmp/$appName-$ident")
+
+        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home/prometheus")
+        assertEquals("$home/prometheus/$appName", AppContext.APP_TMP_DIR_RT.toString())
+        assertEquals("$home/prometheus/$appName-$ident", AppContext.APP_PROC_TMP_DIR_RT.toString())
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testCustomAppContextDirs() {
+        System.setProperty(CapabilityTypes.APP_TMP_DIR_KEY, "$home/prometheus")
+        System.setProperty(CapabilityTypes.APP_NAME_KEY, "amazon")
+        System.setProperty(CapabilityTypes.APP_ID_KEY, "bs")
+
+        assertEquals("$home/prometheus/amazon", AppContext.APP_TMP_DIR_RT.toString())
+        assertEquals("$home/prometheus/amazon-bs", AppContext.APP_PROC_TMP_DIR_RT.toString())
+    }
 
     @Test
     @Throws(Exception::class)

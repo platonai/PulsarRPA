@@ -13,7 +13,8 @@ public interface CapabilityTypes {
      * Common Parameters
      */
 
-    String APP_ID_STR = "app.id.str";
+    String APP_ID_KEY = "app.ident";
+    String APP_NAME_KEY = "app.name";
 
     String APP_TMP_DIR_KEY = "app.tmp.dir";
 
