@@ -94,9 +94,13 @@ abstract class PrivacyContext(
      * */
     open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     /**
-     * The privacy context is not closed nor leaked
+     * Check if the privacy context is not closed nor leaked
      * */
-    open val isActive get() = !isLeaked && !closed.get()
+    open val isActive get() = !isLeaked && !isClosed
+    /**
+     * Check if the privacy context is closed
+     * */
+    open val isClosed get() = closed.get()
     /**
      * A ready privacy context has to meet the following requirements:
      * 1. not closed

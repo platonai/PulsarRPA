@@ -143,7 +143,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private fun closeZombieContexts() {
         logger.debug("Closing zombie contexts ...")
 
-        val pendingContexts = zombieContexts.filter { !it.closed.get() }
+        val pendingContexts = zombieContexts.filter { !it.isClosed }
         if (isClosed) {
             zombieContexts.clear()
         }
