@@ -56,6 +56,8 @@ abstract class PrivacyContext(
     val meterFinishes = registry.meter(this, "$sequence$sms", "finishes")
     val meterSmallPages = registry.meter(this, "$sequence$sms", "smallPages")
     val smallPageRate get() = 1.0 * meterSmallPages.count / meterTasks.count.coerceAtLeast(1)
+    val successRate = meterSuccesses.count.toFloat() / meterTasks.count
+    val failureRate get() = 1 - successRate
 
     val startTime = Instant.now()
     var lastActiveTime = Instant.now()

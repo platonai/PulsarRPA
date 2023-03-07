@@ -31,8 +31,13 @@ class ConcurrentStatefulDriverPoolPool {
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
 
     @Synchronized
-    fun availableDriverCount(browserId: BrowserId): Int {
-        return _workingDriverPools[browserId]?.numAvailable ?: 0
+    fun availableDriverCount(browserId: BrowserId, capacity: Int): Int {
+        if (browserId in closedDriverPools || browserId in retiredDriverPools) {
+            return 0
+        }
+
+        val pool = _workingDriverPools[browserId] ?: return capacity
+        return pool.numAvailable
     }
 
     @Synchronized

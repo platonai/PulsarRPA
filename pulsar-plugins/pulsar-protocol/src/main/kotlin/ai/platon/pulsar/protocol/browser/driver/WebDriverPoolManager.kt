@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -198,6 +199,11 @@ open class WebDriverPoolManager(
 
     private val driverPoolPool = ConcurrentStatefulDriverPoolPool()
 
+    /**
+     * The max number of drivers the pool can hold
+     * */
+    private val poolCapacity = immutableConfig.getInt(CapabilityTypes.BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+
     val driverSettings get() = driverFactory.driverSettings
     val idleTimeout = Duration.ofMinutes(18)
 
@@ -245,9 +251,6 @@ open class WebDriverPoolManager(
     private val lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
-
-    // private val launchLock = ReentrantLock()
-    private val launchMutex = Mutex()
 
     private val driverPoolCloser = BrowserAccompaniedDriverPoolCloser(driverPoolPool, this)
 
@@ -315,7 +318,7 @@ open class WebDriverPoolManager(
         return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
     }
 
-    fun availableDriverCount(browserId: BrowserId) = driverPoolPool.availableDriverCount(browserId)
+    fun availableDriverCount(browserId: BrowserId) = driverPoolPool.availableDriverCount(browserId, poolCapacity)
 
     fun isRetiredPool(browserId: BrowserId) = retiredDriverPools.contains(browserId)
 

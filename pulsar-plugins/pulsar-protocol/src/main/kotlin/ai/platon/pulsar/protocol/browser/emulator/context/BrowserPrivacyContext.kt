@@ -50,7 +50,7 @@ open class BrowserPrivacyContext constructor(
     override fun availableDriverCount() = driverPoolManager.availableDriverCount(browserId)
 
     override fun report() {
-        val isIdle = proxyContext?.proxyEntry?.isIdle == true
+        // val isIdle = proxyContext?.proxyEntry?.isIdle == true
         logger.info("Privacy context #{}{}{} has lived for {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),

@@ -69,7 +69,11 @@ class MultiPrivacyContextManager(
 
         metrics.tasks.mark()
         val privacyContext = computeNextContext(task.fingerprint)
-        return runIfPrivacyContextReady(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
+        val result = runIfPrivacyContextReady(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
+
+        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
+
+        return result
     }
 
     @Throws(ProxyException::class)
@@ -113,7 +117,7 @@ class MultiPrivacyContextManager(
             }
 
 //            return iterator.next()
-            return nextAvailableContextPrivacy()
+            return nextReadyContextPrivacy()
         }
     }
 
@@ -129,23 +133,31 @@ class MultiPrivacyContextManager(
             return
         }
 
-        closeDyingContexts()
+        try {
+            closeDyingContexts()
 
-        // and then check the active context list
-        activeContexts.values.forEach { context ->
-            context.maintain()
+            // and then check the active context list
+            activeContexts.values.forEach { context ->
+                context.maintain()
+            }
+        } catch (t: Throwable) {
+            logger.warn(t.stringify("Unexpected exception when maintain privacy contexts\n"))
         }
     }
 
-    private fun nextAvailableContextPrivacy(): PrivacyContext {
+    private fun nextReadyContextPrivacy(): PrivacyContext {
         var n = activeContexts.size
 
         var pc = iterator.next()
-        while (n-- > 0 && pc.availableDriverCount() <= 0) {
+        while (n-- > 0 && !isReadyPrivacyContext(pc)) {
             pc = iterator.next()
         }
 
         return pc
+    }
+
+    private fun isReadyPrivacyContext(pc: PrivacyContext): Boolean {
+        return pc.availableDriverCount() > 0 && pc.isActive && !pc.isIdle
     }
 
     private fun closeDyingContexts() {
@@ -156,11 +168,23 @@ class MultiPrivacyContextManager(
             close(it)
         }
 
-        // TODO: check the consistent
+        // TODO: check the consistency
         activeContexts.filterValues { it.isIdle }.values.forEach {
             activeContexts.remove(it.id)
             logger.warn(
                 "Privacy context hangs unexpectedly, closing it | {} | {}",
+                it.elapsedTime.readable(),
+                it.id.display
+            )
+            close(it)
+        }
+
+        val failureRateThreshold = 0.6
+        activeContexts.filterValues { it.failureRate > failureRateThreshold }.values.forEach {
+            activeContexts.remove(it.id)
+            logger.warn(
+                "Privacy context has too high failure rate: {}, closing it | {} | {}",
+                it.failureRate,
                 it.elapsedTime.readable(),
                 it.id.display
             )
@@ -171,18 +195,22 @@ class MultiPrivacyContextManager(
     private suspend fun runIfPrivacyContextReady(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
-        if (privacyContext.availableDriverCount() <= 0) {
-            return FetchResult.crawlRetry(task, "No available driver")
-        }
-
         if (privacyContext !is BrowserPrivacyContext) {
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
-        return runAndMaintain(privacyContext, task, fetchFun)
+        if (privacyContext.availableDriverCount() <= 0) {
+            return FetchResult.crawlRetry(task, "No available driver")
+        }
+
+        if (privacyContext.isIdle) {
+            logger.warn("[Unexpected] Privacy is idle, not capable to perform tasks")
+        }
+
+        return runAndUpdate(privacyContext, task, fetchFun)
     }
 
-    private suspend fun runAndMaintain(
+    private suspend fun runAndUpdate(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
         val result = doRun(privacyContext, task, fetchFun)
@@ -192,8 +220,6 @@ class MultiPrivacyContextManager(
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL)
         }
-
-        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
 
         return result
     }
