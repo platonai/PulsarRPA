@@ -21,7 +21,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A privacy context will be closed when the privacy is leaked.
+ * A privacy context will be closed once it is leaked.
+ *
+ * One of the biggest difficulties in web scraping tasks is the bot stealth.
+ * For web scraping tasks, the website should have no idea whether a visit is
+ * from a human being or a bot. Once a page visit is suspected by the website,
+ * which we call a privacy leak, the privacy context has to be dropped,
+ * and Pulsar will visit the page in another privacy context.
  * */
 abstract class PrivacyContext(
     val id: PrivacyAgent,

@@ -323,9 +323,10 @@ class LoadingWebDriverPool constructor(
         // TODO: using count of non-quit drivers can properly handle the memory, but it seems there are bugs to count.
         val onlineDriverCount1 = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
         val onlineDriverCount2 = statefulDriverPool.workingDrivers.size + statefulDriverPool.standbyDrivers.size
-        if (onlineDriverCount2 > capacity) {
+        if (onlineDriverCount2 >= capacity) {
             // should also: numDriverSlots > 0
-            logger.info("Enough online drivers: {}/{}/{}", numDriverSlots, onlineDriverCount2, onlineDriverCount1)
+            logger.info("Enough online drivers: {}/{}/{}, will not create new one",
+                numDriverSlots, onlineDriverCount2, onlineDriverCount1)
         }
 
         return isActive && !AppSystemInfo.isCriticalResources && onlineDriverCount2 < capacity

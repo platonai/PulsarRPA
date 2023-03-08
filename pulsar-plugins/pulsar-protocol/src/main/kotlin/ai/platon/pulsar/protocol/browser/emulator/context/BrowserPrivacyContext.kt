@@ -17,9 +17,6 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.slf4j.LoggerFactory
 
-/**
- * A privacy context will be closed when the privacy is leaked.
- * */
 open class BrowserPrivacyContext constructor(
     val proxyPoolManager: ProxyPoolManager? = null,
     val driverPoolManager: WebDriverPoolManager,
