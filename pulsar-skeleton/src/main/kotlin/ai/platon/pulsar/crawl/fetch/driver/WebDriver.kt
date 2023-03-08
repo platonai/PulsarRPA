@@ -261,8 +261,15 @@ interface WebDriver: Closeable {
     suspend fun type(selector: String, text: String)
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
+
     @Throws(WebDriverException::class)
-    suspend fun clickMatches(selector: String, pattern: String, count: Int = 1)
+    suspend fun clickTextMatches(selector: String, pattern: String, count: Int = 1)
+    /**
+     * Use clickTextMatches instead
+     * */
+    @Deprecated("Inappropriate name", ReplaceWith("clickTextMatches(selector, pattern, count"))
+    @Throws(WebDriverException::class)
+    suspend fun clickMatches(selector: String, pattern: String, count: Int = 1) = clickTextMatches(selector, pattern, count)
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)

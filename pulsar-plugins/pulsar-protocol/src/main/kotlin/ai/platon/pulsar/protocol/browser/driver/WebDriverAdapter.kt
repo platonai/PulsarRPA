@@ -99,6 +99,11 @@ class WebDriverAdapter(
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) = driverOrNull?.click(selector, count) ?: Unit
 
+    override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
+        driverOrNull?.clickTextMatches(selector, pattern, count)
+    }
+
+    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("clickTextMatches(selector, pattern, count"))
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
         driverOrNull?.clickMatches(selector, pattern, count)

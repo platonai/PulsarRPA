@@ -163,7 +163,7 @@ open class BrowserSettings(
         @JvmStatic
         fun withSPA(): Companion {
             System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
-            System.setProperty(FETCH_PRIVACY_CONTEXT_IDLE_TIMEOUT, Duration.ofDays(1000).toString())
+            System.setProperty(PRIVACY_CONTEXT_IDLE_TIMEOUT, Duration.ofDays(1000).toString())
             System.setProperty(BROWSER_SPA_MODE, "true")
             return BrowserSettings
         }
