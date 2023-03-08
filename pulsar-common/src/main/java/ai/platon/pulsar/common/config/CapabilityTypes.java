@@ -288,7 +288,14 @@ public interface CapabilityTypes {
     @Deprecated
     String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_RESPONSE_HANDLER = "browser.response.handler";
+    /**
+     * @deprecated  use BROWSER_URL_BLOCK_PROBABILITY instead
+     * */
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
+    /**
+     * The probability to block urls specified by {@code WebDriver.addBlockedURLs}, between [0, 1]
+     * */
+    String BROWSER_URL_BLOCK_PROBABILITY = "browser.url.block.probability";
     String BROWSER_ENABLE_UA_OVERRIDING = "browser.enable.ua.overriding";
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";

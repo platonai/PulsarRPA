@@ -43,7 +43,7 @@ class ChromeDevtoolsDriver(
 
     val openSequence = 1 + browser.drivers.size
 
-    val enableUrlBlocking get() = browserSettings.isUrlBlockingEnabled
+    val urlBlockProbability get() = browserSettings.urlBlockProbability
     private val _blockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
 
@@ -757,13 +757,12 @@ class ChromeDevtoolsDriver(
 //        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
         addScriptToEvaluateOnNewDocument()
 
-        if (enableUrlBlocking && blockedURLs.isNotEmpty()) {
+        if (urlBlockProbability > 0.0f && blockedURLs.isNotEmpty()) {
             // random drop image requests
-//            val rand = Random.nextInt(3)
-//            if (rand == 0) {
-//            }
-
-            networkAPI?.setBlockedURLs(blockedURLs)
+            val hit = Random.nextInt(100) / 100.0f < urlBlockProbability
+            if (hit) {
+                networkAPI?.setBlockedURLs(blockedURLs)
+            }
         }
 
         networkAPI?.onRequestWillBeSent {

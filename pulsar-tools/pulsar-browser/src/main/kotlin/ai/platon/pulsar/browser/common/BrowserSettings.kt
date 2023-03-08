@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.FuzzyProbability
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -174,7 +175,14 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun enableUrlBlocking(): Companion {
-            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "true")
+            System.setProperty(BROWSER_URL_BLOCK_PROBABILITY, "1.0")
+            return BrowserSettings
+        }
+
+        @JvmStatic
+        fun enableUrlBlocking(probability: Float): Companion {
+            require(probability in 0.0f..1.0f)
+            System.setProperty(BROWSER_URL_BLOCK_PROBABILITY, "$probability")
             return BrowserSettings
         }
 
@@ -183,7 +191,7 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun disableUrlBlocking(): Companion {
-            System.setProperty(BROWSER_ENABLE_URL_BLOCKING, "false")
+            System.setProperty(BROWSER_URL_BLOCK_PROBABILITY, "1.0")
             return BrowserSettings
         }
 
@@ -300,10 +308,15 @@ open class BrowserSettings(
      * */
     val isStartupScriptEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
     /**
+     * Url block probability.
+     * */
+    val urlBlockProbability get() = conf.getFloat(BROWSER_URL_BLOCK_PROBABILITY, 0.0f)
+    /**
      * Check if url blocking is enabled.
      * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
-    val isUrlBlockingEnabled get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
+    @Deprecated("Use urlBlockProbability instead", ReplaceWith("urlBlockProbability > 0"))
+    val isUrlBlockingEnabled get() = urlBlockProbability > 0
     /**
      * Check if user agent overriding is enabled. User agent overriding disabled by default,
      * since inappropriate user agent overriding will be detected by the target website and
