@@ -54,7 +54,7 @@ open class BrowserManager(
     @Synchronized
     fun destroyBrowserForcibly(browserId: BrowserId) {
         createdBrowsers.filter { browserId == it.id }.forEach { browser ->
-            kotlin.runCatching { browser.close() }.onFailure { logger.warn(it.stringify("Failed to close browser\n")) }
+            kotlin.runCatching { browser.destroyForcibly() }.onFailure { logger.warn(it.stringify("Failed to close browser\n")) }
             closedBrowsers.add(browser)
         }
     }
@@ -84,9 +84,13 @@ open class BrowserManager(
         }
     }
 
+    /**
+     * Destroy the zombie browsers forcibly, kill the associated browser processes,
+     * release all allocated resources, regardless of whether the browser is closed or not.
+     * */
     @Synchronized
     fun destroyZombieBrowsersForcibly() {
-        val zombieBrowsers = createdBrowsers - browsers.values - closedBrowsers
+        val zombieBrowsers = createdBrowsers - browsers.values.toSet() - closedBrowsers
         if (zombieBrowsers.isNotEmpty()) {
             logger.warn("There are {} zombie browsers, cleaning them ...", zombieBrowsers.size)
             zombieBrowsers.forEach { browser ->

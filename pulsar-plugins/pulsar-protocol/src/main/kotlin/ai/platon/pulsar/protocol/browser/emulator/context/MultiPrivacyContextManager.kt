@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.ServiceTemporaryUnavailableException
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -66,7 +67,7 @@ class MultiPrivacyContextManager(
         metrics.tasks.mark()
 
         if (!isActive) {
-            return FetchResult.crawlRetry(task, "Inactive privacy context")
+            return FetchResult.canceled(task)
         }
 
         val privacyContext = computeNextContext(task.fingerprint)
@@ -123,8 +124,11 @@ class MultiPrivacyContextManager(
     }
 
     @Throws(ProxyException::class)
-    override fun computeIfAbsent(id: PrivacyContextId) =
-        activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
+    override fun computeIfAbsent(id: PrivacyContextId): PrivacyContext {
+        synchronized(activeContexts) {
+            return activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
+        }
+    }
 
     /**
      * Maintain all the privacy contexts, usually in a scheduled service.
@@ -156,6 +160,7 @@ class MultiPrivacyContextManager(
             pc = iterator.next()
         }
 
+        // TODO: subscribe a web driver and no other thread can use it
         return pc
     }
 
@@ -197,15 +202,30 @@ class MultiPrivacyContextManager(
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
-        if (privacyContext.promisedDriverCount() <= 0) {
-            return FetchResult.crawlRetry(task, "No available driver")
+        val message = when {
+            privacyContext.promisedDriverCount() <= 0 -> {
+                "No available driver temporary"
+            }
+            !privacyContext.isActive -> {
+                logger.warn("[Unexpected] Privacy is inactive, inability to perform tasks, closing it now")
+                close(privacyContext)
+                "Privacy context temporary unavailable - inactive"
+            }
+            privacyContext.isIdle -> {
+                logger.warn("[Unexpected] Privacy is idle, inability to perform tasks, closing it now")
+                close(privacyContext)
+                "Privacy context temporary unavailable - idle"
+            }
+            !privacyContext.isReady -> {
+                "Privacy context temporary unavailable - not ready"
+            }
+            else -> ""
         }
 
-        if (privacyContext.isIdle) {
-            logger.warn("[Unexpected] Privacy is idle, not capable to perform tasks")
-        }
-
-        return runAndUpdate(privacyContext, task, fetchFun)
+        return if (message.isNotBlank()) {
+            val delay = Duration.ofSeconds(10)
+            FetchResult.crawlRetry(task, delay, ServiceTemporaryUnavailableException(message))
+        } else runAndUpdate(privacyContext, task, fetchFun)
     }
 
     private suspend fun runAndUpdate(

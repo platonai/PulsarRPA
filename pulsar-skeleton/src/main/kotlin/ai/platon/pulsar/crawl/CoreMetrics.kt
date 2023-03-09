@@ -395,7 +395,7 @@ class CoreMetrics(
         }
     }
 
-    private fun updateSystemInfo() {
+    fun updateSystemInfo() {
         kotlin.runCatching { updateSystemInfo0() }.onFailure { logger.warn("[Unexpected]", it) }
     }
 

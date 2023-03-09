@@ -62,7 +62,7 @@ open class WebDriverContext(
      * */
     open val isReady: Boolean
         get() {
-            val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.availableDriverCount(browserId) > 0
+            val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.promisedDriverCount(browserId) > 0
             return isActive && isDriverPoolReady
         }
 
@@ -73,7 +73,7 @@ open class WebDriverContext(
             numGlobalRunningTasks.incrementAndGet()
             driverPoolManager.run(browserId, task) {
                 browseFun(task, it)
-            }?:FetchResult.crawlRetry(task, "Null response from driver pool manager")
+            } ?: FetchResult.crawlRetry(task, "Null response from driver pool manager")
         } catch (e: WebDriverPoolExhaustedException) {
             val message = String.format("%s. Retry task %s in crawl scope | cause by: %s",
                 task.page.id, task.id, e.message)
@@ -115,18 +115,22 @@ open class WebDriverContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching { doClose() }.onFailure { logger.warn(it.stringify()) }
+            if (!AppContext.isActive) {
+                kotlin.runCatching { shutdownUnderlyingLayerImmediately() }.onFailure { logger.warn(it.stringify()) }
+            } else {
+                kotlin.runCatching { closeContext() }.onFailure { logger.warn(it.stringify()) }
+            }
         }
     }
 
-    private fun doClose() {
+    private fun closeContext() {
         val asap = !AppContext.isActive || AppSystemInfo.isCriticalResources
 
         logger.debug("Closing web driver context, asap: $asap")
 
         // not shutdown, wait longer
         if (asap) {
-            closeUnderlyingLayerImmediately()
+            closeUnderlyingLayerGracefully()
         } else {
             waitUntilAllDoneNormally(Duration.ofMinutes(1))
             // close underlying IO based modules asynchronously
@@ -154,7 +158,9 @@ open class WebDriverContext(
         driverPoolManager.closeDriverPoolGracefully(browserId, DRIVER_CLOSE_TIME_OUT)
     }
 
-    private fun closeUnderlyingLayerImmediately() {
+    private fun shutdownUnderlyingLayerImmediately() {
+        logger.info("Shutdown the underlying layer immediately")
+
         runningTasks.forEach { it.cancel() }
         driverPoolManager.cancelAll()
         driverPoolManager.close()

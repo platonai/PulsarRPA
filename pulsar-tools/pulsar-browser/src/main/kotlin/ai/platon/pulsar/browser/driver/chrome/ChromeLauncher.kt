@@ -74,10 +74,7 @@ class ChromeLauncher(
             val pid = Files.readAllLines(pidPath).firstOrNull { it.isNotBlank() }?.toIntOrNull() ?: 0
             if (pid > 0) {
                 logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
-
-                if (SystemUtils.IS_OS_LINUX) {
-                    Runtimes.exec("kill -9 $pid")
-                }
+                Runtimes.destroyProcessForcibly(pid)
             }
         } catch (t: Throwable) {
             t.printStackTrace()
@@ -275,7 +272,7 @@ class ChromeLauncher(
     private fun cleanUp() {
         val target = userDataDir
 
-        // delete user data dir only if it's in the system tmp dir
+        // delete user data dir only if it's in the system tmp dir to prevent deleting files by mistake
         if (target.startsWith(AppPaths.SYS_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {

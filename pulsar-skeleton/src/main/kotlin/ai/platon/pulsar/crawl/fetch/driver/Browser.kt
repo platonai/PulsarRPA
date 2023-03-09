@@ -36,8 +36,15 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     @Throws(WebDriverException::class)
     fun newDriver(): WebDriver
 
+    /**
+     * Destroy the web driver, close the associated browser tabs.
+     * */
     fun destroyDriver(driver: WebDriver)
 
+    /**
+     * Destroy the browser forcibly, kill the associated browser processes, release all allocated resources,
+     * regardless of whether the browser is closed or not.
+     * */
     fun destroyForcibly()
 
     /**

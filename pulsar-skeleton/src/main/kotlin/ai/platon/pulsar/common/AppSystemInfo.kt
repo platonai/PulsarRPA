@@ -32,6 +32,8 @@ class AppSystemInfo {
 
         val isCriticalCPULoad get() = systemCpuLoad > CRITICAL_CPU_THRESHOLD
 
+
+
         /**
          * Free memory in bytes.
          * Free memory is the amount of memory which is currently not used for anything.

@@ -100,6 +100,7 @@ class ChromeDevtoolsBrowser(
     }
 
     override fun destroyForcibly() {
+        close()
         kotlin.runCatching { launcher.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
     }
 

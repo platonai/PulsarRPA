@@ -168,7 +168,7 @@ open class WebDriverPoolManager(
         return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
     }
 
-    fun availableDriverCount(browserId: BrowserId) = driverPoolPool.availableDriverCount(browserId, poolCapacity)
+    fun promisedDriverCount(browserId: BrowserId) = driverPoolPool.promisedDriverCount(browserId, poolCapacity)
 
     fun isRetiredPool(browserId: BrowserId) = retiredDriverPools.contains(browserId)
 
@@ -220,7 +220,7 @@ open class WebDriverPoolManager(
         // Wait until there is no normal tasks, and if there is at least one preemptive task
         // in the critical section, all normal tasks have to wait.
         preempt {
-            driverPoolCloser.close(browserId)
+            driverPoolCloser.closeGracefully(browserId)
         }
     }
 
@@ -235,9 +235,13 @@ open class WebDriverPoolManager(
         try {
             // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
             driverPoolCloser.closeOldestRetiredDriverPoolSafely()
-            // review closed driver pools
-            driverPoolCloser.reviewClosedDriverPools()
+            // review closed driver pools, if
+            driverPoolCloser.closeUnexpectedActiveBrowsers()
 
+            /**
+             * Check if there is zombie browsers who are not in active browser list nor in closed browser list,
+             * if there are some of such browsers, write warnings and destroy them.
+             * */
             browserManager.destroyZombieBrowsersForcibly()
 
             // Preempt the channel to ensure consistency
@@ -459,9 +463,45 @@ private class BrowserAccompaniedDriverPoolCloser(
 
     private val logger = getLogger(this)
 
+
     @Synchronized
-    fun close(browserId: BrowserId) {
-        val retiredDriverPool = workingDriverPools[browserId]
+    fun closeGracefully(browserId: BrowserId) {
+        kotlin.runCatching { doClose(browserId) }.onFailure { logger.warn(it.stringify()) }
+    }
+
+    @Synchronized
+    fun closeOldestRetiredDriverPoolSafely() {
+        val dyingDriverPool = findOldestRetiredDriverPoolOrNull()
+
+        if (dyingDriverPool != null) {
+            closeBrowserAccompaniedDriverPool(dyingDriverPool)
+        }
+    }
+
+    @Synchronized
+    fun closeIdleDriverPoolsSafely() {
+        workingDriverPools.values.filter { it.isIdle }.forEach { driverPool ->
+            logger.info("Driver pool is idle, closing it ... | {}", driverPool.browserId)
+            logger.info(driverPool.takeImpreciseSnapshot().format(true))
+            kotlin.runCatching { closeBrowserAccompaniedDriverPool(driverPool) }.onFailure { logger.warn(it.stringify()) }
+        }
+    }
+
+    @Synchronized
+    fun closeUnexpectedActiveBrowsers() {
+        driverPoolPool.closedDriverPools.forEach { browserId ->
+            val browser = browserManager.findBrowser(browserId)
+            if (browser != null) {
+                logger.warn("Browser should be closed, but still in active list, closing them ... | {}", browserId)
+                kotlin.runCatching { browserManager.closeBrowser(browserId) }.onFailure { logger.warn(it.stringify()) }
+            }
+        }
+    }
+
+    private fun doClose(browserId: BrowserId) {
+        // Force the page to stop all navigations and RELEASE all resources.
+        // mark the driver pool be retired, but not closed yet
+        val retiredDriverPool = driverPoolPool.retire(browserId)
 
         // TODO: configurable
         val isBusySystem = alwaysTrue()
@@ -472,47 +512,14 @@ private class BrowserAccompaniedDriverPoolCloser(
                 openInformationPages(browserId)
             }
 
-            // Force the page to stop all navigations and RELEASE all resources.
-            // mark the driver pool be retired, but not closed yet
-            driverPoolPool.retire(retiredDriverPool)
-
             // if diagnosis is not needed, close the browser immediately
             if (!diagnosis) {
-                closeBrowserAndDriverPool(retiredDriverPool)
+                closeBrowserAccompaniedDriverPool(retiredDriverPool)
             }
         }
 
         if (diagnosis) {
             closeLeastValuableDriverPool(browserId, retiredDriverPool)
-        }
-    }
-
-    @Synchronized
-    fun closeOldestRetiredDriverPoolSafely() {
-        val dyingDriverPool = findOldestRetiredDriverPoolOrNull()
-
-        if (dyingDriverPool != null) {
-            closeBrowserAndDriverPool(dyingDriverPool)
-        }
-    }
-
-    @Synchronized
-    fun closeIdleDriverPoolsSafely() {
-        workingDriverPools.values.filter { it.isIdle }.forEach { driverPool ->
-            logger.info("Driver pool is idle, closing it ... | {}", driverPool.browserId)
-            logger.info(driverPool.takeImpreciseSnapshot().format(true))
-            kotlin.runCatching { closeBrowserAndDriverPool(driverPool) }.onFailure { logger.warn(it.stringify()) }
-        }
-    }
-
-    @Synchronized
-    fun reviewClosedDriverPools() {
-        driverPoolPool.closedDriverPools.forEach { browserId ->
-            val browser = browserManager.findBrowser(browserId)
-            if (browser != null) {
-                logger.warn("Browser {} should be dead, destroy it forcibly", browserId)
-                kotlin.runCatching { browserManager.destroyBrowserForcibly(browserId) }.onFailure { logger.warn(it.stringify()) }
-            }
         }
     }
 
@@ -547,24 +554,24 @@ private class BrowserAccompaniedDriverPoolCloser(
         }
 
         if (dyingDriverPool != null) {
-            closeBrowserAndDriverPool(dyingDriverPool)
+            closeBrowserAccompaniedDriverPool(dyingDriverPool)
         } else {
             val displayMode = driverSettings.displayMode
             logger.info("Web drivers are in {} mode, please close them manually | {} ", displayMode, browserId)
         }
     }
 
-    private fun closeBrowserAndDriverPool(driverPool: LoadingWebDriverPool) {
+    private fun closeBrowserAccompaniedDriverPool(driverPool: LoadingWebDriverPool) {
         val browser = browserManager.findBrowser(driverPool.browserId)
         if (browser != null) {
-            closeBrowserAndDriverPool(browser, driverPool)
+            closeBrowserAccompaniedDriverPool(browser, driverPool)
         } else {
             kotlin.runCatching { driverPoolPool.close(driverPool) }.onFailure { logger.warn(it.stringify()) }
             logger.warn("Browser should exists when driver pool exists | {}", driverPool.browserId)
         }
     }
 
-    private fun closeBrowserAndDriverPool(browser: Browser, driverPool: LoadingWebDriverPool) {
+    private fun closeBrowserAccompaniedDriverPool(browser: Browser, driverPool: LoadingWebDriverPool) {
         require(browser.id == driverPool.browserId) { "Browser id not match \n${browser.id}\n${driverPool.browserId}" }
 
         val browserId = driverPool.browserId

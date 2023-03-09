@@ -151,6 +151,12 @@ class ChromeImpl(
         try {
             val uri = URL(String.format(path, *params))
             connection = uri.openConnection() as HttpURLConnection
+            // TODO: issue #14 Using unsafe HTTP verb GET to invoke /json/new. This action supports only PUT verb.
+            // https://github.com/platonai/exotic-amazon/issues/14
+            // chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
+//            if ("new" in path) {
+//                connection.requestMethod = "PUT"
+//            }
             val responseCode = connection.responseCode
             if (HttpURLConnection.HTTP_OK == responseCode) {
                 if (Void::class.java == responseType) {

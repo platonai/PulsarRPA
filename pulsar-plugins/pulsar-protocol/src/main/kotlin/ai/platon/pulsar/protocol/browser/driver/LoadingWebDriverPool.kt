@@ -117,7 +117,7 @@ class LoadingWebDriverPool constructor(
 
     var lastActiveTime: Instant = Instant.now()
         private set
-    val idleTimeout get() = immutableConfig.getDuration(BROWSER_DRIVER_POOL_IDLE_TIMEOUT, Duration.ofMinutes(10))
+    val idleTimeout get() = immutableConfig.getDuration(BROWSER_DRIVER_POOL_IDLE_TIMEOUT, Duration.ofMinutes(20))
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
 
     /**
