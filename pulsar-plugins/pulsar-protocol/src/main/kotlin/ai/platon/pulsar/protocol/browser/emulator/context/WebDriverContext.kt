@@ -102,8 +102,7 @@ open class WebDriverContext(
 
     open fun maintain() {
         // close dead, valueless, idle driver pools, etc
-        // TODO: called by every web driver context, which is not expected.
-        // driverPoolManager.maintain()
+        kotlin.runCatching { driverPoolManager.maintain() }.onFailure { logger.warn(it.stringify()) }
     }
 
     /**

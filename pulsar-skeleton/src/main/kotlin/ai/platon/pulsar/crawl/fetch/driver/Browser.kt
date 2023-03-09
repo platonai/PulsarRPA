@@ -38,6 +38,8 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
 
     fun destroyDriver(driver: WebDriver)
 
+    fun destroyForcibly()
+
     /**
      * Register event handler when a url is about to navigate.
      * */

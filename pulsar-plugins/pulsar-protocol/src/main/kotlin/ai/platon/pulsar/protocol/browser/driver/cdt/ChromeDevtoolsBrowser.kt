@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.common.AppSystemInfo
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_REUSE_RECOVERED_DRIVERS
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
@@ -96,6 +97,10 @@ class ChromeDevtoolsBrowser(
     override fun maintain() {
         recoverUnmanagedPages()
         closeRecoveredIdleDrivers()
+    }
+
+    override fun destroyForcibly() {
+        kotlin.runCatching { launcher.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
     }
 
     /**

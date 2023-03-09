@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -32,6 +34,7 @@ class ChromeImpl(
         const val VERSION = "json/version"
     }
 
+    private val logger = getLogger(this)
     private val objectMapper = ObjectMapper()
     private val remoteDevTools: MutableMap<String, RemoteDevTools> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
@@ -96,7 +99,7 @@ class ChromeImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            remoteDevTools.values.forEach { it.close() }
+            remoteDevTools.values.forEach { kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
             remoteDevTools.clear()
         }
     }

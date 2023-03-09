@@ -6,10 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ProcessLauncher
-import ai.platon.pulsar.common.Runtimes
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
@@ -38,6 +35,7 @@ class ChromeLauncher(
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
+    val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
     private var process: Process? = null
     private val shutdownHookThread = Thread { this.close() }
 
@@ -70,6 +68,22 @@ class ChromeLauncher(
      * Launch the chrome
      * */
     fun launch() = launch(true)
+
+    fun destroyForcibly() {
+        try {
+            val pid = Files.readAllLines(pidPath).firstOrNull { it.isNotBlank() }?.toIntOrNull() ?: 0
+            if (pid > 0) {
+                logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
+
+                if (SystemUtils.IS_OS_LINUX) {
+                    Runtimes.exec("kill -9 $pid")
+                }
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            logger.warn(t.stringify())
+        }
+    }
 
     override fun close() {
         val p = process ?: return

@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kklisura.cdt.protocol.types.network.Cookie
+import com.github.kklisura.cdt.protocol.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
 import kotlinx.coroutines.delay
@@ -43,9 +44,18 @@ class ChromeDevtoolsDriver(
 
     val openSequence = 1 + browser.drivers.size
 
-    val urlBlockProbability get() = browserSettings.urlBlockProbability
+    val resourceBlockProbability get() = browserSettings.resourceBlockProbability
+    /**
+     * Disable network after n response received
+     * TODO: check if this is necessary
+     * */
+    private val numResponseReceivedToDisableNetwork: Int get() {
+        return System.getProperty("WebDriver.numResponseReceivedToDisableNetwork")?.toIntOrNull() ?: -1
+    }
     private val _blockedURLs = mutableListOf<String>()
+    private val _probabilityBlockedURLs = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLs
+    val probabilityBlockedURLs: List<String> get() = _probabilityBlockedURLs
 
     private val page = PageHandler(devTools, browserSettings)
     private val screenshot = Screenshot(page, devTools)
@@ -111,6 +121,10 @@ class ChromeDevtoolsDriver(
         _blockedURLs.addAll(urls)
     }
 
+    override suspend fun addProbabilityBlockedURLs(urls: List<String>) {
+        _probabilityBlockedURLs.addAll(urls)
+    }
+
     override suspend fun setTimeouts(browserSettings: BrowserSettings) {
     }
 
@@ -126,6 +140,10 @@ class ChromeDevtoolsDriver(
             domAPI?.enable()
             runtimeAPI?.enable()
             networkAPI?.enable()
+
+            if (resourceBlockProbability > 0.0f) {
+                fetchAPI?.enable()
+            }
 
             rpc.invokeDeferred("navigateTo") {
                 if (enableStartupScript) navigateInvaded(entry.url) else navigateNonInvaded(entry.url)
@@ -757,30 +775,37 @@ class ChromeDevtoolsDriver(
 //        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
         addScriptToEvaluateOnNewDocument()
 
-        if (urlBlockProbability > 0.0f && blockedURLs.isNotEmpty()) {
-            // random drop image requests
-            val hit = Random.nextInt(100) / 100.0f < urlBlockProbability
-            if (hit) {
-                networkAPI?.setBlockedURLs(blockedURLs)
-            }
+        if (blockedURLs.isNotEmpty()) {
+            // Blocks URLs from loading.
+            networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        networkAPI?.onRequestWillBeSent {
+        networkAPI?.onRequestWillBeSent { requestWillBeSent ->
             if (mainRequestId.isBlank()) {
-                mainRequestId = it.requestId
-                mainRequestHeaders = it.request.headers
+                mainRequestId = requestWillBeSent.requestId
+                mainRequestHeaders = requestWillBeSent.request.headers
             }
 
-            if (it.request.url.endsWith("*.jpg")) {
-                // random drop
+            if (resourceBlockProbability > 0.0f) {
+                val requestUrl = requestWillBeSent.request.url
+                if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
+                    // random drop requests
+                    val hit = Random.nextInt(100) / 100.0f < resourceBlockProbability
+                    if (hit) {
+                        // ErrorReason.CONNECTION_FAILED
+                        fetchAPI?.failRequest(requestWillBeSent.requestId, ErrorReason.ABORTED)
+                    }
+                }
             }
         }
 
         networkAPI?.onResponseReceived {
-            if (mainRequestId.isNotBlank()) {
+            val maxResponses = numResponseReceivedToDisableNetwork
+            if (maxResponses > 0 && mainRequestId.isNotBlank()) {
                 // split the `if` to make it clearer
-                if (numResponseReceived.incrementAndGet() == 100) {
+                if (numResponseReceived.incrementAndGet() == maxResponses) {
                     // Disables network tracking, prevents network events from being sent to the client.
+                    // TODO: does the resource blocking logic work if we disable the network API?
                     networkAPI?.disable()
                     // logger.info("Network API for driver #{} is disabled", id)
                 }

@@ -12,6 +12,7 @@ import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BrowserManager(
@@ -20,9 +21,9 @@ open class BrowserManager(
     private val logger = getLogger(this)
     private val closed = AtomicBoolean()
     private val browserFactory = BrowserFactory()
-    // TODO: use browser id as the key directly
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
-    private val closedBrowserIds = mutableListOf<BrowserId>()
+    private val createdBrowsers = ConcurrentLinkedDeque<Browser>()
+    private val closedBrowsers = ConcurrentLinkedDeque<Browser>()
 
     val browsers: Map<BrowserId, Browser> = _browsers
 
@@ -39,16 +40,24 @@ open class BrowserManager(
     }
 
     @Synchronized
+    fun findBrowser(browserId: BrowserId) = browsers[browserId]
+
+    @Synchronized
     fun closeBrowser(browserId: BrowserId) {
         val browser = _browsers.remove(browserId)
         if (browser != null) {
-            runCatching { browser.close() }.onFailure { logger.warn(it.brief("Failed to close browser\n")) }
-            closedBrowserIds.add(browserId)
+            kotlin.runCatching { browser.close() }.onFailure { logger.warn(it.brief("Failed to close browser\n")) }
+            closedBrowsers.add(browser)
         }
     }
 
     @Synchronized
-    fun findBrowser(browserId: BrowserId) = browsers[browserId]
+    fun destroyBrowserForcibly(browserId: BrowserId) {
+        createdBrowsers.filter { browserId == it.id }.forEach { browser ->
+            kotlin.runCatching { browser.close() }.onFailure { logger.warn(it.stringify("Failed to close browser\n")) }
+            closedBrowsers.add(browser)
+        }
+    }
 
     @Synchronized
     fun closeBrowser(browser: Browser) {
@@ -72,6 +81,18 @@ open class BrowserManager(
         val driver = findLeastValuableDriver()
         if (driver != null) {
             closeDriver(driver)
+        }
+    }
+
+    @Synchronized
+    fun destroyZombieBrowsersForcibly() {
+        val zombieBrowsers = createdBrowsers - browsers.values - closedBrowsers
+        if (zombieBrowsers.isNotEmpty()) {
+            logger.warn("There are {} zombie browsers, cleaning them ...", zombieBrowsers.size)
+            zombieBrowsers.forEach { browser ->
+                logger.info("Closing zombie browser {} ...", browser.id)
+                kotlin.runCatching { browser.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
+            }
         }
     }
 
@@ -102,8 +123,10 @@ open class BrowserManager(
     private fun launchIfAbsent(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
-        return _browsers.computeIfAbsent(browserId) {
+        val browser = _browsers.computeIfAbsent(browserId) {
             browserFactory.launch(browserId, launcherOptions, launchOptions)
         }
+        createdBrowsers.add(browser)
+        return  browser
     }
 }

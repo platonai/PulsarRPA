@@ -23,10 +23,11 @@ internal class RobustRPC(
     @Throws(SessionLostException::class)
     fun handleRPCException(e: ChromeRPCException, action: String? = null, url: String? = null) {
         if (rpcFailures.get() > maxRPCFailures) {
+            logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
             throw SessionLostException("Too many RPC failures", driver)
         }
 
-        logger.warn("Chrome RPC exception: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
+        logger.info("Chrome RPC exception: [{}] ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
     }
 
     fun <T> invoke(action: String, block: () -> T): T? {

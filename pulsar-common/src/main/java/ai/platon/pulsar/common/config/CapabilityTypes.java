@@ -295,7 +295,7 @@ public interface CapabilityTypes {
     /**
      * The probability to block urls specified by {@code WebDriver.addBlockedURLs}, between [0, 1]
      * */
-    String BROWSER_URL_BLOCK_PROBABILITY = "browser.url.block.probability";
+    String BROWSER_RESOURCE_BLOCK_PROBABILITY = "browser.url.block.probability";
     String BROWSER_ENABLE_UA_OVERRIDING = "browser.enable.ua.overriding";
     String BROWSER_SPA_MODE = "browser.spa.mode";
     String BROWSER_CHROME_PATH = "browser.chrome.path";

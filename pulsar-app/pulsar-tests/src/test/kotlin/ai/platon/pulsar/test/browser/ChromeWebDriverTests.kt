@@ -156,7 +156,7 @@ class ChromeWebDriverTests: TestBase() {
     fun testClickMatches2() = runWebDriverTest { driver ->
         open(url, driver)
 
-        driver.clickMatches("a[data-hook]", "See all reviews")
+        driver.clickTextMatches("a[data-hook]", "See all reviews")
         driver.waitForNavigation()
         driver.waitForSelector("body")
         // assertNotEquals(url, driver.currentUrl())

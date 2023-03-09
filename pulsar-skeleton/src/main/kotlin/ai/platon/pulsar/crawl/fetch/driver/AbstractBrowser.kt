@@ -45,6 +45,10 @@ abstract class AbstractBrowser(
         // Nothing to do
     }
 
+    override fun destroyForcibly() {
+
+    }
+
     override fun maintain() {
         // Nothing to do
     }

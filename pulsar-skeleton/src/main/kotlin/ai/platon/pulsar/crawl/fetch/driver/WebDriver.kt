@@ -165,12 +165,18 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun addInitScript(script: String)
     /**
-     * Blocks URLs from loading.
+     * Blocks resource URLs from loading.
      *
      * @param urls URL patterns to block. Wildcards ('*') are allowed.
      */
     @Throws(WebDriverException::class)
     suspend fun addBlockedURLs(urls: List<String>)
+    /**
+     * Blocks resource URLs by probability from loading.
+     *
+     * @param urls URL patterns to block.
+     */
+    suspend fun addProbabilityBlockedURLs(urls: List<String>)
     /**
      * Returns the main resource response. In case of multiple redirects, the navigation
      * will resolve with the first non-redirect response.
