@@ -117,8 +117,9 @@ class ProxyEntry(
     /**
      * Check if this proxy is ready to work.
      * TODO: isWorking
+     * Note: idle proxy can still be ready. It's very common to visit a web page for more than 10 minutes.
      * */
-    val isReady get() = !isGone && !isExpired && !isRetired && !isIdle && !isBanned
+    val isReady get() = !isGone && !isExpired && !isRetired && !isBanned
 
     enum class BanState {
         OK, SEGMENT, HOST, OTHER;

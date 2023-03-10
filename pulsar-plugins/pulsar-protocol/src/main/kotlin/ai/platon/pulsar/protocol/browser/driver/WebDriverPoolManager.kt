@@ -170,6 +170,8 @@ open class WebDriverPoolManager(
 
     fun promisedDriverCount(browserId: BrowserId) = driverPoolPool.promisedDriverCount(browserId, poolCapacity)
 
+    fun hasDriverPromise(browserId: BrowserId) = promisedDriverCount(browserId) > 0
+
     fun isRetiredPool(browserId: BrowserId) = retiredDriverPools.contains(browserId)
 
     /**

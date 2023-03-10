@@ -260,7 +260,7 @@ class MultiPrivacyContextManager(
         }
 
         val errorMessage = when {
-            privacyContext.promisedWorkerCount() <= 0 -> {
+            !privacyContext.hasWorkerPromise() -> {
                 "PRIVACY CX NO DRIVER"
             }
             !privacyContext.isActive -> {
@@ -301,6 +301,7 @@ class MultiPrivacyContextManager(
             val idleTimes = activeContexts.values.joinToString { it.idelTime.readable() }
             logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",
                 promisedDrivers, errorMessage, states, idleTimes)
+
         }
 
         delay(2_000)
@@ -362,7 +363,7 @@ class MultiPrivacyContextManager(
 
         val status = result.response.protocolStatus
         when {
-            // TODO: review all retries
+            // TODO: review all retries and cancels
 //            status.isRetry(RetryScope.PRIVACY) -> logPrivacyLeakWarning(privacyContext, result)
             status.isRetry -> logPrivacyLeakWarning(privacyContext, result)
             status.isSuccess -> metrics.successes.mark()

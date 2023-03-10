@@ -62,7 +62,7 @@ open class WebDriverContext(
      * */
     open val isReady: Boolean
         get() {
-            val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.promisedDriverCount(browserId) > 0
+            val isDriverPoolReady = driverPoolManager.isReady && driverPoolManager.hasDriverPromise(browserId)
             return isActive && isDriverPoolReady
         }
 

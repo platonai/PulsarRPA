@@ -118,7 +118,7 @@ abstract class PrivacyContext(
      *
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
-    open val isReady get() = promisedWorkerCount() > 0 && isActive
+    open val isReady get() = hasWorkerPromise() && isActive
 
     open val readableState: String get() {
         return listOf(
@@ -134,6 +134,7 @@ abstract class PrivacyContext(
 
     /**
      * The promised worker count.
+     *
      * The implementation has to tell the caller how many workers it can provide.
      * The number of workers can change immediately after reading, so the caller only has promises
      * but no guarantees.
@@ -141,6 +142,11 @@ abstract class PrivacyContext(
      * @return the number of workers promised.
      * */
     abstract fun promisedWorkerCount(): Int
+
+    /**
+     * Check if the privacy context promises at least one worker to provide.
+     * */
+    fun hasWorkerPromise() = promisedWorkerCount() > 0
 
     /**
      * Mark a success task.
