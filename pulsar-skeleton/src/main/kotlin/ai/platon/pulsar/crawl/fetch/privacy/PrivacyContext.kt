@@ -21,9 +21,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A privacy context will be closed once it is leaked.
+ * A privacy context is a standalone agent to the target website, it will be closed once it is leaked.
  *
  * One of the biggest difficulties in web scraping tasks is the bot stealth.
+ *
  * For web scraping tasks, the website should have no idea whether a visit is
  * from a human being or a bot. Once a page visit is suspected by the website,
  * which we call a privacy leak, the privacy context has to be dropped,
@@ -117,7 +118,7 @@ abstract class PrivacyContext(
      *
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
-    open val isReady get() = promisedDriverCount() > 0 && isActive
+    open val isReady get() = promisedWorkerCount() > 0 && isActive
 
     open val readableState: String get() {
         return listOf(
@@ -131,24 +132,44 @@ abstract class PrivacyContext(
         globalMetrics.contexts.mark()
     }
 
-    abstract fun promisedDriverCount(): Int
+    /**
+     * The promised worker count.
+     * The implementation has to tell the caller how many workers it can provide.
+     * The number of workers can change immediately after reading, so the caller only has promises
+     * but no guarantees.
+     *
+     * @return the number of workers promised.
+     * */
+    abstract fun promisedWorkerCount(): Int
 
+    /**
+     * Mark a success task.
+     * */
     fun markSuccess() {
         privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
         meterSuccesses.mark()
         globalMetrics.successes.mark()
     }
 
+    /**
+     * Mark a warning.
+     * */
     fun markWarning() {
         privacyLeakWarnings.incrementAndGet()
         globalMetrics.leakWarnings.mark()
     }
 
+    /**
+     * Mark n warnings.
+     * */
     fun markWarning(n: Int) {
         privacyLeakWarnings.addAndGet(n)
         globalMetrics.leakWarnings.mark(n.toLong())
     }
 
+    /**
+     * Mark a minor warnings.
+     * */
     fun markMinorWarning() {
         privacyLeakMinorWarnings.incrementAndGet()
         globalMetrics.minorLeakWarnings.mark()
@@ -158,19 +179,40 @@ abstract class PrivacyContext(
         }
     }
 
+    /**
+     * Mark the privacy context as leaked. A leaked privacy context should not serve anymore, 
+     * and will be closed soon.
+     * */
     fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
 
+    /**
+     * Run a task in the privacy context and record the status.
+     *
+     * @param task the fetch task
+     * @param fetchFun the fetch function
+     * @return the fetch result
+     * */
     @Throws(ProxyException::class)
-    open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+    open suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
-        val result = doRun(task, browseFun)
+        val result = doRun(task, fetchFun)
         afterRun(result)
         return result
     }
 
+    /**
+     * Run a task in the privacy context.
+     *
+     * @param task the fetch task
+     * @param fetchFun the fetch function
+     * @return the fetch result
+     * */
     @Throws(ProxyException::class)
-    abstract suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
+    abstract suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
+    /**
+     * Do the maintaining jobs.
+     * */
     abstract fun maintain()
 
     override fun compareTo(other: PrivacyContext) = id.compareTo(other.id)

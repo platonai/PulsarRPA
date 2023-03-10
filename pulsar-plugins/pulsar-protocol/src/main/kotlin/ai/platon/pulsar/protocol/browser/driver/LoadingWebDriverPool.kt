@@ -20,7 +20,6 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import javax.naming.InsufficientResourcesException
 
 /**
  * Created by vincent on 18-1-1.
@@ -324,32 +323,33 @@ class LoadingWebDriverPool constructor(
     }
 
     /**
-     * Check if we should create a web driver.
+     * Check if we should create a new web driver.
      * */
     private fun shouldCreateWebDriver(): Boolean {
         // Using the count of non-quit drivers can better match the memory consumption,
         // but it's easy to wrongly count the quit drivers, a tiny bug can lead to a big mistake.
         // We leave a debug log here for diagnosis purpose.
-        val onlineDriverCount1 = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
-        val onlineDriverCount2 = statefulDriverPool.workingDrivers.size + statefulDriverPool.standbyDrivers.size
-        if (onlineDriverCount1 != onlineDriverCount2) {
-            logger.warn("Inconsistent online driver status: {}/{}/{}",
-                numDriverSlots, onlineDriverCount2, onlineDriverCount1)
+        val activeDriversInBrowser = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
+        // Number of active drivers in this driver pool
+        val activeDriversInPool = statefulDriverPool.workingDrivers.size + statefulDriverPool.standbyDrivers.size
+        if (activeDriversInBrowser != activeDriversInPool) {
+            logger.warn("Inconsistent online driver status: {}/{}/{} (slots/activeP/activeB)",
+                numDriverSlots, activeDriversInPool, activeDriversInBrowser)
         }
 
         val isCriticalResources = AppSystemInfo.isCriticalResources
-        if (onlineDriverCount2 >= capacity) {
+        if (activeDriversInPool >= capacity) {
             // should also: numDriverSlots > 0
-            logger.debug("Enough online drivers: {}/{}/{}, will not create new one",
-                numDriverSlots, onlineDriverCount2, onlineDriverCount1)
+            logger.debug("Enough online drivers: {}/{}/{} (slots/activeP/activeB), will not create new one",
+                numDriverSlots, activeDriversInPool, activeDriversInBrowser)
         } else if (isCriticalResources) {
-            logger.info("Critical resource. CPU: {}, memory: {}, ..., {}/{}/{}, will not create new driver",
+            logger.info("Critical resource. CPU: {}, memory: {}, .... {}/{}/{} (slots/activeP/activeB), will not create new driver",
                 AppSystemInfo.systemCpuLoad, Strings.compactFormat(AppSystemInfo.availableMemory),
-                numDriverSlots, onlineDriverCount2, onlineDriverCount1
+                numDriverSlots, activeDriversInPool, activeDriversInBrowser
             )
         }
 
-        return isActive && !isCriticalResources && onlineDriverCount2 < capacity
+        return isActive && !isCriticalResources && activeDriversInPool < capacity
     }
 
     @Throws(BrowserLaunchException::class)

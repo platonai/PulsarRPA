@@ -40,7 +40,17 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     val isActive get() = !isClosed && AppContext.isActive
 
     /**
-     * Run a task within this privacy manager
+     * Run a task in a privacy context.
+     *
+     * The privacy context is selected from the active privacy context pool,
+     * and it is supposed to have at least one ready web driver to run the task.
+     *
+     * If the privacy context chosen is not ready to serve, especially, it has no any ready web driver,
+     * the task will be canceled.
+     *
+     * @param task the fetch task
+     * @param fetchFun the fetch function
+     * @return the fetch result
      * */
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 

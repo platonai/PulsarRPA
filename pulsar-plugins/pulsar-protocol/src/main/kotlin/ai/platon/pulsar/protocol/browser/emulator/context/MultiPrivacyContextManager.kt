@@ -71,9 +71,15 @@ class MultiPrivacyContextManager(
     /**
      * Run a task in a privacy context.
      *
-     * The privacy context is selected from the active privacy context pool.
-     * The privacy context is supposed to have at least one ready web driver to run the task.
-     * If the privacy context has no any ready web driver, the task will be canceled.
+     * The privacy context is selected from the active privacy context pool,
+     * and it is supposed to have at least one ready web driver to run the task.
+     *
+     * If the privacy context chosen is not ready to serve, especially, it has no any ready web driver,
+     * the task will be canceled.
+     *
+     * @param task the fetch task
+     * @param fetchFun the fetch function
+     * @return the fetch result
      * */
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         metrics.tasks.mark()
@@ -91,6 +97,9 @@ class MultiPrivacyContextManager(
         return result
     }
 
+    /**
+     * Create a privacy context who is not added to the context list.
+     * */
     @Throws(ProxyException::class)
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, id)
@@ -102,10 +111,23 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     * If the number of privacy contexts does not exceed the upper limit, create a new one,
-     * otherwise return the next active context.
+     * Try to get a ready privacy context.
      *
-     * If a context is inactive, close it.
+     * If the total number of active contexts is less than the maximum number allowed,
+     * a new privacy context will be created.
+     *
+     * If a privacy context obtain from the active context list is inactive, close it and
+     * create a new one immediately, and return the new one.
+     *
+     * This method can return a non-ready privacy context, in which case, the task will be canceled.
+     *
+     * A ready privacy context is:
+     * 1. is active
+     * 2. [requirement removed] not idle
+     * 3. the associated driver pool promises to provide an available driver (but the promise can be failed)
+     *
+     * @param fingerprint The fingerprint of this privacy context.
+     * @return A privacy context which is promised to be ready.
      * */
     @Throws(ProxyException::class)
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
@@ -122,8 +144,20 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     * If the number of privacy contexts does not exceed the upper limit, create a new one,
-     * otherwise return the next one.
+     * Try to get a ready privacy context.
+     *
+     * If the total number of active contexts is less than the maximum number allowed,
+     * a new privacy context will be created.
+     *
+     * This method can return a non-ready privacy context, in which case, the task will be canceled.
+     *
+     * A ready privacy context is:
+     * 1. is active
+     * 2. [requirement removed] not idle
+     * 3. the associated driver pool promises to provide an available driver (but the promise can be failed)
+     *
+     * @param fingerprint The fingerprint of this privacy context.
+     * @return A privacy context which is promised to be ready.
      * */
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(activeContexts) {
@@ -177,8 +211,10 @@ class MultiPrivacyContextManager(
      *
      * A ready privacy context is:
      * 1. is active
-     * 2. not idle
-     * 3. the associated driver pool promises to provide an available driver (but can be failed)
+     * 2. [requirement removed] not idle
+     * 3. the associated driver pool promises to provide an available driver (but the promise can be failed)
+     *
+     * @return A privacy context which is promised to be ready.
      * */
     private fun tryNextReadyPrivacyContext(): PrivacyContext {
         var n = activeContexts.size
@@ -188,7 +224,7 @@ class MultiPrivacyContextManager(
             pc = iterator.next()
         }
 
-        // TODO: subscribe a web driver and no other thread can use it
+        // TODO: subscribe a web driver and no other thread can use it, a possible approach is to take the driver's id
         return pc
     }
 
@@ -224,7 +260,7 @@ class MultiPrivacyContextManager(
         }
 
         val errorMessage = when {
-            privacyContext.promisedDriverCount() <= 0 -> {
+            privacyContext.promisedWorkerCount() <= 0 -> {
                 "PRIVACY CX NO DRIVER"
             }
             !privacyContext.isActive -> {
@@ -260,7 +296,7 @@ class MultiPrivacyContextManager(
         if (Duration.between(driverAbsenceReportTime, now).seconds > 10) {
             driverAbsenceReportTime = now
 
-            val promisedDrivers = activeContexts.values.joinToString { it.promisedDriverCount().toString() }
+            val promisedDrivers = activeContexts.values.joinToString { it.promisedWorkerCount().toString() }
             val states = activeContexts.values.joinToString { it.readableState }
             val idleTimes = activeContexts.values.joinToString { it.idelTime.readable() }
             logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",
