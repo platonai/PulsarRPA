@@ -19,15 +19,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
-    private val isClosed get() = closed.get()
 
     private val closeStrategy get() = conf.get(PRIVACY_CONTEXT_CLOSE_LAZY, CloseStrategy.ASAP.name)
 
     private val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
-
-    open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
-
-    val isActive get() = !closed.get() && AppContext.isActive
 
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
 
@@ -37,6 +32,12 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
 
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
+
+    open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
+
+    val isClosed get() = closed.get()
+
+    val isActive get() = !isClosed && AppContext.isActive
 
     /**
      * Run a task within this privacy manager
@@ -65,6 +66,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     /**
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
+     * No exception.
      * */
     open fun close(privacyContext: PrivacyContext) {
         kotlin.runCatching { doClose(privacyContext) }.onFailure { logger.warn(it.stringify()) }
@@ -73,6 +75,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
      * */
+    @Throws(Exception::class)
     private fun doClose(privacyContext: PrivacyContext) {
         if (logger.isDebugEnabled) {
             logger.debug("Closing privacy context | {}", privacyContext.id)

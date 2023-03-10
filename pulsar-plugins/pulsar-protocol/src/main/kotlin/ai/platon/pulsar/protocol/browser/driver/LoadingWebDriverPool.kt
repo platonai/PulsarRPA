@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppSystemInfo
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -19,6 +20,7 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import javax.naming.InsufficientResourcesException
 
 /**
  * Created by vincent on 18-1-1.
@@ -137,23 +139,25 @@ class LoadingWebDriverPool constructor(
         val numClosed: Int,
         val isRetired: Boolean,
         val isIdle: Boolean,
-        val idleTime: Duration
+        val idleTime: Duration,
+        val lackOfResources: Boolean = AppSystemInfo.isCriticalResources
     ) {
         fun format(verbose: Boolean): String {
             val status = if (verbose) {
                 String.format(
-                    "active: %d, free: %d, waiting: %d, working: %d, slots: %d, retired: %d, closed: %d",
+                    "active: %d, standby: %d, waiting: %d, working: %d, slots: %d, retired: %d, closed: %d",
                     numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
                 )
             } else {
                 String.format(
-                    "%d/%d/%d/%d/%d/%d/%d (active/free/waiting/working/slots/retired/closed)",
+                    "%d/%d/%d/%d/%d/%d/%d (active/standby/waiting/working/slots/retired/closed)",
                     numActive, numStandby, numWaiting, numWorking, numDriverSlots, numRetired, numClosed
                 )
             }
 
             val time = idleTime.readable()
             return when {
+                lackOfResources -> "[Lack of resource] | $status"
                 isIdle -> "[Idle] $time | $status"
                 isRetired -> "[Retired] | $status"
                 else -> status
@@ -319,17 +323,33 @@ class LoadingWebDriverPool constructor(
         }
     }
 
+    /**
+     * Check if we should create a web driver.
+     * */
     private fun shouldCreateWebDriver(): Boolean {
-        // TODO: using count of non-quit drivers can properly handle the memory, but it seems there are bugs to count.
+        // Using the count of non-quit drivers can better match the memory consumption,
+        // but it's easy to wrongly count the quit drivers, a tiny bug can lead to a big mistake.
+        // We leave a debug log here for diagnosis purpose.
         val onlineDriverCount1 = _browser?.drivers?.values?.count { !it.isQuit } ?: 0
         val onlineDriverCount2 = statefulDriverPool.workingDrivers.size + statefulDriverPool.standbyDrivers.size
-        if (onlineDriverCount2 >= capacity) {
-            // should also: numDriverSlots > 0
-            logger.info("Enough online drivers: {}/{}/{}, will not create new one",
+        if (onlineDriverCount1 != onlineDriverCount2) {
+            logger.warn("Inconsistent online driver status: {}/{}/{}",
                 numDriverSlots, onlineDriverCount2, onlineDriverCount1)
         }
 
-        return isActive && !AppSystemInfo.isCriticalResources && onlineDriverCount2 < capacity
+        val isCriticalResources = AppSystemInfo.isCriticalResources
+        if (isCriticalResources) {
+            logger.info("Critical resource. CPU: {}, memory: {}, ..., will not create new driver",
+                AppSystemInfo.systemCpuLoad, Strings.compactFormat(AppSystemInfo.availableMemory))
+        }
+
+        if (onlineDriverCount2 >= capacity) {
+            // should also: numDriverSlots > 0
+            logger.debug("Enough online drivers: {}/{}/{}, will not create new one",
+                numDriverSlots, onlineDriverCount2, onlineDriverCount1)
+        }
+
+        return isActive && !isCriticalResources && onlineDriverCount2 < capacity
     }
 
     @Throws(BrowserLaunchException::class)

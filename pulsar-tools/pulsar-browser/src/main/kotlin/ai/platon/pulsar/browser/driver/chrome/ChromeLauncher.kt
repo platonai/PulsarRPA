@@ -272,8 +272,10 @@ class ChromeLauncher(
     private fun cleanUp() {
         val target = userDataDir
 
+        // seems safe enough to delete directory matching special pattern
+        val forceDelete = target.toString().matches(".+pulsar-.+/context/cx.+".toRegex())
         // delete user data dir only if it's in the system tmp dir to prevent deleting files by mistake
-        if (target.startsWith(AppPaths.SYS_TMP_DIR)) {
+        if (forceDelete || target.startsWith(AppPaths.SYS_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
                 logger.warn("Failed to delete browser cache, try again | {}", target)

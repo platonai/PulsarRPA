@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.impl
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.collect.DelayUrl
-import ai.platon.pulsar.common.config.AppConstants.*
+import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
@@ -43,6 +43,7 @@ private class StreamingCrawlerMetrics {
     private val registry = AppMetrics.defaultMetricRegistry
 
     val retries = registry.multiMetric(this, "retries")
+    val cancels = registry.multiMetric(this, "cancels")
     val gone = registry.multiMetric(this, "gone")
     val tasks = registry.multiMetric(this, "tasks")
     val successes = registry.multiMetric(this, "successes")
@@ -51,7 +52,6 @@ private class StreamingCrawlerMetrics {
     val fetchSuccesses = registry.multiMetric(this, "fetchSuccesses")
 
     val drops = registry.meter(this, "drops")
-    val processing = registry.meter(this, "processing")
     val timeouts = registry.meter(this, "timeouts")
 }
 
@@ -101,6 +101,9 @@ open class StreamingCrawler(
         private val isIllegalApplicationState = AtomicBoolean()
 
         private var wrongDistrict = AppMetrics.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
+
+        private val hasLoadResourceLock = ReentrantLock()
+        private val hasLoadResourceCondition = hasLoadResourceLock.newCondition()
 
         init {
             mapOf(
@@ -225,7 +228,8 @@ open class StreamingCrawler(
                 )
 
                 // The largest disk must have at least 10 GiB remaining space
-                val freeSpace = Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
+                val freeSpace =
+                    Runtimes.unallocatedDiskSpaces().maxOfOrNull { ByteUnitConverter.convert(it, "G") } ?: 0.0
                 if (freeSpace < 10.0) {
                     logger.error("Disk space is full!")
                     criticalWarning = CriticalWarning.OUT_OF_DISK_STORAGE
@@ -290,13 +294,7 @@ open class StreamingCrawler(
     private suspend fun runWithStatusCheck(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
 
-        while (isActive && globalRunningTasks.get() >= fetchConcurrency) {
-            if (j % 120 == 0) {
-                logger.info("$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
-                    idleTime.readable())
-            }
-            delay(500L + Random.nextInt(500))
-        }
+        delayIfEstimatedNoLoadResource(j)
 
         while (isActive && AppSystemInfo.isCriticalCPULoad) {
             criticalWarning = CriticalWarning.HIGH_CPU_LOAD
@@ -340,17 +338,20 @@ open class StreamingCrawler(
             return flowState
         }
 
+        delayIfEstimatedNoLoadResource(j)
+
         criticalWarning = null
 
         val context = Dispatchers.Default + CoroutineName("w")
         val urlSpec = UrlUtils.splitUrlArgs(url.url).first
-        val isAppActive = isActive
-        // must increase before launch because we have to control the number of running tasks
+        // We must increase the number before the task is actually launched in a coroutine,
+        // otherwise, it's easy to grow larger than fetchConcurrency.
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
-            if (!isAppActive) {
-                return@launch
-            }
+            // We can only estimate whether there are resources in the underlying layer to serve the task,
+            // which is not always correct. If the estimation is wrong, the underlying layer will return a
+            // retry result.
+            delayIfEstimatedNoLoadResource(j)
 
             try {
                 globalMetrics.tasks.mark()
@@ -368,7 +369,29 @@ open class StreamingCrawler(
         return flowState
     }
 
+    /**
+     * Delay if there is no resource to load a new task.
+     * Running task has to be no more than the available web drivers.
+     * */
+    private suspend fun delayIfEstimatedNoLoadResource(j: Int, maxTry: Int = 1000) {
+        var k = 0
+        while (isActive && ++k < maxTry && globalRunningTasks.get() >= fetchConcurrency) {
+            if (j % 120 == 0) {
+                logger.info(
+                    "$j. Long time to run $globalRunningTasks tasks | $lastActiveTime -> {}",
+                    idleTime.readable()
+                )
+            }
+            val timeMillis = 500L + Random.nextInt(500)
+            delay(timeMillis)
+        }
+    }
+
     private suspend fun runLoadTaskWithEventHandlers(url: UrlAware) {
+        if (!isActive) {
+            return
+        }
+
         emit(CrawlEvents.willLoad, url)
 
         if (url is ListenableUrl && url is DegenerateUrl) {
@@ -399,8 +422,10 @@ open class StreamingCrawler(
             }
         } catch (e: TimeoutCancellationException) {
             globalMetrics.timeouts.mark()
-            logger.info("{}. Task timeout ({}) to load page, thrown by [withTimeout] | {}",
-                globalMetrics.timeouts.count, timeout, url)
+            logger.info(
+                "{}. Task timeout ({}) to load page, thrown by [withTimeout] | {}",
+                globalMetrics.timeouts.count, timeout, url
+            )
         } catch (e: Throwable) {
             when {
                 // The following exceptions can be caught as a Throwable but not the concrete exception,
@@ -411,9 +436,11 @@ open class StreamingCrawler(
                     }
                     flowState = FlowState.BREAK
                 }
+
                 e.javaClass.name.contains("DriverLaunchException") -> {
                     logger.warn(e.message)
                 }
+
                 else -> {
                     logger.warn("[Unexpected]", e)
                 }
@@ -447,11 +474,14 @@ open class StreamingCrawler(
         globalMetrics.successes.mark()
     }
 
+    /**
+     * Find a proper strategy to retry the task.
+     * */
     private fun handleRetry(url: UrlAware, page: WebPage?) {
         when {
             !isActive -> return
-            page == null -> handleRetry0(url, page)
-            page.isCanceled -> handleRetry0(url, page)
+            page == null -> handleRetry0(url, null)
+            page.isCanceled -> handleCanceled(url, page)
             page.protocolStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
@@ -498,21 +528,28 @@ open class StreamingCrawler(
                 }
                 return FlowState.BREAK
             }
+
             is ProxyInsufficientBalanceException -> {
                 proxyOutOfService++
                 logger.warn("{}. {}", proxyOutOfService, e.message)
             }
+
             is ProxyVendorUntrustedException -> {
                 logger.warn("Proxy is untrusted | {}", e.message)
                 return FlowState.BREAK
             }
+
             is ProxyException -> {
                 logger.warn("[Unexpected] proxy exception | {}", e.brief())
             }
+
             is TimeoutCancellationException -> {
-                logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout]. {} | {}",
-                    e.brief(), url)
+                logger.warn(
+                    "[Timeout] Coroutine was cancelled, thrown by [withTimeout]. {} | {}",
+                    e.brief(), url
+                )
             }
+
             is CancellationException -> {
                 // Has to come after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
@@ -520,9 +557,11 @@ open class StreamingCrawler(
                 }
                 return FlowState.BREAK
             }
+
             is IllegalStateException -> {
                 logger.warn("Illegal state", e)
             }
+
             else -> throw e
         }
 
@@ -540,9 +579,14 @@ open class StreamingCrawler(
         return false
     }
 
+    private fun handleCanceled(url: UrlAware, page: WebPage?) {
+        globalMetrics.cancels.mark()
+        val delay = page?.retryDelay?.takeIf { !it.isZero } ?: Duration.ofSeconds(10)
+        fetchDelayed(url, delay)
+    }
+
     private fun handleRetry0(url: UrlAware, page: WebPage?) {
         val nextRetryNumber = 1 + (page?.fetchRetries ?: 0)
-
         if (page != null && nextRetryNumber > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()

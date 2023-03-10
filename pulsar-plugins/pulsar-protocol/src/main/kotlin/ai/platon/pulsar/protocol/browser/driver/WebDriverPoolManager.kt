@@ -227,29 +227,26 @@ open class WebDriverPoolManager(
     /**
      * Maintain the driver pools
      * */
+    @Throws(Exception::class)
     fun maintain() {
         if (tooFrequentMaintenance) {
             return
         }
 
-        try {
-            // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
-            driverPoolCloser.closeOldestRetiredDriverPoolSafely()
-            // review closed driver pools, if
-            driverPoolCloser.closeUnexpectedActiveBrowsers()
+        // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
+        driverPoolCloser.closeOldestRetiredDriverPoolSafely()
+        // close unexpected active browsers
+        driverPoolCloser.closeUnexpectedActiveBrowsers()
 
-            /**
-             * Check if there is zombie browsers who are not in active browser list nor in closed browser list,
-             * if there are some of such browsers, write warnings and destroy them.
-             * */
-            browserManager.destroyZombieBrowsersForcibly()
+        /**
+         * Check if there is zombie browsers who are not in active browser list nor in closed browser list,
+         * if there are some of such browsers, write warnings and destroy them.
+         * */
+        browserManager.destroyZombieBrowsersForcibly()
 
-            // Preempt the channel to ensure consistency
-            preempt {
-                driverPoolCloser.closeIdleDriverPoolsSafely()
-            }
-        } catch (e: Exception) {
-            logger.warn(e.stringify())
+        // Preempt the channel to ensure consistency
+        preempt {
+            driverPoolCloser.closeIdleDriverPoolsSafely()
         }
     }
 

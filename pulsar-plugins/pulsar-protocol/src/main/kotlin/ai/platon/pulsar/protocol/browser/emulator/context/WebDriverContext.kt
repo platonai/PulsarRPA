@@ -100,9 +100,10 @@ open class WebDriverContext(
         }
     }
 
+    @Throws(Exception::class)
     open fun maintain() {
         // close dead, valueless, idle driver pools, etc
-        kotlin.runCatching { driverPoolManager.maintain() }.onFailure { logger.warn(it.stringify()) }
+        driverPoolManager.maintain()
     }
 
     /**

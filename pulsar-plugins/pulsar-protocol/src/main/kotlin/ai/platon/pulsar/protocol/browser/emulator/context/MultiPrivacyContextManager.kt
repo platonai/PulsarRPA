@@ -21,9 +21,12 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 class MultiPrivacyContextManager(
     val driverPoolManager: WebDriverPoolManager,
@@ -37,6 +40,8 @@ class MultiPrivacyContextManager(
         val tasks = registry.multiMetric(this, "tasks")
         val successes = registry.multiMetric(this, "successes")
         val finishes = registry.multiMetric(this, "finishes")
+
+        val illegalDrivers = registry.meter(this, "illegalDrivers")
     }
 
     companion object {
@@ -50,9 +55,11 @@ class MultiPrivacyContextManager(
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
+    private val maintainCount = AtomicInteger()
     private val lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
+    private val maintainService = Executors.newSingleThreadExecutor()
 
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
@@ -70,10 +77,17 @@ class MultiPrivacyContextManager(
             return FetchResult.canceled(task)
         }
 
+        if (metrics.illegalDrivers.oneMinuteRate > 30) {
+            // TODO: delay in upper layer
+            delay(1000)
+            return FetchResult.canceled(task, "Too many illegal drivers")
+        }
+
         val privacyContext = computeNextContext(task.fingerprint)
         val result = runIfPrivacyContextReady(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
-        kotlin.runCatching { maintain() }.onFailure { logger.warn(it.stringify()) }
+        // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not work.
+        maintainService.submit { maintain() }
 
         return result
     }
@@ -119,7 +133,7 @@ class MultiPrivacyContextManager(
             }
 
 //            return iterator.next()
-            return nextReadyPrivacyContext()
+            return tryNextReadyPrivacyContext()
         }
     }
 
@@ -138,6 +152,10 @@ class MultiPrivacyContextManager(
             return
         }
 
+        if (maintainCount.getAndIncrement() == 0) {
+            logger.info("Maintaining service is started")
+        }
+
         closeDyingContexts()
 
         // and then check the active context list
@@ -146,13 +164,24 @@ class MultiPrivacyContextManager(
         }
     }
 
+    override fun close() {
+        if (!isClosed) {
+            kotlin.runCatching { maintainService.shutdownNow() }.onFailure { logger.warn(it.stringify()) }
+        }
+
+        super.close()
+    }
+
     /**
+     * Try to get the next ready privacy context.
+     * This method can fail and a non-ready privacy context returns.
+     *
      * A ready privacy context is:
      * 1. is active
      * 2. not idle
      * 3. the associated driver pool promises to provide an available driver (but can be failed)
      * */
-    private fun nextReadyPrivacyContext(): PrivacyContext {
+    private fun tryNextReadyPrivacyContext(): PrivacyContext {
         var n = activeContexts.size
 
         var pc = iterator.next()
@@ -202,29 +231,31 @@ class MultiPrivacyContextManager(
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext | ${privacyContext.javaClass}")
         }
 
-        val message = when {
+        val errorMessage = when {
             privacyContext.promisedDriverCount() <= 0 -> {
-                "No available driver temporary"
+                "PRIVACY CX NO DRIVER"
             }
             !privacyContext.isActive -> {
                 logger.warn("[Unexpected] Privacy is inactive, inability to perform tasks, closing it now")
                 close(privacyContext)
-                "Privacy context temporary unavailable - inactive"
+                "PRIVACY CX NOT INACTIVE"
             }
             privacyContext.isIdle -> {
                 logger.warn("[Unexpected] Privacy is idle, inability to perform tasks, closing it now")
                 close(privacyContext)
-                "Privacy context temporary unavailable - idle"
+                "PRIVACY CX IDLE"
             }
             !privacyContext.isReady -> {
-                "Privacy context temporary unavailable - not ready"
+                "PRIVACY CX NOT READY"
             }
-            else -> ""
+            else -> null
         }
 
-        return if (message.isNotBlank()) {
-            val delay = Duration.ofSeconds(10)
-            FetchResult.crawlRetry(task, delay, ServiceTemporaryUnavailableException(message))
+        return if (errorMessage != null) {
+            metrics.illegalDrivers.mark()
+//            val delay = Duration.ofSeconds(10)
+//            FetchResult.crawlRetry(task, delay, errorMessage)
+            FetchResult.canceled(task, errorMessage)
         } else runAndUpdate(privacyContext, task, fetchFun)
     }
 

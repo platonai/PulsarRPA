@@ -140,7 +140,7 @@ abstract class PrivacyContext(
 
     fun markWarning(n: Int) {
         privacyLeakWarnings.addAndGet(n)
-        globalMetrics.leakWarnings.inc(n.toLong())
+        globalMetrics.leakWarnings.mark(n.toLong())
     }
 
     fun markMinorWarning() {

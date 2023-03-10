@@ -154,7 +154,7 @@ class FetchResult(
     val isSuccess get() = status.isSuccess
     val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
     val isCrawlRetry get() = status.isRetry(RetryScope.CRAWL)
-    val isSmall get() = status.args[ProtocolStatus.ARG_RETRY_REASON] == HtmlIntegrity.TOO_SMALL.toString()
+    val isSmall get() = status.retryReason.toString() == HtmlIntegrity.TOO_SMALL.toString()
 
     fun canceled() {
         response = ForwardingResponse.canceled(task.page)
@@ -173,6 +173,7 @@ class FetchResult(
         fun unchanged(task: FetchTask) = FetchResult(task, ForwardingResponse.unchanged(task.page))
         fun unfetched(task: FetchTask) = FetchResult(task, ForwardingResponse.unfetched(task.page))
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
+        fun canceled(task: FetchTask, reason: String) = FetchResult(task, ForwardingResponse.canceled(task.page, reason))
         fun retry(task: FetchTask, retryScope: RetryScope, reason: String) =
             FetchResult(task, ForwardingResponse.retry(task.page, retryScope, reason))
 

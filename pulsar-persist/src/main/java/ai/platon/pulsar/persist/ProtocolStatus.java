@@ -30,7 +30,12 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
     public static final String ARG_URL = "url";
     public static final String ARG_RETRY_SCOPE = "rsp";
+    /**
+     * @deprecated Use ARG_REASON instead
+     * */
+    @Deprecated
     public static final String ARG_RETRY_REASON = "rrs";
+    public static final String ARG_REASON = "rs";
 
     /**
      * Content was not retrieved yet.
@@ -144,13 +149,14 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
         return failed(ProtocolStatusCodes.RETRY,
                 ARG_RETRY_SCOPE, scope,
-                ARG_RETRY_REASON, reasonString
+                ARG_REASON, reasonString
         );
     }
 
     @Nonnull
-    public static ProtocolStatus cancel(Object... args) {
-        return failed(ProtocolStatusCodes.CANCELED, args);
+    public static ProtocolStatus cancel(Object reason) {
+        return failed(ProtocolStatusCodes.CANCELED,
+                ARG_REASON, reason);
     }
 
     @Nonnull
@@ -213,7 +219,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     }
 
     /**
-     * If a fetch task is canceled, do not update the page status
+     * If a fetch task is canceled, the page status will not be change
      * */
     public boolean isCanceled() {
         return getMinorCode() == CANCELED;
@@ -249,7 +255,20 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         } else {
             reasonString = reason.toString();
         }
-        return isRetry(scope) && getArgOrElse(ARG_RETRY_REASON, "").equals(reasonString);
+
+        if (!isRetry(scope)) {
+            return false;
+        }
+
+        if (getArgOrElse(ARG_RETRY_REASON, "").equals(reasonString)) {
+            return true;
+        }
+
+        if (getArgOrElse(ARG_REASON, "").equals(reasonString)) {
+            return true;
+        }
+
+        return false;
     }
 
     public boolean isTempMoved() {
@@ -315,9 +334,22 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getArgs().get(ARG_RETRY_SCOPE);
     }
 
+    /**
+     * @deprecated Use getReason instead
+     * */
+    @Deprecated
     @Nullable
     public Object getRetryReason() {
-        return getArgs().get(ARG_RETRY_REASON);
+        Object reason = getArgs().get(ARG_REASON);
+        if (reason == null) {
+            reason = getArgs().get(ARG_RETRY_REASON);
+        }
+        return reason;
+    }
+
+    @Nullable
+    public Object getReason() {
+        return getArgs().get(ARG_REASON);
     }
 
     public void upgradeRetry(RetryScope scope) {
@@ -329,7 +361,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         String minorName = minorCodes.getOrDefault(getMinorCode(), "Unknown");
         String str = minorName + "(" + getMinorCode() + ")";
         if (!getArgs().isEmpty()) {
-            List<String> keys = List.of(ARG_RETRY_SCOPE, ARG_RETRY_REASON, ARG_HTTP_CODE);
+            List<String> keys = List.of(ARG_RETRY_SCOPE, ARG_REASON, ARG_RETRY_REASON, ARG_HTTP_CODE);
             String args = getArgs().entrySet().stream()
                     .filter(e -> keys.contains(e.getKey().toString()))
                     .map(e -> e.getKey() + ": " + e.getValue())

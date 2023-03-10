@@ -51,6 +51,7 @@ open class ForwardingResponse(
 
         // TODO: define the difference between a canceled task and a retry task
         fun canceled(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
+        fun canceled(page: WebPage, reason: String) = ForwardingResponse(ProtocolStatus.cancel(reason), page)
 
         fun retry(page: WebPage, retryScope: RetryScope, reason: String) = ForwardingResponse(retryScope, reason, page)
         fun retry(page: WebPage, retryScope: RetryScope, retryReason: Exception) = ForwardingResponse(retryScope, retryReason, page)

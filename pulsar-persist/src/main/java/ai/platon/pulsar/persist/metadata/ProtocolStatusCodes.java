@@ -163,7 +163,7 @@ public interface ProtocolStatusCodes {
      */
     int RETRY = 1601;
     /**
-     * The fetch task is canceled, the result is discarded despite success or error
+     * If the fetch task is canceled, the result will be discarded despite success or failed.
      */
     int CANCELED = 1602;
 }

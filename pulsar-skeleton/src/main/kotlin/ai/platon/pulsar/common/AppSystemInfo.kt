@@ -32,7 +32,11 @@ class AppSystemInfo {
 
         val isCriticalCPULoad get() = systemCpuLoad > CRITICAL_CPU_THRESHOLD
 
-
+        /**
+         * An array of the system load averages for 1, 5, and 15 minutes
+         * with the size of the array specified by nelem; or negative values if not available.
+         * */
+        val systemLoadAverage get() = systemInfo.hardware.processor.getSystemLoadAverage(3)
 
         /**
          * Free memory in bytes.
@@ -83,18 +87,15 @@ class AppSystemInfo {
         private fun computeSystemCpuLoad(): Double {
             val processor = systemInfo.hardware.processor
 
-            // Returns the "recent cpu usage" for the whole system by counting ticks
-            val cpuLoad = processor.getSystemCpuLoadBetweenTicks(prevCPUTicks)
-            // Get System-wide CPU Load tick counters. Returns an array with seven elements
-            // representing milliseconds spent in User (0), Nice (1), System (2), Idle (3), IOwait (4),
-            // Hardware interrupts (IRQ) (5), Software interrupts/DPC (SoftIRQ) (6), or Steal (7) states.
-            prevCPUTicks = processor.systemCpuLoadTicks
-//            println(String.format("cpuLoad: %.2f%%", cpuLoad))
-
-//            val systemLoadAverage = processor.getSystemLoadAverage(3).joinToString()
-//            println("Sys: $systemLoadAverage")
-
-            return cpuLoad
+            synchronized(prevCPUTicks) {
+                // Returns the "recent cpu usage" for the whole system by counting ticks
+                val cpuLoad = processor.getSystemCpuLoadBetweenTicks(prevCPUTicks)
+                // Get System-wide CPU Load tick counters. Returns an array with seven elements
+                // representing milliseconds spent in User (0), Nice (1), System (2), Idle (3), IOwait (4),
+                // Hardware interrupts (IRQ) (5), Software interrupts/DPC (SoftIRQ) (6), or Steal (7) states.
+                prevCPUTicks = processor.systemCpuLoadTicks
+                return cpuLoad
+            }
         }
     }
 }
