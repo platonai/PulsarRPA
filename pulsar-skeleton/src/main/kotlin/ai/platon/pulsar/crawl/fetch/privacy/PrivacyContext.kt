@@ -39,7 +39,7 @@ abstract class PrivacyContext(
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         val PROTOTYPE_CONTEXT_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
         val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
-        val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(20)
+        val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
     }
@@ -81,12 +81,10 @@ abstract class PrivacyContext(
         get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
     private val privacyContextIdleTimeout
         get() = conf.getDuration(PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
-    private val idleTimeout
-        get() = when {
-            privacyContextIdleTimeout > fetchTaskTimeout -> privacyContextIdleTimeout
-            else -> fetchTaskTimeout
-        }
-    open val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+    private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
+
+    val idelTime get() = Duration.between(lastActiveTime, Instant.now())
+    open val isIdle get() = idelTime > idleTimeout
 
 //    val historyUrls = PassiveExpiringMap<String, String>()
 
@@ -111,7 +109,7 @@ abstract class PrivacyContext(
      * A ready privacy context has to meet the following requirements:
      * 1. not closed
      * 2. not leaked
-     * 3. not idle
+     * 3. [requirement removed] not idle
      * 4. if there is a proxy, the proxy has to be ready
      * 5. the associated driver pool promises to provide an available driver, ether one of the following:
      *    1. it has slots to create new drivers
@@ -119,7 +117,15 @@ abstract class PrivacyContext(
      *
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
-    open val isReady get() = promisedDriverCount() > 0 && isActive && !isIdle
+    open val isReady get() = promisedDriverCount() > 0 && isActive
+
+    open val readableState: String get() {
+        return listOf(
+            "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
+            "highFailure" to isHighFailureRate, "idle" to isIdle, "good" to isGood,
+            "ready" to isReady
+        ).filter { it.second }.joinToString(" ") { it.first }
+    }
 
     init {
         globalMetrics.contexts.mark()

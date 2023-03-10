@@ -338,15 +338,15 @@ class LoadingWebDriverPool constructor(
         }
 
         val isCriticalResources = AppSystemInfo.isCriticalResources
-        if (isCriticalResources) {
-            logger.info("Critical resource. CPU: {}, memory: {}, ..., will not create new driver",
-                AppSystemInfo.systemCpuLoad, Strings.compactFormat(AppSystemInfo.availableMemory))
-        }
-
         if (onlineDriverCount2 >= capacity) {
             // should also: numDriverSlots > 0
             logger.debug("Enough online drivers: {}/{}/{}, will not create new one",
                 numDriverSlots, onlineDriverCount2, onlineDriverCount1)
+        } else if (isCriticalResources) {
+            logger.info("Critical resource. CPU: {}, memory: {}, ..., {}/{}/{}, will not create new driver",
+                AppSystemInfo.systemCpuLoad, Strings.compactFormat(AppSystemInfo.availableMemory),
+                numDriverSlots, onlineDriverCount2, onlineDriverCount1
+            )
         }
 
         return isActive && !isCriticalResources && onlineDriverCount2 < capacity

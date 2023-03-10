@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.ServiceTemporaryUnavailableException
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -9,8 +8,6 @@ import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
-import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -60,6 +57,7 @@ class MultiPrivacyContextManager(
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
     private val maintainService = Executors.newSingleThreadExecutor()
+    private var driverAbsenceReportTime = Instant.EPOCH
 
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
@@ -70,17 +68,18 @@ class MultiPrivacyContextManager(
         immutableConfig: ImmutableConfig
     ) : this(driverPoolManager, null, null, immutableConfig)
 
+    /**
+     * Run a task in a privacy context.
+     *
+     * The privacy context is selected from the active privacy context pool.
+     * The privacy context is supposed to have at least one ready web driver to run the task.
+     * If the privacy context has no any ready web driver, the task will be canceled.
+     * */
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         metrics.tasks.mark()
 
         if (!isActive) {
             return FetchResult.canceled(task)
-        }
-
-        if (metrics.illegalDrivers.oneMinuteRate > 30) {
-            // TODO: delay in upper layer
-            delay(1000)
-            return FetchResult.canceled(task, "Too many illegal drivers")
         }
 
         val privacyContext = computeNextContext(task.fingerprint)
@@ -197,29 +196,22 @@ class MultiPrivacyContextManager(
         // weakly consistent, which is OK
         activeContexts.filterValues { !it.isActive }.values.forEach {
             activeContexts.remove(it.id)
-            logger.info("Privacy context is dead, closing it | {} | {}", it.elapsedTime.readable(), it.id.display)
+            logger.info("Privacy context is inactive, closing it | {} | {} | {}",
+                it.elapsedTime.readable(), it.id.display, it.readableState)
             close(it)
         }
 
-        // TODO: check the consistency
         activeContexts.filterValues { it.isIdle }.values.forEach {
             activeContexts.remove(it.id)
-            logger.warn(
-                "Privacy context hangs unexpectedly, closing it | {} | {}",
-                it.elapsedTime.readable(),
-                it.id.display
-            )
+            logger.warn("Privacy context hangs unexpectedly, closing it | {}/{} | {} | {}",
+                it.idelTime.readable(), it.elapsedTime.readable(), it.id.display, it.readableState)
             close(it)
         }
 
         activeContexts.filterValues { it.isHighFailureRate }.values.forEach {
             activeContexts.remove(it.id)
-            logger.warn(
-                "Privacy context has too high failure rate: {}, closing it | {} | {}",
-                it.failureRate,
-                it.elapsedTime.readable(),
-                it.id.display
-            )
+            logger.warn("Privacy context has too high failure rate: {}, closing it | {} | {} | {}",
+                it.failureRate, it.elapsedTime.readable(), it.id.display, it.readableState)
             close(it)
         }
     }
@@ -253,10 +245,29 @@ class MultiPrivacyContextManager(
 
         return if (errorMessage != null) {
             metrics.illegalDrivers.mark()
-//            val delay = Duration.ofSeconds(10)
-//            FetchResult.crawlRetry(task, delay, errorMessage)
+            // rate_unit=events/second
+            if (metrics.illegalDrivers.oneMinuteRate > 2) {
+                handleTooManyDriverAbsence(errorMessage)
+            }
             FetchResult.canceled(task, errorMessage)
-        } else runAndUpdate(privacyContext, task, fetchFun)
+        } else {
+            runAndUpdate(privacyContext, task, fetchFun)
+        }
+    }
+
+    private suspend fun handleTooManyDriverAbsence(errorMessage: String) {
+        val now = Instant.now()
+        if (Duration.between(driverAbsenceReportTime, now).seconds > 10) {
+            driverAbsenceReportTime = now
+
+            val promisedDrivers = activeContexts.values.joinToString { it.promisedDriverCount().toString() }
+            val states = activeContexts.values.joinToString { it.readableState }
+            val idleTimes = activeContexts.values.joinToString { it.idelTime.readable() }
+            logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",
+                promisedDrivers, errorMessage, states, idleTimes)
+        }
+
+        delay(2_000)
     }
 
     private suspend fun runAndUpdate(

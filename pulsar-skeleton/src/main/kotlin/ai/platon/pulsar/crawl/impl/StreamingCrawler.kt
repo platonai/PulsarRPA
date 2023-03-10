@@ -61,6 +61,7 @@ private enum class CriticalWarning(val message: String) {
     OUT_OF_DISK_STORAGE("OUT OF DISK STORAGE"),
     NO_PROXY("NO PROXY AVAILABLE"),
     FAST_CONTEXT_LEAK("CONTEXT LEAK TOO FAST"),
+    FAST_CANCELS("CANCELS TOO FAST"),
     WRONG_DISTRICT("WRONG DISTRICT! ALL RESIDENT TASKS ARE PAUSED"),
 }
 
@@ -351,7 +352,7 @@ open class StreamingCrawler(
             // We can only estimate whether there are resources in the underlying layer to serve the task,
             // which is not always correct. If the estimation is wrong, the underlying layer will return a
             // retry result.
-            delayIfEstimatedNoLoadResource(j)
+            // delayIfEstimatedNoLoadResource(j)
 
             try {
                 globalMetrics.tasks.mark()
@@ -477,7 +478,7 @@ open class StreamingCrawler(
     /**
      * Find a proper strategy to retry the task.
      * */
-    private fun handleRetry(url: UrlAware, page: WebPage?) {
+    private suspend fun handleRetry(url: UrlAware, page: WebPage?) {
         when {
             !isActive -> return
             page == null -> handleRetry0(url, null)
@@ -579,10 +580,17 @@ open class StreamingCrawler(
         return false
     }
 
-    private fun handleCanceled(url: UrlAware, page: WebPage?) {
+    private suspend fun handleCanceled(url: UrlAware, page: WebPage?) {
         globalMetrics.cancels.mark()
         val delay = page?.retryDelay?.takeIf { !it.isZero } ?: Duration.ofSeconds(10)
         fetchDelayed(url, delay)
+
+        // rate_unit=events/second
+        val oneMinuteRate = globalMetrics.cancels.meter.oneMinuteRate
+        if (isActive && oneMinuteRate >= 1.0) {
+            criticalWarning = CriticalWarning.FAST_CANCELS
+            delay(1_000)
+        }
     }
 
     private fun handleRetry0(url: UrlAware, page: WebPage?) {

@@ -154,6 +154,7 @@ class FetchResult(
     val isSuccess get() = status.isSuccess
     val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
     val isCrawlRetry get() = status.isRetry(RetryScope.CRAWL)
+    val isCanceled get() = status.isCanceled()
     val isSmall get() = status.retryReason.toString() == HtmlIntegrity.TOO_SMALL.toString()
 
     fun canceled() {
