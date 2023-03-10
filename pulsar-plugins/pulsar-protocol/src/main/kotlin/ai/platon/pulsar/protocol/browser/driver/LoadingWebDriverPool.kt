@@ -200,7 +200,7 @@ class LoadingWebDriverPool constructor(
     fun poll(priority: Int, conf: VolatileConfig, timeout: Long, unit: TimeUnit): WebDriver {
         val driver = pollWebDriver(priority, conf, timeout, unit)
         if (driver == null) {
-            val snapshot = takeImpreciseSnapshot()
+            val snapshot = takeSnapshot()
             val message = String.format("Driver pool is exhausted | %s", snapshot.format(true))
             logger.warn(message)
             throw WebDriverPoolExhaustedException("Driver pool is exhausted ($snapshot)")
@@ -255,12 +255,12 @@ class LoadingWebDriverPool constructor(
         statefulDriverPool.cancelAll()
     }
 
-    override fun toString(): String = takeImpreciseSnapshot().format(false)
+    override fun toString(): String = takeSnapshot().format(false)
 
     /**
      * Take an imprecise snapshot
      * */
-    fun takeImpreciseSnapshot(): Snapshot {
+    fun takeSnapshot(): Snapshot {
         return Snapshot(
             numActive,
             numStandby,

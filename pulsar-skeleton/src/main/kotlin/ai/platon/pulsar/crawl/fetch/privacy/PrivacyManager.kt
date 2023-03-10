@@ -74,8 +74,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * */
     abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
 
-    open fun takeImpreciseSnapshot(): String {
-        val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeImpreciseSnapshot() }
+    open fun takeSnapshot(): String {
+        val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }
         return snapshot
     }
 

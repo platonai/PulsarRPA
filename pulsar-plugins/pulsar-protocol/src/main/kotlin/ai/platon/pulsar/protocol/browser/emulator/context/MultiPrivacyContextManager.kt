@@ -197,9 +197,8 @@ class MultiPrivacyContextManager(
             context.maintain()
         }
 
-        // TODO: show the message by a rest request
-        if (Duration.between(lastMaintainTime, Instant.now()) > Duration.ofMinutes(10)) {
-            logger.info("Maintaining: {}", takeImpreciseSnapshot())
+        if (Duration.between(lastMaintainTime, Instant.now()) > Duration.ofMinutes(30)) {
+            logger.info("Maintaining: {}", takeSnapshot())
             activeContexts.values.forEach { it.report() }
         }
     }
