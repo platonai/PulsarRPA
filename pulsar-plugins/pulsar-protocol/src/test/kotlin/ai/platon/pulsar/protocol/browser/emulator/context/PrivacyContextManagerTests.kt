@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
 import org.junit.Test
@@ -115,7 +116,7 @@ class PrivacyContextManagerTests {
     }
 
     @Test
-    fun `When close a privacy context then it's removed from the active context queue`() {
+    fun `When a privacy context closed then it's removed from the active queue`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
 
         val id = PrivacyContextId(contextPath, BrowserType.MOCK_CHROME)
@@ -127,7 +128,7 @@ class PrivacyContextManagerTests {
     }
 
     @Test
-    fun `When run tasks the contexts rotates`() {
+    fun `When tasks run then contexts rotates`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
         val url = "about:blank"
         val page = WebPageExt.newTestWebPage(url)
@@ -136,9 +137,28 @@ class PrivacyContextManagerTests {
             repeat(10) {
                 val task = FetchTask.create(page)
                 task.fingerprint.userAgent = RandomStringUtils.randomAlphanumeric(10)
-                manager.run(task) { task, driver -> mockFetch(task, driver) }
+                manager.run(task) { _, driver -> mockFetch(task, driver) }
                 assertTrue { manager.activeContexts.size <= manager.maxAllowedBadContexts }
             }
+        }
+    }
+
+    @Test
+    fun `When task run then maintainer started`() {
+        val manager = MultiPrivacyContextManager(driverPoolManager, conf)
+        val url = "about:blank"
+        val page = WebPageExt.newTestWebPage(url)
+
+        runBlocking {
+            val task = FetchTask.create(page)
+            manager.run(task) { _, driver -> mockFetch(task, driver) }
+            var n = 3600
+            while (n-- > 0 && manager.maintainCount.get() <= 0) {
+                delay(1000)
+            }
+
+            assertTrue { n > 0 }
+            assertTrue { manager.maintainCount.get() > 0 }
         }
     }
 

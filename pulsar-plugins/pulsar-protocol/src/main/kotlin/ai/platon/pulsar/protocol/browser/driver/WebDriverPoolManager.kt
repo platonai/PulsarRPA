@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -99,8 +100,10 @@ open class WebDriverPoolManager(
     ).takeUnless { suppressMetrics }
 
     private val lastMaintainTime = Instant.now()
+    private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
+    private val maintainService = Executors.newSingleThreadExecutor()
 
     private val driverPoolCloser = BrowserAccompaniedDriverPoolCloser(driverPoolPool, this)
 
@@ -134,7 +137,7 @@ open class WebDriverPoolManager(
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     suspend fun run(task: WebDriverTask): FetchResult? {
         lastActiveTime = Instant.now()
-        return run0(task).also { lastActiveTime = Instant.now() }
+        return doRun(task).also { lastActiveTime = Instant.now() }
     }
 
     @Throws(CancellationException::class)
@@ -235,6 +238,10 @@ open class WebDriverPoolManager(
             return
         }
 
+        if (maintainCount.getAndIncrement() == 0) {
+            logger.info("Maintaining service is started")
+        }
+
         // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
         driverPoolCloser.closeOldestRetiredDriverPoolSafely()
         // close unexpected active browsers
@@ -250,6 +257,11 @@ open class WebDriverPoolManager(
         preempt {
             driverPoolCloser.closeIdleDriverPoolsSafely()
         }
+
+        // TODO: show the message by a rest request
+        if (Duration.between(lastMaintainTime, Instant.now()) > Duration.ofMinutes(10)) {
+            logger.info("Maintaining: {}", takeImpreciseSnapshot())
+        }
     }
 
     fun takeImpreciseSnapshot(browserId: BrowserId, verbose: Boolean = false): String {
@@ -257,7 +269,12 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Closing call stack:
+     * Close the web driver pool manager. All deferred tasks will be canceled, the pool of driver pools will be cleared
+     * and the browser manager will be closed.
+     *
+     * It happens when the program exits.
+     *
+     * The closing call stack:
      *
      * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
      * -> BrowserManager.close -> Browser.close -> WebDriver.close
@@ -279,10 +296,20 @@ open class WebDriverPoolManager(
         }
     }
 
+    /**
+     * Return a string to represent the snapshot of the status.
+     * */
     override fun toString(): String = takeImpreciseSnapshot(false)
 
     @Throws(WebDriverException::class, WebDriverPoolException::class)
-    private suspend fun run0(task: WebDriverTask) = runWithDriverPool(task)
+    private suspend fun doRun(task: WebDriverTask): FetchResult? {
+        val result = runWithDriverPool(task)
+
+        // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not work.
+        maintainService.submit { maintain() }
+
+        return result
+    }
 
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     private suspend fun runWithSpecifiedDriver(task: WebDriverTask, driver: WebDriver) =
@@ -296,7 +323,7 @@ open class WebDriverPoolManager(
          * There are two kind of tasks, normal tasks and monitor tasks,
          * normal tasks are performed in parallel, but can not be performed with monitor tasks at the same time.
          *
-         * [PreemptChannelSupport] is developed for the above mechanism.
+         * [PreemptChannelSupport] is developed for such mechanism.
          * */
         whenNormalDeferred {
             if (!isActive) {
@@ -310,8 +337,8 @@ open class WebDriverPoolManager(
                 throw WebDriverPoolException(message)
             }
 
-            // Browser id is specified by the caller code, a typical strategy is to
-            // pass the browser id from a pool in sequence, in which case, driver pools are return
+            // The browser id is specified by the caller, a typical strategy is
+            // taking a browser id in a list in sequence, in which case, driver pools are return
             // one by one in sequence.
             //
             val driverPool = createDriverPoolIfAbsent(browserId, task)

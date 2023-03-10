@@ -52,11 +52,12 @@ class MultiPrivacyContextManager(
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
-    private val maintainCount = AtomicInteger()
-    private val lastMaintainTime = Instant.now()
+    internal val maintainCount = AtomicInteger()
+    private val lastMaintainTime = Instant.EPOCH
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
     private val maintainService = Executors.newSingleThreadExecutor()
+
     private var driverAbsenceReportTime = Instant.EPOCH
 
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
@@ -194,6 +195,12 @@ class MultiPrivacyContextManager(
         // and then check the active context list
         activeContexts.values.forEach { context ->
             context.maintain()
+        }
+
+        // TODO: show the message by a rest request
+        if (Duration.between(lastMaintainTime, Instant.now()) > Duration.ofMinutes(10)) {
+            logger.info("Maintaining: {}", takeImpreciseSnapshot())
+            activeContexts.values.forEach { it.report() }
         }
     }
 

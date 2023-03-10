@@ -74,6 +74,11 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * */
     abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
 
+    open fun takeImpreciseSnapshot(): String {
+        val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeImpreciseSnapshot() }
+        return snapshot
+    }
+
     /**
      * Close a given privacy context, remove it from the active list and add it to the zombie list.
      * No exception.

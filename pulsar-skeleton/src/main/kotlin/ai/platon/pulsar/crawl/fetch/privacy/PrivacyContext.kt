@@ -216,6 +216,8 @@ abstract class PrivacyContext(
     @Throws(ProxyException::class)
     abstract suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
+    fun takeImpreciseSnapshot() = readableState
+
     /**
      * Do the maintaining jobs.
      * */

@@ -172,7 +172,7 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun addBlockedURLs(urls: List<String>)
     /**
-     * Blocks resource URLs by probability from loading.
+     * Block resource URL loading with a certain probability.
      *
      * @param urls URL patterns to block.
      */

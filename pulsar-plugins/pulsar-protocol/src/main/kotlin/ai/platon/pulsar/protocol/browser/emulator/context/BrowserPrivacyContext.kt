@@ -48,12 +48,12 @@ open class BrowserPrivacyContext constructor(
     }
 
     @Throws(ProxyException::class)
-    override suspend fun doRun(task: FetchTask, browseFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
+    override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
         initialize(task)
 
         return checkAbnormalResult(task) ?:
-            proxyContext?.run(task, browseFun) ?:
-            driverContext.run(task, browseFun)
+            proxyContext?.run(task, fetchFun) ?:
+            driverContext.run(task, fetchFun)
     }
 
     override fun maintain() {

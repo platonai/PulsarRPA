@@ -103,7 +103,6 @@ open class WebDriverContext(
     @Throws(Exception::class)
     open fun maintain() {
         // close dead, valueless, idle driver pools, etc
-        driverPoolManager.maintain()
     }
 
     /**
