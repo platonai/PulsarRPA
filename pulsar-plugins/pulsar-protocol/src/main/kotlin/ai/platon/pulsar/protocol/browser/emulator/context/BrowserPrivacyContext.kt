@@ -31,7 +31,7 @@ open class BrowserPrivacyContext constructor(
     private val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
     /**
-     * The privacy context is retired but not closed yet
+     * The privacy context is retired but not closed yet.
      * */
     override val isRetired: Boolean get() {
         return proxyContext?.isRetired == true

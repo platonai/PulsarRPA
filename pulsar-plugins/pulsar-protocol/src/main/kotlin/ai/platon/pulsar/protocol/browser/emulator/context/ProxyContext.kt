@@ -88,8 +88,14 @@ open class ProxyContext(
 
     val isEnabled get() = proxyPoolManager.isEnabled
     val isRetired: Boolean get() {
-        val isProxyRetired = proxyEntry?.isRetired == true
-        return isProxyRetired
+        val p = proxyEntry
+        if (p != null) {
+            if (p.isExpired) {
+                p.retire()
+            }
+            return p.isRetired
+        }
+        return false
     }
     val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
     val isReady: Boolean get() {
@@ -106,6 +112,10 @@ open class ProxyContext(
     }
 
     open fun maintain() {
+        val p = proxyEntry
+        if (p != null && p.isExpired) {
+            p.retire()
+        }
         // nothing to do currently
     }
 

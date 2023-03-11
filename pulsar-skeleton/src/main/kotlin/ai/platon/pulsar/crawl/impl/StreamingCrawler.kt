@@ -116,7 +116,7 @@ open class StreamingCrawler(
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
                 "000WARNING" to Gauge { readableCriticalWarning },
-                "lastCancelReason" to Gauge { lastCancelReason },
+                "lastCancelReason" to Gauge { lastCancelReason.toString() },
 
                 "lastUrl" to Gauge { lastUrl },
                 "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
@@ -640,10 +640,13 @@ open class StreamingCrawler(
     private suspend fun handleCanceled(url: UrlAware, page: WebPage?) {
         globalMetrics.cancels.mark()
         val delay = page?.retryDelay?.takeIf { !it.isZero } ?: Duration.ofSeconds(10)
+        // Delay fetching the page.
         fetchDelayed(url, delay)
 
+        // Collect all cancel reasons
         if (page != null) {
-            lastCancelReason.add(page.protocolStatus.reason.toString())
+            val reason = page.protocolStatus.reason ?: "unknown"
+            lastCancelReason.add(reason.toString())
         }
 
         // Set a guard to prevent too many cancels.
