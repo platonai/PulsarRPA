@@ -342,9 +342,9 @@ class LoadingWebDriverPool constructor(
             // should also: numDriverSlots > 0
             logger.debug("Enough online drivers: {}/{}/{} (slots/activeP/activeB), will not create new one",
                 numDriverSlots, activeDriversInPool, activeDriversInBrowser)
-        } else if (isCriticalResources) {
-            logger.info("Critical resource. CPU: {}, memory: {}, .... {}/{}/{} (slots/activeP/activeB), will not create new driver",
-                AppSystemInfo.systemCpuLoad, Strings.compactFormat(AppSystemInfo.availableMemory),
+        } else if (AppSystemInfo.isCriticalMemory) {
+            logger.info("Critical memory: {}, {}/{}/{} (slots/activeP/activeB), will not create new driver",
+                Strings.compactFormat(AppSystemInfo.availableMemory),
                 numDriverSlots, activeDriversInPool, activeDriversInBrowser
             )
         }

@@ -49,5 +49,13 @@ class TestConcurrentPassiveExpiringSet {
             value = iterator.next()
         }
         assertEquals(1, value)
+
+        value = iterator.next()
+        assertEquals(2, value)
+        n = set.size
+        while (n-- > 0) {
+            value = iterator.next()
+        }
+        assertEquals(2, value)
     }
 }

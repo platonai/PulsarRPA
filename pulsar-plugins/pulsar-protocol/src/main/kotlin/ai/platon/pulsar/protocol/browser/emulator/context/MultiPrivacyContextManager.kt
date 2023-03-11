@@ -53,7 +53,7 @@ class MultiPrivacyContextManager(
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
     internal val maintainCount = AtomicInteger()
-    private val lastMaintainTime = Instant.EPOCH
+    private var lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
     private val maintainService = Executors.newSingleThreadExecutor()
@@ -185,6 +185,7 @@ class MultiPrivacyContextManager(
         if (tooFrequentMaintenance) {
             return
         }
+        lastMaintainTime = Instant.now()
 
         if (maintainCount.getAndIncrement() == 0) {
             logger.info("Maintaining service is started")
@@ -197,8 +198,9 @@ class MultiPrivacyContextManager(
             context.maintain()
         }
 
-        if (Duration.between(lastMaintainTime, Instant.now()) > Duration.ofMinutes(30)) {
-            logger.info("Maintaining: {}", takeSnapshot())
+        // if "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action
+        if (FileCommand.check("takeSnapshot")) {
+            logger.info("Privacy context snapshot: \n{}", takeSnapshot())
             activeContexts.values.forEach { it.report() }
         }
     }
@@ -266,7 +268,7 @@ class MultiPrivacyContextManager(
         }
 
         val errorMessage = when {
-            !privacyContext.hasWorkerPromise() -> {
+            !privacyContext.hasWebDriverPromise() -> {
                 "PRIVACY CX NO DRIVER"
             }
             !privacyContext.isActive -> {
@@ -302,7 +304,7 @@ class MultiPrivacyContextManager(
         if (Duration.between(driverAbsenceReportTime, now).seconds > 10) {
             driverAbsenceReportTime = now
 
-            val promisedDrivers = activeContexts.values.joinToString { it.promisedWorkerCount().toString() }
+            val promisedDrivers = activeContexts.values.joinToString { it.promisedWebDriverCount().toString() }
             val states = activeContexts.values.joinToString { it.readableState }
             val idleTimes = activeContexts.values.joinToString { it.idelTime.readable() }
             logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",

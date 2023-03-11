@@ -2,7 +2,9 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import com.google.common.annotations.Beta
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet
 
@@ -38,6 +40,28 @@ class ConcurrentStatefulDriverPoolPool {
 
         val pool = _workingDriverPools[browserId] ?: return capacity
         return pool.numAvailable
+    }
+
+    @Beta
+    @Synchronized
+    fun subscribeDriver(browserId: BrowserId): WebDriver? {
+        if (browserId in closedDriverPools || browserId in retiredDriverPools) {
+            return null
+        }
+
+        val pool = _workingDriverPools[browserId] ?: return null
+        val driver = pool.poll()
+        // _subscribedDrivers.add(driver)
+        return driver
+    }
+
+    @Beta
+    @Synchronized
+    fun subscribeDriver(): WebDriver? {
+        val driverPool = _workingDriverPools.values.firstOrNull { it.numAvailable > 0 } ?: return null
+        val driver = driverPool.poll()
+        // _subscribedDrivers.add(driver)
+        return driver
     }
 
     @Synchronized

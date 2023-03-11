@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 
 open class BrowserPrivacyContext constructor(
@@ -31,6 +32,9 @@ open class BrowserPrivacyContext constructor(
     private var proxyContext: ProxyContext? = null
     /**
      * A ready privacy context has to meet the following requirements:
+     *
+     * TODO: too complex state checking is very easy to lead to bugs, we have disabled the complex checking
+     *
      * 1. not closed
      * 2. not leaked
      * 3. not idle
@@ -42,9 +46,13 @@ open class BrowserPrivacyContext constructor(
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
     override val isReady: Boolean get() {
-        val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
-        val isDriverContextReady = driverContext.isReady
-        return isProxyContextReady && isDriverContextReady && super.isReady
+        // NOTICE:
+        // too complex state checking, which is very easy to lead to bugs, disable the code
+//        val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
+//        val isDriverContextReady = driverContext.isReady
+//        return isProxyContextReady && isDriverContextReady && super.isReady
+
+        return super.isReady
     }
 
     @Throws(ProxyException::class)
@@ -61,7 +69,10 @@ open class BrowserPrivacyContext constructor(
         driverContext.maintain()
     }
 
-    override fun promisedWorkerCount() = driverPoolManager.promisedDriverCount(browserId)
+    override fun promisedWebDriverCount() = driverPoolManager.promisedDriverCount(browserId)
+
+    @Beta
+    override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
 
     override fun report() {
         val isProxyIdle = proxyContext?.proxyEntry?.isIdle == true

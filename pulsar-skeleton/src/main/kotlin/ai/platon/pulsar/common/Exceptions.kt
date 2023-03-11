@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-class ServiceTemporaryUnavailableException: RuntimeException {
+class ServiceUnavailableException: RuntimeException {
     constructor() : super()
 
     constructor(message: String) : super(message)

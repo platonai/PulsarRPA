@@ -14,6 +14,7 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.BrowserErrorPageException
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.persist.RetryScope
+import com.google.common.annotations.Beta
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -118,7 +119,7 @@ abstract class PrivacyContext(
      *
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
-    open val isReady get() = hasWorkerPromise() && isActive
+    open val isReady get() = hasWebDriverPromise() && isActive
 
     open val readableState: String get() {
         return listOf(
@@ -141,12 +142,15 @@ abstract class PrivacyContext(
      *
      * @return the number of workers promised.
      * */
-    abstract fun promisedWorkerCount(): Int
+    abstract fun promisedWebDriverCount(): Int
 
     /**
      * Check if the privacy context promises at least one worker to provide.
      * */
-    fun hasWorkerPromise() = promisedWorkerCount() > 0
+    fun hasWebDriverPromise() = promisedWebDriverCount() > 0
+
+    @Beta
+    abstract fun subscribeWebDriver(): WebDriver?
 
     /**
      * Mark a success task.
