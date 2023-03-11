@@ -322,14 +322,17 @@ class LoadComponent(
             pageCache.putDatum(page.url, page)
         }
 
-        if (!page.isCached) {
+        // TODO: Too many cancels in 1.10.x, so do not report canceled pages, it will be improved in the further version
+        if (!page.isCached && !page.isCanceled) {
             report(page)
         }
 
         // We might use the cached page's content in parse phase
-        // TODO: what if is canceled?
         if (options.parse) {
-            parse(page, normUrl.options)
+            // TODO: do we need page.protocalStatus.isSuccess?
+            if (!page.isCanceled) {
+                parse(page, normUrl.options)
+            }
         }
 
         try {

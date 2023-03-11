@@ -270,10 +270,10 @@ open class WebDriverPoolManager(
      * Maintain all the driver pools, check and report inconsistency, illness, idleness, etc.,
      * close bad pools if necessary.
      *
-     * If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+     * If "takeDriverPoolSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
      *
      * If the tmp dir is the default one, run the following command to take snapshot once:
-     * echo takeSnapshot >> /tmp/pulsar/pulsar-commands
+     * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
      * */
     @Throws(Exception::class)
     fun maintain() {
@@ -302,11 +302,11 @@ open class WebDriverPoolManager(
             driverPoolCloser.closeIdleDriverPoolsSafely()
         }
 
-        // If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+        // If "takeDriverPoolSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
         //
         // If the tmp dir is the default one, run the following command to take snapshot once:
-        // echo takeSnapshot >> /tmp/pulsar/pulsar-commands
-        if (FileCommand.check("takeSnapshot")) {
+        // echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
+        if (FileCommand.check("takeDriverPoolSnapshot")) {
             logger.info("\nDriver pool manager: \n")
             logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             logger.info("\n{}", takeSnapshot())

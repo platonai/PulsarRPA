@@ -181,10 +181,10 @@ class MultiPrivacyContextManager(
      * Maintain all the privacy contexts, check and report inconsistency, illness, idleness, etc.,
      * close bad contexts if necessary.
      *
-     * If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+     * If "takePrivacyContextSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
      *
      * If the tmp dir is the default one, run the following command to take snapshot once:
-     * echo takeSnapshot >> /tmp/pulsar/pulsar-commands
+     * echo takePrivacyContextSnapshot >> /tmp/pulsar/pulsar-commands
      * */
     override fun maintain() {
         if (tooFrequentMaintenance) {
@@ -203,11 +203,11 @@ class MultiPrivacyContextManager(
             context.maintain()
         }
 
-        // If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+        // If "takePrivacyContextSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
         //
         // If the tmp dir is the default one, run the following command to take snapshot once:
-        // echo takeSnapshot >> /tmp/pulsar/pulsar-commands
-        if (FileCommand.check("takeSnapshot")) {
+        // echo takePrivacyContextSnapshot >> /tmp/pulsar/pulsar-commands
+        if (FileCommand.check("takePrivacyContextSnapshot")) {
             logger.info("\nPrivacy context snapshot: \n")
             logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             logger.info("\n{}", takeSnapshot())

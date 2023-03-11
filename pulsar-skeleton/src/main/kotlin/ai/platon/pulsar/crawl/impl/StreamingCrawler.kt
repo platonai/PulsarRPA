@@ -82,7 +82,7 @@ open class StreamingCrawler(
      * Auto close or not
      * */
     autoClose: Boolean = true,
-) : AbstractCrawler(session, autoClose) {
+): AbstractCrawler(session, autoClose) {
     companion object {
         private val globalRunningInstances = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
@@ -99,12 +99,13 @@ open class StreamingCrawler(
         private var lastUrl = ""
         private var lastHtmlIntegrity = ""
         private var lastFetchError = ""
+        private val lastCancelReason = Frequency<String>()
         private val isIllegalApplicationState = AtomicBoolean()
 
         private var wrongDistrict = AppMetrics.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
 
-        private val hasLoadResourceLock = ReentrantLock()
-        private val hasLoadResourceCondition = hasLoadResourceLock.newCondition()
+        private val readableCriticalWarning: String
+            get() = criticalWarning?.message?.let { "!!! WARNING !!! $it !!! ${Instant.now()}" } ?: ""
 
         init {
             mapOf(
@@ -114,7 +115,9 @@ open class StreamingCrawler(
 
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
-                "000WARNING" to Gauge { criticalWarning?.message?.let { "!!! WARNING !!! $it" } ?: "" },
+                "000WARNING" to Gauge { readableCriticalWarning },
+                "lastCancelReason" to Gauge { lastCancelReason },
+
                 "lastUrl" to Gauge { lastUrl },
                 "lastHtmlIntegrity" to Gauge { lastHtmlIntegrity },
                 "lastFetchError" to Gauge { lastFetchError },
@@ -638,6 +641,10 @@ open class StreamingCrawler(
         globalMetrics.cancels.mark()
         val delay = page?.retryDelay?.takeIf { !it.isZero } ?: Duration.ofSeconds(10)
         fetchDelayed(url, delay)
+
+        if (page != null) {
+            lastCancelReason.add(page.protocolStatus.reason.toString())
+        }
 
         // Set a guard to prevent too many cancels.
         // If there are too many cancels, the loop should have a rest.
