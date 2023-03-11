@@ -19,7 +19,7 @@ interface Crawler: AutoCloseable {
      * */
     var retryDelayPolicy: (Int, UrlAware?) -> Duration
     /**
-     * Await for all tasks be done
+     * Wait until all tasks are done.
      * */
     fun await()
 

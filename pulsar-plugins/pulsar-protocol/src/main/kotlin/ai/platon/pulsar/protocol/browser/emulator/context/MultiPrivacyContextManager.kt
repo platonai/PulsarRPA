@@ -237,7 +237,6 @@ class MultiPrivacyContextManager(
             pc = iterator.next()
         }
 
-        // TODO: subscribe a web driver and no other thread can use it, a possible approach is to take the driver's id
         return pc
     }
 

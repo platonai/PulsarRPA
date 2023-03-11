@@ -126,38 +126,17 @@ open class StreamingCrawler(
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
     private val conf = session.sessionConfig
-
-    val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
-    val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
-
     private val globalCache get() = session.globalCache
     private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull(ProxyPool::class)
     private var proxyOutOfService = 0
 
-    val outOfWorkTimeout = Duration.ofMinutes(10)
-    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
-
-    private var lastActiveTime = Instant.now()
-    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    val isOutOfWork get() = idleTime > outOfWorkTimeout
-
-    private val enableSmartRetry get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
-    private val isIdle: Boolean
-        get() {
-            return !urls.iterator().hasNext()
-                    && globalLoadingUrls.isEmpty()
-                    && idleTime > Duration.ofSeconds(5)
-        }
-    private val lock = ReentrantLock()
-    private val notBusy = lock.newCondition()
-    private var forceQuit = false
-    override val isActive get() = super.isActive && !forceQuit && !isIllegalApplicationState.get()
-
     @Volatile
     private var flowState = FlowState.CONTINUE
 
-    var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
+    private var lastActiveTime = Instant.now()
+
+    private val lock = ReentrantLock()
+    private val notBusy = lock.newCondition()
 
     private val gauges = mapOf(
         "idleTime" to Gauge { idleTime.readable() },
@@ -165,6 +144,64 @@ open class StreamingCrawler(
         "numMaxActiveTabs" to Gauge { numMaxActiveTabs },
         "fetchConcurrency" to Gauge { fetchConcurrency },
     )
+
+    private var forceQuit = false
+    /**
+     * The maximum number of privacy contexts allowed.
+     * */
+    val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    /**
+     * The maximum number of open tabs allowed in each open browser.
+     * */
+    val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    /**
+     * The fetch concurrency equals to the number of all allowed open tabs.
+     * */
+    val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
+
+    /**
+     * The out of work timeout.
+     * */
+    val outOfWorkTimeout = Duration.ofMinutes(10)
+    /**
+     * The timeout for each fetch task.
+     * */
+    val fetchTaskTimeout get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
+
+    /**
+     * The idle time during which there is no fetch tasks.
+     * */
+    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+    /**
+     * Check if the crawler is out of work (idle for long time).
+     * */
+    val isOutOfWork get() = idleTime > outOfWorkTimeout
+    /**
+     * Check if smart retry is enabled.
+     *
+     * If smart retry is enabled, tasks will be retried if it's canceled or marked as retry.
+     * A continuous crawl system should enable smart retry, while a simple demo can disable it.
+     * */
+    val isSmartRetryEnabled get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
+    /**
+     * Check if the crawler is idle.
+     * An idle crawler means:
+     * 1. no loading urls
+     * 2. no urls in the loading queue
+     * */
+    val isIdle: Boolean
+        get() {
+            return !urls.iterator().hasNext() && globalLoadingUrls.isEmpty()
+                    && idleTime > Duration.ofSeconds(5)
+        }
+    /**
+     * Check if the crawler is active.
+     * */
+    override val isActive get() = super.isActive && !forceQuit && !isIllegalApplicationState.get()
+    /**
+     * The job name.
+     * */
+    var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
 
     init {
         AppMetrics.reg.registerAll(this, "$id.g", gauges)
@@ -178,6 +215,9 @@ open class StreamingCrawler(
         generateFinishCommand()
     }
 
+    /**
+     * Run the crawler.
+     * */
     open fun run() {
         runBlocking {
             supervisorScope {
@@ -186,18 +226,30 @@ open class StreamingCrawler(
         }
     }
 
+    /**
+     * Run the crawler in the given coroutine scope.
+     * */
     open suspend fun run(scope: CoroutineScope) {
         startCrawlLoop(scope)
     }
 
+    /**
+     * Wait until all tasks are done.
+     * */
     override fun await() {
         lock.withLock { notBusy.await() }
     }
 
+    /**
+     * Quit the crawl loop.
+     * */
     fun quit() {
         forceQuit = true
     }
 
+    /**
+     * Quit and close the crawl loop.
+     * */
     override fun close() {
         quit()
         super.close()
@@ -402,7 +454,8 @@ open class StreamingCrawler(
         } else {
             val page = loadWithTimeout(url)
 
-            if (enableSmartRetry) {
+            // A continuous crawl system should enable smart retry, while a simple demo can disable it
+            if (isSmartRetryEnabled) {
                 handleRetry(url, page)
             }
 
@@ -483,6 +536,7 @@ open class StreamingCrawler(
             !isActive -> return
             page == null -> handleRetry0(url, null)
             page.isCanceled -> handleCanceled(url, page)
+            // TODO: keep consistency with protocolStatus.isRetry and crawlStatus.isRetry
             page.protocolStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
@@ -585,6 +639,9 @@ open class StreamingCrawler(
         val delay = page?.retryDelay?.takeIf { !it.isZero } ?: Duration.ofSeconds(10)
         fetchDelayed(url, delay)
 
+        // Set a guard to prevent too many cancels.
+        // If there are too many cancels, the loop should have a rest.
+        //
         // rate_unit=events/second
         val oneMinuteRate = globalMetrics.cancels.meter.oneMinuteRate
         if (isActive && oneMinuteRate >= 1.0) {
