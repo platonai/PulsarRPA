@@ -59,7 +59,8 @@ open class InteractiveBrowserEmulator(
     override suspend fun fetch(task: FetchTask, driver: WebDriver) = visit(task, driver)
 
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
-        return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(task)
+        return takeIf { isActive }?.browseWithDriver(task, driver) ?:
+        FetchResult.canceled(task, "Inactive interactive browser emulator")
     }
 
     override fun cancelNow(task: FetchTask) {
@@ -181,7 +182,7 @@ open class InteractiveBrowserEmulator(
 
         if (task.page.options.isDead()) {
             taskLogger.info("Page is dead, cancel the task | {}", task.page.configuredUrl)
-            return FetchResult.canceled(task)
+            return FetchResult.canceled(task, "Page deadline exceed")
         }
 
         var exception: Exception? = null

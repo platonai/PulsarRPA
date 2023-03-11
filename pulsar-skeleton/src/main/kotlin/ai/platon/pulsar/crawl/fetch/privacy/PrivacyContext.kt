@@ -100,14 +100,21 @@ abstract class PrivacyContext(
      * */
     open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     /**
-     * Check if the privacy context is not closed nor leaked
+     * The privacy context works fine and the fetch speed is qualified.
      * */
-    open val isActive get() = !isLeaked && !isClosed
+    open val isRetired get() = false
+    /**
+     * Check if the privacy context is active.
+     * An active privacy context can be used to serve tasks, and an inactive one should be closed.
+     * */
+    open val isActive get() = !isLeaked && !isRetired && !isClosed
     /**
      * Check if the privacy context is closed
      * */
     open val isClosed get() = closed.get()
     /**
+     * A ready privacy context is ready to serve tasks.
+     *
      * A ready privacy context has to meet the following requirements:
      * 1. not closed
      * 2. not leaked
@@ -121,6 +128,19 @@ abstract class PrivacyContext(
      * */
     open val isReady get() = hasWebDriverPromise() && isActive
 
+    /**
+     * Check if the privacy context is running at full load
+     * */
+    open val isFullCapacity = false
+
+    /**
+     * Check if the privacy context is running under loaded
+     * */
+    open val isUnderLoaded get() = !isFullCapacity
+
+    /**
+     * Get the readable privacy context state.
+     * */
     open val readableState: String get() {
         return listOf(
             "closed" to isClosed, "leaked" to isLeaked, "active" to isActive,
@@ -220,7 +240,9 @@ abstract class PrivacyContext(
     @Throws(ProxyException::class)
     abstract suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
 
-    fun takeSnapshot() = readableState
+    fun takeSnapshot(): String {
+        return "$readableState driver: ${promisedWebDriverCount()}"
+    }
 
     /**
      * Do the maintaining jobs.
@@ -270,6 +292,10 @@ abstract class PrivacyContext(
         if (isLeaked) {
             globalMetrics.contextLeaks.mark()
         }
+    }
+
+    open fun getReport(): String {
+        return String.format("Privacy context #%s has lived for %s", sequence, elapsedTime.readable())
     }
 
     open fun report() {

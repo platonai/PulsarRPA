@@ -42,6 +42,16 @@ class ConcurrentStatefulDriverPoolPool {
         return pool.numAvailable
     }
 
+    @Synchronized
+    fun isFullCapacity(browserId: BrowserId): Boolean {
+        if (browserId in closedDriverPools || browserId in retiredDriverPools) {
+            return false
+        }
+
+        val pool = _workingDriverPools[browserId] ?: return false
+        return pool.numWorking + pool.numWaiting >= pool.capacity
+    }
+
     @Beta
     @Synchronized
     fun subscribeDriver(browserId: BrowserId): WebDriver? {

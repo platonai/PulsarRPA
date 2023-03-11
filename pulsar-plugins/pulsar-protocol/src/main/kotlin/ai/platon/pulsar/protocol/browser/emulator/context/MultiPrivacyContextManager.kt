@@ -86,11 +86,14 @@ class MultiPrivacyContextManager(
         metrics.tasks.mark()
 
         if (!isActive) {
-            return FetchResult.canceled(task)
+            return FetchResult.canceled(task, "Inactive privacy context manager")
         }
 
+        // Try to get a ready privacy context, the privacy context is supposed to be:
+        // not closed, not retired, [not idle]?, has promised driver.
+        // If the privacy context is inactive, close it and cancel the task.
         val privacyContext = computeNextContext(task.fingerprint)
-        val result = runIfPrivacyContextReady(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
+        val result = runIfPrivacyContextActive(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
         // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not work.
         maintainService.submit { maintain() }
@@ -117,10 +120,9 @@ class MultiPrivacyContextManager(
      * If the total number of active contexts is less than the maximum number allowed,
      * a new privacy context will be created.
      *
-     * If a privacy context obtain from the active context list is inactive, close it and
-     * create a new one immediately, and return the new one.
+     * If the privacy context is inactive, close it and create a new one immediately, and return the new one.
      *
-     * This method can return a non-ready privacy context, in which case, the task will be canceled.
+     * This method can return a non-ready privacy context, in which case the task will be canceled.
      *
      * A ready privacy context is:
      * 1. is active
@@ -134,6 +136,7 @@ class MultiPrivacyContextManager(
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
         val context = computeIfNecessary(fingerprint)
 
+        // An active privacy context can be used to serve tasks, and an inactive one should be closed.
         if (context.isActive) {
             return context
         }
@@ -145,17 +148,13 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     * Try to get a ready privacy context.
+     * Gets an under-loaded privacy context, which can be either active or inactive.
      *
      * If the total number of active contexts is less than the maximum number allowed,
      * a new privacy context will be created.
      *
-     * This method can return a non-ready privacy context, in which case, the task will be canceled.
-     *
-     * A ready privacy context is:
-     * 1. is active
-     * 2. [requirement removed] not idle
-     * 3. the associated driver pool promises to provide an available driver (but the promise can be failed)
+     * This method can return an inactive privacy context, in which case, the task should be canceled,
+     * and the privacy context should be closed.
      *
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
@@ -167,7 +166,7 @@ class MultiPrivacyContextManager(
             }
 
 //            return iterator.next()
-            return tryNextReadyPrivacyContext()
+            return tryNextUnderLoadedPrivacyContext()
         }
     }
 
@@ -179,7 +178,13 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     * Maintain all the privacy contexts, usually in a scheduled service.
+     * Maintain all the privacy contexts, check and report inconsistency, illness, idleness, etc.,
+     * close bad contexts if necessary.
+     *
+     * If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+     *
+     * If the tmp dir is the default one, run the following command to take snapshot once:
+     * echo takeSnapshot >> /tmp/pulsar/pulsar-commands
      * */
     override fun maintain() {
         if (tooFrequentMaintenance) {
@@ -198,10 +203,16 @@ class MultiPrivacyContextManager(
             context.maintain()
         }
 
-        // if "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action
+        // If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+        //
+        // If the tmp dir is the default one, run the following command to take snapshot once:
+        // echo takeSnapshot >> /tmp/pulsar/pulsar-commands
         if (FileCommand.check("takeSnapshot")) {
-            logger.info("Privacy context snapshot: \n{}", takeSnapshot())
+            logger.info("\nPrivacy context snapshot: \n")
+            logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            logger.info("\n{}", takeSnapshot())
             activeContexts.values.forEach { it.report() }
+            logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         }
     }
 
@@ -214,21 +225,15 @@ class MultiPrivacyContextManager(
     }
 
     /**
-     * Try to get the next ready privacy context.
-     * This method can fail and a non-ready privacy context returns.
-     *
-     * A ready privacy context is:
-     * 1. is active
-     * 2. [requirement removed] not idle
-     * 3. the associated driver pool promises to provide an available driver (but the promise can be failed)
+     * Get the next under loaded privacy context, which can be ether active or inactive.
      *
      * @return A privacy context which is promised to be ready.
      * */
-    private fun tryNextReadyPrivacyContext(): PrivacyContext {
+    private fun tryNextUnderLoadedPrivacyContext(): PrivacyContext {
         var n = activeContexts.size
 
         var pc = iterator.next()
-        while (n-- > 0 && !pc.isReady) {
+        while (n-- > 0 && pc.isFullCapacity) {
             pc = iterator.next()
         }
 
@@ -260,7 +265,12 @@ class MultiPrivacyContextManager(
         }
     }
 
-    private suspend fun runIfPrivacyContextReady(
+    /**
+     * Try to run the task with the given privacy context, the privacy context is supposed to be:
+     * not closed, not retired, [not idle]?, has promised driver.
+     * If the privacy context is inactive, close it and cancel the task.
+     * */
+    private suspend fun runIfPrivacyContextActive(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult
     ): FetchResult {
         if (privacyContext !is BrowserPrivacyContext) {
@@ -271,18 +281,15 @@ class MultiPrivacyContextManager(
             !privacyContext.hasWebDriverPromise() -> {
                 "PRIVACY CX NO DRIVER"
             }
-            !privacyContext.isActive -> {
-                logger.warn("[Unexpected] Privacy is inactive, inability to perform tasks, closing it now")
-                close(privacyContext)
-                "PRIVACY CX NOT INACTIVE"
-            }
             privacyContext.isIdle -> {
-                logger.warn("[Unexpected] Privacy is idle, inability to perform tasks, closing it now")
+                logger.warn("[Unexpected] Privacy is idle and can not perform tasks, closing it now")
                 close(privacyContext)
                 "PRIVACY CX IDLE"
             }
-            !privacyContext.isReady -> {
-                "PRIVACY CX NOT READY"
+            !privacyContext.isActive -> {
+                logger.warn("[Unexpected] Privacy is inactive and can not perform tasks, closing it now")
+                close(privacyContext)
+                "PRIVACY CX NOT INACTIVE"
             }
             else -> null
         }

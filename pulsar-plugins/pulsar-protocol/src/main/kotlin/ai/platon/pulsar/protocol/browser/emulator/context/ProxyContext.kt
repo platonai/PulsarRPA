@@ -87,10 +87,14 @@ open class ProxyContext(
     private val closed = AtomicBoolean()
 
     val isEnabled get() = proxyPoolManager.isEnabled
+    val isRetired: Boolean get() {
+        val isProxyRetired = proxyEntry?.isRetired == true
+        return isProxyRetired
+    }
     val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
     val isReady: Boolean get() {
         val isProxyReady = proxyEntry == null || proxyEntry?.isReady == true
-        return isProxyReady && isActive
+        return isProxyReady && !isRetired && isActive
     }
 
     init {
@@ -126,7 +130,7 @@ open class ProxyContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.canceled(task)
+            return FetchResult.canceled(task, "PROXY CX INACTIVE")
         }
 
         checkProxyAbsence()

@@ -209,11 +209,11 @@ open class WebDriverContext(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
-            return FetchResult.canceled(task)
+            return FetchResult.canceled(task, "Inactive web driver context")
         }
 
         if (driverPoolManager.isRetiredPool(browserId)) {
-            return FetchResult.canceled(task)
+            return FetchResult.canceled(task, "Retired driver pool")
         }
 
         return null

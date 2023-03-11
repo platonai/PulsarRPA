@@ -186,6 +186,8 @@ open class WebDriverPoolManager(
 
     fun hasDriverPromise(browserId: BrowserId) = promisedDriverCount(browserId) > 0
 
+    fun isFullCapacity(browserId: BrowserId) = driverPoolPool.isFullCapacity(browserId)
+
     @Beta
     fun subscribeDriver(browserId: BrowserId) = driverPoolPool.subscribeDriver(browserId)
 
@@ -247,7 +249,13 @@ open class WebDriverPoolManager(
     }
 
     /**
-     * Maintain the driver pools
+     * Maintain all the driver pools, check and report inconsistency, illness, idleness, etc.,
+     * close bad pools if necessary.
+     *
+     * If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+     *
+     * If the tmp dir is the default one, run the following command to take snapshot once:
+     * echo takeSnapshot >> /tmp/pulsar/pulsar-commands
      * */
     @Throws(Exception::class)
     fun maintain() {
@@ -262,7 +270,7 @@ open class WebDriverPoolManager(
 
         // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
         driverPoolCloser.closeOldestRetiredDriverPoolSafely()
-        // close unexpected active browsers
+        // Close unexpected active browsers
         driverPoolCloser.closeUnexpectedActiveBrowsers()
 
         /**
@@ -276,9 +284,15 @@ open class WebDriverPoolManager(
             driverPoolCloser.closeIdleDriverPoolsSafely()
         }
 
-        // if "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action
+        // If "takeSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+        //
+        // If the tmp dir is the default one, run the following command to take snapshot once:
+        // echo takeSnapshot >> /tmp/pulsar/pulsar-commands
         if (FileCommand.check("takeSnapshot")) {
-            logger.info("Driver pool manager snapshot: \n{}", takeSnapshot())
+            logger.info("\nDriver pool manager: \n")
+            logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            logger.info("\n{}", takeSnapshot())
+            logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         }
     }
 
@@ -331,7 +345,7 @@ open class WebDriverPoolManager(
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
         val result = runWithDriverPool(task)
 
-        // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not work.
+        // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not working well.
         maintainService.submit { maintain() }
 
         return result

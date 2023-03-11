@@ -95,7 +95,7 @@ open class BrowserEmulatedFetcherImpl(
 
     private suspend fun doFetch(task: FetchTask, driver: WebDriver): FetchResult {
         if (!isActive) {
-            return FetchResult.canceled(task)
+            return FetchResult.canceled(task, "Inactive browser emulated fetcher")
         }
 
         emit(EventType.willFetch, task.page, driver)

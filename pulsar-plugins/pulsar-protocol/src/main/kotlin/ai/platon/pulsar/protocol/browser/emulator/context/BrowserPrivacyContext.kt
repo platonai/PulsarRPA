@@ -31,9 +31,13 @@ open class BrowserPrivacyContext constructor(
     private val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
     /**
+     * The privacy context is retired but not closed yet
+     * */
+    override val isRetired: Boolean get() {
+        return proxyContext?.isRetired == true
+    }
+    /**
      * A ready privacy context has to meet the following requirements:
-     *
-     * TODO: too complex state checking is very easy to lead to bugs, we have disabled the complex checking
      *
      * 1. not closed
      * 2. not leaked
@@ -47,13 +51,13 @@ open class BrowserPrivacyContext constructor(
      * */
     override val isReady: Boolean get() {
         // NOTICE:
-        // too complex state checking, which is very easy to lead to bugs, disable the code
-//        val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
-//        val isDriverContextReady = driverContext.isReady
-//        return isProxyContextReady && isDriverContextReady && super.isReady
-
-        return super.isReady
+        // too complex state checking, which is very easy to lead to bugs
+        val isProxyContextReady = proxyContext == null || proxyContext?.isReady == true
+        val isDriverContextReady = driverContext.isReady
+        return isProxyContextReady && isDriverContextReady && super.isReady
     }
+
+    override val isFullCapacity: Boolean get() = driverPoolManager.isFullCapacity(browserId)
 
     @Throws(ProxyException::class)
     override suspend fun doRun(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
@@ -75,7 +79,6 @@ open class BrowserPrivacyContext constructor(
     override fun subscribeWebDriver() = driverPoolManager.subscribeDriver(browserId)
 
     override fun report() {
-        val isProxyIdle = proxyContext?.proxyEntry?.isIdle == true
         logger.info("Privacy context #{}{}{} has lived for {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
@@ -84,7 +87,7 @@ open class BrowserPrivacyContext constructor(
                 Strings.compactFormat(coreMetrics?.totalNetworkIFsRecvBytes?:0),
                 Strings.compactFormat(coreMetrics?.networkIFsRecvBytesPerSecond?:0),
                 meterTasks.count, meterFinishes.count,
-                proxyContext?.proxyEntry
+                proxyContext?.proxyEntry?.toString()
         )
 
         if (smallPageRate > 0.5) {
@@ -122,7 +125,7 @@ open class BrowserPrivacyContext constructor(
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         return when {
-            !isActive -> FetchResult.canceled(task)
+            !isActive -> FetchResult.canceled(task, "PRIVACY CX INACTIVE")
             else -> null
         }
     }
