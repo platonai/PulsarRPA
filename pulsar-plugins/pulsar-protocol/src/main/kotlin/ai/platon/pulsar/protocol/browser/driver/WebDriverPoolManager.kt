@@ -102,6 +102,7 @@ open class WebDriverPoolManager(
     ).takeUnless { suppressMetrics }
 
     private var lastMaintainTime = Instant.now()
+    private var lastIdleDriverMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
@@ -297,9 +298,13 @@ open class WebDriverPoolManager(
          * */
         browserManager.destroyZombieBrowsersForcibly()
 
-        // Preempt the channel to ensure consistency
-        preempt {
-            driverPoolCloser.closeIdleDriverPoolsSafely()
+        // We doubt the preemptive maintainer slows down the system if it runs too frequent
+        if (Duration.between(lastIdleDriverMaintainTime, Instant.now()) > Duration.ofMinutes(20)) {
+            // Preempt the channel to ensure consistency
+            preempt {
+                lastIdleDriverMaintainTime = Instant.now()
+                driverPoolCloser.closeIdleDriverPoolsSafely()
+            }
         }
 
         // If "takeDriverPoolSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.

@@ -105,7 +105,7 @@ class PageDatum(
     /**
      * The length of the final page content in bytes, the content might has inserted pulsar metadata.
      */
-    val contentLength get() = (content.get()?.size ?: 0).toLong()
+    val contentLength get() = (content?.size ?: 0).toLong()
 
     var page = WeakReference<WebPage>(null)
 
@@ -123,7 +123,7 @@ class PageDatum(
                 && url == other.url
                 && location == other.location
                 && contentType == other.contentType
-                && Arrays.equals(content.get(), other.content.get())
+                && Arrays.equals(content, other.content)
     }
 
     override fun hashCode() = url.hashCode()

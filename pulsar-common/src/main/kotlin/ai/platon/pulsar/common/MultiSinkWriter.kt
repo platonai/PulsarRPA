@@ -37,22 +37,28 @@ abstract class MultiSinkWriter(val conf: ImmutableConfig) : AutoCloseable {
         return listOf()
     }
 
-    fun write(message: String, filename: String) {
-        write(message, getPath(filename))
+    fun write(message: String, filename: String): Path {
+        val path = getPath(filename)
+        write(message, path)
+        return path
     }
 
-    fun write(message: String, file: Path) {
+    fun write(message: String, file: Path): Path {
         writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
+        return file
     }
 
-    fun writeLine(message: String, filename: String) {
-        writeLine(message, getPath(filename))
+    fun writeLine(message: String, filename: String): Path {
+        val path = getPath(filename)
+        writeLine(message, path)
+        return path
     }
 
-    fun writeLine(message: String, file: Path) {
+    fun writeLine(message: String, file: Path): Path {
         val writer = writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
         writer.write(message)
         writer.write("\n")
+        return file
     }
 
     fun closeWriter(filename: String) {
