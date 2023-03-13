@@ -135,6 +135,8 @@ class WebPageExt(private val page: WebPage) {
 
         page.setOriginalContentLength(pageDatum.originalContentLength)
         page.setContent(pageDatum.content)
+        // clear content immediately to release resource as soon as possible
+        pageDatum.content = null
 
         if (contentType != null) {
             pageDatum.contentType = contentType

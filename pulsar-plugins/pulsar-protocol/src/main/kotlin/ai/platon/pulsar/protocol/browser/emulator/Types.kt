@@ -22,14 +22,13 @@ class NavigateTask constructor(
 
     val url get() = fetchTask.url
     val page get() = fetchTask.page
-    val pageDatum = PageDatum(url)
+    val pageDatum = PageDatum(page)
 
     var originalContentLength = -1
     var pageSource = ""
 
     init {
         pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()
-        pageDatum.page = WeakReference(fetchTask.page)
     }
 }
 

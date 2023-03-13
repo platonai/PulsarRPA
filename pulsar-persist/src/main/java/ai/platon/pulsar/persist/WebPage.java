@@ -86,7 +86,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * Web page scope variables
      */
     private final Variables variables = new Variables();
-
+    /**
+     * The page datum for update.
+     * Page datum is collected by the fetcher and is used to update the page in the update phase.
+     * */
+    private PageDatum pageDatum = null;
     /**
      * If this page is fetched from Internet
      */
@@ -399,6 +403,14 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     public void setVar(@NotNull String name, @NotNull Object value) {
         variables.set(name, value);
+    }
+
+    public PageDatum getPageDatum() {
+        return pageDatum;
+    }
+
+    public void setPageDatum(PageDatum pageDatum) {
+        this.pageDatum = pageDatum;
     }
 
     public boolean isCached() {
