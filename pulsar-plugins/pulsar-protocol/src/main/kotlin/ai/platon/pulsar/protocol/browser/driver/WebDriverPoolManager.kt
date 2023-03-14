@@ -102,7 +102,6 @@ open class WebDriverPoolManager(
     ).takeUnless { suppressMetrics }
 
     private var lastMaintainTime = Instant.now()
-    private var lastIdleDriverMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
@@ -299,18 +298,21 @@ open class WebDriverPoolManager(
         browserManager.destroyZombieBrowsersForcibly()
 
         // We doubt the preemptive maintainer slows down the system if it runs too frequent
-        if (Duration.between(lastIdleDriverMaintainTime, Instant.now()) > Duration.ofMinutes(20)) {
+        val idleDriverPoolCount = workingDriverPools.values.count { it.isIdle }
+        if (idleDriverPoolCount > 0) {
+            logger.warn("There are {} idle driver pools, preempt and do the maintaining", idleDriverPoolCount)
             // Preempt the channel to ensure consistency
             preempt {
-                lastIdleDriverMaintainTime = Instant.now()
                 driverPoolCloser.closeIdleDriverPoolsSafely()
             }
         }
 
-        // If "takeDriverPoolSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
-        //
-        // If the tmp dir is the default one, run the following command to take snapshot once:
-        // echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
+        /**
+         * If "takeDriverPoolSnapshot" is in file AppPaths.PATH_LOCAL_COMMAND, perform the action.
+         *
+         * If the tmp dir is the default one, run the following command to take snapshot once:
+         * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
+        * */
         if (FileCommand.check("takeDriverPoolSnapshot")) {
             logger.info("\nDriver pool manager: \n")
             logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
