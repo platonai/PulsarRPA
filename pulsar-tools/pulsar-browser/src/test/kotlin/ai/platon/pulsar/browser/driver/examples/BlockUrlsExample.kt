@@ -79,7 +79,7 @@ class BlockUrlsExample: BrowserExampleBase() {
 
         println(Gson().toJson(chrome.version))
 
-        readLine()
+//        readLine()
     }
 
     private fun isMainFrame(frameId: String): Boolean {

@@ -17,13 +17,16 @@ class MessageWriter(
 ): AutoCloseable {
 
     private val log = LoggerFactory.getLogger(MessageWriter::class.java)
-    private var maxFileSize = DEFAULT_MAX_FILE_SIZE
-    private var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss ")
+
     private var fileWriter: Writer? = null
     private var printWriter: PrintWriter? = null
-    private var checkSize: Int = 0
     private val closed = AtomicBoolean()
-    private var writingError: Boolean = false
+
+    var maxFileSize = DEFAULT_MAX_FILE_SIZE
+    var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss ")
+
+    var checkSize: Int = 0
+    var writingError: Boolean = false
 
     fun write(s: String) {
         writeFile(s)

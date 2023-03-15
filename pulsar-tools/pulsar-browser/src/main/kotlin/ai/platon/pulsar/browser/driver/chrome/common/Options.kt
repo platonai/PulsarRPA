@@ -86,22 +86,41 @@ class ChromeOptions(
     @ChromeParameter("no-sandbox")
     var noSandbox: Boolean = false,
     @ChromeParameter("ignore-certificate-errors")
-    var ignoreCertificateErrors: Boolean = true
+    var ignoreCertificateErrors: Boolean = true,
+    /**
+     * The origin for DevTools Websocket connections must now be specified explicitly from Chrome 111.
+     * @see [fluidsonic's pull](https://github.com/kklisura/chrome-devtools-java-client/pull/85)
+     * @see [ChromeDriver 111.0.5563.19 unable to establish connection to chrome](https://groups.google.com/g/chromedriver-users/c/xL5-13_qGaA?pli=1)
+     * */
+    @ChromeParameter("remote-allow-origins")
+    var remoteAllowOrigins: String = "*"
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 
+    /**
+     * Add an argument.
+     * */
     fun addArgument(key: String, value: String? = null): ChromeOptions {
         additionalArguments[key] = value
         return this
     }
 
+    /**
+     * Remove an argument.
+     * */
     fun removeArgument(key: String): ChromeOptions {
         additionalArguments.remove(key)
         return this
     }
 
+    /**
+     * Merge an arguments map to this
+     * */
     fun merge(args: Map<String, Any?>) = args.forEach { (key, value) -> addArgument(key, value?.toString()) }
 
+    /**
+     * Convert all the arguments to a map.
+     * */
     fun toMap(): Map<String, Any?> {
         val args = ChromeOptions::class.java.declaredFields
             .filter { it.annotations.any { it is ChromeParameter } }
@@ -113,6 +132,9 @@ class ChromeOptions(
         return args
     }
 
+    /**
+     * Convert all the arguments to a list.
+     * */
     fun toList() = toList(toMap())
 
     fun toList(args: Map<String, Any?>): List<String> {

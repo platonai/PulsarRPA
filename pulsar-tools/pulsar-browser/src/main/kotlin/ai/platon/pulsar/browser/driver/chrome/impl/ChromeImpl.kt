@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.jetbrains.kotlin.util.getValueOrNull
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -34,12 +35,23 @@ class ChromeImpl(
         const val VERSION = "json/version"
     }
 
+    enum class HttpMethod {
+        CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE
+    }
+
     private val logger = getLogger(this)
     private val objectMapper = ObjectMapper()
     private val remoteDevTools: MutableMap<String, RemoteDevTools> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
 
-    override val version: ChromeVersion by lazy { refreshVersion() }
+    /**
+     * The Chrome version.
+     *
+     * @see https://developer.chrome.com/tags/new-in-devtools/
+     * @see https://developer.chrome.com/en/blog/new-in-devtools-111/
+     * */
+    private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
+    override val version get() = _version.value
 
     constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {
         override fun createWebSocketService(wsUrl: String): Transport {
@@ -51,7 +63,7 @@ class ChromeImpl(
 
     @Throws(ChromeServiceException::class)
     override fun listTabs(): Array<ChromeTab> {
-        return request(Array<ChromeTab>::class.java, "http://%s:%d/%s", host, port, LIST_TABS)
+        return request(Array<ChromeTab>::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, LIST_TABS)
             ?: throw ChromeServiceException("Failed to list tabs")
     }
 
@@ -62,18 +74,18 @@ class ChromeImpl(
 
     @Throws(ChromeServiceException::class)
     override fun createTab(url: String): ChromeTab {
-        return request(ChromeTab::class.java, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
+        return request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
                 ?: throw ChromeServiceException("Failed to create tab | $url")
     }
 
     @Throws(ChromeServiceException::class)
     override fun activateTab(tab: ChromeTab) {
-        request(Void::class.java, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
+        request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
     }
 
     @Throws(ChromeServiceException::class)
     override fun closeTab(tab: ChromeTab) {
-        request(Void::class.java, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
+        request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
         clearDevTools(tab)
     }
 
@@ -89,7 +101,7 @@ class ChromeImpl(
 
     @Throws(ChromeServiceException::class)
     private fun refreshVersion(): ChromeVersion {
-        return request(ChromeVersion::class.java, "http://%s:%d/%s", host, port, VERSION)
+        return request(ChromeVersion::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, VERSION)
             ?: throw ChromeServiceException("Failed to get version")
     }
 
@@ -142,7 +154,9 @@ class ChromeImpl(
      * @throws ChromeServiceException If sending request fails due to any reason.
     */
     @Throws(ChromeServiceException::class)
-    private fun <T> request(responseType: Class<T>, path: String, vararg params: Any): T? {
+    private fun <T> request(
+        responseType: Class<T>, method: HttpMethod, path: String, vararg params: Any
+    ): T? {
         if (closed.get()) return null
 
         var connection: HttpURLConnection? = null
@@ -154,9 +168,12 @@ class ChromeImpl(
             // TODO: issue #14 Using unsafe HTTP verb GET to invoke /json/new. This action supports only PUT verb.
             // https://github.com/platonai/exotic-amazon/issues/14
             // chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
-//            if ("new" in path) {
-//                connection.requestMethod = "PUT"
+
+//            val requestMethod = when {
+//                listOf(CREATE_TAB, ACTIVATE_TAB, CLOSE_TAB).any { uri.path.contains(it) } -> "PUT"
+//                else -> "GET"
 //            }
+            connection.requestMethod = method.toString()
             val responseCode = connection.responseCode
             if (HttpURLConnection.HTTP_OK == responseCode) {
                 if (Void::class.java == responseType) {

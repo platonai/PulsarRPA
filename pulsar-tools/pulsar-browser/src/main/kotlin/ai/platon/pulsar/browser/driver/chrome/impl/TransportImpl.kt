@@ -73,11 +73,11 @@ class TransportImpl : Transport {
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
-            logger.warn("Failed to connect to ws server | {}", uri, e)
-            throw WebSocketServiceException("Failed connecting to ws server {}", e)
+            logger.warn("Failed to connect to ws server | $uri", e)
+            throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
         } catch (e: IOException) {
-            logger.warn("Failed to connect to ws server | {}", uri, e)
-            throw WebSocketServiceException("Failed connecting to ws server {}", e)
+            logger.warn("Failed to connect to ws server | $uri", uri, e)
+            throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
         }
     }
 

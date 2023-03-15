@@ -67,8 +67,10 @@ class ChromeDevtoolsBrowser(
             val chromeTab = createTab()
             return newDriver(chromeTab, false)
         } catch (e: ChromeDriverException) {
+            logger.warn(e.stringify())
             throw WebDriverException("Failed to create chrome devtools driver | " + e.message)
         } catch (e: Exception) {
+            logger.warn(e.stringify())
             throw WebDriverException("[Unexpected] Failed to create chrome devtools driver", e)
         }
     }
