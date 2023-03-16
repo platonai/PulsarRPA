@@ -46,9 +46,6 @@ class ChromeImpl(
 
     /**
      * The Chrome version.
-     *
-     * @see https://developer.chrome.com/tags/new-in-devtools/
-     * @see https://developer.chrome.com/en/blog/new-in-devtools-111/
      * */
     private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
     override val version get() = _version.value
@@ -147,7 +144,7 @@ class ChromeImpl(
      * Sends a request and parses json response as type T.
      *
      * @param responseType Resulting class type.
-     * @param path Path with optional params similar to String.formats params.
+     * @param path Path with optional params similar to String.format() params.
      * @param params Path params.
      * @param <T> Type of response type.
      * @return Response object.
@@ -165,15 +162,20 @@ class ChromeImpl(
         try {
             val uri = URL(String.format(path, *params))
             connection = uri.openConnection() as HttpURLConnection
-            // TODO: issue #14 Using unsafe HTTP verb GET to invoke /json/new. This action supports only PUT verb.
-            // https://github.com/platonai/exotic-amazon/issues/14
-            // chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
 
-//            val requestMethod = when {
-//                listOf(CREATE_TAB, ACTIVATE_TAB, CLOSE_TAB).any { uri.path.contains(it) } -> "PUT"
-//                else -> "GET"
-//            }
+
+            /**
+             * Chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
+             *
+             * Issue #14: Using unsafe HTTP verb GET to invoke /json/new. This action supports only PUT verb.
+             * @see [#14](https://github.com/platonai/exotic-amazon/issues/14)
+             *
+             * Chrome-devtools-java-client issue #87: Doesn't work with chrome v111 #87
+             * @see [#87](https://github.com/kklisura/chrome-devtools-java-client/issues/87)
+             * */
             connection.requestMethod = method.toString()
+
+
             val responseCode = connection.responseCode
             if (HttpURLConnection.HTTP_OK == responseCode) {
                 if (Void::class.java == responseType) {
