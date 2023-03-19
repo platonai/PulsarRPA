@@ -72,6 +72,16 @@ object Runtimes {
         }
     }
 
+    fun destroyProcessForcibly(pid: Int) {
+        if (pid <= 0) {
+            return
+        } else if (SystemUtils.IS_OS_LINUX) {
+            exec("kill -9 $pid")
+        } else if (SystemUtils.IS_OS_WINDOWS) {
+            exec("taskkill /F /PID $pid")
+        }
+    }
+
     fun formatProcessInfo(process: ProcessHandle): String {
         val info = process.info()
         val user = info.user().orElse("")

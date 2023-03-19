@@ -371,7 +371,7 @@ class ChromeDevtoolsDriver(
     override suspend fun moveMouseTo(x: Double, y: Double) {
         try {
             rpc.invokeDeferred("moveMouseTo") {
-                mouse?.move(x, y)
+                mouse?.moveTo(x, y)
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "moveMouseTo")

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.geometric.DimD
 import ai.platon.pulsar.common.geometric.OffsetD
 import ai.platon.pulsar.common.geometric.PointD
 import ai.platon.pulsar.common.geometric.RectD
-import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.ChromeDevTools
 import com.github.kklisura.cdt.protocol.commands.DOM
 import com.github.kklisura.cdt.protocol.commands.Page
@@ -14,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
+import java.awt.Robot
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -187,7 +187,7 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y - Vertical position of the mouse.
      */
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
-        move(x, y)
+        moveTo(x, y)
         down(x, y, clickCount)
 
         if (delayMillis > 0) {
@@ -197,11 +197,11 @@ class Mouse(private val devTools: ChromeDevTools) {
         up(x, y, clickCount)
     }
 
-    suspend fun move(point: PointD, steps: Int = 5, delayMillis: Long = 50) {
-        move(point.x, point.y, steps, delayMillis)
+    suspend fun moveTo(point: PointD, steps: Int = 5, delayMillis: Long = 50) {
+        moveTo(point.x, point.y, steps, delayMillis)
     }
 
-    suspend fun move(x: Double, y: Double, steps: Int = 5, delayMillis: Long = 50) {
+    suspend fun moveTo(x: Double, y: Double, steps: Int = 1, delayMillis: Long = 50) {
         val fromX = currentX
         val fromY = currentY
 
@@ -209,12 +209,26 @@ class Mouse(private val devTools: ChromeDevTools) {
         currentY = y
 
         var i = 0
-        while (i <= steps) {
+        while (i < steps) {
             val x1 = fromX + (currentX - fromX) * (i.toDouble() / steps)
             val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
 
+            chromeMoveTo(x1, y1)
+
+            if (delayMillis > 0) {
+                delay(delayMillis)
+            }
+
+            ++i
+        }
+    }
+
+    /**
+     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
+     * */
+    private fun chromeMoveTo(x: Double, y: Double) {
             input.dispatchMouseEvent(
-                DispatchMouseEventType.MOUSE_MOVED, x1, y1,
+            DispatchMouseEventType.MOUSE_MOVED, x, y,
                 null, null,
                 null, // button
                 null, // buttons
@@ -228,13 +242,11 @@ class Mouse(private val devTools: ChromeDevTools) {
                 null,
                 null
             )
-
-            if (delayMillis > 0) {
-                delay(delayMillis)
             }
 
-            ++i
-        }
+    private fun awtMoveTo(x: Double, y: Double) {
+        val robot = Robot()
+        robot.mouseMove(x.toInt(), y.toInt())
     }
 
     /**
@@ -419,9 +431,9 @@ class Mouse(private val devTools: ChromeDevTools) {
             }
         }
 
-        move(start, 5, 100)
+        moveTo(start, 5, 100)
         down(currentX, currentY)
-        move(target, 3, 500)
+        moveTo(target, 3, 500)
 
         return dragData
     }

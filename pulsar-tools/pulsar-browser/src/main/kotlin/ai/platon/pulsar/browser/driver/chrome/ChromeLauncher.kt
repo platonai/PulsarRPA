@@ -6,10 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ProcessLauncher
-import ai.platon.pulsar.common.Runtimes
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.browser.Browsers
 import ai.platon.pulsar.common.concurrent.RuntimeShutdownHookRegistry
 import ai.platon.pulsar.common.concurrent.ShutdownHookRegistry
@@ -17,13 +14,11 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
+import java.io.FileFilter
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.util.regex.Pattern
 
 /**
@@ -40,6 +35,7 @@ class ChromeLauncher(
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
+    val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
     private var process: Process? = null
     private val shutdownHookThread = Thread { this.close() }
 
@@ -72,6 +68,19 @@ class ChromeLauncher(
      * Launch the chrome
      * */
     fun launch() = launch(true)
+
+    fun destroyForcibly() {
+        try {
+            val pid = Files.readAllLines(pidPath).firstOrNull { it.isNotBlank() }?.toIntOrNull() ?: 0
+            if (pid > 0) {
+                logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
+                Runtimes.destroyProcessForcibly(pid)
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            logger.warn(t.stringify())
+        }
+    }
 
     override fun close() {
         val p = process ?: return
@@ -235,8 +244,13 @@ class ChromeLauncher(
                 if (!Files.exists(userDataDir.resolve("Default"))) {
                     logger.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
                     // remove dead symbolic links
-                    Files.list(prototypeUserDataDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
-                    FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
+                    Files.list(prototypeUserDataDir)
+                        .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
+                        .forEach { Files.delete(it) }
+                    // ISSUE#29: https://github.com/platonai/pulsarr/issues/29
+                    // Failed to copy chrome data dir when there is a SingletonSocket symbol link
+                    val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
+                    FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
                     val leveldb = userDataDir.resolve("Default/Local Storage/leveldb")
@@ -258,8 +272,10 @@ class ChromeLauncher(
     private fun cleanUp() {
         val target = userDataDir
 
-        // delete user data dir only if it's in the system tmp dir
-        if (target.startsWith(AppPaths.SYS_TMP_DIR)) {
+        // seems safe enough to delete directory matching special pattern
+        val forceDelete = target.toString().matches(".+pulsar-.+/context/cx.+".toRegex())
+        // delete user data dir only if it's in the system tmp dir to prevent deleting files by mistake
+        if (forceDelete || target.startsWith(AppPaths.SYS_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
                 logger.warn("Failed to delete browser cache, try again | {}", target)

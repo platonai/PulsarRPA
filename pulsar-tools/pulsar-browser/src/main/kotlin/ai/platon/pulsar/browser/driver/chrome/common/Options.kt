@@ -34,7 +34,7 @@ annotation class ChromeParameter(val value: String)
  * The options to open chrome devtools
  * */
 class ChromeOptions(
-    // user data dir is set in LauncherOptions
+    // user data dir is set as a constructor parameter of ChromeLauncher
 //        @ChromeParameter("user-data-dir")
 //        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
     @ChromeParameter("proxy-server")
@@ -86,7 +86,14 @@ class ChromeOptions(
     @ChromeParameter("no-sandbox")
     var noSandbox: Boolean = false,
     @ChromeParameter("ignore-certificate-errors")
-    var ignoreCertificateErrors: Boolean = true
+    var ignoreCertificateErrors: Boolean = true,
+    /**
+     * The origin for DevTools Websocket connections must now be specified explicitly from Chrome 111.
+     * @see [fluidsonic's pull](https://github.com/kklisura/chrome-devtools-java-client/pull/85)
+     * @see [ChromeDriver 111.0.5563.19 unable to establish connection to chrome](https://groups.google.com/g/chromedriver-users/c/xL5-13_qGaA?pli=1)
+     * */
+    @ChromeParameter("remote-allow-origins")
+    var remoteAllowOrigins: String = "*"
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 

@@ -46,9 +46,21 @@ class InvocationFuture(val returnProperty: String? = null) {
         countDownLatch.countDown()
     }
 
+    /**
+     * Causes the current thread to wait until the latch has counted down to
+     * zero, unless the thread is interrupted, or the specified waiting time elapses.
+     *
+     * TODO: this method blocks the current thread, so it should not used in a coroutine
+     * */
     @Throws(InterruptedException::class)
     fun await(timeout: Duration) = await(timeout.toMillis(), TimeUnit.MILLISECONDS)
 
+    /**
+     * Causes the current thread to wait until the latch has counted down to
+     * zero, unless the thread is interrupted, or the specified waiting time elapses.
+     *
+     * TODO: this method blocks the current thread, so it should not used in a coroutine
+     * */
     @Throws(InterruptedException::class)
     fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
         return if (timeout == 0L) {

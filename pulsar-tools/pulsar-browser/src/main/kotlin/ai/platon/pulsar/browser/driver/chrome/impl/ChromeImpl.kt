@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -32,11 +34,20 @@ class ChromeImpl(
         const val VERSION = "json/version"
     }
 
+    enum class HttpMethod {
+        CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE
+    }
+
+    private val logger = getLogger(this)
     private val objectMapper = ObjectMapper()
     private val remoteDevTools: MutableMap<String, RemoteDevTools> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
 
-    override val version: ChromeVersion by lazy { refreshVersion() }
+    /**
+     * The Chrome version.
+     * */
+    private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
+    override val version get() = _version.value
 
     constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {
         override fun createWebSocketService(wsUrl: String): Transport {
@@ -48,7 +59,7 @@ class ChromeImpl(
 
     @Throws(ChromeServiceException::class)
     override fun listTabs(): Array<ChromeTab> {
-        return request(Array<ChromeTab>::class.java, "http://%s:%d/%s", host, port, LIST_TABS)
+        return request(Array<ChromeTab>::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, LIST_TABS)
             ?: throw ChromeServiceException("Failed to list tabs")
     }
 
@@ -59,18 +70,18 @@ class ChromeImpl(
 
     @Throws(ChromeServiceException::class)
     override fun createTab(url: String): ChromeTab {
-        return request(ChromeTab::class.java, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
+        return request(ChromeTab::class.java, HttpMethod.PUT, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
                 ?: throw ChromeServiceException("Failed to create tab | $url")
     }
 
     @Throws(ChromeServiceException::class)
     override fun activateTab(tab: ChromeTab) {
-        request(Void::class.java, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
+        request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
     }
 
     @Throws(ChromeServiceException::class)
     override fun closeTab(tab: ChromeTab) {
-        request(Void::class.java, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
+        request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
         clearDevTools(tab)
     }
 
@@ -86,7 +97,7 @@ class ChromeImpl(
 
     @Throws(ChromeServiceException::class)
     private fun refreshVersion(): ChromeVersion {
-        return request(ChromeVersion::class.java, "http://%s:%d/%s", host, port, VERSION)
+        return request(ChromeVersion::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, VERSION)
             ?: throw ChromeServiceException("Failed to get version")
     }
 
@@ -96,7 +107,7 @@ class ChromeImpl(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            remoteDevTools.values.forEach { it.close() }
+            remoteDevTools.values.forEach { kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) } }
             remoteDevTools.clear()
         }
     }
@@ -132,14 +143,16 @@ class ChromeImpl(
      * Sends a request and parses json response as type T.
      *
      * @param responseType Resulting class type.
-     * @param path Path with optional params similar to String.formats params.
+     * @param path Path with optional params similar to String.format() params.
      * @param params Path params.
      * @param <T> Type of response type.
      * @return Response object.
      * @throws ChromeServiceException If sending request fails due to any reason.
     */
     @Throws(ChromeServiceException::class)
-    private fun <T> request(responseType: Class<T>, path: String, vararg params: Any): T? {
+    private fun <T> request(
+        responseType: Class<T>, method: HttpMethod, path: String, vararg params: Any
+    ): T? {
         if (closed.get()) return null
 
         var connection: HttpURLConnection? = null
@@ -148,6 +161,20 @@ class ChromeImpl(
         try {
             val uri = URL(String.format(path, *params))
             connection = uri.openConnection() as HttpURLConnection
+
+
+            /**
+             * Chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
+             *
+             * Issue #14: Using unsafe HTTP verb GET to invoke /json/new. This action supports only PUT verb.
+             * @see [#14](https://github.com/platonai/exotic-amazon/issues/14)
+             *
+             * Chrome-devtools-java-client issue #87: Doesn't work with chrome v111 #87
+             * @see [#87](https://github.com/kklisura/chrome-devtools-java-client/issues/87)
+             * */
+            connection.requestMethod = method.toString()
+
+
             val responseCode = connection.responseCode
             if (HttpURLConnection.HTTP_OK == responseCode) {
                 if (Void::class.java == responseType) {

@@ -4,8 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.simplify
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -73,11 +73,11 @@ class TransportImpl : Transport {
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
-            logger.warn("Failed to connect to ws server | {}", uri, e)
-            throw WebSocketServiceException("Failed connecting to ws server {}", e)
+            logger.warn("Failed to connect to ws server | $uri", e)
+            throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
         } catch (e: IOException) {
-            logger.warn("Failed to connect to ws server | {}", uri, e)
-            throw WebSocketServiceException("Failed connecting to ws server {}", e)
+            logger.warn("Failed to connect to ws server | $uri", uri, e)
+            throw WebSocketServiceException("Failed connecting to ws server | $uri", e)
         }
     }
 
@@ -143,7 +143,7 @@ class TransportImpl : Transport {
     }
 
     private fun onError(session: Session, e: Throwable?) {
-        logger.error("WS session error | {}\n>>>{}<<<", session.requestURI, e?.simplify())
+        logger.error("WS session error | {}\n>>>{}<<<", session.requestURI, e?.brief())
     }
 
     override fun close() {
