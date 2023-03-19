@@ -51,6 +51,20 @@ class LoadComponent(
         private const val VAR_REFRESH = "refresh"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
+
+        var IGNORED_PAGE_FIELDS = setOf(
+            GWebPage.Field.PAGE_MODEL,
+        )
+
+        var IGNORED_PAGE_FIELDS_2 = setOf(
+            GWebPage.Field.PAGE_MODEL,
+            GWebPage.Field.CONTENT
+        )
+
+//        var PAGE_FIELDS = GWebPage.Field.values().toSet() - IGNORED_PAGE_FIELDS
+
+        // Specify page fields to accelerate page loading
+        val PAGE_FIELDS = mutableListOf<GWebPage.Field>()
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -259,7 +273,11 @@ class LoadComponent(
             // TODO: two step loading, or lazy loading page content
 //            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
             // loadedPage?.setLazyFieldLoader { webDb.getOrNull(normUrl.spec, field = GWebPage.Field.CONTENT) }
-            val loadedPage = webDb.getOrNull(normUrl.spec)
+            val loadedPage = if (PAGE_FIELDS.isNotEmpty()) {
+                webDb.getOrNull(normUrl.spec, fields = PAGE_FIELDS)
+            } else {
+                webDb.getOrNull(normUrl.spec)
+            }
 
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {

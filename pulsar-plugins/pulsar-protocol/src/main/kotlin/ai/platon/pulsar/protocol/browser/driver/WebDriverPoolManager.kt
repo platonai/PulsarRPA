@@ -260,6 +260,8 @@ open class WebDriverPoolManager(
         numReset.mark()
 
         // Preempt the channel to ensure consistency.
+        // TODO: remove preempt guard, just mark the driver pool and all the drivers as retired
+        //
         // Wait until there is no normal tasks, and if there is at least one preemptive task
         // in the critical section, all normal tasks have to wait.
         preempt {

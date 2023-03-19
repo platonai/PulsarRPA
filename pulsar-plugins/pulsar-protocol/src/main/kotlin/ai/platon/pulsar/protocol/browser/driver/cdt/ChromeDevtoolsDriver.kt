@@ -146,7 +146,7 @@ class ChromeDevtoolsDriver(
             }
 
             rpc.invokeDeferred("navigateTo") {
-                if (enableStartupScript) navigateInvaded(entry.url) else navigateNonInvaded(entry.url)
+                if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
             }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "navigateTo", entry.url)
@@ -771,7 +771,9 @@ class ChromeDevtoolsDriver(
 
     override fun toString() = "DevTools driver ($lastSessionId)"
 
-    private fun navigateInvaded(url: String) {
+    private fun navigateInvaded(entry: NavigateEntry) {
+        val url = entry.url
+
 //        pageAPI?.addScriptToEvaluateOnNewDocument(buildInitScripts())
         addScriptToEvaluateOnNewDocument()
 
@@ -782,6 +784,11 @@ class ChromeDevtoolsDriver(
 
         networkAPI?.onRequestWillBeSent { requestWillBeSent ->
             if (mainRequestId.isBlank()) {
+                // amazon.com uses "referer" instead of "referrer" in the request header,
+                // not clear if other sites uses the other one
+                val refererHeaderName = "referer"
+                entry.pageReferrer?.let { requestWillBeSent.request.headers.put(refererHeaderName, it) }
+
                 mainRequestId = requestWillBeSent.requestId
                 mainRequestHeaders = requestWillBeSent.request.headers
             }
@@ -829,7 +836,9 @@ class ChromeDevtoolsDriver(
     /**
      * Navigate to a url without javascript injected, this is only for debugging
      * */
-    private fun navigateNonInvaded(url: String) {
+    private fun navigateNonInvaded(entry: NavigateEntry) {
+        val url = entry.url
+
         pageAPI?.enable()
         navigateUrl = url
         pageAPI?.navigate(url)

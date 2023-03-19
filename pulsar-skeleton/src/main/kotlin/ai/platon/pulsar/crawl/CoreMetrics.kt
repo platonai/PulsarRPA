@@ -468,6 +468,9 @@ class CoreMetrics(
 
         if (i % period == 0L) {
             logger.info(getSuccessReport())
+        } else if (DateTimes.elapsedTime(lastReportTime).seconds > 4 * 60) {
+            // must report every 4 minutes
+            logger.info(getSuccessReport())
         }
     }
 
