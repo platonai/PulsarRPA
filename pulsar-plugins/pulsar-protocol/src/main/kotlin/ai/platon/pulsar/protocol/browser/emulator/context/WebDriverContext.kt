@@ -58,7 +58,11 @@ open class WebDriverContext(
      * */
     open val isActive get() = !closed.get() && AppContext.isActive
     /**
-     * The driver context is ready to serve
+     * Check if the driver context is retired.
+     * */
+    open val isRetired get() = driverPoolManager.isRetiredPool(browserId)
+    /**
+     * Check if the driver context is ready to serve
      * */
     open val isReady: Boolean
         get() {

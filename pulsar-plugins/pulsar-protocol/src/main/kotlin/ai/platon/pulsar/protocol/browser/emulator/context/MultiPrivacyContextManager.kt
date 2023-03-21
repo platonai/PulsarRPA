@@ -68,7 +68,6 @@ class MultiPrivacyContextManager(
         driverPoolManager: WebDriverPoolManager,
         immutableConfig: ImmutableConfig
     ) : this(driverPoolManager, null, null, immutableConfig)
-
     /**
      * Run a task in a privacy context.
      *
@@ -100,7 +99,6 @@ class MultiPrivacyContextManager(
 
         return result
     }
-
     /**
      * Create a privacy context who is not added to the context list.
      * */
@@ -113,7 +111,6 @@ class MultiPrivacyContextManager(
         )
         return context
     }
-
     /**
      * Try to get a ready privacy context.
      *
@@ -146,7 +143,6 @@ class MultiPrivacyContextManager(
 
         return computeIfAbsent(privacyContextIdGenerator(fingerprint))
     }
-
     /**
      * Gets an under-loaded privacy context, which can be either active or inactive.
      *
@@ -165,7 +161,6 @@ class MultiPrivacyContextManager(
                 computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
 
-//            return iterator.next()
             return tryNextUnderLoadedPrivacyContext()
         }
     }
@@ -214,6 +209,9 @@ class MultiPrivacyContextManager(
             activeContexts.values.forEach { it.report() }
             logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         }
+
+        // assign the last maintain time again
+        lastMaintainTime = Instant.now()
     }
 
     override fun close() {
@@ -227,7 +225,13 @@ class MultiPrivacyContextManager(
     /**
      * Get the next under loaded privacy context, which can be ether active or inactive.
      *
-     * @return A privacy context which is promised to be ready.
+     * If a privacy context is full capacity, it means the underlying layer is healthy and is running full load, and no
+     * resources to serve new tasks.
+     *
+     * If a privacy context is not full capacity, it means the underlying layer is inactive or has available resources
+     * to serve new tasks.
+     *
+     * @return A privacy context which is promised to be ready to serve a new task.
      * */
     private fun tryNextUnderLoadedPrivacyContext(): PrivacyContext {
         var n = activeContexts.size

@@ -169,8 +169,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         if (pendingContexts.isNotEmpty()) {
             logger.debug("Closing {} pending zombie contexts ...", pendingContexts.size)
 
-            pendingContexts.forEach {
-                kotlin.runCatching { it.close() }.onFailure { logger.warn(it.stringify()) }
+            pendingContexts.forEach { privacyContext ->
+                kotlin.runCatching { privacyContext.close() }.onFailure { logger.warn(it.stringify()) }
             }
 
             reportZombieContexts()

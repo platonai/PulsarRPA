@@ -355,10 +355,13 @@ open class StreamingCrawler(
         while (isActive && AppSystemInfo.isCriticalCPULoad) {
             criticalWarning = CriticalWarning.HIGH_CPU_LOAD
             // CPU load changes very fast, it drops immediately when a web driver becomes free,
-            // so we delay for shorter time.
+            // so we delay for short and random time.
             randomDelay(200, 300)
         }
 
+        /**
+         * If all memory is used up, we can do nothing but wait.
+         * */
         var k = 0
         while (isActive && AppSystemInfo.isCriticalMemory) {
             if (k++ % 20 == 0) {
@@ -368,6 +371,9 @@ open class StreamingCrawler(
             randomDelay(500, 500)
         }
 
+        /**
+         * If the privacy context leaks too quickly, there is a good chance that there is a bug.
+         * */
         val contextLeaksRate = PrivacyContext.globalMetrics.contextLeaks.meter.fifteenMinuteRate
         if (isActive && contextLeaksRate >= 5 / 60f) {
             criticalWarning = CriticalWarning.FAST_CONTEXT_LEAK
@@ -404,11 +410,6 @@ open class StreamingCrawler(
         // otherwise, it's easy to grow larger than fetchConcurrency.
         globalRunningTasks.incrementAndGet()
         scope.launch(context) {
-            // We can only estimate whether there are resources in the underlying layer to serve the task,
-            // which is not always correct. If the estimation is wrong, the underlying layer will return a
-            // retry result.
-            // delayIfEstimatedNoLoadResource(j)
-
             try {
                 globalMetrics.tasks.mark()
                 runLoadTaskWithEventHandlers(url)

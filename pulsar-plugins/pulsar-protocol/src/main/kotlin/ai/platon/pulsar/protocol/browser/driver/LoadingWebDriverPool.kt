@@ -248,7 +248,8 @@ class LoadingWebDriverPool constructor(
     }
 
     /**
-     * Cancel all the fetch tasks, stop loading all pages, the execution will throw a CancellationException
+     * Cancel all the fetch tasks, stop loading all pages, the execution will throw a CancellationException.
+     *
      * */
     fun cancelAll() {
         // mark each driver be canceled, so the execution will throw a CancellationException

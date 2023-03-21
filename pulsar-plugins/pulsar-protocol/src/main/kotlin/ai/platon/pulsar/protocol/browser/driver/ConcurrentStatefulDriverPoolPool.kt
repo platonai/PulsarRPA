@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentSkipListSet
  * A concurrent pool of loading driver pools whose states are tracked.
  * */
 class ConcurrentStatefulDriverPoolPool {
+    private val logger = getLogger(this)
     /**
      * Working driver pools
      * */
@@ -31,17 +32,33 @@ class ConcurrentStatefulDriverPoolPool {
     val retiredDriverPools: Map<BrowserId, LoadingWebDriverPool> get() = _retiredDriverPools
 
     val closedDriverPools: Set<BrowserId> get() = _closedDriverPools
-
+    /**
+     * Return the number of new drivers can offer by the pool at the calling time point.
+     *
+     * If the driver pool is retired or closed, no new driver can offer.
+     * If the driver pool is not created yet, it can offer [capacity] drivers at top.
+     *
+     * @param browserId The id of the webdriver pool.
+     * @param capacity The capacity of a driver pool.
+     * @return The number of new drivers can offer by the pool at the calling time point.
+     * */
     @Synchronized
     fun promisedDriverCount(browserId: BrowserId, capacity: Int): Int {
         if (browserId in closedDriverPools || browserId in retiredDriverPools) {
             return 0
         }
 
+        // if the
         val pool = _workingDriverPools[browserId] ?: return capacity
         return pool.numAvailable
     }
-
+    /**
+     * Check if a webdriver pool is full capacity, so it can not provide a webdriver for new tasks.
+     * Note that if a driver pool is retired or closed, it's not full capacity.
+     *
+     * @param browserId The id of the webdriver pool.
+     * @return True if the webdriver pool is full capacity, false otherwise.
+     * */
     @Synchronized
     fun isFullCapacity(browserId: BrowserId): Boolean {
         if (browserId in closedDriverPools || browserId in retiredDriverPools) {
@@ -51,6 +68,9 @@ class ConcurrentStatefulDriverPoolPool {
         val pool = _workingDriverPools[browserId] ?: return false
         return pool.numWorking + pool.numWaiting >= pool.capacity
     }
+
+    @Synchronized
+    fun isRetiredPool(browserId: BrowserId) = retiredDriverPools.contains(browserId)
 
     @Beta
     @Synchronized
@@ -82,14 +102,19 @@ class ConcurrentStatefulDriverPoolPool {
     @Synchronized
     fun retire(driverPool: LoadingWebDriverPool) {
         val browserId = driverPool.browserId
+        _workingDriverPools.remove(browserId)
+
+        if (browserId in _closedDriverPools) {
+            logger.warn("Inconsistent driver pool state: retire pool who is already closed | {}", browserId)
+        }
+
         driverPool.retire()
         _retiredDriverPools[browserId] = driverPool
-        _workingDriverPools.remove(browserId)
     }
 
     @Synchronized
     fun retire(browserId: BrowserId): LoadingWebDriverPool? {
-        val retiredDriverPool = workingDriverPools[browserId]
+        val retiredDriverPool = _workingDriverPools.remove(browserId)
         if (retiredDriverPool != null) {
             retire(retiredDriverPool)
         }

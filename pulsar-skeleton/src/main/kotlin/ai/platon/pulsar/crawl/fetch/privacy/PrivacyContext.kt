@@ -127,14 +127,21 @@ abstract class PrivacyContext(
      * Note: this flag does not guarantee consistency, and can change immediately after it's read
      * */
     open val isReady get() = hasWebDriverPromise() && isActive
-
     /**
-     * Check if the privacy context is running at full load
+     * Check if the privacy context is full capacity. If the privacy context is full capacity, it should
+     * not be used for new tasks, the underlying layer might refuse to serve.
+     *
+     * A privacy context is running at full load when the underlying webdriver pool is full capacity,
+     * so the webdriver pool can not provide a webdriver for new tasks.
+     *
+     * Note that if a driver pool is retired or closed, it's not full capacity.
+     *
+     * @return True if the privacy context is running at full load, false otherwise.
      * */
     open val isFullCapacity = false
 
     /**
-     * Check if the privacy context is running under loaded
+     * Check if the privacy context is running under loaded.
      * */
     open val isUnderLoaded get() = !isFullCapacity
 
