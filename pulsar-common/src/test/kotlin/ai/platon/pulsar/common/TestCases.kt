@@ -367,31 +367,6 @@ class TestCases {
     }
 
     @Test
-    fun testFrequency() {
-        val freq = Frequency<String>()
-        freq.addAll(listOf("a", "a", "b", "a", "b", "a", "c", "d"))
-        println("iteration: ")
-        freq.forEachIndexed { i, s -> print("$s\t") }
-        println("\nentry set: ")
-        freq.entrySet().also { println(it) }
-        println("\nelement set: ")
-        freq.elementSet().also { println(it) }
-
-        println("\nsize: ${freq.size}")
-        println("\ntotal frequency: ${freq.totalFrequency}")
-        println("\nmode: ${freq.mode}")
-        println("\nmodes: ${freq.modes}")
-
-        println("\ncumulative frequency: ")
-        freq.elementSet().associateBy({ it }) { freq.cumulativeFrequencyOf(it) }.also { println(it) }
-
-        println("\npercentage: ")
-        freq.elementSet().associateBy({ it }) { freq.percentageOf(it) }.also { println(it) }
-        println("\ncumulative percentage: ")
-        freq.elementSet().associateBy({ it }) { freq.cumulativePercentageOf(it) }.also { println(it) }
-    }
-
-    @Test
     fun testDistribution() {
         val d1 = UniformIntegerDistribution(0, 100)
         println(d1.sample(30).joinToString())
@@ -443,17 +418,6 @@ class TestCases {
         val tree = UrlTree()
         urls.forEach { tree.add(it) }
         tree.print()
-    }
-
-    @Test
-    fun testFrequencyTree() {
-        val frequency: Frequency<String> = urls.flatMapTo(Frequency()) { it.split("/") }
-        println(frequency)
-
-        val tree = FrequencyTree(frequency)
-        // tree.print()
-        val ptree = tree.root.convert()
-        BTreePrinter.print(ptree)
     }
 
     @Test

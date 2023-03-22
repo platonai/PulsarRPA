@@ -8,6 +8,61 @@ import kotlin.test.assertEquals
  */
 class TestFrequency {
 
+    val urls = arrayOf(
+        "http://a.example.com/cn/news/201810/a/b/file1.htm",
+        "http://a.example.com/cn/news/201810/a/b/file2.htm",
+        "http://a.example.com/cn/news/201810/a/b/file3.htm",
+        "http://a.example.com/en/news/201810/a/b/file4.htm",
+        "http://a.example.com/en/news/201810/a/b/file5.htm",
+        "http://a.example.com/en/news/201810/e/c/file6.htm",
+        "http://a.example.com/en/video/201812/d/file7.htm",
+        "http://a.example.com/en/video/201812/d/file8.htm",
+        "http://a.example.com/en/video/file9.htm"
+    )
+
+    @Test
+    fun testFrequency() {
+        val freq = Frequency<String>()
+        freq.addAll(listOf("a", "a", "b", "a", "b", "a", "c", "d"))
+        println("iteration: ")
+        freq.forEachIndexed { i, s -> print("$s\t") }
+        assertEquals("a,a,a,a,b,b,c,d", freq.joinToString())
+        println("\nentry set: ")
+        freq.entrySet().also { println(it) }
+        assertEquals("[a x 4, b x 2, c, d]", freq.entrySet().toString())
+        println("\nelement set: ")
+        freq.elementSet().also { println(it) }
+        assertEquals("[a, b, c, d]", freq.elementSet().toString())
+
+        println("\nsize: ${freq.size}")
+        assertEquals(4, freq.size)
+        println("\ntotal frequency: ${freq.totalFrequency}")
+        assertEquals(8, freq.totalFrequency)
+        println("\nmode: ${freq.mode}")
+        assertEquals("a", freq.mode)
+        println("\nmodes: ${freq.modes}")
+        assertEquals("[a, b, c, d]", freq.modes.toString())
+
+        println("\ncumulative frequency: ")
+        freq.elementSet().associateBy({ it }) { freq.cumulativeFrequencyOf(it) }.also { println(it) }
+
+        println("\npercentage: ")
+        freq.elementSet().associateBy({ it }) { freq.percentageOf(it) }.also { println(it) }
+        println("\ncumulative percentage: ")
+        freq.elementSet().associateBy({ it }) { freq.cumulativePercentageOf(it) }.also { println(it) }
+    }
+
+    @Test
+    fun testFrequencyTree() {
+        val frequency: Frequency<String> = urls.flatMapTo(Frequency()) { it.split("/") }
+        println(frequency)
+
+        val tree = FrequencyTree(frequency)
+        // tree.print()
+        val ptree = tree.root.convert()
+        BTreePrinter.print(ptree)
+    }
+
     @Test
     fun testToString() {
         val frequency = Frequency<String>()
