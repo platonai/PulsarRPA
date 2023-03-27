@@ -1,8 +1,7 @@
 package ai.platon.pulsar.common.message
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_CONTEXT_NAME
-import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
+import ai.platon.pulsar.common.PulsarParams.*
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.persist.ext.options
@@ -67,7 +66,7 @@ data class Record(
     override fun toString() = value.toString()
 }
 
-class LoadStatusFormatter(
+class PageLoadStatusFormatter(
         private val page: WebPage,
         private val prefix: String = "",
         private val withOptions: Boolean = false,
@@ -152,12 +151,27 @@ class LoadStatusFormatter(
         protocolStatus.isFailed -> String.format(" %s", page.protocolStatus.toString())
         else -> ""
     }
-    private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     private val contextName get() = page.variables[VAR_PRIVACY_CONTEXT_NAME]?.let { " | $it" } ?: ""
+    private val additionalStatus: String get() = page.getVar(VAR_ADD_LOAD_STATUS)?.toString()?.let { " | $it" } ?: ""
+    private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $taskStatusSymbol$loadMessagePrefix %s $fetchReason got %d %s in %s," +
-            "$prevFetchTimeReport fc:$fetchCount$failure" +
-            "$jsFmt$fieldCountFmt$proxyFmt$contextName$formattedLabel | %s"
+    private val formattedMessage = "$prevFetchTimeReport fc:$fetchCount$failure" +
+            "$jsFmt$fieldCountFmt$additionalStatus$proxyFmt$contextName$formattedLabel"
+    private val fmt get() = "%3d. $taskStatusSymbol$loadMessagePrefix %s $fetchReason got %d %s in %s, $formattedMessage | %s"
+
+    override fun toString(): String {
+        return String.format(fmt,
+                page.id,
+                category,
+                page.protocolStatus.minorCode,
+                buildContentBytes(),
+                DateTimes.readableDuration(responseTime),
+                jsSate,
+                fieldCount,
+                proxy?:"",
+                buildLocation()
+        )
+    }
 
     fun explain() {
         listOf(
@@ -187,20 +201,6 @@ class LoadStatusFormatter(
             .joinToString(" ") { it.format() }
 
         TODO("NOT IMPLEMENTED")
-    }
-
-    override fun toString(): String {
-        return String.format(fmt,
-                page.id,
-                category,
-                page.protocolStatus.minorCode,
-                buildContentBytes(),
-                DateTimes.readableDuration(responseTime),
-                jsSate,
-                fieldCount,
-                proxy?:"",
-                buildLocation()
-        )
     }
 
     private fun buildFetchReason(): String {
@@ -245,6 +245,8 @@ class LoadStatusFormatter(
         return if (doWithSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
     }
 }
+
+typealias LoadStatusFormatter = PageLoadStatusFormatter
 
 class LoadedPagesStatusFormatter(
         val pages: Collection<WebPage>,

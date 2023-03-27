@@ -192,7 +192,10 @@ public class PulsarParams extends Params {
     public static final String VAR_FETCH_STATE = "fetch_state";
     public static final String VAR_PREV_FETCH_TIME_BEFORE_UPDATE = "prev_fetch_time_before_update";
     public static final String VAR_PRIVACY_CONTEXT_NAME = "privacy_context_name";
-
+    /**
+     * Additional load status to report by PageLoadStatusFormatter.
+     * */
+    public static final String VAR_ADD_LOAD_STATUS = "additional_load_status";
     /**
      * If this task is a scrape task
      * TODO: this is a temporary solution
