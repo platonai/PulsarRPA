@@ -78,9 +78,9 @@ abstract class PrivacyContext(
 //    val historyUrls = PassiveExpiringMap<String, String>()
 
     val closed = AtomicBoolean()
-    val isGood get() = meterSuccesses.meanRate >= minimumThroughput
-    val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
-    val isActive get() = !isLeaked && !closed.get()
+    open val isGood get() = meterSuccesses.meanRate >= minimumThroughput
+    open val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
+    open val isActive get() = !isLeaked && !closed.get()
 
     init {
         globalMetrics.contexts.mark()

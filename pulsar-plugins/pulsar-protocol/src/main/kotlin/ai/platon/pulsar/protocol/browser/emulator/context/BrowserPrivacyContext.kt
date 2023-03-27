@@ -31,6 +31,12 @@ open class BrowserPrivacyContext(
     private val browserInstanceId = BrowserInstanceId(id.contextDir, id.fingerprint)
     private val driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
     private var proxyContext: ProxyContext? = null
+    private val isExpired: Boolean get() {
+        val p = proxyEntry
+        return p?.isExpired ?: false
+    }
+    override val isActive get() = !isLeaked && !isExpired && !closed.get()
+
     val numFreeDrivers get() = driverPoolManager.numFreeDrivers
     val numWorkingDrivers get() = driverPoolManager.numWorkingDrivers
     val numAvailableDrivers get() = driverPoolManager.numAvailableDrivers
