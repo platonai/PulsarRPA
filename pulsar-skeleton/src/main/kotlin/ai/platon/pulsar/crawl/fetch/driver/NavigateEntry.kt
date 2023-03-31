@@ -47,6 +47,13 @@ data class NavigateEntry(
      */
     val createTime: Instant = Instant.now(),
 ): Comparable<NavigateEntry> {
+    var mainRequestId = ""
+    var mainRequestHeaders: Map<String, Any> = mapOf()
+    var mainRequestCookies: List<Map<String, String>> = listOf()
+    var mainResponseStatus: Int = -1
+    var mainResponseStatusText: String = ""
+    var mainResponseHeaders: Map<String, Any> = mapOf()
+
     /**
      * The time when the document is ready.
      */

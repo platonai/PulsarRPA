@@ -101,6 +101,12 @@ abstract class AbstractWebDriver(
     override val sessionId: String?
         get() = id.toString()
 
+    override val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
+    override val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
+    override val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
+    override val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
+    override val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
+
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
 

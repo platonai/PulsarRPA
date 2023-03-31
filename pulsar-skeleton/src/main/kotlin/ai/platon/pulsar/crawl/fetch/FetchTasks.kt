@@ -1,18 +1,17 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.config.CapabilityTypes
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger

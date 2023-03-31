@@ -142,6 +142,12 @@ interface WebDriver: Closeable {
      * */
     val delayPolicy: (String) -> Long get() = { 300L + Random.nextInt(500) }
 
+    val mainRequestHeaders: Map<String, Any>
+    val mainRequestCookies: List<Map<String, String>>
+    val mainResponseStatus: Int
+    val mainResponseStatusText: String
+    val mainResponseHeaders: Map<String, Any>
+
     /**
      * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,
      * which had difficulty handling kotlin suspend methods.
@@ -215,13 +221,15 @@ interface WebDriver: Closeable {
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
 
+    @Deprecated("Getter is available", ReplaceWith("mainRequestHeaders"))
     @Throws(WebDriverException::class)
     suspend fun mainRequestHeaders(): Map<String, Any>
+    @Deprecated("Getter is available", ReplaceWith("mainRequestCookies"))
     @Throws(WebDriverException::class)
     suspend fun mainRequestCookies(): List<Map<String, String>>
+    @Deprecated("Getter is available", ReplaceWith("getCookies"))
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
-
     /**
      * Brings page to front (activates tab).
      */

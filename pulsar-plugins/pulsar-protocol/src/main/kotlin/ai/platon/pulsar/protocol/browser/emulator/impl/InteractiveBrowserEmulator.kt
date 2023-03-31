@@ -303,8 +303,18 @@ open class InteractiveBrowserEmulator(
         checkState(navigateTask.fetchTask, driver)
 
         val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.driverSettings)
+
+        val httpCode = driver.mainResponseStatus
+        val finalProtocolStatus = if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
+            // Pulsar status
+            interactResult.protocolStatus
+        } else {
+            // HTTP status
+            ProtocolStatusTranslator.translateHttpCode(httpCode)
+        }
+
         navigateTask.pageDatum.apply {
-            protocolStatus = interactResult.protocolStatus
+            protocolStatus = finalProtocolStatus
             activeDOMStatTrace = interactResult.activeDOMMessage?.trace
             activeDOMUrls = interactResult.activeDOMMessage?.urls
         }

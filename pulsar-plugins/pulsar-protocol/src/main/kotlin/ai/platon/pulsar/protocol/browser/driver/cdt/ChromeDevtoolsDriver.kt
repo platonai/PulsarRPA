@@ -79,9 +79,6 @@ class ChromeDevtoolsDriver(
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
 
-    private var mainRequestId = ""
-    private var mainRequestHeaders: Map<String, Any> = mapOf()
-    private var mainRequestCookies: List<Map<String, String>> = listOf()
     private var numResponseReceived = AtomicInteger()
     private val rpc = RobustRPC(this)
 
@@ -783,14 +780,16 @@ class ChromeDevtoolsDriver(
         }
 
         networkAPI?.onRequestWillBeSent { requestWillBeSent ->
-            if (mainRequestId.isBlank()) {
+            if (entry.mainRequestId.isBlank()) {
+                // The first request, fetch the main HTML
+
                 // amazon.com uses "referer" instead of "referrer" in the request header,
                 // not clear if other sites uses the other one
                 val refererHeaderName = "referer"
                 entry.pageReferrer?.let { requestWillBeSent.request.headers.put(refererHeaderName, it) }
 
-                mainRequestId = requestWillBeSent.requestId
-                mainRequestHeaders = requestWillBeSent.request.headers
+                entry.mainRequestId = requestWillBeSent.requestId
+                entry.mainRequestHeaders = requestWillBeSent.request.headers
             }
 
             if (resourceBlockProbability > 0.0f) {
@@ -806,21 +805,27 @@ class ChromeDevtoolsDriver(
             }
         }
 
-        networkAPI?.onResponseReceived {
+        networkAPI?.onResponseReceived { response ->
             val maxResponses = numResponseReceivedToDisableNetwork
-            if (maxResponses > 0 && mainRequestId.isNotBlank()) {
+            if (maxResponses > 0 && entry.mainRequestId.isNotBlank()) {
                 // split the `if` to make it clearer
                 if (numResponseReceived.incrementAndGet() == maxResponses) {
                     // Disables network tracking, prevents network events from being sent to the client.
                     // TODO: does the resource blocking logic work if we disable the network API?
-                    networkAPI?.disable()
+                    // networkAPI?.disable()
                     // logger.info("Network API for driver #{} is disabled", id)
                 }
+            }
+
+            if (entry.mainResponseStatus < 0) {
+                entry.mainResponseStatus = response.response.status
+                entry.mainResponseStatusText = response.response.statusText
+                entry.mainResponseHeaders = response.response.headers
             }
         }
 
         pageAPI?.onDocumentOpened {
-            mainRequestCookies = getCookies0()
+            entry.mainRequestCookies = getCookies0()
         }
 
         navigateUrl = url
