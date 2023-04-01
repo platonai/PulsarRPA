@@ -38,8 +38,8 @@ open class WebDriverPoolManager(
     val browserManager: BrowserManager,
     val driverFactory: WebDriverFactory,
     val immutableConfig: ImmutableConfig,
-    val suppressMetrics: Boolean = false
-): Parameterized, PreemptChannelSupport("WebDriverPoolManager"), AutoCloseable {
+    val suppressMetrics: Boolean = false,
+) : Parameterized, PreemptChannelSupport("WebDriverPoolManager"), AutoCloseable {
     companion object {
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
     }
@@ -101,6 +101,7 @@ open class WebDriverPoolManager(
         "idleTime" to Gauge { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
+    private val monitorStrategy = immutableConfig[CapabilityTypes.MONITOR_STRATEGY]
     private var lastMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
@@ -108,11 +109,13 @@ open class WebDriverPoolManager(
     /**
      * The thread executor to execute the maintaining task.
      * */
-    private val maintainService = Executors.newSingleThreadExecutor()
+    private val maintainService = if (monitorStrategy == "AUTO") Executors.newSingleThreadExecutor() else null
+
     /**
      * The web driver pool closer
      * */
     private val driverPoolCloser = BrowserAccompaniedDriverPoolCloser(driverPoolPool, this)
+
     /**
      * The deferred tasks
      * */
@@ -121,6 +124,7 @@ open class WebDriverPoolManager(
     init {
         gauges?.let { AppMetrics.reg.registerAll(this, it) }
     }
+
     /**
      * Run the task.
      * */
@@ -139,19 +143,21 @@ open class WebDriverPoolManager(
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     suspend fun run(
         browserId: BrowserId, task: FetchTask,
-        browseFun: suspend (driver: WebDriver) -> FetchResult?
+        browseFun: suspend (driver: WebDriver) -> FetchResult?,
     ) = run(WebDriverTask(browserId, task.page, task.priority, browseFun))
+
     /**
      * Run the task with the driver specified.
      * */
     @Throws(WebDriverException::class, WebDriverPoolException::class)
     suspend fun run(
         driverId: Int, task: FetchTask,
-        browseFun: suspend (driver: WebDriver) -> FetchResult?
+        browseFun: suspend (driver: WebDriver) -> FetchResult?,
     ) {
         // subscribe a driver first, and then use it to run a task
         TODO("NOT_IMPLEMENTED")
     }
+
     /**
      * Run the task.
      * */
@@ -160,6 +166,7 @@ open class WebDriverPoolManager(
         lastActiveTime = Instant.now()
         return doRun(task).also { lastActiveTime = Instant.now() }
     }
+
     /**
      * Run the task and save the execution state, so it can be canceled by [cancel] and [cancelAll].
      * */
@@ -183,41 +190,49 @@ open class WebDriverPoolManager(
             _deferredTasks.remove(task.id)
         }
     }
+
     /**
      * Create a driver pool, but the driver pool is not added to [workingDriverPools].
      * */
     fun createUnmanagedDriverPool(
-        browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0
+        browserId: BrowserId = BrowserId.DEFAULT, priority: Int = 0,
     ): LoadingWebDriverPool {
         return LoadingWebDriverPool(browserId, priority, this, driverFactory, immutableConfig)
     }
+
     /**
      * Get the number of drivers which can serve tasks in the pool.
      * */
     fun promisedDriverCount(browserId: BrowserId) = driverPoolPool.promisedDriverCount(browserId, poolCapacity)
+
     /**
      * Check if the pool has at least one driver to serve.
      * */
     fun hasDriverPromise(browserId: BrowserId) = promisedDriverCount(browserId) > 0
+
     /**
      * Check if the pool is on full capacity.
      * */
     fun isFullCapacity(browserId: BrowserId) = driverPoolPool.isFullCapacity(browserId)
+
     /**
      * Subscribe a web driver in the pool specified by [browserId], the other subscriber
      * should not use the driver.
      * */
     @Beta
     fun subscribeDriver(browserId: BrowserId) = driverPoolPool.subscribeDriver(browserId)
+
     /**
      * Subscribe a web driver, the other subscriber should not use the driver.
      * */
     @Beta
     fun subscribeDriver() = driverPoolPool.subscribeDriver()
+
     /**
      * Check if a pool is retired.
      * */
     fun isRetiredPool(browserId: BrowserId) = driverPoolPool.isRetiredPool(browserId)
+
     /**
      * Cancel the fetch task specified by [url] remotely.
      * NOTE: A cancel request should run immediately not waiting for any browser task return.
@@ -229,6 +244,7 @@ open class WebDriverPoolManager(
         }
         return driver
     }
+
     /**
      * Cancel the fetch task specified by [url] remotely.
      * NOTE: A cancel request should run immediately not waiting for any browser task return.
@@ -237,12 +253,14 @@ open class WebDriverPoolManager(
         val driverPool = workingDriverPools[browserId] ?: return null
         return driverPool.firstOrNull { it.navigateEntry.pageUrl == url }?.also { it.cancel() }
     }
+
     /**
      * Cancel all the fetch tasks, stop loading all pages.
      * */
     fun cancelAll() {
         workingDriverPools.values.forEach { it.cancelAll() }
     }
+
     /**
      * Cancel all the fetch tasks, stop loading all pages.
      * */
@@ -250,6 +268,7 @@ open class WebDriverPoolManager(
         val driverPool = workingDriverPools[browserId] ?: return
         driverPool.cancelAll()
     }
+
     /**
      * Find the driver pool with [browserId], cancel all running tasks in it, and close all drivers in it.
      *
@@ -268,6 +287,7 @@ open class WebDriverPoolManager(
         }
 //        driverPoolCloser.closeGracefully(browserId)
     }
+
     /**
      * Maintain all the driver pools, check and report inconsistency, illness, idleness, etc.,
      * close bad pools if necessary.
@@ -288,6 +308,14 @@ open class WebDriverPoolManager(
             logger.info("Maintaining service is started")
         }
 
+        doMaintain()
+
+        // assign the last maintain time again
+        lastMaintainTime = Instant.now()
+    }
+
+    @Throws(Exception::class)
+    private fun doMaintain() {
         // To close retired driver pools, there is no need to wait for normal tasks, so no preempting is required
         driverPoolCloser.closeOldestRetiredDriverPoolSafely()
         // Close unexpected active browsers
@@ -314,23 +342,22 @@ open class WebDriverPoolManager(
          *
          * If the tmp dir is the default one, run the following command to take snapshot once:
          * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
-        * */
+         * */
         if (FileCommand.check("takeDriverPoolSnapshot")) {
             logger.info("\nDriver pool manager: \n")
             logger.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             logger.info("\n{}", takeSnapshot())
             logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         }
-
-        // assign the last maintain time again
-        lastMaintainTime = Instant.now()
     }
+
     /**
      * Take a snapshot about the state of the driver pools.
      * */
     fun takeSnapshot(browserId: BrowserId, verbose: Boolean = false): String {
         return workingDriverPools[browserId]?.takeSnapshot()?.format(verbose) ?: ""
     }
+
     /**
      * Take a snapshot about the state of the driver pools.
      * */
@@ -341,6 +368,7 @@ open class WebDriverPoolManager(
         }
         return sb.toString()
     }
+
     /**
      * Close the web driver pool manager. All deferred tasks will be canceled, the pool of driver pools will be cleared
      * and the browser manager will be closed.
@@ -356,7 +384,7 @@ open class WebDriverPoolManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // Attempts to stop all actively executing tasks, halts the processing of waiting tasks
-            kotlin.runCatching { maintainService.shutdownNow() }.onFailure { logger.warn(it.stringify()) }
+            maintainService?.runCatching { shutdownNow() }?.onFailure { logger.warn(it.stringify()) }
 
             _deferredTasks.values.forEach {
                 // Cancels job, including all its children with a specified diagnostic error
@@ -383,7 +411,9 @@ open class WebDriverPoolManager(
         val result = runWithDriverPool(task)
 
         // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not working well.
-        maintainService.submit { maintain() }
+        // newSingleThreadExecutor() still prevents the program from existing
+//        maintainService.submit { maintain() }
+        maintain()
 
         return result
     }
@@ -526,7 +556,7 @@ open class WebDriverPoolManager(
 
     @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
     private suspend fun launchAndPoll(
-        driverPool: LoadingWebDriverPool, page: WebPage, priority: Int
+        driverPool: LoadingWebDriverPool, page: WebPage, priority: Int,
     ): WebDriver {
         val event = page.browseEvent
 
@@ -569,11 +599,11 @@ open class WebDriverPoolManager(
     }
 }
 
-class WebDriverTask (
+class WebDriverTask(
     val browserId: BrowserId,
     val page: WebPage,
     val priority: Int = 0,
-    val driverFun: suspend (driver: WebDriver) -> FetchResult?
+    val driverFun: suspend (driver: WebDriver) -> FetchResult?,
 ) {
     companion object {
         private val sequencer = AtomicInteger()
@@ -589,7 +619,7 @@ class WebDriverTask (
  * */
 private class BrowserAccompaniedDriverPoolCloser(
     private val driverPoolPool: ConcurrentStatefulDriverPoolPool,
-    private val driverPoolManager: WebDriverPoolManager
+    private val driverPoolManager: WebDriverPoolManager,
 ) {
     private val driverSettings get() = driverPoolManager.driverSettings
     private val browserManager get() = driverPoolManager.browserManager
@@ -631,7 +661,8 @@ private class BrowserAccompaniedDriverPoolCloser(
         workingDriverPools.values.filter { it.isIdle }.forEach { driverPool ->
             logger.info("Driver pool is idle, closing it ... | {}", driverPool.browserId)
             logger.info(driverPool.takeSnapshot().format(true))
-            kotlin.runCatching { closeBrowserAccompaniedDriverPool(driverPool) }.onFailure { logger.warn(it.stringify()) }
+            kotlin.runCatching { closeBrowserAccompaniedDriverPool(driverPool) }
+                .onFailure { logger.warn(it.stringify()) }
         }
     }
 
@@ -737,8 +768,10 @@ private class BrowserAccompaniedDriverPoolCloser(
         val totalDyingDrivers = driverPoolManager.retiredDriverPools.values.sumOf { it.numCreated }
 
         if (logger.isTraceEnabled) {
-            logger.trace("There are {} dying drivers in {} retired driver pools",
-                totalDyingDrivers, driverPoolManager.retiredDriverPools.size)
+            logger.trace(
+                "There are {} dying drivers in {} retired driver pools",
+                totalDyingDrivers, driverPoolManager.retiredDriverPools.size
+            )
         }
 
         return when {

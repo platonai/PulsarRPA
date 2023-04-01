@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
@@ -37,7 +38,7 @@ import kotlin.reflect.jvm.kotlinProperty
  * // write the page content into storage
  * session.load('https://www.jd.com', '-storeContent')
  * ```
- * TODO: support new options: -referrer, -priority
+ * TODO: support new options: -priority
  * */
 open class LoadOptions(
     argv: Array<String>,
@@ -383,7 +384,7 @@ open class LoadOptions(
     var itemRequireImages = 0
 
     /**
-     * Re-fetch item pages who's anchors is less than requireAnchors.
+     * Re-fetch item pages whos anchors is less than requireAnchors.
      * */
     @ApiPublic
     @Parameter(names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],

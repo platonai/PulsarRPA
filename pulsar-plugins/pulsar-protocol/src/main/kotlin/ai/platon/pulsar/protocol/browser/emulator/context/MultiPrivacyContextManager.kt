@@ -1,13 +1,17 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.MONITOR_STRATEGY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -52,11 +56,13 @@ class MultiPrivacyContextManager(
 
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
+
+    private val monitorStrategy = conf[MONITOR_STRATEGY]
     internal val maintainCount = AtomicInteger()
     private var lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
-    private val maintainService = Executors.newSingleThreadExecutor()
+    private val maintainService = if (monitorStrategy == "AUTO") Executors.newSingleThreadExecutor() else null
 
     private var driverAbsenceReportTime = Instant.EPOCH
 
@@ -68,6 +74,7 @@ class MultiPrivacyContextManager(
         driverPoolManager: WebDriverPoolManager,
         immutableConfig: ImmutableConfig
     ) : this(driverPoolManager, null, null, immutableConfig)
+
     /**
      * Run a task in a privacy context.
      *
@@ -95,7 +102,7 @@ class MultiPrivacyContextManager(
         val result = runIfPrivacyContextActive(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
         // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not work.
-        maintainService.submit { maintain() }
+        maintainService?.submit { maintain() }
 
         return result
     }
@@ -191,6 +198,13 @@ class MultiPrivacyContextManager(
             logger.info("Maintaining service is started")
         }
 
+        doMaintain()
+
+        // assign the last maintain time again
+        lastMaintainTime = Instant.now()
+    }
+
+    private fun doMaintain() {
         closeDyingContexts()
 
         // and then check the active context list
@@ -209,14 +223,11 @@ class MultiPrivacyContextManager(
             activeContexts.values.forEach { it.report() }
             logger.info("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         }
-
-        // assign the last maintain time again
-        lastMaintainTime = Instant.now()
     }
 
     override fun close() {
         if (!isClosed) {
-            kotlin.runCatching { maintainService.shutdownNow() }.onFailure { logger.warn(it.stringify()) }
+            maintainService?.runCatching { shutdownNow() }?.onFailure { logger.warn(it.stringify()) }
         }
 
         super.close()

@@ -195,6 +195,9 @@ abstract class AbstractUrlPool(val conf: ImmutableConfig) : UrlPool {
         return add(link)
     }
 
+    /**
+     * TODO: consider accept only normalized urls
+     * */
     override fun add(url: UrlAware): Boolean {
         val added = orderedCaches[url.priority]?.reentrantQueue?.add(url)
         return added == true

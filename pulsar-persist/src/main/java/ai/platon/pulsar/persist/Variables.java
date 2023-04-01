@@ -4,6 +4,7 @@ import ai.platon.pulsar.persist.metadata.Name;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by vincent on 17-7-26.
@@ -17,7 +18,7 @@ public class Variables {
     /**
      * Temporary variables, all temporary fields will not persist to storage.
      */
-    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, Object> variables = new ConcurrentHashMap<>();
 
     public Map<String, Object> getVariables() {
         return variables;

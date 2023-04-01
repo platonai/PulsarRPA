@@ -416,6 +416,8 @@ public interface CapabilityTypes {
     String INDEXER_COLLECTION = "indexer.collection";
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
+    String MONITOR_STRATEGY = "monitor.start.strategy";
+
     /**
      * Create default data collectors or not
      * */
