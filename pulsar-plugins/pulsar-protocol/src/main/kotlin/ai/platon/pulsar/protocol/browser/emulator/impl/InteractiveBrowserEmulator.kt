@@ -304,6 +304,7 @@ open class InteractiveBrowserEmulator(
 
         val interactResult = navigateAndInteract(navigateTask, driver, navigateTask.driverSettings)
 
+        // TODO: separate status code of pulsar system and the status code from browser
         val httpCode = driver.mainResponseStatus
         val finalProtocolStatus = if (httpCode < 0 || interactResult.protocolStatus.minorCode >= ProtocolStatus.INCOMPATIBLE_CODE_START) {
             // Pulsar status
