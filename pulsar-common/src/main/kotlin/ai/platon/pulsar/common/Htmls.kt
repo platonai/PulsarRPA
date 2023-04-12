@@ -101,6 +101,7 @@ enum class HtmlIntegrity {
     val isRobotCheck2: Boolean get() = this == ROBOT_CHECK_2
     val isRobotCheck3: Boolean get() = this == ROBOT_CHECK_3
     val isForbidden: Boolean get() = this == FORBIDDEN
+    val isWrongProfile: Boolean get() = this == WRONG_DISTRICT || this == WRONG_COUNTRY || this == WRONG_LANG
     val isVerify: Boolean get() = this == VERIFY
     val isNotFound: Boolean get() = this == NOT_FOUND
     val isSmall: Boolean get() = this == TOO_SMALL || this == TOO_SMALL_IN_HISTORY || this == TOO_SMALL_IN_BATCH

@@ -32,6 +32,7 @@ open class BrowserResponseHandlerImpl(
 
     private val registry = AppMetrics.defaultMetricRegistry
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
+    protected val wrongProfile by lazy { registry.meter(this, "wrongProfile") }
     protected val bannedPages by lazy { registry.meter(this, "bannedPages") }
     protected val notFoundPages by lazy { registry.meter(this, "notFoundPages") }
     protected val missingFieldPages by lazy { registry.meter(this, "missingFieldPages") }
@@ -129,6 +130,8 @@ open class BrowserResponseHandlerImpl(
             // should cancel all running tasks and reset the privacy context and then re-fetch them
             htmlIntegrity.isRobotCheck || htmlIntegrity.isRobotCheck2 || htmlIntegrity.isRobotCheck3 ->
                 ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
+            htmlIntegrity.isWrongProfile ->
+                ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also { wrongProfile.mark() }
             htmlIntegrity.isForbidden -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
             htmlIntegrity.isNotFound -> ProtocolStatus.failed(ProtocolStatus.NOT_FOUND).also { notFoundPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority

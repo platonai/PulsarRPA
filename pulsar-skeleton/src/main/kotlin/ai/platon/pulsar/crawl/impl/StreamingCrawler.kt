@@ -63,6 +63,7 @@ private enum class CriticalWarning(val message: String) {
     FAST_CONTEXT_LEAK("CONTEXT LEAK TOO FAST"),
     FAST_CANCELS("CANCELS TOO FAST"),
     WRONG_DISTRICT("WRONG DISTRICT! ALL RESIDENT TASKS ARE PAUSED"),
+    WRONG_PROFILE("WRONG PROFILE! ALL RESIDENT TASKS ARE PAUSED"),
 }
 
 open class StreamingCrawler(
@@ -101,8 +102,11 @@ open class StreamingCrawler(
         private var lastFetchError = ""
         private val lastCancelReason = Frequency<String>()
         private val isIllegalApplicationState = AtomicBoolean()
-
+        /**
+         * TODO: change to wrong profile
+         * */
         private var wrongDistrict = AppMetrics.reg.multiMetric(this, "WRONG_DISTRICT_COUNT")
+        private var wrongProfile = AppMetrics.reg.multiMetric(this, "WRONG_PROFILE_COUNT")
 
         private val readableCriticalWarning: String
             get() = criticalWarning?.message?.let { "!!! WARNING !!! $it !!! ${Instant.now()}" } ?: ""
@@ -380,7 +384,10 @@ open class StreamingCrawler(
             handleContextLeaks()
         }
 
-        if (isActive && wrongDistrict.hourlyCounter.count > 60) {
+        if (isActive && wrongProfile.hourlyCounter.count > 60) {
+            handleWrongProfile()
+        } else if (isActive && wrongDistrict.hourlyCounter.count > 60) {
+            // since profile contains district setting, handleWrongDistrict will be removed
             handleWrongDistrict()
         }
 
@@ -520,15 +527,27 @@ open class StreamingCrawler(
 
         lastUrl = page.configuredUrl
         lastHtmlIntegrity = page.htmlIntegrity.toString()
-        if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
-            wrongDistrict.mark()
+
+
+        if (page.htmlIntegrity.isWrongProfile) {
+            wrongProfile.mark()
         } else {
-            wrongDistrict.reset()
+            wrongProfile.reset()
+        }
+
+        if (!page.htmlIntegrity.isWrongProfile) {
+            // TODO: since profile contains district setting, this will be removed later
+            if (page.htmlIntegrity == HtmlIntegrity.WRONG_DISTRICT) {
+                wrongDistrict.mark()
+            } else {
+                wrongDistrict.reset()
+            }
         }
 
         if (page.isFetched) {
             globalMetrics.fetchSuccesses.mark()
         }
+
         globalMetrics.successes.mark()
     }
 
@@ -768,6 +787,15 @@ open class StreamingCrawler(
         var k = 0
         while (wrongDistrict.hourlyCounter.count > 60) {
             criticalWarning = CriticalWarning.WRONG_DISTRICT
+            logger.takeIf { k++ % 20 == 0 }?.warn("{}", criticalWarning?.message ?: "")
+            delay(1000)
+        }
+    }
+
+    private suspend fun handleWrongProfile() {
+        var k = 0
+        while (wrongProfile.hourlyCounter.count > 60) {
+            criticalWarning = CriticalWarning.WRONG_PROFILE
             logger.takeIf { k++ % 20 == 0 }?.warn("{}", criticalWarning?.message ?: "")
             delay(1000)
         }
