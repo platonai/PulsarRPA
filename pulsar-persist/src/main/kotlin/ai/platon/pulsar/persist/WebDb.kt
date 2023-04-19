@@ -12,12 +12,13 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
+import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class WebDb(
-    val conf: ImmutableConfig
+    val conf: ImmutableConfig,
 ): AutoCloseable {
     companion object {
         val dbGetCount = AtomicLong()
@@ -65,18 +66,11 @@ class WebDb(
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
-        tracer?.trace("Getting $key")
-
-        val startTime = System.nanoTime()
-        val page = fields?.let { dataStore.get(key, it) } ?: dataStore.get(key)
-        dbGetCount.incrementAndGet()
-        accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
+        val page = getOrNull0(originalUrl, norm, fields)
 
         if (page != null) {
             val p = WebPage.box(url, key, page, conf.toVolatileConfig()).also { it.isLoaded = true }
-
             tracer?.trace("Got ${p.fetchCount} ${p.prevFetchTime} ${p.fetchTime} $key")
-
             return p
         }
 
@@ -100,9 +94,27 @@ class WebDb(
         return getOrNull(originalUrl, norm, fields) ?: WebPage.NIL
     }
 
+    fun get0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
+        return getOrNull0(originalUrl, norm, fields)
+    }
+
     fun exists(originalUrl: String, norm: Boolean = false): Boolean {
         val requiredField = GWebPage.Field.CREATE_TIME.toString()
         return getOrNull(originalUrl, norm, arrayOf(requiredField)) != null
+    }
+
+    fun getContent(originalUrl: String): ByteBuffer? {
+        val fields = arrayOf(GWebPage.Field.CONTENT.name)
+        return getOrNull0(originalUrl, false, fields)?.content
+    }
+
+    fun getContentAsString(originalUrl: String): String? {
+        val buffer = getContent(originalUrl) ?: return null
+
+        return when {
+            buffer.remaining() == 0 -> ""
+            else -> String(buffer.array(), buffer.arrayOffset(), buffer.limit())
+        }
     }
 
     @JvmOverloads
@@ -279,6 +291,26 @@ class WebDb(
             }
             // GoraStorage.close()
         }
+    }
+
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
+     * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
+    private fun getOrNull0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
+        val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+
+        tracer?.trace("Getting $key")
+
+        val startTime = System.nanoTime()
+        val page = fields?.let { dataStore.get(key, it) } ?: dataStore.get(key)
+        dbGetCount.incrementAndGet()
+        accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
+
+        return page
     }
 
     private fun prepareFields(fields: MutableSet<String>): Array<String> {

@@ -401,9 +401,17 @@ open class LoadOptions(
     /**
      * If false, persist the page without the content which is usually very large
      * */
-    @Parameter(names = ["-storeContent", "--store-content"], arity = 1,
+    @Parameter(names = ["-sct", "-storeContent", "--store-content"], arity = 1,
             description = "If false, persist the page without it's content which is usually very large")
     var storeContent = LoadOptionDefaults.storeContent
+
+    /**
+     * If false, load the page without the content which is usually very large
+     * TODO: review the design
+     * */
+//    @Parameter(names = ["-lct", "-loadContent", "--load-content"], arity = 1,
+//        description = "If false, load the page without it's content which is usually very large")
+//    var loadContent = LoadOptionDefaults.loadContent
 
     /**
      * Refresh the fetch state of a page, clear the retry counters.
@@ -1014,6 +1022,15 @@ object LoadOptionDefaults {
      * If we are running a public cloud, this option might be changed to false.
      * */
     var storeContent = true
+    /**
+     * Load webpage content or not.
+     *
+     * Load webpage content by default.
+     * If we are running a public cloud, this option might be changed to false.
+     *
+     * TODO: review the design
+     * */
+//    var loadContent = true
     /**
      * If true, still fetch the page even if it is gone.
      * */

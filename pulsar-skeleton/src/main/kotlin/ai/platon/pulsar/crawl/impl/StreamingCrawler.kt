@@ -666,7 +666,7 @@ open class StreamingCrawler(
         // Collect all cancel reasons
         if (page != null) {
             // page is not updated using page datum if the page is canceled, so use pageDatum
-            val reason = page.pageDatum.protocolStatus.reason ?: "unknown"
+            val reason = page.pageDatum?.protocolStatus?.reason ?: "unknown"
             lastCancelReason.add(reason.toString())
         }
 

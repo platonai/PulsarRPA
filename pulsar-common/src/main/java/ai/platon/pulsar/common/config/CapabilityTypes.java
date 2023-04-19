@@ -157,25 +157,34 @@ public interface CapabilityTypes {
     /**
      * Inject parameters
      */
+    @Deprecated
     String INJECT_SEEDS = "inject.seeds";
 
+    @Deprecated
     String INJECT_SEED_PATH = "inject.seed.dir";
 
+    @Deprecated
     String INJECT_UPDATE = "inject.update";
 
+    @Deprecated
     String INJECT_WATCH = "inject.watch";
 
     String INJECT_SCORE = "inject.score";
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
 
+    @Deprecated
     String BROWSER_MEMORY_TO_RESERVE_KEY = "browser.memory.to.reserve";
 
+    @Deprecated
     String MEMORY_TO_RESERVE_MIB_KEY = "browser.memory.to.reserve.MiB";
     /**
      * Load parameters
      */
+    @Deprecated
     String LOAD_HARD_REDIRECT = "load.hard.redirect";
+    String LOAD_STRATEGY = "load.strategy";
+
     /**
      * Fetch parameters
      */

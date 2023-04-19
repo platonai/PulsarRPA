@@ -69,7 +69,7 @@ abstract class BrowserEmulatorImplBase(
             return createResponseWithDatum(task, pageDatum)
         }
 
-        // Check if the page source is integral
+        // Check whether the source code of the page is intact.
         val integrity = responseHandler.htmlIntegrityChecker(task.pageSource, task.pageDatum)
         // Check browse timeout event, transform status to be success if the page source is good
         if (pageDatum.protocolStatus.isTimeout) {

@@ -17,6 +17,8 @@ import ai.platon.pulsar.crawl.common.PageCatch
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import com.google.common.annotations.Beta
+import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
@@ -238,9 +240,44 @@ interface PulsarSession : AutoCloseable {
      * Get a page from storage.
      *
      * @param url The url
+     * @param fields The fields to load from local storage
+     * @return The webpage in storage if exists, otherwise returns a NIL page
+     */
+    fun get(url: String, vararg fields: String): WebPage
+
+    /**
+     * Get a page from storage.
+     *
+     * @param url The url
      * @return The page in storage if exists, otherwise returns null
      */
     fun getOrNull(url: String): WebPage?
+
+    /**
+     * Get a page from storage.
+     *
+     * @param url The url
+     * @param fields The fields to load from local storage
+     * @return The page in storage if exists, otherwise returns null
+     */
+    fun getOrNull(url: String, vararg fields: String): WebPage?
+
+    /**
+     * Get the content of the page from the storage
+     *
+     * @param url The url of the page to retrieve
+     * @return The page content or null
+     */
+    fun getContent(url: String): ByteBuffer?
+
+    /**
+     * Get the content of the page from the storage
+     *
+     * @param url The url of the page to retrieve
+     * @return The page content in string format or null
+     */
+    @Beta
+    fun getContentAsString(url: String): String?
 
     /**
      * Check if the page exists in the storage.

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
+import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -253,12 +254,27 @@ abstract class AbstractPulsarContext(
         return webDbOrNull?.get(url, false) ?: WebPage.NIL
     }
 
+    override fun get(url: String, vararg fields: String): WebPage {
+        return webDbOrNull?.get(url, false, arrayOf(*fields)) ?: WebPage.NIL
+    }
+
     /**
      * Get a webpage from the storage
      * */
     override fun getOrNull(url: String): WebPage? {
         return webDbOrNull?.getOrNull(url, false)
     }
+
+    /**
+     * Get a webpage from the storage
+     * */
+    override fun getOrNull(url: String, vararg fields: String): WebPage? {
+        return webDbOrNull?.getOrNull(url, false, arrayOf(*fields))
+    }
+
+    override fun getContent(url: String): ByteBuffer? = webDbOrNull?.getContent(url)
+
+    override fun getContentAsString(url: String): String? = webDbOrNull?.getContentAsString(url)
 
     /**
      * Check if a page exists in the storage

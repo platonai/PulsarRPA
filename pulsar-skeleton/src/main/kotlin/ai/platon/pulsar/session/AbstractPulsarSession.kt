@@ -18,6 +18,7 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
+import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
@@ -146,7 +147,15 @@ abstract class AbstractPulsarSession(
 
     override fun get(url: String): WebPage = ensureActive { context.get(url) }
 
+    override fun get(url: String, vararg fields: String): WebPage = ensureActive { context.get(url, *fields) }
+
     override fun getOrNull(url: String): WebPage? = ensureActive { context.getOrNull(url) }
+
+    override fun getOrNull(url: String, vararg fields: String): WebPage? = ensureActive { context.getOrNull(url, *fields) }
+
+    override fun getContent(url: String): ByteBuffer? = ensureActive { context.getContent(url) }
+
+    override fun getContentAsString(url: String): String? = ensureActive { context.getContentAsString(url) }
 
     override fun exists(url: String): Boolean = ensureActive { context.exists(url) }
 

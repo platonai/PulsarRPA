@@ -423,7 +423,7 @@ val Node.captionOrSelector: String
  * The trimmed text of this node.
  *
  * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
- * This is a balance of space and time.
+ * This method balances time and space.
  * */
 val Node?.cleanText: String
     get() =

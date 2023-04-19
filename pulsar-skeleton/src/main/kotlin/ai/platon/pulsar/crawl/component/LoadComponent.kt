@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_STRATEGY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.message.LoadStatusFormatter
@@ -56,20 +57,22 @@ class LoadComponent(
             GWebPage.Field.PAGE_MODEL,
         )
 
-        var IGNORED_PAGE_FIELDS_2 = setOf(
+        var LAZY_PAGE_FIELDS = setOf(
             GWebPage.Field.PAGE_MODEL,
             GWebPage.Field.CONTENT
         )
 
-//        var PAGE_FIELDS = GWebPage.Field.values().toSet() - IGNORED_PAGE_FIELDS
+        var PAGE_FIELDS = GWebPage.Field.values().toSet() - LAZY_PAGE_FIELDS
 
         // Specify page fields to accelerate page loading
-        val PAGE_FIELDS = mutableListOf<GWebPage.Field>()
+//        val PAGE_FIELDS = mutableListOf<GWebPage.Field>()
     }
 
     private val logger = LoggerFactory.getLogger(LoadComponent::class.java)
     private val taskLogger = LoggerFactory.getLogger(LoadComponent::class.java.name + ".Task")
     private val tracer = logger.takeIf { it.isTraceEnabled }
+
+    private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
 
     val globalCache get() = globalCacheFactory.globalCache
     val pageCache get() = globalCache.pageCache
@@ -270,14 +273,23 @@ class LoadComponent(
             assert(page.isNotInternal)
         } else {
             // get the metadata of the page from the database, this is very fast for a crawler
-            // TODO: two step loading, or lazy loading page content
-//            val loadedPage = webDb.getOrNull(normUrl.spec, fields = metadataFields)
-            // loadedPage?.setLazyFieldLoader { webDb.getOrNull(normUrl.spec, field = GWebPage.Field.CONTENT) }
-            val loadedPage = if (PAGE_FIELDS.isNotEmpty()) {
-                webDb.getOrNull(normUrl.spec, fields = PAGE_FIELDS)
-            } else {
-                webDb.getOrNull(normUrl.spec)
+            // load page content and page model lazily, if we load page content and page model every time,
+            // the underlying storage may crash due to the stress.
+            val loadedPage = when (loadStrategy) {
+                "PARTIAL_LAZY" -> {
+                    webDb.getOrNull(normUrl.spec, fields = PAGE_FIELDS)?.also {
+                        it.setLazyFieldLoader(LazyFieldLoader(normUrl.spec, webDb))
+                    }
+                }
+                else -> {
+                    webDb.getOrNull(normUrl.spec)
+                }
             }
+//            val loadedPage = if (PAGE_FIELDS.isNotEmpty()) {
+//                webDb.getOrNull(normUrl.spec, fields = PAGE_FIELDS)
+//            } else {
+//                webDb.getOrNull(normUrl.spec)
+//            }
 
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
@@ -290,6 +302,15 @@ class LoadComponent(
         }
 
         return page
+    }
+
+    class LazyFieldLoader(
+        val url: String,
+        val db: WebDb
+    ): java.util.function.Function<String, GWebPage?> {
+        override fun apply(field: String): GWebPage? {
+            return db.get0(url, false, arrayOf(field))
+        }
     }
 
     private fun initFetchState(normUrl: NormUrl, page: WebPage, loadedPage: WebPage?): CheckState {

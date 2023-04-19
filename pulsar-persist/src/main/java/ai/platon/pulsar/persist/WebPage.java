@@ -40,10 +40,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -129,7 +127,13 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     /**
      * The field loader to load fields lazily.
      */
-    private Function<String, Object> lazyFieldLoader = null;
+    private Function<String, GWebPage> lazyFieldLoader = null;
+
+    private final List<String> lazyLoadedFields = new ArrayList<>();
+
+    private final Object CONTENT_MONITOR = new Object();
+    private final Object PAGE_MODEL_MONITOR = new Object();
+//    private final Deque<String> lazyLoadedFields = new ConcurrentLinkedDeque<>();
 
     private WebPage(
             @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
@@ -405,6 +409,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         variables.set(name, value);
     }
 
+    @Nullable
     public PageDatum getPageDatum() {
         return pageDatum;
     }
@@ -519,7 +524,11 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         this.retryDelay = retryDelay;
     }
 
-    public void setLazyFieldLoader(Function<String, Object> lazyFieldLoader) {
+    /**
+     * Set a field loader, the loader takes a parameter as the field name,
+     * and returns a GWebPage containing the field.
+     * */
+    public void setLazyFieldLoader(Function<String, GWebPage> lazyFieldLoader) {
         this.lazyFieldLoader = lazyFieldLoader;
     }
 
@@ -1017,11 +1026,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
             return tmpContent;
         }
 
-        if (lazyFieldLoader != null) {
-            return (ByteBuffer)lazyFieldLoader.apply(GWebPage.Field.CONTENT.getName());
-        }
-
-        return page.getContent();
+        return getPersistContent();
     }
 
     /**
@@ -1044,7 +1049,17 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     @Nullable
     public ByteBuffer getPersistContent() {
-        return page.getContent();
+        synchronized (CONTENT_MONITOR) {
+            String fieldName = GWebPage.Field.CONTENT.getName();
+            // load content lazily
+            if (page.getContent() == null && lazyFieldLoader != null && !lazyLoadedFields.contains(fieldName)) {
+                lazyLoadedFields.add(fieldName);
+                GWebPage lazyPage = lazyFieldLoader.apply(fieldName);
+                page.setContent(lazyPage.getContent());
+            }
+
+            return page.getContent();
+        }
     }
 
     /**
@@ -1125,28 +1140,32 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Set the page content
+     * Set the page content.
      *
-     * @param value a ByteBuffer.
+     * TODO: check consistency again
+     *
+     * @param value a ByteBuffer
      */
     public void setContent(@Nullable ByteBuffer value) {
-        if (value != null) {
-            page.setContent(value);
-            isContentUpdated = true;
+        synchronized (CONTENT_MONITOR) {
+            if (value != null) {
+                page.setContent(value);
+                isContentUpdated = true;
 
-            long length = value.array().length;
-            // save the length of the persisted content,
-            // so we can query the length without loading the big or even huge content field
-            setPersistedContentLength(length);
+                long length = value.array().length;
+                // save the length of the persisted content,
+                // so we can query the length without loading the big or even huge content field
+                setPersistedContentLength(length);
 
-            length = getOriginalContentLength();
-            if (length <= 0) {
-                // TODO: it's for old version compatible
-                length = value.array().length;
+                length = getOriginalContentLength();
+                if (length <= 0) {
+                    // TODO: it's for old version compatible
+                    length = value.array().length;
+                }
+                computeContentLength(length);
+            } else {
+                clearPersistContent();
             }
-            computeContentLength(length);
-        } else {
-            clearPersistContent();
         }
     }
 
@@ -1154,9 +1173,13 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      * Clear persist content, so the content will not write to the disk.
      * */
     public void clearPersistContent() {
-        tmpContent = page.getContent();
-        page.setContent(null);
-        setPersistedContentLength(0);
+        synchronized (CONTENT_MONITOR) {
+            tmpContent = page.getContent();
+            page.setContent(null);
+            setPersistedContentLength(0);
+            // TODO: check consistency
+            // lazyLoadedFields.remove(GWebPage.Field.CONTENT.getName());
+        }
     }
 
     /**
@@ -1556,16 +1579,28 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
     @Nullable
     public PageModel getPageModel() {
-        return page.getPageModel() == null ? null : PageModel.box(page.getPageModel());
+        synchronized (PAGE_MODEL_MONITOR) {
+            String fieldName = GWebPage.Field.PAGE_MODEL.getName();
+            // load content lazily
+            if (page.getPageModel() == null && lazyFieldLoader != null && !lazyLoadedFields.contains(fieldName)) {
+                lazyLoadedFields.add(fieldName);
+                GWebPage lazyPage = lazyFieldLoader.apply(fieldName);
+                page.setPageModel(lazyPage.getPageModel());
+            }
+
+            return page.getPageModel() == null ? null : PageModel.box(page.getPageModel());
+        }
     }
 
     @NotNull
     public PageModel ensurePageModel() {
-        if (page.getPageModel() == null) {
-            page.setPageModel(GPageModel.newBuilder().build());
-        }
+        synchronized (PAGE_MODEL_MONITOR) {
+            if (page.getPageModel() == null) {
+                page.setPageModel(GPageModel.newBuilder().build());
+            }
 
-        return Objects.requireNonNull(getPageModel());
+            return Objects.requireNonNull(getPageModel());
+        }
     }
 
     /**
