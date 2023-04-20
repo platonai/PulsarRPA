@@ -2,6 +2,7 @@ package ai.platon.pulsar.common
 
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
@@ -76,5 +77,80 @@ class TestFrequency {
             frequency.toPString())
         // Frequency string
         assertEquals("1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10", frequency.toString())
+    }
+
+    @Test
+    fun testCumulativeFrequencyOf() {
+        val freq = Frequency<Int>()
+        IntRange(1, 10).forEach { i ->
+            repeat(i) {
+                freq.add(i)
+            }
+        }
+
+        listOf(1, 2, 3, 4, 5, 9, 10).forEach {  v ->
+            val a = freq.cumulativeFrequencyOf(v)
+            println("CF: $v -> $a")
+        }
+
+        println(freq.toPString("PString:\n"))
+
+        println(freq.toReport("Report:\n"))
+
+        println("String:\n$freq")
+    }
+
+    @Test
+    fun testCumulativePercentageOf() {
+        val freq = Frequency<Int>()
+        IntRange(1, 10).forEach { i ->
+            repeat(i) {
+                freq.add(i)
+            }
+        }
+
+        listOf(1, 2, 3, 4, 5, 9, 10).forEach {  v ->
+            val a = freq.cumulativePercentageOf(v)
+            println("Cum Pct: $v -> $a")
+        }
+
+        println(freq.toPString("PString:\n"))
+
+        println(freq.toReport("Report:\n"))
+
+        println("String:\n$freq")
+    }
+
+    @Test
+    fun testFrequencyTrimStart() {
+        val freq = Frequency<Int>()
+        IntRange(1, 10).forEach { i ->
+            repeat(i) {
+                freq.add(i)
+            }
+        }
+
+//        println(freq.toString())
+        val freqThreshold = 5.0
+        freq.trimStart(freqThreshold)
+//        println(freq.toString())
+//        println(freq.leastEntry.count)
+        assertTrue(freq.leastEntry.count < freqThreshold - 0.1, "Count of least entry: " + freq.leastEntry.count)
+    }
+
+    @Test
+    fun testFrequencyTrimEnd() {
+        val freq = Frequency<Int>()
+        IntRange(1, 10).forEach { i ->
+            repeat(i) {
+                freq.add(i)
+            }
+        }
+
+        val freqThreshold = 5.0
+        freq.trimEnd(freqThreshold)
+//        println(freq.toString())
+//        println(freq.mostEntry.count)
+        assertTrue(freq.mostEntry.count < freqThreshold + 0.1, "Count of most entry: " + freq.mostEntry.count)
     }
 }

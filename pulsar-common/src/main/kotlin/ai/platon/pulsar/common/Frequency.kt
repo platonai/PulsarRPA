@@ -35,7 +35,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     /**
      * The entry with the least frequency
      * */
-    val leastEntry: Entry<T> get() = entrySet().maxByOrNull { it.count }?:throw NoSuchElementException("Collection is empty.")
+    val leastEntry: Entry<T> get() = entrySet().minByOrNull { it.count }?:throw NoSuchElementException("Collection is empty.")
     /**
      * The mode value
      * The mode of a sample is the element that occurs most often in the collection.
