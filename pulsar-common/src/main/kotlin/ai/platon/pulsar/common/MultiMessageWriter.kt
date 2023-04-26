@@ -1,7 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -13,23 +11,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Multiple sink message writer. Messages from different source are write to different files or database.
  */
-abstract class MultiSinkWriter(
-    val conf: ImmutableConfig
+abstract class MultiMessageWriter(
+    val baseDir: Path
 ) : AutoCloseable {
-    private val timeIdent get() = DateTimes.formatNow("MMdd")
-    private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME]
-    private val reportDir0 get() = AppPaths.REPORT_DIR.resolve(timeIdent)
     private val writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
 
-    val reportDir = if (jobIdent == null) reportDir0 else reportDir0.resolve(jobIdent)
-
-    init {
-        Files.createDirectories(reportDir)
-    }
-
     fun getPath(filename: String): Path {
-        return reportDir.resolve(filename)
+        return baseDir.resolve(filename)
     }
 
     fun readAllLines(filename: String): List<String> {
@@ -44,16 +33,16 @@ abstract class MultiSinkWriter(
         write(message, getPath(filename))
     }
 
-    fun write(message: String, file: Path) {
-        writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
+    fun write(message: String, path: Path) {
+        writers.computeIfAbsent(path.toAbsolutePath()) { MessageWriter(it) }.write(message)
     }
 
     fun writeLine(message: String, filename: String) {
         writeLine(message, getPath(filename))
     }
 
-    fun writeLine(message: String, file: Path) {
-        val writer = writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
+    fun writeLine(message: String, path: Path) {
+        val writer = writers.computeIfAbsent(path.toAbsolutePath()) { MessageWriter(it) }
         writer.write(message)
         writer.write("\n")
     }

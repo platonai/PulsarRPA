@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 
 install_utils() {
+  if ! command -v java &> /dev/null
+  then
+    sudo apt install wget vim default-jdk maven git curl
+  fi
+
   if ! command -v mvn &> /dev/null
   then
-      sudo apt-get install maven
+      sudo apt install maven
   fi
 
   if ! command -v curl &> /dev/null
   then
-      sudo apt-get install curl
+      sudo apt install curl
   fi
 }
 

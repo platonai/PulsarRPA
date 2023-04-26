@@ -1,0 +1,27 @@
+= X-SQL
+Vincent Zhang <ivincent.zhang@gmail.com>
+3.0, July 29, 2022: Frequently Asked Questions
+:toc:
+:icons: font
+
+== Linux Environment
+
+Update the system:
+
+[source,bash]
+----
+root@galaxyeye$ apt update
+root@galaxyeye$ apt upgrade
+----
+
+Install necessary software:
+[source,bash]
+----
+root@galaxyeye$ apt install wget vim default-jdk maven git
+----
+
+Install mongodb:
+
+Follow the official document: https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/:[install-mongodb-on-ubuntu]
+
+

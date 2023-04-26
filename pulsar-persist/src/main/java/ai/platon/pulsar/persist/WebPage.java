@@ -562,11 +562,15 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         page.setZoneId(zoneId.getId());
     }
 
+    @Nullable
     public String getBatchId() {
-        return page.getBatchId() == null ? "" : page.getBatchId().toString();
+        return page.getBatchId() == null ? null : page.getBatchId().toString();
     }
 
-    public void setBatchId(String value) {
+    public void setBatchId(@Nullable String value) {
+        // TODO: use Utf8 which is an optimized string
+//        page.setBatchId(Utf8(value));
+
         page.setBatchId(value);
     }
 

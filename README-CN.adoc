@@ -537,3 +537,9 @@ PulsarR 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行
 * 如何隐藏我的机器人不被检测到？
 * 如何以及为什么要模拟人类行为？
 * 如何在一台机器上渲染尽可能多的页面而不被屏蔽？
+
+== 联系作者
+微信：galaxyeye
+微博：galaxyeye
+邮箱：galaxyeye@live.cn, ivincent.zhang@gmail.com
+Twitter: galaxyeye8

@@ -65,7 +65,7 @@ class WebDbComponent(private val webDb: WebDb, private val conf: ImmutableConfig
     fun scan(startUrl: String, endUrl: String): DbQueryResult {
         val result = DbQueryResult()
         val crawlId = conf[CapabilityTypes.STORAGE_CRAWL_ID] ?: ""
-        val query = DbQuery(crawlId, AppConstants.ALL_BATCHES, startUrl, endUrl)
+        val query = DbQuery(batchId = AppConstants.ALL_BATCHES, startUrl = startUrl, endUrl = endUrl)
         Params.of("startUrl", startUrl, "endUrl", endUrl).withLogger(LOG).debug(true)
         val iterator = webDb.query(query)
         while (iterator.hasNext()) {

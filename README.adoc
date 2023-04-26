@@ -535,3 +535,9 @@ Check link:docs/faq/technical-details.adoc[technical details] to see answers for
 * How to hide my bot from being detected?
 * How & why to simulate human behaviors?
 * How to render as many pages as possible on a single machine without be blocked?
+
+== Contact
+Wechat：galaxyeye
+Weibo：galaxyeye
+Email：galaxyeye@live.cn, ivincent.zhang@gmail.com
+Twitter: galaxyeye8

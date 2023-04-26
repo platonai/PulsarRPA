@@ -115,7 +115,7 @@ class WebPageFormatter(val page: WebPage) {
         fields["prevModifiedTime"] = format(page.prevModifiedTime)
         fields["modifiedTime"] = format(page.modifiedTime)
         fields["baseUrl"] = page.location
-        fields["batchId"] = page.batchId
+        fields["batchId"] = page.batchId ?: "(null)"
         /* Parse */fields["parseStatus"] = page.parseStatus.name
         fields["parseStatusMessage"] = page.parseStatus.toString()
         fields["encoding"] = page.encoding?:""

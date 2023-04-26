@@ -16,51 +16,22 @@
  */
 package ai.platon.pulsar.persist.gora.db
 
-import ai.platon.pulsar.common.config.AppConstants
-import org.apache.avro.util.Utf8
-import java.util.*
+class DbQuery(
+    /**
+     * Utf8 is an optimized string
+     * */
+    var batchId: CharSequence? = null,
+    var startUrl: String? = null,
+    var endUrl: String? = null,
+    var start: Long = 0L,
+    var limit: Long = 100L,
+    var fields: HashSet<String> = HashSet(),
+    var filterIfMissing: Boolean = false,
+    var filterNullBatchId: Boolean = false,
 
-class DbQuery {
-    private var crawlId: String? = null
-    private var batchId = Utf8(AppConstants.ALL_BATCHES)
-    var startUrl: String? = null
-    var endUrl: String? = null
-    var urlFilter = "+."
-    var start = 0L
-    var limit = 100L
-    var fields: HashSet<String> = HashSet()
-
-    private constructor() {}
-    constructor(startUrl: String) {
-        this.startUrl = startUrl
-        endUrl = null
-    }
-
-    constructor(startUrl: String, endUrl: String?) {
-        this.startUrl = startUrl
-        this.endUrl = endUrl
-    }
-
-    constructor(crawlId: String, batchId: String, startUrl: String? = null, endUrl: String? = null) {
-        this.crawlId = crawlId
-        this.batchId = Utf8(batchId)
-        this.startUrl = startUrl
-        this.endUrl = endUrl
-    }
-
-    fun getCrawlId(): String {
-        return if (crawlId == null) "" else crawlId!!
-    }
-
-    fun setCrawlId(crawlId: String) {
-        this.crawlId = crawlId
-    }
-
-    fun getBatchId(): CharSequence {
-        return batchId
-    }
-
-    fun setBatchId(batchId: CharSequence) {
-        this.batchId = Utf8(batchId.toString())
-    }
+    @Deprecated("Not used any more")
+    var crawlId: String? = null,
+) {
+    // private var batchId = Utf8(AppConstants.ALL_BATCHES)
+//    var urlFilter = "+."
 }

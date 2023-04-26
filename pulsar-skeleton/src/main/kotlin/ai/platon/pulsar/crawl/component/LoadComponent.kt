@@ -285,11 +285,6 @@ class LoadComponent(
                     webDb.getOrNull(normUrl.spec)
                 }
             }
-//            val loadedPage = if (PAGE_FIELDS.isNotEmpty()) {
-//                webDb.getOrNull(normUrl.spec, fields = PAGE_FIELDS)
-//            } else {
-//                webDb.getOrNull(normUrl.spec)
-//            }
 
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {

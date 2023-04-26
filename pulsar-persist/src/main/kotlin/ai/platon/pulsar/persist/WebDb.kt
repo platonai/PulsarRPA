@@ -8,8 +8,11 @@ import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.apache.avro.util.Utf8
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
+import org.apache.gora.filter.FilterOp
+import org.apache.gora.filter.SingleFieldValueFilter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
 import java.nio.ByteBuffer
@@ -104,7 +107,7 @@ class WebDb(
     }
 
     fun getContent(originalUrl: String): ByteBuffer? {
-        val fields = arrayOf(GWebPage.Field.CONTENT.name)
+        val fields = arrayOf(GWebPage.Field.CONTENT.toString())
         return getOrNull0(originalUrl, false, fields)?.content
     }
 
@@ -214,6 +217,7 @@ class WebDb(
      */
     fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
         val query = dataStore.newQuery()
+        // TODO: key range not working for MongoDB
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -231,6 +235,7 @@ class WebDb(
         val query = dataStore.newQuery()
 
         query.filter = filter
+        // TODO: key range is not working for MongoDB
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -256,11 +261,18 @@ class WebDb(
             endKey = endKey.replace("\\\\uFFFF".toRegex(), UNICODE_LAST_CODE_POINT.toString())
         }
 
+        // TODO: key range is not working for MongoDB
         goraQuery.startKey = startKey
         goraQuery.endKey = endKey
+        // TODO: use DbQuery.filterNullBatchId
+        val batchId = query.batchId
+        if (batchId == null && query.filterNullBatchId) {
+            goraQuery.filter = createBatchIdFilter(query.batchId, query.filterIfMissing)
+        } else if (batchId != null) {
+            goraQuery.filter = createBatchIdFilter(query.batchId, query.filterIfMissing)
+        }
 
-        val fields = prepareFields(query.fields)
-        goraQuery.setFields(*fields)
+        goraQuery.setFields(*prepareFields(query.fields))
         val result = dataStore.execute(goraQuery)
 
         return DbIterator(result, conf)
@@ -313,10 +325,26 @@ class WebDb(
         return page
     }
 
+    private fun createBatchIdFilter(
+        batchId: CharSequence?, filterIfMissing: Boolean = false
+    ): SingleFieldValueFilter<String, GWebPage> {
+        return SingleFieldValueFilter<String, GWebPage>().also {
+            it.fieldName = GWebPage.Field.BATCH_ID.toString()
+            it.filterOp = FilterOp.EQUALS
+            if (batchId != null) {
+                it.operands = listOf(batchId)
+            } else {
+                it.operands = listOf(null)
+            }
+            it.isFilterIfMissing = filterIfMissing
+        }
+    }
+
     private fun prepareFields(fields: MutableSet<String>): Array<String> {
-        if (CollectionUtils.isEmpty(fields)) {
+        if (fields.isEmpty()) {
             return GWebPage._ALL_FIELDS
         }
+
         fields.remove("url")
         return fields.toTypedArray()
     }

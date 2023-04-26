@@ -183,7 +183,7 @@ class IndexDocument(
 
             doc.addIfAbsent("id", key)
             doc.add("digest", page.signatureAsString)
-            doc.add("batchId", page.batchId)
+            page.batchId?.let { doc.add("batchId", it) }
             var boost: Float = 1.0f
             // run scoring indexingFilters
             boost = scoringFilters.indexerScore(url, doc, page, boost)

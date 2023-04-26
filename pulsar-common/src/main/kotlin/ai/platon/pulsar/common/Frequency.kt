@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import com.google.common.collect.ConcurrentHashMultiset
 import com.google.common.collect.HashMultiset
 import com.google.common.collect.Multiset.Entry
 import org.apache.commons.collections4.CollectionUtils
@@ -19,7 +20,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     /**
      * The underlying term counter
      * */
-    private val counter = HashMultiset.create<T>()
+    private val counter = ConcurrentHashMultiset.create<T>()
     /**
      * The unique elements count
      * */

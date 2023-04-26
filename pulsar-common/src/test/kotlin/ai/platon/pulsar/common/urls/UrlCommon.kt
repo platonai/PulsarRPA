@@ -26,6 +26,8 @@ object UrlCommon {
     val urlString6 = "http://foo.com"
     val urlString7 = "file:///var/www/index.html"
     val urlString8 = "https://www.amazon.com/Best-Sellers-Home-Kitchen/zgbs/home-garden/ref=zg_bs_unv_hg_1_510136_4"
+    val urlString9 = "https://www.amazon.co.uk/dp/B08JV5Q1DC"
+
     val reversedUrlString1 = "com.foo:http/"
     val reversedUrlString2 = "com.foo:http:8900/"
     val reversedUrlString3 = "com.baz.bar:ftp/"
@@ -34,4 +36,5 @@ object UrlCommon {
     val reversedUrlString6 = "com.foo:http"
     val reversedUrlString7 = ":file/var/www/index.html"
     val reversedUrlString8 = "com.amazon.www:https/Best-Sellers-Home-Kitchen/zgbs/home-garden/ref=zg_bs_unv_hg_1_510136_4"
+    val reversedUrlString9 = "uk.co.amazon.www:https/dp/B08JV5Q1DC"
 }

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.junit.Test
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -27,7 +28,7 @@ class TestFrequency {
         freq.addAll(listOf("a", "a", "b", "a", "b", "a", "c", "d"))
         println("iteration: ")
         freq.forEachIndexed { i, s -> print("$s\t") }
-        assertEquals("a,a,a,a,b,b,c,d", freq.joinToString())
+        assertEquals("a,a,a,a,b,b,c,d", freq.joinToString(","))
         println("\nentry set: ")
         freq.entrySet().also { println(it) }
         assertEquals("[a x 4, b x 2, c, d]", freq.entrySet().toString())
@@ -51,6 +52,40 @@ class TestFrequency {
         freq.elementSet().associateBy({ it }) { freq.percentageOf(it) }.also { println(it) }
         println("\ncumulative percentage: ")
         freq.elementSet().associateBy({ it }) { freq.cumulativePercentageOf(it) }.also { println(it) }
+    }
+
+    @Test
+    fun testElementSetIsNotSorted() {
+        val freq = Frequency<Int>()
+        val n = 98
+
+        freq.add(-500)
+        repeat(n) {
+            freq.add(Random.nextInt(1000))
+        }
+        freq.add(-1)
+
+//        println(freq.entrySet().joinToString())
+//        println(freq.elementSet().joinToString())
+    }
+
+    @Test
+    fun testIterator() {
+        val freq = Frequency<String>()
+        freq.addAll(listOf("a", "a", "b", "a", "b", "a", "c", "d"))
+
+        val it = freq.iterator()
+        val destination = mutableListOf<String>()
+        while (it.hasNext()) {
+            val item = it.next()
+            destination.add(item)
+        }
+
+        assertEquals("a", destination[0])
+        assertEquals("a", destination[1])
+        assertEquals("a", destination[2])
+        assertEquals("a", destination[3])
+        assertEquals("b", destination[4])
     }
 
     @Test
@@ -135,7 +170,7 @@ class TestFrequency {
         freq.trimStart(freqThreshold)
 //        println(freq.toString())
 //        println(freq.leastEntry.count)
-        assertTrue(freq.leastEntry.count < freqThreshold - 0.1, "Count of least entry: " + freq.leastEntry.count)
+        assertTrue(freq.leastEntry.count > freqThreshold - 0.1, "Count of least entry: " + freq.leastEntry.count)
     }
 
     @Test

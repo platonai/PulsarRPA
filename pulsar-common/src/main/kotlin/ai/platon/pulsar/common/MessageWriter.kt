@@ -16,6 +16,25 @@ class MessageWriter(
         var levelFile: Int = DEFAULT_LOG_LEVEL
 ): AutoCloseable {
 
+    companion object {
+        const val OFF = 0
+        const val ERROR = 1
+        const val WARN = 2
+        const val INFO = 3
+        const val DEBUG = 4
+        /**
+         * The default level for file log messages.
+         */
+        var DEFAULT_LOG_LEVEL = INFO
+        /**
+         * The default maximum trace file size. It is currently 64 MB. Additionally,
+         * there could be a .old file of the same size.
+         */
+        var DEFAULT_MAX_FILE_SIZE = 64 * 1024 * 1024
+
+        var CHECK_SIZE_EACH_WRITES = 4096
+    }
+
     private val log = LoggerFactory.getLogger(MessageWriter::class.java)
 
     private var fileWriter: Writer? = null
@@ -108,24 +127,5 @@ class MessageWriter(
         if (closed.compareAndSet(false, true)) {
             closeWriter()
         }
-    }
-
-    companion object {
-        const val OFF = 0
-        const val ERROR = 1
-        const val WARN = 2
-        const val INFO = 3
-        const val DEBUG = 4
-        /**
-         * The default level for file log messages.
-         */
-        val DEFAULT_LOG_LEVEL = INFO
-        /**
-         * The default maximum trace file size. It is currently 64 MB. Additionally,
-         * there could be a .old file of the same size.
-         */
-        private val DEFAULT_MAX_FILE_SIZE = 64 * 1024 * 1024
-
-        private val CHECK_SIZE_EACH_WRITES = 4096
     }
 }

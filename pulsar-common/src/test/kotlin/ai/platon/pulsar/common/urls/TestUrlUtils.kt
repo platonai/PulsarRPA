@@ -26,8 +26,8 @@ import kotlin.test.assertTrue
 typealias uc = UrlCommon
 
 class TestUrlUtils {
+
     @Test
-    @Throws(Exception::class)
     fun testReverseUrl() {
         println(reverseUrl("http://sz.sxrb.com/sxxww/dspd/szpd/wsjk"))
         println(reverseUrl("http://sz.sxrb.com/sxxww/"))
@@ -41,10 +41,10 @@ class TestUrlUtils {
         assertReverse(UrlCommon.urlString6, UrlCommon.reversedUrlString6)
         assertReverse(UrlCommon.urlString7, UrlCommon.reversedUrlString7)
         assertReverse(UrlCommon.urlString8, UrlCommon.reversedUrlString8)
+        assertReverse(UrlCommon.urlString9, UrlCommon.reversedUrlString9)
     }
 
     @Test
-    @Throws(Exception::class)
     fun testUnreverseUrl() {
         println(unreverseUrl("com.sxrb.www:http/sxxww/zthj/xmtdt/6619357.shtml"))
         assertUnreverse(UrlCommon.reversedUrlString1, UrlCommon.urlString1)
@@ -54,10 +54,11 @@ class TestUrlUtils {
         assertUnreverse(UrlCommon.reversedUrlString5, UrlCommon.urlString5rev)
         assertUnreverse(UrlCommon.reversedUrlString6, UrlCommon.urlString6)
         assertUnreverse(UrlCommon.reversedUrlString7, UrlCommon.urlString7)
+        assertUnreverse(UrlCommon.reversedUrlString8, UrlCommon.urlString8)
+        assertUnreverse(UrlCommon.reversedUrlString9, UrlCommon.urlString9)
     }
 
     @Test
-    @Throws(Exception::class)
     fun testRemoveParameters() {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
@@ -69,7 +70,6 @@ class TestUrlUtils {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testKeepParameters() {
         val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
         val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"

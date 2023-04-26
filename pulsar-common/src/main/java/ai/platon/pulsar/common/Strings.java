@@ -759,6 +759,10 @@ public final class Strings {
    * CompactNumberFormat</a>
    */
   public static String compactFormat(long number, int scale, boolean si) {
+    if (number < 0) {
+      return "-" + compactFormat(-number, scale, si);
+    }
+
     int unit = si ? 1000 : 1024;
     if (number < unit) {
       return number + " B";
@@ -802,10 +806,10 @@ public final class Strings {
   }
 
   /**
-   * All lines separated by back slashes are merged together
+   * All lines separated by backslashes are merged together
    *
    * @param allLines All lines separated by "\n", some of them are separated by  back slash
-   * @return All lines separated by back slashes are merged
+   * @return All lines separated by backslashes are merged
    */
   public static List<String> getUnslashedLines(String allLines) {
     return mergeSlashedLines(Arrays.asList(allLines.split("\n")));
@@ -823,10 +827,10 @@ public final class Strings {
   }
 
   /**
-   * Merge lines concatenated with back slash, for example :
-   * The line "Java Stream API is very very usefull \\\n"
+   * Merge lines concatenated with backslash, for example :
+   * The line "Java Stream API is very, very useful, \\\n"
    * " and we use them everywhere "
-   * can be merged into "Java Stream API is very very usefull and we use them everywhere"
+   * can be merged into "Java Stream API is very, very useful, and we use them everywhere"
    *
    * @param slashedLine a {@link java.lang.String} object.
    * @return a {@link java.lang.String} object.
@@ -987,9 +991,9 @@ public final class Strings {
   }
 
   /**
-   * https://www.regextester.com/97725
+   * <a href="https://www.regextester.com/97725">regextester</a>
    *
-   * @param text a {@link java.lang.String} object.
+   * @param text a {@link String} object.
    * @return a boolean.
    */
   public static boolean isMoneyLike(String text) {
