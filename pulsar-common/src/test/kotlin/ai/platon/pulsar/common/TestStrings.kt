@@ -33,12 +33,17 @@ class TestStrings {
     @Test
     fun testCompactFormat() {
         var s = Strings.compactFormat(1e6.toLong(), true)
-//        println(s)
         assertEquals("1.00 MB", s)
 
         s = Strings.compactFormat(1e6.toLong())
         assertEquals("976.56 KiB", s)
-//        println(s)
+
+        // negative numbers
+        s = Strings.compactFormat((-1e6).toLong(), true)
+        assertEquals("-1.00 MB", s)
+
+        s = Strings.compactFormat((-1e6).toLong())
+        assertEquals("-976.56 KiB", s)
     }
 
     @Test
