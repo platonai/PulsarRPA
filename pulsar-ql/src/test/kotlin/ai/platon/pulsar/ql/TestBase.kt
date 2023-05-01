@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.options.LoadOptionDefaults
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.ql.context.DefaultClassPathXmlSQLContext
 import ai.platon.pulsar.ql.context.SQLContexts
 import org.slf4j.LoggerFactory
@@ -39,8 +40,11 @@ abstract class TestBase {
         val startTime = Instant.now()
     }
 
+    val logger = getLogger(this)
     val context = SQLContexts.create()
     val session = context.createSession()
+
+    val productUrl = "https://www.amazon.com/dp/B09V3KXJPB"
 
     fun execute(sql: String, printResult: Boolean = true) {
         context.run { connection ->
@@ -66,15 +70,14 @@ abstract class TestBase {
 
     fun query(sql: String, printResult: Boolean = true): ResultSet {
         return context.runQuery { connection ->
-            connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
-                .use { stat ->
-                    val rs = stat.executeQuery(sql)
-                    if (printResult) {
-                        println(ResultSetFormatter(rs))
-                    }
-                    history.add("${sql.trim { it.isWhitespace() }};")
-                    rs
-                }
+            val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
+            val rs = stat.executeQuery(sql)
+            if (printResult) {
+                println(ResultSetFormatter(rs, withHeader = true))
+            }
+            history.add("${sql.trim { it.isWhitespace() }};")
+            rs.beforeFirst()
+            rs
         }
     }
 

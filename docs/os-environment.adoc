@@ -1,10 +1,10 @@
-= X-SQL
+= OS environment
 Vincent Zhang <ivincent.zhang@gmail.com>
 3.0, July 29, 2022: Frequently Asked Questions
 :toc:
 :icons: font
 
-== Linux Environment
+== Linux
 
 Update the system:
 

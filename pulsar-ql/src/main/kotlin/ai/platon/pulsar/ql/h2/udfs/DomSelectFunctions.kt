@@ -286,7 +286,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun allHrefs(dom: ValueDom, cssQuery: String = ":root"): ValueArray {
         val q = appendSelectorIfMissing(cssQuery, "a")
-        return Queries.select(dom, q) { ele -> ele.attr("abs:href") }
+        return Queries.select(dom, q) { it.attr("abs:href") }
     }
 
     @UDFunction(description = "Select the first anchor element from a DOM by the given css query " +

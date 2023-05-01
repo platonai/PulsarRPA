@@ -21,8 +21,10 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.common.domain.DomainSuffix
 import ai.platon.pulsar.common.domain.DomainSuffixes
 import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
+import com.google.common.net.InternetDomainName
 import org.slf4j.LoggerFactory
 import java.net.*
+
 
 /**
  * Utility class for URL analysis
@@ -86,6 +88,8 @@ object URLUtil {
     ` * <br></br>
      * will return <br></br>
      * ` apache.org`
+     *
+     * @see com.google.common.net.InternetDomainName.topPrivateDomain
      */
     fun getDomainName(url: URL): String {
         val tlds = DomainSuffixes.getInstance()
@@ -114,6 +118,8 @@ object URLUtil {
     ` * <br></br>
      * will return <br></br>
      * ` apache.org`
+     *
+     * @see com.google.common.net.InternetDomainName.topPrivateDomain
      *
      * @throws MalformedURLException
      */
@@ -155,6 +161,8 @@ object URLUtil {
     /**
      * Returns the [DomainSuffix] corresponding to the last public part of
      * the hostname
+     *
+     * @see com.google.common.net.InternetDomainName.publicSuffix
      */
     fun getDomainSuffix(url: URL): DomainSuffix? {
         return getDomainSuffix(DomainSuffixes.getInstance(), url)

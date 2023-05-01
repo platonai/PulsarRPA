@@ -17,6 +17,7 @@
 package ai.platon.pulsar.persist.gora.db
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -55,17 +56,22 @@ class DbIterator(
             log.error("Failed to move to the next record", e)
         }
 
-        return nextPage?:WebPage.NIL
+        return nextPage ?: WebPage.NIL
     }
 
     @Throws(Exception::class)
     private fun moveToNext() {
         nextPage = null
         while (nextPage == null && result.next()) {
-            val page = WebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
-            val f = filter
-            if (f == null || f.test(page)) {
-                nextPage = page
+            val url = UrlUtils.reverseUrlOrNull(result.key)
+            if (url != null) {
+                val p = result.get()
+                // TODO: url or p.baseUrl?
+                val page = WebPage.box(url, p, true, conf.toVolatileConfig())
+                val flt = filter
+                if (flt == null || flt.test(page)) {
+                    nextPage = page
+                }
             }
         }
     }
