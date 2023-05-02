@@ -63,11 +63,24 @@ class DbIterator(
     private fun moveToNext() {
         nextPage = null
         while (nextPage == null && result.next()) {
+            val page = WebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
+            val f = filter
+            if (f == null || f.test(page)) {
+                nextPage = page
+            }
+        }
+    }
+
+    @Throws(Exception::class)
+    @Deprecated("The old version moveToNext is OK, previous bug is caused by WebPage.box", ReplaceWith("moveToNext"))
+    private fun moveToNext0() {
+        nextPage = null
+        while (nextPage == null && result.next()) {
             val url = UrlUtils.reverseUrlOrNull(result.key)
             if (url != null) {
                 val p = result.get()
                 // TODO: url or p.baseUrl?
-                val page = WebPage.box(url, p, true, conf.toVolatileConfig())
+                val page = WebPage.box(url, p, false, conf.toVolatileConfig())
                 val flt = filter
                 if (flt == null || flt.test(page)) {
                     nextPage = page

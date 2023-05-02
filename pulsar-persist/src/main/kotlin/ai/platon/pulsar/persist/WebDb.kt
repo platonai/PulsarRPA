@@ -264,7 +264,6 @@ class WebDb(
         // TODO: key range is not working for MongoDB
         goraQuery.startKey = startKey
         goraQuery.endKey = endKey
-        // TODO: use DbQuery.filterNullBatchId
         val batchId = query.batchId
         if (batchId == null && query.filterNullBatchId) {
             goraQuery.filter = createBatchIdFilter(query.batchId, query.filterIfMissing)

@@ -136,16 +136,16 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 //    private final Deque<String> lazyLoadedFields = new ConcurrentLinkedDeque<>();
 
     private WebPage(
-            @NotNull String url, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
+            @NotNull String urlOrKey, @NotNull GWebPage page, boolean urlReversed, @NotNull VolatileConfig conf
     ) {
-        this.url = urlReversed ? UrlUtils.unreverseUrl(url) : url;
-        this.reversedUrl = urlReversed ? url : UrlUtils.reverseUrlOrEmpty(url);
+        this.url = urlReversed ? UrlUtils.unreverseUrl(urlOrKey) : urlOrKey;
+        this.reversedUrl = urlReversed ? urlOrKey : UrlUtils.reverseUrlOrEmpty(urlOrKey);
         this.conf = conf;
         this.page = page;
 
         // the url of a page might be normalized, but the baseUrl always keeps be the original
         if (page.getBaseUrl() == null) {
-            setLocation(url);
+            setLocation(this.url);
         }
     }
 
@@ -159,7 +159,7 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
 
         // BaseUrl is the last working address, it might redirect to url, or it might have random parameters
         if (page.getBaseUrl() == null) {
-            setLocation(url);
+            setLocation(this.url);
         }
     }
 
