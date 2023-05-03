@@ -543,6 +543,7 @@ class LoadComponent(
             // return CheckState(FetchState.NO_CONTENT, "no content")
         }
 
+        // TODO: page.persistedContentLength or page.originalContentLength?
         if (page.persistedContentLength < options.requireSize) {
             return CheckState(FetchState.SMALL_CONTENT, "small content")
         }

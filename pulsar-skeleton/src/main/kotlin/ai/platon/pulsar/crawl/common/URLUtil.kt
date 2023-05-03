@@ -164,6 +164,17 @@ object URLUtil {
      *
      * @see com.google.common.net.InternetDomainName.publicSuffix
      */
+    fun getDomainSuffix(url: String): DomainSuffix? {
+        val u = getURLOrNull(url) ?: return null
+        return getDomainSuffix(u)
+    }
+
+    /**
+     * Returns the [DomainSuffix] corresponding to the last public part of
+     * the hostname
+     *
+     * @see com.google.common.net.InternetDomainName.publicSuffix
+     */
     fun getDomainSuffix(url: URL): DomainSuffix? {
         return getDomainSuffix(DomainSuffixes.getInstance(), url)
     }
