@@ -186,7 +186,8 @@ public interface CapabilityTypes {
     String LOAD_STRATEGY = "load.strategy";
     /**
      * Disable the fetch component, so the page only be loaded from the storage,
-     * if it does not exist in the local storage, return WebPage.NIL
+     * and will never be fetched from the internet.
+     * If the page does not exist in the local storage, return WebPage.NIL.
      * */
     String LOAD_DISABLE_FETCH = "load.disable.fetch";
 

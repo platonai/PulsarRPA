@@ -74,6 +74,11 @@ class LoadComponent(
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
+    /**
+     * Disable the fetch component, so the page only be loaded from the storage,
+     * and will never be fetched from the internet.
+     * If the page does not exist in the local storage, return WebPage.NIL.
+     * */
     private val disableFetch = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
 
     val globalCache get() = globalCacheFactory.globalCache
@@ -208,6 +213,10 @@ class LoadComponent(
         return linkFutures
     }
 
+    /**
+     * Load a webpage from local storage, or if it doesn't exist in local storage,
+     * fetch it from the Internet, unless the fetch component is disabled.
+     * */
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
 
@@ -230,6 +239,11 @@ class LoadComponent(
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
+
+        if (disableFetch && shouldFetch(page)) {
+            return WebPage.NIL
+        }
+
         return loadDeferred1(normUrl, page)
     }
 
