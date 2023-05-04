@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_DISABLE_FETCH
 import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_STRATEGY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
@@ -73,6 +74,7 @@ class LoadComponent(
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
+    private val disableFetch = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
 
     val globalCache get() = globalCacheFactory.globalCache
     val pageCache get() = globalCache.pageCache
@@ -208,6 +210,11 @@ class LoadComponent(
 
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createPageShell(normUrl)
+
+        if (disableFetch && shouldFetch(page)) {
+            return WebPage.NIL
+        }
+
         return load1(normUrl, page)
     }
 
@@ -237,6 +244,10 @@ class LoadComponent(
     }
 
     private fun fetchContentIfNecessary(normUrl: NormUrl, page: WebPage) {
+        if (page.isInternal) {
+            return
+        }
+
         if (page.removeVar(VAR_REFRESH) != null) {
             fetchContent(page, normUrl)
         }
@@ -299,15 +310,6 @@ class LoadComponent(
         return page
     }
 
-    class LazyFieldLoader(
-        val url: String,
-        val db: WebDb
-    ): java.util.function.Function<String, GWebPage?> {
-        override fun apply(field: String): GWebPage? {
-            return db.get0(url, false, arrayOf(field))
-        }
-    }
-
     private fun initFetchState(normUrl: NormUrl, page: WebPage, loadedPage: WebPage?): CheckState {
         val options = normUrl.options
 
@@ -328,6 +330,10 @@ class LoadComponent(
     }
 
     private fun onWillLoad(normUrl: NormUrl, page: WebPage) {
+        if (page.isInternal) {
+            return
+        }
+
         val options = normUrl.options
 
         shouldBe(options.conf, page.conf) { "Conf should be the same \n${options.conf} \n${page.conf}" }
@@ -340,6 +346,10 @@ class LoadComponent(
     }
 
     private fun onLoaded(page: WebPage, normUrl: NormUrl) {
+        if (page.isInternal) {
+            return
+        }
+
         val options = normUrl.options
         val status = page.protocolStatus
 
@@ -457,6 +467,10 @@ class LoadComponent(
         }
 
         return null
+    }
+
+    private fun shouldFetch(page: WebPage): Boolean {
+        return page.hasVar(VAR_REFRESH)
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
@@ -627,6 +641,15 @@ class LoadComponent(
     private fun shouldBe(expected: Any?, actual: Any?, lazyMessage: () -> String) {
         if (actual != expected) {
             logger.warn(lazyMessage())
+        }
+    }
+
+    class LazyFieldLoader(
+        val url: String,
+        val db: WebDb
+    ): java.util.function.Function<String, GWebPage?> {
+        override fun apply(field: String): GWebPage? {
+            return db.get0(url, false, arrayOf(field))
         }
     }
 }
