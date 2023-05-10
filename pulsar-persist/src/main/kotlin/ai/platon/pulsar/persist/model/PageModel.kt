@@ -58,6 +58,17 @@ class PageModel(
     }
 
     @Synchronized
+    fun add(groupId: Int, name: String, value: String) {
+        val group = findById(groupId)
+        val fields = group?.unbox()?.fields ?: mutableMapOf()
+        fields[u8(name)] = value
+
+        val parentId = group?.parentId?.toInt() ?: 0
+        val groupName = group?.name ?: ""
+        emplace0(groupId, parentId, groupName, fields)
+    }
+
+    @Synchronized
     fun emplace(groupId: Int, fields: Map<String, String?>): FieldGroup {
         return emplace(groupId, 0, "", fields)
     }
@@ -69,18 +80,8 @@ class PageModel(
 
     @Synchronized
     fun emplace(groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
-        var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
-        if (gFieldGroup == null) {
-            gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
-            fieldGroups.add(gFieldGroup)
-        }
-
-        // fieldGroup.fields = fields
-        gFieldGroup.fields.putAll(fields.entries.associate { u8(it.key) to it.value })
-        gFieldGroup.setDirty()
-        pageModel.setDirty()
-
-        return FieldGroup.box(gFieldGroup)
+        val f = fields.entries.associate { u8(it.key)!! to it.value }
+        return emplace0(groupId, parentId, groupName, f)
     }
 
     @Synchronized
@@ -116,6 +117,24 @@ class PageModel(
     fun deepCopy(): PageModel {
         val other = GPageModel.newBuilder(pageModel).build()
         return PageModel(other)
+    }
+
+    @Synchronized
+    private fun emplace0(
+        groupId: Int, parentId: Int, groupName: String, fields: Map<out CharSequence, CharSequence?>
+    ): FieldGroup {
+        var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        if (gFieldGroup == null) {
+            gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
+            fieldGroups.add(gFieldGroup)
+        }
+
+        // fieldGroup.fields = fields
+        gFieldGroup.fields.putAll(fields)
+        gFieldGroup.setDirty()
+        pageModel.setDirty()
+
+        return FieldGroup.box(gFieldGroup)
     }
 
     companion object {

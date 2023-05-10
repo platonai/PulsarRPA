@@ -51,7 +51,9 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
 
     operator fun set(key: String, value: String) {
         // Note: map
+        // fields is Dirtyable
         fieldGroup.fields[wrapKey(key)] = value
+        fieldGroup.setDirty()
     }
 
     override fun toString(): String {
