@@ -323,13 +323,24 @@ object DateTimes {
     }
 
     @JvmStatic
-    fun parseDuration(duration: String, defaultValue: Duration): Duration {
+    fun parseDuration(text: String, defaultValue: Duration): Duration {
         return try {
-            Duration.parse(duration)
+            Duration.parse(text)
         } catch (ignored: Throwable) {
             defaultValue
         }
     }
+
+    @JvmStatic
+    fun parseDurationOrNull(text: String): Duration? {
+        return try {
+            Duration.parse(text)
+        } catch (ignored: Throwable) {
+            null
+        }
+    }
+
+    fun isDuration(text: String) = parseDurationOrNull(text) != null
 
     @JvmStatic
     fun constructTimeHistory(timeHistory: String?, fetchTime: Instant, maxRecords: Int): String {

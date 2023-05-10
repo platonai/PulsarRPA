@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.exotic.common.ResourceWalker
 import org.junit.Test
 import kotlin.test.assertTrue
 
