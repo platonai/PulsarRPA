@@ -1,5 +1,7 @@
-package ai.platon.pulsar.common
+package ai.platon.exotic.common
 
+import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.getLogger
 import java.nio.file.*
 
 class ResourceWalker {
@@ -18,13 +20,23 @@ class ResourceWalker {
         }
     }
 
+    fun list(resourceBase: String): Set<Path> {
+        val paths = mutableSetOf<Path>()
+        walk(resourceBase, 1) {
+            if (!it.toString().endsWith(resourceBase)) {
+                paths.add(it)
+            }
+        }
+        return paths
+    }
+
     fun walk(resourceBase: String, maxDepth: Int, visitor: (Path) -> Unit) {
         val uri = ResourceLoader.getResource(resourceBase)?.toURI() ?: return
 
         var fileSystem: FileSystem? = null
         try {
             val path = if (uri.scheme == "jar") {
-                val env = HashMap<String, String>()
+                val env: MutableMap<String, String> = HashMap()
                 fileSystem = FileSystems.newFileSystem(uri, env)
                 fileSystem.getPath("$resourcePrefix$resourceBase")
             } else {
@@ -45,15 +57,5 @@ class ResourceWalker {
         } finally {
             fileSystem?.close()
         }
-    }
-
-    fun collect(resourceBase: String, maxDepth: Int): List<Path> {
-        val paths = mutableListOf<Path>()
-
-        walk(resourceBase, maxDepth) {
-            paths.add(it)
-        }
-
-        return paths
     }
 }

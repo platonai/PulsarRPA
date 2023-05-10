@@ -1,9 +1,18 @@
 package ai.platon.pulsar.common
 
+import ai.platon.exotic.common.ResourceWalker
 import org.junit.Test
 import kotlin.test.assertTrue
 
 class ResourceWalkerTests {
+
+    @Test
+    fun testList() {
+        val resourceWalker = ResourceWalker()
+        val paths = resourceWalker.list("data")
+        paths.forEach { println(it) }
+        assertTrue("html-charsets.txt" in paths.toString())
+    }
 
     @Test
     fun testWalk() {
@@ -11,7 +20,7 @@ class ResourceWalkerTests {
         var exists = false
         val resourceWalker = ResourceWalker()
         resourceWalker.walk("data", 2) { path ->
-            if (targetResource.toString().contains(targetResource)) {
+            if (path.toString().contains(targetResource)) {
                 exists = true
             }
         }
