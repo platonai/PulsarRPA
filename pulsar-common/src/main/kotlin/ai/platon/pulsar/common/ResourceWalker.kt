@@ -39,6 +39,9 @@ class ResourceWalker(
         return null
     }
 
+    /**
+     * Files.list(getPath(resourceBase)) is OK
+     * */
     fun list(dir: String): Set<Path> {
         val paths = mutableSetOf<Path>()
         walk(dir, 1) {
@@ -50,6 +53,9 @@ class ResourceWalker(
         return paths
     }
 
+    /**
+     * Files.walk(path, maxDepth) is OK
+     * */
     fun walk(start: String, maxDepth: Int, visitor: (Path) -> Unit) {
         val path = getPath(start)
 
