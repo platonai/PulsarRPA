@@ -7,7 +7,6 @@ import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.jetbrains.kotlin.util.getValueOrNull
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream

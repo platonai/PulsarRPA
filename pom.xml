@@ -341,6 +341,15 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -660,24 +669,24 @@
     </dependencies>
 
     <properties>
-        <kotlin.version>1.5.32</kotlin.version>
+        <kotlin.version>1.7.22</kotlin.version>
         <kotlin.coroutine.version>1.6.4</kotlin.coroutine.version>
 <!--        <kotlin.version>1.6.20</kotlin.version>-->
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
 
-        <dokka.version>1.4.32</dokka.version>
+        <dokka.version>1.8.10</dokka.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
 
         <commons-io.version>2.11.0</commons-io.version>
-        <jackson.version>2.13.4</jackson.version>
+        <jackson.version>2.13.5</jackson.version>
         <gson.version>2.10.1</gson.version>
 
-        <spring.version>5.3.17</spring.version>
+        <spring.version>5.3.27</spring.version>
         <!-- spring-data-mongo -->
         <spring-data.version>3.1.15</spring-data.version>
-        <spring-boot.version>2.4.13</spring-boot.version>
+        <spring-boot.version>2.7.11</spring-boot.version>
         <tika.version>2.3.0</tika.version>
         <autolink.version>0.10.0</autolink.version>
         <playwright.version>1.19.0</playwright.version>
