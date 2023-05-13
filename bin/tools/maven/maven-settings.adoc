@@ -8,7 +8,7 @@ on Windows,
 
     %UserProfile%\.m2\settings.xml
 
-If the file doesn't exist, just copy link:settings.xml[settings.xml] to the proper directory.
+If the file doesn't exist, just copy link:cn/settings.xml[settings.xml] to the proper directory.
 
 On Linux:
 

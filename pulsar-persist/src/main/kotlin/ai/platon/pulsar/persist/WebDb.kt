@@ -193,6 +193,7 @@ class WebDb(
      */
     fun scan(urlBase: String): Iterator<WebPage> {
         val query = dataStore.newQuery()
+        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
         val result = dataStore.execute(query)
@@ -217,7 +218,7 @@ class WebDb(
      */
     fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
         val query = dataStore.newQuery()
-        // TODO: key range not working for MongoDB
+        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -235,7 +236,7 @@ class WebDb(
         val query = dataStore.newQuery()
 
         query.filter = filter
-        // TODO: key range is not working for MongoDB
+        // TODO: key range does not working in MongoStore
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
@@ -261,7 +262,7 @@ class WebDb(
             endKey = endKey.replace("\\\\uFFFF".toRegex(), UNICODE_LAST_CODE_POINT.toString())
         }
 
-        // TODO: key range is not working for MongoDB
+        // TODO: key range does not working in MongoStore
         goraQuery.startKey = startKey
         goraQuery.endKey = endKey
         val batchId = query.batchId
