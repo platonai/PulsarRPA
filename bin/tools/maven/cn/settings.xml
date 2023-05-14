@@ -5,54 +5,13 @@
 
     <mirrors>
         <mirror>
-            <id>nexus-tencentyun</id>
-            <mirrorOf>*</mirrorOf>
-            <name>Nexus tencentyun</name>
-            <url>http://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>
-        </mirror>
-        <mirror>
             <id>huaweicloud</id>
             <url>https://repo.huaweicloud.com/repository/maven/</url>
             <mirrorOf>central</mirrorOf>
         </mirror>
         <mirror>
-            <id>nju</id>
-            <url>http://maven.nju.edu.cn/repository/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
-            <id>ustc</id>
-            <url>http://mirrors.ustc.edu.cn/maven/maven2/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
             <id>central</id>
             <url>https://repo1.maven.org/maven2/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
-            <id>netease</id>
-            <url>http://maven.netease.com/repository/public/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
-            <id>bit</id>
-            <url>http://mirror.bit.edu.cn/maven/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
-            <id>neusoft</id>
-            <url>https://mirrors.neusoft.edu.cn/maven2/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
-            <id>opencas</id>
-            <url>http://maven.opencas.cn/maven/</url>
-            <mirrorOf>central</mirrorOf>
-        </mirror>
-        <mirror>
-            <id>bjtu</id>
-            <url>http://maven.bjtu.edu.cn/maven2/</url>
             <mirrorOf>central</mirrorOf>
         </mirror>
 
