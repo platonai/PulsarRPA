@@ -18,8 +18,10 @@ import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.session.PulsarSession
 import com.codahale.metrics.Gauge
@@ -59,6 +61,7 @@ private enum class CriticalWarning(val message: String) {
     HIGH_CPU_LOAD("HIGH CPU LOAD"),
     OUT_OF_MEMORY("OUT OF MEMORY"),
     OUT_OF_DISK_STORAGE("OUT OF DISK STORAGE"),
+    WEB_DB_LOST("WEB DB LOST"),
     NO_PROXY("NO PROXY AVAILABLE"),
     FAST_CONTEXT_LEAK("CONTEXT LEAK TOO FAST"),
     FAST_CANCELS("CANCELS TOO FAST"),
@@ -89,6 +92,7 @@ open class StreamingCrawler(
         private val globalRunningTasks = AtomicInteger()
         private val globalKilledTasks = AtomicInteger()
         private val globalTasks = AtomicInteger()
+        private var globalWebDBFailures = AtomicInteger()
 
         private val globalMetrics = StreamingCrawlerMetrics()
 
@@ -102,6 +106,7 @@ open class StreamingCrawler(
         private var lastFetchError = ""
         private val lastCancelReason = Frequency<String>()
         private val isIllegalApplicationState = AtomicBoolean()
+
         /**
          * TODO: change to wrong profile
          * */
@@ -116,6 +121,7 @@ open class StreamingCrawler(
                 "globalRunningInstances" to Gauge { globalRunningInstances.get() },
                 "globalRunningTasks" to Gauge { globalRunningTasks.get() },
                 "globalKilledTasks" to Gauge { globalKilledTasks.get() },
+                "globalWebDBFailures" to Gauge { globalWebDBFailures.get() },
 
                 "contextLeakWaitingTime" to Gauge { contextLeakWaitingTime },
                 "proxyVendorWaitingTime" to Gauge { proxyVendorWaitingTime },
@@ -133,8 +139,9 @@ open class StreamingCrawler(
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
     private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
     private val conf = session.sessionConfig
+    private val context = session.context as AbstractPulsarContext
     private val globalCache get() = session.globalCache
-    private val proxyPool: ProxyPool? = if (noProxy) null else session.context.getBeanOrNull(ProxyPool::class)
+    private val proxyPool: ProxyPool? = if (noProxy) null else context.getBeanOrNull(ProxyPool::class)
     private var proxyOutOfService = 0
 
     @Volatile
@@ -153,14 +160,17 @@ open class StreamingCrawler(
     )
 
     private var forceQuit = false
+
     /**
      * The maximum number of privacy contexts allowed.
      * */
     val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */
     val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+
     /**
      * The fetch concurrency equals to the number of all allowed open tabs.
      * */
@@ -170,6 +180,7 @@ open class StreamingCrawler(
      * The out of work timeout.
      * */
     val outOfWorkTimeout = Duration.ofMinutes(10)
+
     /**
      * The timeout for each fetch task.
      * */
@@ -179,10 +190,12 @@ open class StreamingCrawler(
      * The idle time during which there is no fetch tasks.
      * */
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+
     /**
      * Check if the crawler is out of work (idle for long time).
      * */
     val isOutOfWork get() = idleTime > outOfWorkTimeout
+
     /**
      * Check if smart retry is enabled.
      *
@@ -190,6 +203,7 @@ open class StreamingCrawler(
      * A continuous crawl system should enable smart retry, while a simple demo can disable it.
      * */
     val isSmartRetryEnabled get() = conf.getBoolean(CRAWL_SMART_RETRY, true)
+
     /**
      * Check if the crawler is idle.
      * An idle crawler means:
@@ -201,10 +215,12 @@ open class StreamingCrawler(
             return !urls.iterator().hasNext() && globalLoadingUrls.isEmpty()
                     && idleTime > Duration.ofSeconds(5)
         }
+
     /**
      * Check if the crawler is active.
      * */
     override val isActive get() = super.isActive && !forceQuit && !isIllegalApplicationState.get()
+
     /**
      * The job name.
      * */
@@ -396,6 +412,11 @@ open class StreamingCrawler(
             handleProxyOutOfService()
         }
 
+        if (isActive && globalWebDBFailures.get() > 0) {
+            criticalWarning = CriticalWarning.WEB_DB_LOST
+            handleWebDBLost()
+        }
+
         if (isActive && FileCommand.check("finish-job")) {
             logger.info("Find finish-job command, quit streaming crawler ...")
             flowState = FlowState.BREAK
@@ -584,12 +605,21 @@ open class StreamingCrawler(
 //        }
 
         return kotlin.runCatching { session.loadDeferred(url, options) }
-            .onFailure { flowState = handleException(url, it) }
+            .onSuccess { flowState = handleLoadSuccess(url, it) }
+            .onFailure { flowState = handleLoadException(url, it) }
             .getOrNull()
     }
 
     @Throws(Exception::class)
-    private fun handleException(url: UrlAware, e: Throwable): FlowState {
+    private fun handleLoadSuccess(url: UrlAware, page: WebPage): FlowState {
+//        if (globalWebDBFailures.get() > 0 && globalWebDBFailures.decrementAndGet() < 0) {
+//            globalWebDBFailures.set(0)
+//        }
+        return FlowState.CONTINUE
+    }
+
+    @Throws(Exception::class)
+    private fun handleLoadException(url: UrlAware, e: Throwable): FlowState {
         if (flowState == FlowState.BREAK) {
             return flowState
         }
@@ -619,6 +649,11 @@ open class StreamingCrawler(
 
             is ProxyException -> {
                 logger.warn("[Unexpected] proxy exception | {}", e.brief())
+            }
+
+            is WebDBException -> {
+                globalWebDBFailures.incrementAndGet()
+                // logger.warn("Web DB failure | {} | the Web DB layer should have reported the detail", continousWebDBFailureCount)
             }
 
             is TimeoutCancellationException -> {
@@ -780,6 +815,37 @@ open class StreamingCrawler(
             } else {
                 proxyOutOfService = 0
             }
+        }
+    }
+
+    private suspend fun handleWebDBLost() {
+        val startTime = Instant.now()
+        var lastReportTime = Instant.EPOCH
+        var canConnect = false
+        while (isActive && !canConnect) {
+            canConnect = context.webDb.canConnect()
+            if (!canConnect) {
+                val elapsedTime = DateTimes.elapsedTime(startTime)
+                val elapsedSeconds = elapsedTime.seconds
+                val delaySeconds = elapsedSeconds.coerceAtLeast(5).coerceAtMost(30)
+                val delayInterval = Duration.ofSeconds(delaySeconds)
+
+                val reportInterval = when {
+                    elapsedSeconds < 30 -> Duration.ofSeconds(30)
+                    elapsedSeconds < 600 -> Duration.ofMinutes(1)
+                    else -> Duration.ofMinutes(2)
+                }
+                if (DateTimes.elapsedTime(lastReportTime) > reportInterval) {
+                    logger.warn("Web DB lost for {}", elapsedTime.readable())
+                    lastReportTime = Instant.now()
+                }
+
+                delay(delayInterval.toMillis())
+            }
+        }
+
+        if (canConnect) {
+            globalWebDBFailures.set(0)
         }
     }
 

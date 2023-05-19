@@ -50,16 +50,43 @@ class WebDb(
     val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
     val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
 
+    /**
+     * Test if the WebDB can be connected.
+     * @return true if the WebDB can be connected.
+     * */
+    fun canConnect() = dataStore.runCatching { schemaExists() }.isSuccess
+
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param field the field required in the WebPage.
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
     @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
         return getOrNull(originalUrl, field.toString())
     }
 
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param fields the fields required in the WebPage. Pass null to retrieve all fields
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
     @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): WebPage? {
         return getOrNull(originalUrl, false, fields.map { it.toString() }.toTypedArray())
     }
 
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param field the fields required in the WebPage. Pass null to retrieve all fields
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
     @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, field: String): WebPage? {
         return getOrNull(originalUrl, false, arrayOf(field))
@@ -68,8 +95,8 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
-     * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param fields the fields required in the WebPage. Pass null to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
     @Throws(WebDBException::class)
@@ -336,8 +363,8 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
-     * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param fields the fields required in the WebPage. Pass null to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
     @Throws(WebDBException::class)
@@ -384,7 +411,7 @@ class WebDb(
 
     private fun <T : Any> performDSAction(name: String, url: String? = null, action: () -> T): T {
 //        if (!AppContext.isActive) {
-//            throw IllegalStateException("")
+//            throw IllegalApplicationContextStateException("")
 //        }
 
         try {
