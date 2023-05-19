@@ -1,11 +1,11 @@
 控制台
 =
 
-[Exotic](https://github.com/platonai/exotic) ，[国内镜像](https://gitee.com/platonai_galaxyeye/exotic)，代表奇异星（Exotic Star），是 PulsarR 的专业版和控制台，它包含：
+[Exotic](https://github.com/platonai/exotic) ，[国内镜像](https://gitee.com/platonai_galaxyeye/exotic)，代表奇异星（Exotic Star），是 PulsarRPA 的专业版和控制台，它包含：
 
 - 一个**命令行工具**，可以从命令行直接执行网页数据采集任务，而不需要打开 IDE 写代码
-- 一个 **Web 控制台**，方便我们管理 PulsarR 服务，并编写 SQL 来访问 Web，提取数据
-- 一个升级版的 PulsarR 服务器，我们可以在客户端编写 SQL 来访问 Web，提取数据
+- 一个 **Web 控制台**，方便我们管理 PulsarRPA 服务，并编写 SQL 来访问 Web，提取数据
+- 一个升级版的 PulsarRPA 服务器，我们可以在客户端编写 SQL 来访问 Web，提取数据
 - 一个基于 自监督机器学习 自动进行信息提取的小程序，AI 算法识别详情页的所有字段，95% 以上字段精确度 99% 以上
 - 一个基于 自监督机器学习 自动学习并输出所有采集规则的小程序
 - 一组顶尖站点的数据采集示例
