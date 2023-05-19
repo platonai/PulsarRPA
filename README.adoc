@@ -9,7 +9,9 @@ English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxye
 
 == Get started
 
-PulsarRPA is the ultimate open source solution to scrape web data at scale.
+PulsarRPA is All You Need!
+
+PulsarRPA is the ultimate open source solution to scrape Web data at scale.
 
 Extracting Web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
 
@@ -48,7 +50,7 @@ fun main() {
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-*The #most complicated# crawl challenges can start with advanced RPA:*
+*The #most complicated# crawl challenges can be resolved with advanced RPA:*
 
 *Kotlin:*
 
@@ -79,7 +81,7 @@ session.load(url, options)
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin].
 
-*The #most complicated# Web data extraction problems can be resolved by X-SQL:*
+*The #most complicated# Web data extraction problems can be handled by X-SQL:*
 
 1. Your Web data extraction rules are very complex, for example, 100+ rules for each individual page
 2. There are a lot of data extraction rules to maintain, for example, 20+ Amazon websites worldwide, 20+ data types for each website
