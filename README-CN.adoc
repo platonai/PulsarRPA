@@ -142,7 +142,7 @@ PulsarRPA 的核心概念包括以下内容，了解了这些核心概念，您�
 * RPA: 机器人流程自动化，这是抓取现代网页的唯一方法
 * 网络即数据库（Network As A Database）: 像访问本地数据库一样访问 Web
 * X-SQL: 直接使用 SQL 查询 Web
-* PulsarRPA Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
+* Pulsar Session: 提供了一组简单、强大和灵活的 API 来执行 Web 抓取任务
 * Web Driver: Web 驱动定义了一个简洁的界面来访问网页并与之交互，所有行为都经过优化以尽可能接近真实的人
 * URL: PulsarRPA 中的 URL 是一个普通的 URL，但是带有描述任务的额外信息。PulsarRPA 中的每个任务都被定义为某种形式的 URL
 * Hyperlink: PulsarRPA 中的超链接是一个普通的超链接，但是带有描述任务的额外信息
