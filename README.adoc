@@ -9,9 +9,9 @@ English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxye
 
 == Get started
 
-PulsarRPA is All You Need!
+💖 PulsarRPA is All You Need! 💖
 
-PulsarRPA is the ultimate open source solution to scrape Web data at scale.
+PulsarRPA is the ultimate open source solution to scrape Web data at scale, based on high performance, distributed RPA.
 
 Extracting Web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
 
@@ -123,7 +123,7 @@ We have released complete solutions for site-wide Web scraping for some of the l
 
 *PulsarRPA plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
 
-== Features
+== 🚀 Features
 
 * Web spider: browser rendering, ajax data crawling
 * RPA: robotic process automation, mimic human behaviors, SPA crawling, or do something else valuable
@@ -563,7 +563,7 @@ Check link:docs/faq/technical-details.adoc[technical details] to see answers for
 * How & why to simulate human behaviors?
 * How to render as many pages as possible on a single machine without be blocked?
 
-== Contact
+== 🐦 Contact
 
 * Wechat：galaxyeye
 * Weibo：link:https://weibo.com/galaxyeye[galaxyeye]
