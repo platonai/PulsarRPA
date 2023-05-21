@@ -17,7 +17,6 @@
 
 package ai.platon.pulsar.common.domain;
 
-import ai.platon.pulsar.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,10 +25,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Storage class for <code>DomainSuffix</code> objects Note: this class is
- * singleton
- *
- * @author Enis Soztutar &lt;enis.soz.pulsar@gmail.com&gt;
+ * A Top-Level Domain is the suffix tied to a website, such as com, net, or org.
+ * <p />
+ * A top-level domain (TLD) is the suffix or extension tied to a website.
+ * Around half of all websites use the top-level domain com, commonly called “dot” com.
+ * <p />
+ * There is no algorithmic way of knowing whether a suffix is a public domain suffix, or not.
  */
 public class DomainSuffixes {
     private static final Logger LOG = LoggerFactory.getLogger(DomainSuffixes.class);
