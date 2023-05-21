@@ -119,7 +119,7 @@ We have released complete solutions for site-wide Web scraping for some of the l
 
 *PulsarRPA supports RPA based Web scraping.* PulsarRPA includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, dragging and dropping, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
 
-*PulsarRPA supports single resource collection.* PulsarRPA's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example through an ajax interface, you can also call PulsarRPA's resource collection method for high-speed collection.
+*PulsarRPA supports single resource collection.* PulsarRPA's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example, it can be returned through an ajax interface, you can also call PulsarRPA's resource collection method for super High-speed collection.
 
 *PulsarRPA plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
 
@@ -476,7 +476,7 @@ The response is as follows in json format:
 
 Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
-== Step-by-step course
+== 📖 Step-by-step course
 
 We have a step-by-step course by example:
 
