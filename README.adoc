@@ -13,8 +13,6 @@ English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxye
 
 PulsarRPA is the ultimate open source solution to scrape Web data at scale, based on high performance, distributed RPA.
 
-Extracting Web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
-
 *Most scraping attempts can start with (almost) a single line of code:*
 
 *Kotlin:*
@@ -104,8 +102,6 @@ Example code:
 
 == Introduction
 
-PulsarRPA is the ultimate open source solution to scrape web data at scale.
-
 Extracting Web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
 
 We have released complete solutions for site-wide Web scraping for some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality and cost. They will be free and open source forever, such as:
@@ -183,14 +179,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.13</version>
+  <version>1.10.12</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.13")
+implementation("ai.platon.pulsar:pulsar-all:1.10.12")
 ----
 
 You can clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].
