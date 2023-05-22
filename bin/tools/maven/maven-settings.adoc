@@ -1,4 +1,4 @@
-For Chinese developers, we suggest you add aliyun maven mirror to your global maven settings to accelerate the building.
+For Chinese developers, we recommend that you add domestic maven images in your global maven settings to speed up builds.
 
 On Linux, the path of the global maven settings is:
 
@@ -21,8 +21,7 @@ On Windows:
 If the file exists, add the following code to the file:
 
     <mirror>
-        <id>alimaven</id>
+        <id>huaweicloud</id>
+        <url>https://repo.huaweicloud.com/repository/maven/</url>
         <mirrorOf>central</mirrorOf>
-        <name>aliyun maven</name>
-        <url>https://maven.aliyun.com/nexus/content/repositories/central/</url>
     </mirror>
