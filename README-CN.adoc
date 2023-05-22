@@ -7,7 +7,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 
 link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
 
-== 🚀 开始
+== 🚄 开始
 
 PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
 

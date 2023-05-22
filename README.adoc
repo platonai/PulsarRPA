@@ -7,7 +7,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 
 English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
 
-== 🚀 Get started
+== 🚄 Get started
 
 💖 PulsarRPA is All You Need! 💖
 
