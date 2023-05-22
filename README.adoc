@@ -97,11 +97,12 @@ select
   from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
 ----
 
-Example code: link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[Exotic Amazon's X-SQLs].
+Example code:
+
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQL to scrape 100+ fields from an Amazon's product page]
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQLs to scrape all types of Amazon webpages]
 
 == Introduction
-
-PulsarRPA is the ultimate open source solution to scrape web data at scale.
 
 Extracting Web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
 
@@ -452,6 +453,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
 Example code: link:bin/scrape.sh[bash], link:bin/scrape.bat[batch], link:pulsar-client/src/main/java/ai/platon/pulsar/client/Scraper.java[java], link:pulsar-client/src/main/kotlin/ai/platon/pulsar/client/Scraper.kt[kotlin], link:pulsar-client/src/main/php/Scraper.php[php].
 
 The response is as follows in json format:
+
 
 [source,json]
 ----
