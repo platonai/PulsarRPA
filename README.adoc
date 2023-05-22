@@ -399,7 +399,7 @@ The result is as follows:
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.11 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
 ----
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[kotlin].
