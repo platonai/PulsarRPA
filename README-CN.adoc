@@ -7,8 +7,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 
 link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
 
-== 开始
-
+== 🚀 开始
 
 PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
 
@@ -95,7 +94,7 @@ select
 
 Example code: link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[Exotic Amazon's X-SQLs].
 
-== 简介
+== 🥁 简介
 
 PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
 
@@ -119,7 +118,7 @@ PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎�
 
 **PulsarRPA 计划支持最前沿的信息提取技术。**我们计划发布一个先进的人工智能，以显著的精度自动提取所有网页（譬如商品详情页）中的每一个字段，目前我们提供了一个 https://github.com/platonai/exotic#run-auto-extract[预览版本]。
 
-== 主要特性
+== 🚀 主要特性
 
 * 网络爬虫：各种数据采集模式，包括浏览器渲染、ajax数据采集、普通协议采集等
 * RPA：机器人流程自动化、模仿人类行为、采集单网页应用程序或执行其他有价值的任务
@@ -134,7 +133,7 @@ PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎�
 * 日志和指标：密切监控并记录每个事件
 * [预览] 信息提取：自动学习网页数据模式，以显著的精度自动提取网页中的每一个字段
 
-== 核心概念
+== ♾ 核心概念
 
 PulsarRPA 的核心概念包括以下内容，了解了这些核心概念，您可以使用 PulsarRPA 解决最高要求的数据采集任务：
 
@@ -152,7 +151,7 @@ PulsarRPA 的核心概念包括以下内容，了解了这些核心概念，您�
 
 点击 link:docs/concepts-CN.adoc#_the_core_concepts_of_pulsar[PulsarRPA concepts] 查看详情。
 
-== 通过可执行 jar 使用 PulsarRPA
+== 🧮 通过可执行 jar 使用 PulsarRPA
 
 我们发布了一个基于 PulsarRPA 的独立可执行 jar，它包含：
 
@@ -167,7 +166,7 @@ PulsarRPA 的核心概念包括以下内容，了解了这些核心概念，您�
 
     java -jar exotic-standalone.jar
 
-== 将 PulsarRPA 用作软件库
+== 🎁 将 PulsarRPA 用作软件库
 
 利用 PulsarRPA 强大功能的最简单方法是将其作为库添加到您的项目中。
 
@@ -332,7 +331,7 @@ public class ContinuousCrawler {
 
 示例代码: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-=== RPA (机器人流程自动化）
+=== 👽 RPA (机器人流程自动化）
 
 随着网站变得越来越复杂，RPA 已成为从某些网站收集数据的唯一途径，例如某些使用自定义字体技术的网站。
 
@@ -400,7 +399,7 @@ HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store
 
 点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
-== 将 PulsarRPA 作为 REST 服务运行
+== 🌐 将 PulsarRPA 作为 REST 服务运行
 
 当 PulsarRPA 作为 REST 服务运行时，X-SQL 可用于随时随地抓取网页或直接查询 Web 数据，无需打开 IDE。
 
@@ -471,7 +470,7 @@ Json 格式的响应如下：
 
 点击 link:docs/x-sql-CN.adoc[X-SQL] 查看关于 X-SQL 的详细介绍和函数说明。
 
-== 循序渐进的课程
+== 📖 循序渐进的课程
 
 我们有一个循序渐进的示例课程:
 
@@ -486,8 +485,9 @@ Json 格式的响应如下：
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt[WebDriver]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[MassiveCrawler]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[X-SQL]
+. link:https://github.com/platonai/exotic-amazon[Practice: Crawl the Top 1 E-comm Site at Scale]
 
-== 日志和指标
+== 📊 日志和指标
 
 PulsarRPA 精心设计了日志和指标子系统，以记录系统中发生的每一个事件。
 
@@ -506,7 +506,7 @@ PulsarRPA 在日志中报告每个页面加载任务执行的状态，因此很�
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ----
 
-== 系统要求
+== 💻 系统要求
 
 * Memory 4G+
 * Maven 3.2+
@@ -516,7 +516,7 @@ PulsarRPA 在日志中报告每个页面加载任务执行的状态，因此很�
 
 PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进行了测试，任何其他满足要求的操作系统也应该可以正常工作。
 
-== 高级主题
+== 🛸 高级主题
 
 点击链接 link:docs/faq/advanced-topics.adoc[advanced topics] 查看以下问题的答案：
 
@@ -541,7 +541,7 @@ PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进�
 * 如何使用机器学习自动从网站中提取内容并具有商业准确性？
 * 如何抓取 amazon.com 以满足行业需求？
 
-== 同其他方案的对比
+== 🆚 同其他方案的对比
 
 一般来说，”主要特性“部分中提到的特性都得到了 PulsarRPA 的良好支持，但其他解决方案不支持或者支持不好。
 
@@ -551,7 +551,7 @@ PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进�
 * PulsarRPA vs nutch
 * PulsarRPA vs scrapy+splash
 
-== 技术细节
+== 🤓 技术细节
 点击链接 link:docs/faq/technical-details.adoc[technical details] 查看以下问题的答案：
 
 * 如何轮换我的 IP 地址？
@@ -559,7 +559,7 @@ PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进�
 * 如何以及为什么要模拟人类行为？
 * 如何在一台机器上渲染尽可能多的页面而不被屏蔽？
 
-== 联系作者
+== 🐦 联系方式
 
 * 微信：galaxyeye
 * 微博：link:https://weibo.com/galaxyeye[galaxyeye]
