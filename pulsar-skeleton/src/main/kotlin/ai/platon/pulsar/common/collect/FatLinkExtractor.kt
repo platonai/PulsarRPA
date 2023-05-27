@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ObjectConverter
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.message.LoadStatusFormatter
+import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.readable
@@ -97,7 +97,7 @@ class FatLinkExtractor(
         if (!page.protocolStatus.isSuccess) {
             ++counters.badSeeds
             ++globalCounters.badSeeds
-            LoadStatusFormatter(page, prefix = "Bad seed", withOptions = true).also { log.warn(it.toString()) }
+            PageLoadStatusFormatter(page, prefix = "Bad seed", withOptions = true).also { log.warn(it.toString()) }
             return null
         }
 

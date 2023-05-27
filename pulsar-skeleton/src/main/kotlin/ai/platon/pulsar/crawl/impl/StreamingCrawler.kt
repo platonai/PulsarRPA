@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_TIMEOUT_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnitConverter
-import ai.platon.pulsar.common.message.LoadStatusFormatter
+import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyException
@@ -585,7 +585,7 @@ open class StreamingCrawler(
             page.crawlStatus.isRetry -> handleRetry0(url, page)
             page.crawlStatus.isGone -> {
                 globalMetrics.gone.mark()
-                taskLogger.info("{}", LoadStatusFormatter(page, prefix = "Gone"))
+                taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = "Gone"))
             }
         }
     }
@@ -721,7 +721,7 @@ open class StreamingCrawler(
         if (page != null && nextRetryNumber > page.maxRetries) {
             // should not go here, because the page should be marked as GONE
             globalMetrics.gone.mark()
-            taskLogger.info("{}", LoadStatusFormatter(page, prefix = "Gone (unexpected)"))
+            taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = "Gone (unexpected)"))
             return
         }
 
@@ -736,7 +736,7 @@ open class StreamingCrawler(
         if (page != null) {
             val symbol = PopularEmoji.FENCER
             val prefix = "$symbol Trying ${nextRetryNumber}th ${delay.readable()} later | "
-            taskLogger.info("{}", LoadStatusFormatter(page, prefix = prefix))
+            taskLogger.info("{}", PageLoadStatusFormatter(page, prefix = prefix))
         }
     }
 
