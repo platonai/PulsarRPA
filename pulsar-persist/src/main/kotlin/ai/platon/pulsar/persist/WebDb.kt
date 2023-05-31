@@ -1,15 +1,16 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import org.apache.avro.util.Utf8
-import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
 import org.apache.gora.filter.FilterOp
 import org.apache.gora.filter.SingleFieldValueFilter
@@ -19,6 +20,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.jvm.Throws
 
 class WebDb(
     val conf: ImmutableConfig,
@@ -26,6 +28,7 @@ class WebDb(
     companion object {
         val dbGetCount = AtomicLong()
         val accumulateGetNanos = AtomicLong()
+        val dbContinousFailureCount = AtomicLong()
         val dbGetAveMillis get() = TimeUnit.MILLISECONDS.convert(
             accumulateGetNanos.get(),  TimeUnit.NANOSECONDS) / dbGetCount.get().coerceAtLeast(1)
 
@@ -35,8 +38,8 @@ class WebDb(
             accumulatePutNanos.get(),  TimeUnit.NANOSECONDS) / dbPutCount.get().coerceAtLeast(1)
     }
 
-    private val log = LoggerFactory.getLogger(WebDb::class.java)
-    private val tracer = log.takeIf { it.isTraceEnabled }
+    private val logger = LoggerFactory.getLogger(WebDb::class.java)
+    private val tracer = logger.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
     var specifiedDataStore: DataStore<String, GWebPage>? = null
@@ -47,14 +50,44 @@ class WebDb(
     val dataStoreOrNull: DataStore<String, GWebPage>? get() = if (dataStoreDelegate.isInitialized()) dataStore else null
     val schemaName: String get() = dataStoreOrNull?.schemaName?:"(unknown, not initialized)"
 
+    /**
+     * Test if the WebDB can be connected.
+     * @return true if the WebDB can be connected.
+     * */
+    fun canConnect() = dataStore.runCatching { schemaExists() }.isSuccess
+
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param field the field required in the WebPage.
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
+    @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, field: GWebPage.Field): WebPage? {
         return getOrNull(originalUrl, field.toString())
     }
 
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param fields the fields required in the WebPage. Pass null to retrieve all fields
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
+    @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, fields: Iterable<GWebPage.Field>): WebPage? {
         return getOrNull(originalUrl, false, fields.map { it.toString() }.toTypedArray())
     }
 
+    /**
+     * Returns the WebPage corresponding to the given url.
+     *
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param field the fields required in the WebPage. Pass null to retrieve all fields
+     * @return the WebPage corresponding to the key or null if it cannot be found
+     */
+    @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, field: String): WebPage? {
         return getOrNull(originalUrl, false, arrayOf(field))
     }
@@ -62,10 +95,11 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
-     * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param fields the fields required in the WebPage. Pass null to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
+    @Throws(WebDBException::class)
     fun getOrNull(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
@@ -86,31 +120,39 @@ class WebDb(
      * @param originalUrl the original address of the page
      * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
      */
+    @Throws(WebDBException::class)
     fun get(originalUrl: String, field: GWebPage.Field) = getOrNull(originalUrl, field) ?: WebPage.NIL
 
+    @Throws(WebDBException::class)
     fun get(originalUrl: String, fields: Iterable<GWebPage.Field>) =
         getOrNull(originalUrl, fields) ?: WebPage.NIL
 
+    @Throws(WebDBException::class)
     fun get(originalUrl: String, field: String) = getOrNull(originalUrl, field) ?: WebPage.NIL
 
+    @Throws(WebDBException::class)
     fun get(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): WebPage {
         return getOrNull(originalUrl, norm, fields) ?: WebPage.NIL
     }
 
+    @Throws(WebDBException::class)
     fun get0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
         return getOrNull0(originalUrl, norm, fields)
     }
 
+    @Throws(WebDBException::class)
     fun exists(originalUrl: String, norm: Boolean = false): Boolean {
         val requiredField = GWebPage.Field.CREATE_TIME.toString()
         return getOrNull(originalUrl, norm, arrayOf(requiredField)) != null
     }
 
+    @Throws(WebDBException::class)
     fun getContent(originalUrl: String): ByteBuffer? {
         val fields = arrayOf(GWebPage.Field.CONTENT.toString())
         return getOrNull0(originalUrl, false, fields)?.content
     }
 
+    @Throws(WebDBException::class)
     fun getContentAsString(originalUrl: String): String? {
         val buffer = getContent(originalUrl) ?: return null
 
@@ -120,6 +162,7 @@ class WebDb(
         }
     }
 
+    @Throws(WebDBException::class)
     @JvmOverloads
     fun put(page: WebPage, replaceIfExists: Boolean = false) = putInternal(page, replaceIfExists)
 
@@ -128,6 +171,7 @@ class WebDb(
      * There are comments in gora-hbase-0.6.1, HBaseStore.java, line 259:
      * "HBase sometimes does not delete arbitrarily"
      */
+    @Throws(WebDBException::class)
     private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
         // Never update NIL page
         if (page.isNil) {
@@ -140,47 +184,50 @@ class WebDb(
         }
 
         if (replaceIfExists) {
-            dataStore.delete(key)
+            performDSAction("put") { dataStore.delete(key) }
         }
 
         tracer?.trace("Putting ${page.fetchCount} ${page.prevFetchTime} ${page.fetchTime} $key")
 
         val startTime = System.nanoTime()
-        dataStore.put(key, page.unbox())
+        performDSAction("put") { dataStore.put(key, page.unbox()) }
         dbPutCount.incrementAndGet()
         accumulatePutNanos.addAndGet(System.nanoTime() - startTime)
 
         return true
     }
 
+    @Throws(WebDBException::class)
     fun putAll(pages: Iterable<WebPage>) = pages.forEach { put(it, false) }
 
     @JvmOverloads
+    @Throws(WebDBException::class)
     fun delete(originalUrl: String, norm: Boolean = false): Boolean {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
+        if (key.isBlank()) {
+            return false
+        }
 
-        return if (key.isNotEmpty()) {
-            dataStore.delete(key)
-            return true
-        } else false
+        return performDSAction("delete", originalUrl) { dataStore.delete(key) }
     }
 
     @JvmOverloads
+    @Throws(WebDBException::class)
     fun truncate(force: Boolean = false): Boolean {
         val schemaName = dataStore.schemaName
         if (force) {
-            dataStore.truncateSchema()
-            log.info("Schema $schemaName is truncated")
+            performDSAction("truncate") { dataStore.truncateSchema() }
+            logger.info("Schema $schemaName is truncated")
             return true
         }
 
         return if (schemaName.startsWith("tmp_") || schemaName.endsWith("_tmp_webpage")) {
-            dataStore.truncateSchema()
-            log.info("Schema $schemaName is truncated")
+            performDSAction("truncate") { dataStore.truncateSchema() }
+            logger.info("Schema $schemaName is truncated")
             true
         } else {
-            log.info("Only schema name starts with tmp_ or ends with _tmp_webpage " +
-                    "can be truncated using this API, bug got $schemaName")
+            logger.info("Only schema name starts with tmp_ or ends with _tmp_webpage " +
+                    "can be truncated using this API")
             false
         }
     }
@@ -191,6 +238,7 @@ class WebDb(
      * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
+    @Throws(WebDBException::class)
     fun scan(urlBase: String): Iterator<WebPage> {
         val query = dataStore.newQuery()
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
@@ -205,6 +253,7 @@ class WebDb(
      * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
+    @Throws(WebDBException::class)
     fun scan(urlBase: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
         return scan(urlBase, fields.map { it.toString() }.toTypedArray())
     }
@@ -215,6 +264,7 @@ class WebDb(
      * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
+    @Throws(WebDBException::class)
     fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
         val query = dataStore.newQuery()
         // TODO: key range not working for MongoDB
@@ -231,6 +281,7 @@ class WebDb(
      * @param urlBase The base url to start with
      * @return The iterator to retrieve pages
      */
+    @Throws(WebDBException::class)
     fun scan(urlBase: String, fields: Array<String>, filter: Filter<String, GWebPage>): Iterator<WebPage> {
         val query = dataStore.newQuery()
 
@@ -249,6 +300,7 @@ class WebDb(
      * @param query The query
      * @return The iterator to retrieve pages
      */
+    @Throws(WebDBException::class)
     fun query(query: DbQuery): Iterator<WebPage> {
         val goraQuery = dataStore.newQuery()
 
@@ -272,33 +324,37 @@ class WebDb(
         }
 
         goraQuery.setFields(*prepareFields(query.fields))
-        val result = dataStore.execute(goraQuery)
+
+        val result = performDSAction("query") { dataStore.execute(goraQuery) }
 
         return DbIterator(result, conf)
     }
 
+    @Throws(WebDBException::class)
     fun flush() {
         if (!dataStoreDelegate.isInitialized()) {
             return
         }
 
         try {
-            dataStore.flush()
+            performDSAction("flush") { dataStore.flush() }
         } catch (e: IllegalStateException) {
-            log.warn(e.message)
-        } catch (e: Throwable) {
+            logger.warn(e.message)
+        } catch (e: Exception) {
             // TODO: Embedded MongoDB fails to shutdown gracefully #5487
             // see https://github.com/spring-projects/spring-boot/issues/5487
-            log.error(e.stringify())
+            logger.error(e.stringify())
+            throw WebDBException("Failed to flush", e)
         }
     }
 
+    @Throws(WebDBException::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (dataStoreDelegate.isInitialized()) {
                 // flush()
                 // Note: mongo store does not close actually
-                dataStore.close()
+                performDSAction("close") { dataStore.close() }
             }
             // GoraStorage.close()
         }
@@ -307,17 +363,22 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
-     * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
+     * @param originalUrl the original url of the page, it comes from user input, webpage parsing, etc
+     * @param fields the fields required in the WebPage. Pass null to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
+    @Throws(WebDBException::class)
     private fun getOrNull0(originalUrl: String, norm: Boolean = false, fields: Array<String>? = null): GWebPage? {
         val (url, key) = UrlUtils.normalizedUrlAndKey(originalUrl, norm)
 
         tracer?.trace("Getting $key")
 
         val startTime = System.nanoTime()
-        val page = fields?.let { dataStore.get(key, it) } ?: dataStore.get(key)
+
+        val page = performDSAction("get", originalUrl) {
+            fields?.let { dataStore.get(key, it) } ?: dataStore.get(key)
+        }
+
         dbGetCount.incrementAndGet()
         accumulateGetNanos.addAndGet(System.nanoTime() - startTime)
 
@@ -346,5 +407,29 @@ class WebDb(
 
         fields.remove("url")
         return fields.toTypedArray()
+    }
+
+    private fun <T : Any> performDSAction(name: String, url: String? = null, action: () -> T): T {
+//        if (!AppContext.isActive) {
+//            throw IllegalApplicationContextStateException("")
+//        }
+
+        try {
+            return action().also { dbContinousFailureCount.decrementAndGet() }
+        } catch (e: Exception) {
+            var message = "Data storage failure | [$name]"
+            if (url.isNullOrBlank()) {
+                message = "$message | $url"
+            }
+
+            dbContinousFailureCount.incrementAndGet()
+            if (dbContinousFailureCount.get() < 5) {
+                logger.warn(e.stringify("$message - "))
+            } else {
+                logger.warn(e.brief("$message - "))
+            }
+
+            throw WebDBException(message, e)
+        }
     }
 }

@@ -18,17 +18,17 @@
 
 <!--
   Document   : domain-suffixes.xsd
-  Author     : Enis Soztutar - enis.soz.pulsar@gmail.com
+  Author     : Enis Soztutar - enis.soz.nutch@gmail.com
   Description: This document is the schema for valid domain-suffixes
-  definitions. For successful parsing of domain-suffixes xml files, 
-  the xml file should be validated with this xsd. 
-  See        : DomainSuffixesReader.java
+  definitions. For successful parsing of domain-suffixes xml files,
+  the xml file should be validated with this xsd.
+  See        : org.apache.nutch.util.domain.DomainSuffixesReader.java
 -->
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://lucene.apache.org/pulsar"
-  xmlns="http://lucene.apache.org/pulsar"
-  elementFormDefault="qualified">
+           targetNamespace="http://lucene.apache.org/nutch"
+           xmlns="http://lucene.apache.org/nutch"
+           elementFormDefault="qualified">
 
   <xs:element name="domains">
     <xs:complexType>
@@ -40,7 +40,7 @@
                 <xs:complexType>
                   <xs:sequence>
                     <xs:element name="tld" maxOccurs="unbounded"
-                      type="gtld" />
+                                type="gtld" />
                   </xs:sequence>
                 </xs:complexType>
               </xs:element>
@@ -49,7 +49,7 @@
                 <xs:complexType>
                   <xs:sequence>
                     <xs:element name="tld" maxOccurs="unbounded"
-                      type="gtld" />
+                                type="gtld" />
                   </xs:sequence>
                 </xs:complexType>
               </xs:element>
@@ -58,7 +58,7 @@
                 <xs:complexType>
                   <xs:sequence>
                     <xs:element name="tld" maxOccurs="unbounded"
-                      type="cctld" />
+                                type="cctld" />
                   </xs:sequence>
                 </xs:complexType>
               </xs:element>
@@ -71,7 +71,7 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element name="suffix" maxOccurs="unbounded"
-                type="sldType" />
+                          type="sldType" />
             </xs:sequence>
           </xs:complexType>
         </xs:element>

@@ -363,7 +363,7 @@ enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
  * The interaction settings
  * */
 data class InteractSettings constructor(
-    var scrollCount: Int = 10,
+    var scrollCount: Int = 3,
     var scrollInterval: Duration = Duration.ofMillis(500),
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
@@ -429,8 +429,13 @@ data class InteractSettings constructor(
         return this
     }
 
-    fun noScroll(): InteractSettings {
+    fun noInitScroll(): InteractSettings {
         initScrollPositions = ""
+        return this
+    }
+
+    fun noScroll(): InteractSettings {
+        scrollCount = 0
         return this
     }
 

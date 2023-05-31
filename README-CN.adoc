@@ -176,14 +176,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.12</version>
+  <version>1.10.13</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.12")
+implementation("ai.platon.pulsar:pulsar-all:1.10.13")
 ----
 
 也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]。
@@ -541,7 +541,7 @@ PulsarRPA 在 Ubuntu 18.04、Ubuntu 20.04、Windows 7、Windows 11、WSL 上进�
 * 如何使用机器学习自动从网站中提取内容并具有商业准确性？
 * 如何抓取 amazon.com 以满足行业需求？
 
-== 同其他方案的对比
+== 🆚 同其他方案的对比
 
 一般来说，”主要特性“部分中提到的特性都得到了 PulsarRPA 的良好支持，但其他解决方案不支持或者支持不好。
 

@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_DISABLE_FETCH
 import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_STRATEGY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
-import ai.platon.pulsar.common.message.LoadStatusFormatter
+import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.NormUrl
@@ -446,7 +446,7 @@ class LoadComponent(
     private fun report(page: WebPage) {
         if (taskLogger.isInfoEnabled) {
             val verbose = taskLogger.isDebugEnabled
-            val report = LoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
+            val report = PageLoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
 
             taskLogger.info(report)
 

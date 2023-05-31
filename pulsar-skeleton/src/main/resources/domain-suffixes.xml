@@ -18,7 +18,7 @@
 
 <!--
   Document   : domain-suffixes.xml
-  Author     : Enis Soztutar - enis.soz.pulsar@gmail.com
+  Author     : Enis Soztutar - enis.soz.nutch@gmail.com
   Description: This document contains top level domains 
   as described by the Internet Assigned Numbers
   Authotiry (IANA), and second or third level domains that 
@@ -28,37 +28,37 @@
   is a public domain suffix, or not. So this large file is used 
   for this purpose. The entries in the file is used to find the
   domain of a url, which may not the same thing as the host of 
-  the url. For example for "http://lucene.apache.org/pulsar" the
+  the url. For example for "http://lucene.apache.org/nutch" the
   hostname is lucene.apache.org, however the domain name for this
-  url would be apache.org. Domain names can be quite handy for 
-  statistical analysis, and fighting against spam.    
-  
-  The list of TLDs is constructed from IANA, and the 
-  list of "effective tlds" are constructed from Wikipedia, 
+  url would be apache.org. Domain names can be quite handy for
+  statistical analysis, and fighting against spam.
+
+  The list of TLDs is constructed from IANA, and the
+  list of "effective tlds" are constructed from Wikipedia,
   http://wiki.mozilla.org/TLD_List, and http://publicsuffix.org/
   The list may not include all the suffixes, but some
-  effort has been spent to make it comprehensive. Please forward 
-  any improvements for this list to pulsar-dev mailing list, or
-  pulsar JIRA.
-  
+  effort has been spent to make it comprehensive. Please forward
+  any improvements for this list to nutch-dev mailing list, or
+  nutch JIRA.
+
   Top level domains(tlds) are grouped
-  to three, namely infrastrusture, generic and country 
-  code tlds. Infrastrusture tlds are only used for 
-  technical reasons. Generic tlds represents the type 
-  of the organization that they represent. Those in 
+  to three, namely infrastrusture, generic and country
+  code tlds. Infrastrusture tlds are only used for
+  technical reasons. Generic tlds represents the type
+  of the organization that they represent. Those in
   current use and those waiting for approval is listed.
-  Most of the country code tlds correspond to the two 
-  letter ISO-3166-1 country codes. 
-  Each tld is listed with its domain (such as com), a 
-  status enumeration describing the status of the tld, 
+  Most of the country code tlds correspond to the two
+  letter ISO-3166-1 country codes.
+  Each tld is listed with its domain (such as com), a
+  status enumeration describing the status of the tld,
   and optionally a description or description for convenience.
   cctlds are listed with additional country name field.
-  
-  status and boost elements are optional, with default values IN_USE 
+
+  status and boost elements are optional, with default values IN_USE
   and 1.0 respectively. see domain-suffixes.xsd for the xml schema.
-  
-  
-  References : 
+
+
+  References :
   http://www.iana.org
   http://www.iana.org/gtld/gtld.htm
   http://www.iana.org/root-whois/index.html
@@ -70,9 +70,9 @@
   http://www.neuhaus.com/domaincheck/domain_list.htm
 -->
 
-<domains xmlns="http://lucene.apache.org/pulsar"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://lucene.apache.org/pulsar domain-suffixes.xsd">
+<domains xmlns="http://lucene.apache.org/nutch"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://lucene.apache.org/nutch domain-suffixes.xsd">
 
   <tlds>
     <!--  Infrastructure Top Level Domains -->
@@ -102,7 +102,7 @@
       </tld>
     </itlds><!--  Generic Top Level Domains -->
     <gtlds>
-      <!-- 
+      <!--
         The following gTLDs are in actual use
       -->
 
@@ -214,9 +214,9 @@
         </description>
       </tld>
 
-      <!-- 
-        The following gTLDs are in the process of being approved, 
-        and may be added to the root nameservers in the near future 
+      <!--
+        The following gTLDs are in the process of being approved,
+        and may be added to the root nameservers in the near future
       -->
 
       <tld domain="asia">
@@ -282,7 +282,7 @@
         <description>For Adult entertainment sites</description>
       </tld>
 
-      <!-- 
+      <!--
         The following gTLDs are removed from the registry
       -->
       <tld domain="nato">
@@ -292,7 +292,7 @@
         </description>
       </tld>
 
-      <!-- 
+      <!--
         The following gTLDs are PSEUDO_DOMAINs
       -->
       <tld domain="bitnet">
@@ -1575,10 +1575,10 @@
     <suffix domain="wiki.br" />
     <suffix domain="zlg.br" />
 
-    <!-- 
-      Below elements are generated from the file 
-      at http://publicsuffix.org/.  
-      see ai.platon.pulsar.crawl.net.domain.MozillaPublicSuffixListParser.java
+    <!--
+      Below elements are generated from the file
+      at http://publicsuffix.org/.
+      see org.apache.nutch.util.domain.MozillaPublicSuffixListParser.java
     -->
 
     <!--  ac : http://en.wikipedia.org/wiki/.am-->
@@ -2245,14 +2245,14 @@
     <!--  ie : http://en.wikipedia.org/wiki/.ie-->
 
     <!--  il : http://en.wikipedia.org/wiki/.il-->
-   <suffix domain="ac.il" />
-   <suffix domain="co.il" />
-   <suffix domain="org.il" />
-   <suffix domain="net.il" />
-   <suffix domain="k12.il" />
-   <suffix domain="gov.il" />
-   <suffix domain="muni.il" />
-   <suffix domain="idf.il" />
+    <suffix domain="ac.il" />
+    <suffix domain="co.il" />
+    <suffix domain="org.il" />
+    <suffix domain="net.il" />
+    <suffix domain="k12.il" />
+    <suffix domain="gov.il" />
+    <suffix domain="muni.il" />
+    <suffix domain="idf.il" />
 
     <!--  im : https://www.nic.im/pdfs/imfaqs.pdf-->
     <suffix domain="co.im" />
@@ -3701,19 +3701,19 @@
     <!--  nu : http://en.wikipedia.org/wiki/.nu-->
 
     <!--  nz : http://en.wikipedia.org/wiki/.nz-->
-   <suffix domain="ac.nz" />
-   <suffix domain="co.nz" />
-   <suffix domain="cri.nz" />
-   <suffix domain="geek.nz" />
-   <suffix domain="gen.nz" />
-   <suffix domain="govt.nz" />
-   <suffix domain="iwi.nz" />
-   <suffix domain="maori.nz" />
-   <suffix domain="mil.nz" />
-   <suffix domain="net.nz" />
-   <suffix domain="org.nz" />
-   <suffix domain="parliament.nz" />
-   <suffix domain="school.nz" />
+    <suffix domain="ac.nz" />
+    <suffix domain="co.nz" />
+    <suffix domain="cri.nz" />
+    <suffix domain="geek.nz" />
+    <suffix domain="gen.nz" />
+    <suffix domain="govt.nz" />
+    <suffix domain="iwi.nz" />
+    <suffix domain="maori.nz" />
+    <suffix domain="mil.nz" />
+    <suffix domain="net.nz" />
+    <suffix domain="org.nz" />
+    <suffix domain="parliament.nz" />
+    <suffix domain="school.nz" />
 
     <!--  om : http://en.wikipedia.org/wiki/.om-->
 

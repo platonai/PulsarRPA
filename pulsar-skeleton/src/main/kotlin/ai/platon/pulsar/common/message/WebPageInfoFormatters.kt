@@ -246,6 +246,7 @@ class PageLoadStatusFormatter(
     }
 }
 
+@Deprecated("Inappropriate name", ReplaceWith("PageLoadStatusFormatter"))
 typealias LoadStatusFormatter = PageLoadStatusFormatter
 
 class LoadedPagesStatusFormatter(
@@ -258,7 +259,7 @@ class LoadedPagesStatusFormatter(
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
         pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(LoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
+            sb.append(i.inc()).append(".\t").append(PageLoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
         }
         return sb.toString()
     }

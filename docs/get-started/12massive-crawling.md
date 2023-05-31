@@ -4,9 +4,9 @@
 > 烂程序员关心的是代码。好程序员关心的是数据结构和它们之间的关系。
 > -- Linus Torvalds
 
-大规模提取 Web 数据非常困难。**网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整**，[PulsarR](https://github.com/platonai/pulsarr) 开发了一系列尖端技术来解决这些问题。
+大规模提取 Web 数据非常困难。**网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整**，[PulsarRPA](https://github.com/platonai/pulsarr) 开发了一系列尖端技术来解决这些问题。
 
-PulsarR 设计了一组数据结构来处理 URL 池的问题。这使得 PulsarR 不仅能同时处理数以百万计的 URL，还能够准确定义这些 URL 的行为。
+PulsarRPA 设计了一组数据结构来处理 URL 池的问题。这使得 PulsarRPA 不仅能同时处理数以百万计的 URL，还能够准确定义这些 URL 的行为。
 
 运行连续采集时，URL 会添加到 [URLPool](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt) 中。URLPool 包含各种精心设计的 [URLCache](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt) 来满足不同的需求，例如，优先任务、延时任务、截止日期、外部加载等等。
 
