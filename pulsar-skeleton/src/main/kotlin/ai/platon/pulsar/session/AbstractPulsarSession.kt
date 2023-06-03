@@ -311,7 +311,7 @@ abstract class AbstractPulsarSession(
 
     override fun loadDocument(url: String, args: String) = parse(load(url, args))
 
-    override fun loadDocument(url: String, options: LoadOptions) = parse(load(url))
+    override fun loadDocument(url: String, options: LoadOptions) = parse(load(url, options))
 
     override fun loadDocument(url: UrlAware) = parse(load(url))
 
