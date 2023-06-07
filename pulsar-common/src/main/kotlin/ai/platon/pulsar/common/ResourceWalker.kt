@@ -7,7 +7,7 @@ class ResourceWalker(
 ): AutoCloseable {
     companion object {
         val SPRING_PACKED_RESOURCE_BASE_DIR = "BOOT-INF/classes/"
-        val springPackedResourceWalker = ResourceWalker(SPRING_PACKED_RESOURCE_BASE_DIR)
+        val SPRING_PACKED_RESOURCE_WALKER = ResourceWalker(SPRING_PACKED_RESOURCE_BASE_DIR)
     }
 
     private val logger = getLogger(this)
