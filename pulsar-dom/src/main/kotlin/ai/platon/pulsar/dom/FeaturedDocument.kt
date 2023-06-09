@@ -63,8 +63,9 @@ open class FeaturedDocument(val document: Document) {
         /**
          * Create a shell document.
          * */
-        fun createShell(baseUri: String): FeaturedDocument {
-            val document = Document.createShell(baseUri)
+        fun createShell(baseURI: String, charset: String = "UTF-8"): FeaturedDocument {
+            val document = Document.createShell(baseURI)
+            document.head().append("<meta charset=\"$charset\">")
             return FeaturedDocument(document)
         }
 
@@ -102,6 +103,9 @@ open class FeaturedDocument(val document: Document) {
      * @return base URI
      * @see #absUrl
      */
+    val baseURI get() = document.baseUri()
+
+    @Deprecated("Inapproriate name", ReplaceWith("baseURI"))
     val baseUri get() = document.baseUri()
 
     /**
@@ -291,10 +295,10 @@ open class FeaturedDocument(val document: Document) {
     /**
      * The constructor
      *
-     * @param baseUri The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     * @param baseURI The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
      * before the HTML declares a `<base href>` tag.
      * */
-    constructor(baseUri: String) : this(Document(baseUri))
+    constructor(baseURI: String) : this(Document(baseURI))
 
     /**
      * The constructor

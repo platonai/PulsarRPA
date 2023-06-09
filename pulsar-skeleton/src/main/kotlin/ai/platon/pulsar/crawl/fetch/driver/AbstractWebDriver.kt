@@ -110,6 +110,16 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
 
+    override suspend fun location(): String {
+        val result = evaluate("window.location")
+        return result?.toString() ?: ""
+    }
+
+    override suspend fun baseURI(): String {
+        val result = evaluate("document.baseURI")
+        return result?.toString() ?: ""
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =
         waitForSelector(selector, Duration.ofMillis(timeoutMillis))
@@ -160,16 +170,6 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun scrollToMiddle(ratio: Float) {
         evaluate("__pulsar_utils__.scrollToMiddle($ratio)")
-    }
-
-    suspend fun location(): String? {
-        val result = evaluate("window.location")
-        return result?.toString()
-    }
-
-    suspend fun baseURI(): String? {
-        val result = evaluate("document.baseURI")
-        return result?.toString()
     }
 
     @Throws(WebDriverException::class)

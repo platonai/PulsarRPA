@@ -13,7 +13,7 @@ class ResourceWalker(
     private val logger = getLogger(this)
 
     // When the jar is packed using spring-boot, the resources are put into directory BOOT-INF/classes
-    val baseUri = ResourceLoader.getResource(baseDir)?.toURI()
+    val baseURI = ResourceLoader.getResource(baseDir)?.toURI()
 
     private var fileSystem: FileSystem? = null
 

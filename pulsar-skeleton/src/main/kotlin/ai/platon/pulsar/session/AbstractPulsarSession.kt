@@ -444,7 +444,7 @@ abstract class AbstractPulsarSession(
     override fun export(doc: FeaturedDocument) = export(doc, "")
 
     override fun export(doc: FeaturedDocument, ident: String): Path {
-        val filename = AppPaths.fromUri(doc.baseUri, "", ".htm")
+        val filename = AppPaths.fromUri(doc.baseURI, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(doc.prettyHtml, path, true)
     }

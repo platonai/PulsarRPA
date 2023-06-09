@@ -29,7 +29,7 @@ fun main() {
     }
 
     event.loadEvent.onHTMLDocumentParsed.addLast { page, document ->
-        println(document.title + " | " + document.baseUri)
+        println(document.title + " | " + document.baseURI)
     }
     urls.forEach { session.submitOutPages(it, options) }
 

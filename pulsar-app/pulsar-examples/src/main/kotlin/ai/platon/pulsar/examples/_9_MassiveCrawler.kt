@@ -21,7 +21,7 @@ fun main() {
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // do something wonderful with the document
-        println(document.title + "\t|\t" + document.baseUri)
+        println(document.title + "\t|\t" + document.baseURI)
     }
     val urls = LinkExtractors.fromResource("seeds100.txt").map { ParsableHyperlink(it, parseHandler) }
 
