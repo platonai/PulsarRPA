@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.common
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -35,11 +36,55 @@ open class BrowserSettings(
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
         /**
-         * Specify the browser type for all fetches.
+         * Specify the browser type for all webpages.
          * */
+        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType: BrowserType)"))
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
+            return BrowserSettings
+        }
+
+        /**
+         * Specify the browser type for all webpages.
+         * */
+        @JvmStatic
+        fun withBrowser(browserType: BrowserType): Companion {
+            System.setProperty(BROWSER_TYPE, browserType.name)
+            return BrowserSettings
+        }
+
+        /**
+         * Specify the browser type for all webpages.
+         * */
+        @JvmStatic
+        fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
+
+        /**
+         * Specify the browser type for all webpages.
+         * */
+        @JvmStatic
+        fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyContextIdGenerator"
+            System.setProperty(PRIVACY_CONTEXT_ID_GENERATOR_CLASS, clazz)
+            withBrowser(browserType)
+            return BrowserSettings
+        }
+
+        /**
+         * Specify the browser type for all webpages.
+         * */
+        @JvmStatic
+        fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
+
+        /**
+         * Specify the browser type for all webpages.
+         * */
+        @JvmStatic
+        fun withPrototypeBrowser(browserType: BrowserType): Companion {
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator"
+            System.setProperty(PRIVACY_CONTEXT_ID_GENERATOR_CLASS, clazz)
+            withBrowser(browserType)
             return BrowserSettings
         }
 

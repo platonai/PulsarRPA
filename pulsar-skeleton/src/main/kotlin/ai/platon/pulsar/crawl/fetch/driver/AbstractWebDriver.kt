@@ -162,6 +162,16 @@ abstract class AbstractWebDriver(
         evaluate("__pulsar_utils__.scrollToMiddle($ratio)")
     }
 
+    suspend fun location(): String? {
+        val result = evaluate("window.location")
+        return result?.toString()
+    }
+
+    suspend fun baseURI(): String? {
+        val result = evaluate("document.baseURI")
+        return result?.toString()
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun clickNthAnchor(n: Int, rootSelector: String): String? {
         val result = evaluate("__pulsar_utils__.clickNthAnchor($n, '$rootSelector')")

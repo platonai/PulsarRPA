@@ -26,6 +26,7 @@ object AppPaths {
     val SYS_TMP_DIR = Paths.get(AppContext.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppContext.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
+    val SYS_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYS_BROWSER_DATA_DIR")
 
     // directory for symbolic links, this path should be as short as possible
     @RequiredDirectory

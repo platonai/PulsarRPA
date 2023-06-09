@@ -147,10 +147,18 @@ class ChromeLauncher(
         }
 
         val executable = supervisorProcess?:"$chromeBinary"
-        val arguments = if (supervisorProcess == null) chromeOptions.toList() else {
+        var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
-        arguments.add("--user-data-dir=$userDataDir")
+
+        if (userDataDir == AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER) {
+            // Open the default browser just like a real user daily do,
+            // open the blank page to ignore choosing profile
+            val args = "--remote-debugging-port=0 --remote-allow-origins=* about:blank"
+            arguments = args.split(" ").toMutableList()
+        } else {
+            arguments.add("--user-data-dir=$userDataDir")
+        }
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)

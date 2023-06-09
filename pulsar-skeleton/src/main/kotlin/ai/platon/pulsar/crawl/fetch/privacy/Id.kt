@@ -16,14 +16,14 @@ data class PrivacyAgentId(
     val contextDir: Path,
     val browserType: BrowserType
 ): Comparable<PrivacyAgentId> {
-    override fun compareTo(other: PrivacyAgentId): Int {
-        return contextDir.compareTo(other.contextDir)
-    }
+    override fun compareTo(other: PrivacyAgentId) = contextDir.compareTo(other.contextDir)
 
+    val isSystemDefault get() = this == SYSTEM_DEFAULT
     val isDefault get() = this == DEFAULT
     val isPrototype get() = this == PROTOTYPE
 
     companion object {
+        val SYSTEM_DEFAULT = PrivacyAgentId(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
         val DEFAULT = PrivacyAgentId(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
         val PROTOTYPE = PrivacyAgentId(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
@@ -77,6 +77,7 @@ data class PrivacyAgent(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
+        val SYSTEM_DEFAULT = PrivacyAgent(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
         val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
         val PROTOTYPE = PrivacyAgent(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
@@ -99,7 +100,8 @@ data class BrowserId constructor(
     val proxyServer: String? get() = fingerprint.proxyServer
 
     val userDataDir: Path get() = when {
-        contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR -> PrivacyContext.PROTOTYPE_DATA_DIR
+        contextDir == PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER -> contextDir
+        contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR -> contextDir
         else -> contextDir.resolve(browserType.name.lowercase())
     }
     val ident get() = contextDir.last().toString() + browserType.ordinal
@@ -134,6 +136,8 @@ data class BrowserId constructor(
     }
 
     companion object {
+        val SYSTEM_DEFAULT = BrowserId(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER, Fingerprint(BrowserType.PULSAR_CHROME))
+        // TODO: USE PrivacyContext.DEFAULT_DIR
         val DEFAULT = BrowserId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
         val PROTOTYPE = BrowserId(PrivacyContext.PROTOTYPE_CONTEXT_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
     }
@@ -143,7 +147,7 @@ data class BrowserId constructor(
 typealias BrowserInstanceId = BrowserId
 
 interface PrivacyContextIdGenerator {
-    operator fun invoke(fingerprint: Fingerprint): PrivacyContextId
+    operator fun invoke(fingerprint: Fingerprint): PrivacyAgent
 }
 
 class DefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
@@ -153,16 +157,20 @@ class DefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
             get() = PrivacyContext.DEFAULT_DIR.resolve(sequencer.incrementAndGet().toString())
     }
 
-    override fun invoke(fingerprint: Fingerprint): PrivacyContextId = PrivacyContextId(nextContextDir, fingerprint)
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent(nextContextDir, fingerprint)
+}
+
+class SystemDefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.SYSTEM_DEFAULT
 }
 
 class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint) = PrivacyContextId.PROTOTYPE
+    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.PROTOTYPE
 }
 
 class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyContextId =
-        PrivacyContextId(nextContextDir(), fingerprint)
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
+        PrivacyAgent(nextContextDir(), fingerprint)
 
     @Synchronized
     private fun nextContextDir(): Path {
@@ -188,7 +196,7 @@ class PrivacyContextIdGeneratorFactory(val conf: ImmutableConfig) {
         val clazz = try {
             conf.getClass(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS, defaultClazz)
         } catch (e: Exception) {
-            logger.warn("Configured proxy loader {}({}) is not found, use default ({})",
+            logger.warn("Configured privacy context id generator {}({}) is not found, use default ({})",
                 CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS,
                 conf.get(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS),
                 defaultClazz.simpleName)
