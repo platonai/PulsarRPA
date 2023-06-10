@@ -24,7 +24,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-The code above will scrape fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages.
+The code above scrapes fields specified by CSS selectors #title and #acrCustomerReviewText from a set of product pages.
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
 

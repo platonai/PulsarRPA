@@ -36,7 +36,7 @@ open class BrowserSettings(
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
         /**
-         * Specify the browser type for all webpages.
+         * Specify the browser type to fetch webpages.
          * */
         @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType: BrowserType)"))
         @JvmStatic
@@ -46,7 +46,9 @@ open class BrowserSettings(
         }
 
         /**
-         * Specify the browser type for all webpages.
+         * Specify the browser type to fetch webpages.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withBrowser(browserType: BrowserType): Companion {
@@ -55,13 +57,14 @@ open class BrowserSettings(
         }
 
         /**
-         * Specify the browser type for all webpages.
+         * Use google-chrome with the default environment, so PulsarRPA visits websites just like you do.
          * */
         @JvmStatic
         fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
 
         /**
-         * Specify the browser type for all webpages.
+         * Use the specified browser with the default environment, so PulsarRPA visits websites just like you do.
+         * PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
@@ -72,13 +75,15 @@ open class BrowserSettings(
         }
 
         /**
-         * Specify the browser type for all webpages.
+         * Use google-chrome with the prototype environment, any change to the browser will be kept.
          * */
         @JvmStatic
         fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
 
         /**
-         * Specify the browser type for all webpages.
+         * Use the specified browser with the prototype environment, any change to the browser will be kept.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
          * */
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
