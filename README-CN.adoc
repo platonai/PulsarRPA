@@ -9,6 +9,8 @@ link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/
 
 == 🚄 开始
 
+💖 PulsarRPA 是你唯一的需要！💖
+
 PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
 
 大规模提取 Web 数据非常困难。#网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整#，PulsarRPA 开发了一系列尖端技术来解决这些问题。
