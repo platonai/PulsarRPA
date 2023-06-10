@@ -785,8 +785,11 @@ class ChromeDevtoolsDriver(
 
                 // amazon.com uses "referer" instead of "referrer" in the request header,
                 // not clear if other sites uses the other one
-                val refererHeaderName = "referer"
-                entry.pageReferrer?.let { requestWillBeSent.request.headers.put(refererHeaderName, it) }
+                val headers: MutableMap<String, Any> = requestWillBeSent.request.headers
+                entry.pageReferrer?.let {
+                    headers["referer"] = it
+                    headers["referrer"] = it
+                }
 
                 entry.mainRequestId = requestWillBeSent.requestId
                 entry.mainRequestHeaders = requestWillBeSent.request.headers
