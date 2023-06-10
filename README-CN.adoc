@@ -5,7 +5,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
 
 == 🚄 开始
 

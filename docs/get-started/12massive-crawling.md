@@ -4,11 +4,11 @@
 > 烂程序员关心的是代码。好程序员关心的是数据结构和它们之间的关系。
 > -- Linus Torvalds
 
-大规模提取 Web 数据非常困难。**网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整**，[PulsarRPA](https://github.com/platonai/pulsarr) 开发了一系列尖端技术来解决这些问题。
+大规模提取 Web 数据非常困难。**网站经常变化并且变得越来越复杂，这意味着收集的网络数据通常不准确或不完整**，[PulsarRPA](https://github.com/platonai/PulsarRPA) 开发了一系列尖端技术来解决这些问题。
 
 PulsarRPA 设计了一组数据结构来处理 URL 池的问题。这使得 PulsarRPA 不仅能同时处理数以百万计的 URL，还能够准确定义这些 URL 的行为。
 
-运行连续采集时，URL 会添加到 [URLPool](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt) 中。URLPool 包含各种精心设计的 [URLCache](../../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt) 来满足不同的需求，例如，优先任务、延时任务、截止日期、外部加载等等。
+运行连续采集时，URL 会添加到 [URLPool](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlPool.kt) 中。URLPool 包含各种精心设计的 [URLCache](../../pulsar-common/src/main/kotlin/ai/platon/pulsar/common/collect/UrlCache.kt) 来满足不同的需求，例如，优先任务、延时任务、截止日期、外部加载等等。
 
 通过组合 URLCache 和 LoadOptions，我们可以满足最复杂的采集需求。
 
@@ -94,7 +94,7 @@ urlPool.delayCache.add(DelayUrl(url5, Duration.ofHours(2)))
 
 默认配置中，URLCache 都是基于内存的，我们也可以重新配置，使用支持文件系统或者数据库的缓存实现。
 
-本课程提供了[完整代码](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt)。
+本课程提供了[完整代码](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt)。
 
 ------
 

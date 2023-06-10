@@ -30,7 +30,7 @@ select
 }
 ```
 
-完整代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)。
+完整代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)。
 
 ## 语言介绍
 
@@ -158,7 +158,7 @@ from
 
 ## String Functions
 
-大多数字符串函数是通过程序从 org.apache.commons.lang3.StringUtils 自动转换而来。你可以在下述文件中找到 UDF 定义：[StringFunctions](../../../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)（[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)），所有的字符串函数都在命名空间 STR 中。
+大多数字符串函数是通过程序从 org.apache.commons.lang3.StringUtils 自动转换而来。你可以在下述文件中找到 UDF 定义：[StringFunctions](../../../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)（[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)），所有的字符串函数都在命名空间 STR 中。
 
 ### STR_SUBSTRING_AFTER
 
