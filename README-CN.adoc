@@ -92,7 +92,10 @@ select
   from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
 ----
 
-Example code: link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[Exotic Amazon's X-SQLs].
+示例代码:
+
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQL to scrape 100+ fields from an Amazon's product page]
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQLs to scrape all types of Amazon webpages]
 
 == 🥁 简介
 
