@@ -100,8 +100,8 @@ data class BrowserId constructor(
     val proxyServer: String? get() = fingerprint.proxyServer
 
     val userDataDir: Path get() = when {
-        contextDir == PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER -> contextDir
-        contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR -> contextDir
+        contextDir == PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER -> PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER
+        contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR -> PrivacyContext.PROTOTYPE_DATA_DIR
         else -> contextDir.resolve(browserType.name.lowercase())
     }
     val ident get() = contextDir.last().toString() + browserType.ordinal
