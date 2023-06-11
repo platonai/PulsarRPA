@@ -5,7 +5,7 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
 
 == 🚄 Get started
 
@@ -24,7 +24,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-The code above will scrape fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages.
+The code above scrapes fields specified by CSS selectors #title and #acrCustomerReviewText from a set of product pages.
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
 
@@ -181,14 +181,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.13</version>
+  <version>1.10.14</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.13")
+implementation("ai.platon.pulsar:pulsar-all:1.10.14")
 ----
 
 You can clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].

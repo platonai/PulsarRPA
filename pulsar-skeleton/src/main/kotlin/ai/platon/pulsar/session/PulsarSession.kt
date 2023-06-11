@@ -916,6 +916,9 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url as a resource without browser rendering.
      *
+     * Referrer will be opened by a browser first to obtain browsing environment,
+     * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
+     *
      * @param url  The url to load
      * @param referrer The referrer URL
      * @return The webpage containing the resource
@@ -923,6 +926,9 @@ interface PulsarSession : AutoCloseable {
     fun loadResource(url: String, referrer: String): WebPage
     /**
      * Load a url as a resource without browser rendering.
+     *
+     * Referrer will be opened by a browser first to obtain browsing environment,
+     * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
      *
      * @param url  The url to load
      * @param referrer The referrer URL
@@ -933,6 +939,9 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url as a resource without browser rendering.
      *
+     * Referrer will be opened by a browser first to obtain browsing environment,
+     * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
+     *
      * @param url     The url to load
      * @param referrer The referrer URL
      * @param options The load options
@@ -942,6 +951,9 @@ interface PulsarSession : AutoCloseable {
 
     /**
      * Load a url as a resource without browser rendering.
+     *
+     * Referrer will be opened by a browser first to obtain browsing environment,
+     * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
@@ -954,6 +966,9 @@ interface PulsarSession : AutoCloseable {
     /**
      * Load a url as a resource without browser rendering.
      *
+     * Referrer will be opened by a browser first to obtain browsing environment,
+     * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
+     *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.
      *
@@ -965,6 +980,9 @@ interface PulsarSession : AutoCloseable {
     suspend fun loadResourceDeferred(url: String, referrer: String, args: String): WebPage
     /**
      * Load a url as a resource without browser rendering.
+     *
+     * Referrer will be opened by a browser first to obtain browsing environment,
+     * such as headers and cookies, and then the browsing environment will be applied to the later resource fetching.
      *
      * This function is a kotlin suspend function, which could be started, paused, and resume.
      * Suspend functions are only allowed to be called from a coroutine or another suspend function.

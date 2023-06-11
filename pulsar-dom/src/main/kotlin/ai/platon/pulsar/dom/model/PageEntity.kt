@@ -45,7 +45,7 @@ data class PageAttribute(
     }
 }
 
-class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory? = null) {
+class PageEntity(baseURI0: String = NIL_PAGE_URL, var category: FragmentCategory? = null) {
 
     val attributes = HashMap<String, PageAttribute>()
     val metadata = HashMap<String, String>()
@@ -58,10 +58,10 @@ class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory
      *
      * @return base URI
      */
-    var baseUri: String = baseUri0
+    var baseURI: String = baseURI0
         set(value) {
             field = value
-            put(META_BASE_URI, baseUri, METADATA)
+            put(META_BASE_URI, baseURI, METADATA)
         }
 
     var title: String = ""
@@ -131,13 +131,13 @@ class PageEntity(baseUri0: String = NIL_PAGE_URL, var category: FragmentCategory
 
     fun joinToString(name: String, sep: String = ", ") = get(name).joinToString { sep }
 
-    override fun hashCode() = baseUri.hashCode()
+    override fun hashCode() = baseURI.hashCode()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true;
         }
 
-        return other is PageEntity && baseUri == other.baseUri
+        return other is PageEntity && baseURI == other.baseURI
     }
 }

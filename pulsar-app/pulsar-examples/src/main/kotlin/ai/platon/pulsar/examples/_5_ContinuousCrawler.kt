@@ -14,7 +14,7 @@ fun main() {
 
     val parseHandler = { _: WebPage, document: FeaturedDocument ->
         // do something wonderful with the document
-        println(document.title + "\t|\t" + document.baseUri)
+        println(document.title + "\t|\t" + document.baseURI)
 
         // extract more links from the document
         context.submitAll(document.selectHyperlinks("a[href~=/dp/]"))

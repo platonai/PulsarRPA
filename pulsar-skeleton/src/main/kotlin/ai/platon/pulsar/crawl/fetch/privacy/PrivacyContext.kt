@@ -38,7 +38,12 @@ abstract class PrivacyContext(
     companion object {
         private val instanceSequencer = AtomicInteger()
         val IDENT_PREFIX = "cx."
+        // This is a placeholder, actually no data dir should be specified,
+        // so the driver can open a browser using system default configuration
+        val SYSTEM_DEFAULT_DIR_PLACEHOLDER = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
+        // The default context directory
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        // The prototype context directory, all privacy contexts copies browser data from this directory
         val PROTOTYPE_CONTEXT_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
         val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(30)

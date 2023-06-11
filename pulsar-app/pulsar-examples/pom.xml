@@ -14,7 +14,7 @@
   <parent>
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-app</artifactId>
-    <version>1.10.13-SNAPSHOT</version>
+    <version>1.10.14-SNAPSHOT</version>
   </parent>
 
   <artifactId>pulsar-examples</artifactId>
@@ -43,6 +43,7 @@
           </execution>
         </executions>
         <configuration>
+          <skip>true</skip>
           <mainClass>ai.platon.pulsar.examples.sites.food.dianping.RestaurantCrawlerKt</mainClass>
           <addResources>true</addResources>
           <executable>true</executable>

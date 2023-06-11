@@ -5,9 +5,11 @@ Vincent Zhang <ivincent.zhang@gmail.com>
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+link:README.adoc[English] | 简体中文 | https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
 
 == 🚄 开始
+
+💖 PulsarRPA 是你唯一的需要！💖
 
 PulsarRPA 是大规模采集 Web 数据的终极开源方案，可满足几乎所有规模和性质的网络数据采集需要。
 
@@ -92,7 +94,10 @@ select
   from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
 ----
 
-Example code: link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[Exotic Amazon's X-SQLs].
+示例代码:
+
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQL to scrape 100+ fields from an Amazon's product page]
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQLs to scrape all types of Amazon webpages]
 
 == 🥁 简介
 
@@ -176,14 +181,14 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.13</version>
+  <version>1.10.14</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.13")
+implementation("ai.platon.pulsar:pulsar-all:1.10.14")
 ----
 
 也可以从 github.com 克隆模板项目: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17]。

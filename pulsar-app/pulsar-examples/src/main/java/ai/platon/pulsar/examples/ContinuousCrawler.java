@@ -15,7 +15,7 @@ public class ContinuousCrawler {
 
     private static void onParse(WebPage page, FeaturedDocument document) {
         // do something wonderful with the document
-        System.out.println(document.getTitle() + "\t|\t" + document.getBaseUri());
+        System.out.println(document.getTitle() + "\t|\t" + document.getBaseURI());
 
         // extract more links from the document
         List<Hyperlink> urls = document.selectHyperlinks("a[href~=/dp/]");

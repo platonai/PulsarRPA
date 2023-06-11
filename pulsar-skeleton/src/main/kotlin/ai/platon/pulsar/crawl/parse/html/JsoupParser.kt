@@ -56,8 +56,8 @@ class JsoupParser(
         val selector = "#${AppConstants.PULSAR_META_INFORMATION_ID}"
         val metadata = document.document.selectFirstOrNull(selector) ?: return
 
-        page.href?.takeIf { UrlUtils.isValidUrl(it) }?.let { metadata.attr("href", it) }
-        page.referrer.takeIf { UrlUtils.isValidUrl(it) }?.let { metadata.attr("referer", it) }
+        page.href?.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("href", it) }
+        page.referrer.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("referer", it) }
 
         val options = page.options
 

@@ -10,5 +10,5 @@ fun main() {
     val pages = session.loadOutPages(portalUrl, args)
     val documents = pages.map { session.parse(it) }
     // do something with documents
-    documents.forEach { println(it.title + " | " + it.baseUri) }
+    documents.forEach { println(it.title + " | " + it.baseURI) }
 }

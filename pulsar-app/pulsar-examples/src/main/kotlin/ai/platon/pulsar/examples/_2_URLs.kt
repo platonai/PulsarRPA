@@ -52,7 +52,7 @@ fun main() {
 
     // Load a webpage and parse it into a document
     val parsableHyperlink = ParsableHyperlink(url) { p, doc ->
-        println("Parsed " + doc.baseUri)
+        println("Parsed " + doc.baseURI)
     }
     val page2 = session.load(parsableHyperlink, "-expires 10s")
     println("ParsableHyperlink loaded | " + page2.url)

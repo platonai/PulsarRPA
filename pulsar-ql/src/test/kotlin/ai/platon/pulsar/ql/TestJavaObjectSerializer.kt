@@ -92,8 +92,8 @@ class TestJavaObjectSerializer: TestBase() {
     fun testLocalSerialization() {
         val serializer = ai.platon.pulsar.ql.PulsarObjectSerializer()
 
-        val baseUri = "http://example.com/"
-        val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseUri)
+        val baseURI = "http://example.com/"
+        val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseURI)
         val baseDom = ValueDom.get(doc.body().selectFirst("div"))
 
         val bytes = serializer.serialize(baseDom)
@@ -120,8 +120,8 @@ class TestJavaObjectSerializer: TestBase() {
         val stat = conn.createStatement()
         stat.execute("create table t(id int, val other)")
 
-        val baseUri = "http://example.com/"
-        val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseUri)
+        val baseURI = "http://example.com/"
+        val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseURI)
         val baseDom = ValueDom.get(doc.body().selectFirst("div"))
 
         val ins = conn.prepareStatement("insert into t(id, val) values(?, ?)")

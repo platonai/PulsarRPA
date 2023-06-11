@@ -133,14 +133,7 @@ class ChromeDevtoolsDriver(
         browser.emit(BrowserEvents.willNavigate, entry)
 
         try {
-            pageAPI?.enable()
-            domAPI?.enable()
-            runtimeAPI?.enable()
-            networkAPI?.enable()
-
-            if (resourceBlockProbability > 0.0f) {
-                fetchAPI?.enable()
-            }
+            enableAgents()
 
             rpc.invokeDeferred("navigateTo") {
                 if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
@@ -150,16 +143,19 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
     @Throws(WebDriverException::class)
     override suspend fun mainRequestHeaders(): Map<String, Any> {
         return mainRequestHeaders
     }
 
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
     @Throws(WebDriverException::class)
     override suspend fun mainRequestCookies(): List<Map<String, String>> {
         return mainRequestCookies
     }
 
+    @Deprecated("Getter is available", replaceWith = ReplaceWith("getCookies"))
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return try {
@@ -172,7 +168,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
-        networkAPI?.enable()
+        enableAgents()
         val cookies = networkAPI?.cookies?.map { serialize(it) }
         networkAPI?.disable()
         return cookies ?: listOf()
@@ -188,9 +184,7 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun pause() {
         try {
-            rpc.invokeDeferred("pause") {
-                pageAPI?.stopLoading()
-            }
+            rpc.invokeDeferred("pause") { pageAPI?.stopLoading() }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "pause")
         }
@@ -284,9 +278,7 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
         navigateUrl = try {
-            return rpc.invokeDeferred("currentUrl") {
-                mainFrameAPI?.url ?: navigateUrl
-            } ?: ""
+            return rpc.invokeDeferred("currentUrl") { mainFrameAPI?.url ?: navigateUrl } ?: ""
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "currentUrl")
             ""
@@ -310,9 +302,9 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
         try {
-            return page.visible(selector)
+            return rpc.invokeDeferred("isVisible") { page.visible(selector) } ?: false
         } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "visible $selector")
+            rpc.handleRPCException(e, "visible >$selector<")
         }
 
         return false
@@ -431,9 +423,7 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
         try {
-            rpc.invokeDeferred("moveMouseTo") {
-                mouse?.moveTo(x, y)
-            }
+            rpc.invokeDeferred("moveMouseTo") { mouse?.moveTo(x, y) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "moveMouseTo")
         }
@@ -541,9 +531,7 @@ class ChromeDevtoolsDriver(
     @Throws(WebDriverException::class)
     override suspend fun scrollTo(selector: String) {
         try {
-            rpc.invokeDeferred("scrollTo") {
-                page.scrollIntoViewIfNeeded(selector)
-            }
+            rpc.invokeDeferred("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "scrollTo")
         }
@@ -707,7 +695,7 @@ class ChromeDevtoolsDriver(
         if (!checkState()) return null
 
         try {
-            return rpc.invokeDeferred("querySelector") { page?.querySelector(selector) }
+            return rpc.invokeDeferred("querySelector") { page.querySelector(selector) }
         } catch (e: ChromeRPCException) {
             rpc.handleRPCException(e, "querySelector")
         }
@@ -766,6 +754,18 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    fun enableAgents() {
+        pageAPI?.enable()
+        domAPI?.enable()
+        runtimeAPI?.enable()
+        networkAPI?.enable()
+        cssAPI?.enable()
+
+        if (resourceBlockProbability > 0.0f) {
+            fetchAPI?.enable()
+        }
+    }
+
     override fun toString() = "DevTools driver ($lastSessionId)"
 
     private fun navigateInvaded(entry: NavigateEntry) {
@@ -785,8 +785,11 @@ class ChromeDevtoolsDriver(
 
                 // amazon.com uses "referer" instead of "referrer" in the request header,
                 // not clear if other sites uses the other one
-                val refererHeaderName = "referer"
-                entry.pageReferrer?.let { requestWillBeSent.request.headers.put(refererHeaderName, it) }
+                val headers: MutableMap<String, Any> = requestWillBeSent.request.headers
+                entry.pageReferrer?.let {
+                    headers["referer"] = it
+                    headers["referrer"] = it
+                }
 
                 entry.mainRequestId = requestWillBeSent.requestId
                 entry.mainRequestHeaders = requestWillBeSent.request.headers
@@ -844,7 +847,6 @@ class ChromeDevtoolsDriver(
     private fun navigateNonInvaded(entry: NavigateEntry) {
         val url = entry.url
 
-        pageAPI?.enable()
         navigateUrl = url
         pageAPI?.navigate(url)
     }

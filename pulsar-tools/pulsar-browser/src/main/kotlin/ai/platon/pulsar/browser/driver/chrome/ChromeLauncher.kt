@@ -147,10 +147,18 @@ class ChromeLauncher(
         }
 
         val executable = supervisorProcess?:"$chromeBinary"
-        val arguments = if (supervisorProcess == null) chromeOptions.toList() else {
+        var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
-        arguments.add("--user-data-dir=$userDataDir")
+
+        if (userDataDir == AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER) {
+            // Open the default browser just like a real user daily do,
+            // open the blank page to ignore choosing profile
+            val args = "--remote-debugging-port=0 --remote-allow-origins=* about:blank"
+            arguments = args.split(" ").toMutableList()
+        } else {
+            arguments.add("--user-data-dir=$userDataDir")
+        }
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
@@ -247,7 +255,7 @@ class ChromeLauncher(
                     Files.list(prototypeUserDataDir)
                         .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
                         .forEach { Files.delete(it) }
-                    // ISSUE#29: https://github.com/platonai/pulsarr/issues/29
+                    // ISSUE#29: https://github.com/platonai/PulsarRPA/issues/29
                     // Failed to copy chrome data dir when there is a SingletonSocket symbol link
                     val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
