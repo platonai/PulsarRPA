@@ -26,9 +26,12 @@ object AppPaths {
     val SYS_TMP_DIR = Paths.get(AppContext.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppContext.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
+    // The directory for the system default browser.
+    // This is a placeholder, actually no data dir should be specified,
+    // so the driver opens a browser just like a normal user opens it.
     val SYS_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYS_BROWSER_DATA_DIR")
 
-    // directory for symbolic links, this path should be as short as possible
+    // Directory for symbolic links, this path should be as short as possible
     @RequiredDirectory
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
 

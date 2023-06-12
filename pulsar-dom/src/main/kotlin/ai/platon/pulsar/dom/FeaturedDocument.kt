@@ -105,7 +105,7 @@ open class FeaturedDocument(val document: Document) {
      */
     val baseURI get() = document.baseUri()
 
-    @Deprecated("Inapproriate name", ReplaceWith("baseURI"))
+    @Deprecated("Inappropriate name", ReplaceWith("baseURI"))
     val baseUri get() = document.baseUri()
 
     /**
@@ -267,7 +267,7 @@ open class FeaturedDocument(val document: Document) {
     val childNodes: List<Node> get() = document.childNodes()
 
     /**
-     * Retrieves the document's inner HTML with pretty printing.
+     * Retrieves the document's outer HTML with pretty printing.
      * */
     val prettyHtml: String
         get() {
