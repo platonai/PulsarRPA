@@ -6,14 +6,15 @@ import java.io.Writer
 import java.nio.file.*
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
 
 /**
  * A simple log system
  */
 class MessageWriter(
-        val path: Path,
-        var levelFile: Int = DEFAULT_LOG_LEVEL
+    val filePath: Path,
+    var levelFile: Int = DEFAULT_LOG_LEVEL
 ): AutoCloseable {
 
     companion object {
@@ -27,10 +28,10 @@ class MessageWriter(
          */
         var DEFAULT_LOG_LEVEL = INFO
         /**
-         * The default maximum trace file size. It is currently 64 MB. Additionally,
+         * The default maximum trace file size. It is currently 512 MB. Additionally,
          * there could be a .old file of the same size.
          */
-        var DEFAULT_MAX_FILE_SIZE = 64 * 1024 * 1024
+        var DEFAULT_MAX_FILE_SIZE = 512 * 1024 * 1024
 
         var CHECK_SIZE_EACH_WRITES = 4096
     }
@@ -72,9 +73,13 @@ class MessageWriter(
             if (checkSize++ >= CHECK_SIZE_EACH_WRITES) {
                 checkSize = 0
                 closeWriter()
-                if (maxFileSize > 0 && Files.size(path) > maxFileSize) {
-                    val old = Paths.get("$path.old")
-                    Files.move(path, old, StandardCopyOption.REPLACE_EXISTING)
+                val count = Files.list(filePath.parent)
+                    .filter { it.isRegularFile() }
+                    .filter { it.fileName.toString().contains(filePath.fileName.toString()) }
+                    .count()
+                if (maxFileSize > 0 && Files.size(filePath) > maxFileSize) {
+                    val old = Paths.get("$filePath.$count")
+                    Files.move(filePath, old, StandardCopyOption.REPLACE_EXISTING)
                 }
             }
 
@@ -99,9 +104,9 @@ class MessageWriter(
     private fun openWriter(): PrintWriter? {
         if (printWriter == null) {
             try {
-                Files.createDirectories(path.parent)
+                Files.createDirectories(filePath.parent)
                 // println("Create printer writer to $path")
-                fileWriter = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+                fileWriter = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
                 printWriter = PrintWriter(fileWriter!!, true)
             } catch (e: Exception) {
                 logWritingError(e)
@@ -114,7 +119,7 @@ class MessageWriter(
 
     @Synchronized
     private fun closeWriter() {
-        log.info("Closing writer | $path")
+        log.info("Closing writer | $filePath")
         printWriter?.flush()
         printWriter?.close()
         fileWriter?.close()

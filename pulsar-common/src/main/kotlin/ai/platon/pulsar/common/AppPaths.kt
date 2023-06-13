@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.RandomStringUtils
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
@@ -160,6 +161,11 @@ object AppPaths {
     }
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
+
+    fun createTempFile(prefix: String, suffix: String): Path {
+        val rand = RandomStringUtils.randomAlphanumeric(12)
+        return getProcTmp("tmp", "$prefix$rand$suffix")
+    }
 
     /**
      * Create a mock page path.
