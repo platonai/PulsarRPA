@@ -96,9 +96,11 @@
                 <module>pulsar-dom</module>
 
                 <module>pulsar-tools</module>
+                <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
                 <module>pulsar-spring-support</module>
+                <module>pulsar-all</module>
             </modules>
         </profile>
 
