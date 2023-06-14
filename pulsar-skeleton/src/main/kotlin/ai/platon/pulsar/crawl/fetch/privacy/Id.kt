@@ -10,6 +10,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.MonthDay
 import java.util.concurrent.atomic.AtomicInteger
 
 data class PrivacyAgentId(
@@ -169,21 +170,27 @@ class PrototypePrivacyContextIdGenerator: PrivacyContextIdGenerator {
 }
 
 class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(nextContextDir(), fingerprint)
-
-    @Synchronized
-    private fun nextContextDir(): Path {
-        sequencer.incrementAndGet()
-        val impreciseNumInstances = 1 + Files.list(ROOT_DIR).filter { Files.isDirectory(it) }.count()
-        val rand = RandomStringUtils.randomAlphanumeric(5)
-        return ROOT_DIR.resolve("${PrivacyContext.IDENT_PREFIX}${sequencer}$rand$impreciseNumInstances")
+    companion object {
+        /** The root directory of privacy contexts, every context have its own directory in this fold */
+        private val sequencer = AtomicInteger()
     }
 
-    companion object {
-        /** The root directory of privacy contexts, every context have it's own directory in this fold */
-        private val ROOT_DIR = AppPaths.CONTEXT_TMP_DIR
-        private val sequencer = AtomicInteger()
+    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
+        PrivacyAgent(generateUserDataContextDir(), fingerprint)
+
+    @Synchronized
+    fun generateUserDataContextDir(): Path {
+        sequencer.incrementAndGet()
+        val prefix = PrivacyContext.IDENT_PREFIX
+        val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
+            .filter { Files.isDirectory(it) }
+            .filter { it.toString().contains(prefix) }
+            .count()
+        val rand = RandomStringUtils.randomAlphanumeric(5)
+        val monthDay = MonthDay.now()
+        val fileName = String.format("%s%02d%02d%s%s%s",
+            prefix, monthDay.monthValue, monthDay.dayOfMonth, sequencer, rand, contextCount)
+        return AppPaths.CONTEXT_TMP_DIR.resolve(fileName)
     }
 }
 

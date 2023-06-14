@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
+import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher.Companion.USER_DATA_DIR_REGEX
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.AppPaths
@@ -12,6 +13,28 @@ import java.time.LocalDateTime
 import kotlin.test.assertTrue
 
 class TestChromeImplLauncher {
+
+    /**
+     * Test ChromeLauncher
+     * */
+    @Test
+    fun testRegex3() {
+        val text = """
+            |xvfb-run -a -e /dev/stdout -s "-screen 0 1920x1080x24" /usr/bin/google-chrome-stable 
+            |--proxy-server=119.49.122.242:4224 --disable-gpu --hide-scrollbars --remote-debugging-port=0 
+            |--no-default-browser-check --no-first-run --no-startup-window --mute-audio 
+            |--disable-background-networking --disable-background-timer-throttling 
+            |--disable-client-side-phishing-detection --disable-hang-monitor 
+            |--disable-popup-blocking --disable-prompt-on-repost --disable-sync --disable-translate 
+            |--disable-blink-features=AutomationControlled --metrics-recording-only 
+            |--safebrowsing-disable-auto-update --no-sandbox --ignore-certificate-errors 
+            |--window-size=1920,1080 --pageLoadStrategy=none --throwExceptionOnScriptError=true 
+            |--user-data-dir=/home/vincent/tmp/pulsar-vincent/context/cx.2zmmAe40/pulsar_chrome
+        """.trimMargin().replace("\n", " ")
+        // println(text)
+        assertTrue { "./pulsar-vincent/context/cx.5oruW037".matches(USER_DATA_DIR_REGEX) }
+        assertTrue { text.matches(USER_DATA_DIR_REGEX) }
+    }
 
     @Test
     fun testLauncher() {

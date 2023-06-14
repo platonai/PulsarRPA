@@ -294,9 +294,9 @@ open class BrowserSettings(
          * Generate a user data directory.
          * */
         fun generateUserDataDir(): Path {
-            val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
+            val numInstances = Files.list(AppPaths.CONTEXT_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
-            return AppPaths.BROWSER_TMP_DIR.resolve("br.$numInstances$rand")
+            return AppPaths.CONTEXT_TMP_DIR.resolve("cx.$numInstances$rand")
         }
     }
 
