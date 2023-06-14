@@ -24,8 +24,8 @@ data class PrivacyAgentId(
     val isPrototype get() = this == PROTOTYPE
 
     companion object {
-        val SYSTEM_DEFAULT = PrivacyAgentId(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
-        val DEFAULT = PrivacyAgentId(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
+        val SYSTEM_DEFAULT = PrivacyAgentId(PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+        val DEFAULT = PrivacyAgentId(PrivacyContext.DEFAULT_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
         val PROTOTYPE = PrivacyAgentId(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
 }
@@ -43,7 +43,7 @@ data class PrivacyAgent(
 
     val id = PrivacyAgentId(contextDir, fingerprint.browserType)
     val ident = contextDir.last().toString()
-    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
+    val display = ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
     val browserType get() = fingerprint.browserType
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
@@ -78,8 +78,8 @@ data class PrivacyAgent(
 //    override fun toString() = /** AUTO GENERATED **/
 
     companion object {
-        val SYSTEM_DEFAULT = PrivacyAgent(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
-        val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_DIR, BrowserType.PULSAR_CHROME)
+        val SYSTEM_DEFAULT = PrivacyAgent(PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+        val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
         val PROTOTYPE = PrivacyAgent(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
 }
@@ -101,12 +101,12 @@ data class BrowserId constructor(
     val proxyServer: String? get() = fingerprint.proxyServer
 
     val userDataDir: Path get() = when {
-        contextDir == PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER -> PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER
+        contextDir == PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER -> PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER
         contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR -> PrivacyContext.PROTOTYPE_DATA_DIR
         else -> contextDir.resolve(browserType.name.lowercase())
     }
     val ident get() = contextDir.last().toString() + browserType.ordinal
-    val display get() = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
+    val display get() = ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
 
@@ -137,7 +137,7 @@ data class BrowserId constructor(
     }
 
     companion object {
-        val SYSTEM_DEFAULT = BrowserId(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER, Fingerprint(BrowserType.PULSAR_CHROME))
+        val SYSTEM_DEFAULT = BrowserId(PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER, Fingerprint(BrowserType.PULSAR_CHROME))
         // TODO: USE PrivacyContext.DEFAULT_DIR
         val DEFAULT = BrowserId(AppPaths.BROWSER_TMP_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
         val PROTOTYPE = BrowserId(PrivacyContext.PROTOTYPE_CONTEXT_DIR, Fingerprint(BrowserType.PULSAR_CHROME))
@@ -155,7 +155,7 @@ class DefaultPrivacyContextIdGenerator: PrivacyContextIdGenerator {
     companion object {
         private val sequencer = AtomicInteger()
         private val nextContextDir
-            get() = PrivacyContext.DEFAULT_DIR.resolve(sequencer.incrementAndGet().toString())
+            get() = PrivacyContext.DEFAULT_CONTEXT_DIR.resolve(sequencer.incrementAndGet().toString())
     }
 
     override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent(nextContextDir, fingerprint)
@@ -181,7 +181,7 @@ class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
     @Synchronized
     fun generateUserDataContextDir(): Path {
         sequencer.incrementAndGet()
-        val prefix = PrivacyContext.IDENT_PREFIX
+        val prefix = PrivacyContext.CONTEXT_DIR_PREFIX
         val contextCount = 1 + Files.list(AppPaths.CONTEXT_TMP_DIR)
             .filter { Files.isDirectory(it) }
             .filter { it.toString().contains(prefix) }
