@@ -1,14 +1,14 @@
 package ai.platon.pulsar.persist.model
 
 import ai.platon.pulsar.persist.WebPage.u8
+import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 import ai.platon.pulsar.persist.gora.generated.GPageModel
 
 /**
  * Created by vincent on 17-8-3.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  *
- *
- * The core concept of Document Data Model, DDM
+ * The core concept of Page Model
  */
 class PageModel(
         val pageModel: GPageModel
@@ -40,10 +40,25 @@ class PageModel(
     fun unbox() = pageModel
 
     @Synchronized
-    fun firstOrNull() = if (isEmpty) null else get(0)
+    fun firstOrNull(): FieldGroup? = fieldGroups.firstOrNull()?.let { FieldGroup.box(it) }
 
     @Synchronized
-    operator fun get(i: Int) = FieldGroup.box(fieldGroups[i])
+    fun lastOrNull(): FieldGroup? = fieldGroups.lastOrNull()?.let { FieldGroup.box(it) }
+
+    @Synchronized
+    operator fun get(index: Int): FieldGroup? = fieldGroups[index]?.let { FieldGroup.box(it) }
+
+    @Synchronized
+    fun getValue(index: Int, name: String) = get(index)?.get(name)
+
+    @Synchronized
+    fun findById(groupId: Int): FieldGroup? {
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
+    }
+
+    @Synchronized
+    fun findValueById(groupId: Int, name: String): String? = findById(groupId)?.get(name)
 
     @Synchronized
     fun add(fieldGroup: FieldGroup) {
@@ -57,8 +72,11 @@ class PageModel(
         pageModel.setDirty()
     }
 
+    @Deprecated("Inappropriate name", ReplaceWith("set(groupId, name, value)"))
+    fun add(groupId: Int, name: String, value: String) = set(groupId, name, value)
+
     @Synchronized
-    fun add(groupId: Int, name: String, value: String) {
+    fun set(groupId: Int, name: String, value: String) {
         val group = findById(groupId)
         val fields = group?.unbox()?.fields ?: mutableMapOf()
         fields[u8(name)] = value
@@ -85,12 +103,6 @@ class PageModel(
     }
 
     @Synchronized
-    fun findById(groupId: Int): FieldGroup? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
-        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
-    }
-
-    @Synchronized
     fun remove(groupId: Int) {
         fieldGroups.removeIf { it.id == groupId.toLong() }
         pageModel.setDirty()
@@ -98,10 +110,11 @@ class PageModel(
 
     @Synchronized
     fun remove(groupId: Int, key: String): String? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() } ?: return null
+        val gFieldGroup = findRawById(groupId) ?: return null
         val oldValue = gFieldGroup.fields.remove(u8(key)) ?: return null
 
         gFieldGroup.setDirty()
+        // Can we ignore pageModel's dirty flag?
         pageModel.setDirty()
 
         return oldValue.toString()
@@ -117,6 +130,12 @@ class PageModel(
     fun deepCopy(): PageModel {
         val other = GPageModel.newBuilder(pageModel).build()
         return PageModel(other)
+    }
+
+    private fun findRawById(groupId: Int) = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+
+    private fun removeRawById(groupId: Int, key: String): CharSequence? {
+        return findRawById(groupId)?.fields?.remove(u8(key))
     }
 
     @Synchronized
