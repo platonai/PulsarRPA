@@ -12,13 +12,13 @@ data class HyperlinkDatum(
      * */
     val text: String = "",
     /**
-     * The link order, e.g., in the referer page
+     * The link order, e.g., the order in which the link appears on the referrer page.
      * */
     val order: Int = 0,
     /**
-     * A hyperlink might have a referer, so the default value is null
+     * A hyperlink might have a referrer, so the default value is null
      * */
-    val referer: String? = null,
+    val referrer: String? = null,
     /**
      * The load argument, can be parsed into a LoadOptions
      * */
@@ -49,7 +49,7 @@ data class HyperlinkDatum(
  * */
 open class Hyperlink(
     /**
-     * The url of this hyperlink
+     * The url of the hyperlink
      * */
     url: String,
     /**
@@ -57,11 +57,11 @@ open class Hyperlink(
      * */
     var text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in it's referrer page
      * */
     var order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
     referrer: String? = null,
     /**
@@ -77,9 +77,9 @@ open class Hyperlink(
 
     constructor(url: UrlAware) : this(url.url, "", 0, url.referrer, url.args, href = url.href)
     constructor(url: Hyperlink) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
-    constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referer, url.args, href = url.href)
+    constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
 
-    fun data() = HyperlinkDatum(url, text, order, referer = referrer, args = args, href = href, true, 0)
+    fun data() = HyperlinkDatum(url, text, order, referrer = referrer, args = args, href = href, true, 0)
 }
 
 open class StatefulHyperlink(
@@ -92,13 +92,13 @@ open class StatefulHyperlink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink on its referrer page
      * */
     order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The url arguments
      * */
@@ -108,7 +108,7 @@ open class StatefulHyperlink(
      * for example, an url with a timestamp query parameter added
      * */
     href: String? = null
-) : Hyperlink(url, text, order, referer, args, href), StatefulUrl {
+) : Hyperlink(url, text, order, referrer, args, href), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -135,13 +135,13 @@ open class FatLink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in it's referrer page
      * */
     order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The url arguments
      * */
@@ -154,7 +154,7 @@ open class FatLink(
      * The tail links
      * */
     var tailLinks: List<StatefulHyperlink>
-) : Hyperlink(url, text, order, referer, args, href) {
+) : Hyperlink(url, text, order, referrer, args, href) {
     val size get() = tailLinks.size
     val isEmpty get() = size == 0
     val isNotEmpty get() = !isEmpty
@@ -172,13 +172,13 @@ open class StatefulFatLink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in it's referrer page
      * */
     order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The url arguments
      * */
@@ -191,7 +191,7 @@ open class StatefulFatLink(
      * The tail links
      * */
     tailLinks: List<StatefulHyperlink>
-) : FatLink(url, text, order, referer, args, href, tailLinks), StatefulUrl {
+) : FatLink(url, text, order, referrer, args, href, tailLinks), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -211,13 +211,13 @@ open class CrawlableFatLink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in it's referrer page
      * */
     order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The url arguments
      * */
@@ -230,7 +230,7 @@ open class CrawlableFatLink(
      * The tail links
      * */
     tailLinks: List<StatefulHyperlink> = listOf()
-) : StatefulFatLink(url, text, order, referer, args, href, tailLinks) {
+) : StatefulFatLink(url, text, order, referrer, args, href, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 

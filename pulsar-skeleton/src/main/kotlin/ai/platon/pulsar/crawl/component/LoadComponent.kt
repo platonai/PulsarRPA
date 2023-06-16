@@ -314,7 +314,7 @@ class LoadComponent(
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
-                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
+                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec, normUrl.referrer)
                 page = loadedPage
             }
 

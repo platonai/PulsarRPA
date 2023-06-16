@@ -31,7 +31,9 @@ class FetchEntry(val page: WebPage, val options: LoadOptions) {
                 it.args = options.toString()
                 it.maxRetries = options.nMaxRetry
                 it.isResource = options.isResource
-                it.referrer = referrer
+                if (referrer != null) {
+                    it.referrer = referrer
+                }
 
                 // since LoadOptions is not visible by WebPage, we use an unsafe method to pass the load options
                 it.setVar(PulsarParams.VAR_LOAD_OPTIONS, options)
