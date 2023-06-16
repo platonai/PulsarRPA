@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-7-26.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  * <p>
  * Header information returned from the web server used to serve the content which is subsequently fetched from.
  * This includes keys such as

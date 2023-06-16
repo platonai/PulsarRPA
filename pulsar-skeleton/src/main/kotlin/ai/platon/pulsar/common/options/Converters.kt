@@ -14,7 +14,7 @@ import java.util.*
 
 /**
  * Created by vincent on 17-4-7.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class DurationConverter : IStringConverter<Duration> {
     override fun convert(value: String): Duration {
@@ -78,7 +78,7 @@ class ItemExtractorConverter : IStringConverter<ItemExtractor> {
 
 /**
  * Created by vincent on 17-4-7.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class WeightedKeywordsConverter : IStringConverter<Map<String, Double>> {
     override fun convert(value: String): Map<String, Double> {

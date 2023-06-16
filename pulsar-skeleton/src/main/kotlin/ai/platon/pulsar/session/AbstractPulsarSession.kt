@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Created by vincent on 18-1-17.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 abstract class AbstractPulsarSession(
     /**

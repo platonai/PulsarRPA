@@ -6,7 +6,7 @@ import ai.platon.pulsar.persist.gora.generated.GPageModel
 
 /**
  * Created by vincent on 17-8-3.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  *
  * The core concept of Page Model
  */

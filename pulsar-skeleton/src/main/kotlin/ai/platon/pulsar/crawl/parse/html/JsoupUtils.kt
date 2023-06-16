@@ -11,7 +11,7 @@ import java.util.function.Consumer
 
 /**
  * Created by vincent on 17-8-9.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 object JsoupUtils {
     fun sanitize(doc: Document, pithy: Boolean): Document {

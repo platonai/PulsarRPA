@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.metrics
 
 /**
  * Created by vincent on 17-4-5.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 enum class CommonCounter {
     mRows, rRows, mDetail, rDetail, mPersist, mDepth0, mDepth1, mDepth2, mDepth3, mDepthN,

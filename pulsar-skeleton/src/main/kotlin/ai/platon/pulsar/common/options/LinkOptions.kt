@@ -11,7 +11,7 @@ import java.util.function.Predicate
 
 /**
  * Created by vincent on 17-3-18.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class LinkOptions : PulsarOptions {
     @Parameter(names = ["-css", "--restrict-css"], description = "Path to the DOM to follow links")

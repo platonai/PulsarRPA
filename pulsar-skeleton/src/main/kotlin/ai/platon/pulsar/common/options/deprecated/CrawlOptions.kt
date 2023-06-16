@@ -17,7 +17,7 @@ import java.util.*
 
 /**
  * Created by vincent on 17-3-18.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class CrawlOptions(argv: Array<String>) : CommonOptions(argv) {
 
