@@ -80,7 +80,7 @@ interface WebDriver: Closeable {
     /**
      * The navigation history.
      * */
-    val navigateHistory: MutableList<NavigateEntry>
+    val navigateHistory: NavigateHistory
     /**
      * The browser type.
      * */

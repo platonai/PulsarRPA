@@ -49,7 +49,7 @@ abstract class AbstractWebDriver(
 
     override var navigateEntry: NavigateEntry = NavigateEntry("")
 
-    override val navigateHistory: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
+    override val navigateHistory = NavigateHistory()
 
     override val supportJavascript: Boolean = true
 

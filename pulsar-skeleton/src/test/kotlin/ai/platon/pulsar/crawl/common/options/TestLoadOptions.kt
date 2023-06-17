@@ -43,6 +43,13 @@ class TestLoadOptions {
     }
 
     @Test
+    fun testSpecialChar() {
+        val args = "-label com.br"
+        val options = LoadOptions.parse(args)
+        assertEquals("com.br", options.label)
+    }
+
+    @Test
     fun testArityOptions() {
         val options = LoadOptions.create(VolatileConfig.UNSAFE).apply {
             storeContent = true
