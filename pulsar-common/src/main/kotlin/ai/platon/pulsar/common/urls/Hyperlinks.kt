@@ -57,7 +57,7 @@ open class Hyperlink(
      * */
     var text: String = "",
     /**
-     * The order of this hyperlink in it's referrer page
+     * The order of this hyperlink in it referrer page
      * */
     var order: Int = 0,
     /**
@@ -104,8 +104,7 @@ open class StatefulHyperlink(
      * */
     args: String? = null,
     /**
-     * A click url is a url variant, it's the raw url in the html without normalization,
-     * for example, an url with a timestamp query parameter added
+     * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
     href: String? = null
 ) : Hyperlink(url, text, order, referrer, args, href), StatefulUrl {
