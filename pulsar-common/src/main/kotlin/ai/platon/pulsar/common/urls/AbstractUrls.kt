@@ -91,8 +91,8 @@ abstract class AbstractUrl(
 abstract class AbstractStatefulUrl(
     url: String,
     args: String? = null,
-    referer: String? = null
-) : AbstractUrl(url, args, referer), StatefulUrl {
+    referrer: String? = null
+) : AbstractUrl(url, args, referrer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()

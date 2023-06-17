@@ -33,13 +33,13 @@ open class ListenableHyperlink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in its referrer page
      * */
     order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The url arguments
      * */
@@ -53,7 +53,7 @@ open class ListenableHyperlink(
      * The event handler
      * */
     override var event: PageEvent = DefaultPageEvent(),
-): Hyperlink(url, text, order, referer, args, href), ListenableUrl {
+): Hyperlink(url, text, order, referrer, args, href), ListenableUrl {
     /**
      * A listenable url is not a persistence object because the event handler is not persistent
      * */
@@ -70,13 +70,13 @@ open class StatefulListenableHyperlink(
          * */
         text: String = "",
         /**
-         * The order of this hyperlink in it's referer page
+         * The order of this hyperlink in its referrer page
          * */
         order: Int = 0,
         /**
-         * The url of the referer page
+         * The url of the referrer page
          * */
-        referer: String? = null,
+        referrer: String? = null,
         /**
          * The url arguments
          * */
@@ -90,7 +90,7 @@ open class StatefulListenableHyperlink(
          * The event handler
          * */
         override var event: PageEvent = DefaultPageEvent()
-): StatefulHyperlink(url, text, order, referer, args, href), ListenableUrl {
+): StatefulHyperlink(url, text, order, referrer, args, href), ListenableUrl {
 
     override val isPersistable: Boolean = false
 
@@ -128,11 +128,11 @@ open class CompletableHyperlink<T>(
      * */
     var text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in it's referrer page
      * */
     var order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
     override var referrer: String? = null,
     /**
@@ -234,13 +234,13 @@ open class CompletableListenableHyperlink<T>(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referer page
+     * The order of this hyperlink in it's referrer page
      * */
     order: Int = 0,
     /**
-     * The url of the referer page
+     * The url of the referrer page
      * */
-    referer: String? = null,
+    referrer: String? = null,
     /**
      * The url arguments
      * */
@@ -254,7 +254,7 @@ open class CompletableListenableHyperlink<T>(
      * */
     override var event: PageEvent = DefaultPageEvent()
 ): UrlAware, Comparable<UrlAware>, ListenableUrl,
-    CompletableHyperlink<T>(url, text, order, referer, args, href)
+    CompletableHyperlink<T>(url, text, order, referrer, args, href)
 
 internal class CompleteWebPageHyperlinkHandler(val link: CompletableListenableHyperlink<WebPage>): WebPageHandler() {
     override fun invoke(page: WebPage) {

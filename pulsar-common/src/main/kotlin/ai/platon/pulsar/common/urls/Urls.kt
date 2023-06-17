@@ -37,7 +37,7 @@ interface UrlAware {
     var href: String?
 
     /**
-     * The referer
+     * The referrer
      * */
     var referrer: String?
 

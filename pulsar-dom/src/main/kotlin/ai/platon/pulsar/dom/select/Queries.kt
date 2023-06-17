@@ -276,7 +276,7 @@ fun Node.selectHyperlinks(query: String, offset: Int = 1, limit: Int = Int.MAX_V
 
 //    return select(cssQuery, offset, limit).mapNotNull {
 //        it.takeIf { UrlUtils.isStandard(it.absUrl("href")) }
-//            ?.let { Hyperlink(it.absUrl("href"), it.cleanText, referer = baseUri()) }
+//            ?.let { Hyperlink(it.absUrl("href"), it.cleanText, referrer = baseUri()) }
 
     return select(cssQuery, offset, limit).asSequence()
         .map { it to it.absUrl("href") }

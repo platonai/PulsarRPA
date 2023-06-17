@@ -75,8 +75,8 @@ open class RegexHyperlinkExtractor(
         var i = 0
         val parsedUrls = restrictedSection.collectNotNull { node ->
             node.takeIf { it.isAnchor }?.attr("abs:href")
-                ?.takeIf { UrlUtils.isValidUrl(it) && it.matches(urlRegex) }
-                ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, referer = page.url) }
+                ?.takeIf { UrlUtils.isStandard(it) && it.matches(urlRegex) }
+                ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, referrer = page.url) }
         }
         parsedUrls.toCollection(fetchUrls)
 

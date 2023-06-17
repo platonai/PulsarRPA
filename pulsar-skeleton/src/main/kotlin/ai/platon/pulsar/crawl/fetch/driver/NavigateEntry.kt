@@ -23,7 +23,7 @@ data class NavigateEntry(
      * */
     val pageUrl: String = "",
     /**
-     * The referer claimed by the page.
+     * The referrer claimed by the page.
      */
     var pageReferrer: String? = null,
     /**
