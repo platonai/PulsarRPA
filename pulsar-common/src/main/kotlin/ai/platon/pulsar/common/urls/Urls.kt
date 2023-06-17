@@ -32,6 +32,11 @@ interface UrlAware {
     var args: String?
 
     /**
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    var href: String?
+
+    /**
      * The referer
      * */
     var referrer: String?
@@ -41,11 +46,6 @@ interface UrlAware {
      * */
     @Deprecated("Inappropriate name", ReplaceWith("referrer"))
     val referer: String? get() = referrer
-
-    /**
-     * The hypertext reference, It defines the address of the document, which this time is linked from
-     * */
-    var href: String?
 
     /**
      * The priority

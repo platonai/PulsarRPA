@@ -39,33 +39,68 @@ class PageModel(
 
     fun unbox() = pageModel
 
+    /**
+     * Return the first field group.
+     * */
     @Synchronized
     fun firstOrNull(): FieldGroup? = fieldGroups.firstOrNull()?.let { FieldGroup.box(it) }
 
+    /**
+     * Return the last field group.
+     * */
     @Synchronized
     fun lastOrNull(): FieldGroup? = fieldGroups.lastOrNull()?.let { FieldGroup.box(it) }
 
+    /**
+     * Return the n-th field group.
+     * */
     @Synchronized
     operator fun get(index: Int): FieldGroup? = fieldGroups[index]?.let { FieldGroup.box(it) }
 
+    /**
+     * Get the n-th field group and retrieve the value associated with [name].
+     * */
     @Synchronized
     fun getValue(index: Int, name: String) = get(index)?.get(name)
 
+    @Deprecated("Inappropriate name", ReplaceWith("findGroup(groupId)"))
     @Synchronized
     fun findById(groupId: Int): FieldGroup? {
         val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
         return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
     }
 
+    @Deprecated("Inappropriate name", ReplaceWith("findValue(groupId, name)"))
     @Synchronized
     fun findValueById(groupId: Int, name: String): String? = findById(groupId)?.get(name)
 
+    /**
+     * Find the field group whose id is [groupId].
+     * */
+    @Synchronized
+    fun findGroup(groupId: Int): FieldGroup? {
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
+    }
+
+    /**
+     * Find the field group whose id is [groupId] and retrieve the value associated with [name].
+     * */
+    @Synchronized
+    fun findValue(groupId: Int, name: String): String? = findGroup(groupId)?.get(name)
+
+    /**
+     * Add a field group.
+     * */
     @Synchronized
     fun add(fieldGroup: FieldGroup) {
         fieldGroups.add(fieldGroup.unbox())
         pageModel.setDirty()
     }
 
+    /**
+     * Add a field group.
+     * */
     @Synchronized
     fun add(index: Int, fieldGroup: FieldGroup) {
         fieldGroups.add(index, fieldGroup.unbox())
@@ -75,9 +110,12 @@ class PageModel(
     @Deprecated("Inappropriate name", ReplaceWith("set(groupId, name, value)"))
     fun add(groupId: Int, name: String, value: String) = set(groupId, name, value)
 
+    /**
+     * Set a field entry to field group whose id is [groupId].
+     * */
     @Synchronized
     fun set(groupId: Int, name: String, value: String) {
-        val group = findById(groupId)
+        val group = findGroup(groupId)
         val fields = group?.unbox()?.fields ?: mutableMapOf()
         fields[u8(name)] = value
 

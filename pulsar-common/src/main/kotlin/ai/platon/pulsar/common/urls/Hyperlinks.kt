@@ -284,6 +284,6 @@ object Hyperlinks {
      * */
     fun toHyperlink(url: UrlAware): Hyperlink {
         return if (url is Hyperlink) url
-        else Hyperlink(url.url, args = url.args, referrer = url.referrer, href = url.href)
+        else Hyperlink(url.url, args = url.args, href = url.href, referrer = url.referrer)
     }
 }

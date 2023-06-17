@@ -61,6 +61,8 @@ class TestGoraStorage {
             return
         }
 
+        println("Test with store " + store::class)
+
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
         var page = WebPageExt.newTestWebPage(url)
         assertEquals(url, page.url)
