@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.DateTimes
 import java.time.Instant
 
 /**
@@ -57,7 +58,7 @@ data class NavigateEntry(
     /**
      * The time when the document is ready.
      */
-    var documentReadyTime = Instant.MAX
+    var documentReadyTime = DateTimes.doomsday
     /**
      * Track the time of page actions.
      */

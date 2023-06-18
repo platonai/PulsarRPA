@@ -28,7 +28,7 @@ class NavigateHistory {
 
     fun contains(url: String) = history.any { it.url == url }
 
-    fun contains(urlRegex: Regex) = history.any { it.url.matches(urlRegex) }
+    fun contains(urlRegex: Regex) = history.any { it.url.contains(urlRegex) }
 
     fun firstOrNull(url: String) = history.firstOrNull { it.url == url }
 
