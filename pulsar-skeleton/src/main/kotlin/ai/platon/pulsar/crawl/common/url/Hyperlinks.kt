@@ -33,7 +33,7 @@ open class ListenableHyperlink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in its referrer page
+     * The order of this hyperlink on its referrer page
      * */
     order: Int = 0,
     /**
@@ -70,7 +70,7 @@ open class StatefulListenableHyperlink(
          * */
         text: String = "",
         /**
-         * The order of this hyperlink in its referrer page
+         * The order of this hyperlink on its referrer page
          * */
         order: Int = 0,
         /**

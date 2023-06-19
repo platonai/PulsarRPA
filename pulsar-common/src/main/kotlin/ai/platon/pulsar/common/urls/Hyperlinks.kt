@@ -6,6 +6,9 @@ import java.time.Duration
 import java.time.Instant
 
 data class HyperlinkDatum(
+    /**
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
+     * */
     val url: String,
     /**
      * A hyperlink should have a text, so the default value is an empty string
@@ -45,11 +48,11 @@ data class HyperlinkDatum(
  * Hypertext is text with hyperlinks. The text that is linked from is called anchor text.
  *
  * The [anchor text](https://en.wikipedia.org/wiki/Anchor_text), link label or link text is the visible,
- * clickable text in an HTML hyperlink
+ * clickable text in an HTML hyperlink.
  * */
 open class Hyperlink(
     /**
-     * The url of the hyperlink
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
      * */
     url: String,
     /**
@@ -84,7 +87,7 @@ open class Hyperlink(
 
 open class StatefulHyperlink(
     /**
-     * The url of this hyperlink
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
      * */
     url: String,
     /**
@@ -126,7 +129,7 @@ val StatefulHyperlink.isFinished get() = !isCreated && !isAccepted && !isProcess
  * */
 open class FatLink(
     /**
-     * The url of this hyperlink
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
      * */
     url: String,
     /**
@@ -134,7 +137,7 @@ open class FatLink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referrer page
+     * The order of this hyperlink on its referrer page
      * */
     order: Int = 0,
     /**
@@ -146,7 +149,7 @@ open class FatLink(
      * */
     args: String? = null,
     /**
-     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * The hypertext reference, it defines the address of the document on the referrer page
      * */
     href: String? = null,
     /**
@@ -163,7 +166,7 @@ open class FatLink(
 
 open class StatefulFatLink(
     /**
-     * The url of this hyperlink
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
      * */
     url: String,
     /**
@@ -202,7 +205,7 @@ open class StatefulFatLink(
 
 open class CrawlableFatLink(
     /**
-     * The url of this hyperlink
+     * The url specification of the hyperlink, it is usually normalized, and can contain load arguments.
      * */
     url: String,
     /**

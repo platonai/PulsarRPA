@@ -17,7 +17,13 @@ class JsEvaluation(
     var exception: JsException? = null
 )
 
+/**
+ * The webpage navigation history.
+ * */
 class NavigateHistory {
+    /**
+     * Navigate history is small, so search is very fast in a list.
+     * */
     val history: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
 
     fun isEmpty() = history.isEmpty()

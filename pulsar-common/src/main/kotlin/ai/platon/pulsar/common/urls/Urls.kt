@@ -22,7 +22,7 @@ interface DegenerateUrl {
  * */
 interface UrlAware {
     /**
-     * The url, it can be configured or not
+     * The url specification, it is usually normalized, and can contain load arguments.
      * */
     var url: String
 

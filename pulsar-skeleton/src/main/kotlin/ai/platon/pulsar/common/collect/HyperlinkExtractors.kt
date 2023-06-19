@@ -31,7 +31,7 @@ open class HyperlinkExtractor(
 
         var i = 0
         val parsedUrls = document.select(selector0).mapNotNull { element ->
-            element.attr("abs:href").takeIf { UrlUtils.isValidUrl(it) }
+            element.attr("abs:href").takeIf { UrlUtils.isStandard(it) }
                 ?.let { Pair(it, normalizer?.invoke(it) ?: it) }
                 ?.let { Hyperlink(it.second, element.text(), i++, referrer = page.url, href = it.first) }
         }
