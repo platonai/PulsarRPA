@@ -23,9 +23,14 @@ class TestOptions {
         )
 
         argsList.forEach { args ->
-            val result = "-label\\s+([\\-_a-zA-Z0-9]+)(\\s)?".toRegex().find(args)
+            val result = "-label\\s+([\\-_a-zA-Z0-9]+)\\s?".toRegex().find(args)
             assertNotNull(result)
-            assertEquals(3, result.groups.size)
+
+            println("$args")
+            result.groups.forEach { println(it) }
+            println()
+
+            assertEquals(2, result.groups.size)
             assertEquals(label, result.groupValues[1])
         }
 
