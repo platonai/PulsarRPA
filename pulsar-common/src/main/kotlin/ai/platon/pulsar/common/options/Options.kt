@@ -2,9 +2,12 @@ package ai.platon.pulsar.common.options
 
 object OptionUtils {
 
+    // typical options: best-seller, com.br
+    val OPTION_REGEX = "\\s+([\\\\.\\-_a-zA-Z0-9]+)\\s?"
+
     fun findOption(args: String?, optionName: String): String? {
         val s = args ?: return null
-        return "$optionName\\s+([\\-_a-zA-Z0-9]+)\\s?".toRegex().find(s)?.groupValues?.get(1)
+        return "$optionName$OPTION_REGEX".toRegex().find(s)?.groupValues?.get(1)
     }
 
     fun findOption(args: String?, optionNames: Iterable<String>): String? {

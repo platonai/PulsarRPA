@@ -33,6 +33,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
+    /**
+     * TODO: session/page scope id generator
+     * */
     open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
 
     val isClosed get() = closed.get()
