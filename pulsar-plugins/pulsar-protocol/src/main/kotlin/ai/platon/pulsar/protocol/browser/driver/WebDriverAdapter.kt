@@ -29,7 +29,7 @@ class WebDriverAdapter(
         get() = driver.navigateEntry
         set(value) { driver.navigateEntry = value }
 
-    override val navigateHistory: MutableList<NavigateEntry> get() = driver.navigateHistory
+    override val navigateHistory get() = driver.navigateHistory
 
     /**
      * The browser type

@@ -294,9 +294,9 @@ open class BrowserSettings(
          * Generate a user data directory.
          * */
         fun generateUserDataDir(): Path {
-            val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
+            val numInstances = Files.list(AppPaths.CONTEXT_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
-            return AppPaths.BROWSER_TMP_DIR.resolve("br.$numInstances$rand")
+            return AppPaths.CONTEXT_TMP_DIR.resolve("cx.$numInstances$rand")
         }
     }
 
@@ -364,12 +364,12 @@ open class BrowserSettings(
      * Check if url blocking is enabled.
      * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
-    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 0"))
-    val isUrlBlockingEnabled get() = resourceBlockProbability > 0
+    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 1e-6"))
+    val isUrlBlockingEnabled get() = resourceBlockProbability > 1e-6
     /**
-     * Check if user agent overriding is enabled. User agent overriding disabled by default,
-     * since inappropriate user agent overriding will be detected by the target website and
-     * the visits will be blocked.
+     * Check if user agent overriding is enabled. User agent overriding is disabled by default,
+     * because inappropriate user agent overriding can be detected by the website,
+     * furthermore, there is no obvious benefits to rotate the user agent.
      * */
     val isUserAgentOverridingEnabled get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
 
@@ -413,12 +413,34 @@ enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
  * The interaction settings
  * */
 data class InteractSettings constructor(
+    /**
+     * The number of scroll downs on the page.
+     * */
     var scrollCount: Int = 3,
+    /**
+     * The time interval to scroll down on the page.
+     * */
     var scrollInterval: Duration = Duration.ofMillis(500),
+    /**
+     * Timeout for executing custom scripts on the page.
+     * */
     var scriptTimeout: Duration = Duration.ofMinutes(1),
+    /**
+     * Timeout for loading a webpage.
+     * */
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
+    /**
+     * Whether to bring the webpage to the front.
+     * */
     var bringToFront: Boolean = false,
-    // (0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
+    /**
+     * Page positions to scroll to, these numbers are percentages of the total height,
+     * e.g., 0.2 means to scroll to 20% of the height of the page.
+     *
+     * Some typical positions are:
+     * * 0.3,0.75,0.4,0.5
+     * * 0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75
+     * */
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
     @JsonIgnore

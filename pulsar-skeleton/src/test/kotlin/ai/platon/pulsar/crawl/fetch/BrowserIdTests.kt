@@ -47,8 +47,8 @@ class BrowserIdTests {
         println(id.contextDir)
         println(id.userDataDir)
         assertFalse { id.userDataDir.toString().contains("google-chrome") }
-        assertEquals(id.contextDir, PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER)
-        assertEquals(id.userDataDir, PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER)
-        assertTrue { id.userDataDir.startsWith(PrivacyContext.SYSTEM_DEFAULT_DIR_PLACEHOLDER) }
+        assertEquals(id.contextDir, PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER)
+        assertEquals(id.userDataDir, PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER)
+        assertTrue { id.userDataDir.startsWith(PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER) }
     }
 }

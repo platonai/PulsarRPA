@@ -19,6 +19,7 @@ import com.github.kklisura.cdt.protocol.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import com.github.kklisura.cdt.protocol.types.runtime.Evaluate
 import kotlinx.coroutines.delay
+import org.apache.commons.math3.util.MathUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.time.Duration
@@ -133,7 +134,7 @@ class ChromeDevtoolsDriver(
         browser.emit(BrowserEvents.willNavigate, entry)
 
         try {
-            enableAgents()
+            enableAPIAgents()
 
             rpc.invokeDeferred("navigateTo") {
                 if (enableStartupScript) navigateInvaded(entry) else navigateNonInvaded(entry)
@@ -168,7 +169,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
-        enableAgents()
+        enableAPIAgents()
         val cookies = networkAPI?.cookies?.map { serialize(it) }
         networkAPI?.disable()
         return cookies ?: listOf()
@@ -754,20 +755,23 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    fun enableAgents() {
+    fun enableAPIAgents() {
         pageAPI?.enable()
         domAPI?.enable()
         runtimeAPI?.enable()
         networkAPI?.enable()
         cssAPI?.enable()
 
-        if (resourceBlockProbability > 0.0f) {
+        if (resourceBlockProbability > 1e-6) {
             fetchAPI?.enable()
         }
     }
 
-    override fun toString() = "DevTools driver ($lastSessionId)"
+    override fun toString() = "Driver#$id"
 
+    /**
+     * Navigate to the page and inject scripts.
+     * */
     private fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
 
@@ -795,7 +799,7 @@ class ChromeDevtoolsDriver(
                 entry.mainRequestHeaders = requestWillBeSent.request.headers
             }
 
-            if (resourceBlockProbability > 0.0f) {
+            if (resourceBlockProbability > 1e-6) {
                 val requestUrl = requestWillBeSent.request.url
                 if (probabilityBlockedURLs.any { requestUrl.matches(it.toRegex()) }) {
                     // random drop requests

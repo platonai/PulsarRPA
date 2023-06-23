@@ -22,7 +22,7 @@ interface DegenerateUrl {
  * */
 interface UrlAware {
     /**
-     * The url, it can be configured or not
+     * The url specification, it is usually normalized, and can contain load arguments.
      * */
     var url: String
 
@@ -32,7 +32,12 @@ interface UrlAware {
     var args: String?
 
     /**
-     * The referer
+     * The hypertext reference, It defines the address of the document, which this time is linked from
+     * */
+    var href: String?
+
+    /**
+     * The referrer
      * */
     var referrer: String?
 
@@ -41,11 +46,6 @@ interface UrlAware {
      * */
     @Deprecated("Inappropriate name", ReplaceWith("referrer"))
     val referer: String? get() = referrer
-
-    /**
-     * The hypertext reference, It defines the address of the document, which this time is linked from
-     * */
-    var href: String?
 
     /**
      * The priority

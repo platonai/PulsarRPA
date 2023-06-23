@@ -701,7 +701,7 @@ open class LoadOptions(
 
         rawEvent?.let { putBean(it) }
         setEnum(CapabilityTypes.BROWSER_TYPE, browser)
-        // incognito is not used since the browser is always running in temporary contexts
+        // incognito mode is never used because the browsers are always running in temporary contexts
         setBoolean(CapabilityTypes.BROWSER_INCOGNITO, incognito)
     }
 

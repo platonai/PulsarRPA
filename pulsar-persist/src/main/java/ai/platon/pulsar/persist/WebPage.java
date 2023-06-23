@@ -267,18 +267,36 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Gora wraps map with a DirtyMapWrapper and requires the key's type to be Utf8.
+     * Return a Utf8 string.
+     *
+     * Unlike {@link String}, instances are mutable. This is more
+     * efficient than {@link String} when reading or writing a sequence of values,
+     * as a single instance may be reused.
      * */
     @NotNull
     public static Utf8 wrapKey(@NotNull String key) {
         return u8(key);
     }
 
+    /**
+     * Return a Utf8 string.
+     *
+     * Unlike {@link String}, instances are mutable. This is more
+     * efficient than {@link String} when reading or writing a sequence of values,
+     * as a single instance may be reused.
+     * */
     @NotNull
     public static Utf8 wrapKey(@NotNull Mark mark) {
         return u8(mark.value());
     }
 
+    /**
+     * Return a Utf8 string.
+     *
+     * Unlike {@link String}, instances are mutable. This is more
+     * efficient than {@link String} when reading or writing a sequence of values,
+     * as a single instance may be reused.
+     * */
     @Nullable
     public static Utf8 u8(@Nullable String value) {
         if (value == null) {
@@ -303,6 +321,9 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return reversedUrl;
     }
 
+    /**
+     * A non-persistable page id, the id is process scope.
+     * */
     public int getId() {
         return id;
     }

@@ -57,7 +57,7 @@ class JsoupParser(
         val metadata = document.document.selectFirstOrNull(selector) ?: return
 
         page.href?.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("href", it) }
-        page.referrer.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("referer", it) }
+        page.referrer.takeIf { UrlUtils.isStandard(it) }?.let { metadata.attr("referrer", it) }
 
         val options = page.options
 

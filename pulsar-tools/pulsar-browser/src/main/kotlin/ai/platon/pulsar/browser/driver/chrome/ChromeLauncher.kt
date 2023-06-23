@@ -31,7 +31,8 @@ class ChromeLauncher(
 ) : AutoCloseable {
 
     companion object {
-        private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        val USER_DATA_DIR_REGEX = ".+pulsar-.+/context/cx.+".toRegex()
+        val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
@@ -281,9 +282,11 @@ class ChromeLauncher(
         val target = userDataDir
 
         // seems safe enough to delete directory matching special pattern
-        val forceDelete = target.toString().matches(".+pulsar-.+/context/cx.+".toRegex())
-        // delete user data dir only if it's in the system tmp dir to prevent deleting files by mistake
-        if (forceDelete || target.startsWith(AppPaths.SYS_TMP_DIR)) {
+        val forceDelete = target.toString().matches(USER_DATA_DIR_REGEX)
+        // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
+        // especially, do not delete the following directories:
+        // AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER, AppPaths.CONTEXT_TMP_DIR, AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        if (forceDelete || target.startsWith(AppPaths.CONTEXT_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
                 logger.warn("Failed to delete browser cache, try again | {}", target)

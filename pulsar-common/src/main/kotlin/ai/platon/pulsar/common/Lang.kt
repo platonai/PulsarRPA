@@ -53,6 +53,11 @@ enum class Priority5(val value: Int) {
     LOWEST(Int.MAX_VALUE / 10)
 }
 
+/**
+ * Smaller value, higher priority, keep consistent with PriorityQueue
+ *
+ * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
+ * */
 enum class Priority13(val value: Int) {
     HIGHEST(Int.MIN_VALUE / 10),
     HIGHER5(-5000),
@@ -83,9 +88,22 @@ enum class Priority13(val value: Int) {
         fun valueOfOrNull(value: Int): Priority13? {
             return values().firstOrNull { it.value == value }
         }
+
+        fun lowerPriority(value: Int): Priority13 {
+            return values().sortedBy { it.value }.firstOrNull { it.value >= value } ?: LOWEST
+        }
+
+        fun upperPriority(value: Int): Priority13 {
+            return values().sortedBy { it.value }.lastOrNull { it.value <= value } ?: HIGHEST
+        }
     }
 }
 
+/**
+ * Smaller value, higher priority, keep consistent with PriorityQueue
+ *
+ * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
+ * */
 enum class Priority21(val value: Int) {
     HIGHEST(Int.MIN_VALUE / 10),
     HIGHER9(-9000),

@@ -101,15 +101,10 @@ open class WebDriverPoolManager(
         "idleTime" to Gauge { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
-    private val monitorStrategy = immutableConfig[CapabilityTypes.MONITOR_STRATEGY]
     private var lastMaintainTime = Instant.now()
     private val maintainCount = AtomicInteger()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
-    /**
-     * The thread executor to execute the maintaining task.
-     * */
-    private val maintainService = if (monitorStrategy == "AUTO") Executors.newSingleThreadExecutor() else null
 
     /**
      * The web driver pool closer
@@ -383,9 +378,6 @@ open class WebDriverPoolManager(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            // Attempts to stop all actively executing tasks, halts the processing of waiting tasks
-            maintainService?.runCatching { shutdownNow() }?.onFailure { logger.warn(it.stringify()) }
-
             _deferredTasks.values.forEach {
                 // Cancels job, including all its children with a specified diagnostic error
                 it.cancel("Program is closed")
@@ -410,9 +402,6 @@ open class WebDriverPoolManager(
     private suspend fun doRun(task: WebDriverTask): FetchResult? {
         val result = runWithDriverPool(task)
 
-        // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not working well.
-        // newSingleThreadExecutor() still prevents the program from existing
-//        maintainService.submit { maintain() }
         maintain()
 
         return result

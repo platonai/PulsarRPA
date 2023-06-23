@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Created by vincent on 17-1-14.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 public class TestJavaFeatures {
 

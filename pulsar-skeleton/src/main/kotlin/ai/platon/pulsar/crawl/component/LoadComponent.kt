@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Created by vincent on 17-7-15.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  *
  * Load pages from storage or fetch from the Internet if it's not fetched or expired
  */
@@ -314,7 +314,7 @@ class LoadComponent(
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
-                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
+                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec, normUrl.referrer)
                 page = loadedPage
             }
 

@@ -18,10 +18,8 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     val userAgent: String?
     /**
      * The navigation history.
-     *
-     * Navigate history is small, so search is very fast for a list.
      * */
-    val navigateHistory: List<NavigateEntry>
+    val navigateHistory: NavigateHistory
     /**
      * The created drivers by this browser.
      * */

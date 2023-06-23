@@ -32,7 +32,7 @@ import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved.
+ * Copyright @ 2013-2023 Platon AI. All rights reserved.
  */
 open class InteractiveBrowserEmulator(
     val driverPoolManager: WebDriverPoolManager,

@@ -7,7 +7,7 @@ import ai.platon.pulsar.context.support.AbstractPulsarContext
 
 /**
  * Created by vincent on 18-1-17.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 open class BasicPulsarSession(
     /**

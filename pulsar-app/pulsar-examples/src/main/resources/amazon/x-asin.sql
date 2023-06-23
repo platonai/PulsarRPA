@@ -231,6 +231,7 @@ select
     -- variables from metadata
     dom_first_attr(dom, '#PulsarMetaInformation', 'href') as `meta_href`,
     dom_first_attr(dom, '#PulsarMetaInformation', 'referer') as `meta_referer`,
+    dom_first_attr(dom, '#PulsarMetaInformation', 'referrer') as `meta_referrer`,
     dom_first_attr(dom, '#PulsarMetaInformation', 'label') as `meta_label`,
     time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `meta_task_time`,
 

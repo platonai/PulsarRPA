@@ -4,14 +4,12 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.MONITOR_STRATEGY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -26,7 +24,6 @@ import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 class MultiPrivacyContextManager(
@@ -57,12 +54,10 @@ class MultiPrivacyContextManager(
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
 
-    private val monitorStrategy = conf[MONITOR_STRATEGY]
     internal val maintainCount = AtomicInteger()
     private var lastMaintainTime = Instant.now()
     private val minMaintainInterval = Duration.ofSeconds(10)
     private val tooFrequentMaintenance get() = DateTimes.elapsedTime(lastMaintainTime) < minMaintainInterval
-    private val maintainService = if (monitorStrategy == "AUTO") Executors.newSingleThreadExecutor() else null
 
     private var driverAbsenceReportTime = Instant.EPOCH
 
@@ -101,8 +96,9 @@ class MultiPrivacyContextManager(
         val privacyContext = computeNextContext(task.fingerprint)
         val result = runIfPrivacyContextActive(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
-        // TODO: a scheduled service is better, but ScheduledService can not be shutdown gracefully at shutdown google's guava provides MoreExecutors to fix the problem, but it seems not work.
-        maintainService?.submit { maintain() }
+        // maintain after run and also start a scheduled monitor,
+        // so We can periodically run maintenance processes even when the system is idle.
+        maintain()
 
         return result
     }
@@ -226,10 +222,6 @@ class MultiPrivacyContextManager(
     }
 
     override fun close() {
-        if (!isClosed) {
-            maintainService?.runCatching { shutdownNow() }?.onFailure { logger.warn(it.stringify()) }
-        }
-
         super.close()
     }
 

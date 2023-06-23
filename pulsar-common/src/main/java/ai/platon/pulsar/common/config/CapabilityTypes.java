@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.config;
 
 /**
  * Created by vincent on 17-1-17.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  *
  * @author vincent
  * @version $Id: $Id
@@ -430,8 +430,6 @@ public interface CapabilityTypes {
     String INDEXER_ZK = "indexer.zookeeper.hosts";
     String INDEXER_COLLECTION = "indexer.collection";
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
-
-    String MONITOR_STRATEGY = "monitor.start.strategy";
 
     /**
      * Create default data collectors or not

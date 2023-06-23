@@ -5,14 +5,25 @@ import ai.platon.pulsar.persist.gora.generated.GPageModel
 
 /**
  * Created by vincent on 17-8-3.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  *
- *
- * The core concept of Document Data Model, DDM
+ * The core concept of Page Model
  */
 class PageModel(
         val pageModel: GPageModel
 ) {
+    companion object {
+        const val DEFAULT_GROUP_ID = 1
+
+        @JvmStatic
+        fun box(pageModel: GPageModel): PageModel {
+            return PageModel(pageModel)
+        }
+    }
+
+    /**
+     * TODO: Find out a way to partially update nested fields.
+     * */
     @get:Synchronized
     val fieldGroups get() = pageModel.fieldGroups
 
@@ -39,33 +50,86 @@ class PageModel(
 
     fun unbox() = pageModel
 
+    /**
+     * Return the first field group.
+     * */
     @Synchronized
-    fun firstOrNull() = if (isEmpty) null else get(0)
+    fun firstOrNull(): FieldGroup? = fieldGroups.firstOrNull()?.let { FieldGroup.box(it) }
 
+    /**
+     * Return the last field group.
+     * */
     @Synchronized
-    operator fun get(i: Int) = FieldGroup.box(fieldGroups[i])
+    fun lastOrNull(): FieldGroup? = fieldGroups.lastOrNull()?.let { FieldGroup.box(it) }
 
+    /**
+     * Return the n-th field group.
+     * */
+    @Synchronized
+    operator fun get(index: Int): FieldGroup? = fieldGroups[index]?.let { FieldGroup.box(it) }
+
+    /**
+     * Get the n-th field group and retrieve the value associated with [name].
+     * */
+    @Synchronized
+    fun getValue(index: Int, name: String) = get(index)?.get(name)
+
+    @Deprecated("Inappropriate name", ReplaceWith("findGroup(groupId)"))
+    @Synchronized
+    fun findById(groupId: Int): FieldGroup? {
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
+    }
+
+    @Deprecated("Inappropriate name", ReplaceWith("findValue(groupId, name)"))
+    @Synchronized
+    fun findValueById(groupId: Int, name: String): String? = findGroup(groupId)?.get(name)
+
+    /**
+     * Find the field group whose id is [groupId].
+     * */
+    @Synchronized
+    fun findGroup(groupId: Int): FieldGroup? {
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
+    }
+
+    /**
+     * Find the field group whose id is [groupId] and retrieve the value associated with [name].
+     * */
+    @Synchronized
+    fun findValue(groupId: Int, name: String): String? = findGroup(groupId)?.get(name)
+
+    /**
+     * Add a field group.
+     * */
     @Synchronized
     fun add(fieldGroup: FieldGroup) {
         fieldGroups.add(fieldGroup.unbox())
         pageModel.setDirty()
     }
 
+    /**
+     * Add a field group.
+     * */
     @Synchronized
     fun add(index: Int, fieldGroup: FieldGroup) {
         fieldGroups.add(index, fieldGroup.unbox())
         pageModel.setDirty()
     }
 
-    @Synchronized
-    fun add(groupId: Int, name: String, value: String) {
-        val group = findById(groupId)
-        val fields = group?.unbox()?.fields ?: mutableMapOf()
-        fields[u8(name)] = value
+    @Deprecated("Inappropriate name", ReplaceWith("put(groupId, name, value)"))
+    fun add(groupId: Int, name: String, value: String) = put(groupId, name, value)
 
+    /**
+     * Set a field entry to field group whose id is [groupId].
+     * */
+    @Synchronized
+    fun put(groupId: Int, name: String, value: String) {
+        val group = findGroup(groupId)
         val parentId = group?.parentId?.toInt() ?: 0
         val groupName = group?.name ?: ""
-        emplace0(groupId, parentId, groupName, fields)
+        put0(groupId, parentId, groupName, name, value)
     }
 
     @Synchronized
@@ -80,14 +144,7 @@ class PageModel(
 
     @Synchronized
     fun emplace(groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>): FieldGroup {
-        val f = fields.entries.associate { u8(it.key)!! to it.value }
-        return emplace0(groupId, parentId, groupName, f)
-    }
-
-    @Synchronized
-    fun findById(groupId: Int): FieldGroup? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
-        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
+        return emplace0(groupId, parentId, groupName, fields)
     }
 
     @Synchronized
@@ -98,10 +155,11 @@ class PageModel(
 
     @Synchronized
     fun remove(groupId: Int, key: String): String? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() } ?: return null
+        val gFieldGroup = findRawById(groupId) ?: return null
         val oldValue = gFieldGroup.fields.remove(u8(key)) ?: return null
 
         gFieldGroup.setDirty()
+        // Can we ignore pageModel's dirty flag?
         pageModel.setDirty()
 
         return oldValue.toString()
@@ -119,9 +177,15 @@ class PageModel(
         return PageModel(other)
     }
 
+    private fun findRawById(groupId: Int) = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+
+    private fun removeRawById(groupId: Int, key: String): CharSequence? {
+        return findRawById(groupId)?.fields?.remove(u8(key))
+    }
+
     @Synchronized
     private fun emplace0(
-        groupId: Int, parentId: Int, groupName: String, fields: Map<out CharSequence, CharSequence?>
+        groupId: Int, parentId: Int, groupName: String, fields: Map<String, String?>
     ): FieldGroup {
         var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
         if (gFieldGroup == null) {
@@ -129,18 +193,29 @@ class PageModel(
             fieldGroups.add(gFieldGroup)
         }
 
-        // fieldGroup.fields = fields
-        gFieldGroup.fields.putAll(fields)
+        gFieldGroup.fields.clear()
+        fields.entries.associateTo(gFieldGroup.fields) { u8(it.key) to it.value }
+
         gFieldGroup.setDirty()
         pageModel.setDirty()
 
         return FieldGroup.box(gFieldGroup)
     }
 
-    companion object {
-        @JvmStatic
-        fun box(pageModel: GPageModel): PageModel {
-            return PageModel(pageModel)
+    @Synchronized
+    private fun put0(
+        groupId: Int, parentId: Int, groupName: String, name: String, value: String
+    ): FieldGroup {
+        var gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
+        if (gFieldGroup == null) {
+            gFieldGroup = FieldGroup.newGFieldGroup(groupId, groupName, parentId)
+            fieldGroups.add(gFieldGroup)
         }
+
+        gFieldGroup.fields[u8(name)] = value
+        gFieldGroup.setDirty()
+        pageModel.setDirty()
+
+        return FieldGroup.box(gFieldGroup)
     }
 }

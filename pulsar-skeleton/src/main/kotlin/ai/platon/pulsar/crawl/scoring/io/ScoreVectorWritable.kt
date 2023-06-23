@@ -9,7 +9,7 @@ import java.io.IOException
 
 /**
  * Created by vincent on 17-4-20.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class ScoreVectorWritable(var scoreVector: ScoreVector) : Writable {
     fun get(): ScoreVector {

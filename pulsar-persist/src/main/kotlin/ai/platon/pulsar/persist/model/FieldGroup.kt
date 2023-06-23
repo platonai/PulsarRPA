@@ -6,6 +6,7 @@
  */
 package ai.platon.pulsar.persist.model
 
+import ai.platon.pulsar.persist.WebPage.u8
 import ai.platon.pulsar.persist.WebPage.wrapKey
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 
@@ -35,7 +36,7 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
             fieldGroup.name = name
         }
 
-    @Deprecated("prone to misuse", ReplaceWith("fieldsCopy"))
+    @Deprecated("Prone to misuse", ReplaceWith("fieldsCopy"))
     var fields: Map<String, String?>
         get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
         set(value) {
@@ -46,13 +47,13 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
         get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
 
     operator fun get(key: String): String? {
-        return fieldGroup.fields[wrapKey(key)]?.toString()
+        return fieldGroup.fields[u8(key)]?.toString()
     }
 
     operator fun set(key: String, value: String) {
         // Note: map
         // fields is Dirtyable
-        fieldGroup.fields[wrapKey(key)] = value
+        fieldGroup.fields[u8(key)] = value
         fieldGroup.setDirty()
     }
 

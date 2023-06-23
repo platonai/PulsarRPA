@@ -11,6 +11,14 @@ import kotlin.test.assertTrue
 class TestCollections {
 
     @Test
+    fun testChunked() {
+        val chunkSize = 100
+        val chunks = IntRange(1, 1000).toList().chunked(chunkSize)
+        chunks.forEach {
+            assertEquals(chunkSize, it.size) }
+    }
+
+    @Test
     fun testDeque() {
         val deque = ConcurrentLinkedDeque<Int>()
         IntRange(1, 10).forEach { deque.addFirst(it) }

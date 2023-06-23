@@ -4,13 +4,14 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.ConcurrentSkipListMap
 
 /**
  * A set of term counters
  */
 class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
 
-    private val counters = mutableMapOf<String, Frequency<T>>()
+    private val counters = ConcurrentSkipListMap<String, Frequency<T>>()
 
     fun computeIfAbsent(name: String): Frequency<T> {
         return counters.computeIfAbsent(name) { Frequency(it) }
@@ -22,9 +23,7 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
 
     fun count(name: String, term: T): Int {
         val counter = counters[name]
-        return if (counter != null) {
-            counter.count(term)
-        } else 0
+        return counter?.count(term) ?: 0
     }
 
     override val size: Int get() = counters.size

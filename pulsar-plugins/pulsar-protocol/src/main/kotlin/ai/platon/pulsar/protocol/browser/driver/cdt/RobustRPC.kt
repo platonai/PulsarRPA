@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.Throws
 
@@ -83,7 +82,7 @@ internal class RobustRPC(
     private fun fixCDTAgentIfNecessary(e: Exception) {
         if (e.toString().contains("agent was not enabled")) {
             logger.warn(e.stringify())
-            driver.enableAgents()
+            driver.enableAPIAgents()
             decreaseRPCFailures()
         }
     }

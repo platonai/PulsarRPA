@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.10.14-SNAPSHOT</version>
+    <version>1.10.15-SNAPSHOT</version>
 
     <name>Pulsar</name>
     <description>Scrape Web data at scale completely and accurately with high performance, distributed RPA.</description>
@@ -46,7 +46,7 @@
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
         <url>https://github.com/platonai/pulsar</url>
-        <tag>v1.10.14</tag>
+        <tag>v1.10.15</tag>
     </scm>
 
     <repositories>
@@ -96,9 +96,11 @@
                 <module>pulsar-dom</module>
 
                 <module>pulsar-tools</module>
+                <module>pulsar-ql-common</module>
                 <module>pulsar-ql</module>
 
                 <module>pulsar-spring-support</module>
+                <module>pulsar-all</module>
             </modules>
         </profile>
 
