@@ -37,7 +37,7 @@ data class HyperlinkDatum(
     /**
      * The depth
      * */
-    val depth: Int = 0
+    val depth: Int = 0,
 )
 
 /**
@@ -74,7 +74,7 @@ open class Hyperlink(
     /**
      * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
-    href: String? = null
+    href: String? = null,
 ) : AbstractUrl(url, args, referrer, href) {
     var depth: Int = 0
 
@@ -83,6 +83,63 @@ open class Hyperlink(
     constructor(url: HyperlinkDatum) : this(url.url, url.text, url.order, url.referrer, url.args, href = url.href)
 
     fun data() = HyperlinkDatum(url, text, order, referrer = referrer, args = args, href = href, true, 0)
+
+    override fun serializeTo(sb: StringBuilder): StringBuilder {
+        super.serializeTo(sb)
+
+        text.takeUnless { it.isEmpty() }?.let { sb.append(" -text ").append(it) }
+        order.takeUnless { it == 0 }?.let { sb.append(" -order ").append(it) }
+        depth.takeUnless { it == 0 }?.let { sb.append(" -depth ").append(it) }
+
+        return sb
+    }
+
+    companion object {
+        fun parse(linkText: String): Hyperlink {
+            var url = ""
+            var text = ""
+            var args: String? = null
+            var href: String? = null
+            var referrer: String? = null
+            var order = 0
+            var priority = 0
+            var lang = "*"
+            var country = "*"
+            var district = "*"
+            var nMaxRetry = 3
+
+            val names = listOf("text", "args", "href", "referrer", "order", "priority",
+                "lang", "country", "district", "nMaxRetry")
+            val regex = names.map { " -$it " }.filter { it in linkText }.joinToString("|").toRegex()
+            val values = linkText.split(regex)
+
+            url = values[0]
+            var i = 0
+            while (i < names.size) {
+                val j = i + 1
+                if (names[i] == "text") text = values[j]
+                if (names[i] == "args") args = values[j]
+                if (names[i] == "href") href = values[j]
+                if (names[i] == "referrer") referrer = values[j]
+                if (names[i] == "order") order = values[j].toIntOrNull() ?: order
+                if (names[i] == "priority") priority = values[j].toIntOrNull() ?: priority
+                if (names[i] == "lang") lang = values[j]
+                if (names[i] == "country") country = values[j]
+                if (names[i] == "district") district = values[j]
+                if (names[i] == "nMaxRetry") nMaxRetry = values[j].toIntOrNull() ?: nMaxRetry
+
+                ++i
+            }
+
+            return Hyperlink(url, text, order, referrer, args, href).also {
+                it.priority = priority
+                it.lang = lang
+                it.country = country
+                it.district = district
+                it.nMaxRetry = nMaxRetry
+            }
+        }
+    }
 }
 
 open class StatefulHyperlink(
@@ -109,7 +166,7 @@ open class StatefulHyperlink(
     /**
      * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
-    href: String? = null
+    href: String? = null,
 ) : Hyperlink(url, text, order, referrer, args, href), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
@@ -155,7 +212,7 @@ open class FatLink(
     /**
      * The tail links
      * */
-    var tailLinks: List<StatefulHyperlink>
+    var tailLinks: List<StatefulHyperlink>,
 ) : Hyperlink(url, text, order, referrer, args, href) {
     val size get() = tailLinks.size
     val isEmpty get() = size == 0
@@ -192,7 +249,7 @@ open class StatefulFatLink(
     /**
      * The tail links
      * */
-    tailLinks: List<StatefulHyperlink>
+    tailLinks: List<StatefulHyperlink>,
 ) : FatLink(url, text, order, referrer, args, href, tailLinks), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
@@ -231,7 +288,7 @@ open class CrawlableFatLink(
     /**
      * The tail links
      * */
-    tailLinks: List<StatefulHyperlink> = listOf()
+    tailLinks: List<StatefulHyperlink> = listOf(),
 ) : StatefulFatLink(url, text, order, referrer, args, href, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)

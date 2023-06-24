@@ -13,7 +13,7 @@ abstract class AbstractUrl(
     override var args: String? = null,
     override var referrer: String? = null,
     override var href: String? = null,
-    override var priority: Int = 0
+    override var priority: Int = 0,
 ) : ComparableUrlAware {
 
     override val configuredUrl get() = UrlUtils.mergeUrlArgs(url, args)
@@ -86,14 +86,47 @@ abstract class AbstractUrl(
     override fun hashCode() = url.hashCode()
 
     override fun toString() = url
+
+    open fun serialize(): String {
+        return serializeTo(StringBuilder()).toString()
+    }
+
+    protected open fun serializeTo(sb: StringBuilder): StringBuilder {
+        sb.append(url)
+
+        args?.takeIf { it.isNotBlank() }?.replace("\"", "\\\"")
+            ?.let { sb.append(" -args ").append(it) }
+        href?.let { sb.append(" -href ").append(it) }
+        referrer?.let { sb.append(" -referrer ").append(it) }
+        priority.takeIf { it != 0 }?.let { sb.append(" -priority ").append(it) }
+        lang.takeIf { it != "*" }?.let { sb.append(" -lang ").append(it) }
+        country.takeIf { it != "*" }?.let { sb.append(" -country ").append(it) }
+        district.takeIf { it != "*" }?.let { sb.append(" -district ").append(it) }
+        nMaxRetry.takeIf { it != 3 }?.let { sb.append(" -nMaxRetry ").append(it) }
+
+        return sb
+    }
 }
 
 abstract class AbstractStatefulUrl(
     url: String,
     args: String? = null,
-    referrer: String? = null
+    referrer: String? = null,
 ) : AbstractUrl(url, args, referrer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
+
+    override fun serializeTo(sb: StringBuilder): StringBuilder {
+        super.serializeTo(sb)
+
+        status.takeUnless { it == ResourceStatus.SC_CREATED }
+            ?.let { sb.append(" -status ").append(it) }
+        authToken?.let { sb.append(" -authToken ").append(it) }
+        remoteAddr?.let { sb.append(" -remoteAddr ").append(it) }
+        createdAt.let { sb.append(" -createdAt ").append(it) }
+        modifiedAt.let { sb.append(" -modifiedAt ").append(it) }
+
+        return sb
+    }
 }

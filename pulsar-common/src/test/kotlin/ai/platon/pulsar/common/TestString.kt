@@ -274,6 +274,23 @@ class TestString {
     }
 
     @Test
+    fun testSplitByRegex2() {
+        val url = "https://www.amazon.com/s?k=insomnia&i=aps&page=100"
+        val text = "Search insomnia on Amazon"
+        val args = "-i 10d -ii 1h -label search"
+        val linkString = "$url -text $text -args $args" + " "
+
+        val names = listOf("text", "args", "href", "referrer")
+            .map { " -$it " }
+            .filter { it in linkString }
+        val regex = names.joinToString("|").toRegex()
+        val values = linkString.split(regex)
+
+        println("Regex: $regex")
+        values.forEach { println(it) }
+    }
+
+    @Test
     fun testCsslize() {
         var s = "-TestStringUtil"
         assertEquals("-test-string-util", Strings.csslize(s))
