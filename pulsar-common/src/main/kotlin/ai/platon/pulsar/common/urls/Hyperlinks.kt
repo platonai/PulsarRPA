@@ -111,6 +111,7 @@ open class Hyperlink(
             val names = listOf("text", "args", "href", "referrer", "order", "priority",
                 "lang", "country", "district", "nMaxRetry")
             val regex = names.map { " -$it " }.filter { it in linkText }.joinToString("|").toRegex()
+            val regex2 = " -\b "
             val values = linkText.split(regex)
 
             url = values[0]
@@ -231,7 +232,7 @@ open class StatefulFatLink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referrer page
+     * The order of this hyperlink in its referrer page
      * */
     order: Int = 0,
     /**
@@ -270,7 +271,7 @@ open class CrawlableFatLink(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referrer page
+     * The order of this hyperlink in its referrer page
      * */
     order: Int = 0,
     /**

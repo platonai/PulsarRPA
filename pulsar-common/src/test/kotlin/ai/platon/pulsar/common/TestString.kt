@@ -19,6 +19,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.options.OptionUtils
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.junit.Assert.assertArrayEquals
@@ -256,7 +257,7 @@ class TestString {
     }
 
     @Test
-    fun testRegexSplit() {
+    fun testSplitStringByRegex() {
         var s = "TestStringUtil"
         val r = s.split("(?=\\p{Upper})".toRegex()).filterNot { it.isEmpty() }.toTypedArray()
         assertArrayEquals(arrayOf("Test", "String", "Util"), r)
@@ -271,23 +272,6 @@ class TestString {
         s = "ld,-o,-s,-w:hello,-a:b,-c"
         val options = StringUtils.replaceChars(s, ":,", Strings.padding[2]).split(" ").toTypedArray()
         println(StringUtils.join(options, " "))
-    }
-
-    @Test
-    fun testSplitByRegex2() {
-        val url = "https://www.amazon.com/s?k=insomnia&i=aps&page=100"
-        val text = "Search insomnia on Amazon"
-        val args = "-i 10d -ii 1h -label search"
-        val linkString = "$url -text $text -args $args" + " "
-
-        val names = listOf("text", "args", "href", "referrer")
-            .map { " -$it " }
-            .filter { it in linkString }
-        val regex = names.joinToString("|").toRegex()
-        val values = linkString.split(regex)
-
-        println("Regex: $regex")
-        values.forEach { println(it) }
     }
 
     @Test

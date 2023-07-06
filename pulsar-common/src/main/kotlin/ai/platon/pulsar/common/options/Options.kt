@@ -1,5 +1,9 @@
 package ai.platon.pulsar.common.options
 
+import java.util.*
+import kotlin.collections.ArrayList
+
+
 object OptionUtils {
 
     // typical options: best-seller, com.br
@@ -21,6 +25,75 @@ object OptionUtils {
         }
 
         return null
+    }
+
+    /**
+     * [code borrowed from ant.jar]
+     * Crack a command line.
+     * @param toProcess the command line to process.
+     * @return the command line broken into strings.
+     * An empty or null toProcess parameter results in a zero sized array.
+     */
+    fun translateCommandline(toProcess: String): List<String> {
+        if (toProcess.isBlank()) {
+            //no command? no string
+            return listOf()
+        }
+
+        // parse with a simple finite state machine
+        val normal = 0
+        val inQuote = 1
+        val inDoubleQuote = 2
+        var state = normal
+        val tok = StringTokenizer(toProcess, "\"\' ", true)
+        val result = ArrayList<String>()
+        val current = StringBuilder()
+        var lastTokenHasBeenQuoted = false
+
+        while (tok.hasMoreTokens()) {
+            val nextTok: String = tok.nextToken()
+            when (state) {
+                inQuote -> if ("\'" == nextTok) {
+                    lastTokenHasBeenQuoted = true
+                    state = normal
+                } else {
+                    current.append(nextTok)
+                }
+
+                inDoubleQuote -> if ("\"" == nextTok) {
+                    lastTokenHasBeenQuoted = true
+                    state = normal
+                } else {
+                    current.append(nextTok)
+                }
+
+                else -> {
+                    if ("\'" == nextTok) {
+                        state = inQuote
+                    } else if ("\"" == nextTok) {
+                        state = inDoubleQuote
+                    } else if (" " == nextTok) {
+                        if (lastTokenHasBeenQuoted || current.length != 0) {
+                            result.add(current.toString())
+                            current.setLength(0)
+                        }
+                    } else {
+                        current.append(nextTok)
+                    }
+                    lastTokenHasBeenQuoted = false
+                }
+            }
+        }
+
+        if (lastTokenHasBeenQuoted || current.isNotEmpty()) {
+            result.add(current.toString())
+        }
+
+        if (state == inQuote || state == inDoubleQuote) {
+            throw RuntimeException("unbalanced quotes in $toProcess")
+        }
+
+        return result
     }
 
     fun arity0ToArity1(args: String, search: String): String {

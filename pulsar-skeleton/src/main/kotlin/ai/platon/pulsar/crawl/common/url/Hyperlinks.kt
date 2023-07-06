@@ -128,7 +128,7 @@ open class CompletableHyperlink<T>(
      * */
     var text: String = "",
     /**
-     * The order of this hyperlink in it's referrer page
+     * The order of this hyperlink in its referrer page
      * */
     var order: Int = 0,
     /**
@@ -234,7 +234,7 @@ open class CompletableListenableHyperlink<T>(
      * */
     text: String = "",
     /**
-     * The order of this hyperlink in it's referrer page
+     * The order of this hyperlink in its referrer page
      * */
     order: Int = 0,
     /**

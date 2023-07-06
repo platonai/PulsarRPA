@@ -25,6 +25,9 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
     protected val startTime = Instant.now()
     protected val closed = AtomicBoolean()
 
+    /**
+     * The minimum time to live for proxy IPs, the implementation might drop short-live proxy IPs.
+     * */
     var minimumProxyTTL = Duration.ofMinutes(5)
     var testProxyBeforeUse = false
     // TODO: configurable

@@ -186,8 +186,10 @@ class CoreMetrics(
 
     init {
         kotlin.runCatching {
-            Files.readAllLines(PATH_UNREACHABLE_HOSTS).toCollection(unreachableHosts)
-        }.onFailure { logger.warn("[Unexpected]", it) }
+            if (Files.exists(PATH_UNREACHABLE_HOSTS)) {
+                Files.readAllLines(PATH_UNREACHABLE_HOSTS).toCollection(unreachableHosts)
+            }
+        }.onFailure { logger.warn("[Unexpected][Ignored]", it) }
 
         params.withLogger(logger).info(true)
     }
