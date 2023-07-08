@@ -19,7 +19,6 @@ abstract class AbstractLoadingQueue(
 ) : AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     private val logger = getLogger(AbstractLoadingQueue::class)
 
-    // TODO: check the synchronization, non-concurrent collection might be OK
     protected val cacheImplementation = ConcurrentLinkedQueue<UrlAware>()
 
     private val capacity = topic.pageSize
@@ -46,7 +45,7 @@ abstract class AbstractLoadingQueue(
     override val externalSize: Int
         get() {
             return loader.runCatching { countRemaining(topic) }
-                .onFailure { logger.warn(it.stringify("externalSize")) }
+                .onFailure { logger.warn(it.stringify("externalSize - ")) }
                 .getOrNull() ?: 0
         }
 
@@ -54,7 +53,7 @@ abstract class AbstractLoadingQueue(
     override val estimatedExternalSize: Int
         get() {
             return loader.runCatching { estimateRemaining(topic) }
-                .onFailure { logger.warn(it.stringify("estimatedExternalSize")) }
+                .onFailure { logger.warn(it.stringify("estimatedExternalSize - ")) }
                 .getOrNull() ?: 0
         }
 
