@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.emoji
 
 /**
  * Unicode emoji used by Pulsar
+ * TODO: add alt field for OS which has no unicode emoji support
  * */
 enum class PopularEmoji(val value: String) {
     CANCELLATION_X("\uD83D\uDDD9"),

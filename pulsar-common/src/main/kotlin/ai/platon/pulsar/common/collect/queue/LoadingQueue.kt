@@ -16,6 +16,8 @@ interface LoadingQueue<T> : Queue<T>, Loadable<T> {
 
     val estimatedExternalSize: Int
 
+    val estimatedSize: Int
+
     fun shuffle()
 
     fun overflow(url: UrlAware)
