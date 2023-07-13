@@ -38,6 +38,7 @@ import kotlin.reflect.jvm.kotlinProperty
  * session.load('https://www.jd.com', '-storeContent')
  * ```
  * TODO: support new options: -priority
+ * TODO: keep unsupported options
  * */
 open class LoadOptions(
     argv: Array<String>,
@@ -474,20 +475,30 @@ open class LoadOptions(
     var persist = true
 
     /**
-     * If false, persist the page without the content which is usually very large
+     * If false, do not persist the page content which is usually very large.
      * */
     @Parameter(
         names = ["-sct", "-storeContent", "--store-content"], arity = 1,
-        description = "If false, persist the page without it's content which is usually very large"
+        description = "If false, do not persist the page content which is usually very large."
     )
     var storeContent = LoadOptionDefaults.storeContent
+
+    /**
+     * If the option exists, do not persist the page content which is usually very large.
+     * This option overrides [storeContent].
+     * */
+    @Parameter(
+        names = ["-dct", "-dropContent", "--drop-content"], arity = 1,
+        description = "If the option exists, do not persist the page content which is usually very large."
+    )
+    var dropContent = false
 
     /**
      * If false, load the page without the content which is usually very large
      * TODO: review the design
      * */
 //    @Parameter(names = ["-lct", "-loadContent", "--load-content"], arity = 1,
-//        description = "If false, load the page without it's content which is usually very large")
+//        description = "If false, load the page without its content which is usually very large")
 //    var loadContent = LoadOptionDefaults.loadContent
 
     /**

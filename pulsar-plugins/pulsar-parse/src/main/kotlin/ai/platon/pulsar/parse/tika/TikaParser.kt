@@ -53,11 +53,14 @@ class TikaParser(
         val parseFilters: ParseFilters? = null,
         val conf: ImmutableConfig
 ) : Parser {
-    private val LOG = LoggerFactory.getLogger(TikaParser::class.java)
+    private val logger = LoggerFactory.getLogger(TikaParser::class.java)
     private val primerParser = PrimerParser(conf)
+
     private val tikaConfig = TikaConfig.getDefaultConfig()
     private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private var htmlMapper = conf.get(PARSE_TIKA_HTML_MAPPER_NAME)?.let { ReflectionUtils.forNameOrNull<HtmlMapper>(it) }
+
+    override val timeout = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)!!
 
     constructor(conf: ImmutableConfig): this(null, null, conf)
 
@@ -90,7 +93,7 @@ class TikaParser(
                         + raw.position(), raw.remaining()), domhandler, tikamd, context)
             }
         } catch (e: Exception) {
-            LOG.error("Error parsing " + page.url, e)
+            logger.error("Error parsing " + page.url, e)
             return failed(e)
         }
 

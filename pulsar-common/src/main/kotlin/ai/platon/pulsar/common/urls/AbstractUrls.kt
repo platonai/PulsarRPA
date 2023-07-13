@@ -28,7 +28,8 @@ abstract class AbstractUrl(
     override val isNil get() = url == AppConstants.NIL_PAGE_URL
 
     /**
-     * If this url is persistable
+     * If this url is persistable.
+     * Not all urls are persistable, for example, a ListenableHyperlink with events is not persistable.
      * */
     override val isPersistable: Boolean = true
 

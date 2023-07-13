@@ -64,6 +64,7 @@ class CoreMetrics(
                 "loadCompDbGets" to Gauge { LoadComponent.dbGetCount },
                 "loadCompDbGets/s" to Gauge { 1.0 * LoadComponent.dbGetCount.get() / DateTimes.elapsedSeconds() },
 
+                // TODO: dbGets/dbPuts should be a multiMetric
                 "dbGets" to Gauge { WebDb.dbGetCount },
                 "dbGets/s" to Gauge { 1.0 * WebDb.dbGetCount.get() / DateTimes.elapsedSeconds() },
                 "dbGetAveMillis" to Gauge { WebDb.dbGetAveMillis },
@@ -139,6 +140,9 @@ class CoreMetrics(
     val meterContentMBytes = registry.multiMetric(this, "contentBytes")
     val persistContentMBytes = registry.multiMetric(this, "persistContentMBytes")
     val meterContentBytes = registry.meter(this, "contentBytes")
+
+//    val dbGets = registry.multiMetric(this, "dbGets")
+//    val dbPuts = registry.multiMetric(this, "dbPuts")
 
     val histogramContentBytes = registry.histogram(this, "contentBytes")
     val pageImages = registry.histogram(this, "pageImages")

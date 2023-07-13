@@ -210,6 +210,7 @@ open class FetchComponent(
             it.lastBrowser?.let { page.lastBrowser = it }
 
             if (protocolStatus.isSuccess) {
+                // good! persists content for only success pages
                 pageExt.updateContent(it)
             }
         }
