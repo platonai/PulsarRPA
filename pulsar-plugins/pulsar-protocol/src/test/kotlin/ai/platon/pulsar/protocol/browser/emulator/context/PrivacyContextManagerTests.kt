@@ -14,7 +14,6 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
-import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.RandomStringUtils
@@ -51,15 +50,15 @@ class PrivacyContextManagerTests {
         assertTrue { pc.isActive }
         privacyManager.close(pc)
         assertTrue { !pc.isActive }
-        assertFalse { privacyManager.activeContexts.containsKey(pc.id) }
-        assertFalse { privacyManager.activeContexts.containsValue(pc) }
+        assertFalse { privacyManager.volatileContexts.containsKey(pc.id) }
+        assertFalse { privacyManager.volatileContexts.containsValue(pc) }
 
         val pc2 = privacyManager.computeNextContext(fingerprint)
         assertTrue { pc2.isActive }
         assertNotEquals(pc.id, pc2.id)
         assertNotEquals(pc, pc2)
-        assertTrue { privacyManager.activeContexts.containsKey(pc2.id) }
-        assertTrue { privacyManager.activeContexts.containsValue(pc2) }
+        assertTrue { privacyManager.volatileContexts.containsKey(pc2.id) }
+        assertTrue { privacyManager.volatileContexts.containsValue(pc2) }
     }
 
     @Test
@@ -75,8 +74,8 @@ class PrivacyContextManagerTests {
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }
-            assertFalse { privacyManager.activeContexts.containsKey(pc.id) }
-            assertFalse { privacyManager.activeContexts.containsValue(pc) }
+            assertFalse { privacyManager.volatileContexts.containsKey(pc.id) }
+            assertFalse { privacyManager.volatileContexts.containsValue(pc) }
         }
     }
 
@@ -85,7 +84,7 @@ class PrivacyContextManagerTests {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)
         val userAgents = UserAgent()
 
-        val activeContexts = ConcurrentLinkedDeque<PrivacyContext>()
+        val volatileContexts = ConcurrentLinkedDeque<PrivacyContext>()
         val producer = Executors.newSingleThreadScheduledExecutor()
         val closer = Executors.newSingleThreadScheduledExecutor()
 
@@ -95,19 +94,19 @@ class PrivacyContextManagerTests {
             val fingerprint = Fingerprint(BrowserType.MOCK_CHROME, proxyServer, userAgent = userAgent)
             val pc = privacyManager.computeNextContext(fingerprint)
 
-            activeContexts.add(pc)
+            volatileContexts.add(pc)
             assertTrue { pc.isActive }
         }, 1, 800, TimeUnit.MILLISECONDS)
 
         closer.scheduleWithFixedDelay({
-            activeContexts.forEach { pc ->
+            volatileContexts.forEach { pc ->
                 // proxy server can be changed, which will be improved in the further
                 pc.id.fingerprint.proxyServer = "127.0.0." + Random.nextInt(200)
 
                 privacyManager.close(pc)
                 assertTrue { !pc.isActive }
-                assertFalse { privacyManager.activeContexts.containsKey(pc.id) }
-                assertFalse { privacyManager.activeContexts.containsValue(pc) }
+                assertFalse { privacyManager.volatileContexts.containsKey(pc.id) }
+                assertFalse { privacyManager.volatileContexts.containsValue(pc) }
             }
         }, 2, 1, TimeUnit.SECONDS)
 
@@ -124,9 +123,9 @@ class PrivacyContextManagerTests {
         val id = PrivacyContextId(contextPath, BrowserType.MOCK_CHROME)
         val privacyContext = manager.computeIfAbsent(id)
 
-        assertTrue { manager.activeContexts.containsKey(id) }
+        assertTrue { manager.volatileContexts.containsKey(id) }
         manager.close(privacyContext)
-        assertFalse { manager.activeContexts.containsKey(id) }
+        assertFalse { manager.volatileContexts.containsKey(id) }
     }
 
     @Test
@@ -140,7 +139,7 @@ class PrivacyContextManagerTests {
                 val task = FetchTask.create(page)
                 task.fingerprint.userAgent = RandomStringUtils.randomAlphanumeric(10)
                 manager.run(task) { _, driver -> mockFetch(task, driver) }
-                assertTrue { manager.activeContexts.size <= manager.maxAllowedBadContexts }
+                assertTrue { manager.volatileContexts.size <= manager.maxAllowedBadContexts }
             }
         }
     }

@@ -25,6 +25,10 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * */
     val drivers: Map<String, WebDriver>
     /**
+     * The associated data.
+     * */
+    val data: MutableMap<String, Any?>
+    /**
      * Check if this browser is idle.
      * */
     val isIdle: Boolean

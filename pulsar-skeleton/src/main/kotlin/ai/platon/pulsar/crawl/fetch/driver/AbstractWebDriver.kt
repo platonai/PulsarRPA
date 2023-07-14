@@ -61,6 +61,11 @@ abstract class AbstractWebDriver(
 
     override val state = AtomicReference(WebDriver.State.INIT)
 
+    /**
+     * The associated data.
+     * */
+    override val data: MutableMap<String, Any?> = mutableMapOf()
+
     override var lastActiveTime: Instant = Instant.now()
 
     override val isInit get() = state.get().isInit

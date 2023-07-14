@@ -152,9 +152,9 @@ class ChromeLauncher(
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
 
-        if (userDataDir == AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER) {
+        if (userDataDir == AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER) {
             // Open the default browser just like a real user daily do,
-            // open the blank page to ignore choosing profile
+            // open a blank page not to choose the profile
             val args = "--remote-debugging-port=0 --remote-allow-origins=* about:blank"
             arguments = args.split(" ").toMutableList()
         } else {
@@ -285,7 +285,7 @@ class ChromeLauncher(
         val forceDelete = target.toString().matches(USER_DATA_DIR_REGEX)
         // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
         // especially, do not delete the following directories:
-        // AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER, AppPaths.CONTEXT_TMP_DIR, AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        // AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER, AppPaths.CONTEXT_TMP_DIR, AppPaths.CHROME_DATA_DIR_PROTOTYPE
         if (forceDelete || target.startsWith(AppPaths.CONTEXT_TMP_DIR)) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {

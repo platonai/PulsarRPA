@@ -48,6 +48,16 @@ open class LoadOptions(
 ) : CommonOptions(argv) {
 
     /**
+     * The entity name of the page, for example, article, product, hotel, flower, etc, it's optional.
+     * */
+    @ApiPublic
+    @Parameter(
+        names = ["-e", "-entity", "--entity"],
+        description = "The entity of the page, it's optional."
+    )
+    var entity = ""
+
+    /**
      * The task label, it's optional and can be used to group tasks.
      * */
     @ApiPublic
@@ -484,8 +494,8 @@ open class LoadOptions(
     var storeContent = LoadOptionDefaults.storeContent
 
     /**
-     * If the option exists, do not persist the page content which is usually very large.
-     * This option overrides [storeContent].
+     * If the option is set, do not persist the page content which is usually very large.
+     * If the option is set, it overrides [storeContent].
      * */
     @Parameter(
         names = ["-dct", "-dropContent", "--drop-content"], arity = 1,
