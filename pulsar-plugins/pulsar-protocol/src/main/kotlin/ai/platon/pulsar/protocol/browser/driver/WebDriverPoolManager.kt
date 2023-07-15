@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.browseEvent
+import ai.platon.pulsar.common.persist.ext.event
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.Browser
@@ -495,7 +496,7 @@ open class WebDriverPoolManager(
     private suspend fun runWithDriverPool(task: WebDriverTask, driverPool: LoadingWebDriverPool): FetchResult? {
         var driver: WebDriver? = null
         try {
-            driver = driverPool.poll(task)
+            driver = driverPool.poll(task.priority, task.volatileConfig, task.page.event?.browseEvent, task.page)
 
             return runWithDriver(task, driver)
         } finally {
