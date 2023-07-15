@@ -199,7 +199,7 @@ class ChromeDevtoolsDriver(
                 // in gui mode, just stop the loading, so we can diagnose
                 pageAPI?.stopLoading()
             } else {
-                // go to about:blank, so the browser stops the previous page and release all resources
+                // go to about:blank, so the browser stops the previous page and releases all resources
                 navigateTo(ChromeImpl.ABOUT_BLANK_PAGE)
             }
 

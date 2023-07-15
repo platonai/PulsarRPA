@@ -448,6 +448,8 @@ open class WebDriverPoolManager(
          * normal tasks are performed in parallel, but can not be performed with monitor tasks at the same time.
          *
          * [PreemptChannelSupport] is developed for such mechanism.
+         *
+         * TODO: seems not a normal task
          * */
         whenNormalDeferred {
             if (!isActive) {
@@ -493,16 +495,7 @@ open class WebDriverPoolManager(
     private suspend fun runWithDriverPool(task: WebDriverTask, driverPool: LoadingWebDriverPool): FetchResult? {
         var driver: WebDriver? = null
         try {
-            // Mutual exclusion for coroutines. At most one thread at a time can poll the driver.
-            // TODO: check if we remove the mutex to allow multiple thread to poll drivers
-            // consider the case:
-            // thread a is waiting for a driver in pool A, thread b has to wait a to return,
-            // but thread b can take a driver from pool B actually.
-//            driver = launchMutex.withLock {
-//                poll(driverPool, task)
-//            }
-
-            driver = poll(driverPool, task)
+            driver = driverPool.poll(task)
 
             return runWithDriver(task, driver)
         } finally {
@@ -532,59 +525,43 @@ open class WebDriverPoolManager(
         }
     }
 
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-    private suspend fun poll(driverPool: LoadingWebDriverPool, task: WebDriverTask): WebDriver {
-        // TODO: should not set driverPool.launched here
-        val notLaunched = driverPool.launched.compareAndSet(false, true)
-        return if (notLaunched) {
-            launchAndPoll(driverPool, task.page, task.priority)
-        } else {
-            pollWebDriver(driverPool, task.priority, task.page.conf)
-        }
-    }
-
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-    private suspend fun launchAndPoll(
-        driverPool: LoadingWebDriverPool, page: WebPage, priority: Int,
-    ): WebDriver {
-        val event = page.browseEvent
-
-        // TODO: should handle launch events in browser
-        dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
-
-        return pollWebDriver(driverPool, priority, page.conf).also { driver ->
-            dispatchEvent("onBrowserLaunched") { event?.onBrowserLaunched?.invoke(page, driver) }
-        }
-    }
-
-    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
-    private fun pollWebDriver(driverPool: LoadingWebDriverPool, priority: Int, conf: VolatileConfig): WebDriver {
-        val timeout = driverSettings.pollingDriverTimeout
-        val driver = driverPool.poll(priority, conf, timeout)
-        require(driver.isWorking)
-        return driver
-    }
+//    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+//    private suspend fun poll(driverPool: LoadingWebDriverPool, task: WebDriverTask): WebDriver {
+//        // TODO: should not set driverPool.launched here
+//        // NOTE: concurrency note - if multiple threads come to the code snippet,
+//        // only one goes to launchAndPoll, others wait in pollWebDriver
+//        val notLaunched = driverPool.launched.compareAndSet(false, true)
+//        return if (notLaunched) {
+//            launchAndPoll(driverPool, task.page, task.priority)
+//        } else {
+//            pollWebDriver(driverPool, task.priority, task.page.conf)
+//        }
+//    }
+//
+//    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+//    private suspend fun launchAndPoll(
+//        driverPool: LoadingWebDriverPool, page: WebPage, priority: Int,
+//    ): WebDriver {
+//        val event = page.browseEvent
+//
+//        // TODO: should handle launch events in browser
+//        dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
+//
+//        return pollWebDriver(driverPool, priority, page.conf).also { driver ->
+//            dispatchEvent("onBrowserLaunched") { event?.onBrowserLaunched?.invoke(page, driver) }
+//        }
+//    }
+//
+//    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+//    private fun pollWebDriver(driverPool: LoadingWebDriverPool, priority: Int, conf: VolatileConfig): WebDriver {
+//        val timeout = driverSettings.pollingDriverTimeout
+//        val driver = driverPool.poll(priority, conf, timeout)
+//        require(driver.isWorking)
+//        return driver
+//    }
 
     private fun createDriverPoolIfAbsent0(browserId: BrowserId, priority: Int): LoadingWebDriverPool {
         return driverPoolPool.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, priority) }
-    }
-
-    private suspend fun dispatchEvent(name: String, action: suspend () -> Unit) {
-        if (!isActive) {
-            return
-        }
-
-        try {
-            action()
-        } catch (e: WebDriverCancellationException) {
-            logger.info("Web driver is cancelled")
-        } catch (e: WebDriverException) {
-            logger.warn(e.brief("[Ignored][$name] "))
-        } catch (e: Exception) {
-            logger.warn(e.stringify("[Ignored][$name] "))
-        } catch (e: Throwable) {
-            logger.error(e.stringify("[Unexpected][$name] "))
-        }
     }
 }
 

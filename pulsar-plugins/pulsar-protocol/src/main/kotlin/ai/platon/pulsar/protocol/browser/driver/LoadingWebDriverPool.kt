@@ -1,17 +1,18 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppSystemInfo
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.metrics.AppMetrics
-import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.persist.ext.browseEvent
 import ai.platon.pulsar.crawl.fetch.driver.Browser
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverCancellationException
+import ai.platon.pulsar.crawl.fetch.driver.WebDriverException
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserId
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.BrowserLaunchException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import org.slf4j.LoggerFactory
@@ -72,7 +73,7 @@ class LoadingWebDriverPool constructor(
      * */
     private var isRetired = false
     val isActive get() = !isRetired && AppContext.isActive
-    val launched = AtomicBoolean()
+    private val launched = AtomicBoolean()
     private val _numCreatedDrivers = AtomicInteger()
     private val _numWaitingTasks = AtomicInteger()
 
@@ -209,9 +210,41 @@ class LoadingWebDriverPool constructor(
         return driver
     }
 
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    suspend fun poll(task: WebDriverTask): WebDriver {
+        // NOTE: concurrency note - if multiple threads come to the code snippet,
+        // only one goes to launchAndPoll, others wait in pollWebDriver
+        val notLaunched = launched.compareAndSet(false, true)
+        return if (notLaunched) {
+            launchAndPoll(task.page, task.priority)
+        } else {
+            pollWebDriver(task.priority, task.page.conf)
+        }
+    }
+
     fun put(driver: WebDriver) {
         lastActiveTime = Instant.now()
         offerOrDismiss(driver)
+    }
+
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    private suspend fun launchAndPoll(page: WebPage, priority: Int): WebDriver {
+        val event = page.browseEvent
+
+        // TODO: should handle launch events in browser
+        dispatchEvent("onWillLaunchBrowser") { event?.onWillLaunchBrowser?.invoke(page) }
+
+        return pollWebDriver(priority, page.conf).also { driver ->
+            dispatchEvent("onBrowserLaunched") { event?.onBrowserLaunched?.invoke(page, driver) }
+        }
+    }
+
+    @Throws(BrowserLaunchException::class, WebDriverPoolExhaustedException::class)
+    private fun pollWebDriver(priority: Int, conf: VolatileConfig): WebDriver {
+        val timeout = driverFactory.driverSettings.pollingDriverTimeout
+        val driver = poll(priority, conf, timeout)
+        require(driver.isWorking)
+        return driver
     }
 
     private fun offerOrDismiss(driver: WebDriver) {
@@ -367,6 +400,24 @@ class LoadingWebDriverPool constructor(
 
         if (logger.isDebugEnabled) {
             logDriverOnline(driver)
+        }
+    }
+
+    private suspend fun dispatchEvent(name: String, action: suspend () -> Unit) {
+        if (!isActive) {
+            return
+        }
+
+        try {
+            action()
+        } catch (e: WebDriverCancellationException) {
+            logger.info("Web driver is cancelled")
+        } catch (e: WebDriverException) {
+            logger.warn(e.brief("[Ignored][$name] "))
+        } catch (e: Exception) {
+            logger.warn(e.stringify("[Ignored][$name] "))
+        } catch (e: Throwable) {
+            logger.error(e.stringify("[Unexpected][$name] "))
         }
     }
 

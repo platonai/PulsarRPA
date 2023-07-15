@@ -48,11 +48,16 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * regardless of whether the browser is closed or not.
      * */
     fun destroyForcibly()
+    /**
+     * Initialize the browser.
+     * */
+    fun onInitialize()
 
     /**
-     * Register event handler when a url is about to navigate.
+     * Register event handler before navigating to a url.
      * */
     fun onWillNavigate(entry: NavigateEntry)
+
     /**
      * Maintain the browser
      * */
