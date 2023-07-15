@@ -50,15 +50,15 @@ class PrivacyContextManagerTests {
         assertTrue { pc.isActive }
         privacyManager.close(pc)
         assertTrue { !pc.isActive }
-        assertFalse { privacyManager.volatileContexts.containsKey(pc.id) }
-        assertFalse { privacyManager.volatileContexts.containsValue(pc) }
+        assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
+        assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
 
         val pc2 = privacyManager.computeNextContext(fingerprint)
         assertTrue { pc2.isActive }
         assertNotEquals(pc.id, pc2.id)
         assertNotEquals(pc, pc2)
-        assertTrue { privacyManager.volatileContexts.containsKey(pc2.id) }
-        assertTrue { privacyManager.volatileContexts.containsValue(pc2) }
+        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.id) }
+        assertTrue { privacyManager.temporaryContexts.containsValue(pc2) }
     }
 
     @Test
@@ -74,8 +74,8 @@ class PrivacyContextManagerTests {
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }
-            assertFalse { privacyManager.volatileContexts.containsKey(pc.id) }
-            assertFalse { privacyManager.volatileContexts.containsValue(pc) }
+            assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
+            assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
         }
     }
 
@@ -105,8 +105,8 @@ class PrivacyContextManagerTests {
 
                 privacyManager.close(pc)
                 assertTrue { !pc.isActive }
-                assertFalse { privacyManager.volatileContexts.containsKey(pc.id) }
-                assertFalse { privacyManager.volatileContexts.containsValue(pc) }
+                assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
+                assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
             }
         }, 2, 1, TimeUnit.SECONDS)
 
@@ -123,9 +123,9 @@ class PrivacyContextManagerTests {
         val id = PrivacyContextId(contextPath, BrowserType.MOCK_CHROME)
         val privacyContext = manager.computeIfAbsent(id)
 
-        assertTrue { manager.volatileContexts.containsKey(id) }
+        assertTrue { manager.temporaryContexts.containsKey(id) }
         manager.close(privacyContext)
-        assertFalse { manager.volatileContexts.containsKey(id) }
+        assertFalse { manager.temporaryContexts.containsKey(id) }
     }
 
     @Test
@@ -139,7 +139,7 @@ class PrivacyContextManagerTests {
                 val task = FetchTask.create(page)
                 task.fingerprint.userAgent = RandomStringUtils.randomAlphanumeric(10)
                 manager.run(task) { _, driver -> mockFetch(task, driver) }
-                assertTrue { manager.volatileContexts.size <= manager.maxAllowedBadContexts }
+                assertTrue { manager.temporaryContexts.size <= manager.maxAllowedBadContexts }
             }
         }
     }

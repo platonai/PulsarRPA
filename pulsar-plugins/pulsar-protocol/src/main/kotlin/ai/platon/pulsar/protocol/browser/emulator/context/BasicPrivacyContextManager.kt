@@ -25,7 +25,7 @@ class BasicPrivacyContextManager(
     private val logger = LoggerFactory.getLogger(BasicPrivacyContextManager::class.java)
     private val numPrivacyContexts: Int get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
 
-    private val iterator = Iterables.cycle(volatileContexts.values).iterator()
+    private val iterator = Iterables.cycle(temporaryContexts.values).iterator()
 
     constructor(driverPoolManager: WebDriverPoolManager, config: ImmutableConfig)
             : this(driverPoolManager, null, null, config)
@@ -59,7 +59,7 @@ class BasicPrivacyContextManager(
     )
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
-            if (volatileContexts.size < numPrivacyContexts) {
+            if (temporaryContexts.size < numPrivacyContexts) {
                 val generator = privacyAgentGeneratorFactory.generator
                 computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
@@ -72,7 +72,7 @@ class BasicPrivacyContextManager(
         return computeIfNecessary(fingerprint)
     }
 
-    override fun computeIfAbsent(id: PrivacyContextId) = volatileContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
+    override fun computeIfAbsent(id: PrivacyContextId) = temporaryContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
 
     private suspend fun run0(
         privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult

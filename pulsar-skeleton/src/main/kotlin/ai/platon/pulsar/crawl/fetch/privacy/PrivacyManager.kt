@@ -26,9 +26,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
-    val volatileContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
+    val temporaryContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
 
-    val activeContexts get() = permanentContexts + volatileContexts
+    val activeContexts get() = permanentContexts + temporaryContexts
 
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
 
@@ -131,7 +131,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
          * */
         synchronized(contextLifeCycleMonitor) {
             permanentContexts.remove(privacyAgent)
-            volatileContexts.remove(privacyAgent)
+            temporaryContexts.remove(privacyAgent)
 
             if (!zombieContexts.contains(privacyContext)) {
                 // every time we add the item to the head,
@@ -168,7 +168,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
             activeContexts.values.forEach { zombieContexts.add(it) }
             permanentContexts.clear()
-            volatileContexts.clear()
+            temporaryContexts.clear()
 
             cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
             closeZombieContexts()

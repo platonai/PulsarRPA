@@ -62,7 +62,7 @@ class MultiPrivacyContextManager(
 
     private var driverAbsenceReportTime = Instant.EPOCH
 
-    private val iterator = Iterables.cycle(volatileContexts.values).iterator()
+    private val iterator = Iterables.cycle(temporaryContexts.values).iterator()
 
     val metrics = Metrics()
 
@@ -113,8 +113,8 @@ class MultiPrivacyContextManager(
             logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
         } else {
             logger.info(
-                "Volatile privacy context is created #{}, active: {}, allowed: {} | {}",
-                context.display, volatileContexts.size, numPrivacyContexts, context.baseDir
+                "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
+                context.display, temporaryContexts.size, numPrivacyContexts, context.baseDir
             )
         }
         return context
@@ -175,7 +175,7 @@ class MultiPrivacyContextManager(
     )
     override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
-            if (volatileContexts.size < numPrivacyContexts) {
+            if (temporaryContexts.size < numPrivacyContexts) {
                 computeIfAbsent(privacyContextIdGenerator(fingerprint))
             }
 
@@ -201,7 +201,7 @@ class MultiPrivacyContextManager(
         }
 
         synchronized(contextLifeCycleMonitor) {
-            if (volatileContexts.size < numPrivacyContexts) {
+            if (temporaryContexts.size < numPrivacyContexts) {
                 computeIfAbsent(privacyAgent)
             }
 
@@ -218,7 +218,7 @@ class MultiPrivacyContextManager(
         }
 
         synchronized(contextLifeCycleMonitor) {
-            return volatileContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            return temporaryContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
         }
     }
 
@@ -292,7 +292,7 @@ class MultiPrivacyContextManager(
      * @return A privacy context which is promised to be ready to serve a new task.
      * */
     private fun tryNextUnderLoadedPrivacyContext(): PrivacyContext {
-        var n = volatileContexts.size
+        var n = temporaryContexts.size
 
         var pc = iterator.next()
         while (n-- > 0 && pc.isFullCapacity) {
@@ -306,7 +306,7 @@ class MultiPrivacyContextManager(
         // weakly consistent, which is OK
         activeContexts.filterValues { !it.isActive }.values.forEach {
             permanentContexts.remove(it.privacyAgent)
-            volatileContexts.remove(it.privacyAgent)
+            temporaryContexts.remove(it.privacyAgent)
             logger.info("Privacy context is inactive, closing it | {} | {} | {}",
                 it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
@@ -314,7 +314,7 @@ class MultiPrivacyContextManager(
 
         activeContexts.filterValues { it.isIdle }.values.forEach {
             permanentContexts.remove(it.privacyAgent)
-            volatileContexts.remove(it.privacyAgent)
+            temporaryContexts.remove(it.privacyAgent)
             logger.warn("Privacy context hangs unexpectedly, closing it | {}/{} | {} | {}",
                 it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
@@ -322,7 +322,7 @@ class MultiPrivacyContextManager(
 
         activeContexts.filterValues { it.isHighFailureRate }.values.forEach {
             permanentContexts.remove(it.privacyAgent)
-            volatileContexts.remove(it.privacyAgent)
+            temporaryContexts.remove(it.privacyAgent)
             logger.warn("Privacy context has too high failure rate: {}, closing it | {} | {} | {}",
                 it.failureRate, it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
@@ -375,9 +375,9 @@ class MultiPrivacyContextManager(
         if (Duration.between(driverAbsenceReportTime, now).seconds > 10) {
             driverAbsenceReportTime = now
 
-            val promisedDrivers = volatileContexts.values.joinToString { it.promisedWebDriverCount().toString() }
-            val states = volatileContexts.values.joinToString { it.readableState }
-            val idleTimes = volatileContexts.values.joinToString { it.idelTime.readable() }
+            val promisedDrivers = temporaryContexts.values.joinToString { it.promisedWebDriverCount().toString() }
+            val states = temporaryContexts.values.joinToString { it.readableState }
+            val idleTimes = temporaryContexts.values.joinToString { it.idelTime.readable() }
             logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",
                 promisedDrivers, errorMessage, states, idleTimes)
         }
