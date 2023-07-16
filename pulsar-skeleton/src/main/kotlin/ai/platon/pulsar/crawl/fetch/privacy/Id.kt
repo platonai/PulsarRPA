@@ -34,7 +34,9 @@ data class PrivacyAgentId(
      * */
     val isDefault get() = this.contextDir == PrivacyContext.DEFAULT_CONTEXT_DIR
     /**
-     * If true, the privacy agent opens browser just like a real user does every day.
+     * If true, the privacy agent opens browser with the prototype data dir.
+     * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
+     * uses a copy of the prototype data dir.
      * */
     val isPrototype get() = this.contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR
     /**
@@ -74,7 +76,7 @@ data class PrivacyAgentId(
 }
 
 /**
- * The privacy agent defines a unique agent to visit websites.
+ * A privacy agent defines a unique agent to visit websites.
  *
  * Page visits through different privacy agents should not be detected
  * as the same person, even if the visits are from the same host.
@@ -111,8 +113,20 @@ data class PrivacyAgent(
     companion object {
         @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT"))
         val SYSTEM_DEFAULT = PrivacyAgent(PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+        /**
+         * The user default privacy agent opens browser just like real users do every day.
+         * */
         val USER_DEFAULT = PrivacyAgent(PrivacyContext.USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER, BrowserType.PULSAR_CHROME)
+        /**
+         * The prototype privacy agent opens browser with the prototype data dir.
+         * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
+         * uses a copy of the prototype data dir.
+         * */
         val PROTOTYPE = PrivacyAgent(PrivacyContext.PROTOTYPE_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
+        /**
+         * The default privacy agent opens browser with the default data dir, the default data dir will not be removed
+         * after the browser closes.
+         * */
         val DEFAULT = PrivacyAgent(PrivacyContext.DEFAULT_CONTEXT_DIR, BrowserType.PULSAR_CHROME)
     }
 }
@@ -156,7 +170,7 @@ data class BrowserId constructor(
     override fun compareTo(other: BrowserId) = privacyAgent.compareTo(other.privacyAgent)
 
     override fun toString(): String {
-        return "{$fingerprint | $contextDir}"
+        return "{$fingerprint, $display}"
     }
 
     companion object {

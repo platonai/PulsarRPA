@@ -135,7 +135,7 @@ open class BrowserPrivacyContext constructor(
     @Synchronized
     private fun initialize(task: FetchTask) {
         createProxyContextIfEnabled()
-        task.page.variables[VAR_PRIVACY_CONTEXT_NAME] = display
+        task.page.setVar(VAR_PRIVACY_CONTEXT_NAME, display)
     }
 
     private fun createProxyContextIfEnabled() {

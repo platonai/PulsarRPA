@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.FileCommand
+import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
@@ -273,9 +274,17 @@ class MultiPrivacyContextManager(
     }
 
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
+        // Specify the privacy agent by the user code
+        // TODO: this is a temporary solution, try a better and consistent solution
+        val specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
+        if (specifiedPrivacyAgent is PrivacyAgent) {
+            return specifiedPrivacyAgent
+        }
+
         val conf = page.conf
         val privacyAgentClassName = conf[PRIVACY_AGENT_GENERATOR_CLASS]
             ?: conf[PRIVACY_CONTEXT_ID_GENERATOR_CLASS] ?: ""
+
         val privacyAgentGenerator = privacyAgentGeneratorFactory.create(privacyAgentClassName)
         return privacyAgentGenerator.invoke(fingerprint)
     }
@@ -312,10 +321,16 @@ class MultiPrivacyContextManager(
             close(it)
         }
 
-        activeContexts.filterValues { it.isIdle }.values.forEach {
-            permanentContexts.remove(it.privacyAgent)
+        temporaryContexts.filterValues { it.isIdle }.values.forEach {
             temporaryContexts.remove(it.privacyAgent)
             logger.warn("Privacy context hangs unexpectedly, closing it | {}/{} | {} | {}",
+                it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
+            close(it)
+        }
+
+        permanentContexts.filterValues { it.isIdle }.values.forEach {
+            permanentContexts.remove(it.privacyAgent)
+            logger.warn("Permanent privacy context is idle, closing it | {}/{} | {} | {}",
                 it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
         }
