@@ -91,7 +91,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     abstract fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**
-     * Create a context with [id] and add it to active context list if not absent
+     * Create a context with [privacyAgent] and add it to active context list if not absent
      * */
     abstract fun computeIfAbsent(privacyAgent: PrivacyContextId): PrivacyContext
 
@@ -166,7 +166,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         if (closed.compareAndSet(false, true)) {
             logger.info("Closing privacy contexts ...")
 
-            activeContexts.values.forEach { zombieContexts.add(it) }
+            activeContexts.values.toCollection(zombieContexts)
             permanentContexts.clear()
             temporaryContexts.clear()
 
@@ -210,10 +210,10 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     private fun reportZombieContexts() {
         if (zombieContexts.isNotEmpty()) {
-            val prefix = "The latest context throughput: "
+            val prefix = "The latest temporary context throughput: "
             val postfix = " (success/min)"
             // zombieContexts is a deque, so here we take the latest n contexts.
-            zombieContexts.take(15)
+            zombieContexts.filter { it.privacyAgent.isTemporary }.take(15)
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }
         }

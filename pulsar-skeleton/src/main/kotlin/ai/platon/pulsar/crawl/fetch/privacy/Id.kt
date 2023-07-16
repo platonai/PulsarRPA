@@ -23,13 +23,27 @@ data class PrivacyAgentId(
 
     val display = ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
     @Deprecated("Inappropriate name", ReplaceWith("isUserDefault"))
-
     val isSystemDefault get() = this.contextDir == PrivacyContext.SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER
+    /**
+     * If true, the privacy agent opens browser just like a real user does every day.
+     * */
     val isUserDefault get() = this.contextDir == PrivacyContext.USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER
+    /**
+     * If true, the privacy agent opens browser with the default data dir, the default data dir will not be removed
+     * after the browser closes.
+     * */
     val isDefault get() = this.contextDir == PrivacyContext.DEFAULT_CONTEXT_DIR
+    /**
+     * If true, the privacy agent opens browser just like a real user does every day.
+     * */
     val isPrototype get() = this.contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR
+    /**
+     * If true, the privacy agent opens browser with a temporary data dir, the temporary data dir is created before the
+     * browser starts and will be deleted after the browser closes.
+     * */
+    val isTemporary get() = this.contextDir.startsWith(AppPaths.CONTEXT_TMP_DIR)
 
-    val isPermanent get() = isSystemDefault || isUserDefault || isPrototype || isDefault
+    val isPermanent get() = isUserDefault || isPrototype
 
     /**
      * The PrivacyAgent equality.
@@ -49,7 +63,14 @@ data class PrivacyAgentId(
         return 31 * contextDir.hashCode() + browserType.name.hashCode()
     }
 
-    override fun compareTo(other: PrivacyAgentId) = contextDir.compareTo(other.contextDir)
+    override fun compareTo(other: PrivacyAgentId): Int {
+        val b = contextDir.compareTo(other.contextDir)
+        if (b != 0) {
+            return b
+        }
+
+        return browserType.name.compareTo(other.browserType.name)
+    }
 }
 
 /**
@@ -70,6 +91,7 @@ data class PrivacyAgent(
     val isUserDefault get() = id.isUserDefault
     val isDefault get() = id.isDefault
     val isPrototype get() = id.isPrototype
+    val isTemporary get() = id.isTemporary
     val isPermanent get() = id.isPermanent
 
     constructor(contextDir: Path, browserType: BrowserType): this(contextDir, Fingerprint(browserType))
@@ -138,7 +160,6 @@ data class BrowserId constructor(
     }
 
     companion object {
-        val SYSTEM_DEFAULT = BrowserId(PrivacyAgent.SYSTEM_DEFAULT)
         val USER_DEFAULT = BrowserId(PrivacyAgent.USER_DEFAULT)
         val DEFAULT = BrowserId(PrivacyAgent.DEFAULT)
         val PROTOTYPE = BrowserId(PrivacyAgent.PROTOTYPE)

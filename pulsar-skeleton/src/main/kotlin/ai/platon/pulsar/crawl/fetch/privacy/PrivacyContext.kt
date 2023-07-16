@@ -42,12 +42,13 @@ abstract class PrivacyContext(
         val CONTEXT_DIR_PREFIX = "cx."
         @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
         val SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
-        // The directory for the user's default browser. This is a placeholder, actually no data dir should be specified,
-        // so the driver opens a browser just like a normal user opens it.
-        // On linux, the actual system default context dir is: ~/.config/google-chrome/
         val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
+        // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
+        // should be specified, so the browser driver opens a browser just like a normal user opens it.
+        // The actual data dir of user's browser are different on different operating systems, for example,
+        // on linux, chrome's data dir is: ~/.config/google-chrome/
         val USER_DEFAULT_DATA_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
-        // The default context directory
+        // The default context directory, if you need a semi-permanent context, use this one
         val DEFAULT_CONTEXT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
         // The prototype context directory, all privacy contexts copies browser data from the prototype.
         // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
