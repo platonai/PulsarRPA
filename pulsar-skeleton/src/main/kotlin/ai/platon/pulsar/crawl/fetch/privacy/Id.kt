@@ -154,8 +154,13 @@ data class BrowserId constructor(
         else -> contextDir.resolve(browserType.name.lowercase())
     }
 
-    val ident get() = contextDir.last().toString() + browserType.ordinal
-    val display get() = ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
+    /**
+     * A human-readable short display of the context.
+     * For example,
+     * 1. prototype
+     * 2. 07171ChsOE207
+     * */
+    val display get() = contextDir.last().toString().substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
 
     constructor(privacyAgent: PrivacyAgent): this(privacyAgent.contextDir, privacyAgent.fingerprint)
 
@@ -174,8 +179,17 @@ data class BrowserId constructor(
     }
 
     companion object {
+        /**
+         * Represent the real user's default browser.
+         * */
         val USER_DEFAULT = BrowserId(PrivacyAgent.USER_DEFAULT)
+        /**
+         * Represent the default browser.
+         * */
         val DEFAULT = BrowserId(PrivacyAgent.DEFAULT)
+        /**
+         * Represent the prototype browser.
+         * */
         val PROTOTYPE = BrowserId(PrivacyAgent.PROTOTYPE)
     }
 }

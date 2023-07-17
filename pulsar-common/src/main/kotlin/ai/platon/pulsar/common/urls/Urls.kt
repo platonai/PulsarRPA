@@ -5,10 +5,17 @@ import java.net.URL
 import java.time.Instant
 
 /**
- * A degenerate url can be used to perform non-fetching tasks in the main loop.
+ * A degenerate url represent a task that executes in the main loop.
+ * A degenerate url can be submitted to the url pool normally, the main loop will take it from the url pool,
+ * and execute it as a task, but it will never be loaded as a webpage.
  * */
 interface DegenerateUrl {
+    // TODO: Every DegenerateUrl is callable?
+    // operator fun invoke()
+}
 
+interface CallableDegenerateUrl: DegenerateUrl {
+    operator fun invoke()
 }
 
 /**

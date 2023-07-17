@@ -17,7 +17,10 @@ import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.*
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
@@ -196,13 +199,14 @@ class MultiPrivacyContextManager(
      * @return A privacy context which is promised to be ready.
      * */
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
-        val privacyAgent = createPrivacyAgent(page, fingerprint)
-        if (privacyAgent.isPermanent) {
-            return computeIfAbsent(privacyAgent)
-        }
-
         synchronized(contextLifeCycleMonitor) {
-            if (temporaryContexts.size < numPrivacyContexts) {
+            // TODO: out of memory problem
+            val privacyAgent = createPrivacyAgent(page, fingerprint)
+            if (privacyAgent.isPermanent) {
+                return computeIfAbsent(privacyAgent)
+            }
+
+            if (activeContexts.size < numPrivacyContexts) {
                 computeIfAbsent(privacyAgent)
             }
 
@@ -212,14 +216,12 @@ class MultiPrivacyContextManager(
 
     @Throws(ProxyException::class)
     override fun computeIfAbsent(privacyAgent: PrivacyContextId): PrivacyContext {
-        if (privacyAgent.isPermanent) {
-            synchronized(contextLifeCycleMonitor) {
-                return permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
-            }
-        }
-
         synchronized(contextLifeCycleMonitor) {
-            return temporaryContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            return if (privacyAgent.isPermanent) {
+                permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            } else {
+                temporaryContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            }
         }
     }
 
@@ -239,7 +241,9 @@ class MultiPrivacyContextManager(
         lastMaintainTime = Instant.now()
 
         if (maintainCount.getAndIncrement() == 0) {
-            logger.info("Maintaining service is started")
+            logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
+            val command = "echo takePrivacyContextSnapshot >> ${FileCommand.COMMAND_FILE}"
+            logger.info("Run the following command to take snapshot once: \n{}", command)
         }
 
         doMaintain()

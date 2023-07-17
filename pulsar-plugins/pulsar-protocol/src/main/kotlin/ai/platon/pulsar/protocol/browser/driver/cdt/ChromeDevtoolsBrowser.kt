@@ -111,7 +111,7 @@ class ChromeDevtoolsBrowser(
      *
      * PrivacyContextManager.close -> PrivacyContext.close -> WebDriverContext.close -> WebDriverPoolManager.close
      * -> BrowserManager.close -> Browser.close -> WebDriver.close
-     * |-> LoadingWebDriverPool.close
+     * |-> LoadingWebDriverPool.close()
      *
      * */
     override fun close() {
