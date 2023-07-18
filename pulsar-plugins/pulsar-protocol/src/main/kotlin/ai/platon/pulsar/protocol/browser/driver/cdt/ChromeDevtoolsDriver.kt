@@ -8,9 +8,9 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
-import ai.platon.pulsar.common.geometric.OffsetD
-import ai.platon.pulsar.common.geometric.PointD
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.OffsetD
+import ai.platon.pulsar.common.math.geometric.PointD
+import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue

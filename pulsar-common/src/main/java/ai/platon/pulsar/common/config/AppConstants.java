@@ -123,7 +123,11 @@ public interface AppConstants {
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
     // schema version 1.10.x
-    String WEBPAGE_SCHEMA = "webpage110";
+//    String WEBPAGE_SCHEMA = "webpage110";
+    /**
+     * Schema version 1.12.x, has to be compatible with webpage110
+     * */
+    String WEBPAGE_SCHEMA = "webpage120";
 
     /**
      * Fetch

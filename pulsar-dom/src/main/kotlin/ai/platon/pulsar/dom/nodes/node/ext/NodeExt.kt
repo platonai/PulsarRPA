@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.*
-import ai.platon.pulsar.common.geometric.str
-import ai.platon.pulsar.common.geometric.str2
+import ai.platon.pulsar.common.math.geometric.str
+import ai.platon.pulsar.common.math.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
 import ai.platon.pulsar.dom.features.FeatureEntry

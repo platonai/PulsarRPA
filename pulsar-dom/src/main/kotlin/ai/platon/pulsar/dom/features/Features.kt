@@ -1,6 +1,6 @@
 package ai.platon.pulsar.dom.features
 
-import ai.platon.pulsar.common.geometric.str
+import ai.platon.pulsar.common.math.geometric.str
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.toHexString
 import ai.platon.pulsar.dom.FeaturedDocument

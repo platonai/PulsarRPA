@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common.geometric
+package ai.platon.pulsar.common.math.geometric
 
 import java.awt.Dimension
 import java.awt.Point

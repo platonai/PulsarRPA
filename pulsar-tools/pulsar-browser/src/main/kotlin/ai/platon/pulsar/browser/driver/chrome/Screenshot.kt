@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.geometric.RectD
+import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport

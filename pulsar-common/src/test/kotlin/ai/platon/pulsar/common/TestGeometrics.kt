@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.geometric.str2
-import ai.platon.pulsar.common.geometric.testAlignment
+import ai.platon.pulsar.common.math.geometric.str2
+import ai.platon.pulsar.common.math.geometric.testAlignment
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Rectangle
