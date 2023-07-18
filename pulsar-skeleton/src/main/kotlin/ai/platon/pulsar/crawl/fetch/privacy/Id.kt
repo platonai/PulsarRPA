@@ -175,7 +175,7 @@ data class BrowserId constructor(
     override fun compareTo(other: BrowserId) = privacyAgent.compareTo(other.privacyAgent)
 
     override fun toString(): String {
-        return "{$fingerprint, $display}"
+        return "{$fingerprint, $contextDir}"
     }
 
     companion object {
