@@ -62,6 +62,7 @@ interface BrowseEvent {
     val onWillInteract: WebPageWebDriverEventHandler
     val onDidInteract: WebPageWebDriverEventHandler
 
+    val onWillCheckDocumentState: WebPageWebDriverEventHandler
     /**
      * Fire when the document is actually ready. The document state is checked(computed)
      * using an algorithm in javascript.

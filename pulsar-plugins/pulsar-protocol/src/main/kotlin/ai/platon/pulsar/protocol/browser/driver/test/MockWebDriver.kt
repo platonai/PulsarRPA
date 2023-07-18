@@ -56,6 +56,12 @@ class MockWebDriver(
 
     override val isMockedPageSource: Boolean get() = mockPageSource != null
 
+    override val mainRequestHeaders get() = backupDriverOrNull?.mainRequestHeaders ?: mapOf()
+    override val mainRequestCookies get() = backupDriverOrNull?.mainRequestCookies ?: listOf()
+    override val mainResponseStatus get() = backupDriverOrNull?.mainResponseStatus ?: 0
+    override val mainResponseStatusText get() = backupDriverOrNull?.mainResponseStatusText ?: ""
+    override val mainResponseHeaders get() = backupDriverOrNull?.mainResponseHeaders ?: mapOf()
+
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) {
         backupDriverOrNull?.addInitScript(script)
@@ -102,16 +108,6 @@ class MockWebDriver(
         }
 
         backupDriverOrNull?.navigateTo(url)
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestHeaders(): Map<String, Any> {
-        return backupDriverOrNull?.mainRequestHeaders() ?: mapOf()
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestCookies(): List<Map<String, String>> {
-        return backupDriverOrNull?.mainRequestCookies() ?: listOf()
     }
 
     @Throws(WebDriverException::class)
@@ -239,14 +235,6 @@ class MockWebDriver(
     @Throws(WebDriverException::class)
     override fun awaitTermination() {
         backupDriverOrNull?.awaitTermination()
-    }
-
-    /**
-     * Quit the browser instance
-     * */
-    @Throws(WebDriverException::class)
-    override fun quit() {
-        close()
     }
 
     /**

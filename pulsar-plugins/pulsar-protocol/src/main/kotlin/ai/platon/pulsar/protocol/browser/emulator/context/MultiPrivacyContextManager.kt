@@ -18,7 +18,6 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -110,7 +109,7 @@ class MultiPrivacyContextManager(
      * Create a privacy context who is not added to the context list yet.
      * */
     @Throws(ProxyException::class)
-    override fun createUnmanagedContext(privacyAgent: PrivacyContextId): BrowserPrivacyContext {
+    override fun createUnmanagedContext(privacyAgent: PrivacyAgent): BrowserPrivacyContext {
         val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
         if (privacyAgent.isPermanent) {
             logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
@@ -121,6 +120,38 @@ class MultiPrivacyContextManager(
             )
         }
         return context
+    }
+    /**
+     * Try to get a ready privacy context.
+     *
+     * If the total number of active contexts is less than the maximum number allowed,
+     * a new privacy context will be created.
+     *
+     * If the privacy context is inactive, close it and create a new one immediately, and return the new one.
+     *
+     * This method can return a non-ready privacy context, in which case the task will be canceled.
+     *
+     * A ready privacy context is:
+     * 1. is active
+     * 2. [requirement removed] not idle
+     * 3. the associated driver pool promises to provide an available driver (but the promise can be failed)
+     *
+     * @param fingerprint The fingerprint of this privacy context.
+     * @return A privacy context which is promised to be ready.
+     * */
+    @Throws(ProxyException::class)
+    override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
+        val context = computeIfNecessary(fingerprint)
+
+        // An active privacy context can be used to serve tasks, and an inactive one should be closed.
+        if (context.isActive) {
+            return context
+        }
+
+        assert(!context.isActive)
+        close(context)
+
+        return computeIfAbsent(createPrivacyAgent(fingerprint))
     }
     /**
      * Try to get a ready privacy context.
@@ -167,6 +198,33 @@ class MultiPrivacyContextManager(
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
      * */
+    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
+        synchronized(contextLifeCycleMonitor) {
+            val privacyAgent = createPrivacyAgent(fingerprint)
+            if (privacyAgent.isPermanent) {
+                return computeIfAbsent(privacyAgent)
+            }
+
+            if (activeContexts.size < numPrivacyContexts) {
+                computeIfAbsent(privacyAgent)
+            }
+
+            return tryNextUnderLoadedPrivacyContext()
+        }
+    }
+
+    /**
+     * Gets an under-loaded privacy context, which can be either active or inactive.
+     *
+     * If the total number of active contexts is less than the maximum number allowed,
+     * a new privacy context will be created.
+     *
+     * This method can return an inactive privacy context, in which case, the task should be canceled,
+     * and the privacy context should be closed.
+     *
+     * @param fingerprint The fingerprint of this privacy context.
+     * @return A privacy context which is promised to be ready.
+     * */
     override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             // TODO: out of memory problem
@@ -184,7 +242,7 @@ class MultiPrivacyContextManager(
     }
 
     @Throws(ProxyException::class)
-    override fun computeIfAbsent(privacyAgent: PrivacyContextId): PrivacyContext {
+    override fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             return if (privacyAgent.isPermanent) {
                 permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
@@ -244,6 +302,11 @@ class MultiPrivacyContextManager(
 
     override fun close() {
         super.close()
+    }
+
+    private fun createPrivacyAgent(fingerprint: Fingerprint): PrivacyAgent {
+        val generator = privacyAgentGeneratorFactory.create("")
+        return generator.invoke(fingerprint)
     }
 
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {

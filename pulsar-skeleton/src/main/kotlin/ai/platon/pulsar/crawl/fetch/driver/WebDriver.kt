@@ -229,6 +229,8 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
+    @Throws(WebDriverException::class)
+    suspend fun getCookies(): List<Map<String, String>>
     /**
      * Brings page to front (activates tab).
      */

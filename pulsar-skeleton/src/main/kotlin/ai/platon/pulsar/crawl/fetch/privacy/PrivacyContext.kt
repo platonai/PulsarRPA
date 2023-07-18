@@ -101,9 +101,9 @@ abstract class PrivacyContext(
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     private val fetchTaskTimeout
         get() = conf.getDuration(FETCH_TASK_TIMEOUT, FETCH_TASK_TIMEOUT_DEFAULT)
-    private val privacyContextIdleTimeout
+    private val PrivacyAgentleTimeout
         get() = conf.getDuration(PRIVACY_CONTEXT_IDLE_TIMEOUT, PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT)
-    private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
+    private val idleTimeout: Duration get() = PrivacyAgentleTimeout.coerceAtLeast(fetchTaskTimeout)
 
     val idelTime get() = Duration.between(lastActiveTime, Instant.now())
     open val isIdle get() = idelTime > idleTimeout

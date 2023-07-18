@@ -349,19 +349,6 @@ open class ImmutableWebPage {
     open val encoding get() = page.encoding?.toString()
 
     /**
-     * Get the encoding of the content.
-     * Content encoding is detected just before it's parsed.
-     */
-    fun getEncodingOrDefault(defaultEncoding: String): String {
-        return if (page.encoding == null) defaultEncoding else page.encoding.toString()
-    }
-
-    /**
-     * The clues are used to determine the encoding of the page content
-     */
-    open val encodingClues get() = metadata.getOrDefault(Name.ENCODING_CLUES, "")
-
-    /**
      * The entire raw document content e.g. raw XHTML
      *
      * @return The raw document content in [ByteBuffer].

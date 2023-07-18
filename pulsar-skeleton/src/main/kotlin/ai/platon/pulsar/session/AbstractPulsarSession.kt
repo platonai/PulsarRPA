@@ -417,8 +417,6 @@ abstract class AbstractPulsarSession(
 
     override fun setVariable(name: String, value: Any) = run { variables[name] = value }
 
-    inline fun <reified T> getSessionBean(): T? = sessionBeanFactory.getBean()
-
     override fun delete(url: String) = ensureActive { context.delete(url) }
 
     override fun flush() = ensureActive { context.webDb.flush() }

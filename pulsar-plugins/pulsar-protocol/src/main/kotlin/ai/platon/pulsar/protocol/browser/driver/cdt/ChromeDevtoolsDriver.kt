@@ -683,6 +683,16 @@ class ChromeDevtoolsDriver(
         return null
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun getCookies(): List<Map<String, String>> {
+        return try {
+            rpc.invokeDeferred("getCookies") { getCookies0() } ?: listOf()
+        } catch (e: ChromeRPCException) {
+            rpc.handleRPCException(e, "getCookies")
+            listOf()
+        }
+    }
+
     override suspend fun bringToFront() {
         if (!checkState()) return
 

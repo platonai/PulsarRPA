@@ -52,7 +52,6 @@ class TestHtmlParser : HtmlParserTestBase() {
             LOG.debug(parseResult.toString())
             LOG.debug(charset.toString())
             LOG.debug(page.encoding)
-            LOG.debug(page.encodingClues)
             val title = page.pageTitle
             val text = page.pageText
             val keywords = page.metadata[Name.META_KEYWORDS]

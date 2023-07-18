@@ -54,7 +54,7 @@ interface DataCollector<T> {
      * */
     val collectedCount: Int
     /**
-     * The create time of this collector
+     * The time point collector is created
      * */
     val createTime: Instant
     /**

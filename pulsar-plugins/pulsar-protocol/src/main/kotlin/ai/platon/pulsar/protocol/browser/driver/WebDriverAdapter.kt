@@ -17,17 +17,23 @@ class WebDriverAdapter(
 
     override var idleTimeout: Duration
         get() = driver.idleTimeout
-        set(value) { driver.idleTimeout = value }
+        set(value) {
+            driver.idleTimeout = value
+        }
 
     override var waitForElementTimeout: Duration
         get() = driver.waitForElementTimeout
-        set(value) { driver.waitForElementTimeout = value }
+        set(value) {
+            driver.waitForElementTimeout = value
+        }
 
     override val state get() = driver.state
 
     override var navigateEntry: NavigateEntry
         get() = driver.navigateEntry
-        set(value) { driver.navigateEntry = value }
+        set(value) {
+            driver.navigateEntry = value
+        }
 
     override val navigateHistory get() = driver.navigateHistory
 
@@ -40,12 +46,19 @@ class WebDriverAdapter(
 
     override val isMockedPageSource get() = driver.isMockedPageSource
 
+    override val mainRequestHeaders get() = driverOrNull?.mainRequestHeaders ?: mapOf()
+    override val mainRequestCookies get() = driverOrNull?.mainRequestCookies ?: listOf()
+    override val mainResponseStatus get() = driverOrNull?.mainResponseStatus ?: 0
+    override val mainResponseStatusText get() = driverOrNull?.mainResponseStatusText ?: ""
+    override val mainResponseHeaders get() = driverOrNull?.mainResponseHeaders ?: mapOf()
+
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
 
     override suspend fun addBlockedURLs(urls: List<String>) = driverOrNull?.addBlockedURLs(urls) ?: Unit
 
-    override suspend fun addProbabilityBlockedURLs(urls: List<String>) = driverOrNull?.addProbabilityBlockedURLs(urls) ?: Unit
+    override suspend fun addProbabilityBlockedURLs(urls: List<String>) =
+        driverOrNull?.addProbabilityBlockedURLs(urls) ?: Unit
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
@@ -64,10 +77,12 @@ class WebDriverAdapter(
     override suspend fun waitForSelector(selector: String) = driverOrNull?.waitForSelector(selector) ?: 0
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeoutMillis: Long) = driverOrNull?.waitForSelector(selector, timeoutMillis) ?: 0
+    override suspend fun waitForSelector(selector: String, timeoutMillis: Long) =
+        driverOrNull?.waitForSelector(selector, timeoutMillis) ?: 0
 
     @Throws(WebDriverException::class)
-    override suspend fun waitForSelector(selector: String, timeout: Duration) = driverOrNull?.waitForSelector(selector, timeout) ?: 0
+    override suspend fun waitForSelector(selector: String, timeout: Duration) =
+        driverOrNull?.waitForSelector(selector, timeout) ?: 0
 
     @Throws(WebDriverException::class)
     override suspend fun waitForNavigation() = driverOrNull?.waitForNavigation() ?: 0
@@ -159,12 +174,6 @@ class WebDriverAdapter(
     override suspend fun evaluateDetail(expression: String) = driverOrNull?.evaluateDetail(expression)
 
     @Throws(WebDriverException::class)
-    override suspend fun mainRequestHeaders() = driverOrNull?.mainRequestHeaders() ?: mapOf()
-
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestCookies() = driverOrNull?.mainRequestCookies() ?: listOf()
-
-    @Throws(WebDriverException::class)
     override suspend fun getCookies() = driverOrNull?.getCookies() ?: listOf()
 
     @Throws(WebDriverException::class)
@@ -194,12 +203,6 @@ class WebDriverAdapter(
 
     @Throws(WebDriverException::class)
     override fun awaitTermination() = driverOrNull?.awaitTermination() ?: Unit
-
-    /**
-     * Quits this driver, close every associated window
-     * */
-    @Throws(Exception::class)
-    override fun quit() = driverOrNull?.quit() ?: Unit
 
     @Throws(Exception::class)
     override fun close() = driverOrNull?.close() ?: Unit

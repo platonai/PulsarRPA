@@ -58,12 +58,19 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
      * @return the fetch result
      * */
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult
-
+    /**
+     * Create a new context or return an existing one.
+     * */
+    abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
     /**
      * Create a new context or return an existing one.
      * */
     abstract fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
 
+    /**
+     * Create a new context or return an existing one
+     * */
+    abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
     /**
      * Create a new context or return an existing one
      * */

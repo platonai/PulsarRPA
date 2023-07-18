@@ -7,8 +7,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
-import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyContextIdGenerator
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.crawl.fetch.privacy.SequentialPrivacyAgentGenerator
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.browser.emulator.DefaultWebDriverPoolManager
@@ -25,14 +25,14 @@ class BrowserContextTests {
     private val contextPath = AppPaths.getTmp("test-context")
 
     init {
-        System.setProperty(CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS,
-            SequentialPrivacyContextIdGenerator::class.java.name)
+        System.setProperty(CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS,
+            SequentialPrivacyAgentGenerator::class.java.name)
     }
 
     @Test
     fun `When close a privacy context then it's removed from the active contexts queue`() {
         val manager = MultiPrivacyContextManager(webDriverPoolManager, conf)
-        val id = PrivacyContextId(contextPath, BrowserType.MOCK_CHROME)
+        val id = PrivacyAgent(contextPath, BrowserType.MOCK_CHROME)
         val privacyContext = manager.computeIfAbsent(id)
         assertTrue { manager.activeContexts.containsKey(id) }
         manager.close(privacyContext)

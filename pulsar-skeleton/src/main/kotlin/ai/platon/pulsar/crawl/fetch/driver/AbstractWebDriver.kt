@@ -233,9 +233,8 @@ abstract class AbstractWebDriver(
      * */
     @Throws(WebDriverException::class)
     override suspend fun newSession(): Connection {
-        val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
+        val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
         val cookies = getCookies()
-
         return newSession(headers, cookies)
     }
 
@@ -255,26 +254,18 @@ abstract class AbstractWebDriver(
         return response
     }
 
-    /**
-     * Quit the browser instance
-     * */
-    override fun quit() {
-        close()
-    }
-
     override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)
 
     override fun hashCode(): Int = id
 
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
 
-    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id"
+    override fun toString(): String = "#$id"
 
     private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
         return runBlocking {
-            val headers = mainRequestHeaders().entries.associate { it.key to it.value.toString() }
+            val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
             val cookies = getCookies()
-
             headers to cookies
         }
     }

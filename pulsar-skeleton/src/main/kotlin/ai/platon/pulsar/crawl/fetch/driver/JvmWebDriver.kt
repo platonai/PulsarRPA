@@ -139,9 +139,11 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun clickMatchesAsync(selector: String, pattern: String) = clickMatchesAsync(selector, pattern, 1)
     @Throws(WebDriverException::class)
-    fun clickMatchesAsync(selector: String, pattern: String, count: Int = 1): CompletableFuture<Unit>
+    fun clickMatchesAsync(selector: String, pattern: String, count: Int): CompletableFuture<Unit>
     @Throws(WebDriverException::class)
-    fun clickMatchesAsync(selector: String, attrName: String, pattern: String, count: Int = 1): CompletableFuture<Unit>
+    fun clickMatchesAsync(selector: String, attrName: String, pattern: String) = clickMatchesAsync(selector, attrName, pattern, 1)
+    @Throws(WebDriverException::class)
+    fun clickMatchesAsync(selector: String, attrName: String, pattern: String, count: Int): CompletableFuture<Unit>
     @Throws(WebDriverException::class)
     fun clickNthAnchorAsync(n: Int, rootSelector: String = "body"): CompletableFuture<String?>
     @Throws(WebDriverException::class)

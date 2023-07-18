@@ -92,7 +92,6 @@ class PrimerParser(val conf: ImmutableConfig) {
         val encoding = encodingDetector.sniffEncoding(page)
         if (encoding != null && encoding.isNotEmpty()) {
             page.encoding = encoding
-            page.encodingClues = encodingDetector.cluesAsString
         } else {
             logger.warn("Failed to detect encoding, url: " + page.url)
         }
@@ -113,18 +112,6 @@ class PrimerParser(val conf: ImmutableConfig) {
         jsoupParser.parse()
 
         return ParseContext(page, jsoupParser.document)
-    }
-
-    /**
-     * TODO: no need to convert to a W3CDom, we can use the original document directly
-     * */
-    private fun parseMetaTags(page: WebPage, document: FeaturedDocument) {
-        val baseUrl = page.baseUrl ?: page.url
-        val baseURL = URL(baseUrl)
-
-        val fragment = W3CDom().fromJsoup(document.document).createDocumentFragment()
-        val metaTags = parseMetaTags(baseURL, fragment, page)
-        val parseResult = initParseResult(metaTags)
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {

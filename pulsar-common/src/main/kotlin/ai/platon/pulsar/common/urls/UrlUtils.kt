@@ -566,7 +566,7 @@ object UrlUtils {
      * from the String.
      *
      * @param utf8 Utf8 object
-     * @return string-ifed Utf8 object or null if Utf8 instance is null
+     * @return stringify Utf8 object or null if Utf8 instance is null
      * @deprecated purpose not clear
      */
     @JvmStatic

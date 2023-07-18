@@ -19,8 +19,8 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun setTimeoutsAsync(browserSettings: BrowserSettings) = interopScope.future { setTimeouts(browserSettings) }
     override fun currentUrlAsync() = interopScope.future { currentUrl() }
     override fun pageSourceAsync() = interopScope.future { pageSource() }
-    override fun mainRequestHeadersAsync() = interopScope.future { mainRequestHeaders() }
-    override fun mainRequestCookiesAsync() = interopScope.future { mainRequestCookies() }
+    override fun mainRequestHeadersAsync() = interopScope.future { mainRequestHeaders }
+    override fun mainRequestCookiesAsync() = interopScope.future { mainRequestCookies }
     override fun getCookiesAsync() = interopScope.future { getCookies() }
     override fun bringToFrontAsync() = interopScope.future { bringToFront() }
     override fun waitForSelectorAsync(selector: String) = interopScope.future { waitForSelector(selector) }
@@ -36,7 +36,7 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun isCheckedAsync(selector: String) = interopScope.future { isChecked(selector) }
     override fun typeAsync(selector: String, text: String) = interopScope.future { type(selector, text) }
     override fun clickAsync(selector: String, count: Int) = interopScope.future { click(selector, count) }
-    override fun clickMatchesAsync(selector: String, pattern: String, count: Int) = interopScope.future { clickMatches(selector, pattern, count) }
+    override fun clickMatchesAsync(selector: String, pattern: String, count: Int) = interopScope.future { clickTextMatches(selector, pattern, count) }
     override fun clickMatchesAsync(selector: String, attrName: String, pattern: String, count: Int) =
         interopScope.future { clickMatches(selector, attrName, pattern, count) }
     override fun clickNthAnchorAsync(n: Int, rootSelector: String) = interopScope.future { clickNthAnchor(n, rootSelector) }

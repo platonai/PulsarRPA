@@ -84,10 +84,10 @@ class UrlFeeder(
         val now = System.currentTimeMillis()
         // the fetch speed, pages per second
         val speed = 1.0
-        var delayQueueCount = delayCollector.queue.count { it.startTime - now < speed * priorCount }
+        var delayQueueCount = delayCollector.queue.count { it.delayExpireAt - now < speed * priorCount }
         // if a task in delayed queue is ready to run in 15 seconds, count it
         if (delayQueueCount == 0) {
-            delayQueueCount = delayCollector.queue.count { it.startTime - now < 15_000 }
+            delayQueueCount = delayCollector.queue.count { it.delayExpireAt - now < 15_000 }
         }
 
         val competitorCollectors = collectors.filter { it.priority == priority }
