@@ -20,6 +20,7 @@ abstract class AbstractBrowser(
     protected val mutableRecoveredDrivers = ConcurrentHashMap<String, WebDriver>()
     protected val mutableReusedDrivers = ConcurrentHashMap<String, WebDriver>()
 
+    protected val initialized = AtomicBoolean()
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
 
@@ -27,6 +28,10 @@ abstract class AbstractBrowser(
 
     override val navigateHistory = NavigateHistory()
     override val drivers: Map<String, WebDriver> get() = mutableDrivers
+    /**
+     * The associated data.
+     * */
+    override val data: MutableMap<String, Any?> = mutableMapOf()
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
@@ -52,6 +57,10 @@ abstract class AbstractBrowser(
         // Nothing to do
     }
 
+    override fun onInitialize() {
+        initialized.set(true)
+    }
+
     override fun onWillNavigate(entry: NavigateEntry) {
         navigateHistory.add(entry)
     }
@@ -70,6 +79,7 @@ abstract class AbstractBrowser(
      * Attach default event handlers
      * */
     protected fun attach() {
+        on(BrowserEvents.initialize) { onInitialize() }
         on(BrowserEvents.willNavigate) { entry: NavigateEntry -> onWillNavigate(entry) }
         on(BrowserEvents.maintain) { maintain() }
     }
@@ -78,6 +88,7 @@ abstract class AbstractBrowser(
      * Detach default event handlers
      * */
     protected fun detach() {
+        off(BrowserEvents.initialize)
         off(BrowserEvents.willNavigate)
         off(BrowserEvents.maintain)
     }

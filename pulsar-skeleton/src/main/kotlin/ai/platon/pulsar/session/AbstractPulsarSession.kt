@@ -59,7 +59,7 @@ abstract class AbstractPulsarSession(
         fun generateNextId() = ID_START + idGen.incrementAndGet()
     }
 
-    private val log = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
+    private val logger = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
@@ -462,7 +462,7 @@ abstract class AbstractPulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closableObjects.forEach { o -> o.close() }
-            log.info("Session is closed | #{}", display)
+            logger.info("Session is closed | #{}", display)
         }
     }
 

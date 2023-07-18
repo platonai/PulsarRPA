@@ -25,7 +25,7 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(ProxyPool::class.java)
 
     protected val capacity: Int = conf.getInt(PROXY_POOL_CAPACITY, 100)
-    protected val pollingTimeout: Duration = conf.getDuration(PROXY_POOL_POLLING_TIMEOUT, Duration.ofSeconds(20))
+    protected val pollingTimeout: Duration = conf.getDuration(PROXY_POOL_POLLING_TIMEOUT, Duration.ofSeconds(1))
     protected val proxyEntries = mutableSetOf<ProxyEntry>()
     protected val freeProxies = LinkedBlockingDeque<ProxyEntry>(capacity)
     protected var numProxyBanned = 0
@@ -54,12 +54,13 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
     open fun take(): ProxyEntry? {
         lastActiveTime = Instant.now()
 
-        var retry = 3
-        while (retry-- > 0) {
+        var retry = 30
+        while (retry-- > 0 && !Thread.currentThread().isInterrupted) {
             try {
                 return freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
             } catch (e: ProxyRetryException) {
-                sleepSeconds(3)
+                // TODO: never happens
+                sleepSeconds(1)
             }
         }
 

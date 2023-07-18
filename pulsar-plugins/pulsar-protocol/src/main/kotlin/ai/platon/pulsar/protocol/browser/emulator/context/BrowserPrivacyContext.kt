@@ -23,6 +23,7 @@ open class BrowserPrivacyContext constructor(
     val driverPoolManager: WebDriverPoolManager,
     val coreMetrics: CoreMetrics? = null,
     conf: ImmutableConfig,
+    // @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
     id: PrivacyContextId
 ): PrivacyContext(id, conf) {
     private val logger = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
@@ -134,7 +135,7 @@ open class BrowserPrivacyContext constructor(
     @Synchronized
     private fun initialize(task: FetchTask) {
         createProxyContextIfEnabled()
-        task.page.variables[VAR_PRIVACY_CONTEXT_NAME] = display
+        task.page.setVar(VAR_PRIVACY_CONTEXT_NAME, display)
     }
 
     private fun createProxyContextIfEnabled() {
@@ -144,6 +145,11 @@ open class BrowserPrivacyContext constructor(
     }
 
     private fun createProxyContext(proxyPoolManager: ProxyPoolManager) {
+        if (!isActive) {
+            logger.info("Do not create proxy context, system is inactive")
+            return
+        }
+
         try {
             val pc = ProxyContext.create(id, driverContext, proxyPoolManager, conf)
             proxyEntry = pc.proxyEntry

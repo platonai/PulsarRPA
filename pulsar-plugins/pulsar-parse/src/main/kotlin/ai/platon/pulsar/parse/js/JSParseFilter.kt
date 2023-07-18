@@ -16,25 +16,16 @@
  */
 package ai.platon.pulsar.parse.js
 
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.FilterResult
 import ai.platon.pulsar.crawl.parse.ParseResult
-import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.persist.HyperlinkPersistable
-import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import org.apache.oro.text.regex.*
-import org.slf4j.LoggerFactory
-import org.w3c.dom.Element
-import org.w3c.dom.Node
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.*
 
 /**
  * This class is a heuristic link extractor for JavaScript files and code
@@ -44,6 +35,7 @@ import java.util.*
  * @author Andrzej Bialecki &lt;ab@getopt.org&gt;
  */
 class JSParseFilter(val conf: ImmutableConfig) : AbstractParseFilter(), Parser {
+    override val timeout = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)!!
 
     /**
      * Scan the JavaScript looking for possible [HyperlinkPersistable]'s

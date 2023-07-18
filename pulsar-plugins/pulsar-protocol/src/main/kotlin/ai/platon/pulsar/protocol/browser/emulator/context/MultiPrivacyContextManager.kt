@@ -2,8 +2,11 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.FileCommand
+import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -14,10 +17,12 @@ import ai.platon.pulsar.crawl.CoreMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyAgent
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.persist.RetryScope
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.delay
@@ -61,7 +66,7 @@ class MultiPrivacyContextManager(
 
     private var driverAbsenceReportTime = Instant.EPOCH
 
-    private val iterator = Iterables.cycle(activeContexts.values).iterator()
+    private val iterator = Iterables.cycle(temporaryContexts.values).iterator()
 
     val metrics = Metrics()
 
@@ -93,7 +98,7 @@ class MultiPrivacyContextManager(
         // Try to get a ready privacy context, the privacy context is supposed to be:
         // not closed, not retired, [not idle]?, has promised driver.
         // If the privacy context is inactive, close it and cancel the task.
-        val privacyContext = computeNextContext(task.fingerprint)
+        val privacyContext = computeNextContext(task.page, task.fingerprint, task)
         val result = runIfPrivacyContextActive(privacyContext, task, fetchFun).also { metrics.finishes.mark() }
 
         // maintain after run and also start a scheduled monitor,
@@ -103,15 +108,19 @@ class MultiPrivacyContextManager(
         return result
     }
     /**
-     * Create a privacy context who is not added to the context list.
+     * Create a privacy context who is not added to the context list yet.
      * */
     @Throws(ProxyException::class)
-    override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
-        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, id)
-        logger.info(
-            "Privacy context is created #{}, active: {}, allowed: {}",
-            context.display, activeContexts.size, numPrivacyContexts
-        )
+    override fun createUnmanagedContext(privacyAgent: PrivacyContextId): BrowserPrivacyContext {
+        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
+        if (privacyAgent.isPermanent) {
+            logger.info("Permanent privacy context is created #{} | {}", context.display, context.baseDir)
+        } else {
+            logger.info(
+                "Temporary privacy context is created #{}, active: {}, allowed: {} | {}",
+                context.display, temporaryContexts.size, numPrivacyContexts, context.baseDir
+            )
+        }
         return context
     }
     /**
@@ -132,6 +141,10 @@ class MultiPrivacyContextManager(
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
      * */
+    @Deprecated(
+        "Use computeNextContext(task, fingerprint)",
+        replaceWith = ReplaceWith("computeNextContext(task, fingerprint)")
+    )
     @Throws(ProxyException::class)
     override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
         val context = computeIfNecessary(fingerprint)
@@ -146,6 +159,33 @@ class MultiPrivacyContextManager(
 
         return computeIfAbsent(privacyContextIdGenerator(fingerprint))
     }
+    @Throws(ProxyException::class)
+    override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
+        val context = computeIfNecessary(page, fingerprint, task)
+
+        // An active privacy context can be used to serve tasks, and an inactive one should be closed.
+        if (context.isActive) {
+            return context
+        }
+
+        assert(!context.isActive)
+        close(context)
+
+        return computeIfAbsent(createPrivacyAgent(task.page, fingerprint))
+    }
+    @Deprecated(
+        "Use computeIfNecessary(task, fingerprint)",
+        replaceWith = ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
+    )
+    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
+        synchronized(contextLifeCycleMonitor) {
+            if (temporaryContexts.size < numPrivacyContexts) {
+                computeIfAbsent(privacyContextIdGenerator(fingerprint))
+            }
+
+            return tryNextUnderLoadedPrivacyContext()
+        }
+    }
     /**
      * Gets an under-loaded privacy context, which can be either active or inactive.
      *
@@ -158,10 +198,16 @@ class MultiPrivacyContextManager(
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
      * */
-    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
-        synchronized(activeContexts) {
+    override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
+        synchronized(contextLifeCycleMonitor) {
+            // TODO: out of memory problem
+            val privacyAgent = createPrivacyAgent(page, fingerprint)
+            if (privacyAgent.isPermanent) {
+                return computeIfAbsent(privacyAgent)
+            }
+
             if (activeContexts.size < numPrivacyContexts) {
-                computeIfAbsent(privacyContextIdGenerator(fingerprint))
+                computeIfAbsent(privacyAgent)
             }
 
             return tryNextUnderLoadedPrivacyContext()
@@ -169,9 +215,13 @@ class MultiPrivacyContextManager(
     }
 
     @Throws(ProxyException::class)
-    override fun computeIfAbsent(id: PrivacyContextId): PrivacyContext {
-        synchronized(activeContexts) {
-            return activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
+    override fun computeIfAbsent(privacyAgent: PrivacyContextId): PrivacyContext {
+        synchronized(contextLifeCycleMonitor) {
+            return if (privacyAgent.isPermanent) {
+                permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            } else {
+                temporaryContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            }
         }
     }
 
@@ -191,7 +241,9 @@ class MultiPrivacyContextManager(
         lastMaintainTime = Instant.now()
 
         if (maintainCount.getAndIncrement() == 0) {
-            logger.info("Maintaining service is started")
+            logger.info("Maintaining service is started, minimal maintain interval: {}", minMaintainInterval)
+            val command = "echo takePrivacyContextSnapshot >> ${FileCommand.COMMAND_FILE}"
+            logger.info("Run the following command to take snapshot once: \n{}", command)
         }
 
         doMaintain()
@@ -225,6 +277,22 @@ class MultiPrivacyContextManager(
         super.close()
     }
 
+    private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
+        // Specify the privacy agent by the user code
+        // TODO: this is a temporary solution, try a better and consistent solution
+        val specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
+        if (specifiedPrivacyAgent is PrivacyAgent) {
+            return specifiedPrivacyAgent
+        }
+
+        val conf = page.conf
+        val privacyAgentClassName = conf[PRIVACY_AGENT_GENERATOR_CLASS]
+            ?: conf[PRIVACY_CONTEXT_ID_GENERATOR_CLASS] ?: ""
+
+        val privacyAgentGenerator = privacyAgentGeneratorFactory.create(privacyAgentClassName)
+        return privacyAgentGenerator.invoke(fingerprint)
+    }
+
     /**
      * Get the next under loaded privacy context, which can be ether active or inactive.
      *
@@ -237,7 +305,7 @@ class MultiPrivacyContextManager(
      * @return A privacy context which is promised to be ready to serve a new task.
      * */
     private fun tryNextUnderLoadedPrivacyContext(): PrivacyContext {
-        var n = activeContexts.size
+        var n = temporaryContexts.size
 
         var pc = iterator.next()
         while (n-- > 0 && pc.isFullCapacity) {
@@ -250,23 +318,32 @@ class MultiPrivacyContextManager(
     private fun closeDyingContexts() {
         // weakly consistent, which is OK
         activeContexts.filterValues { !it.isActive }.values.forEach {
-            activeContexts.remove(it.id)
+            permanentContexts.remove(it.privacyAgent)
+            temporaryContexts.remove(it.privacyAgent)
             logger.info("Privacy context is inactive, closing it | {} | {} | {}",
-                it.elapsedTime.readable(), it.id.display, it.readableState)
+                it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
         }
 
-        activeContexts.filterValues { it.isIdle }.values.forEach {
-            activeContexts.remove(it.id)
+        temporaryContexts.filterValues { it.isIdle }.values.forEach {
+            temporaryContexts.remove(it.privacyAgent)
             logger.warn("Privacy context hangs unexpectedly, closing it | {}/{} | {} | {}",
-                it.idelTime.readable(), it.elapsedTime.readable(), it.id.display, it.readableState)
+                it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
+            close(it)
+        }
+
+        permanentContexts.filterValues { it.isIdle }.values.forEach {
+            permanentContexts.remove(it.privacyAgent)
+            logger.warn("Permanent privacy context is idle, closing it | {}/{} | {} | {}",
+                it.idelTime.readable(), it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
         }
 
         activeContexts.filterValues { it.isHighFailureRate }.values.forEach {
-            activeContexts.remove(it.id)
+            permanentContexts.remove(it.privacyAgent)
+            temporaryContexts.remove(it.privacyAgent)
             logger.warn("Privacy context has too high failure rate: {}, closing it | {} | {} | {}",
-                it.failureRate, it.elapsedTime.readable(), it.id.display, it.readableState)
+                it.failureRate, it.elapsedTime.readable(), it.display, it.readableState)
             close(it)
         }
     }
@@ -317,12 +394,11 @@ class MultiPrivacyContextManager(
         if (Duration.between(driverAbsenceReportTime, now).seconds > 10) {
             driverAbsenceReportTime = now
 
-            val promisedDrivers = activeContexts.values.joinToString { it.promisedWebDriverCount().toString() }
-            val states = activeContexts.values.joinToString { it.readableState }
-            val idleTimes = activeContexts.values.joinToString { it.idelTime.readable() }
+            val promisedDrivers = temporaryContexts.values.joinToString { it.promisedWebDriverCount().toString() }
+            val states = temporaryContexts.values.joinToString { it.readableState }
+            val idleTimes = temporaryContexts.values.joinToString { it.idelTime.readable() }
             logger.warn("Too many driver absence errors, promised drivers: {} | {} | {} | {}",
                 promisedDrivers, errorMessage, states, idleTimes)
-
         }
 
         delay(2_000)

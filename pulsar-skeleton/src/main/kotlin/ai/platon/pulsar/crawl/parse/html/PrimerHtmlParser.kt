@@ -1,5 +1,7 @@
 package ai.platon.pulsar.crawl.parse.html
 
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_DEFAULT_ENCODING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
@@ -13,6 +15,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.slf4j.LoggerFactory
 import java.net.MalformedURLException
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -33,6 +36,12 @@ class PrimerHtmlParser(
     private val tracer = logger.takeIf { it.isDebugEnabled }
     private val defaultCharEncoding = conf.get(PARSE_DEFAULT_ENCODING, "utf-8")
     private val primerParser = PrimerParser(conf)
+    /**
+     * Optimized for html content
+     * To parse non-html content, the parser might run into an endless loop,
+     * run it in a separate coroutine to protect the process
+     * */
+    override val timeout = Duration.ZERO
 
     init {
         logger.info(params.formatAsLine())

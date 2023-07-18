@@ -14,6 +14,7 @@ import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyInsufficientBalanceException
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.common.urls.CallableDegenerateUrl
 import ai.platon.pulsar.common.urls.DegenerateUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.UrlUtils
@@ -440,7 +441,7 @@ open class StreamingCrawler(
         scope.launch(context) {
             try {
                 globalMetrics.tasks.mark()
-                runLoadTaskWithEventHandlers(url)
+                runTaskWithEventHandlers(url)
             } finally {
                 lastActiveTime = Instant.now()
 
@@ -472,31 +473,50 @@ open class StreamingCrawler(
         }
     }
 
-    private suspend fun runLoadTaskWithEventHandlers(url: UrlAware) {
-        if (!isActive) {
-            return
+    private suspend fun runTaskWithEventHandlers(url: UrlAware) {
+        when {
+            !isActive -> {
+                return
+            }
+            url is DegenerateUrl -> {
+                runDegenerateUrlTask(url)
+            }
+            else -> {
+                loadWithEventHandlers(url)
+            }
         }
+    }
 
+    private fun runDegenerateUrlTask(url: DegenerateUrl) {
+        when (url) {
+            is CallableDegenerateUrl -> {
+                url.invoke()
+            }
+
+            is ListenableUrl -> {
+                emit(CrawlEvents.willLoad, url)
+                // The url is degenerated, which means it's not a resource on the Internet but a normal executable task.
+                emit(CrawlEvents.load, url)
+                emit(CrawlEvents.loaded, url, null)
+            }
+        }
+    }
+
+    private suspend fun loadWithEventHandlers(url: UrlAware) {
         emit(CrawlEvents.willLoad, url)
 
-        if (url is ListenableUrl && url is DegenerateUrl) {
-            // The url is degenerated, which means it's not a resource on the Internet but a normal executable task.
-            emit(CrawlEvents.load, url)
-            emit(CrawlEvents.loaded, url, null)
-        } else {
-            val page = loadWithTimeout(url)
+        val page = loadWithTimeout(url)
 
-            // A continuous crawl system should enable smart retry, while a simple demo can disable it
-            if (isSmartRetryEnabled) {
-                handleRetry(url, page)
-            }
-
-            if (page != null) {
-                collectStatAfterLoad(page)
-            }
-
-            emit(CrawlEvents.loaded, url, page)
+        // A continuous crawl system should enable smart retry, while a simple demo can disable it
+        if (isSmartRetryEnabled) {
+            handleRetry(url, page)
         }
+
+        if (page != null) {
+            collectStatAfterLoad(page)
+        }
+
+        emit(CrawlEvents.loaded, url, page)
     }
 
     private suspend fun loadWithTimeout(url: UrlAware): WebPage? {

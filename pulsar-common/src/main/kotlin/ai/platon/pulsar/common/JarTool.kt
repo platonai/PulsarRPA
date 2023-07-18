@@ -1,3 +1,5 @@
+package ai.platon.pulsar.common
+
 import java.io.*
 import java.util.jar.Attributes
 import java.util.jar.JarEntry

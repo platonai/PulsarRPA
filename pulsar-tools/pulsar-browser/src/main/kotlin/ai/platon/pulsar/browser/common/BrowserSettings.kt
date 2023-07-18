@@ -183,16 +183,17 @@ open class BrowserSettings(
          * */
         @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
         @JvmStatic
-        fun privacyContext(n: Int): Companion {
-            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
-            return BrowserSettings
-        }
+        fun privacyContext(n: Int): Companion = privacy(n)
 
         /**
          * Set the number of privacy contexts
          * */
         @JvmStatic
         fun privacy(n: Int): Companion {
+            if (n <= 0) {
+                throw IllegalArgumentException("The number of privacy context has to be > 0")
+            }
+
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
             return BrowserSettings
         }
@@ -202,6 +203,10 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun maxTabs(n: Int): Companion {
+            if (n <= 0) {
+                throw IllegalArgumentException("The number of open tabs has to be > 0")
+            }
+
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }

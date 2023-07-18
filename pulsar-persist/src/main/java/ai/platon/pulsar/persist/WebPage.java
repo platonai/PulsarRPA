@@ -85,6 +85,10 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
      */
     private final Variables variables = new Variables();
     /**
+     * Store arbitrary data associated with the webpage.
+     */
+    private final Variables data = new Variables();
+    /**
      * The page datum for update.
      * Page datum is collected by the fetcher and is used to update the page in the update phase.
      * */
@@ -402,13 +406,14 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Returns the local variable value to which the specified name is mapped,
+     * Returns the page scope temporary variable to which the specified name is mapped,
      * or {@code null} if the local variable map contains no mapping for the name.
      *
      * @param name the name whose associated value is to be returned
      * @return the value to which the specified name is mapped, or
      *         {@code null} if the local variable map contains no mapping for the key
      */
+    @Nullable
     public Object getVar(@NotNull String name) {
         return variables.get(name);
     }
@@ -421,13 +426,40 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
     }
 
     /**
-     * Get a page scope temporary variable
+     * Set a page scope temporary variable.
      *
      * @param name  The variable name.
      * @param value The variable value.
      */
     public void setVar(@NotNull String name, @NotNull Object value) {
         variables.set(name, value);
+    }
+
+    /**
+     * Returns the data to which the specified name is mapped,
+     * or {@code null} if the data map contains no mapping for the name.
+     *
+     * @param name the name whose associated value is to be returned
+     * @return the value to which the specified name is mapped, or
+     *         {@code null} if the local variable map contains no mapping for the key
+     */
+    @Nullable
+    public Object data(@NotNull String name) {
+        return data.get(name);
+    }
+
+    /**
+     * Store arbitrary data associated with the webpage.
+     *
+     * @param name  A string naming the piece of data to set.
+     * @param value The new data value.
+     */
+    public void data(@NotNull String name, @Nullable Object value) {
+        if (value == null) {
+            data.remove(name);
+        } else {
+            data.set(name, value);
+        }
     }
 
     @Nullable

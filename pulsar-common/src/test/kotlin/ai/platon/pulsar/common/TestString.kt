@@ -19,6 +19,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.options.OptionUtils
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.junit.Assert.assertArrayEquals
@@ -256,7 +257,7 @@ class TestString {
     }
 
     @Test
-    fun testRegexSplit() {
+    fun testSplitStringByRegex() {
         var s = "TestStringUtil"
         val r = s.split("(?=\\p{Upper})".toRegex()).filterNot { it.isEmpty() }.toTypedArray()
         assertArrayEquals(arrayOf("Test", "String", "Util"), r)

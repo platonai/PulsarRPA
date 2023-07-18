@@ -107,6 +107,10 @@ interface WebDriver: Closeable {
      * */
     val state: AtomicReference<State>
     /**
+     * The associated data.
+     * */
+    val data: MutableMap<String, Any?>
+    /**
      * The time of the last action.
      * */
     val lastActiveTime: Instant

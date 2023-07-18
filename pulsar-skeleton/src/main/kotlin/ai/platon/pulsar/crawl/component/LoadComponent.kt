@@ -75,8 +75,8 @@ class LoadComponent(
 
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
     /**
-     * Disable the fetch component, so the page only be loaded from the storage,
-     * and will never be fetched from the internet.
+     * Disable the fetch component, so all the pages will be loaded from the storage,
+     * and will never be fetched from the Internet.
      * If the page does not exist in the local storage, return WebPage.NIL.
      * */
     private val disableFetch = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
@@ -605,13 +605,14 @@ class LoadComponent(
     }
 
     private fun persist(page: WebPage, options: LoadOptions) {
-        // Remove content if storingContent is false. Content is added to page earlier
-        // so PageParser is able to parse it, now, we can clear it
-        if (!options.storeContent && page.content != null) {
+        // Remove page content if dropContent is set or storeContent is false. Page content is set earlier,
+        // so the PageParser can parse it, now, we can clear it since it's usually very large.
+        if (options.dropContent || !options.storeContent) {
             page.clearPersistContent()
         }
 
-        // the content is loaded from cache, the content remains unchanged, do not persist it
+        // The content is loaded from cache, the content remains unchanged, do not persist it
+        // TODO: check the logic again
         if (page.isCached) {
             page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             assert(!page.unbox().isContentDirty)

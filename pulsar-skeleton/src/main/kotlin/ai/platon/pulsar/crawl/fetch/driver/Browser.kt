@@ -25,6 +25,10 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * */
     val drivers: Map<String, WebDriver>
     /**
+     * The associated data.
+     * */
+    val data: MutableMap<String, Any?>
+    /**
      * Check if this browser is idle.
      * */
     val isIdle: Boolean
@@ -44,11 +48,16 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * regardless of whether the browser is closed or not.
      * */
     fun destroyForcibly()
+    /**
+     * Initialize the browser.
+     * */
+    fun onInitialize()
 
     /**
-     * Register event handler when a url is about to navigate.
+     * Register event handler before navigating to a url.
      * */
     fun onWillNavigate(entry: NavigateEntry)
+
     /**
      * Maintain the browser
      * */

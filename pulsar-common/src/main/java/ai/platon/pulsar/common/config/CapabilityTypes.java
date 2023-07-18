@@ -256,8 +256,15 @@ public interface CapabilityTypes {
      * Privacy context
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
-    /** The class name of privacy context id generator */
+    /**
+     * @deprecated Use PRIVACY_AGENT_GENERATOR_CLASS instead
+     * */
+    @Deprecated
     String PRIVACY_CONTEXT_ID_GENERATOR_CLASS = "privacy.context.id.generator.class";
+    /**
+     * The class name of privacy agent generator
+     * */
+    String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
 
     String PRIVACY_CONTEXT_IDLE_TIMEOUT = "privacy.idle.timeout";

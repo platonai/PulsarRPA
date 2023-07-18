@@ -16,11 +16,43 @@ internal abstract class PowerEvaluator : Evaluator() {
 
     companion object {
         /**
-         * Handle non-standard CSS selectors
+         * Handle non-standard CSS identifier. Some websites use selectors what do not match the standard. For example,
+         *
+         * <code>
+         *     <div class='KAHaP+'></div>
+         * </code>
+         *
+         * the charactor "+" is not allowed in a class name so Jsoup throws a SelectorParseException,
+         * and pulsar-dom throws a PowerSelectorParseException.
+         *
+         * Jsoup follows the CSS2 value defination standard: https://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
+         *
+         * <p>
+         * In CSS, identifiers (including element names, classes, and IDs in
+         * [selectors](https://www.w3.org/TR/CSS2/selector.html)) can contain only the characters [a-zA-Z0-9]
+         * and ISO 10646 characters U+00A0 and higher, plus the hyphen (-) and the underscore (_);
+         * they cannot start with a digit, two hyphens, or a hyphen followed by a digit.
+         * Identifiers can also contain escaped characters and any ISO 10646 character as a numeric code.
+         * For instance, the identifier "B&W?" may be written as "B\&W\?" or "B\26 W\3F".
+         *
+         * For more about valid characters in a CSS selector:
+         * https://pineco.de/css-quick-tip-the-valid-characters-in-a-custom-css-selector/
+         * A selector will look something like this:
+         * -?[_a-zA-Z]+[_-a-zA-Z0-9]*
+         *
          * @see [Issue #10](https://github.com/platonai/pulsar/issues/10)
          * */
         fun encodeQuery(query: String): String {
-            return query.replace("+", "--x--")
+            // correct non-standard identifier
+            // <div class='KAHaP+'></div>
+            // to be:
+            // <div class='KAHaP--x--'></div>
+            // TODO: can we escape these characters? we need a test
+            var q = query.replace("+", "--x--")
+
+            // Further fix: adjacent sibling selector (+), for example "div + p".
+            q = q.replace(" --x-- ", " + ")
+            return q
         }
 
         fun decodeQuery(query: String): String {

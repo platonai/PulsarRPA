@@ -11,7 +11,7 @@ fun main() {
 
     val be = options.event.browseEvent
     be.onWillNavigate.addFirst { _, driver ->
-        println("onWillNavigate " + driver.navigateHistory.joinToString { it.url })
+        println("onWillNavigate " + driver.navigateHistory.history.joinToString { it.url })
         scripts.forEach { driver.addInitScript(it) }
     }
     be.onFeatureComputed.addLast { _, driver ->

@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.collect.queue
 import ai.platon.pulsar.common.collect.ExternalUrlLoader
 import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -18,7 +19,6 @@ abstract class AbstractLoadingQueue(
 ) : AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     private val logger = getLogger(AbstractLoadingQueue::class)
 
-    // TODO: check the synchronization, non-concurrent collection might be OK
     protected val cacheImplementation = ConcurrentLinkedQueue<UrlAware>()
 
     private val capacity = topic.pageSize
@@ -44,17 +44,22 @@ abstract class AbstractLoadingQueue(
     @get:Synchronized
     override val externalSize: Int
         get() {
-            return try {
-                loader.countRemaining(topic)
-            } catch (e: Exception) {
-                logger.warn("Failed to count", e)
-                0
-            }
+            return loader.runCatching { countRemaining(topic) }
+                .onFailure { logger.warn(it.stringify("externalSize - ")) }
+                .getOrNull() ?: 0
         }
 
     @get:Synchronized
     override val estimatedExternalSize: Int
-        get() = externalSize
+        get() {
+            return loader.runCatching { estimateRemaining(topic) }
+                .onFailure { logger.warn(it.stringify("estimatedExternalSize - ")) }
+                .getOrNull() ?: 0
+        }
+
+    @get:Synchronized
+    override val estimatedSize: Int
+        get() = size + estimatedExternalSize
 
     @get:Synchronized
     val freeSlots

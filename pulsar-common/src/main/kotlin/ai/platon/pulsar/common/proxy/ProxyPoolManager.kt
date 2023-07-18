@@ -111,12 +111,10 @@ open class ProxyPoolManager(
          * */
         fun isProxyEnabled(conf: ImmutableConfig): Boolean {
             // explicit set system environment property
-            val useProxy = conf.get(CapabilityTypes.PROXY_USE_PROXY)
-            if (useProxy != null) {
-                when (useProxy) {
-                    "yes", "true" -> return true
-                    "no", "false" -> return false
-                }
+            val useProxy = conf[CapabilityTypes.PROXY_USE_PROXY]
+            when (useProxy) {
+                "yes", "true" -> return true
+                "no", "false" -> return false
             }
 
             if (conf.getBoolean(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
