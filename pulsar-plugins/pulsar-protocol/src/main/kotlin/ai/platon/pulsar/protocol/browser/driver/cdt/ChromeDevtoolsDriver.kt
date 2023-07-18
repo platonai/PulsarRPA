@@ -156,7 +156,6 @@ class ChromeDevtoolsDriver(
         return mainRequestCookies
     }
 
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("getCookies"))
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
         return try {
