@@ -37,27 +37,15 @@ interface WebDriver: Closeable {
     enum class State {
         INIT,
         READY,
-        @Deprecated("Inappropriate name", ReplaceWith("READY"))
-        FREE,
         WORKING,
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.canceled"))
-        CANCELED,
         RETIRED,
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.crashed"))
-        CRASHED,
         QUIT;
 
         val isInit get() = this == INIT
-        @Deprecated("Inappropriate name", ReplaceWith("isReady"))
-        val isFree get() = this == FREE
-        val isReady get() = this == READY || isFree
+        val isReady get() = this == READY
         val isWorking get() = this == WORKING
         val isQuit get() = this == QUIT
         val isRetired get() = this == RETIRED
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCanceled"))
-        val isCanceled get() = this == CANCELED
-        @Deprecated("Inappropriate lifetime status", ReplaceWith("WebDriver.isCrashed"))
-        val isCrashed get() = this == CRASHED
     }
 
     /**
@@ -129,8 +117,6 @@ interface WebDriver: Closeable {
 
     val isInit: Boolean
     val isReady: Boolean
-    @Deprecated("Inappropriate name", ReplaceWith("isReady()"))
-    val isFree: Boolean
     val isWorking: Boolean
     val isRetired: Boolean
     val isQuit: Boolean
@@ -138,8 +124,6 @@ interface WebDriver: Closeable {
     val isCanceled: Boolean
     val isCrashed: Boolean
 
-    @Deprecated("Not used any more")
-    val sessionId: String?
     /**
      * Delay policy defines the delay time between actions, it is used to mimic real people
      * to interact with webpages.
@@ -245,16 +229,6 @@ interface WebDriver: Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
-
-    @Deprecated("Getter is available", ReplaceWith("mainRequestHeaders"))
-    @Throws(WebDriverException::class)
-    suspend fun mainRequestHeaders(): Map<String, Any>
-    @Deprecated("Getter is available", ReplaceWith("mainRequestCookies"))
-    @Throws(WebDriverException::class)
-    suspend fun mainRequestCookies(): List<Map<String, String>>
-    @Deprecated("Getter is available", ReplaceWith("getCookies"))
-    @Throws(WebDriverException::class)
-    suspend fun getCookies(): List<Map<String, String>>
     /**
      * Brings page to front (activates tab).
      */
@@ -303,12 +277,6 @@ interface WebDriver: Closeable {
 
     @Throws(WebDriverException::class)
     suspend fun clickTextMatches(selector: String, pattern: String, count: Int = 1)
-    /**
-     * Use clickTextMatches instead
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("clickTextMatches(selector, pattern, count"))
-    @Throws(WebDriverException::class)
-    suspend fun clickMatches(selector: String, pattern: String, count: Int = 1) = clickTextMatches(selector, pattern, count)
     @Throws(WebDriverException::class)
     suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
     @Throws(WebDriverException::class)
@@ -420,9 +388,6 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun pause()
-    @Deprecated("Inappropriate name", ReplaceWith("pause"))
-    @Throws(WebDriverException::class)
-    suspend fun stopLoading() = pause()
     /**
      * Force the page stop all navigations and RELEASES all resources. Interaction with the
      * stop page results in undefined behavior and the results should not be trusted.
@@ -438,12 +403,6 @@ interface WebDriver: Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun terminate()
-    /**
-     * Quits this driver, closing every associated window.
-     * */
-    @Deprecated("Inappropriate name", ReplaceWith("close()"))
-    @Throws(Exception::class)
-    fun quit()
     /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
     fun awaitTermination()

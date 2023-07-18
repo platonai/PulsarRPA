@@ -157,32 +157,14 @@ public interface CapabilityTypes {
     /**
      * Inject parameters
      */
-    @Deprecated
-    String INJECT_SEEDS = "inject.seeds";
-
-    @Deprecated
-    String INJECT_SEED_PATH = "inject.seed.dir";
-
-    @Deprecated
-    String INJECT_UPDATE = "inject.update";
-
-    @Deprecated
-    String INJECT_WATCH = "inject.watch";
 
     String INJECT_SCORE = "inject.score";
 
     String GLOBAL_CACHE_CLASS = "global.cache.class";
 
-    @Deprecated
-    String BROWSER_MEMORY_TO_RESERVE_KEY = "browser.memory.to.reserve";
-
-    @Deprecated
-    String MEMORY_TO_RESERVE_MIB_KEY = "browser.memory.to.reserve.MiB";
     /**
      * Load parameters
      */
-    @Deprecated
-    String LOAD_HARD_REDIRECT = "load.hard.redirect";
     String LOAD_STRATEGY = "load.strategy";
     /**
      * Disable the fetch component, so the page only be loaded from the storage,
@@ -257,11 +239,6 @@ public interface CapabilityTypes {
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
     /**
-     * @deprecated Use PRIVACY_AGENT_GENERATOR_CLASS instead
-     * */
-    @Deprecated
-    String PRIVACY_CONTEXT_ID_GENERATOR_CLASS = "privacy.context.id.generator.class";
-    /**
      * The class name of privacy agent generator
      * */
     String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
@@ -281,21 +258,11 @@ public interface CapabilityTypes {
      */
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
     /**
-     * Open a set of blank tabs before the first page view
-     * @deprecated Not a useful feature
-     * */
-    String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
-    /**
      * The web driver to use
      * */
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
     String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
-    /**
-     * @deprecated not useful
-     * */
-    @Deprecated
-    String BROWSER_HEAVY_RENDERING = "browser.heavy.rendering";
     String BROWSER_TYPE = "browser.type";
     // not used since the browser is always running in temporary contexts
     String BROWSER_INCOGNITO = "browser.incognito";
@@ -304,16 +271,7 @@ public interface CapabilityTypes {
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
 
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
-    /**
-     * @deprecated use BROWSER_RESPONSE_HANDLER instead
-     * */
-    @Deprecated
-    String BROWSER_EMULATOR_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_RESPONSE_HANDLER = "browser.response.handler";
-    /**
-     * @deprecated  use BROWSER_URL_BLOCK_PROBABILITY instead
-     * */
-    String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
     /**
      * The probability to block urls specified by {@code WebDriver.addBlockedURLs}, between [0, 1]
      * */
@@ -326,19 +284,12 @@ public interface CapabilityTypes {
      * */
     String BROWSER_REUSE_RECOVERED_DRIVERS = "browser.reuse.recovered.drivers";
     /**
-     * @deprecated Use event handlers instead
-     * */
-    @Deprecated
-    String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
-    /**
      * Add a --no-sandbox flag to launch the chrome if we are running inside a virtual machine,
      * for example, virtualbox, vmware or WSL
      * */
     String BROWSER_LAUNCH_NO_SANDBOX = "browser.launch.no.sandbox";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
-    @Deprecated
-    String BROWSER_JS_NAME_MANGLING_MAGIC = "browser.js.name.mangling.magic";
 
     /**
      * Proxy

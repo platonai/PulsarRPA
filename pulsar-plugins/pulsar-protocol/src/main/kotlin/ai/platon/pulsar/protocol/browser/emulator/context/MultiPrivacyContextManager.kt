@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.PulsarParams.VAR_PRIVACY_AGENT
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_ID_GENERATOR_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.metrics.AppMetrics
@@ -141,24 +140,6 @@ class MultiPrivacyContextManager(
      * @param fingerprint The fingerprint of this privacy context.
      * @return A privacy context which is promised to be ready.
      * */
-    @Deprecated(
-        "Use computeNextContext(task, fingerprint)",
-        replaceWith = ReplaceWith("computeNextContext(task, fingerprint)")
-    )
-    @Throws(ProxyException::class)
-    override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
-        val context = computeIfNecessary(fingerprint)
-
-        // An active privacy context can be used to serve tasks, and an inactive one should be closed.
-        if (context.isActive) {
-            return context
-        }
-
-        assert(!context.isActive)
-        close(context)
-
-        return computeIfAbsent(privacyContextIdGenerator(fingerprint))
-    }
     @Throws(ProxyException::class)
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         val context = computeIfNecessary(page, fingerprint, task)
@@ -173,19 +154,7 @@ class MultiPrivacyContextManager(
 
         return computeIfAbsent(createPrivacyAgent(task.page, fingerprint))
     }
-    @Deprecated(
-        "Use computeIfNecessary(task, fingerprint)",
-        replaceWith = ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
-    )
-    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
-        synchronized(contextLifeCycleMonitor) {
-            if (temporaryContexts.size < numPrivacyContexts) {
-                computeIfAbsent(privacyContextIdGenerator(fingerprint))
-            }
 
-            return tryNextUnderLoadedPrivacyContext()
-        }
-    }
     /**
      * Gets an under-loaded privacy context, which can be either active or inactive.
      *
@@ -278,7 +247,7 @@ class MultiPrivacyContextManager(
     }
 
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
-        // Specify the privacy agent by the user code
+        // Privacy agent is specified by the customer code
         // TODO: this is a temporary solution, try a better and consistent solution
         val specifiedPrivacyAgent = page.getVar(VAR_PRIVACY_AGENT)
         if (specifiedPrivacyAgent is PrivacyAgent) {
@@ -286,11 +255,10 @@ class MultiPrivacyContextManager(
         }
 
         val conf = page.conf
-        val privacyAgentClassName = conf[PRIVACY_AGENT_GENERATOR_CLASS]
-            ?: conf[PRIVACY_CONTEXT_ID_GENERATOR_CLASS] ?: ""
+        val privacyAgentClassName = conf[PRIVACY_AGENT_GENERATOR_CLASS] ?: ""
 
-        val privacyAgentGenerator = privacyAgentGeneratorFactory.create(privacyAgentClassName)
-        return privacyAgentGenerator.invoke(fingerprint)
+        val generator = privacyAgentGeneratorFactory.create(privacyAgentClassName)
+        return generator.invoke(fingerprint)
     }
 
     /**
@@ -440,7 +408,7 @@ class MultiPrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.meterSuccesses.meanRate)
+        return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.meanRate)
     }
 
     /**

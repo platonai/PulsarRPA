@@ -20,9 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class GracefulScheduledExecutor(
     var initialDelay: Duration = Duration.ofMinutes(1),
     var interval: Duration = Duration.ofSeconds(10),
-    val executor: ScheduledExecutorService = createDefaultExecutor(),
-    @Deprecated("Not used")
-    val autoClose: Boolean = true
+    val executor: ScheduledExecutorService = createDefaultExecutor()
 ): AutoCloseable {
     private val logger = LoggerFactory.getLogger(GracefulScheduledExecutor::class.java)
 

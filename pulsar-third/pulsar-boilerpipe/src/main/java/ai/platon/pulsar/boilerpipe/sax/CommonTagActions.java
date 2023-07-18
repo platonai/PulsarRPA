@@ -151,12 +151,6 @@ public abstract class CommonTagActions {
   };
 
   /**
-   * @deprecated Use {@link #TA_INLINE_WHITESPACE} instead
-   */
-  @Deprecated
-  public static final TagAction TA_INLINE = TA_INLINE_WHITESPACE;
-
-  /**
    * Marks this tag a simple "inline" element, which neither generates whitespace, nor a new block.
    */
   public static final TagAction TA_INLINE_NO_WHITESPACE = new TagAction() {

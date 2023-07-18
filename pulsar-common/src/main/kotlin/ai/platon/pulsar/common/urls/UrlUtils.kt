@@ -45,18 +45,6 @@ object UrlUtils {
      * @param  str   The string to test
      * @return true if the given str is a a standard URL, false otherwise
      * */
-    @Deprecated("Inappropriate name", ReplaceWith("UrlUtils.isStandard(str)"))
-    @JvmStatic
-    fun isValidUrl(str: String?): Boolean {
-        return getURLOrNull(str) != null
-    }
-
-    /**
-     * Test if the str is a standard URL.
-     *
-     * @param  str   The string to test
-     * @return true if the given str is a a standard URL, false otherwise
-     * */
     @JvmStatic
     fun isStandard(str: String?): Boolean {
         return getURLOrNull(str) != null

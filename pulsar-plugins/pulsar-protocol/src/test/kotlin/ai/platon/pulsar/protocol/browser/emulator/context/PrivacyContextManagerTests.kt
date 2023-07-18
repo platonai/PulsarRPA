@@ -50,14 +50,14 @@ class PrivacyContextManagerTests {
         assertTrue { pc.isActive }
         privacyManager.close(pc)
         assertTrue { !pc.isActive }
-        assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
+        assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
         assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
 
         val pc2 = privacyManager.computeNextContext(fingerprint)
         assertTrue { pc2.isActive }
-        assertNotEquals(pc.id, pc2.id)
+        assertNotEquals(pc.privacyAgent, pc2.privacyAgent)
         assertNotEquals(pc, pc2)
-        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.id) }
+        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.privacyAgent) }
         assertTrue { privacyManager.temporaryContexts.containsValue(pc2) }
     }
 
@@ -74,7 +74,7 @@ class PrivacyContextManagerTests {
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }
-            assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
+            assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
             assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
         }
     }
@@ -101,11 +101,11 @@ class PrivacyContextManagerTests {
         closer.scheduleWithFixedDelay({
             volatileContexts.forEach { pc ->
                 // proxy server can be changed, which will be improved in the further
-                pc.id.fingerprint.proxyServer = "127.0.0." + Random.nextInt(200)
+                pc.privacyAgent.fingerprint.proxyServer = "127.0.0." + Random.nextInt(200)
 
                 privacyManager.close(pc)
                 assertTrue { !pc.isActive }
-                assertFalse { privacyManager.temporaryContexts.containsKey(pc.id) }
+                assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
                 assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
             }
         }, 2, 1, TimeUnit.SECONDS)

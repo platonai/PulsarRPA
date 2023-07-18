@@ -144,11 +144,6 @@ class MockWebDriver(
         backupDriverOrNull?.scrollTo(selector)
     }
 
-    @Deprecated("Not used any more")
-    override val sessionId: String?
-        @Throws(WebDriverException::class)
-        get() = backupDriverOrNull?.sessionId
-
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String = backupDriverOrNull?.currentUrl() ?: navigateUrl
 
@@ -186,12 +181,6 @@ class MockWebDriver(
 
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
         backupDriverOrNull?.clickTextMatches(selector, pattern, count)
-    }
-
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("clickTextMatches(selector, pattern, count"))
-    @Throws(WebDriverException::class)
-    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
-        backupDriverOrNull?.clickMatches(selector, pattern, count)
     }
 
     @Throws(WebDriverException::class)

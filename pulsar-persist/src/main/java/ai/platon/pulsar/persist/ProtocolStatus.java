@@ -30,11 +30,6 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
     public static final String ARG_URL = "url";
     public static final String ARG_RETRY_SCOPE = "rsp";
-    /**
-     * @deprecated Use ARG_REASON instead
-     * */
-    @Deprecated
-    public static final String ARG_RETRY_REASON = "rrs";
     public static final String ARG_REASON = "rs";
 
     /**
@@ -260,10 +255,6 @@ public class ProtocolStatus implements ProtocolStatusCodes {
             return false;
         }
 
-        if (getArgOrElse(ARG_RETRY_REASON, "").equals(reasonString)) {
-            return true;
-        }
-
         if (getArgOrElse(ARG_REASON, "").equals(reasonString)) {
             return true;
         }
@@ -334,19 +325,6 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getArgs().get(ARG_RETRY_SCOPE);
     }
 
-    /**
-     * @deprecated Use getReason instead
-     * */
-    @Deprecated
-    @Nullable
-    public Object getRetryReason() {
-        Object reason = getArgs().get(ARG_REASON);
-        if (reason == null) {
-            reason = getArgs().get(ARG_RETRY_REASON);
-        }
-        return reason;
-    }
-
     @Nullable
     public Object getReason() {
         return getArgs().get(ARG_REASON);
@@ -361,7 +339,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         String minorName = minorCodes.getOrDefault(getMinorCode(), "Unknown");
         String str = minorName + "(" + getMinorCode() + ")";
         if (!getArgs().isEmpty()) {
-            List<String> keys = List.of(ARG_RETRY_SCOPE, ARG_REASON, ARG_RETRY_REASON, ARG_HTTP_CODE);
+            List<String> keys = List.of(ARG_RETRY_SCOPE, ARG_REASON, ARG_HTTP_CODE);
             String args = getArgs().entrySet().stream()
                     .filter(e -> keys.contains(e.getKey().toString()))
                     .map(e -> e.getKey() + ": " + e.getValue())

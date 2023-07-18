@@ -3,8 +3,6 @@ package ai.platon.pulsar.crawl.event
 import ai.platon.pulsar.crawl.*
 
 abstract class AbstractLoadEvent(
-    @Deprecated("Url filtering should not be in load phase, crawl phase is better")
-    override val onFilter: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onNormalize: UrlFilterEventHandler = UrlFilterEventHandler(),
     override val onWillLoad: UrlEventHandler = UrlEventHandler(),
     override val onWillFetch: WebPageEventHandler = WebPageEventHandler(),
@@ -19,7 +17,6 @@ abstract class AbstractLoadEvent(
 ): LoadEvent {
 
     override fun chain(other: LoadEvent): AbstractLoadEvent {
-        onFilter.addLast(other.onFilter)
         onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
         onWillFetch.addLast(other.onWillFetch)
@@ -37,17 +34,11 @@ abstract class AbstractLoadEvent(
 }
 
 abstract class AbstractCrawlEvent(
-    @Deprecated("Url filtering should not be in PageEvent")
-    override val onFilter: UrlAwareEventFilter = UrlAwareEventFilter(),
-    @Deprecated("No need to normalize in a crawler")
-    override val onNormalize: UrlAwareEventFilter = UrlAwareEventFilter(),
     override val onWillLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoad: UrlAwareEventHandler = UrlAwareEventHandler(),
     override val onLoaded: UrlAwareWebPageEventHandler = UrlAwareWebPageEventHandler()
 ): CrawlEvent {
     override fun chain(other: CrawlEvent): CrawlEvent {
-        onFilter.addLast(other.onFilter)
-        onNormalize.addLast(other.onNormalize)
         onWillLoad.addLast(other.onWillLoad)
         onLoad.addLast(other.onLoad)
         onLoaded.addLast(other.onLoaded)
@@ -71,7 +62,6 @@ abstract class AbstractBrowseEvent(
     override val onWillScroll: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
     override val onDidScroll: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
-    override val onWillCheckDocumentState: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
     override val onDocumentActuallyReady: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
 
     override val onWillComputeFeature: WebPageWebDriverEventHandler = WebPageWebDriverEventHandler(),
@@ -94,7 +84,6 @@ abstract class AbstractBrowseEvent(
         onWillInteract.addLast(other.onWillInteract)
         onDidInteract.addLast(other.onDidInteract)
 
-        onWillCheckDocumentState.addLast(other.onWillCheckDocumentState)
         onDocumentActuallyReady.addLast(other.onDocumentActuallyReady)
 
         onWillScroll.addLast(other.onWillScroll)

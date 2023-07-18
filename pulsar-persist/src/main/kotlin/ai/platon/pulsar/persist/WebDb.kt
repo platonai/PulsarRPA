@@ -1,10 +1,8 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.simplify
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.UrlUtils
 import ai.platon.pulsar.common.urls.UrlUtils.reverseUrlOrNull
@@ -20,7 +18,6 @@ import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.jvm.Throws
 
 class WebDb(
     val conf: ImmutableConfig,

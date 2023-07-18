@@ -10,7 +10,7 @@ import java.util.*
  * */
 open class BlockLabel(value: String) : Comparable<BlockLabel> {
 
-    val text: String = value.toLowerCase()
+    val text: String = value.lowercase(Locale.getDefault())
 
     open val isBuiltin: Boolean
         get() = builtinLabels.contains(this)

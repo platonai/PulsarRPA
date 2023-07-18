@@ -33,16 +33,13 @@ import java.util.concurrent.atomic.AtomicInteger
  * and Pulsar will visit the page in another privacy context.
  * */
 abstract class PrivacyContext(
-    @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
-    val id: PrivacyAgent,
+    val privacyAgent: PrivacyAgent,
     val conf: ImmutableConfig
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
         // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
         val CONTEXT_DIR_PREFIX = "cx."
-        @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
-        val SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
         val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
         // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
         // should be specified, so the browser driver opens a browser just like a normal user opens it.
@@ -66,9 +63,8 @@ abstract class PrivacyContext(
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
 
     val sequence = instanceSequencer.incrementAndGet()
-    val privacyAgent get() = id
     /**
-     * The real id, will replace the current inappropriate [id]
+     * The real id, will replace the current inappropriate [privacyAgent]
      * */
     val id0 get() = privacyAgent.id
     val display get() = privacyAgent.display

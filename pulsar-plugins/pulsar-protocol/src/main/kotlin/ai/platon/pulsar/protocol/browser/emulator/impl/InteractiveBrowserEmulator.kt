@@ -55,9 +55,6 @@ open class InteractiveBrowserEmulator(
      * @param task The task to fetch
      * @return The result of this fetch
      * */
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("visit(task, driver)"))
-    override suspend fun fetch(task: FetchTask, driver: WebDriver) = visit(task, driver)
-
     override suspend fun visit(task: FetchTask, driver: WebDriver): FetchResult {
         return takeIf { isActive }?.browseWithDriver(task, driver) ?:
         FetchResult.canceled(task, "Inactive interactive browser emulator")

@@ -666,14 +666,6 @@ public final class Strings {
   }
 
   /**
-   * @deprecated Inappropriate name, use compactFormat instead
-   */
-  @Deprecated
-  public static String readableBytes(int bytes) {
-    return compactFormat(bytes, -1, false);
-  }
-
-  /**
    * Formats a decimal number in its compact, readable form.
    *
    * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
@@ -681,14 +673,6 @@ public final class Strings {
    */
   public static String compactFormat(long number) {
     return compactFormat(number, -1, false);
-  }
-
-  /**
-   * @deprecated Inappropriate name, use compactFormat instead
-   */
-  @Deprecated
-  public static String readableBytes(long bytes) {
-    return compactFormat(bytes, -1, false);
   }
 
   /**
@@ -702,14 +686,6 @@ public final class Strings {
   }
 
   /**
-   * @deprecated Inappropriate name, use compactFormat instead
-   */
-  @Deprecated
-  public static String readableBytes(int bytes, boolean si) {
-    return compactFormat(bytes, -1, si);
-  }
-
-  /**
    * Formats a decimal number in its compact, readable form.
    *
    * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
@@ -720,14 +696,6 @@ public final class Strings {
   }
 
   /**
-   * @deprecated Inappropriate name, use compactFormat instead
-   */
-  @Deprecated
-  public static String readableBytes(long bytes, boolean si) {
-    return compactFormat(bytes, -1, si);
-  }
-
-  /**
    * Formats a decimal number in its compact, readable form.
    *
    * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
@@ -735,14 +703,6 @@ public final class Strings {
    */
   public static String compactFormat(int number, int scale, boolean si) {
     return compactFormat((long) number, scale, si);
-  }
-
-  /**
-   * @deprecated Inappropriate name, use compactFormat instead
-   */
-  @Deprecated
-  public static String readableBytes(int bytes, int scale, boolean si) {
-    return compactFormat((long) bytes, scale, si);
   }
 
   /**
@@ -772,14 +732,6 @@ public final class Strings {
     String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
     String format = scale > 0 ? "%," + scale + ".2f %sB" : "%,.2f %sB";
     return String.format(format, number / Math.pow(unit, exp), pre);
-  }
-
-  /**
-   * @deprecated Inappropriate name, use compactFormat instead
-   */
-  @Deprecated
-  public static String readableBytes(long bytes, int scale, boolean si) {
-    return compactFormat(bytes, scale, si);
   }
 
   /**

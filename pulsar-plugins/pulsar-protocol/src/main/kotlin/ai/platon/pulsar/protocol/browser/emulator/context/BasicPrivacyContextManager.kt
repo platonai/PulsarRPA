@@ -31,7 +31,7 @@ class BasicPrivacyContextManager(
             : this(driverPoolManager, null, null, config)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {
-        return run0(computeNextContext(task.fingerprint), task, fetchFun)
+        return run0(computeNextContext(task.page, task.fingerprint, task), task, fetchFun)
     }
 
     override fun createUnmanagedContext(privacyAgent: PrivacyContextId): BrowserPrivacyContext {
@@ -40,36 +40,45 @@ class BasicPrivacyContextManager(
         return context
     }
 
-    @Deprecated(
-        "Use computeNextContext(task, fingerprint)",
-        replaceWith = ReplaceWith("computeNextContext(FetchTask, Fingerprint)")
-    )
-    override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
-        val context = computeIfNecessary(fingerprint)
-        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyContextIdGenerator(fingerprint)) }
-    }
+//    @Deprecated(
+//        "Use computeNextContext(task, fingerprint)",
+//        replaceWith = ReplaceWith("computeNextContext(FetchTask, Fingerprint)")
+//    )
+//    override fun computeNextContext(fingerprint: Fingerprint): PrivacyContext {
+//        val context = computeIfNecessary(fingerprint)
+//        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyContextIdGenerator(fingerprint)) }
+//    }
 
     override fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
-        return computeNextContext(fingerprint)
+        val context = computeIfNecessary(page, fingerprint, task)
+        val generator = privacyAgentGeneratorFactory.generator
+        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(generator(fingerprint)) }
     }
 
-    @Deprecated(
-        "Use computeIfNecessary(task, fingerprint)",
-        replaceWith = ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
-    )
-    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
+//    @Deprecated(
+//        "Use computeIfNecessary(task, fingerprint)",
+//        replaceWith = ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
+//    )
+//    override fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext {
+//        synchronized(contextLifeCycleMonitor) {
+//            if (temporaryContexts.size < numPrivacyContexts) {
+//                val generator = privacyAgentGeneratorFactory.generator
+//                computeIfAbsent(generator(fingerprint))
+//            }
+//
+//            return iterator.next()
+//        }
+//    }
+
+    override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (temporaryContexts.size < numPrivacyContexts) {
                 val generator = privacyAgentGeneratorFactory.generator
-                computeIfAbsent(privacyContextIdGenerator(fingerprint))
+                computeIfAbsent(generator(fingerprint))
             }
 
             return iterator.next()
         }
-    }
-
-    override fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext? {
-        return computeIfNecessary(fingerprint)
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = temporaryContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
@@ -100,6 +109,6 @@ class BasicPrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.meterSuccesses.fiveMinuteRate)
+        return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.fiveMinuteRate)
     }
 }

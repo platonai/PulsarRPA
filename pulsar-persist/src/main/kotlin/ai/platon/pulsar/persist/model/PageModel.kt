@@ -74,17 +74,6 @@ class PageModel(
     @Synchronized
     fun getValue(index: Int, name: String) = get(index)?.get(name)
 
-    @Deprecated("Inappropriate name", ReplaceWith("findGroup(groupId)"))
-    @Synchronized
-    fun findById(groupId: Int): FieldGroup? {
-        val gFieldGroup = fieldGroups.firstOrNull { it.id == groupId.toLong() }
-        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
-    }
-
-    @Deprecated("Inappropriate name", ReplaceWith("findValue(groupId, name)"))
-    @Synchronized
-    fun findValueById(groupId: Int, name: String): String? = findGroup(groupId)?.get(name)
-
     /**
      * Find the field group whose id is [groupId].
      * */
@@ -117,9 +106,6 @@ class PageModel(
         fieldGroups.add(index, fieldGroup.unbox())
         pageModel.setDirty()
     }
-
-    @Deprecated("Inappropriate name", ReplaceWith("put(groupId, name, value)"))
-    fun add(groupId: Int, name: String, value: String) = put(groupId, name, value)
 
     /**
      * Set a field entry to field group whose id is [groupId].

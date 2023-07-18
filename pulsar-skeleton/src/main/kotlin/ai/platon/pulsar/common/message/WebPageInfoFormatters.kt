@@ -246,9 +246,6 @@ class PageLoadStatusFormatter(
     }
 }
 
-@Deprecated("Inappropriate name", ReplaceWith("PageLoadStatusFormatter"))
-typealias LoadStatusFormatter = PageLoadStatusFormatter
-
 class LoadedPagesStatusFormatter(
         val pages: Collection<WebPage>,
         val startTime: Instant,

@@ -36,13 +36,6 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
             fieldGroup.name = name
         }
 
-    @Deprecated("Prone to misuse", ReplaceWith("fieldsCopy"))
-    var fields: Map<String, String?>
-        get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
-        set(value) {
-            fieldGroup.fields = value.entries.associate { it.key to it.value }
-        }
-
     val fieldsCopy: Map<String, String?>
         get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
 

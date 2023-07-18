@@ -37,16 +37,6 @@ open class BrowserSettings(
 
         /**
          * Specify the browser type to fetch webpages.
-         * */
-        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType: BrowserType)"))
-        @JvmStatic
-        fun withBrowser(browserType: String): Companion {
-            System.setProperty(BROWSER_TYPE, browserType)
-            return BrowserSettings
-        }
-
-        /**
-         * Specify the browser type to fetch webpages.
          *
          * PULSAR_CHROME is the only supported browser currently.
          * */
@@ -177,13 +167,6 @@ open class BrowserSettings(
             System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
             return BrowserSettings
         }
-
-        /**
-         * Set the number of privacy contexts
-         * */
-        @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
-        @JvmStatic
-        fun privacyContext(n: Int): Companion = privacy(n)
 
         /**
          * Set the number of privacy contexts
@@ -369,7 +352,6 @@ open class BrowserSettings(
      * Check if url blocking is enabled.
      * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
-    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 1e-6"))
     val isUrlBlockingEnabled get() = resourceBlockProbability > 1e-6
     /**
      * Check if user agent overriding is enabled. User agent overriding is disabled by default,

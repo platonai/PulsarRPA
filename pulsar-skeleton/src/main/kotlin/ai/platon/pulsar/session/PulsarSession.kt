@@ -99,12 +99,6 @@ interface PulsarSession : AutoCloseable {
     val sessionConfig: VolatileConfig
 
     val unmodifiedConfig: ImmutableConfig
-
-    /**
-     * The scoped bean factory: for each volatileConfig object, there is a bean factory
-     * */
-    @Deprecated("Not used any more")
-    val sessionBeanFactory: BeanFactory
     /**
      * A short descriptive display text.
      * */
@@ -122,8 +116,6 @@ interface PulsarSession : AutoCloseable {
      * */
     val globalCache: GlobalCache
 
-    @Deprecated("Factory should not be a interface property, globalCache is OK")
-    val globalCacheFactory: GlobalCacheFactory
     /**
      * Close objects when the session closes
      * */
@@ -1243,12 +1235,6 @@ interface PulsarSession : AutoCloseable {
      * Set a variable into this session
      * */
     fun setVariable(name: String, value: Any)
-
-    /**
-     * Put session scope bean
-     * */
-    @Deprecated("Not used any more")
-    fun putSessionBean(obj: Any)
 
     /**
      * Delete a webpage from the storage

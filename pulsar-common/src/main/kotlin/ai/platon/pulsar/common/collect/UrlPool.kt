@@ -31,9 +31,6 @@ open class DelayUrl(
 
     constructor(url: String, delay: Duration): this(PlainUrl(url), delay)
 
-    @Deprecated("Inappropriate name", ReplaceWith("delayExpires"))
-    val startTime get() = delayExpireAt
-
     override fun compareTo(other: Delayed): Int {
         return Ints.saturatedCast(delayExpireAt - (other as DelayUrl).delayExpireAt)
     }
@@ -81,8 +78,6 @@ interface UrlPool {
      * Total number of items in all url caches.
      * */
     val totalCount: Int
-    @Deprecated("Confusing name", ReplaceWith("totalCount"))
-    val totalItems: Int get() = totalCount
     /**
      * A shortcut to the cache with the lowest priority in the ordered caches
      * */

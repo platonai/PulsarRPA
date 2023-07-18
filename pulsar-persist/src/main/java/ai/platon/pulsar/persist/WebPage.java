@@ -172,15 +172,6 @@ final public class WebPage implements Comparable<WebPage>, WebAsset {
         return newWebPage(url, conf, null);
     }
 
-    /**
-     * @deprecated Use WebPageEx.newTestWebPage instead
-     * */
-    @Deprecated
-    @NotNull
-    public static WebPage newTestWebPage(@NotNull String url) {
-        return newWebPage(url, new VolatileConfig(), null);
-    }
-
     @NotNull
     public static WebPage newWebPage(@NotNull String url, @NotNull VolatileConfig conf, @Nullable String href) {
         return newWebPageInternal(url, conf, href);

@@ -40,12 +40,6 @@ class WebDriverAdapter(
 
     override val isMockedPageSource get() = driver.isMockedPageSource
 
-    /**
-     * The id of the session to the browser
-     * */
-    @Deprecated("Not used any more")
-    override val sessionId get() = driverOrNull?.sessionId
-
     @Throws(WebDriverException::class)
     override suspend fun addInitScript(script: String) = driverOrNull?.addInitScript(script) ?: Unit
 
@@ -101,12 +95,6 @@ class WebDriverAdapter(
 
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
         driverOrNull?.clickTextMatches(selector, pattern, count)
-    }
-
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("clickTextMatches(selector, pattern, count"))
-    @Throws(WebDriverException::class)
-    override suspend fun clickMatches(selector: String, pattern: String, count: Int) {
-        driverOrNull?.clickMatches(selector, pattern, count)
     }
 
     @Throws(WebDriverException::class)

@@ -105,9 +105,6 @@ open class FeaturedDocument(val document: Document) {
      */
     val baseURI get() = document.baseUri()
 
-    @Deprecated("Inappropriate name", ReplaceWith("baseURI"))
-    val baseUri get() = document.baseUri()
-
     /**
      * Get this document's head element.
      *
@@ -289,9 +286,6 @@ open class FeaturedDocument(val document: Document) {
             document.extension.features = value
         }
 
-    @Deprecated("Fragment is no longer used")
-    val fragments by lazy { DocumentFragments(this) }
-
     /**
      * The constructor
      *
@@ -448,13 +442,6 @@ open class FeaturedDocument(val document: Document) {
      * */
     fun <T> selectFirstOptional(query: String, transformer: (Element) -> T) =
         Optional.ofNullable(document.selectFirstOrNull(query)?.let { transformer(it) })
-
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query)"))
-    fun first(query: String) = document.selectFirstOrNull(query)
-
-    @Deprecated("Inappropriate name", ReplaceWith("selectFirst(query, transformer)"))
-    fun <T> first(query: String, transformer: (Element) -> T) =
-        document.selectFirstOrNull(query)?.let { transformer(it) }
 
     /**
      * Find the text content of the first element that match the CSS query.

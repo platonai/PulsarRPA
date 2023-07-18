@@ -144,29 +144,6 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestHeaders"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestHeaders(): Map<String, Any> {
-        return mainRequestHeaders
-    }
-
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("mainRequestCookies"))
-    @Throws(WebDriverException::class)
-    override suspend fun mainRequestCookies(): List<Map<String, String>> {
-        return mainRequestCookies
-    }
-
-    @Deprecated("Getter is available", replaceWith = ReplaceWith("getCookies"))
-    @Throws(WebDriverException::class)
-    override suspend fun getCookies(): List<Map<String, String>> {
-        return try {
-            rpc.invokeDeferred("getCookies") { getCookies0() } ?: listOf()
-        } catch (e: ChromeRPCException) {
-            rpc.handleRPCException(e, "getCookies")
-            listOf()
-        }
-    }
-
     @Throws(WebDriverException::class)
     private fun getCookies0(): List<Map<String, String>> {
         enableAPIAgents()
@@ -262,19 +239,6 @@ class ChromeDevtoolsDriver(
             )
         }
     }
-
-    @Deprecated("Not used any more")
-    override val sessionId: String?
-        @Throws(WebDriverException::class)
-        get() {
-            lastSessionId = try {
-                if (!isActive) null else mainFrameAPI?.id
-            } catch (e: ChromeRPCException) {
-                rpc.handleRPCException(e, "sessionId")
-                null
-            }
-            return lastSessionId
-        }
 
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {

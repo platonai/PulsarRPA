@@ -126,8 +126,7 @@ public class SParser {
 
     /**
      * Get the value of property, <code>null</code> if
-     * no such property exists. If the key is deprecated, it returns the value of
-     * the first key which replaces the deprecated key and is not null.
+     * no such property exists.
      * <p>
      * Values are processed for <a href="#VariableExpansion">variable expansion</a>
      * before being returned.
@@ -142,8 +141,6 @@ public class SParser {
     /**
      * Get the value of property as a trimmed <code>String</code>,
      * <code>null</code> if no such property exists.
-     * If the key is deprecated, it returns the value of
-     * the first key which replaces the deprecated key and is not null
      * <p>
      * Values are processed for <a href="#VariableExpansion">variable expansion</a>
      * before being returned.

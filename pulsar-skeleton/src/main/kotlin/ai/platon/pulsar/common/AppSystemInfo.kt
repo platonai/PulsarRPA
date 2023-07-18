@@ -118,6 +118,3 @@ class AppSystemInfo {
         }
     }
 }
-
-@Deprecated("Inappropriate name", ReplaceWith("HardwareResource"))
-typealias AppRuntime = AppSystemInfo

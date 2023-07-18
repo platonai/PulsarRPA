@@ -27,8 +27,6 @@ object AppPaths {
     val SYS_TMP_DIR = Paths.get(AppContext.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppContext.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
-    @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
-    val SYS_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYS_BROWSER_DATA_DIR")
     /**
      * The directory for the user's default browser.
      * This is a placeholder, actually no data dir should be specified to launch the browser,

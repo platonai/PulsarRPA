@@ -70,8 +70,6 @@ abstract class AbstractWebDriver(
 
     override val isInit get() = state.get().isInit
     override val isReady get() = state.get().isReady
-    @Deprecated("Inappropriate name", replaceWith = ReplaceWith("isReady()"))
-    override val isFree get() = isReady
     override val isWorking get() = state.get().isWorking
     override val isRetired get() = state.get().isRetired
     override val isQuit get() = state.get().isQuit
@@ -101,10 +99,6 @@ abstract class AbstractWebDriver(
     }
 
     override fun jvm(): JvmWebDriver = this
-
-    @Deprecated("Not used any more", ReplaceWith("id.toString()"))
-    override val sessionId: String?
-        get() = id.toString()
 
     override val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
     override val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies

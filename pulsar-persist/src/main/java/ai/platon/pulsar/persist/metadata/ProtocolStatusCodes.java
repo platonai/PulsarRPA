@@ -133,16 +133,6 @@ public interface ProtocolStatusCodes {
      */
     int SCRIPT_TIMEOUT = 1472;
     /**
-     * Document incomplete
-     * @deprecated
-     */
-    int DOCUMENT_INCOMPLETE = 1473;
-    /**
-     * Web driver timeout.
-     * @deprecated
-     */
-    int BROWSER_ERR_CONNECTION_TIMED_OUT = 1480;
-    /**
      * Web driver timeout.
      */
     int PROXY_ERROR = 1481;

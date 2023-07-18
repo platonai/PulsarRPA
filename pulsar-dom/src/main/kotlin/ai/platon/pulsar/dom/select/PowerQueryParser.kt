@@ -178,21 +178,6 @@ class PowerQueryParser(private val query: String) {
         evals.add(PowerEvaluator.PowerClass(className.trim()))
     }
 
-    /**
-     * Deprecated, use byTag instead which is copy from Jsoup
-     * */
-    private fun byTagDeprecated() {
-        var tagName = tq.consumeElementSelector()
-        Validate.notEmpty(tagName)
-        // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
-        if (tagName.startsWith("*|")) {
-            evals.add(CombiningEvaluator.Or(Tag(normalize(tagName)), TagEndsWith(normalize(tagName.replace("*|", ":")))))
-        } else { // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
-            if (tagName.contains("|")) tagName = tagName.replace("|", ":")
-            evals.add(Tag(tagName.trim { it <= ' ' }))
-        }
-    }
-
     private fun byTag() {
         // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
         // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for

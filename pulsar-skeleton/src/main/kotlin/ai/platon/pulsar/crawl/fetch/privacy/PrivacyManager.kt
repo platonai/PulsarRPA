@@ -38,10 +38,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
-    protected val privacyAgentGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
-
-    @Deprecated("Use local generator")
-    open val privacyContextIdGenerator get() = privacyAgentGeneratorFactory.generator
+    protected val privacyAgentGeneratorFactory = PrivacyAgentGeneratorFactory(conf)
 
     val isClosed get() = closed.get()
 
@@ -65,25 +62,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Create a new context or return an existing one.
      * */
-    @Deprecated(
-        "Use computeNextContext(task, fingerprint)",
-        ReplaceWith("computeNextContext(FetchTask, Fingerprint)")
-    )
-    abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
-
-    /**
-     * Create a new context or return an existing one.
-     * */
     abstract fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
-
-    /**
-     * Create a new context or return an existing one
-     * */
-    @Deprecated(
-        "Use computeIfNecessary(task, fingerprint)",
-        ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
-    )
-    abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
 
     /**
      * Create a new context or return an existing one
@@ -93,12 +72,12 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Create a context with [privacyAgent] and add it to active context list if not absent
      * */
-    abstract fun computeIfAbsent(privacyAgent: PrivacyContextId): PrivacyContext
+    abstract fun computeIfAbsent(privacyAgent: PrivacyAgent): PrivacyContext
 
     /**
      * Create a context and do not add to active context list
      * */
-    abstract fun createUnmanagedContext(privacyAgent: PrivacyContextId): PrivacyContext
+    abstract fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
 
     open fun takeSnapshot(): String {
         val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }
@@ -119,7 +98,7 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     @Throws(Exception::class)
     private fun doClose(privacyContext: PrivacyContext) {
         if (logger.isDebugEnabled) {
-            logger.debug("Closing privacy context | {}", privacyContext.id)
+            logger.debug("Closing privacy context | {}", privacyContext.privacyAgent)
             logger.debug("Active contexts: {}, zombie contexts: {}", activeContexts.size, zombieContexts.size)
         }
 

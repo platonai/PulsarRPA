@@ -100,15 +100,6 @@ val NILElement: Element = NILDocument.body()
 
 val NILNode: Node = NILElement
 
-@Deprecated("Inappropriate name", ReplaceWith("NILDocument"))
-val nilDocument = NILDocument
-
-@Deprecated("Inappropriate name", ReplaceWith("NILElement"))
-val nilElement = NILElement
-
-@Deprecated("Inappropriate name", ReplaceWith("NILNode"))
-val nilNode = NILNode
-
 val Document.isNil get() = this === NILDocument
 
 val Document.pulsarMetaElement get() = getElementById(PULSAR_META_INFORMATION_ID)

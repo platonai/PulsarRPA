@@ -127,18 +127,6 @@ class PrimerParser(val conf: ImmutableConfig) {
         val parseResult = initParseResult(metaTags)
     }
 
-    @Deprecated("Just use jsoup to parse meta tags")
-    private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
-        val metaTags = HTMLMetaTags(docRoot, baseURL)
-        val tags = metaTags.generalTags
-        val metadata = page.metadata
-        tags.names().forEach { name: String -> metadata["meta_$name"] = tags[name] }
-        if (metaTags.noCache) {
-            metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
-        }
-        return metaTags
-    }
-
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
         if (metaTags.noIndex) {
             return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX)

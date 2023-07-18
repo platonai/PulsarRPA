@@ -63,9 +63,6 @@ abstract class AbstractPulsarSession(
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
-    @Deprecated("Not used any more")
-    override val sessionBeanFactory = BeanFactory(sessionConfig)
-
     override val display get() = "$id"
 
     private val closed = AtomicBoolean()
@@ -73,8 +70,6 @@ abstract class AbstractPulsarSession(
 
     private val variables = ConcurrentHashMap<String, Any>()
     private var enablePDCache = true
-    @Deprecated("Factory should not be a interface property, globalCache is OK")
-    override val globalCacheFactory get() = context.globalCacheFactory
     override val globalCache get() = context.globalCacheFactory.globalCache
     override val pageCache get() = context.globalCacheFactory.globalCache.pageCache
     override val documentCache get() = context.globalCacheFactory.globalCache.documentCache
@@ -421,9 +416,6 @@ abstract class AbstractPulsarSession(
     override fun getVariable(name: String): Any? = let { variables[name] }
 
     override fun setVariable(name: String, value: Any) = run { variables[name] = value }
-
-    @Deprecated("Not used any more")
-    override fun putSessionBean(obj: Any) = ensureActive { sessionBeanFactory.putBean(obj) }
 
     inline fun <reified T> getSessionBean(): T? = sessionBeanFactory.getBean()
 
