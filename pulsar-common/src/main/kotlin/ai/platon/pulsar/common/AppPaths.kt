@@ -30,9 +30,9 @@ object AppPaths {
     @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
     val SYS_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYS_BROWSER_DATA_DIR")
     /**
-     * The directory for the system default browser.
-     * This is a placeholder, actually no data dir should be specified,
-     * so the driver opens a browser just like a normal user opens it.
+     * The directory for the user's default browser.
+     * This is a placeholder, actually no data dir should be specified to launch the browser,
+     * so the web driver opens a browser just like a real user opens it.
      */
     val USER_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".USER_BROWSER_DATA_DIR")
 

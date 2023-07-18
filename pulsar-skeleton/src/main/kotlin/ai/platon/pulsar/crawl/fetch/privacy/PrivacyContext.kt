@@ -22,7 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A privacy context is a standalone agent to the target website, it will be closed once it is leaked.
+ * A privacy context is a unique context of a privacy agent to the target website,
+ * it will be closed once it is leaked.
  *
  * One of the biggest difficulties in web scraping tasks is the bot stealth.
  *
