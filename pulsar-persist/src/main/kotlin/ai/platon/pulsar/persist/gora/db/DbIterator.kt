@@ -17,7 +17,7 @@
 package ai.platon.pulsar.persist.gora.db
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.UrlUtils
+import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -46,6 +46,7 @@ class DbIterator(
         return nextPage != null
     }
 
+    @Throws(WebDBException::class)
     override fun next(): WebPage {
         try {
             moveToNext()
@@ -59,32 +60,24 @@ class DbIterator(
         return nextPage ?: WebPage.NIL
     }
 
-    @Throws(Exception::class)
+    @Throws(WebDBException::class)
     private fun moveToNext() {
+        try {
+            moveToNext0()
+        } catch (e: Exception) {
+            val message = "Data storage failure | [moveToNext]"
+            throw WebDBException(message, e)
+        }
+    }
+
+    @Throws(Exception::class)
+    private fun moveToNext0() {
         nextPage = null
         while (nextPage == null && result.next()) {
             val page = WebPage.box(result.key, result.get(), true, conf.toVolatileConfig())
             val f = filter
             if (f == null || f.test(page)) {
                 nextPage = page
-            }
-        }
-    }
-
-    @Throws(Exception::class)
-    @Deprecated("The old version moveToNext is OK, previous bug is caused by WebPage.box", ReplaceWith("moveToNext"))
-    private fun moveToNext0() {
-        nextPage = null
-        while (nextPage == null && result.next()) {
-            val url = UrlUtils.reverseUrlOrNull(result.key)
-            if (url != null) {
-                val p = result.get()
-                // TODO: url or p.baseUrl?
-                val page = WebPage.box(url, p, false, conf.toVolatileConfig())
-                val flt = filter
-                if (flt == null || flt.test(page)) {
-                    nextPage = page
-                }
             }
         }
     }

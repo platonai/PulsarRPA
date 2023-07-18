@@ -231,13 +231,14 @@ select
     -- variables from metadata
     dom_first_attr(dom, '#PulsarMetaInformation', 'href') as `meta_href`,
     dom_first_attr(dom, '#PulsarMetaInformation', 'referer') as `meta_referer`,
+    dom_first_attr(dom, '#PulsarMetaInformation', 'referrer') as `meta_referrer`,
     dom_first_attr(dom, '#PulsarMetaInformation', 'label') as `meta_label`,
     time_first_mysql_date_time(dom_attr(dom_select_first(dom_owner_body(dom), '#PulsarMetaInformation'), 'taskTime')) as `meta_task_time`,
 
     -- all feature names defined by amazon
     dom_all_attrs(dom, '*[data-feature-name]', 'data-feature-name') as `amazon_feature_names`,
 
-    -- dom features calculated by PulsarR
+    -- dom features calculated by PulsarRPA
     dom_ch(dom_owner_body(dom)) as `pulsar_num_chars`,
     dom_a(dom_owner_body(dom)) as `pulsar_num_links`,
     dom_img(dom_owner_body(dom)) as `pulsar_num_imgs`,

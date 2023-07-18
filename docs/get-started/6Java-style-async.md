@@ -1,7 +1,7 @@
 Java风格异步编程
 =
 
-PulsarR 丰富的 API 使得我们的绝大多数编程场景下，都能够使用一行代码解决“加载-解析-提取”。本文介绍如何使用 Java 风格的异步编程，来解决批量的网页采集问题。
+PulsarRPA 丰富的 API 使得我们的绝大多数编程场景下，都能够使用一行代码解决“加载-解析-提取”。本文介绍如何使用 Java 风格的异步编程，来解决批量的网页采集问题。
 
 ```kotlin
 object JvmAsync {
@@ -44,7 +44,7 @@ object JvmAsync {
 }
 ```
 
-在线代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt)。
+在线代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt)。
 
 ------
 

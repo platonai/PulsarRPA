@@ -18,7 +18,7 @@ import java.util.function.Predicate
 
 /**
  * Created by vincent on 17-5-21.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConfig) : Parameterized {
     private val groupMode = conf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)

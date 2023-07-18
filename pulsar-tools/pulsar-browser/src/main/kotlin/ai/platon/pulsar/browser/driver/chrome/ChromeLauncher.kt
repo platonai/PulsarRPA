@@ -31,7 +31,7 @@ class ChromeLauncher(
 ) : AutoCloseable {
 
     companion object {
-        private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
     }
 
     private val logger = LoggerFactory.getLogger(ChromeLauncher::class.java)
@@ -147,10 +147,18 @@ class ChromeLauncher(
         }
 
         val executable = supervisorProcess?:"$chromeBinary"
-        val arguments = if (supervisorProcess == null) chromeOptions.toList() else {
+        var arguments = if (supervisorProcess == null) chromeOptions.toList() else {
             options.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }.toMutableList()
-        arguments.add("--user-data-dir=$userDataDir")
+
+        if (userDataDir == AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER) {
+            // Open the default browser just like a real user daily do,
+            // open a blank page not to choose the profile
+            val args = "--remote-debugging-port=0 --remote-allow-origins=* about:blank"
+            arguments = args.split(" ").toMutableList()
+        } else {
+            arguments.add("--user-data-dir=$userDataDir")
+        }
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
@@ -247,7 +255,7 @@ class ChromeLauncher(
                     Files.list(prototypeUserDataDir)
                         .filter { Files.isSymbolicLink(it) && !Files.exists(it) }
                         .forEach { Files.delete(it) }
-                    // ISSUE#29: https://github.com/platonai/pulsarr/issues/29
+                    // ISSUE#29: https://github.com/platonai/PulsarRPA/issues/29
                     // Failed to copy chrome data dir when there is a SingletonSocket symbol link
                     val fileFilter = FileFilter { !Files.isSymbolicLink(it.toPath()) }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile(), fileFilter)
@@ -273,9 +281,9 @@ class ChromeLauncher(
         val target = userDataDir
 
         // seems safe enough to delete directory matching special pattern
-        val forceDelete = target.toString().matches(".+pulsar-.+/context/cx.+".toRegex())
-        // delete user data dir only if it's in the system tmp dir to prevent deleting files by mistake
-        if (forceDelete || target.startsWith(AppPaths.SYS_TMP_DIR)) {
+        val isTemporary = target.startsWith(AppPaths.CONTEXT_TMP_DIR)
+        // be careful, do not delete files by mistake, so delete files only inside AppPaths.CONTEXT_TMP_DIR
+        if (isTemporary) {
             FileUtils.deleteQuietly(target.toFile())
             if (!SystemUtils.IS_OS_WINDOWS && Files.exists(target)) {
                 logger.warn("Failed to delete browser cache, try again | {}", target)

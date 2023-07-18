@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.urls.UrlUtils.getURLOrNull
 import com.google.common.net.InternetDomainName
 import org.slf4j.LoggerFactory
 import java.net.*
-
+import java.util.*
 
 /**
  * Utility class for URL analysis
@@ -46,12 +46,12 @@ object URLUtil {
 
     fun getHost(url: String, defaultHost: String, groupMode: GroupMode): String {
         val host = getHost(url, groupMode) ?: return defaultHost
-        return if (host.isEmpty()) defaultHost else host
+        return host.ifEmpty { defaultHost }
     }
 
     fun getHost(url: URL, defaultHost: String, groupMode: GroupMode): String {
         val host = getHost(url, groupMode) ?: return defaultHost
-        return if (host.isEmpty()) defaultHost else host
+        return host.ifEmpty { defaultHost }
     }
 
     fun getHost(url: URL, groupMode: GroupMode): String? {
@@ -388,7 +388,7 @@ object URLUtil {
      */
     fun getHostName(url: String?): String? {
         return try {
-            URL(url).host.toLowerCase()
+            URL(url).host.lowercase(Locale.getDefault())
         } catch (e: MalformedURLException) {
             null
         }
@@ -396,7 +396,7 @@ object URLUtil {
 
     fun getHostName(url: String?, defaultValue: String): String {
         return try {
-            URL(url).host.toLowerCase()
+            URL(url).host.lowercase(Locale.getDefault())
         } catch (e: MalformedURLException) {
             defaultValue
         }
@@ -414,7 +414,7 @@ object URLUtil {
     fun getQuery(url: String): String? {
         var url = url
         return try { // get the full url, and replace the query string with and empty string
-            url = url.toLowerCase()
+            url = url.lowercase(Locale.getDefault())
             val queryStr = URL(url).query
             if (queryStr != null) url.replace("?$queryStr", "") else url
         } catch (e: MalformedURLException) {

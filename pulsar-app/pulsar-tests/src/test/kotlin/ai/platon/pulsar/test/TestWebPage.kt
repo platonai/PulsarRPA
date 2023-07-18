@@ -1,7 +1,7 @@
 package ai.platon.pulsar.test
 
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.message.LoadStatusFormatter
+import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.persist.ext.options
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.WebPage
@@ -52,7 +52,7 @@ class TestWebPage: TestBase() {
         val prevFetchTime2 = page.prevFetchTime
         val fetchTime2 = page.fetchTime
 
-        println(LoadStatusFormatter(page, "", true, true, true, true))
+        println(PageLoadStatusFormatter(page, "", true, true, true, true))
         println("Fetch time history: " + page.getFetchTimeHistory(""))
         println("prevFetchTime: " + page.prevFetchTime)
         println("fetchTime: " + page.fetchTime)

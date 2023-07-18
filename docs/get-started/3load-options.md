@@ -1,7 +1,7 @@
 加载参数
 =
 
-PulsarR 使用简单的加载参数来精确描述一个采集任务，譬如数据生命周期，页面质量要求，任务截止日期，任务重试等。绝大多数情况下，一个数据采集任务可以用 url arguments 形式的文本来唯一确定，因此它可以很轻松地被复制、管理、存储、传输、并行化，以及沟通交流。
+PulsarRPA 使用简单的加载参数来精确描述一个采集任务，譬如数据生命周期，页面质量要求，任务截止日期，任务重试等。绝大多数情况下，一个数据采集任务可以用 url arguments 形式的文本来唯一确定，因此它可以很轻松地被复制、管理、存储、传输、并行化，以及沟通交流。
 
 首先还是从 PulsarSession 开始：
 
@@ -28,7 +28,7 @@ var page = session.load(url, "-expires 10s")
 page = session.load(url, "-i 10s")
 ```
 
-一个链接会实际失效，譬如说电商网站的一个商品被下架；但是该链接在后来或许又会重新生效，譬如该商品重新上架。默认情况下，PulsarR 在 3 次探测到链接无效后，会将该链接标记为“丢失”（ Gone），并不再采集该链接。
+一个链接会实际失效，譬如说电商网站的一个商品被下架；但是该链接在后来或许又会重新生效，譬如该商品重新上架。默认情况下，PulsarRPA 在 3 次探测到链接无效后，会将该链接标记为“丢失”（ Gone），并不再采集该链接。
 
 选项 -ignoreFailure 用来忽略“丢失”状态：
 
@@ -96,7 +96,7 @@ page = session.load(url, "-parse")
 page = session.load(url, "-storeContent")
 ```
 
-PulsarR 提供了完善的重试机制，来保证所采集的页面符合分析要求。
+PulsarRPA 提供了完善的重试机制，来保证所采集的页面符合分析要求。
 
 由于现代网页越来越复杂，被采集的页面可能不完整：
 
@@ -149,7 +149,7 @@ var pages = session.loadOutPages(url, "-expires 10s" +
 )
 ```
 
-本课程提供了[完整代码](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)。
+本课程提供了[完整代码](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt)。
 
 ------
 

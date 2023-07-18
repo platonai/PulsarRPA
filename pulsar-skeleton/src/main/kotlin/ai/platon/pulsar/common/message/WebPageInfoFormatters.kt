@@ -204,7 +204,7 @@ class PageLoadStatusFormatter(
     }
 
     private fun buildFetchReason(): String {
-        val state = page.variables[VAR_FETCH_STATE] as? CheckState
+        val state = page.getVar(VAR_FETCH_STATE) as? CheckState
         val code = state?.code ?: FetchState.DO_NOT_FETCH
         return FetchState.toSymbol(code).takeIf { it.isNotBlank() }?.let { "for $it" } ?: ""
     }
@@ -246,6 +246,7 @@ class PageLoadStatusFormatter(
     }
 }
 
+@Deprecated("Inappropriate name", ReplaceWith("PageLoadStatusFormatter"))
 typealias LoadStatusFormatter = PageLoadStatusFormatter
 
 class LoadedPagesStatusFormatter(
@@ -258,7 +259,7 @@ class LoadedPagesStatusFormatter(
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
         pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(LoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
+            sb.append(i.inc()).append(".\t").append(PageLoadStatusFormatter(p, withSymbolicLink = withSymbolicLink)).append('\n')
         }
         return sb.toString()
     }

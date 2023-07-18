@@ -19,8 +19,10 @@ abstract class MultiSinkWriter(
     private val timeIdent get() = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME]
     private val reportDir0 get() = AppPaths.REPORT_DIR.resolve(timeIdent)
-    private val writers = ConcurrentHashMap<Path, MessageWriter>()
+    private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
+
+    val writers: Map<Path, MessageWriter> get() = _writers
 
     val reportDir = if (jobIdent == null) reportDir0 else reportDir0.resolve(jobIdent)
 
@@ -28,9 +30,9 @@ abstract class MultiSinkWriter(
         Files.createDirectories(reportDir)
     }
 
-    fun getPath(filename: String): Path {
-        return reportDir.resolve(filename)
-    }
+    fun getPath(filename: String) = pathOf(filename)
+
+    fun pathOf(filename: String) = reportDir.resolve(filename)
 
     fun readAllLines(filename: String): List<String> {
         val path = getPath(filename)
@@ -45,7 +47,7 @@ abstract class MultiSinkWriter(
     }
 
     fun write(message: String, file: Path) {
-        writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
+        _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
     }
 
     fun writeLine(message: String, filename: String) {
@@ -53,18 +55,18 @@ abstract class MultiSinkWriter(
     }
 
     fun writeLine(message: String, file: Path) {
-        val writer = writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
+        val writer = _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
         writer.write(message)
         writer.write("\n")
     }
 
     fun closeWriter(filename: String) {
-        writers[getPath(filename)]?.close()
+        _writers[getPath(filename)]?.close()
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            writers.values.forEach { it.close() }
+            _writers.values.forEach { it.close() }
         }
     }
 }

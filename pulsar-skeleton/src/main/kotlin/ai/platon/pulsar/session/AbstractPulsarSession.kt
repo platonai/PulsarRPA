@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Created by vincent on 18-1-17.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 abstract class AbstractPulsarSession(
     /**
@@ -59,7 +59,7 @@ abstract class AbstractPulsarSession(
         fun generateNextId() = ID_START + idGen.incrementAndGet()
     }
 
-    private val log = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
+    private val logger = LoggerFactory.getLogger(AbstractPulsarSession::class.java)
 
     override val unmodifiedConfig get() = context.unmodifiedConfig
 
@@ -311,7 +311,7 @@ abstract class AbstractPulsarSession(
 
     override fun loadDocument(url: String, args: String) = parse(load(url, args))
 
-    override fun loadDocument(url: String, options: LoadOptions) = parse(load(url))
+    override fun loadDocument(url: String, options: LoadOptions) = parse(load(url, options))
 
     override fun loadDocument(url: UrlAware) = parse(load(url))
 
@@ -444,7 +444,7 @@ abstract class AbstractPulsarSession(
     override fun export(doc: FeaturedDocument) = export(doc, "")
 
     override fun export(doc: FeaturedDocument, ident: String): Path {
-        val filename = AppPaths.fromUri(doc.baseUri, "", ".htm")
+        val filename = AppPaths.fromUri(doc.baseURI, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(doc.prettyHtml, path, true)
     }
@@ -462,7 +462,7 @@ abstract class AbstractPulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closableObjects.forEach { o -> o.close() }
-            log.info("Session is closed | #{}", display)
+            logger.info("Session is closed | #{}", display)
         }
     }
 

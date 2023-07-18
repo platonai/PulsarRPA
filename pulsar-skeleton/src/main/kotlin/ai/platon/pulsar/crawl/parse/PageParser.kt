@@ -19,7 +19,9 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.persist.ext.loadEvent
@@ -27,8 +29,8 @@ import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.ChainedUrlNormalizer
+import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HyperlinkPersistable
@@ -45,6 +47,7 @@ import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
 class PageParser(
@@ -58,14 +61,10 @@ class PageParser(
     enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
     init { AppMetrics.reg.register(Counter::class.java) }
 
-    private val log = LoggerFactory.getLogger(PageParser::class.java)
+    private val logger = LoggerFactory.getLogger(PageParser::class.java)
+    private val parseCount = AtomicInteger()
 
     val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
-    private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
-    /**
-     * Parser timeout set to 60 sec by default. Set -1 (or any negative int) to deactivate
-     */
-    private val maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
     val linkFilter = LinkFilter(crawlFilters, conf)
 
     constructor(parserFactory: ParserFactory, conf: ImmutableConfig) : this(
@@ -88,13 +87,6 @@ class PageParser(
     override fun setup(jobConf: ImmutableConfig) {
     }
 
-    override fun getParams(): Params {
-        return Params.of(
-                "maxParseTime", maxParseTime,
-                "maxParsedLinks", maxParsedLinks
-        )
-    }
-
     /**
      * Parses given web page and stores parsed content within page. Puts a meta-redirect to outlinks.
      *
@@ -103,6 +95,8 @@ class PageParser(
      * A non-null ParseResult contains the main result and status of this parse
      */
     fun parse(page: WebPage): ParseResult {
+        parseCount.incrementAndGet()
+
         try {
             val parseResult = doParse(page)
 
@@ -127,15 +121,6 @@ class PageParser(
         }
 
         return ParseResult()
-    }
-
-    // TODO: optimization
-    private fun filterLinks(page: WebPage, unfilteredLinks: Set<HyperlinkPersistable>): Set<HyperlinkPersistable> {
-        return unfilteredLinks.asSequence()
-                .filter { linkFilter.asPredicate(page).test(it) } // filter out invalid urls
-                .sortedByDescending { it.text.length } // longer anchor comes first
-                .take(maxParsedLinks)
-                .toSet()
     }
 
     private fun doParse(page: WebPage): ParseResult {
@@ -192,19 +177,17 @@ class PageParser(
         val parsers = parserFactory.getParsers(page.contentType, page.url)
 
         for (parser in parsers) {
-            // optimize for html content
-            // To parse non-html content, the parser might run into an endless loop,
-            // run it in a separate coroutine to protect the process
-            val timeout = if ("HtmlParser" in parser::class.java.name) Duration.ZERO else maxParseTime
-
             val millis = measureTimeMillis {
-                parseResult = takeIf { timeout.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
+                // Optimized for html content
+                // To parse non-html content, the parser might run into an endless loop,
+                // run it in a separate coroutine to protect the process
+                parseResult = takeIf { parser.timeout.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
             }
             parseResult.parsers.add(parser::class)
 
             val m = page.pageModel
-            if (log.isDebugEnabled && millis > 10_000 && m != null) {
-                log.debug("It takes {} to parse {}/{}/{} fields | {}", Duration.ofMillis(millis).readable(),
+            if (logger.isDebugEnabled && millis > 10_000 && m != null) {
+                logger.debug("It takes {} to parse {}/{}/{} fields | {}", Duration.ofMillis(millis).readable(),
                         m.numNonBlankFields, m.numNonNullFields, m.numFields, page.url)
             }
 
@@ -217,9 +200,12 @@ class PageParser(
         return parseResult
     }
 
+    /**
+     * TODO: might be optimized
+     * */
     private fun runParser(p: Parser, page: WebPage): ParseResult {
         return runBlocking {
-            withTimeout(maxParseTime.toMillis()) {
+            withTimeout(p.timeout.toMillis()) {
                 val deferred = async { p.parse(page) }
                 deferred.await()
             }
@@ -270,7 +256,7 @@ class PageParser(
             // val hypeLinks = filterLinks(page, unfilteredLinks)
             // TODO: too many filters, hard to debug, move all filters to a single filter, or just do it in ParserFilter
             val hypeLinks = unfilteredLinks
-            log.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
+            logger.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
             page.setLiveLinks(hypeLinks)
             pageExt.addHyperlinks(hypeLinks)
         }

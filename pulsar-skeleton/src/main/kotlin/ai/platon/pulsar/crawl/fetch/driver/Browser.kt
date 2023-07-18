@@ -18,14 +18,16 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
     val userAgent: String?
     /**
      * The navigation history.
-     *
-     * Navigate history is small, so search is very fast for a list.
      * */
-    val navigateHistory: List<NavigateEntry>
+    val navigateHistory: NavigateHistory
     /**
      * The created drivers by this browser.
      * */
     val drivers: Map<String, WebDriver>
+    /**
+     * The associated data.
+     * */
+    val data: MutableMap<String, Any?>
     /**
      * Check if this browser is idle.
      * */
@@ -46,11 +48,16 @@ interface Browser: EventEmitter<BrowserEvents>, AutoCloseable {
      * regardless of whether the browser is closed or not.
      * */
     fun destroyForcibly()
+    /**
+     * Initialize the browser.
+     * */
+    fun onInitialize()
 
     /**
-     * Register event handler when a url is about to navigate.
+     * Register event handler before navigating to a url.
      * */
     fun onWillNavigate(entry: NavigateEntry)
+
     /**
      * Maintain the browser
      * */

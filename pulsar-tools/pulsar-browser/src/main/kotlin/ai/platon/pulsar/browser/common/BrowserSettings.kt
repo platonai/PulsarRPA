@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.common
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -35,11 +36,60 @@ open class BrowserSettings(
         val isHeadlessOnly: Boolean get() = !AppContext.isGUIAvailable
 
         /**
-         * Specify the browser type for all fetches.
+         * Specify the browser type to fetch webpages.
          * */
+        @Deprecated("Inappropriate name", ReplaceWith("withBrowser(browserType: BrowserType)"))
         @JvmStatic
         fun withBrowser(browserType: String): Companion {
             System.setProperty(BROWSER_TYPE, browserType)
+            return BrowserSettings
+        }
+
+        /**
+         * Specify the browser type to fetch webpages.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         * */
+        @JvmStatic
+        fun withBrowser(browserType: BrowserType): Companion {
+            System.setProperty(BROWSER_TYPE, browserType.name)
+            return BrowserSettings
+        }
+
+        /**
+         * Use google-chrome with the default environment, so PulsarRPA visits websites just like you do.
+         * */
+        @JvmStatic
+        fun withSystemDefaultBrowser() = withSystemDefaultBrowser(BrowserType.PULSAR_CHROME)
+
+        /**
+         * Use the specified browser with the default environment, so PulsarRPA visits websites just like you do.
+         * PULSAR_CHROME is the only supported browser currently.
+         * */
+        @JvmStatic
+        fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.SystemDefaultPrivacyContextIdGenerator"
+            System.setProperty(PRIVACY_CONTEXT_ID_GENERATOR_CLASS, clazz)
+            withBrowser(browserType)
+            return BrowserSettings
+        }
+
+        /**
+         * Use google-chrome with the prototype environment, any change to the browser will be kept.
+         * */
+        @JvmStatic
+        fun withPrototypeBrowser() = withPrototypeBrowser(BrowserType.PULSAR_CHROME)
+
+        /**
+         * Use the specified browser with the prototype environment, any change to the browser will be kept.
+         *
+         * PULSAR_CHROME is the only supported browser currently.
+         * */
+        @JvmStatic
+        fun withPrototypeBrowser(browserType: BrowserType): Companion {
+            val clazz = "ai.platon.pulsar.crawl.fetch.privacy.PrototypePrivacyContextIdGenerator"
+            System.setProperty(PRIVACY_CONTEXT_ID_GENERATOR_CLASS, clazz)
+            withBrowser(browserType)
             return BrowserSettings
         }
 
@@ -133,16 +183,17 @@ open class BrowserSettings(
          * */
         @Deprecated("Verbose name", ReplaceWith("privacy(n)"))
         @JvmStatic
-        fun privacyContext(n: Int): Companion {
-            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
-            return BrowserSettings
-        }
+        fun privacyContext(n: Int): Companion = privacy(n)
 
         /**
          * Set the number of privacy contexts
          * */
         @JvmStatic
         fun privacy(n: Int): Companion {
+            if (n <= 0) {
+                throw IllegalArgumentException("The number of privacy context has to be > 0")
+            }
+
             System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
             return BrowserSettings
         }
@@ -152,6 +203,10 @@ open class BrowserSettings(
          * */
         @JvmStatic
         fun maxTabs(n: Int): Companion {
+            if (n <= 0) {
+                throw IllegalArgumentException("The number of open tabs has to be > 0")
+            }
+
             System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             return BrowserSettings
         }
@@ -244,9 +299,9 @@ open class BrowserSettings(
          * Generate a user data directory.
          * */
         fun generateUserDataDir(): Path {
-            val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
+            val numInstances = Files.list(AppPaths.CONTEXT_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
             val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
-            return AppPaths.BROWSER_TMP_DIR.resolve("br.$numInstances$rand")
+            return AppPaths.CONTEXT_TMP_DIR.resolve("cx.$numInstances$rand")
         }
     }
 
@@ -314,12 +369,12 @@ open class BrowserSettings(
      * Check if url blocking is enabled.
      * If true and blocking rules are set, resources matching the rules will be blocked by the browser.
      * */
-    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 0"))
-    val isUrlBlockingEnabled get() = resourceBlockProbability > 0
+    @Deprecated("Use resourceBlockProbability instead", ReplaceWith("resourceBlockProbability > 1e-6"))
+    val isUrlBlockingEnabled get() = resourceBlockProbability > 1e-6
     /**
-     * Check if user agent overriding is enabled. User agent overriding disabled by default,
-     * since inappropriate user agent overriding will be detected by the target website and
-     * the visits will be blocked.
+     * Check if user agent overriding is enabled. User agent overriding is disabled by default,
+     * because inappropriate user agent overriding can be detected by the website,
+     * furthermore, there is no obvious benefits to rotate the user agent.
      * */
     val isUserAgentOverridingEnabled get() = conf.getBoolean(BROWSER_ENABLE_UA_OVERRIDING, false)
 
@@ -363,12 +418,34 @@ enum class DisplayMode { SUPERVISED, GUI, HEADLESS }
  * The interaction settings
  * */
 data class InteractSettings constructor(
-    var scrollCount: Int = 10,
+    /**
+     * The number of scroll downs on the page.
+     * */
+    var scrollCount: Int = 3,
+    /**
+     * The time interval to scroll down on the page.
+     * */
     var scrollInterval: Duration = Duration.ofMillis(500),
+    /**
+     * Timeout for executing custom scripts on the page.
+     * */
     var scriptTimeout: Duration = Duration.ofMinutes(1),
+    /**
+     * Timeout for loading a webpage.
+     * */
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
+    /**
+     * Whether to bring the webpage to the front.
+     * */
     var bringToFront: Boolean = false,
-    // (0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75)
+    /**
+     * Page positions to scroll to, these numbers are percentages of the total height,
+     * e.g., 0.2 means to scroll to 20% of the height of the page.
+     *
+     * Some typical positions are:
+     * * 0.3,0.75,0.4,0.5
+     * * 0.2, 0.3, 0.5, 0.75, 0.5, 0.4, 0.5, 0.75
+     * */
     var initScrollPositions: String = "0.3,0.75,0.4,0.5"
 ) {
     @JsonIgnore
@@ -429,8 +506,13 @@ data class InteractSettings constructor(
         return this
     }
 
-    fun noScroll(): InteractSettings {
+    fun noInitScroll(): InteractSettings {
         initScrollPositions = ""
+        return this
+    }
+
+    fun noScroll(): InteractSettings {
+        scrollCount = 0
         return this
     }
 

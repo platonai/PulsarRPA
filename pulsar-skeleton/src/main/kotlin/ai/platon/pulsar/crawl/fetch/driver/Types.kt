@@ -1,5 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import java.util.*
+
 class JsException(
     val text: String? = null,
     val lineNumber: Int? = null,
@@ -14,3 +16,49 @@ class JsEvaluation(
     var description: String? = null,
     var exception: JsException? = null
 )
+
+/**
+ * The webpage navigation history.
+ * */
+class NavigateHistory {
+    /**
+     * Navigate history is small, so search is very fast in a list.
+     * */
+    val history: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
+
+    fun isEmpty() = history.isEmpty()
+
+    fun isNotEmpty() = history.isNotEmpty()
+
+    val size get() = history.size
+
+    fun contains(url: String) = history.any { it.url == url }
+
+    fun contains(urlRegex: Regex) = history.any { it.url.contains(urlRegex) }
+
+    fun firstOrNull(url: String) = history.firstOrNull { it.url == url }
+
+    fun firstOrNull(urlRegex: Regex) = history.firstOrNull { it.url.matches(urlRegex) }
+
+    fun lastOrNull(url: String) = history.lastOrNull { it.url == url }
+
+    fun lastOrNull(urlRegex: Regex) = history.lastOrNull { it.url.matches(urlRegex) }
+
+    fun findAll(urlRegex: Regex) = history.map { it.url.matches(urlRegex) }
+
+    fun add(entry: NavigateEntry) {
+        history.add(entry)
+    }
+
+    fun removeAll(url: String) {
+        history.removeAll { it.url == url }
+    }
+
+    fun removeAll(urlRegex: Regex) {
+        history.removeAll { it.url.matches(urlRegex) }
+    }
+
+    fun clear() {
+        history.clear()
+    }
+}

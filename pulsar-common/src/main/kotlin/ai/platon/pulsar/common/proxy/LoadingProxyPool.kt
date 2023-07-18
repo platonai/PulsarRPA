@@ -25,18 +25,24 @@ class LoadingProxyPool(
     private val bannedIps get() = proxyLoader.bannedIps
     private val bannedSegments get() = proxyLoader.bannedSegments
 
-    @Throws(ProxyException::class)
+    /**
+     * Try to take a proxy from the pool, if the pool is empty, load proxies using a [ProxyLoader].
+     *
+     * */
+    @Throws(ProxyException::class, InterruptedException::class)
     override fun take(): ProxyEntry? {
         lastActiveTime = Instant.now()
 
         var i = 0
-        val maxRetry = 5
+        val maxRetry = 10
         var proxy: ProxyEntry? = null
         while (isActive && proxy == null && i++ < maxRetry && !Thread.currentThread().isInterrupted) {
             if (freeProxies.isEmpty()) {
                 load()
             }
 
+            // Block until timeout, thread interrupted or an available proxy entry returns
+            // TODO: no need to block, just try to get a item from the queue
             proxy = poll0()
         }
 
@@ -89,22 +95,25 @@ class LoadingProxyPool(
 
     @Throws(ProxyException::class)
     private fun load() {
-        proxyLoader.updateProxies(Duration.ZERO).asSequence()
-                .filterNot { it in proxyEntries }
-                .filterNot { it.outIp in bannedIps }
-                .filterNot { it.outSegment in bannedSegments }
-                .forEach { offer(it) }
+        // synchronize proxyLoader to fix issue 41: https://github.com/platonai/PulsarRPA/issues/41
+        val loadedProxies = synchronized(proxyLoader) {
+            proxyLoader.updateProxies(Duration.ZERO)
+        }
+
+        loadedProxies.asSequence()
+            .filterNot { it in proxyEntries }
+            .filterNot { it.outIp in bannedIps }
+            .filterNot { it.outSegment in bannedSegments }
+            .forEach { offer(it) }
     }
 
-    // Block until timeout or an available proxy entry returns
+    /**
+     * Block until timeout, thread interrupted or an available proxy entry returns
+     * */
+    @Throws(InterruptedException::class)
     private fun poll0(): ProxyEntry? {
         // Retrieves and removes the head of the queue
-        val proxy = try {
-            freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            null
-        }?:return null
+        val proxy = freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS) ?: return null
 
         val banState = handleBanState(proxy).takeIf { it.isBanned }?.also {
             numProxyBanned++

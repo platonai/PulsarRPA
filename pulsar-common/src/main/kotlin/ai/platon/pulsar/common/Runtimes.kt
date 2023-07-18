@@ -36,21 +36,24 @@ object Runtimes {
         val command = when {
             SystemUtils.IS_OS_WINDOWS -> "where $executable"
             SystemUtils.IS_OS_LINUX -> "whereis $executable"
-            else -> return listOf()
+            // TODO: more OS support
+            else -> "whereis $executable"
         }
 
-        return exec(command)
+        return exec(command).asSequence()
             .filter { it.contains(File.pathSeparatorChar) }
             .filter { it.contains(executable) }
             .flatMap { it.split(" ") }
             .filter { Files.exists(Paths.get(it)) }
+            .toList()
     }
 
     fun countSystemProcess(pattern: String): Int {
         val command = when {
             SystemUtils.IS_OS_WINDOWS -> "tasklist /NH"
             SystemUtils.IS_OS_LINUX -> "ps -ef"
-            else -> return 0
+            // TODO: more OS support
+            else -> "ps -ef"
         }
         return exec(command).count { it.contains(pattern.toRegex()) }
     }
@@ -83,10 +86,13 @@ object Runtimes {
     fun destroyProcessForcibly(pid: Int) {
         if (pid <= 0) {
             return
-        } else if (SystemUtils.IS_OS_LINUX) {
-            exec("kill -9 $pid")
         } else if (SystemUtils.IS_OS_WINDOWS) {
             exec("taskkill /F /PID $pid")
+        } else if (SystemUtils.IS_OS_LINUX) {
+            exec("kill -9 $pid")
+        } else {
+            // TODO: more OS support
+            exec("kill -9 $pid")
         }
     }
 
@@ -102,9 +108,14 @@ object Runtimes {
         return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
     }
 
-    fun deleteBrokenSymbolicLinks(directory: Path) {
-        if (SystemUtils.IS_OS_LINUX) {
-            exec("find -L $directory -type l -delete")
+    fun deleteBrokenSymbolicLinks(symbolicLink: Path) {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            // TODO: use command line
+            Files.deleteIfExists(symbolicLink)
+        } else if (SystemUtils.IS_OS_LINUX) {
+            exec("find -L $symbolicLink -type l -delete")
+        } else {
+            // TODO: more OS support
         }
     }
 

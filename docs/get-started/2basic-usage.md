@@ -1,7 +1,7 @@
 基本用法
 =
 
-用一句话介绍 PulsarR，它仅仅**正确实现了两个方法：加载网页，提取数据**。为了实现这个目标，PulsarR 增删近百万行代码，沉淀数十万行代码，开发了一系列尖端技术。
+用一句话介绍 PulsarRPA，它仅仅**正确实现了两个方法：加载网页，提取数据**。为了实现这个目标，PulsarRPA 增删近百万行代码，沉淀数十万行代码，开发了一系列尖端技术。
 
 **加载网页：**
 
@@ -26,7 +26,7 @@
 3. 在极端复杂的应用场景中，正确地加载网页并正确地提取数据
 4. 围绕加载和提取的其他辅助性方法
 
-PulsarR 实现**网络即数据库**范式，像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。
+PulsarRPA 实现**网络即数据库**范式，像对待内部数据库一样对待外部网络，如果需要的数据不在本地存储中，或者现存版本不满足分析需要，则系统会从互联网上采集该数据的最新版本。
 
 本课程介绍了加载数据和提取数据的基本 API，这些 API 出现在 PulsarSession 中。PulsarSession 提供了丰富的 API，以覆盖“**加载-解析-提取**”的所有需求。
 
@@ -176,7 +176,7 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ```
 
-本课程完整的代码可以在这里找到：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt)。了解更加详细的使用方法，可以直接阅读源代码：[PulsarSession](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt)。
+本课程完整的代码可以在这里找到：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_0_BasicUsage.kt)。了解更加详细的使用方法，可以直接阅读源代码：[PulsarSession](../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/session/PulsarSession.kt)。
 
 下一章我们将详细介绍[加载参数](3load-options.md)，通过配置加载参数，可以精确定义我们的采集任务。
 

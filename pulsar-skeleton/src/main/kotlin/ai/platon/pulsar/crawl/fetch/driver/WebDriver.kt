@@ -80,7 +80,7 @@ interface WebDriver: Closeable {
     /**
      * The navigation history.
      * */
-    val navigateHistory: MutableList<NavigateEntry>
+    val navigateHistory: NavigateHistory
     /**
      * The browser type.
      * */
@@ -106,6 +106,10 @@ interface WebDriver: Closeable {
      * The driver status.
      * */
     val state: AtomicReference<State>
+    /**
+     * The associated data.
+     * */
+    val data: MutableMap<String, Any?>
     /**
      * The time of the last action.
      * */
@@ -206,10 +210,31 @@ interface WebDriver: Closeable {
     /**
      * Returns a string representing the current URL that the browser is looking at.
      *
-     * @return The URL of the page currently loaded in the browser
+     * If the browser failed to return a proper url, return the url to navigate.
+     *
+     * @return The frame document's URL without fragment.
      */
     @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
+    /**
+     * In javascript, the `window.location`, or `document.location`, is a read-only property
+     * returns a Location object, which contains information about the URL of the
+     * document and provides methods for changing that URL and loading another URL.
+     *
+     * To retrieve just the URL as a string, the read-only `document.URL` property can
+     * also be used.
+     * */
+    suspend fun location(): String
+    /**
+     * In javascript, the baseURI is a property of Node, it's the absolute base URL of the
+     * document containing the node. A baseURI is used to resolve relative URLs.
+     *
+     * The base URL is determined as follows:
+     * 1. By default, the base URL is the location of the document
+     *    (as determined by window.location).
+     * 2. If the document has an `<base>` element, its href attribute is used.
+     * */
+    suspend fun baseURI(): String
 
     /**
      * Returns the source of the last loaded page. If the page has been modified after loading (for

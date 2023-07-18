@@ -16,18 +16,22 @@ abstract class AbstractBrowser(
     val browserSettings: BrowserSettings
 ): Browser, AbstractEventEmitter<BrowserEvents>() {
 
-    protected val mutableNavigateHistory = Collections.synchronizedList(mutableListOf<NavigateEntry>())
     protected val mutableDrivers = ConcurrentHashMap<String, WebDriver>()
     protected val mutableRecoveredDrivers = ConcurrentHashMap<String, WebDriver>()
     protected val mutableReusedDrivers = ConcurrentHashMap<String, WebDriver>()
 
+    protected val initialized = AtomicBoolean()
     protected val closed = AtomicBoolean()
     protected var lastActiveTime = Instant.now()
 
     override val userAgent = getRandomUserAgentOrNull()
 
-    override val navigateHistory: List<NavigateEntry> get() = mutableNavigateHistory
+    override val navigateHistory = NavigateHistory()
     override val drivers: Map<String, WebDriver> get() = mutableDrivers
+    /**
+     * The associated data.
+     * */
+    override val data: MutableMap<String, Any?> = mutableMapOf()
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
@@ -53,8 +57,12 @@ abstract class AbstractBrowser(
         // Nothing to do
     }
 
+    override fun onInitialize() {
+        initialized.set(true)
+    }
+
     override fun onWillNavigate(entry: NavigateEntry) {
-        mutableNavigateHistory.add(entry)
+        navigateHistory.add(entry)
     }
 
     override fun close() {
@@ -71,6 +79,7 @@ abstract class AbstractBrowser(
      * Attach default event handlers
      * */
     protected fun attach() {
+        on(BrowserEvents.initialize) { onInitialize() }
         on(BrowserEvents.willNavigate) { entry: NavigateEntry -> onWillNavigate(entry) }
         on(BrowserEvents.maintain) { maintain() }
     }
@@ -79,6 +88,7 @@ abstract class AbstractBrowser(
      * Detach default event handlers
      * */
     protected fun detach() {
+        off(BrowserEvents.initialize)
         off(BrowserEvents.willNavigate)
         off(BrowserEvents.maintain)
     }

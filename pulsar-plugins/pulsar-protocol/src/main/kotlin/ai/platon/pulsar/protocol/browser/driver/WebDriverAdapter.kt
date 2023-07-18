@@ -29,7 +29,7 @@ class WebDriverAdapter(
         get() = driver.navigateEntry
         set(value) { driver.navigateEntry = value }
 
-    override val navigateHistory: MutableList<NavigateEntry> get() = driver.navigateHistory
+    override val navigateHistory get() = driver.navigateHistory
 
     /**
      * The browser type
@@ -56,15 +56,13 @@ class WebDriverAdapter(
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) = driverOrNull?.navigateTo(entry) ?: Unit
 
-    /**
-     * The actual url return by the browser
-     * */
     @Throws(WebDriverException::class)
     override suspend fun currentUrl() = driverOrNull?.currentUrl() ?: ""
 
-    /**
-     * The real time page source return by the browser
-     * */
+    override suspend fun baseURI() = driverOrNull?.baseURI() ?: ""
+
+    override suspend fun location() = driverOrNull?.location() ?: ""
+
     @Throws(WebDriverException::class)
     override suspend fun pageSource() = driverOrNull?.pageSource()
 

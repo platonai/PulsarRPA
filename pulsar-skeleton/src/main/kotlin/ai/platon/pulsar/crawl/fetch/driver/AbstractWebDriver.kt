@@ -49,7 +49,7 @@ abstract class AbstractWebDriver(
 
     override var navigateEntry: NavigateEntry = NavigateEntry("")
 
-    override val navigateHistory: MutableList<NavigateEntry> = Collections.synchronizedList(mutableListOf())
+    override val navigateHistory = NavigateHistory()
 
     override val supportJavascript: Boolean = true
 
@@ -60,6 +60,11 @@ abstract class AbstractWebDriver(
     override var isReused: Boolean = false
 
     override val state = AtomicReference(WebDriver.State.INIT)
+
+    /**
+     * The associated data.
+     * */
+    override val data: MutableMap<String, Any?> = mutableMapOf()
 
     override var lastActiveTime: Instant = Instant.now()
 
@@ -109,6 +114,16 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
+
+    override suspend fun location(): String {
+        val result = evaluate("window.location")
+        return result?.toString() ?: ""
+    }
+
+    override suspend fun baseURI(): String {
+        val result = evaluate("document.baseURI")
+        return result?.toString() ?: ""
+    }
 
     @Throws(WebDriverException::class)
     override suspend fun waitForSelector(selector: String, timeoutMillis: Long): Long =

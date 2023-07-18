@@ -182,7 +182,7 @@ public class PulsarParams extends Params {
     public static final String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
     public static final String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
     /**
-     * Temporary variable holders
+     * Temporary variables
      */
     public static final String VAR_LINKS_COUNT = "links_count";
     public static final String VAR_DROPPED_LINKS_COUNT = "dropped_links_count";
@@ -192,6 +192,7 @@ public class PulsarParams extends Params {
     public static final String VAR_FETCH_STATE = "fetch_state";
     public static final String VAR_PREV_FETCH_TIME_BEFORE_UPDATE = "prev_fetch_time_before_update";
     public static final String VAR_PRIVACY_CONTEXT_NAME = "privacy_context_name";
+    public static final String VAR_PRIVACY_AGENT = "VAR_PRIVACY_AGENT";
     /**
      * Additional load status to report by PageLoadStatusFormatter.
      * */

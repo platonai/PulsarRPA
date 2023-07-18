@@ -21,10 +21,13 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverSettings
 import ai.platon.pulsar.protocol.browser.emulator.*
 import kotlinx.coroutines.delay
+import org.apache.commons.lang3.SystemUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BrowserEmulatorImplBase(
     val driverSettings: WebDriverSettings,
@@ -49,6 +52,8 @@ abstract class BrowserEmulatorImplBase(
     val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
     val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     val counterCancels by lazy { registry.counter(this, "cancels") }
+
+    private var exportCount = 0
 
     open fun createResponse(task: NavigateTask): Response {
         if (!isActive) {
@@ -206,10 +211,11 @@ abstract class BrowserEmulatorImplBase(
 
     /**
      * Export the page if one of the following condition matches:
-     * 1. the first 200 pages
+     * 1. the first 1000 pages
      * 2. LoadOptions.test > 0
      * 3. logger level is debug or lower
      * 4. logger level is info and protocol status is failed
+     * 5. other cases
      * */
     private fun exportIfNecessary0(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
@@ -218,8 +224,11 @@ abstract class BrowserEmulatorImplBase(
 
         val id = page.id
         val test = page.options.test
-        val shouldExport =
-            id < 200 || id % 100 == 0 || test > 0 || logger.isDebugEnabled || (logger.isInfoEnabled && !status.isSuccess)
+        val shouldExport = exportCount < 1000
+                || (id % 100 == 0 && exportCount < 10000)
+                || test > 0
+                || logger.isDebugEnabled
+                || (logger.isInfoEnabled && !status.isSuccess)
         if (shouldExport) {
             export0(pageSource, status, page)
         }
@@ -231,8 +240,18 @@ abstract class BrowserEmulatorImplBase(
         }
 
         val path = AppFiles.export(status, pageSource, page)
+        ++exportCount
 
-        // Create a symbolic link with an url based, unique, shorter but not readable file name,
+        if (SystemUtils.IS_OS_WINDOWS) {
+            // TODO: Issue 16 - https://github.com/platonai/PulsarRPA/issues/16
+            // Failed to create symbolic link on Windows
+        } else {
+            createSymbolicLink(path, page)
+        }
+    }
+
+    private fun createSymbolicLink(path: Path, page: WebPage) {
+        // Create a symbolic link with an url based, unique, shorter but less readable file name,
         // we can generate and refer to this path at any place
         val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
         try {

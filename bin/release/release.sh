@@ -5,7 +5,7 @@ bin=$(cd "$bin">/dev/null || exit; pwd)
 APP_HOME=$(cd "$bin"/..>/dev/null || exit; pwd)
 
 # Switching remote URLs from HTTPS to SSH
-git remote set-url origin git@github.com:platonai/pulsarr.git
+git remote set-url origin git@github.com:platonai/PulsarRPA.git
 
 SNAPSHOT_VERSION=$(head -n 1 "$APP_HOME/VERSION")
 VERSION=${SNAPSHOT_VERSION//"-SNAPSHOT"/""}

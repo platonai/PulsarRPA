@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.urls.UrlUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.RandomStringUtils
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,15 +20,23 @@ annotation class RequiredDirectory
 
 /**
  * Created by vincent on 18-3-23.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 object AppPaths {
 
     val SYS_TMP_DIR = Paths.get(AppContext.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppContext.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
+    @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
+    val SYS_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYS_BROWSER_DATA_DIR")
+    /**
+     * The directory for the user's default browser.
+     * This is a placeholder, actually no data dir should be specified to launch the browser,
+     * so the web driver opens a browser just like a real user opens it.
+     */
+    val USER_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".USER_BROWSER_DATA_DIR")
 
-    // directory for symbolic links, this path should be as short as possible
+    // Directory for symbolic links, this path should be as short as possible
     @RequiredDirectory
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
 
@@ -74,13 +83,11 @@ object AppPaths {
     val TEST_DIR = PROC_TMP_DIR.resolve( "test")
 
     @RequiredDirectory
-    val CONTEXT_TMP_DIR = PROC_TMP_DIR.resolve( "context")
+    val CONTEXT_BASE_DIR = PROC_TMP_DIR.resolve( "context")
     @RequiredDirectory
-    val BROWSER_TMP_DIR = CONTEXT_TMP_DIR.resolve( "browser")
+    val CONTEXT_TMP_DIR = CONTEXT_BASE_DIR.resolve( "tmp")
     @RequiredFile
-    val BROWSER_TMP_DIR_LOCK = CONTEXT_TMP_DIR.resolve( "browser.lock")
-    @RequiredDirectory
-    val CHROME_TMP_DIR = BROWSER_TMP_DIR.resolve("google-chrome")
+    val BROWSER_TMP_DIR_LOCK = CONTEXT_BASE_DIR.resolve( "browser.lock")
 
     /**
      * Proxy directory
@@ -156,6 +163,11 @@ object AppPaths {
     }
 
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
+
+    fun createTempFile(prefix: String, suffix: String): Path {
+        val rand = RandomStringUtils.randomAlphanumeric(12)
+        return getProcTmp("tmp", "$prefix$rand$suffix")
+    }
 
     /**
      * Create a mock page path.

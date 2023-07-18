@@ -6,7 +6,7 @@ import ai.platon.pulsar.persist.WebPage
 
 /**
  * Created by vincent on 17-7-28.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 class ParseContext(
     val page: WebPage,

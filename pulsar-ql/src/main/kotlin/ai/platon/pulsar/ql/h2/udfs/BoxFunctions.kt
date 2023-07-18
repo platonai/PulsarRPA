@@ -8,7 +8,7 @@ import org.h2.value.ValueArray
 
 /**
  * Created by vincent on 18-02-06.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 @Suppress("unused")
 @UDFGroup(namespace = "IN_BOX")

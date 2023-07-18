@@ -22,11 +22,15 @@ open class BrowserManager(
     private val closed = AtomicBoolean()
     private val browserFactory = BrowserFactory()
     private val _browsers = ConcurrentHashMap<BrowserId, Browser>()
-    private val createdBrowsers = ConcurrentLinkedDeque<Browser>()
+    private val historicalBrowsers = ConcurrentLinkedDeque<Browser>()
     private val closedBrowsers = ConcurrentLinkedDeque<Browser>()
-
+    /**
+     * The active browsers
+     * */
     val browsers: Map<BrowserId, Browser> = _browsers
-
+    /**
+     * Launch a browser. If the browser with the id is already launched, return the existing one.
+     * */
     @Throws(BrowserLaunchException::class)
     fun launch(browserId: BrowserId, driverSettings: WebDriverSettings, capabilities: Map<String, Any>): Browser {
         val launcherOptions = LauncherOptions(driverSettings)
@@ -38,10 +42,15 @@ open class BrowserManager(
         val launchOptions = driverSettings.createChromeOptions(capabilities)
         return launchIfAbsent(browserId, launcherOptions, launchOptions)
     }
-
+    /**
+     * Find an existing browser.
+     * */
     @Synchronized
     fun findBrowser(browserId: BrowserId) = browsers[browserId]
 
+    /**
+     * Close a browser.
+     * */
     @Synchronized
     fun closeBrowser(browserId: BrowserId) {
         val browser = _browsers.remove(browserId)
@@ -53,7 +62,7 @@ open class BrowserManager(
 
     @Synchronized
     fun destroyBrowserForcibly(browserId: BrowserId) {
-        createdBrowsers.filter { browserId == it.id }.forEach { browser ->
+        historicalBrowsers.filter { browserId == it.id }.forEach { browser ->
             kotlin.runCatching { browser.destroyForcibly() }.onFailure { logger.warn(it.stringify("Failed to close browser\n")) }
             closedBrowsers.add(browser)
         }
@@ -90,11 +99,11 @@ open class BrowserManager(
      * */
     @Synchronized
     fun destroyZombieBrowsersForcibly() {
-        val zombieBrowsers = createdBrowsers - browsers.values.toSet() - closedBrowsers
+        val zombieBrowsers = historicalBrowsers - browsers.values.toSet() - closedBrowsers
         if (zombieBrowsers.isNotEmpty()) {
             logger.warn("There are {} zombie browsers, cleaning them ...", zombieBrowsers.size)
             zombieBrowsers.forEach { browser ->
-                logger.info("Closing zombie browser {} ...", browser.id)
+                logger.info("Closing zombie browser | {}", browser.id)
                 kotlin.runCatching { browser.destroyForcibly() }.onFailure { logger.warn(it.stringify()) }
             }
         }
@@ -123,14 +132,18 @@ open class BrowserManager(
     }
 
     @Throws(BrowserLaunchException::class)
-    @Synchronized
     private fun launchIfAbsent(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
-        val browser = _browsers.computeIfAbsent(browserId) {
-            browserFactory.launch(browserId, launcherOptions, launchOptions)
+        val browser = _browsers[browserId]
+        if (browser != null) {
+            return browser
         }
-        createdBrowsers.add(browser)
-        return  browser
+
+        synchronized(browserFactory) {
+            return _browsers.computeIfAbsent(browserId) {
+                browserFactory.launch(browserId, launcherOptions, launchOptions)
+            }.also { historicalBrowsers.add(it) }
+        }
     }
 }

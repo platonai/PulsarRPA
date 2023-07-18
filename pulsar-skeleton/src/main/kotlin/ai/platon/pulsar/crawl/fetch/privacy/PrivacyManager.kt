@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -20,20 +21,27 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     private val logger = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
 
-    private val closeStrategy get() = conf.get(PRIVACY_CONTEXT_CLOSE_LAZY, CloseStrategy.ASAP.name)
-
-    private val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
-
-    val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
+    val permanentContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
 
     /**
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
-    val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
+    val temporaryContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
+
+    val activeContexts get() = permanentContexts + temporaryContexts
+
+    val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
+
+    val contextLifeCycleMonitor = Any()
+
+    private val closeStrategy get() = conf.get(PRIVACY_CONTEXT_CLOSE_LAZY, CloseStrategy.ASAP.name)
 
     private val cleaningService = Executors.newSingleThreadScheduledExecutor()
 
-    open val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
+    protected val privacyAgentGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
+
+    @Deprecated("Use local generator")
+    open val privacyContextIdGenerator get() = privacyAgentGeneratorFactory.generator
 
     val isClosed get() = closed.get()
 
@@ -57,22 +65,40 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     /**
      * Create a new context or return an existing one.
      * */
+    @Deprecated(
+        "Use computeNextContext(task, fingerprint)",
+        ReplaceWith("computeNextContext(FetchTask, Fingerprint)")
+    )
     abstract fun computeNextContext(fingerprint: Fingerprint): PrivacyContext
+
+    /**
+     * Create a new context or return an existing one.
+     * */
+    abstract fun computeNextContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext
 
     /**
      * Create a new context or return an existing one
      * */
+    @Deprecated(
+        "Use computeIfNecessary(task, fingerprint)",
+        ReplaceWith("computeIfNecessary(FetchTask, Fingerprint)")
+    )
     abstract fun computeIfNecessary(fingerprint: Fingerprint): PrivacyContext?
 
     /**
-     * Create a context with [id] and add it to active context list if not absent
+     * Create a new context or return an existing one
      * */
-    abstract fun computeIfAbsent(id: PrivacyContextId): PrivacyContext
+    abstract fun computeIfNecessary(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
+
+    /**
+     * Create a context with [privacyAgent] and add it to active context list if not absent
+     * */
+    abstract fun computeIfAbsent(privacyAgent: PrivacyContextId): PrivacyContext
 
     /**
      * Create a context and do not add to active context list
      * */
-    abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
+    abstract fun createUnmanagedContext(privacyAgent: PrivacyContextId): PrivacyContext
 
     open fun takeSnapshot(): String {
         val snapshot = activeContexts.values.joinToString("\n") { it.display + ": " + it.takeSnapshot() }
@@ -97,15 +123,19 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
             logger.debug("Active contexts: {}, zombie contexts: {}", activeContexts.size, zombieContexts.size)
         }
 
-        val id = privacyContext.id
+        val privacyAgent = privacyContext.privacyAgent
 
         /**
-         * activeContexts is locked so no new context should be allocated before the dead context releases its resource
+         * Volatile contexts is synchronized, so no new contexts should be allocated
+         * before the dead context releases its resource
          * */
-        synchronized(activeContexts) {
-            activeContexts.remove(id)
+        synchronized(contextLifeCycleMonitor) {
+            permanentContexts.remove(privacyAgent)
+            temporaryContexts.remove(privacyAgent)
+
             if (!zombieContexts.contains(privacyContext)) {
-                // every time we add the item to the head, so when we report the deque, the latest contexts are reported.
+                // every time we add the item to the head,
+                // so when we report the deque, the latest contexts are reported.
                 zombieContexts.addFirst(privacyContext)
             }
 
@@ -136,8 +166,9 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
         if (closed.compareAndSet(false, true)) {
             logger.info("Closing privacy contexts ...")
 
-            activeContexts.values.forEach { zombieContexts.add(it) }
-            activeContexts.clear()
+            activeContexts.values.toCollection(zombieContexts)
+            permanentContexts.clear()
+            temporaryContexts.clear()
 
             cleaningService.runCatching { shutdown() }.onFailure { logger.warn(it.stringify()) }
             closeZombieContexts()
@@ -179,10 +210,10 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
 
     private fun reportZombieContexts() {
         if (zombieContexts.isNotEmpty()) {
-            val prefix = "The latest context throughput: "
+            val prefix = "The latest temporary context throughput: "
             val postfix = " (success/min)"
             // zombieContexts is a deque, so here we take the latest n contexts.
-            zombieContexts.take(15)
+            zombieContexts.filter { it.privacyAgent.isTemporary }.take(15)
                 .joinToString(", ", prefix, postfix) { String.format("%.2f", 60 * it.meterSuccesses.meanRate) }
                 .let { logger.info(it) }
         }

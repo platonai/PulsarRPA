@@ -31,6 +31,7 @@ open class NormUrl constructor(
     val hrefSpec get() = href?.toString()
     val args get() = options.toString()
     val configuredUrl get() = "$spec $args".trim()
+    val referrer get() = options.referrer ?: (detail?.referrer)
 
     val isNil get() = this == NIL
     val isNotNil get() = !isNil

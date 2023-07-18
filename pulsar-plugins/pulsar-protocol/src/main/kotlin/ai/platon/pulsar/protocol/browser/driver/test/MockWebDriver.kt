@@ -152,6 +152,10 @@ class MockWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String = backupDriverOrNull?.currentUrl() ?: navigateUrl
 
+    override suspend fun baseURI() = backupDriverOrNull?.baseURI() ?: ""
+
+    override suspend fun location() = backupDriverOrNull?.location() ?: ""
+
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String = mockPageSource ?: (backupDriverOrNull?.pageSource()) ?: ""
 

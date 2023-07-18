@@ -19,6 +19,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.options.OptionUtils
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.junit.Assert.assertArrayEquals
@@ -134,25 +135,6 @@ class TestString {
         assertEquals("a.b", "a..b".replace("\\.+".toRegex(), "."))
 
         assertTrue { "about:blank".matches("about:.+".toRegex()) }
-    }
-
-    @Test
-    fun testRegex3() {
-        val text = """
-            |xvfb-run -a -e /dev/stdout -s "-screen 0 1920x1080x24" /usr/bin/google-chrome-stable 
-            |--proxy-server=119.49.122.242:4224 --disable-gpu --hide-scrollbars --remote-debugging-port=0 
-            |--no-default-browser-check --no-first-run --no-startup-window --mute-audio 
-            |--disable-background-networking --disable-background-timer-throttling 
-            |--disable-client-side-phishing-detection --disable-hang-monitor 
-            |--disable-popup-blocking --disable-prompt-on-repost --disable-sync --disable-translate 
-            |--disable-blink-features=AutomationControlled --metrics-recording-only 
-            |--safebrowsing-disable-auto-update --no-sandbox --ignore-certificate-errors 
-            |--window-size=1920,1080 --pageLoadStrategy=none --throwExceptionOnScriptError=true 
-            |--user-data-dir=/home/vincent/tmp/pulsar-vincent/context/cx.2zmmAe40/pulsar_chrome
-        """.trimMargin().replace("\n", " ")
-        // println(text)
-        assertTrue { "./pulsar-vincent/context/cx.5oruW037".matches(".+pulsar-.+/context/cx.+".toRegex()) }
-        assertTrue { text.matches(".+pulsar-.+/context/cx.+".toRegex()) }
     }
 
     @Test
@@ -275,7 +257,7 @@ class TestString {
     }
 
     @Test
-    fun testRegexSplit() {
+    fun testSplitStringByRegex() {
         var s = "TestStringUtil"
         val r = s.split("(?=\\p{Upper})".toRegex()).filterNot { it.isEmpty() }.toTypedArray()
         assertArrayEquals(arrayOf("Test", "String", "Util"), r)

@@ -7,13 +7,13 @@ class ResourceWalker(
 ): AutoCloseable {
     companion object {
         val SPRING_PACKED_RESOURCE_BASE_DIR = "BOOT-INF/classes/"
-        val springPackedResourceWalker = ResourceWalker(SPRING_PACKED_RESOURCE_BASE_DIR)
+        val SPRING_PACKED_RESOURCE_WALKER = ResourceWalker(SPRING_PACKED_RESOURCE_BASE_DIR)
     }
 
     private val logger = getLogger(this)
 
     // When the jar is packed using spring-boot, the resources are put into directory BOOT-INF/classes
-    val baseUri = ResourceLoader.getResource(baseDir)?.toURI()
+    val baseURI = ResourceLoader.getResource(baseDir)?.toURI()
 
     private var fileSystem: FileSystem? = null
 

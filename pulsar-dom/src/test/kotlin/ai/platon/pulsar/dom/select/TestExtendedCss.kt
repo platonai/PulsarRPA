@@ -22,9 +22,9 @@ internal data class Box(val width: Int, val height: Int) {
 class TestExtendedCss {
 
     private val resourceName = "webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html"
-    private val baseUri = "jar:/$resourceName"
+    private val baseURI = "jar:/$resourceName"
     private val stream = ResourceLoader.getResourceAsStream(resourceName)!!
-    private val doc: FeaturedDocument = Documents.parse(stream, "UTF-8", baseUri)
+    private val doc: FeaturedDocument = Documents.parse(stream, "UTF-8", baseURI)
     private val box = Box(447, 447)
     private val box2 = Box(463, 439)
 

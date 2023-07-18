@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.collect
 import ai.platon.pulsar.session.PulsarSession
 import ai.platon.pulsar.common.ObjectConverter
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.message.LoadStatusFormatter
+import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.metrics.AppMetrics
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.readable
@@ -97,7 +97,7 @@ class FatLinkExtractor(
         if (!page.protocolStatus.isSuccess) {
             ++counters.badSeeds
             ++globalCounters.badSeeds
-            LoadStatusFormatter(page, prefix = "Bad seed", withOptions = true).also { log.warn(it.toString()) }
+            PageLoadStatusFormatter(page, prefix = "Bad seed", withOptions = true).also { log.warn(it.toString()) }
             return null
         }
 
@@ -188,7 +188,7 @@ class FatLinkExtractor(
             .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
             .mapNotNull { normalizeOrNull(it) }
             .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }
-            .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
+            .map { StatefulHyperlink(it.url, it.text, it.order, referrer = fatLinkSpec) }
             .onEach { it.args = "-i 0s" }
             .toList()
     }
@@ -208,7 +208,7 @@ class FatLinkExtractor(
         return page.vividLinks
             .asSequence()
             .mapNotNull { normalizer(it.key.toString())?.let { u -> u to it.value.toString() } }
-            .map { StatefulHyperlink(it.first, it.second, 0, referer = page.url) }
+            .map { StatefulHyperlink(it.first, it.second, 0, referrer = page.url) }
             .filterNot { it in denyList }
             .filter { it.url.matches(urlRegex) }
             .filter { shouldFetchVividPage(it.url, options.itemExpires, now) }

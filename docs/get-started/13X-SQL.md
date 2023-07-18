@@ -1,13 +1,13 @@
 X-SQL
 =
 
-PulsarR 开发了 X-SQL 来直接查询互联网，并将网页转换成表格和图表。X-SQL 扩展了 SQL 来管理 Web 数据：网络爬取、数据采集、数据提取、Web 内容挖掘、Web BI，等等。
+PulsarRPA 开发了 X-SQL 来直接查询互联网，并将网页转换成表格和图表。X-SQL 扩展了 SQL 来管理 Web 数据：网络爬取、数据采集、数据提取、Web 内容挖掘、Web BI，等等。
 
-当 PulsarR 作为 REST 服务运行时，X-SQL 可用于随时随地采集网页或直接查询互联网，无需打开 IDE，就象是升级版的 Google 和百度。
+当 PulsarRPA 作为 REST 服务运行时，X-SQL 可用于随时随地采集网页或直接查询互联网，无需打开 IDE，就象是升级版的 Google 和百度。
 
 现在，我们在大型数据采集项目中，所有 [提取规则](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/)）都是用 X-SQL 编写的，数据类型转换、数据清理等工作也由强大的 X-SQL 内联处理。编写 X-SQL 做数据采集项目的体验，就像传统的 CRUD 项目一样简单高效。一个很好的例子是 [x-asin.sql](https://github.com/platonai/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon/blob/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl/x-asin.sql)），它从每个产品页面中提取 70 多个字段。
 
-[Exotic Amazon](https://github.com/platonai/exotic-amazon)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon)）是采集整个 amazon.com 网站的**完整解决方案**，**开箱即用**，包含亚马逊大多数数据类型，它将永久免费提供并开放源代码。得益于 PulsarR 提供的完善的 Web 数据管理基础设施，整个解决方案由不超过 3500 行的 kotlin 代码和不到 700 行的 X-SQL 组成，以提取 650 多个字段。
+[Exotic Amazon](https://github.com/platonai/exotic-amazon)（[国内镜像](https://gitee.com/platonai_galaxyeye/exotic-amazon)）是采集整个 amazon.com 网站的**完整解决方案**，**开箱即用**，包含亚马逊大多数数据类型，它将永久免费提供并开放源代码。得益于 PulsarRPA 提供的完善的 Web 数据管理基础设施，整个解决方案由不超过 3500 行的 kotlin 代码和不到 700 行的 X-SQL 组成，以提取 650 多个字段。
 
 本课程介绍了 X-SQL 的基本概念、基本用法和最常见的几个 SQL 函数。
 
@@ -30,11 +30,11 @@ select
 }
 ```
 
-完整代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)。
+完整代码：[kotlin](../../pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)，[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt)。
 
 ## 语言介绍
 
-X-SQL 基于 H2 数据库，PulsarR 主要通过注册 UDF 来扩展 H2 数据库，但也做了其他扩展。
+X-SQL 基于 H2 数据库，PulsarRPA 主要通过注册 UDF 来扩展 H2 数据库，但也做了其他扩展。
 
 每个 X-SQL 函数都有一个命名空间，例如：
 
@@ -158,7 +158,7 @@ from
 
 ## String Functions
 
-大多数字符串函数是通过程序从 org.apache.commons.lang3.StringUtils 自动转换而来。你可以在下述文件中找到 UDF 定义：[StringFunctions](../../../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)（[国内镜像](https://gitee.com/platonai_galaxyeye/pulsarr/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)），所有的字符串函数都在命名空间 STR 中。
+大多数字符串函数是通过程序从 org.apache.commons.lang3.StringUtils 自动转换而来。你可以在下述文件中找到 UDF 定义：[StringFunctions](../../../pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)（[国内镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA/blob/1.10.x/pulsar-ql/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs/StringFunctions.kt)），所有的字符串函数都在命名空间 STR 中。
 
 ### STR_SUBSTRING_AFTER
 

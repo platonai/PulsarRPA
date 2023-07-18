@@ -11,7 +11,7 @@ import kotlin.system.exitProcess
 
 /**
  * Created by vincent on 17-4-12.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 open class PulsarOptions(
     /**

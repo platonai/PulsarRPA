@@ -22,7 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A privacy context is a standalone agent to the target website, it will be closed once it is leaked.
+ * A privacy context is a unique context of a privacy agent to the target website,
+ * it will be closed once it is leaked.
  *
  * One of the biggest difficulties in web scraping tasks is the bot stealth.
  *
@@ -32,23 +33,46 @@ import java.util.concurrent.atomic.AtomicInteger
  * and Pulsar will visit the page in another privacy context.
  * */
 abstract class PrivacyContext(
+    @Deprecated("Inappropriate name", ReplaceWith("privacyAgent"))
     val id: PrivacyAgent,
     val conf: ImmutableConfig
 ) : Comparable<PrivacyContext>, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
-        val IDENT_PREFIX = "cx."
-        val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
-        val PROTOTYPE_CONTEXT_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
+        // The prefix for all temporary privacy contexts, system context, prototype context and default context are not included.
+        val CONTEXT_DIR_PREFIX = "cx."
+        @Deprecated("Inappropriate name", ReplaceWith("USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER"))
+        val SYSTEM_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.SYS_BROWSER_DATA_DIR_PLACEHOLDER
+        val USER_DEFAULT_CONTEXT_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
+        // The placeholder directory for the user's default browser. This is a placeholder, actually no data dir
+        // should be specified, so the browser driver opens a browser just like a normal user opens it.
+        // The actual data dir of user's browser are different on different operating systems, for example,
+        // on linux, chrome's data dir is: ~/.config/google-chrome/
+        val USER_DEFAULT_DATA_DIR_PLACEHOLDER = AppPaths.USER_BROWSER_DATA_DIR_PLACEHOLDER
+        // The default context directory, if you need a semi-permanent context, use this one
+        val DEFAULT_CONTEXT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
+        // The prototype context directory, all privacy contexts copies browser data from the prototype.
+        // A typical prototype data dir is: ~/.pulsar/browser/chrome/prototype/google-chrome/
         val PROTOTYPE_DATA_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        // A context dir is the dir which contains the browser data dir, and supports different browsers.
+        // For example: ~/.pulsar/browser/chrome/prototype/
+        val PROTOTYPE_CONTEXT_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE.parent
+
         val PRIVACY_CONTEXT_IDLE_TIMEOUT_DEFAULT = Duration.ofMinutes(30)
 
         val globalMetrics by lazy { PrivacyContextMetrics() }
     }
 
     private val logger = LoggerFactory.getLogger(PrivacyContext::class.java)
+
     val sequence = instanceSequencer.incrementAndGet()
-    val display get() = id.display
+    val privacyAgent get() = id
+    /**
+     * The real id, will replace the current inappropriate [id]
+     * */
+    val id0 get() = privacyAgent.id
+    val display get() = privacyAgent.display
+    val baseDir get() = privacyAgent.contextDir
 
     protected val numRunningTasks = AtomicInteger()
     val minimumThroughput = conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
@@ -256,11 +280,11 @@ abstract class PrivacyContext(
      * */
     abstract fun maintain()
 
-    override fun compareTo(other: PrivacyContext) = id.compareTo(other.id)
+    override fun compareTo(other: PrivacyContext) = id0.compareTo(other.id0)
 
-    override fun equals(other: Any?) = other is PrivacyContext && other.id == id
+    override fun equals(other: Any?) = other is PrivacyContext && other.id0 == id0
 
-    override fun hashCode() = id.hashCode()
+    override fun hashCode() = id0.hashCode()
 
     protected fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()
@@ -282,9 +306,15 @@ abstract class PrivacyContext(
         when {
             status.isRetry(RetryScope.PRIVACY, ProxyRetiredException::class.java) -> markLeaked()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.FORBIDDEN) -> markLeaked()
+
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK) -> markWarning()
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_2) -> markWarning(2)
             status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.ROBOT_CHECK_3) -> markWarning(3)
+
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.WRONG_LANG) -> markWarning(2)
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.WRONG_DISTRICT) -> markWarning(2)
+            status.isRetry(RetryScope.PRIVACY, HtmlIntegrity.WRONG_COUNTRY) -> markWarning(2)
+
             status.isRetry(RetryScope.PRIVACY, BrowserErrorPageException::class.java) -> markWarning(3)
             status.isRetry(RetryScope.PRIVACY) -> markWarning()
             status.isRetry(RetryScope.CRAWL) -> markMinorWarning()

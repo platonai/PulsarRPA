@@ -1,10 +1,11 @@
 package ai.platon.pulsar.crawl.fetch.driver
 
+import ai.platon.pulsar.common.DateTimes
 import java.time.Instant
 
 /**
  * Created by vincent on 18-1-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 data class NavigateEntry(
     /**
@@ -23,7 +24,7 @@ data class NavigateEntry(
      * */
     val pageUrl: String = "",
     /**
-     * The referer claimed by the page.
+     * The referrer claimed by the page.
      */
     var pageReferrer: String? = null,
     /**
@@ -57,7 +58,7 @@ data class NavigateEntry(
     /**
      * The time when the document is ready.
      */
-    var documentReadyTime = Instant.MAX
+    var documentReadyTime = DateTimes.doomsday
     /**
      * Track the time of page actions.
      */

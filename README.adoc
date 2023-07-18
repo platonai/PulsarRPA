@@ -1,54 +1,19 @@
-= What is PulsarR?
+= What is PulsarRPA?
 Vincent Zhang <ivincent.zhang@gmail.com>
-3.0, July 29, 2022: PulsarR README
+3.0, July 29, 2022: PulsarRPA README
 :toc:
 :icons: font
 :url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
 
-English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxyeye/pulsarr[中国镜像]
+English | link:README-CN.adoc[简体中文] | https://gitee.com/platonai_galaxyeye/PulsarRPA[中国镜像]
 
-== Introduction
+== 🚄 Get started
 
-PulsarR is the ultimate open source solution to scrape web data at scale.
+💖 PulsarRPA is All You Need! 💖
 
-PulsarR [ˈpʌlsɑr] is short for Pulsar Radiation. If there is no confusion with other projects, it can be referred to as Pulsar.
+PulsarRPA is the ultimate open source solution to scrape Web data at scale, based on high performance, distributed RPA.
 
-Extracting Web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, PulsarR has developed a range of cutting-edge technologies to solve this problem.
-
-We have released complete solutions for site-wide Web scraping for some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality and cost. They will be free and open source forever, such as:
-
-* link:https://github.com/platonai/exotic-amazon[Exotic Amazon]
-* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
-* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
-
-*PulsarR supports high-quality, large-scale Web data collection and processing.* We have developed a range of infrastructure and cutting-edge technologies to ensure the highest standards of performance, quality and TCO (total cost of ownership), even in very large-scale data collection scenarios.
-
-*PulsarR supports the Network-As-A-Database paradigm.* PulsarR treats the external network as a database. If the required data is not in the local storage, or the existing version does not meet the analysis needs, the system will collect the latest version of the data from the Internet. We also developed X-SQL to query the Web directly and convert webpages into tables and charts.
-
-**PulsarR supports browser rendering as the primary method to collect Web data.** By using browser rendering as the primary method to collect Web data, we achieve an optimal balance between data point scale, data quality, labor cost and hardware cost, and achieve the lowest TCO (total cost of ownership). With optimizations such as blocking unnecessary resource files, the performance of browser rendering can even be comparable to the traditional single resource collection method.
-
-*PulsarR supports RPA based Web scraping.* PulsarR includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, dragging and dropping, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
-
-*PulsarR supports single resource collection.* PulsarR's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example through an ajax interface, you can also call PulsarR's resource collection method for high-speed collection.
-
-*PulsarR plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
-
-== Features
-
-* Web spider: browser rendering, ajax data crawling
-* RPA: robotic process automation, mimic human behaviors, SPA crawling, or do something else valuable
-* Simple API: single line of code to scrape, or single SQL to turn a website into a table
-* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
-* Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
-* High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
-* Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
-* Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
-* Large scale: fully distributed, designed for large scale crawling
-* Big data: various backend storage support: Local File/MongoDB/HBase/Gora
-* Logs &amp; metrics: monitored closely and every event is recorded
-* [Preview] Information Extraction: Learns Web data patterns and automatically extracts every field in a webpage with remarkable precision
-
-== Get started
+Extracting Web data at scale is extremely hard. Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
 
 *Most scraping attempts can start with (almost) a single line of code:*
 
@@ -59,7 +24,9 @@ fun main() = PulsarContexts.createSession().scrapeOutPages(
   "https://www.amazon.com/", "-outLink a[href~=/dp/]", listOf("#title", "#acrCustomerReviewText"))
 ----
 
-The code above will scrape fields specified by css selectors #title and #acrCustomerReviewText from a set of product pages. Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
+The code above scrapes fields specified by CSS selectors #title and #acrCustomerReviewText from a set of product pages.
+
+Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/topEc/english/amazon/AmazonCrawler.kt[kotlin].
 
 *Most #real world# crawl projects can start with the following code snippet:*
 
@@ -83,7 +50,7 @@ fun main() {
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-*The #most complicated# crawl challenges can start with RPA:*
+*The #most complicated# crawl challenges can be resolved with advanced RPA:*
 
 *Kotlin:*
 
@@ -114,9 +81,67 @@ session.load(url, options)
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt[kotlin].
 
-== Core concepts
+*The #most complicated# Web data extraction problems can be handled by X-SQL:*
 
-The core Pulsar concepts include the following, knowing these core concepts, you can use PulsarR to solve the most demanding data scraping tasks:
+1. Your Web data extraction rules are very complex, for example, 100+ rules for each individual page
+2. There are a lot of data extraction rules to maintain, for example, 20+ Amazon websites worldwide, 20+ data types for each website
+
+[source,sql,dialect=H2]
+----
+select
+      dom_first_text(dom, '#productTitle') as title,
+      dom_first_text(dom, '#bylineInfo') as brand,
+      dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+      dom_first_text(dom, '#acrCustomerReviewText') as ratings,
+      str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+  from load_and_select('https://www.amazon.com/dp/B09V3KXJPB -i 1s -njr 3', 'body');
+----
+
+Example code:
+
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQL to scrape 100+ fields from an Amazon's product page]
+* link:https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl[X-SQLs to scrape all types of Amazon webpages]
+
+== 🥁 Introduction
+
+Extracting Web data at scale is extremely hard. #Websites change frequently and are becoming more complex, meaning web data collected is often inaccurate or incomplete#, PulsarRPA has developed a range of cutting-edge technologies to solve this problem.
+
+We have released complete solutions for site-wide Web scraping for some of the largest e-commerce websites. These solutions meet the highest standards of performance, quality and cost. They will be free and open source forever, such as:
+
+* link:https://github.com/platonai/exotic-amazon[Exotic Amazon]
+* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/walmart[Exotic Walmart]
+* link:https://github.com/platonai/exotic/tree/main/exotic-app/exotic-OCR-examples/src/main/kotlin/ai/platon/exotic/examples/sites/food/dianping[Exotic Dianping]
+
+🕷 *PulsarRPA supports high-quality, large-scale Web data collection and processing.* We have developed a range of infrastructure and cutting-edge technologies to ensure the highest standards of performance, quality and TCO (total cost of ownership), even in very large-scale data collection scenarios.
+
+🏪 *PulsarRPA supports the Network-As-A-Database paradigm.* PulsarRPA treats the external network as a database. If the required data is not in the local storage, or the existing version does not meet the analysis needs, the system will collect the latest version of the data from the Internet. We also developed X-SQL to query the Web directly and convert webpages into tables and charts.
+
+🌈 **PulsarRPA supports browser rendering as the primary method to collect Web data.** By using browser rendering as the primary method to collect Web data, we achieve an optimal balance between data point scale, data quality, labor cost and hardware cost, and achieve the lowest TCO (total cost of ownership). With optimizations such as blocking unnecessary resource files, the performance of browser rendering can even be comparable to the traditional single resource collection method.
+
+💫 *PulsarRPA supports RPA based Web scraping.* PulsarRPA includes an RPA subsystem for Web interaction: scrolling, typing, screen capture, dragging and dropping, clicking, etc. This subsystem is similar to the well-known selenium, playwright, puppeteer, but all behaviors are optimized, such as more realistic simulation, better execution performance, better parallelism, better fault tolerance, and so on.
+
+🔪 *PulsarRPA supports single resource collection.* PulsarRPA's default data collection method is to harvest the `complete` Web data through browser rendering, but if the data you need can be retrieved through a single link, for example, it can be returned through an ajax interface, you can also call PulsarRPA's resource collection method for super High-speed collection.
+
+💯 *PulsarRPA plans to support cutting-edge information extraction technology.* We plan to release an advanced AI to automatically extract every field from all valuable webpages (e.g. product detail pages) with remarkable accuracy, and we currently offer a https://github.com/platonai/exotic#run-auto-extract[preview] version.
+
+== 🚀 Features
+
+* Web spider: browser rendering, ajax data crawling
+* RPA: robotic process automation, mimic human behaviors, SPA crawling, or do something else valuable
+* Simple API: single line of code to scrape, or single SQL to turn a website into a table
+* X-SQL: extended SQL to manage web data: Web crawling, scraping, Web content mining, Web BI
+* Bot stealth: web driver stealth, IP rotation, privacy context rotation, never get banned
+* High performance: highly optimized, rendering hundreds of pages in parallel on a single machine without be blocked
+* Low cost: scraping 100,000 browser rendered e-comm webpages, or n * 10,000,000 data points each day, only 8 core CPU/32G memory are required
+* Data quantity assurance: smart retry, accurate scheduling, web data lifecycle management
+* Large scale: fully distributed, designed for large scale crawling
+* Big data: various backend storage support: Local File/MongoDB/HBase/Gora
+* Logs &amp; metrics: monitored closely and every event is recorded
+* [Preview] Information Extraction: Learns Web data patterns and automatically extracts every field in a webpage with remarkable precision
+
+== ♾ Core concepts
+
+The core PulsarRPA concepts include the following, knowing these core concepts, you can use PulsarRPA to solve the most demanding data scraping tasks:
 
 * Web Scraping: the process of using bots to extract content and data from a website
 * Auto Extract: learn the data schema automatically and extract every field from webpages, powered by cutting-edge AI algorithm
@@ -125,30 +150,30 @@ The core Pulsar concepts include the following, knowing these core concepts, you
 * X-SQL: query the Web using SQL directly
 * Pulsar Session: provides a set of simple, powerful and flexible APIs to do web scraping tasks
 * Web Driver: defines a concise interface to visit and interact with webpages, all behaviors are optimized to mimic real people as closely as possible
-* URLs: a URL in Pulsar is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in Pulsar is defined as some form of URL
-* Hyperlinks: a Hyperlink in Pulsar is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task
-* Load Options: load options, or load arguments are control parameters that affect how Pulsar loads, fetches and crawls webpages
+* URLs: a URL in PulsarRPA is a normal link:https://en.wikipedia.org/wiki/URL[URL] with extra information to describe a task. Every task in PulsarRPA is defined as some form of URL
+* Hyperlinks: a Hyperlink in PulsarRPA is a normal link:https://en.wikipedia.org/wiki/Hyperlink[Hyperlink] with extra information to describe a task
+* Load Options: load options, or load arguments are control parameters that affect how PulsarRPA loads, fetches and crawls webpages
 * Event Handlers: capture and process events throughout the lifecycle of webpages
 
-Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[Pulsar concepts] for details.
+Check link:docs/concepts.adoc#_the_core_concepts_of_pulsar[PulsarRPA concepts] for details.
 
-== Usage I: experience Pulsar with an executable jar
+== 🧮 PulsarRPA as an executable jar
 
-We have released a standalone executable jar based on PulsarR, which includes:
+We have released a standalone executable jar based on PulsarRPA, which includes:
 
 * Web scraping examples of a set of top sites
 * An applet based on `self-supervised` machine learning for information extraction, AI identifies all fields on the detail page with over 90% field accuracy of 99.9% or more
 * An applet based on `self-supervised` machine learning and outputs all extract rules, which can help traditional Web scraping methods
 * An applet that scrape Web data directly from the command line, like wget or curl, without writing code
-* An upgraded Pulsar server to which we can send SQLs to collect Web data
+* An upgraded PulsarRPA server to which we can send SQLs to collect Web data
 * A Web UI from which we can write SQLs and send them to the server
 
 Download https://github.com/platonai/exotic#download[Exotic] and explore its capabilities with a single command line:
 
     java -jar exotic-standalone.jar
 
-== Usage II: use Pulsar as a library
-The simplest way to leverage the power of Pulsar is to add it to your project as a library.
+== 🎁 PulsarRPA as a java library
+The simplest way to leverage the power of PulsarRPA is to add it to your project as a library.
 
 Maven:
 [source,xml]
@@ -156,17 +181,19 @@ Maven:
 <dependency>
   <groupId>ai.platon.pulsar</groupId>
   <artifactId>pulsar-all</artifactId>
-  <version>1.10.12</version>
+  <version>1.10.16</version>
 </dependency>
 ----
 
 Gradle:
 [source,kotlin]
 ----
-implementation("ai.platon.pulsar:pulsar-all:1.10.12")
+implementation("ai.platon.pulsar:pulsar-all:1.10.16")
 ----
 
-You can also clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].
+You can clone the template project from github.com: https://github.com/platonai/pulsar-kotlin-template[kotlin], https://github.com/platonai/pulsar-java-template[java-11], https://github.com/platonai/pulsar-java-17-template[java-17].
+
+You can also start your own large-scale web crawler projects based on our commercial-grade open source projects: link:https://github.com/platonai/exotic[Exotic], link:https://github.com/platonai/exotic-amazon[Exotic-amazon].
 
 === Basic usage
 
@@ -244,7 +271,7 @@ Check link:docs/concepts.adoc#_load_options[Load Options] for details.
 
 === Extracting web data
 
-Pulsar uses https://jsoup.org/[jsoup] to extract data from HTML documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
+PulsarRPA uses https://jsoup.org/[jsoup] to extract data from HTML documents. Jsoup parses HTML to the same DOM as modern browsers do. Check https://jsoup.org/cookbook/extracting-data/selector-syntax[selector-syntax] for all the supported CSS selectors.
 
 *Kotlin:*
 
@@ -255,7 +282,7 @@ val price = document.selectFirst('.price').text()
 ----
 
 === Continuous crawls
-It's really simple to scrape a massive url collection or run continuous crawls in Pulsar.
+It's really simple to scrape a massive url collection or run continuous crawls in PulsarRPA.
 
 *Kotlin:*
 
@@ -307,11 +334,11 @@ public class ContinuousCrawler {
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[kotlin], link:pulsar-app/pulsar-examples/src/main/java/ai/platon/pulsar/examples/ContinuousCrawler.java[java].
 
-=== RPA (Robotic Process Automation)
+=== 👽 RPA (Robotic Process Automation)
 
 As websites become more and more complicated, RPA has become the only way to collect data from some website, such as websites using Custom Font technology.
 
-Pulsar provides a convenient way to mimic real people during the lifecycle of a webpage, using a web driver to interact with the webpage: scrolling, typing, screen capturing, dragging and dropping, clicking and more, all actions and behaviors are optimized to mimic real people as closely as possible.
+PulsarRPA provides a convenient way to mimic real people during the lifecycle of a webpage, using a web driver to interact with the webpage: scrolling, typing, screen capturing, dragging and dropping, clicking and more, all actions and behaviors are optimized to mimic real people as closely as possible.
 
 Here is a typical RPA code snippet, which is required to collect data from most top e-comm sites.
 
@@ -372,15 +399,15 @@ The result is as follows:
 
 ----
 TITLE                                                   | BRAND                  | PRICE   | RATINGS       | SCORE
-HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $1.9.11 | 1,349 ratings | 4.40
+HUAWEI P20 Lite (32GB + 4GB RAM) 5.84" FHD+ Display ... | Visit the HUAWEI Store | $6.10 | 1,349 ratings | 4.40
 ----
 
 Example code: link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[kotlin].
 
 Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
-== Usage III: run Pulsar as a REST service
-When Pulsar runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
+== 🌐 PulsarRPA as a REST service
+When PulsarRPA runs as a REST service, X-SQL can be used to scrape webpages or to query the web data directly at anytime, from anywhere, without opening an IDE.
 
 === Build from source
 ----
@@ -450,7 +477,7 @@ The response is as follows in json format:
 
 Click link:docs/x-sql.adoc[X-SQL] to see a detailed introduction and function descriptions about X-SQL.
 
-== Step-by-step course
+== 📖 Step-by-step course
 
 We have a step-by-step course by example:
 
@@ -458,19 +485,20 @@ We have a step-by-step course by example:
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_1_LoadOptions.kt[LoadOptions]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_2_URLs.kt[URLs]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_3_JvmAsync.kt[JvmAsync]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_4_Coroutine.kt[Flow]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[ContinuousCrawler]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt[EventHandler]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_4_Coroutine.kt[Kotlin Coroutine]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_5_ContinuousCrawler.kt[Continuous Crawler]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_6_EventHandler.kt[Event Handler]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_7_RPA.kt[RPA]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_8_WebDriver.kt[WebDriver]
-. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[MassiveCrawler]
+. link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_9_MassiveCrawler.kt[Large Scale Crawler]
 . link:pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/_10_XSQL.kt[X-SQL]
+. link:https://github.com/platonai/exotic-amazon[Practice: Crawl the Top 1 E-comm Site at Scale]
 
-== Logs & Metrics
+== 📊 Logs & Metrics
 
-Pulsar has carefully designed the logging and metrics subsystem to record every event that occurs in the system.
+PulsarRPA has carefully designed the logging and metrics subsystem to record every event that occurs in the system.
 
-Pulsar logs the status for every load execution, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
+PulsarRPA logs the status for every load execution, so it's easy to know what happened in the system, find out answers such as is the system running healthy, how many pages were successfully fetched, how many pages were retried, how many proxy ips were used, etc.
 
 By paying attention to just a few symbols, you can gain insight into the state of the entire system: 💯 💔 🗙 ⚡ 💿 🔃 🤺。
 
@@ -485,17 +513,18 @@ Typical page loading logs are shown below, check link:docs/log-format.adoc[log-f
 2022-09-24 11:47:13.860  INFO [-worker-60] a.p.p.c.c.L.Task - 2828. 🗙 🗙 U for SC got 200 0 <- 348.31 KiB <- 684.75 KiB in 0s, last fetched 18m55s ago, fc:2 | 34/130/52/181/5747 | 60.184.124.232 | 11zTa0r2 | https://www.walmart.com/ip/Walmart-Family-Mobile-Apple-iPhone-11-64GB-Black-Prepaid-Smartphone/209201965?athbdg=L1200 -expires PT24H -ignoreFailure -itemExpires PT1M -outLinkSelector a[href~=/ip/] -parse -requireSize 300000
 ----
 
-== Requirements
+== 💻 System Requirements
 
 * Memory 4G+
 * Maven 3.2+
 * The latest version of the Java 11 JDK
 * java and jar on the PATH
 * Google Chrome 90+
+* [Optional] MongoDB started
 
-Pulsar is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
+PulsarRPA is tested on Ubuntu 18.04, Ubuntu 20.04, Windows 7, Windows 11, WSL, any other operating system that meets the requirements should work as well.
 
-== Advanced topics
+== 🛸 Advanced topics
 Check link:docs/faq/advanced-topics.adoc[advanced topics] to find out the answers for the following questions:
 
 * What’s so difficult about scraping web data at scale?
@@ -519,16 +548,16 @@ Check link:docs/faq/advanced-topics.adoc[advanced topics] to find out the answer
 * How to extract content from websites using machine learning automatically with commercial accuracy?
 * How to scrape amazon.com to match industrial needs?
 
-== Compare with other solutions
-In general, the features mentioned in the Feature section are well-supported by Pulsar, but other solutions do not.
+== 🆚 Compare with other solutions
+In general, the features mentioned in the Feature section are well-supported by PulsarRPA, but other solutions do not.
 
 Check link:docs/faq/solution-comparison.adoc[solution comparison] to see the detailed comparison to the other solutions:
 
-* Pulsar vs selenium/puppeteer/playwright
-* Pulsar vs nutch
-* Pulsar vs scrapy+splash
+* PulsarRPA vs selenium/puppeteer/playwright
+* PulsarRPA vs nutch
+* PulsarRPA vs scrapy+splash
 
-== Technical details
+== 🤓 Technical details
 Check link:docs/faq/technical-details.adoc[technical details] to see answers for the following questions:
 
 * How to rotate my ip addresses?
@@ -536,8 +565,10 @@ Check link:docs/faq/technical-details.adoc[technical details] to see answers for
 * How & why to simulate human behaviors?
 * How to render as many pages as possible on a single machine without be blocked?
 
-== Contact
-Wechat：galaxyeye
-Weibo：galaxyeye
-Email：galaxyeye@live.cn, ivincent.zhang@gmail.com
-Twitter: galaxyeye8
+== 🐦 Contact
+
+* Wechat：galaxyeye
+* Weibo：link:https://weibo.com/galaxyeye[galaxyeye]
+* Email：galaxyeye@live.cn, ivincent.zhang@gmail.com
+* Twitter: galaxyeye8
+* Website：link:http://platon.ai[platon.ai]

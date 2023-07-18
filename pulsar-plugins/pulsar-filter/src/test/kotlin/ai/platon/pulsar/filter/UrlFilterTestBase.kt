@@ -7,7 +7,7 @@ import org.springframework.test.context.ContextConfiguration
 
 /**
  * Created by vincent on 17-4-12.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
 open class UrlFilterTestBase(val testResourcePrefix: String = "") {

@@ -1,12 +1,12 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.SessionLostException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.jvm.Throws
 
@@ -43,6 +43,7 @@ internal class RobustRPC(
         }
     }
 
+    @Throws(Exception::class)
     suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
         if (!driver.checkState(action)) {
             return null
@@ -57,6 +58,7 @@ internal class RobustRPC(
         return result.getOrElse { throw it }
     }
 
+    @Throws(Exception::class)
     private suspend fun <T> invokeDeferred0(action: String, block: suspend CoroutineScope.() -> T): T? {
         if (!driver.checkState()) {
             return null
@@ -69,10 +71,19 @@ internal class RobustRPC(
 
             try {
                 block().also { decreaseRPCFailures() }
-            } catch (e: ChromeRPCException) {
+            } catch (e: Exception) {
                 increaseRPCFailures()
+                fixCDTAgentIfNecessary(e)
                 throw e
             }
+        }
+    }
+
+    private fun fixCDTAgentIfNecessary(e: Exception) {
+        if (e.toString().contains("agent was not enabled")) {
+            logger.warn(e.stringify())
+            driver.enableAPIAgents()
+            decreaseRPCFailures()
         }
     }
 

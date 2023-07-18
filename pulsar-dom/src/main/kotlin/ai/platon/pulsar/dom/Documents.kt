@@ -19,12 +19,12 @@ object Documents {
      * Parse HTML into a FeaturedDocument. The parser will make a sensible, balanced document tree out of any HTML.
      *
      * @param html    HTML to parse
-     * @param baseUri The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     * @param baseURI The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
      * before the HTML declares a `<base href>` tag.
      * @return sane HTML
      */
-    fun parse(html: String, baseUri: String): FeaturedDocument {
-        return FeaturedDocument(Parser.parse(html, baseUri))
+    fun parse(html: String, baseURI: String): FeaturedDocument {
+        return FeaturedDocument(Parser.parse(html, baseURI))
     }
 
     /**
@@ -32,13 +32,13 @@ object Documents {
      * (non-HTML) parser.
      *
      * @param html    HTML to parse
-     * @param baseUri The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     * @param baseURI The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
      * before the HTML declares a `<base href>` tag.
      * @param parser alternate [parser][Parser.xmlParser] to use.
      * @return sane HTML
      */
-    fun parse(html: String, baseUri: String, parser: Parser): FeaturedDocument {
-        return FeaturedDocument(parser.parseInput(html, baseUri))
+    fun parse(html: String, baseURI: String, parser: Parser): FeaturedDocument {
+        return FeaturedDocument(parser.parseInput(html, baseURI))
     }
 
     /**
@@ -75,16 +75,16 @@ object Documents {
      * @param file          file to load HTML from
      * @param charsetName (optional) character set of file contents. Set to `null` to determine from `http-equiv` meta tag, if
      * present, or fall back to `UTF-8` (which is often safe to do).
-     * @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
+     * @param baseURI     The URL where the HTML was retrieved from, to resolve relative links against.
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(file: File, charsetName: String, baseUri: String): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(file, charsetName, baseUri))
+    fun parse(file: File, charsetName: String, baseURI: String): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(file, charsetName, baseURI))
     }
 
-    fun parse(path: Path, charsetName: String, baseUri: String): FeaturedDocument {
-        return parse(path.toFile(), charsetName, baseUri)
+    fun parse(path: Path, charsetName: String, baseURI: String): FeaturedDocument {
+        return parse(path.toFile(), charsetName, baseURI)
     }
 
     /**
@@ -116,17 +116,17 @@ object Documents {
      * @param istream          input stream to read. Make sure to close it after parsing.
      * @param charsetName (optional) character set of file contents. Set to `null` to determine from `http-equiv` meta tag, if
      * present, or fall back to `UTF-8` (which is often safe to do).
-     * @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
+     * @param baseURI     The URL where the HTML was retrieved from, to resolve relative links against.
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(istream: InputStream, charsetName: String, baseUri: String): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri))
+    fun parse(istream: InputStream, charsetName: String, baseURI: String): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI))
     }
 
     // TODO: check the logic whether to support ignoring script
-//    fun parse(istream: InputStream, charsetName: String, baseUri: String, ignoreScript: Boolean): FeaturedDocument {
-//        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, ignoreScript))
+//    fun parse(istream: InputStream, charsetName: String, baseURI: String, ignoreScript: Boolean): FeaturedDocument {
+//        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI, ignoreScript))
 //    }
 
     /**
@@ -136,25 +136,25 @@ object Documents {
      * @param istream          input stream to read. Make sure to close it after parsing.
      * @param charsetName (optional) character set of file contents. Set to `null` to determine from `http-equiv` meta tag, if
      * present, or fall back to `UTF-8` (which is often safe to do).
-     * @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
+     * @param baseURI     The URL where the HTML was retrieved from, to resolve relative links against.
      * @param parser alternate [parser][Parser.xmlParser] to use.
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(istream: InputStream, charsetName: String, baseUri: String, parser: Parser): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, parser))
+    fun parse(istream: InputStream, charsetName: String, baseURI: String, parser: Parser): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(istream, charsetName, baseURI, parser))
     }
 
     /**
      * Parse a fragment of HTML, with the assumption that it forms the `body` of the HTML.
      *
      * @param bodyHtml body HTML fragment
-     * @param baseUri  URL to resolve relative URLs against.
+     * @param baseURI  URL to resolve relative URLs against.
      * @return sane HTML document
      * @see FeaturedDocument.body
      */
-    fun parseBodyFragment(bodyHtml: String, baseUri: String): FeaturedDocument {
-        return FeaturedDocument(Parser.parseBodyFragment(bodyHtml, baseUri))
+    fun parseBodyFragment(bodyHtml: String, baseURI: String): FeaturedDocument {
+        return FeaturedDocument(Parser.parseBodyFragment(bodyHtml, baseURI))
     }
 
     /**

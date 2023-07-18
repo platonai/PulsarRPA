@@ -17,6 +17,8 @@ class TestPulsarSession: TestBase() {
     private val url = "https://www.amazon.com/Best-Sellers/zgbs/"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
 
+    private val resourceUrl = "https://www.amazon.com/dp/B0933BVK6T"
+
     @Before
     fun setup() {
 //        webDB.delete(url)
@@ -49,6 +51,19 @@ class TestPulsarSession: TestBase() {
             println(gson.toJson(page2.activeDOMStatus))
             println(gson.toJson(page2.activeDOMStatTrace))
         }
+    }
+
+    @Test
+    fun testLoadResource() {
+        val page = session.loadResource(resourceUrl, url, "-refresh")
+
+        assertTrue { page.fetchCount > 0 }
+        assertTrue { page.protocolStatus.isSuccess }
+        assertTrue { page.contentLength > 100 }
+
+        println(WebPageFormatter(page))
+        val path = session.export(page)
+        println("Webpage exported | $path")
     }
 
     @Test

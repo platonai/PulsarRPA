@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_DISABLE_FETCH
 import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_STRATEGY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
-import ai.platon.pulsar.common.message.LoadStatusFormatter
+import ai.platon.pulsar.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.persist.ext.loadEvent
 import ai.platon.pulsar.common.urls.NormUrl
@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Created by vincent on 17-7-15.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2023 Platon AI. All rights reserved
  *
  * Load pages from storage or fetch from the Internet if it's not fetched or expired
  */
@@ -75,8 +75,8 @@ class LoadComponent(
 
     private val loadStrategy = immutableConfig.get(LOAD_STRATEGY, "SIMPLE")
     /**
-     * Disable the fetch component, so the page only be loaded from the storage,
-     * and will never be fetched from the internet.
+     * Disable the fetch component, so all the pages will be loaded from the storage,
+     * and will never be fetched from the Internet.
      * If the page does not exist in the local storage, return WebPage.NIL.
      * */
     private val disableFetch = immutableConfig.getBoolean(LOAD_DISABLE_FETCH, false)
@@ -314,7 +314,7 @@ class LoadComponent(
             dbGetCount.incrementAndGet()
             if (loadedPage != null) {
                 // override the old variables: args, href, etc
-                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec)
+                FetchEntry.initWebPage(loadedPage, normUrl.options, normUrl.hrefSpec, normUrl.referrer)
                 page = loadedPage
             }
 
@@ -446,12 +446,12 @@ class LoadComponent(
     private fun report(page: WebPage) {
         if (taskLogger.isInfoEnabled) {
             val verbose = taskLogger.isDebugEnabled
-            val report = LoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
+            val report = PageLoadStatusFormatter(page, withSymbolicLink = verbose, withOptions = true).toString()
 
             taskLogger.info(report)
 
             if (reportCount == 0) {
-                val logExplainUrl = "https://github.com/platonai/pulsarr/blob/master/docs/log-format.adoc"
+                val logExplainUrl = "https://github.com/platonai/PulsarRPA/blob/master/docs/log-format.adoc"
                 taskLogger.info("Log explanation: $logExplainUrl")
             }
 
@@ -605,13 +605,14 @@ class LoadComponent(
     }
 
     private fun persist(page: WebPage, options: LoadOptions) {
-        // Remove content if storingContent is false. Content is added to page earlier
-        // so PageParser is able to parse it, now, we can clear it
-        if (!options.storeContent && page.content != null) {
+        // Remove page content if dropContent is set or storeContent is false. Page content is set earlier,
+        // so the PageParser can parse it, now, we can clear it since it's usually very large.
+        if (options.dropContent || !options.storeContent) {
             page.clearPersistContent()
         }
 
-        // the content is loaded from cache, the content remains unchanged, do not persist it
+        // The content is loaded from cache, the content remains unchanged, do not persist it
+        // TODO: check the logic again
         if (page.isCached) {
             page.unbox().clearDirty(GWebPage.Field.CONTENT.index)
             assert(!page.unbox().isContentDirty)

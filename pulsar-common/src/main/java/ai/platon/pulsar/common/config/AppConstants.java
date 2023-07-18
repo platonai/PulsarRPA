@@ -161,8 +161,6 @@ public interface AppConstants {
     Instant TCP_IP_STANDARDIZED_TIME = Instant.parse("1982-01-01T00:00:00Z");
     Instant MIN_ARTICLE_PUBLISH_TIME = Instant.parse("1995-01-01T00:00:00Z");
     Duration DEFAULT_MAX_PARSE_TIME = Duration.ofSeconds(60);
-    String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
-    String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
 
     String DEFAULT_NODE_FEATURE_CALCULATOR = "ai.platon.pulsar.dom.features.NodeFeatureCalculator";
 
@@ -229,4 +227,10 @@ public interface AppConstants {
      * SQL engine
      * */
     String H2_SESSION_FACTORY = "ai.platon.pulsar.ql.h2.H2SessionFactory";
+
+    //////////////////////////////////////////////////////////
+    // Scent
+
+    String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
+    String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
 }
